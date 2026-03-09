@@ -208,6 +208,7 @@ import org.telegram.ui.Components.VideoForwardDrawable;
 import org.telegram.ui.Components.spoilers.SpoilerEffect;
 import org.telegram.ui.Components.spoilers.SpoilerEffect2;
 import org.telegram.ui.GradientClip;
+import org.telegram.ui.Components.WebPlayerView;
 import org.telegram.ui.LinkManager;
 import org.telegram.ui.MultiLayoutTypingAnimator;
 import org.telegram.ui.PhotoViewer;
@@ -2899,9 +2900,9 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                                 didPressButton(true, false);
                                 playSoundEffect(SoundEffectConstants.CLICK);
                             }
-                        } else if (!currentMessageObject.preview) {
+                        } else if (currentMessageObject != null && !currentMessageObject.preview) {
                             TLRPC.WebPage webPage = MessageObject.getMedia(currentMessageObject.messageOwner).webpage;
-                            if (webPage != null && !TextUtils.isEmpty(webPage.embed_url)) {
+                            if (webPage != null && !TextUtils.isEmpty(webPage.embed_url)/* && TextUtils.isEmpty(WebPlayerView.getYouTubeVideoId(webPage.embed_url))*/) {
                                 delegate.needOpenWebView(currentMessageObject, webPage.embed_url, webPage.site_name, webPage.title, webPage.url, webPage.embed_width, webPage.embed_height);
                             } else if (buttonState == -1 || buttonState == 3) {
                                 delegate.didPressImage(this, lastTouchX, lastTouchY, false);

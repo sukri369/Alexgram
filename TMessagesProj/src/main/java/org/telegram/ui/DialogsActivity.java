@@ -3613,6 +3613,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     }
                 }
             };
+            filterTabsView.setVisibility(View.GONE);
             canShowFilterTabsView = false;
             animatorFilterTabsVisible.setValue(false, false);
             filterTabsView.setDelegate(new FilterTabsView.FilterTabsViewDelegate() {
@@ -13604,6 +13605,40 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     public boolean isSupportEdgeToEdge() {
         return true;
     }
+
+    @Override
+    public boolean drawEdgeNavigationBar() {
+        return false;
+    }
+
+    private BlurredBackgroundWithFadeDrawable navbarProtectionDrawable;
+    private final @Nullable DownscaleScrollableNoiseSuppressor scrollableViewNoiseSuppressor;
+    private final @Nullable BlurredBackgroundSourceRenderNode iBlur3SourceGlassFrosted;
+    private final @NonNull BlurredBackgroundSource iBlur3Source;
+    private final @NonNull BlurredBackgroundDrawableViewFactory iBlur3Factory;
+    private final @NonNull BlurredBackgroundDrawableViewFactory iBlur3FactoryBg;
+
+    private IBlur3Capture iBlur3Capture;
+
+
+    private final ArrayList<RectF> iBlur3Positions = new ArrayList<>();
+    private final RectF iBlur3PositionMainTabs = new RectF(); {
+        iBlur3Positions.add(iBlur3PositionMainTabs);
+    }
+
+    private void blur3_InvalidateBlur() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S || scrollableViewNoiseSuppressor == null) {
+            return;
+        }
+
+        final int mainTabBottom = fragmentView.getMeasuredHeight() + dp(48);
+        final int mainTabTop = fragmentView.getMeasuredHeight() - AndroidUtilities.navigationBarHeight - dp(48 + 48 + 24 + 12);
+        iBlur3PositionMainTabs.set(0, mainTabTop, fragmentView.getMeasuredWidth(), mainTabBottom);
+
+        scrollableViewNoiseSuppressor.setupRenderNodes(iBlur3Positions, 1);
+        scrollableViewNoiseSuppressor.invalidateResultRenderNodes(iBlur3Capture, fragmentView.getMeasuredWidth(), fragmentView.getMeasuredHeight());
+    }
+    
     @Override
     public boolean drawEdgeNavigationBar() {
         return false;

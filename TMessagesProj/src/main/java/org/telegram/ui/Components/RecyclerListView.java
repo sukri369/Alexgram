@@ -3180,6 +3180,16 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
             //     canvas.drawColor(0x80FF00FF);
             }
         } else {
+            for (int a = 0, N = getItemDecorationCount(); a < N; a++) {
+                ItemDecoration itemDecoration = getItemDecorationAt(a);
+                if (itemDecoration instanceof IBlur3Capture) {
+                    if (itemDecoration == sectionsItemDecoration && !canCaptureSectionsDecorator) {
+                        continue;
+                    }
+                    final IBlur3Capture capture = (IBlur3Capture) itemDecoration;
+                    capture.capture(canvas, position);
+                }
+            }
             for (int i = 0, N = getChildCount(); i < N; i++) {
                 final View child = getChildAt(i);
 
@@ -3196,13 +3206,6 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
                 drawChild(canvas, child, drawingTime);
                 ignoreClipChild = false;
             }
-            for (int a = 0, N = getItemDecorationCount(); a < N; a++) {
-                ItemDecoration itemDecoration = getItemDecorationAt(a);
-                if (itemDecoration instanceof IBlur3Capture) {
-                    final IBlur3Capture capture = (IBlur3Capture) itemDecoration;
-                    capture.capture(canvas, position);
-                }
-            }
         }
     }
 
@@ -3216,6 +3219,17 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
         if (hasActiveEdgeEffects() && getOverScrollMode() != OVER_SCROLL_NEVER) {
             builder.unsupported();
             return;
+        }
+
+        for (int a = 0, N = getItemDecorationCount(); a < N; a++) {
+            ItemDecoration itemDecoration = getItemDecorationAt(a);
+            if (itemDecoration instanceof IBlur3Capture) {
+                if (itemDecoration == sectionsItemDecoration && !canCaptureSectionsDecorator) {
+                    continue;
+                }
+                final IBlur3Capture capture = (IBlur3Capture) itemDecoration;
+                capture.captureCalculateHash(builder, position);
+            }
         }
 
         for (int i = 0, N = getChildCount(); i < N; i++) {
@@ -3232,14 +3246,10 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
 
             builder.add(child);
         }
+        private boolean canCaptureSectionsDecorator;
 
-        for (int a = 0, N = getItemDecorationCount(); a < N; a++) {
-            ItemDecoration itemDecoration = getItemDecorationAt(a);
-            if (itemDecoration instanceof IBlur3Capture) {
-                final IBlur3Capture capture = (IBlur3Capture) itemDecoration;
-                capture.captureCalculateHash(builder, position);
-            }
-        }
+        public void setCaptureSectionsDecoratorAllowed(boolean allowed) {
+            canCaptureSectionsDecorator = allowed;
     }
 
     public View findViewByPosition(int position) {
@@ -3343,7 +3353,7 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
         if (sectionsItemDecoration != null) {
             removeItemDecoration(sectionsItemDecoration);
         }
-        addItemDecoration(sectionsItemDecoration = new ListSectionsDecoration(isSectionView, padding, topPadding));
+        addItemDecoration(sectionsItemDecoration = new ListSectionsDecoration(this, isSectionView, padding, topPadding));
 //        if (getItemAnimator() != null) {
 //            getItemAnimator().listenToAnimationUpdates(this::invalidate);
 //        }
@@ -3357,13 +3367,15 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
 //        }
     }
 
-    public static class ListSectionsDecoration extends RecyclerView.ItemDecoration {
+    public static class ListSectionsDecoration extends RecyclerView.ItemDecoration implements IBlur3Capture {
 
         public final Utilities.CallbackReturn<View, Boolean> isSectionItem;
+        public final RecyclerListView parent;
         private int padding;
         private boolean enableTopPadding;
 
-        public ListSectionsDecoration(Utilities.CallbackReturn<View, Boolean> isSectionItem, int padding, boolean enableTopPadding) {
+        public ListSectionsDecoration(RecyclerListView parent, Utilities.CallbackReturn<View, Boolean> isSectionItem, int padding, boolean enableTopPadding) {
+            this.parent = parent;
             this.isSectionItem = isSectionItem;
             this.padding = padding;
             this.enableTopPadding = enableTopPadding;
@@ -3399,6 +3411,14 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
             if (parent instanceof RecyclerListView) {
                 ((RecyclerListView) parent).drawSectionsBackgrounds(c);
             }
+        }
+        
+        @Override
+        public void capture(Canvas canvas, RectF position) {
+            canvas.save();
+            canvas.clipRect(position);
+            parent.drawSectionsBackgrounds(canvas);
+            canvas.restore();
         }
     }
 

@@ -4743,7 +4743,7 @@ public class AlertsCreator {
             return null;
         }
 
-        ScheduleDatePickerColors datePickerColors = new ScheduleDatePickerColors();
+        ScheduleDatePickerColors datePickerColors = new ScheduleDatePickerColors(resourcesProvider);
         BottomSheet.Builder builder = new BottomSheet.Builder(context, false);
         builder.setApplyBottomPadding(false);
 
@@ -5531,7 +5531,8 @@ public class AlertsCreator {
                 case 11:
                 default: {
                     return LocaleController.getString(R.string.December);
-                }
+                }else {
+                return LocaleController.getInstance().getFormatterMonthYear().format(calendar.getTimeInMillis());
             }
         });
         monthPicker.setOnValueChangedListener(onValueChangeListener);

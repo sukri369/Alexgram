@@ -304,6 +304,7 @@ public class NekoChatSettingsActivity extends BaseNekoXSettingsActivity implemen
         items.add(new Item("spoiler", getString(R.string.Spoiler), new ConfigCellTextCheck(NaConfig.INSTANCE.getShowTextSpoiler(), null, getString(R.string.Spoiler))));
         items.add(new Item("link", getString(R.string.CreateLink), new ConfigCellTextCheck(NaConfig.INSTANCE.getShowTextCreateLink(), null, getString(R.string.CreateLink))));
         items.add(new Item("mention", getString(R.string.CreateMention), new ConfigCellTextCheck(NaConfig.INSTANCE.getShowTextCreateMention(), null, getString(R.string.CreateMention))));
+        items.add(new Item("date", getString(R.string.FormattedDate), new ConfigCellTextCheck(NaConfig.INSTANCE.getShowTextCreateDate(), null, getString(R.string.FormattedDate))));
         items.add(new Item("regular", getString(R.string.Regular), new ConfigCellTextCheck(NaConfig.INSTANCE.getShowTextRegular(), null, getString(R.string.Regular))));
 
         // recover saved order
@@ -410,7 +411,7 @@ public class NekoChatSettingsActivity extends BaseNekoXSettingsActivity implemen
         });
         builder.setNegativeButton(getString(R.string.Cancel), null);
         builder.setNeutralButton(getString(R.string.Reset), (d, which) -> {
-            String def = "translate,bold,italic,mono,code,strike,underline,quote,spoiler,link,mention,regular";
+            String def = "translate,bold,italic,mono,code,strike,underline,quote,spoiler,link,mention,date,regular";
             NaConfig.INSTANCE.getTextStyleOrder().setConfigString(def);
             ordered.clear();
             String[] keys = def.split(",");

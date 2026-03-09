@@ -163,6 +163,17 @@ public class PremiumButtonView extends FrameLayout implements Loadable {
         }
     }
 
+    private boolean nonClickable;
+
+    public void setNonClickable() {
+        this.nonClickable = true;
+        setClickable(false);
+        buttonLayout.setClickable(false);
+        setStateListAnimator(null);
+
+    }
+
+
     public boolean isShowOverlay() {
         return showOverlay;
     }
@@ -377,7 +388,11 @@ public class PremiumButtonView extends FrameLayout implements Loadable {
             buttonTextView.cancelAnimation();
         }
         buttonTextView.setText(text, animated);
-        buttonLayout.setOnClickListener(clickListener);
+        
+
+        if (!nonClickable) {
+            buttonLayout.setOnClickListener(clickListener);
+        }
     }
 
     public void checkCounterView() {
