@@ -307,29 +307,15 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
         tabsViewBackground = iBlur3FactoryGlass.create(tabsView, BlurredBackgroundProviderImpl.mainTabs(resourceProvider));
         tabsViewBackground.setRadius(dp(DialogsActivity.MAIN_TABS_HEIGHT / 2f));
         tabsViewBackground.setPadding(dp(DialogsActivity.MAIN_TABS_MARGIN - 0.334f));
-        if (tw.nekomimi.nekogram.NekoConfig.liquidGlassUI.Bool()) {
-            android.graphics.drawable.GradientDrawable liquid = tw.nekomimi.nekogram.helpers.LiquidUIHelper.createLiquidDrawable();
-            liquid.setCornerRadius(dp(DialogsActivity.MAIN_TABS_HEIGHT / 2f));
-            int pad = dp(DialogsActivity.MAIN_TABS_MARGIN - 0.334f);
-            android.graphics.drawable.InsetDrawable insetDrawable = new android.graphics.drawable.InsetDrawable(liquid, pad, pad, pad, pad);
-            android.graphics.drawable.Drawable[] layers = new android.graphics.drawable.Drawable[]{tabsViewBackground, insetDrawable};
-            android.graphics.drawable.LayerDrawable layerDrawable = new android.graphics.drawable.LayerDrawable(layers);
-            tabsView.setBackground(layerDrawable);
-        } else {
-            tabsView.setBackground(tabsViewBackground);
-        }
+        tabsView.setBackground(tabsViewBackground);
 
         BlurredBackgroundDrawableViewFactory iBlur3FactoryFade = new BlurredBackgroundDrawableViewFactory(iBlur3SourceColor);
         iBlur3FactoryFade.setSourceRootView(viewPositionWatcher, contentView);
 
         fadeView = new View(context);
-        if (tw.nekomimi.nekogram.NekoConfig.liquidGlassUI.Bool()) {
-            fadeView.setVisibility(View.GONE);
-        } else {
-            BlurredBackgroundWithFadeDrawable fadeDrawable = new BlurredBackgroundWithFadeDrawable(iBlur3FactoryFade.create(fadeView, null));
-            fadeDrawable.setFadeHeight(dp(60), true);
-            fadeView.setBackground(fadeDrawable);
-        }
+        BlurredBackgroundWithFadeDrawable fadeDrawable = new BlurredBackgroundWithFadeDrawable(iBlur3FactoryFade.create(fadeView, null));
+        fadeDrawable.setFadeHeight(dp(60), true);
+        fadeView.setBackground(fadeDrawable);
 
         contentView.addView(fadeView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 0, Gravity.BOTTOM));
         contentView.addView(tabsView, LayoutHelper.createFrame(328 + DialogsActivity.MAIN_TABS_MARGIN * 2, DialogsActivity.MAIN_TABS_HEIGHT_WITH_MARGINS, Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL));
@@ -795,11 +781,6 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
 
     private void checkUi_fadeView() {
         if (viewPager == null || fadeView == null) {
-            return;
-        }
-
-        if (tw.nekomimi.nekogram.NekoConfig.liquidGlassUI.Bool()) {
-            fadeView.setVisibility(View.GONE);
             return;
         }
 
