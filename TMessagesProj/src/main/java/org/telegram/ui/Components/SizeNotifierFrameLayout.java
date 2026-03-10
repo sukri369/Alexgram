@@ -480,10 +480,10 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
         if (backgroundDrawable == bitmap) {
             if (video) {
                if (backgroundView != null) backgroundView.setVisibility(View.GONE);
-               if (videoTextureView != null) videoTextureView.setVisibility(View.VISIBLE);
+               if (videoSurfaceView != null) videoSurfaceView.setVisibility(View.VISIBLE);
             } else {
                if (backgroundView != null) backgroundView.setVisibility(View.VISIBLE);
-               if (videoTextureView != null) videoTextureView.setVisibility(View.GONE);
+               if (videoSurfaceView != null) videoSurfaceView.setVisibility(View.GONE);
             }
             return;
         }
@@ -494,10 +494,10 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
 
         if (video) {
            if (backgroundView != null) backgroundView.setVisibility(View.GONE);
-           if (videoTextureView != null) videoTextureView.setVisibility(View.VISIBLE);
+           if (videoSurfaceView != null) videoSurfaceView.setVisibility(View.VISIBLE);
         } else {
            if (backgroundView != null) backgroundView.setVisibility(View.VISIBLE);
-           if (videoTextureView != null) videoTextureView.setVisibility(View.GONE);
+           if (videoSurfaceView != null) videoSurfaceView.setVisibility(View.GONE);
         }
 
         if (bitmap instanceof MotionBackgroundDrawable) {
