@@ -4678,10 +4678,15 @@ public class ChatActivityEnterView extends FrameLayout implements
         }
 
         if (tw.nekomimi.nekogram.NekoConfig.liquidGlassUI.Bool()) {
-             android.graphics.drawable.GradientDrawable liquidDrawable = tw.nekomimi.nekogram.helpers.LiquidUIHelper.createLiquidDrawable();
-             liquidDrawable.setBounds(0, bottom, getWidth(), getHeight());
-             liquidDrawable.draw(canvas);
-             return;
+            if (allowBlur && org.telegram.messenger.SharedConfig.chatBlurEnabled() && sizeNotifierLayout != null) {
+                backgroundPaint.setColor(android.graphics.Color.TRANSPARENT);
+                blurBounds.set(0, bottom, getWidth(), getHeight());
+                sizeNotifierLayout.drawBlurRect(canvas, getTop(), blurBounds, backgroundPaint, false);
+            }
+            android.graphics.drawable.GradientDrawable liquidDrawable = tw.nekomimi.nekogram.helpers.LiquidUIHelper.createLiquidDrawable();
+            liquidDrawable.setBounds(0, bottom, getWidth(), getHeight());
+            liquidDrawable.draw(canvas);
+            return;
         }
 
         if (allowBlur) {

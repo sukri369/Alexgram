@@ -312,7 +312,9 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
             liquid.setCornerRadius(dp(DialogsActivity.MAIN_TABS_HEIGHT / 2f));
             int pad = dp(DialogsActivity.MAIN_TABS_MARGIN - 0.334f);
             android.graphics.drawable.InsetDrawable insetDrawable = new android.graphics.drawable.InsetDrawable(liquid, pad, pad, pad, pad);
-            tabsView.setBackground(insetDrawable);
+            android.graphics.drawable.Drawable[] layers = new android.graphics.drawable.Drawable[]{tabsViewBackground, insetDrawable};
+            android.graphics.drawable.LayerDrawable layerDrawable = new android.graphics.drawable.LayerDrawable(layers);
+            tabsView.setBackground(layerDrawable);
         } else {
             tabsView.setBackground(tabsViewBackground);
         }
