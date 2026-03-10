@@ -2493,10 +2493,11 @@ public class ChatActivityEnterView extends FrameLayout implements
 
         public void updateColors() {
             paint.setColor(getThemedColor(Theme.key_chat_messagePanelVoiceBackground));
-            tinyWaveDrawable.paint.setColor(ColorUtils.setAlphaComponent(getThemedColor(Theme.key_chat_messagePanelVoiceBackground), (int) (255 * WaveDrawable.CIRCLE_ALPHA_2)));
-            bigWaveDrawable.paint.setColor(ColorUtils.setAlphaComponent(getThemedColor(Theme.key_chat_messagePanelVoiceBackground), (int) (255 * WaveDrawable.CIRCLE_ALPHA_1)));
-
-            paintAlpha = paint.getAlpha();
+            if (tw.nekomimi.nekogram.NekoConfig.liquidGlassUI.Bool()) {
+                paint.setColor(ColorUtils.setAlphaComponent(paint.getColor(), 100)); // Semi-transparent
+            }
+            tinyWaveDrawable.paint.setColor(ColorUtils.setAlphaComponent(paint.getColor(), (int) (255 * WaveDrawable.CIRCLE_ALPHA_2)));
+            bigWaveDrawable.paint.setColor(ColorUtils.setAlphaComponent(paint.getColor(), (int) (255 * WaveDrawable.CIRCLE_ALPHA_1)));
         }
 
         public void canceledByGesture() {
@@ -11077,6 +11078,9 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
     private void updateRecordedDeleteIconColors() {
         int dotColor = getThemedColor(Theme.key_chat_recordedVoiceDot);
         int background = getThemedColor(Theme.key_chat_messagePanelBackground);
+        if (tw.nekomimi.nekogram.NekoConfig.liquidGlassUI.Bool()) {
+            background = 0x00000000;
+        }
         int greyColor = getThemedColor(Theme.key_chat_messagePanelVoiceDelete);
 
         if (recordDeleteImageView != null) {
@@ -15191,6 +15195,9 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
                 backgroundPaint.setColor(getFillColor());
             } else {
                 backgroundPaint.setColor(ColorUtils.setAlphaComponent(Color.WHITE, 75));
+            }
+            if (tw.nekomimi.nekogram.NekoConfig.liquidGlassUI.Bool()) {
+                 backgroundPaint.setColor(ColorUtils.setAlphaComponent(backgroundPaint.getColor(), 100));
             }
         }
 
