@@ -21,7 +21,7 @@ public class LiquidUIHelper {
     public static GradientDrawable createLiquidDrawable() {
         GradientDrawable gd = new GradientDrawable();
         int color = Theme.getColor(Theme.key_windowBackgroundWhite);
-        int alpha = 200; // 0-255
+        int alpha = 100; // 0-255
         int glassColor = Color.argb(alpha, Color.red(color), Color.green(color), Color.blue(color));
         
         gd.setColor(glassColor);

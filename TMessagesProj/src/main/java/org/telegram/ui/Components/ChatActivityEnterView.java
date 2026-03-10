@@ -6411,6 +6411,7 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
             parentFragment.applyDraftMaybe(false);
         }
         updateFieldRight(lastAttachVisible);
+        updateColors();
     }
 
     public void addTextChangedListener(TextWatcher textWatcher) {
