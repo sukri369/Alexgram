@@ -5529,10 +5529,8 @@ public class AlertsCreator {
                 case 9: return LocaleController.getString(R.string.October);
                 case 10: return LocaleController.getString(R.string.November);
                 case 11:
-                default: {
+                default:
                     return LocaleController.getString(R.string.December);
-                }else {
-                return LocaleController.getInstance().getFormatterMonthYear().format(calendar.getTimeInMillis());
             }
         });
         monthPicker.setOnValueChangedListener(onValueChangeListener);

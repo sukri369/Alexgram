@@ -3246,10 +3246,12 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
 
             builder.add(child);
         }
-        private boolean canCaptureSectionsDecorator;
+    }
 
-        public void setCaptureSectionsDecoratorAllowed(boolean allowed) {
-            canCaptureSectionsDecorator = allowed;
+    private boolean canCaptureSectionsDecorator;
+
+    public void setCaptureSectionsDecoratorAllowed(boolean allowed) {
+        canCaptureSectionsDecorator = allowed;
     }
 
     public View findViewByPosition(int position) {
