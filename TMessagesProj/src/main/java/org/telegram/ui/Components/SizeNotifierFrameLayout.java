@@ -411,6 +411,7 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
          if (enabled && !android.text.TextUtils.isEmpty(currentVideoPath)) {
             if (videoTextureView == null) {
                 videoTextureView = new TextureView(getContext());
+                videoTextureView.setOpaque(false);
                 videoTextureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
                     @Override
                     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
