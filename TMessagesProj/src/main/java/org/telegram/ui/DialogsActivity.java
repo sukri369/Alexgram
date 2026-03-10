@@ -3055,25 +3055,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     }
 
     @Override
-    public void onBecomeFullyHidden() {
-        super.onBecomeFullyHidden();
-        // Release the hardware video decoder to free it for round video messages
-        // in ChatActivity. If we just pause, the decoder slot stays occupied.
-        if (videoBgView != null) {
-            videoBgView.stopAndRelease();
-        }
-    }
-
-    @Override
-    public void onBecomeFullyVisible() {
-        super.onBecomeFullyVisible();
-        // Re-initialize the live wallpaper now that we're back on the dialogs screen.
-        if (videoBgView != null) {
-            videoBgView.restartPlayback();
-        }
-    }
-
-    @Override
     public void onFragmentDestroy() {
         super.onFragmentDestroy();
         if (searchString == null) {
@@ -7477,6 +7458,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         super.onBecomeFullyHidden();
         checkUi_mainTabsVisible();
         canShowStoryHint = true;
+        // Release the decoder so round video messages in ChatActivity can use it.
+        if (videoBgView != null) {
+            videoBgView.stopAndRelease();
+        }
     }
 
     @Override
@@ -7501,6 +7486,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             storyHint.show();
         }
         AndroidUtilities.runOnUIThread(this::createSearchViewPager, 200);
+        // Restart the wallpaper now that we're back on the dialogs screen.
+        if (videoBgView != null) {
+            videoBgView.restartPlayback();
+        }
     }
 
     private void showArchiveHelp() {
