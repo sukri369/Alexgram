@@ -122,6 +122,7 @@ public class WindowAnimatedInsetsProvider extends WindowInsetsAnimationCompat.Ca
             Math.max(0, right),
             Math.max(0, bottom)
         );
+    }
 
     public interface Listener {
         View getAnimatedInsetsTargetView();
