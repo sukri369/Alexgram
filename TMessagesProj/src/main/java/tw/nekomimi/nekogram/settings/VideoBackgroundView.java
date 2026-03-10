@@ -123,6 +123,21 @@ public class VideoBackgroundView extends FrameLayout implements SurfaceHolder.Ca
         }
     }
 
+    /** Called by DialogsActivity.onBecomeFullyHidden() to free the decoder for round video. */
+    public void stopAndRelease() {
+        releaseMediaPlayer();
+    }
+
+    /** Called by DialogsActivity.onBecomeFullyVisible() to restart the wallpaper. */
+    public void restartPlayback() {
+        if (isImage || surfaceView == null) return;
+        SurfaceHolder holder = surfaceView.getHolder();
+        if (holder != null && holder.getSurface() != null && holder.getSurface().isValid()) {
+            initMediaPlayer(holder);
+        }
+        // If the surface is not yet valid, surfaceCreated() will call initMediaPlayer when ready.
+    }
+
     // ── View lifecycle ───────────────────────────────────────────────────────
 
     public void play() {
