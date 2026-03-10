@@ -28,6 +28,9 @@ public class VideoBackgroundView extends FrameLayout implements TextureView.Surf
 
     public VideoBackgroundView(Context context) {
         super(context);
+        // Ensure this view renders on its own hardware layer, isolated from
+        // round video TextureViews so they don't conflict in GPU compositing.
+        setLayerType(LAYER_TYPE_HARDWARE, null);
         
         currentVideoPath = NekoConfig.videoHeaderPath.String();
         
@@ -46,6 +49,7 @@ public class VideoBackgroundView extends FrameLayout implements TextureView.Surf
             addView(imageView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
         } else {
             textureView = new TextureView(context);
+            textureView.setOpaque(false); // Allow round video TextureViews to render over this
             textureView.setSurfaceTextureListener(this);
             addView(textureView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
         }
