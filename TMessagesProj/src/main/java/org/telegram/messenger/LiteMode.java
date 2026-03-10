@@ -151,6 +151,11 @@ public class LiteMode {
             // always enabled for tablets
             return true;
         }
+        // When Liquid Glass UI setting is on, activate Telegram's native glass + blur pipeline
+        if ((flag == FLAG_LIQUID_GLASS || flag == FLAG_CHAT_BLUR) &&
+                tw.nekomimi.nekogram.NekoConfig.liquidGlassUI.Bool()) {
+            return true;
+        }
         return (getValue() & preprocessFlag(flag)) > 0;
     }
 
