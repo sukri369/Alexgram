@@ -99,7 +99,7 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
     private boolean skipBackgroundDrawing;
     SnowflakesEffect snowflakesEffect;
     public View backgroundView;
-    private TextureView videoTextureView;
+    private android.view.SurfaceView videoSurfaceView;
     private MediaPlayer videoMediaPlayer;
     private boolean videoWallpaperPlaying;
     private String currentVideoPath;
@@ -389,9 +389,9 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
 
     private boolean checkVideoWallpaper() {
         if (!canPlayVideo) {
-             if (videoTextureView != null) {
-                removeView(videoTextureView);
-                videoTextureView = null;
+             if (videoSurfaceView != null) {
+                removeView(videoSurfaceView);
+                videoSurfaceView = null;
                 releaseVideo();
             }
             return false;
@@ -404,58 +404,46 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
         boolean pathChanged = !android.text.TextUtils.equals(path, currentVideoPath);
         currentVideoPath = path; // Update current path
 
-        int newBlur = NaConfig.INSTANCE.getLiveVideoBlurIntensity().Int();
-        boolean blurChanged = (newBlur != currentBlur);
-        currentBlur = newBlur;
-
          if (enabled && !android.text.TextUtils.isEmpty(currentVideoPath)) {
-            if (videoTextureView == null) {
-                videoTextureView = new TextureView(getContext());
-                videoTextureView.setOpaque(false);
-                videoTextureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
+            if (videoSurfaceView == null) {
+                videoSurfaceView = new android.view.SurfaceView(getContext());
+                videoSurfaceView.setBackgroundColor(Color.TRANSPARENT);
+                videoSurfaceView.setZOrderMediaOverlay(false);
+                videoSurfaceView.setZOrderOnTop(false);
+                videoSurfaceView.getHolder().addCallback(new android.view.SurfaceHolder.Callback() {
                     @Override
-                    public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-                        // Use currentVideoPath (member variable), not the potentially stale local variable 'path'
-                        playVideo(surface, currentVideoPath);
+                    public void surfaceCreated(android.view.SurfaceHolder holder) {
+                        playVideo(holder.getSurface(), currentVideoPath);
                     }
+
                     @Override
-                    public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {}
+                    public void surfaceChanged(android.view.SurfaceHolder holder, int format, int width, int height) {}
+
                     @Override
-                    public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+                    public void surfaceDestroyed(android.view.SurfaceHolder holder) {
                         releaseVideo();
-                        return true;
                     }
-                    @Override
-                    public void onSurfaceTextureUpdated(SurfaceTexture surface) {}
                 });
-                addView(videoTextureView, 0, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+                addView(videoSurfaceView, 0, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
             } else {
-                if (pathChanged && videoTextureView.isAvailable()) {
-                     playVideo(videoTextureView.getSurfaceTexture(), currentVideoPath);
-                } else if (!videoWallpaperPlaying && videoTextureView.isAvailable()) {
-                     playVideo(videoTextureView.getSurfaceTexture(), currentVideoPath);
-                }
-            }
-            if (Build.VERSION.SDK_INT >= 31 && blurChanged) {
-                if (newBlur > 0) {
-                   float r = Math.max(1f, newBlur / 4.0f);
-                   videoTextureView.setRenderEffect(RenderEffect.createBlurEffect(r, r, Shader.TileMode.CLAMP));
-                } else {
-                   videoTextureView.setRenderEffect(null);
+                if (pathChanged || !videoWallpaperPlaying) {
+                     if (videoSurfaceView.getHolder() != null && videoSurfaceView.getHolder().getSurface() != null && videoSurfaceView.getHolder().getSurface().isValid()) {
+                         playVideo(videoSurfaceView.getHolder().getSurface(), currentVideoPath);
+                     }
                 }
             }
             return true;
         } else {
-            if (videoTextureView != null) {
-                removeView(videoTextureView);
-                videoTextureView = null;
+            if (videoSurfaceView != null) {
+                removeView(videoSurfaceView);
+                videoSurfaceView = null;
                 releaseVideo();
             }
             return false;
         }
     }
 
-    private void playVideo(SurfaceTexture surface, String path) {
+    private void playVideo(Surface surface, String path) {
         try {
             if (videoMediaPlayer == null) {
                 videoMediaPlayer = new MediaPlayer();
@@ -467,7 +455,7 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
             } else {
                 videoMediaPlayer.setDataSource(path);
             }
-            videoMediaPlayer.setSurface(new Surface(surface));
+            videoMediaPlayer.setSurface(surface);
             videoMediaPlayer.setLooping(true);
             videoMediaPlayer.setVolume(0, 0);
             videoMediaPlayer.prepareAsync();
@@ -480,7 +468,8 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
 
     private void releaseVideo() {
         if (videoMediaPlayer != null) {
-            videoMediaPlayer.release();
+            try { videoMediaPlayer.stop(); } catch (Exception ignore) {}
+            try { videoMediaPlayer.release(); } catch (Exception ignore) {}
             videoMediaPlayer = null;
         }
         videoWallpaperPlaying = false;
@@ -594,12 +583,19 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
         if (parallaxEffect != null) {
             parallaxEffect.setEnabled(false);
         }
+        if (videoMediaPlayer != null) {
+            videoWallpaperPlaying = false;
+            try { videoMediaPlayer.pause(); } catch (Exception ignore) {}
+        }
         paused = true;
     }
 
     public void onResume() {
         if (parallaxEffect != null) {
             parallaxEffect.setEnabled(true);
+        }
+        if (videoMediaPlayer != null && !videoWallpaperPlaying) {
+            try { videoMediaPlayer.start(); videoWallpaperPlaying = true; } catch (Exception ignore) {}
         }
         paused = false;
     }
