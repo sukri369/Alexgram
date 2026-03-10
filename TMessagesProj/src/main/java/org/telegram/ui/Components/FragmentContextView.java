@@ -403,6 +403,10 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
             }
         };
         frameLayout.drawBlur = !isInsideBubble;
+        if (tw.nekomimi.nekogram.NekoConfig.liquidGlassUI.Bool()) {
+             frameLayout.setBackground(tw.nekomimi.nekogram.helpers.LiquidUIHelper.createLiquidDrawable());
+             frameLayout.setElevation(AndroidUtilities.dp(4));
+        }
         notifyButtonBounce = new ButtonBounce(frameLayout);
         notifyText.setOverrideFullWidth(AndroidUtilities.displaySize.x);
         notifyText.setScaleProperty(.4f);

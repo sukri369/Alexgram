@@ -4673,6 +4673,13 @@ public class ChatActivityEnterView extends FrameLayout implements
             Theme.chat_composeShadowDrawable.draw(canvas);
         }
 
+        if (tw.nekomimi.nekogram.NekoConfig.liquidGlassUI.Bool()) {
+             android.graphics.drawable.GradientDrawable liquidDrawable = tw.nekomimi.nekogram.helpers.LiquidUIHelper.createLiquidDrawable();
+             liquidDrawable.setBounds(0, bottom, getWidth(), getHeight());
+             liquidDrawable.draw(canvas);
+             return;
+        }
+
         if (allowBlur) {
             backgroundPaint.setColor(getThemedColor(Theme.key_chat_messagePanelBackground));
             if (SharedConfig.chatBlurEnabled() && sizeNotifierLayout != null) {
