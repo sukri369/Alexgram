@@ -1044,6 +1044,9 @@ public class ChatActivityEnterView extends FrameLayout implements
         public void updateColors() {
             int dotColor = getThemedColor(Theme.key_chat_recordedVoiceDot);
             int background = getThemedColor(Theme.key_chat_messagePanelBackground);
+            if (tw.nekomimi.nekogram.NekoConfig.liquidGlassUI.Bool()) {
+                background = 0x00000000;
+            }
             redDotPaint.setColor(dotColor);
             drawable.beginApplyLayerColors();
             drawable.setLayerColor("Cup Red.**", dotColor);
@@ -11072,7 +11075,20 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
         }
         audioVideoSendButton.setColorFilter(new PorterDuffColorFilter(audioVideoButtonContainerForbidden ? getThemedColor(Theme.key_glass_defaultIcon) : Color.WHITE, PorterDuff.Mode.SRC_IN));
         emojiButton.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_glass_defaultIcon), PorterDuff.Mode.SRC_IN));
-        emojiButton.setBackground(Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector)));
+        Drawable selector = Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector));
+        if (tw.nekomimi.nekogram.NekoConfig.liquidGlassUI.Bool()) {
+            selector = null;
+        }
+        emojiButton.setBackground(selector);
+        if (attachButton != null) attachButton.setBackground(selector != null ? Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector)) : null);
+        if (botButton != null) botButton.setBackground(selector != null ? Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector)) : null);
+        if (suggestButton != null) suggestButton.setBackground(selector != null ? Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector)) : null);
+        if (notifyButton != null) notifyButton.setBackgroundDrawable(selector != null ? Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector)) : null);
+        if (scheduledButton != null) scheduledButton.setBackground(selector != null ? Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector)) : null);
+        if (giftButton != null) giftButton.setBackground(selector != null ? Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector)) : null);
+        if (expandStickersButton != null) expandStickersButton.setBackground(selector != null ? Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector)) : null);
+        if (recordDeleteImageView != null) recordDeleteImageView.setBackgroundDrawable(selector != null ? Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector)) : null);
+        if (cancelBotButton != null) cancelBotButton.setBackgroundDrawable(selector != null ? Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector)) : null);
     }
 
     private void updateRecordedDeleteIconColors() {
