@@ -47872,7 +47872,27 @@ public class ChatActivity extends BaseFragment implements
                                     inputField.setEnabled(true);
                                     dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
                                     if (getParentActivity() != null) {
-                                        android.widget.Toast.makeText(getParentActivity(), "Error: " + error, android.widget.Toast.LENGTH_LONG).show();
+                                        android.widget.TextView errorView = new android.widget.TextView(getParentActivity());
+                                        errorView.setText(error);
+                                        errorView.setTextSize(16);
+                                        errorView.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
+                                        errorView.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(8), AndroidUtilities.dp(24), AndroidUtilities.dp(8));
+                                        errorView.setTextIsSelectable(true);
+
+                                        android.widget.ScrollView scrollView = new android.widget.ScrollView(getParentActivity());
+                                        scrollView.addView(errorView);
+
+                                        AlertDialog.Builder errorBuilder = new AlertDialog.Builder(getParentActivity());
+                                        errorBuilder.setTitle("Error");
+                                        errorBuilder.setView(scrollView);
+                                        errorBuilder.setPositiveButton("OK", null);
+                                        errorBuilder.setNeutralButton("Copy", (d, w) -> {
+                                            android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getParentActivity().getSystemService(android.content.Context.CLIPBOARD_SERVICE);
+                                            android.content.ClipData clip = android.content.ClipData.newPlainText("Error Log", error);
+                                            clipboard.setPrimaryClip(clip);
+                                            android.widget.Toast.makeText(getParentActivity(), "Copied to clipboard", android.widget.Toast.LENGTH_SHORT).show();
+                                        });
+                                        errorBuilder.show();
                                     }
                                 } catch (Throwable e) {
                                     e.printStackTrace();
