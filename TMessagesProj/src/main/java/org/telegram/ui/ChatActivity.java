@@ -18120,6 +18120,9 @@ public class ChatActivity extends BaseFragment implements
 
         @Override
         protected boolean isActionBarVisible() {
+            if (NaConfig.INSTANCE.getPillChatTitle().Bool() && isTitleCentered()) {
+                return false;
+            }
             return actionBar.getVisibility() == VISIBLE;
         }
 
