@@ -47865,7 +47865,9 @@ public class ChatActivity extends BaseFragment implements
 
                                 if (getParentActivity() != null) {
                                     android.widget.TextView summaryView = new android.widget.TextView(getParentActivity());
-                                    summaryView.setText(result);
+                                    // Make it beautiful: Parse Markdown using Telegram's internal parser
+                                    CharSequence formattedResult = tw.nekomimi.nekogram.helpers.EntitiesHelper.parseMarkdown(result);
+                                    summaryView.setText(formattedResult);
                                     summaryView.setTextSize(16);
                                     summaryView.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
                                     summaryView.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(8), AndroidUtilities.dp(24), AndroidUtilities.dp(8));
@@ -47881,6 +47883,7 @@ public class ChatActivity extends BaseFragment implements
                                     resultBuilder.setPositiveButton("Close", null);
                                     resultBuilder.setNeutralButton("Copy", (d, w) -> {
                                         android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getParentActivity().getSystemService(android.content.Context.CLIPBOARD_SERVICE);
+                                        // Copy raw markdown text so it can be pasted with formatting elsewhere or re-rendered
                                         android.content.ClipData clip = android.content.ClipData.newPlainText("Summary", result);
                                         clipboard.setPrimaryClip(clip);
                                         android.widget.Toast.makeText(getParentActivity(), "Copied to clipboard", android.widget.Toast.LENGTH_SHORT).show();
