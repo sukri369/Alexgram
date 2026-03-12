@@ -47993,6 +47993,20 @@ public class ChatActivity extends BaseFragment implements
             return;
         }
 
+        // Auto-detect Gemini Native API vs OpenAI Compatible API
+        // If URL contains googleapis but NOT openai, treat as Native Gemini
+        final boolean isGeminiNative = (apiUrl.contains("generativelanguage.googleapis.com") || apiUrl.contains("googleapis.com")) && !apiUrl.contains("openai");
+        String finalUrl = apiUrl;
+        
+        if (isGeminiNative && !apiUrl.contains(":generateContent")) {
+            // Append :generateContent if missing for native API
+            if (apiUrl.endsWith("/")) {
+                finalUrl = apiUrl.substring(0, apiUrl.length() - 1) + ":generateContent";
+            } else {
+                finalUrl = apiUrl + ":generateContent";
+            }
+        }
+
         try {
             OkHttpClient client = new OkHttpClient.Builder()
                     .connectTimeout(30, TimeUnit.SECONDS)
@@ -48000,55 +48014,99 @@ public class ChatActivity extends BaseFragment implements
                     .build();
 
             JSONObject jsonBody = new JSONObject();
-            jsonBody.put("model", "gpt-4o"); 
 
-            JSONArray messages = new JSONArray();
+            if (isGeminiNative) {
+                // --- GEMINI NATIVE FORMAT ---
+                JSONArray contents = new JSONArray();
+                JSONObject contentObj = new JSONObject();
+                JSONArray parts = new JSONArray();
 
-            JSONObject systemMsg = new JSONObject();
-            systemMsg.put("role", "system");
-            systemMsg.put("content", "You are a helpful assistant replying to a message in a chat.");
-            messages.put(systemMsg);
+                // Combine text parts (System + Context + User)
+                String combinedText = "System Instruction: You are a helpful assistant replying to a message in a chat.\n\n" +
+                        "Context Message:\n---\n" + originalMessageText + "\n---\n\n" +
+                        "User Request: " + userPrompt;
+                
+                JSONObject textPart = new JSONObject();
+                textPart.put("text", combinedText);
+                parts.put(textPart);
 
-            JSONObject userMsg = new JSONObject();
-            userMsg.put("role", "user");
-
-            JSONArray contentArray = new JSONArray();
-
-            JSONObject textPart = new JSONObject();
-            textPart.put("type", "text");
-            String content = "Context Message:\n---\n" + originalMessageText + "\n---\n\nUser Instruction: " + userPrompt;
-            textPart.put("text", content);
-            contentArray.put(textPart);
-
-            if (imageFile != null) {
-                try {
-                    byte[] fileBytes = readBytes(imageFile);
-                    if (fileBytes != null && fileBytes.length > 0) {
-                        String base64Image = android.util.Base64.encodeToString(fileBytes, android.util.Base64.NO_WRAP);
-                        
-                        JSONObject imagePart = new JSONObject();
-                        imagePart.put("type", "image_url");
-                        JSONObject imageUrl = new JSONObject();
-                        imageUrl.put("url", "data:image/jpeg;base64," + base64Image);
-                        imagePart.put("image_url", imageUrl);
-                        contentArray.put(imagePart);
-                    }
-                } catch (Throwable e) {
-                    // ignore image error
+                // Image Handling
+                if (imageFile != null) {
+                    try {
+                        byte[] fileBytes = readBytes(imageFile);
+                        if (fileBytes != null && fileBytes.length > 0) {
+                            String base64Image = android.util.Base64.encodeToString(fileBytes, android.util.Base64.NO_WRAP);
+                            JSONObject imagePart = new JSONObject();
+                            JSONObject inlineData = new JSONObject();
+                            inlineData.put("mime_type", "image/jpeg");
+                            inlineData.put("data", base64Image);
+                            imagePart.put("inline_data", inlineData);
+                            parts.put(imagePart);
+                        }
+                    } catch (Throwable e) { /* ignore image error */ }
                 }
+
+                contentObj.put("parts", parts);
+                contents.put(contentObj);
+                jsonBody.put("contents", contents);
+
+            } else {
+                // --- OPENAI FORMAT (Standard) ---
+                jsonBody.put("model", "gpt-4o"); 
+
+                JSONArray messages = new JSONArray();
+
+                JSONObject systemMsg = new JSONObject();
+                systemMsg.put("role", "system");
+                systemMsg.put("content", "You are a helpful assistant replying to a message in a chat.");
+                messages.put(systemMsg);
+
+                JSONObject userMsg = new JSONObject();
+                userMsg.put("role", "user");
+
+                JSONArray contentArray = new JSONArray();
+
+                JSONObject textPart = new JSONObject();
+                textPart.put("type", "text");
+                String content = "Context Message:\n---\n" + originalMessageText + "\n---\n\nUser Instruction: " + userPrompt;
+                textPart.put("text", content);
+                contentArray.put(textPart);
+
+                if (imageFile != null) {
+                    try {
+                        byte[] fileBytes = readBytes(imageFile);
+                        if (fileBytes != null && fileBytes.length > 0) {
+                            String base64Image = android.util.Base64.encodeToString(fileBytes, android.util.Base64.NO_WRAP);
+                            
+                            JSONObject imagePart = new JSONObject();
+                            imagePart.put("type", "image_url");
+                            JSONObject imageUrl = new JSONObject();
+                            imageUrl.put("url", "data:image/jpeg;base64," + base64Image);
+                            imagePart.put("image_url", imageUrl);
+                            contentArray.put(imagePart);
+                        }
+                    } catch (Throwable e) {
+                        // ignore image error
+                    }
+                }
+
+                userMsg.put("content", contentArray);
+                messages.put(userMsg);
+
+                jsonBody.put("messages", messages);
             }
 
-            userMsg.put("content", contentArray);
-            messages.put(userMsg);
-
-            jsonBody.put("messages", messages);
-
             Request.Builder requestBuilder = new Request.Builder()
-                    .url(apiUrl)
+                    .url(finalUrl)
                     .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), jsonBody.toString()));
 
             if (!android.text.TextUtils.isEmpty(apiKey)) {
-                requestBuilder.addHeader("Authorization", "Bearer " + apiKey);
+                if (isGeminiNative) {
+                    // Google prefer x-goog-api-key for API keys
+                    requestBuilder.addHeader("x-goog-api-key", apiKey);
+                } else {
+                    requestBuilder.addHeader("Authorization", "Bearer " + apiKey);
+                }
             }
 
             client.newCall(requestBuilder.build()).enqueue(new Callback() {
@@ -48067,17 +48125,40 @@ public class ChatActivity extends BaseFragment implements
                         }
 
                         JSONObject jsonResponse = new JSONObject(responseBody);
-                        if (jsonResponse.has("choices")) {
-                             JSONArray choices = jsonResponse.getJSONArray("choices");
-                             if (choices.length() > 0) {
-                                 JSONObject message = choices.getJSONObject(0).getJSONObject("message");
-                                 String reply = message.getString("content");
-                                 callback.onSuccess(reply);
-                             } else {
-                                 callback.onError("No choices in response");
+                        
+                        if (isGeminiNative) {
+                             // Parse Gemini Response
+                             if (jsonResponse.has("candidates")) {
+                                 JSONArray candidates = jsonResponse.getJSONArray("candidates");
+                                 if (candidates.length() > 0) {
+                                     JSONObject candidate = candidates.getJSONObject(0);
+                                     if (candidate.has("content")) {
+                                         JSONObject content = candidate.getJSONObject("content");
+                                         JSONArray parts = content.getJSONArray("parts");
+                                         if (parts.length() > 0) {
+                                             String reply = parts.getJSONObject(0).getString("text");
+                                             callback.onSuccess(reply);
+                                             return;
+                                         }
+                                     }
+                                 }
                              }
+                             callback.onError("No text generated (Safety Filter or Empty): " + responseBody);
                         } else {
-                            callback.onError("Unexpected JSON format: " + responseBody);
+                            // Parse OpenAI Response
+                            if (jsonResponse.has("choices")) {
+                                 JSONArray choices = jsonResponse.getJSONArray("choices");
+                                 if (choices.length() > 0) {
+                                     JSONObject message = choices.getJSONObject(0).getJSONObject("message");
+                                     String reply = message.getString("content");
+                                     callback.onSuccess(reply);
+                                     return;
+                                 } else {
+                                     callback.onError("No choices in response");
+                                 }
+                            } else {
+                                callback.onError("Unexpected JSON format: " + responseBody);
+                            }
                         }
                     } catch (Throwable e) {
                         callback.onError("Parse/Response crash: " + e.getMessage());
