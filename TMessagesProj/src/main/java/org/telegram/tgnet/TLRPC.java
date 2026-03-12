@@ -35607,6 +35607,9 @@ public class TLRPC {
                 case TL_messageEntityCustomEmoji.constructor:
                     result = new TL_messageEntityCustomEmoji();
                     break;
+                case TL_messageEntityFormattedDate.constructor:
+                    result = new TL_messageEntityFormattedDate();
+                    break;
             }
             return TLdeserialize(MessageEntity.class, result, stream, constructor, exception);
         }
@@ -35653,6 +35656,45 @@ public class TLRPC {
             }
 
             return null;
+        }
+    }
+
+    public static class TL_messageEntityFormattedDate extends MessageEntity {
+        public static final int constructor = 0x826f8b61;
+
+        public int date;
+        public boolean relative;
+        public boolean day_of_week;
+        public boolean long_date;
+        public boolean short_date;
+        public boolean long_time;
+        public boolean short_time;
+
+        public void readParams(InputSerializedData stream, boolean exception) {
+            flags = stream.readInt32(exception);
+            relative = (flags & 1) != 0;
+            day_of_week = (flags & 2) != 0;
+            long_date = (flags & 4) != 0;
+            short_date = (flags & 8) != 0;
+            long_time = (flags & 16) != 0;
+            short_time = (flags & 32) != 0;
+            offset = stream.readInt32(exception);
+            length = stream.readInt32(exception);
+            date = stream.readInt32(exception);
+        }
+
+        public void serializeToStream(OutputSerializedData stream) {
+            stream.writeInt32(constructor);
+            flags = relative ? (flags | 1) : (flags & ~1);
+            flags = day_of_week ? (flags | 2) : (flags & ~2);
+            flags = long_date ? (flags | 4) : (flags & ~4);
+            flags = short_date ? (flags | 8) : (flags & ~8);
+            flags = long_time ? (flags | 16) : (flags & ~16);
+            flags = short_time ? (flags | 32) : (flags & ~32);
+            stream.writeInt32(flags);
+            stream.writeInt32(offset);
+            stream.writeInt32(length);
+            stream.writeInt32(date);
         }
     }
 
