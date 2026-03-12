@@ -4743,7 +4743,7 @@ public class AlertsCreator {
             return null;
         }
 
-        ScheduleDatePickerColors datePickerColors = new ScheduleDatePickerColors(resourcesProvider);
+        ScheduleDatePickerColors datePickerColors = new ScheduleDatePickerColors(null);
         BottomSheet.Builder builder = new BottomSheet.Builder(context, false);
         builder.setApplyBottomPadding(false);
 

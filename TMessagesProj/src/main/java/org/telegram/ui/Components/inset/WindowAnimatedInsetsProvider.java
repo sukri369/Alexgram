@@ -127,5 +127,7 @@ public class WindowAnimatedInsetsProvider extends WindowInsetsAnimationCompat.Ca
     public interface Listener {
         View getAnimatedInsetsTargetView();
         void onAnimatedInsetsChanged(View view, WindowInsetsCompat insets);
+        default void onAnimatedInsetsStarted() {}
+        default void onAnimatedInsetsFinished() {}
     }
 }

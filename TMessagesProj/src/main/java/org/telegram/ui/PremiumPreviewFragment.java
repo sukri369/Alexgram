@@ -236,6 +236,22 @@ public class PremiumPreviewFragment extends BaseFragment implements Notification
     public final static int PREMIUM_FEATURE_TODO = 39;
 
     public final static int FEATURE_GIFTS = 40;
+    public final static int PREMIUM_FEATURE_SHARING_DISABLE = 41;
+
+    private BlurredBackgroundWithFadeDrawable navbarProtectionDrawable;
+    private final @Nullable DownscaleScrollableNoiseSuppressor scrollableViewNoiseSuppressor;
+    private final @Nullable BlurredBackgroundSourceRenderNode iBlur3SourceGlassFrosted;
+    private final @NonNull BlurredBackgroundSource iBlur3Source;
+    private final @NonNull BlurredBackgroundDrawableViewFactory iBlur3Factory;
+    private final @NonNull BlurredBackgroundDrawableViewFactory iBlur3FactoryBg;
+    private IBlur3Capture iBlur3Capture;
+
+    private void blur3_InvalidateBlur() {
+        if (Build.VERSION.SDK_INT < 31 || scrollableViewNoiseSuppressor == null) {
+            return;
+        }
+        scrollableViewNoiseSuppressor.invalidateResultRenderNodes(iBlur3Capture, contentView.getMeasuredWidth(), contentView.getMeasuredHeight());
+    }
 
     private int statusBarHeight;
     private int firstViewHeight;

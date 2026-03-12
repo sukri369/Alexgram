@@ -18,6 +18,12 @@
     <string name="WrongCountry">Invalid country code</string>
     <string name="AccountAlreadyLoggedIn">This account is already logged in from this app.</string>
     <string name="AccountSwitch">Switch</string>
+    <string name="FormattedDate">Formatted Date</string>
+    <string name="RelativeDateFormatterWeek2">%1$s, %2$s</string>
+    <string name="formatterDayWithSeconds24H">HH:mm:ss</string>
+    <string name="formatterDayWithSeconds12H">h:mm:ss a</string>
+    <string name="PremiumPreviewSharingDisable">Disable Sharing</string>
+    <string name="PremiumPreviewSharingDisableDescription">Disable forwarding and saving of your messages.</string>
     <string name="SyncContacts">Sync Contacts</string>
     <string name="SyncContactsOn">Contacts from this device will be added to this account.</string>
     <string name="SyncContactsOff">Contacts from this device will not be added to this account.</string>
