@@ -1426,6 +1426,12 @@ object NaConfig {
             ConfigItem.configTypeBool,
             false
         )
+    val enableSummarizeChat =
+        addConfig(
+            "enableSummarizeChat",
+            ConfigItem.configTypeBool,
+            false
+        )
     val aiModelUrl =
         addConfig(
             "aiModelUrl",

@@ -1315,6 +1315,7 @@ public class ChatActivity extends BaseFragment implements
     public final static int OPTION_SUGGESTION_EDIT_MESSAGE = 113;
     public final static int OPTION_SUGGESTION_ADD_OFFER = 114;
     public final static int OPTION_AI_REPLY = 200;
+    public final static int OPTION_SUMMARIZE_CHAT = 201;
 
     private final static int OPTION_COPY_PHOTO = 150;
     private final static int OPTION_COPY_PHOTO_AS_STICKER = 151;
@@ -31510,6 +31511,11 @@ public class ChatActivity extends BaseFragment implements
                 options.add(OPTION_AI_REPLY);
                 icons.add(R.drawable.msg_customize);
             }
+            if (xyz.nextalone.nagram.NaConfig.INSTANCE.getEnableSummarizeChat().Bool() && (message.type == MessageObject.TYPE_TEXT || message.isPhoto())) {
+                items.add("Summarize");
+                options.add(OPTION_SUMMARIZE_CHAT);
+                icons.add(R.drawable.msg_customize);
+            }
 
             // AyuMoments menu start
             if (NaConfig.INSTANCE.getEnableSaveEditsHistory().Bool()
@@ -33714,6 +33720,9 @@ public class ChatActivity extends BaseFragment implements
         switch (option) {
             case OPTION_AI_REPLY:
                 showAiReplyDialog();
+                break;
+            case OPTION_SUMMARIZE_CHAT:
+                showAiSummaryDialog();
                 break;
             case AyuConstants.OPTION_HISTORY:
                 presentFragment(new AyuMessageHistory(selectedObject));
@@ -47802,6 +47811,135 @@ public class ChatActivity extends BaseFragment implements
     }
 
     // START AI REPLY GENERATION LOGIC
+
+    private void showAiSummaryDialog() {
+        try {
+            if (selectedObject == null || getParentActivity() == null) {
+                return;
+            }
+            final MessageObject messageToSummarize = selectedObject;
+
+            final android.widget.EditText inputField = new android.widget.EditText(getParentActivity());
+            inputField.setBackground(Theme.createEditTextDrawable(getParentActivity(), false));
+            inputField.setTextSize(16);
+            inputField.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
+            inputField.setHint("Check summary instructions (Optional)...");
+            inputField.setHintTextColor(Theme.getColor(Theme.key_dialogTextHint));
+            inputField.setPadding(AndroidUtilities.dp(4), AndroidUtilities.dp(4), AndroidUtilities.dp(4), AndroidUtilities.dp(4));
+
+            android.widget.LinearLayout container = new android.widget.LinearLayout(getParentActivity());
+            container.setOrientation(android.widget.LinearLayout.VERTICAL);
+            container.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(8), AndroidUtilities.dp(24), 0);
+            container.addView(inputField, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+            builder.setTitle("AI Summary");
+            builder.setView(container);
+            builder.setPositiveButton("Summarize", null); 
+            builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+
+            AlertDialog dialog = builder.create();
+            dialog.show();
+
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+                try {
+                    String userInstruction = inputField.getText().toString().trim();
+                    String prompt = "Please summarize the following message concisely and beautifully, using bullet points or paragraphs as appropriate to make it easy to read.";
+                    if (!android.text.TextUtils.isEmpty(userInstruction)) {
+                        prompt = "Please summarize the following message based on this instruction: " + userInstruction;
+                    }
+
+                    // Show loading
+                    final android.widget.ProgressBar progressBar = new android.widget.ProgressBar(getParentActivity());
+                    container.addView(progressBar, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, android.view.Gravity.CENTER, 0, 16, 0, 0));
+                    inputField.setEnabled(false);
+                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+
+                    startAiGeneration(prompt, messageToSummarize, new AiGenerationCallback() {
+                        @Override
+                        public void onSuccess(String result) {
+                            AndroidUtilities.runOnUIThread(() -> {
+                                try {
+                                    if (dialog.isShowing()) dialog.dismiss();
+                                } catch (Throwable e) { /* ignore */ }
+
+                                if (getParentActivity() != null) {
+                                    android.widget.TextView summaryView = new android.widget.TextView(getParentActivity());
+                                    summaryView.setText(result);
+                                    summaryView.setTextSize(16);
+                                    summaryView.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
+                                    summaryView.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(8), AndroidUtilities.dp(24), AndroidUtilities.dp(8));
+                                    summaryView.setTextIsSelectable(true);
+                                    summaryView.setMovementMethod(new android.text.method.ScrollingMovementMethod());
+
+                                    android.widget.ScrollView scrollView = new android.widget.ScrollView(getParentActivity());
+                                    scrollView.addView(summaryView);
+
+                                    AlertDialog.Builder resultBuilder = new AlertDialog.Builder(getParentActivity());
+                                    resultBuilder.setTitle("Summary Result");
+                                    resultBuilder.setView(scrollView);
+                                    resultBuilder.setPositiveButton("Close", null);
+                                    resultBuilder.setNeutralButton("Copy", (d, w) -> {
+                                        android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getParentActivity().getSystemService(android.content.Context.CLIPBOARD_SERVICE);
+                                        android.content.ClipData clip = android.content.ClipData.newPlainText("Summary", result);
+                                        clipboard.setPrimaryClip(clip);
+                                        android.widget.Toast.makeText(getParentActivity(), "Copied to clipboard", android.widget.Toast.LENGTH_SHORT).show();
+                                    });
+                                    resultBuilder.show();
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void onError(String error) {
+                            AndroidUtilities.runOnUIThread(() -> {
+                                try {
+                                    container.removeView(progressBar);
+                                    inputField.setEnabled(true);
+                                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
+                                    if (getParentActivity() != null) {
+                                        android.widget.TextView errorView = new android.widget.TextView(getParentActivity());
+                                        errorView.setText(error);
+                                        errorView.setTextSize(16);
+                                        errorView.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
+                                        errorView.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(8), AndroidUtilities.dp(24), AndroidUtilities.dp(8));
+                                        errorView.setTextIsSelectable(true);
+
+                                        android.widget.ScrollView scrollView = new android.widget.ScrollView(getParentActivity());
+                                        scrollView.addView(errorView);
+
+                                        AlertDialog.Builder errorBuilder = new AlertDialog.Builder(getParentActivity());
+                                        errorBuilder.setTitle("Error");
+                                        errorBuilder.setView(scrollView);
+                                        errorBuilder.setPositiveButton("OK", null);
+                                        errorBuilder.setNeutralButton("Copy", (d, w) -> {
+                                            android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getParentActivity().getSystemService(android.content.Context.CLIPBOARD_SERVICE);
+                                            android.content.ClipData clip = android.content.ClipData.newPlainText("Error Log", error);
+                                            clipboard.setPrimaryClip(clip);
+                                            android.widget.Toast.makeText(getParentActivity(), "Copied to clipboard", android.widget.Toast.LENGTH_SHORT).show();
+                                        });
+                                        errorBuilder.show();
+                                    }
+                                } catch (Throwable e) {
+                                    e.printStackTrace();
+                                }
+                            });
+                        }
+                    });
+                } catch (Throwable e) {
+                    if (getParentActivity() != null) {
+                        android.widget.Toast.makeText(getParentActivity(), "Crash in Start: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
+                    }
+                    e.printStackTrace();
+                }
+            });
+        } catch (Throwable e) {
+            if (getParentActivity() != null) {
+                android.widget.Toast.makeText(getParentActivity(), "Dialog Crash: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
+            }
+            e.printStackTrace();
+        }
+    }
 
     private void showAiReplyDialog() {
         try {
