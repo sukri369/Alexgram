@@ -18126,6 +18126,14 @@ public class ChatActivity extends BaseFragment implements
             return actionBar.getVisibility() == VISIBLE;
         }
 
+        @Override
+        protected boolean isStatusBarVisible() {
+            if (NaConfig.INSTANCE.getPillChatTitle().Bool() && isTitleCentered()) {
+                return false;
+            }
+            return true;
+        }
+
         private void drawChildElement(Canvas canvas, float listTop, ChatMessageCell cell, int type, boolean hideBottomForGesture) {
             int restoreCount = canvas.save();
             float canvasOffsetX = chatListView.getLeft() + cell.getX();
