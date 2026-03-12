@@ -522,10 +522,10 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
 
             if (titleTextView != null && titleTextView.getVisibility() == VISIBLE && titleTextView.getAlpha() > 0) {
                 float titleLeft = titleTextView.getLeft();
-                float titleRight = titleTextView.getLeft() + titleTextView.getTextWidth();
+                float titleRight = titleTextView.getLeft() + Math.min(titleTextView.getTextWidth(), titleTextView.getMeasuredWidth());
                 if (isCentered()) {
                     float cx = titleTextView.getLeft() + titleTextView.getMeasuredWidth() / 2f;
-                    float halfW = titleTextView.getTextWidth() / 2f;
+                    float halfW = Math.min(titleTextView.getTextWidth(), titleTextView.getMeasuredWidth()) / 2f;
                     titleLeft = cx - halfW;
                     titleRight = cx + halfW;
                 }
@@ -547,11 +547,12 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                     subTextWidth = ((AnimatedTextView) sub).getDrawable().getCurrentWidth();
                     subTextHeight = sub.getMeasuredHeight();
                 }
+                float visibleSubTextWidth = Math.min(subTextWidth, sub.getMeasuredWidth());
                 float subLeft = sub.getLeft();
-                float subRight = sub.getLeft() + subTextWidth;
+                float subRight = sub.getLeft() + visibleSubTextWidth;
                 if (isCentered()) {
                     float cx = sub.getLeft() + sub.getMeasuredWidth() / 2f;
-                    float halfW = subTextWidth / 2f;
+                    float halfW = visibleSubTextWidth / 2f;
                     subLeft = cx - halfW;
                     subRight = cx + halfW;
                 }

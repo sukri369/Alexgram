@@ -4667,6 +4667,10 @@ public class ChatActivity extends BaseFragment implements
 
         ActionBarMenu menu = actionBar.createMenu();
         menu.setCenteredTitle(isTitleCentered());
+        if (NaConfig.INSTANCE.getPillChatTitle().Bool() && isTitleCentered()) {
+            actionBar.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+            actionBar.setShadowAlpha(0);
+        }
 
         if (isThreadChat() && threadMessageId != 0 && !isTopic) {
             viewInChatItem = menu.addItem(nkbtn_view_in_chat, R.drawable.msg_viewreplies);
