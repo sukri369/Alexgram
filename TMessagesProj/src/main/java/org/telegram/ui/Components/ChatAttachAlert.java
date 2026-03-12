@@ -189,20 +189,10 @@ import me.vkryl.android.animator.ReplaceAnimator;
 
 public class ChatAttachAlert extends BottomSheet implements NotificationCenter.NotificationCenterDelegate, BottomSheet.BottomSheetDelegateInterface, FactorAnimator.Target {
 
-    private static final int LAYOUT_TYPE_PHOTO = 1;
-    private static final int LAYOUT_TYPE_MUSIC = 3;
-    private static final int LAYOUT_TYPE_DOCUMENTS = 4;
-    private static final int LAYOUT_TYPE_CONTACTS = 5;
-    private static final int LAYOUT_TYPE_LOCATION = 6;
-    private static final int LAYOUT_TYPE_POLL = 9;
-    private static final int LAYOUT_TYPE_REPLIES = 11;
-    private static final int LAYOUT_TYPE_TODO = 12;
-
     private static final int ANIMATOR_ID_CAPTION_ABOVE = 0;
     private static final int ANIMATOR_ID_CAPTION_VISIBLE = 1;
     private static final int ANIMATOR_ID_ACTIONBAR_VISIBLE = 2;
     private static final int ANIMATOR_ID_CAPTION_NOT_EMPTY = 3;
-    private static final int ANIMATOR_ID_TOGGLE_CAPTION_SUPPORTED = 4;
 
     private final BoolAnimator animatorCaptionAbove = new BoolAnimator(ANIMATOR_ID_CAPTION_ABOVE, this,
         CubicBezierInterpolator.EASE_OUT_QUINT, 380L);
@@ -211,8 +201,6 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
     private final BoolAnimator animatorActionBarVisible = new BoolAnimator(ANIMATOR_ID_ACTIONBAR_VISIBLE, this,
         CubicBezierInterpolator.EASE_OUT_QUINT, 380L);
     private final BoolAnimator animatorCaptionNotEmpty = new BoolAnimator(ANIMATOR_ID_CAPTION_NOT_EMPTY, this,
-        CubicBezierInterpolator.EASE_OUT_QUINT, 380L);
-    private final BoolAnimator animatorToggleCaptionSupported = new BoolAnimator(ANIMATOR_ID_TOGGLE_CAPTION_SUPPORTED, this,
         CubicBezierInterpolator.EASE_OUT_QUINT, 380L);
     private final ReplaceAnimator<Long> animatorCurrentVisibleLayout = new ReplaceAnimator<>(this::onCurrentLayoutAnimatorChanged,
         CubicBezierInterpolator.EASE_OUT_QUINT, 380L);
@@ -618,18 +606,8 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
         } else if (id == ANIMATOR_ID_CAPTION_VISIBLE) {
             checkUi_bottomFade();
         } else if (id == ANIMATOR_ID_CAPTION_NOT_EMPTY) {
-            checkUi_moveCaptionButtonVisibility();
-        } else if (id == ANIMATOR_ID_TOGGLE_CAPTION_SUPPORTED) {
-            checkUi_moveCaptionButtonVisibility();
+            FragmentFloatingButton.setAnimatedVisibility(moveCaptionButton, factor);
         }
-    }
-
-    public void checkUi_moveCaptionButtonVisibility() {
-        final float factor1 = animatorCaptionNotEmpty.getFloatValue();
-        final float factor2 = animatorToggleCaptionSupported.getFloatValue();
-        final float factor = factor1 * factor2;
-
-        FragmentFloatingButton.setAnimatedVisibility(moveCaptionButton, factor);
     }
 
     public interface ChatAttachViewDelegate {
@@ -4261,23 +4239,23 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
         if (layout == restrictedLayout) {
             newId = restrictedLayout.id;
         } else if (layout == photoLayout) {
-            newId = LAYOUT_TYPE_PHOTO;
+            newId = 1;
         } else if (layout == audioLayout) {
-            newId = LAYOUT_TYPE_MUSIC;
+            newId = 3;
         } else if (layout == documentLayout) {
-            newId = LAYOUT_TYPE_DOCUMENTS;
+            newId = 4;
         } else if (layout == contactsLayout) {
-            newId = LAYOUT_TYPE_CONTACTS;
+            newId = 5;
         } else if (layout == locationLayout) {
-            newId = LAYOUT_TYPE_LOCATION;
+            newId = 6;
         } else if (layout == pollLayout) {
-            newId = LAYOUT_TYPE_POLL;
+            newId = 9;
         } else if (layout == colorsLayout) {
             newId = 10;
         } else if (layout == quickRepliesLayout) {
-            newId = LAYOUT_TYPE_REPLIES;
+            newId = 11;
         } else if (layout == todoLayout) {
-            newId = LAYOUT_TYPE_TODO;
+            newId = 12;
         }
         showLayout(layout, newId);
     }
@@ -4299,7 +4277,6 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
             return;
         }
 
-        animatorToggleCaptionSupported.setValue(newId == LAYOUT_TYPE_PHOTO, animated);
         animatorCurrentVisibleLayout.replace(newId, animated);
 
         botButtonWasVisible = false;

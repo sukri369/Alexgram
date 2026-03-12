@@ -4743,7 +4743,7 @@ public class AlertsCreator {
             return null;
         }
 
-        ScheduleDatePickerColors datePickerColors = new ScheduleDatePickerColors(null);
+        ScheduleDatePickerColors datePickerColors = new ScheduleDatePickerColors();
         BottomSheet.Builder builder = new BottomSheet.Builder(context, false);
         builder.setApplyBottomPadding(false);
 
@@ -5529,8 +5529,9 @@ public class AlertsCreator {
                 case 9: return LocaleController.getString(R.string.October);
                 case 10: return LocaleController.getString(R.string.November);
                 case 11:
-                default:
+                default: {
                     return LocaleController.getString(R.string.December);
+                }
             }
         });
         monthPicker.setOnValueChangedListener(onValueChangeListener);

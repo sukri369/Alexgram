@@ -55,8 +55,6 @@ import java.util.Collections;
 
 public class OAuthSheet {
 
-    private static final ArrayList<Integer> accountNumbers = new ArrayList<>();
-
     public static void handle(boolean external, int currentAccount, TLRPC.TL_messages_requestUrlAuth request, TLRPC.UrlAuthResult result) {
         handle(external, currentAccount, request, result, null, null, false);
     }
@@ -122,10 +120,10 @@ public class OAuthSheet {
         FrameLayout container = new FrameLayout(context);
         b.setCustomView(container);
 
-        final boolean testBackend = ConnectionsManager.getInstance(currentAccount).isTestBackend();
+        final ArrayList<Integer> accountNumbers = new ArrayList<>();
         accountNumbers.clear();
         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-            if (UserConfig.getInstance(a).isClientActivated() && ConnectionsManager.getInstance(a).isTestBackend() == testBackend) {
+            if (UserConfig.getInstance(a).isClientActivated()) {
                 accountNumbers.add(a);
             }
         }

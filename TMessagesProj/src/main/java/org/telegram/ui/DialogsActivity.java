@@ -592,9 +592,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     @Nullable
     private ActionBarMenuSubItem blockItem;
 
-    // Live video wallpaper view — kept as a field so lifecycle hooks can pause it.
-    private tw.nekomimi.nekogram.settings.VideoBackgroundView videoBgView;
-
     private float additionalFloatingTranslation;
     private float floatingButtonPanOffset;
 
@@ -3616,7 +3613,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     }
                 }
             };
-            filterTabsView.setVisibility(View.GONE);
             canShowFilterTabsView = false;
             animatorFilterTabsVisible.setValue(false, false);
             filterTabsView.setDelegate(new FilterTabsView.FilterTabsViewDelegate() {
@@ -4170,8 +4166,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     }
                 }
             };
-            videoBgView = new tw.nekomimi.nekogram.settings.VideoBackgroundView(context);
-            videoContainer.addView(videoBgView, org.telegram.ui.Components.LayoutHelper.createFrame(org.telegram.ui.Components.LayoutHelper.MATCH_PARENT, org.telegram.ui.Components.LayoutHelper.MATCH_PARENT));
+            tw.nekomimi.nekogram.settings.VideoBackgroundView videoBg = new tw.nekomimi.nekogram.settings.VideoBackgroundView(context);
+            videoContainer.addView(videoBg, org.telegram.ui.Components.LayoutHelper.createFrame(org.telegram.ui.Components.LayoutHelper.MATCH_PARENT, org.telegram.ui.Components.LayoutHelper.MATCH_PARENT));
             contentView.addView(videoContainer, 0, org.telegram.ui.Components.LayoutHelper.createFrame(org.telegram.ui.Components.LayoutHelper.MATCH_PARENT, org.telegram.ui.Components.LayoutHelper.WRAP_CONTENT));
         }
 
@@ -7459,10 +7455,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         super.onBecomeFullyHidden();
         checkUi_mainTabsVisible();
         canShowStoryHint = true;
-        // Release the decoder so round video messages in ChatActivity can use it.
-        if (videoBgView != null) {
-            videoBgView.stopAndRelease();
-        }
     }
 
     @Override
@@ -7487,10 +7479,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             storyHint.show();
         }
         AndroidUtilities.runOnUIThread(this::createSearchViewPager, 200);
-        // Restart the wallpaper now that we're back on the dialogs screen.
-        if (videoBgView != null) {
-            videoBgView.restartPlayback();
-        }
     }
 
     private void showArchiveHelp() {
@@ -13616,7 +13604,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     public boolean isSupportEdgeToEdge() {
         return true;
     }
-
     @Override
     public boolean drawEdgeNavigationBar() {
         return false;

@@ -1,11 +1,13 @@
 package tw.nekomimi.nekogram.settings;
 
 import android.content.Context;
-import android.graphics.PixelFormat;
+import android.graphics.Matrix;
+import android.graphics.SurfaceTexture;
 import android.media.MediaPlayer;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
+import android.view.Surface;
+import android.view.TextureView;
 import android.widget.FrameLayout;
+
 import android.widget.ImageView;
 
 import org.telegram.messenger.FileLog;
@@ -15,28 +17,20 @@ import java.io.File;
 
 import tw.nekomimi.nekogram.NekoConfig;
 
-/**
- * VideoBackgroundView — live wallpaper for the dialogs header.
- *
- * Uses SurfaceView instead of TextureView so its Surface is composited in a
- * completely separate sub-window layer.  This guarantees zero conflict with the
- * TextureView / SurfaceTexture used by round video messages in ChatActivity,
- * which previously caused round videos to appear blank whenever this view was
- * alive and holding a hardware decoder instance.
- */
-public class VideoBackgroundView extends FrameLayout implements SurfaceHolder.Callback {
+public class VideoBackgroundView extends FrameLayout implements TextureView.SurfaceTextureListener {
 
-    private SurfaceView surfaceView;
+    private TextureView textureView;
     private ImageView imageView;
     private MediaPlayer mediaPlayer;
+    private Surface surface;
     private String currentVideoPath;
     private boolean isImage;
-    private boolean surfaceReady = false;
 
     public VideoBackgroundView(Context context) {
         super(context);
-
+        
         currentVideoPath = NekoConfig.videoHeaderPath.String();
+        
         isImage = isImageFile(currentVideoPath);
 
         if (isImage) {
@@ -51,106 +45,148 @@ public class VideoBackgroundView extends FrameLayout implements SurfaceHolder.Ca
             }
             addView(imageView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
         } else {
-            surfaceView = new SurfaceView(context);
-            // Place the surface BEHIND the window so round-video TextureViews
-            // (which are inline in the view hierarchy) always render on top.
-            surfaceView.setZOrderOnTop(false);
-            surfaceView.setZOrderMediaOverlay(false);
-            surfaceView.getHolder().setFormat(PixelFormat.RGB_888);
-            surfaceView.getHolder().addCallback(this);
-            addView(surfaceView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+            textureView = new TextureView(context);
+            textureView.setSurfaceTextureListener(this);
+            addView(textureView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
         }
     }
 
     private boolean isImageFile(String path) {
         if (path == null) return false;
         String lower = path.toLowerCase();
-        return lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".png")
-                || lower.endsWith(".webp") || lower.endsWith(".bmp") || lower.endsWith(".gif");
+        return lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".png") || lower.endsWith(".webp") || lower.endsWith(".bmp") || lower.endsWith(".gif");
     }
 
-    // ── SurfaceHolder.Callback ──────────────────────────────────────────────
+    private void initMediaPlayer(Surface surface) {
+        if (isImage || currentVideoPath == null || currentVideoPath.isEmpty()) {
+            return;
+        }
 
-    @Override
-    public void surfaceCreated(SurfaceHolder holder) {
-        surfaceReady = true;
-        initMediaPlayer(holder);
-    }
-
-    @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-        // nothing needed — MediaPlayer adapts to the surface dimensions
-    }
-
-    @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {
-        surfaceReady = false;
-        releaseMediaPlayer();
-    }
-
-    // ── MediaPlayer lifecycle ────────────────────────────────────────────────
-
-    private void initMediaPlayer(SurfaceHolder holder) {
-        if (isImage || currentVideoPath == null || currentVideoPath.isEmpty()) return;
         File file = new File(currentVideoPath);
-        if (!file.exists()) return;
+        if (!file.exists()) {
+            return; // Video file not found
+        }
 
         try {
-            releaseMediaPlayer(); // safety — ensure no stale instance
             mediaPlayer = new MediaPlayer();
             mediaPlayer.setDataSource(currentVideoPath);
-            mediaPlayer.setDisplay(holder);
+            mediaPlayer.setSurface(surface);
             mediaPlayer.setLooping(true);
-            mediaPlayer.setVolume(0f, 0f);
-            mediaPlayer.setOnPreparedListener(MediaPlayer::start);
-            mediaPlayer.setOnErrorListener((mp, what, extra) -> {
-                FileLog.e("VideoBackgroundView MediaPlayer error: " + what + "/" + extra);
-                releaseMediaPlayer();
-                return true;
+            mediaPlayer.setVolume(0f, 0f); // Silent background video
+            
+            mediaPlayer.setOnVideoSizeChangedListener((mp, width, height) -> {
+                updateTextureViewSize(width, height);
             });
+            
+            mediaPlayer.setOnPreparedListener(mp -> {
+                mp.start();
+            });
+            
             mediaPlayer.prepareAsync();
         } catch (Exception e) {
-            FileLog.e("VideoBackgroundView init error", e);
+            FileLog.e("Error initializing VideoBackgroundView", e);
             releaseMediaPlayer();
         }
     }
 
+    private void updateTextureViewSize(int videoWidth, int videoHeight) {
+        if (isImage) return;
+        int viewWidth = getWidth();
+        int viewHeight = getHeight();
+
+        if (viewWidth == 0 || viewHeight == 0 || videoWidth == 0 || videoHeight == 0) {
+            return;
+        }
+
+        float videoAspect = (float) videoWidth / videoHeight;
+        float viewAspect = (float) viewWidth / viewHeight;
+
+        Matrix matrix = new Matrix();
+
+        float scaleX = 1f;
+        float scaleY = 1f;
+
+        if (videoAspect > viewAspect) {
+            // Video is wider than the view.
+            // To maintain aspect ratio and fill height, we scale X (width) up? No.
+            // If we stretch to View (W, H), the video is squished horizontally (or rather, the stored aspect is too small).
+            // Actually, wait. TextureView stretches the content (videoWidth, videoHeight) into (viewWidth, viewHeight).
+            
+            // If videoAspect > viewAspect (e.g. 16:9 video in 1:1 view).
+            // Width is relatively larger in video.
+            // Stretched into 1:1, it looks tall and thin? No, wide video into square looks tall?
+            // Wide video (say 100x50, aspect 2) -> Square view (50x50, aspect 1).
+            // Horizontal pixels get squashed by factor 2.
+            // We need to Expand X by factor 2 to restore aspect.
+            // But if we expand X, we crop sides. That's CENTER_CROP.
+            // ScaleX = videoAspect / viewAspect.
+            scaleX = videoAspect / viewAspect;
+        } else {
+            // Video is taller than view (e.g. 9:16 video in 1:1 view).
+            // Tall video (say 50x100, aspect 0.5) -> Square view (50x50, aspect 1).
+            // Vertical pixels get squashed by factor 2.
+            // We need to Expand Y by factor 2.
+            // ScaleY = viewAspect / videoAspect.
+            scaleY = viewAspect / videoAspect;
+        }
+
+        matrix.setScale(scaleX, scaleY, viewWidth / 2f, viewHeight / 2f);
+        textureView.setTransform(matrix);
+    }
+
     private void releaseMediaPlayer() {
         if (mediaPlayer != null) {
-            try { mediaPlayer.stop(); } catch (Exception ignore) {}
-            try { mediaPlayer.release(); } catch (Exception ignore) {}
+            try {
+                mediaPlayer.stop();
+            } catch (Exception ignore) {}
+            try {
+                mediaPlayer.release();
+            } catch (Exception ignore) {}
             mediaPlayer = null;
         }
     }
 
-    /** Called by DialogsActivity.onBecomeFullyHidden() to free the decoder for round video. */
-    public void stopAndRelease() {
-        releaseMediaPlayer();
+    @Override
+    public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
+        if (isImage) return;
+        surface = new Surface(surfaceTexture);
+        initMediaPlayer(surface);
     }
 
-    /** Called by DialogsActivity.onBecomeFullyVisible() to restart the wallpaper. */
-    public void restartPlayback() {
-        if (isImage || surfaceView == null) return;
-        SurfaceHolder holder = surfaceView.getHolder();
-        if (holder != null && holder.getSurface() != null && holder.getSurface().isValid()) {
-            initMediaPlayer(holder);
+    @Override
+    public void onSurfaceTextureSizeChanged(SurfaceTexture surfaceTexture, int width, int height) {
+        if (isImage) return;
+        if (mediaPlayer != null) {
+            updateTextureViewSize(mediaPlayer.getVideoWidth(), mediaPlayer.getVideoHeight());
         }
-        // If the surface is not yet valid, surfaceCreated() will call initMediaPlayer when ready.
     }
 
-    // ── View lifecycle ───────────────────────────────────────────────────────
+    @Override
+    public boolean onSurfaceTextureDestroyed(SurfaceTexture surfaceTexture) {
+        releaseMediaPlayer();
+        if (surface != null) {
+            surface.release();
+            surface = null;
+        }
+        return true;
+    }
+
+    @Override
+    public void onSurfaceTextureUpdated(SurfaceTexture surfaceTexture) {
+        // Not needed
+    }
 
     public void play() {
-        if (isImage || mediaPlayer == null) return;
-        if (!mediaPlayer.isPlaying()) {
-            try { mediaPlayer.start(); } catch (Exception ignore) {}
+        if (isImage) return;
+        if (mediaPlayer != null && !mediaPlayer.isPlaying()) {
+            mediaPlayer.start();
         }
     }
 
     public void pause() {
-        if (isImage || mediaPlayer == null) return;
-        if (mediaPlayer.isPlaying()) {
-            try { mediaPlayer.pause(); } catch (Exception ignore) {}
+        if (isImage) return;
+        if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+            mediaPlayer.pause();
         }
     }
 
@@ -158,16 +194,18 @@ public class VideoBackgroundView extends FrameLayout implements SurfaceHolder.Ca
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
         if (isImage) return;
-        // SurfaceHolder callbacks will trigger initMediaPlayer when the surface
-        // becomes available; here we just resume if we already have a player.
-        if (surfaceReady) play();
+        if (textureView != null && textureView.isAvailable() && mediaPlayer == null) {
+            surface = new Surface(textureView.getSurfaceTexture());
+            initMediaPlayer(surface);
+        } else {
+            play();
+        }
     }
 
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         if (isImage) return;
-        // Fully release the decoder so ChatActivity round-videos can use it.
-        releaseMediaPlayer();
+        pause();
     }
 }

@@ -1728,7 +1728,6 @@ public class ChatActivity extends BaseFragment implements
     private final static int text_mention = 157;
     private final static int text_transalte = 158;
     private final static int text_code = 159;
-    private final static int text_date = 160;
 
     private final static int view_as_topics = 59;
 
@@ -6285,7 +6284,10 @@ public class ChatActivity extends BaseFragment implements
                         continue;
                     }
                     for (int i = 0; i < count; i++) {
-                        View child = chatListView.getChildAt(i);                        
+                        View child = chatListView.getChildAt(i);
+                        if (quickRejectChild(child, positionF)) {
+                            continue;
+                        }
                         if (child instanceof ChatMessageCell) {
                             ChatMessageCell cell = (ChatMessageCell) child;
                             if (child.getY() > chatListView.getHeight() || child.getY() + child.getHeight() < 0 || cell.getVisibility() == View.GONE) {
@@ -6397,7 +6399,10 @@ public class ChatActivity extends BaseFragment implements
                         if (useScale) {
                             canvas.restore();
                             for (int ii = 0; ii < count; ii++) {
-                                View child = chatListView.getChildAt(ii);                               
+                                View child = chatListView.getChildAt(ii);
+                                if (quickRejectChild(child, positionF)) {
+                                    continue;
+                                }
                                 if (child instanceof ChatMessageCell && ((ChatMessageCell) child).getCurrentMessagesGroup() == group) {
                                     ChatMessageCell cell = ((ChatMessageCell) child);
                                     int left = cell.getLeft();
@@ -11367,9 +11372,6 @@ public class ChatActivity extends BaseFragment implements
         }
         item.addSubItem(text_link, LocaleController.getString(R.string.CreateLink));
         item.addSubItem(text_mention, LocaleController.getString(R.string.CreateMention)); // NekoX
-        if (currentEncryptedChat == null) {
-            item.addSubItem(text_date, LocaleController.getString(R.string.FormattedDate));
-        }
         item.addSubItem(text_regular, LocaleController.getString(R.string.Regular));
 
         filledEditTextItemMenu = true;
@@ -12673,7 +12675,7 @@ public class ChatActivity extends BaseFragment implements
             }
 
             videoTextureView = new TextureView(getParentActivity());
-            videoTextureView.setOpaque(true);
+            videoTextureView.setOpaque(false);
             aspectRatioFrameLayout.addView(videoTextureView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
         }
         ViewGroup parent = (ViewGroup) videoPlayerContainer.getParent();
@@ -25111,9 +25113,11 @@ public class ChatActivity extends BaseFragment implements
 
             final ArrayList<MessageObject> arr = new ArrayList<>(1);
             arr.add(arg.messageObject);
-            replaceMessageObjects(arr, 0, true, true);
-            if (!arr.isEmpty()) {
+            if (arg.isNew) {
                 processNewMessages(arr);
+
+            } else {
+                replaceMessageObjects(arr, 0, false);
             }
         } else if (id == NotificationCenter.botForumDraftDelete) {
             final BotForumHelper.BotForumTextDraftDeleteNotification arg = (BotForumHelper.BotForumTextDraftDeleteNotification) args[0];
@@ -27044,10 +27048,6 @@ public class ChatActivity extends BaseFragment implements
     private final BotForumHelper.BotDraftAnimationsPool botDraftAnimationsPool = new BotForumHelper.BotDraftAnimationsPool();
 
     private void replaceMessageObjects(ArrayList<MessageObject> messageObjects, int loadIndex, boolean remove) {
-        replaceMessageObjects(messageObjects, loadIndex, remove, false);
-    }
-
-    private void replaceMessageObjects(ArrayList<MessageObject> messageObjects, int loadIndex, boolean remove, boolean ignoreDateCheckBeforeRemove) {
         LongSparseArray<MessageObject.GroupedMessages> newGroups = null;
         for (int a = 0; a < messageObjects.size(); a++) {
             MessageObject messageObject = messageObjects.get(a);
@@ -27075,7 +27075,7 @@ public class ChatActivity extends BaseFragment implements
             if (loadIndex == 0 && repliesMessagesDict.indexOfKey(messageObject.getId()) >= 0) {
                 repliesMessagesDict.put(messageObject.getId(), messageObject);
             }
-            if (old == null || remove && !ignoreDateCheckBeforeRemove && old.messageOwner.date != messageObject.messageOwner.date || messageObject.scheduled && chatMode != MODE_SCHEDULED) {
+            if (old == null || remove && old.messageOwner.date != messageObject.messageOwner.date || messageObject.scheduled && chatMode != MODE_SCHEDULED) {
                 continue;
             }
             if (remove) {
@@ -28106,11 +28106,7 @@ public class ChatActivity extends BaseFragment implements
         });
         addActions.put("mention", () -> {
             if (NaConfig.INSTANCE.getShowTextCreateMention().Bool()) {
-                 addActions.put("date", () -> {
-            if (NaConfig.INSTANCE.getShowTextCreateDate().Bool() && encryptedChat == null) {
-                menu.add(R.id.menu_groupbolditalic, R.id.menu_date, order.getAndIncrement(), getString(R.string.FormattedDate));
-            }
-        });
+                menu.add(R.id.menu_groupbolditalic, R.id.menu_mention, order.getAndIncrement(), getString(R.string.CreateMention));
             }
         });
         addActions.put("regular", () -> {
@@ -28126,7 +28122,7 @@ public class ChatActivity extends BaseFragment implements
                 Runnable r = addActions.get(k);
                 if (r != null) r.run();
             }
-            for (String k : new String[]{"translate","bold","italic","mono","code","strike","underline","quote","spoiler","link","mention","date","regular"}){
+            for (String k : new String[]{"translate","bold","italic","mono","code","strike","underline","quote","spoiler","link","mention","regular"}){
                 if (!orderStr.contains(k)){
                     Runnable r = addActions.get(k);
                     if (r != null) r.run();
@@ -28144,7 +28140,6 @@ public class ChatActivity extends BaseFragment implements
             addActions.get("spoiler").run();
             addActions.get("link").run();
             addActions.get("mention").run();
-            addActions.get("date").run();
             addActions.get("regular").run();
         }
     }
