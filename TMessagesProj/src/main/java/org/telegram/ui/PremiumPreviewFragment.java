@@ -938,10 +938,11 @@ public class PremiumPreviewFragment extends BaseFragment implements Notification
 
         buttonContainerInternal.setPadding(dp(12), dp(12), dp(12), dp(12));
         buttonContainerInternal.addView(premiumButtonView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
-        buttonContainerInternal.setBackground(iBlur3Factory.create(buttonContainerInternal)
-            .setColorProvider(BlurredBackgroundProviderImpl.premiumButton(resourceProvider))
-            .setRadius(dp(28))
-            .setPadding(dp(8)));
+        BlurredBackgroundDrawable backgroundDrawable = iBlur3Factory.create(buttonContainerInternal);
+        backgroundDrawable.setColorProvider(BlurredBackgroundProviderImpl.premiumButton(resourceProvider));
+        backgroundDrawable.setRadius(dp(28));
+        backgroundDrawable.setPadding(dp(8));
+        buttonContainerInternal.setBackground(backgroundDrawable);
         ScaleStateListAnimator.apply(buttonContainerInternal, 0.02f, 1.5f);
         buttonContainer.addView(buttonContainerInternal, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 48 + 12 + 12, Gravity.BOTTOM, 4, 0, 4, 0));
 

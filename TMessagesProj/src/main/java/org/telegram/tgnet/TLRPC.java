@@ -35696,6 +35696,14 @@ public class TLRPC {
             stream.writeInt32(length);
             stream.writeInt32(date);
         }
+
+        @Override public void serializeToJson(TLJsonBuilder builder) {
+            throw new RuntimeException("NotImplementedError");
+        }
+
+        @Override public void deserializeFromJson(TLJsonParser parser) {
+            throw new RuntimeException("NotImplementedError");
+        }
     }
 
     public static class TL_messageEntityTextUrl extends MessageEntity {
