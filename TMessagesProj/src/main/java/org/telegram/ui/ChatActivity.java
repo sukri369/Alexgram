@@ -47185,6 +47185,12 @@ public class ChatActivity extends BaseFragment implements
     }
 
     private boolean isTitleCentered() {
+        if (NaConfig.INSTANCE.getPillChatTitle().Bool()) {
+            if (this.isReplyChatComment() || this.isReport()) {
+                return false;
+            }
+            return this.getChatMode() != ChatActivity.MODE_SEARCH && this.getChatMode() != ChatActivity.MODE_SAVED;
+        }
         return canShowCenteredTitle(this);
     }
 

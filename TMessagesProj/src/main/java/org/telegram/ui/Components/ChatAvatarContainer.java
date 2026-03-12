@@ -17,9 +17,11 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
@@ -503,11 +505,73 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         bounce.setPressed(pressed);
     }
 
+    private final Paint pillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+
     @Override
     protected void dispatchDraw(Canvas canvas) {
         canvas.save();
         final float s = bounce.getScale(.02f);
         canvas.scale(s, s, getWidth() / 2f, getHeight() / 2f);
+
+        if (NaConfig.INSTANCE.getPillChatTitle().Bool()) {
+            float minX = Float.MAX_VALUE;
+            float minY = Float.MAX_VALUE;
+            float maxX = Float.MIN_VALUE;
+            float maxY = Float.MIN_VALUE;
+            boolean found = false;
+
+            if (titleTextView != null && titleTextView.getVisibility() == VISIBLE && titleTextView.getAlpha() > 0) {
+                float titleLeft = titleTextView.getLeft();
+                float titleRight = titleTextView.getLeft() + titleTextView.getTextWidth();
+                if (isCentered()) {
+                    float cx = titleTextView.getLeft() + titleTextView.getMeasuredWidth() / 2f;
+                    float halfW = titleTextView.getTextWidth() / 2f;
+                    titleLeft = cx - halfW;
+                    titleRight = cx + halfW;
+                }
+                minX = Math.min(minX, titleLeft);
+                maxX = Math.max(maxX, titleRight);
+                minY = Math.min(minY, titleTextView.getTop() + titleTextView.getPaddingTop());
+                maxY = Math.max(maxY, titleTextView.getTop() + titleTextView.getPaddingTop() + titleTextView.getTextHeight());
+                found = true;
+            }
+
+            View sub = subtitleTextView != null ? subtitleTextView : animatedSubtitleTextView;
+            if (sub != null && sub.getVisibility() == VISIBLE && sub.getAlpha() > 0) {
+                float subTextWidth;
+                int subTextHeight;
+                if (sub instanceof SimpleTextView) {
+                    subTextWidth = ((SimpleTextView) sub).getTextWidth();
+                    subTextHeight = ((SimpleTextView) sub).getTextHeight();
+                } else {
+                    subTextWidth = ((AnimatedTextView) sub).getDrawable().getCurrentWidth();
+                    subTextHeight = sub.getMeasuredHeight();
+                }
+                float subLeft = sub.getLeft();
+                float subRight = sub.getLeft() + subTextWidth;
+                if (isCentered()) {
+                    float cx = sub.getLeft() + sub.getMeasuredWidth() / 2f;
+                    float halfW = subTextWidth / 2f;
+                    subLeft = cx - halfW;
+                    subRight = cx + halfW;
+                }
+                minX = Math.min(minX, subLeft);
+                maxX = Math.max(maxX, subRight);
+                minY = Math.min(minY, sub.getTop());
+                maxY = Math.max(maxY, sub.getTop() + subTextHeight);
+                found = true;
+            }
+
+            if (found) {
+                float paddingH = dp(12);
+                float paddingV = dp(4);
+                RectF pillRect = new RectF(minX - paddingH, minY - paddingV, maxX + paddingH, maxY + paddingV);
+                pillPaint.setColor(Theme.isCurrentThemeDark() ? 0x28FFFFFF : 0x15000000);
+                float radius = pillRect.height() / 2f;
+                canvas.drawRoundRect(pillRect, radius, radius, pillPaint);
+            }
+        }
+
         super.dispatchDraw(canvas);
         canvas.restore();
     }

@@ -2054,40 +2054,6 @@ public class ActionBar extends FrameLayout implements Theme.Colorable {
 
     @Override
     protected void dispatchDraw(Canvas canvas) {
-        if (NaConfig.INSTANCE.getPillChatTitle().Bool() && parentFragment instanceof org.telegram.ui.ChatActivity) {
-            float minX = Float.MAX_VALUE;
-            float minY = Float.MAX_VALUE;
-            float maxX = Float.MIN_VALUE;
-            float maxY = Float.MIN_VALUE;
-            boolean found = false;
-
-            for(int i=0; i<2; i++) {
-                if (titleTextView[i] != null && titleTextView[i].getVisibility() == VISIBLE && titleTextView[i].getAlpha() > 0) {
-                    minX = Math.min(minX, titleTextView[i].getX());
-                    minY = Math.min(minY, titleTextView[i].getY());
-                    maxX = Math.max(maxX, titleTextView[i].getX() + titleTextView[i].getMeasuredWidth());
-                    maxY = Math.max(maxY, titleTextView[i].getY() + titleTextView[i].getMeasuredHeight());
-                    found = true;
-                }
-            }
-            if (subtitleTextView != null && subtitleTextView.getVisibility() == VISIBLE && subtitleTextView.getAlpha() > 0) {
-                 minX = Math.min(minX, subtitleTextView.getX());
-                 minY = Math.min(minY, subtitleTextView.getY());
-                 maxX = Math.max(maxX, subtitleTextView.getX() + subtitleTextView.getMeasuredWidth());
-                 maxY = Math.max(maxY, subtitleTextView.getY() + subtitleTextView.getMeasuredHeight());
-                 found = true;
-            }
-
-            if (found) {
-                float paddingH = AndroidUtilities.dp(16);
-                float paddingV = AndroidUtilities.dp(4);
-                RectF rect = new RectF(minX - paddingH, minY - paddingV, maxX + paddingH, maxY + paddingV);
-                Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
-                p.setColor(Theme.isCurrentThemeDark() ? 0x40FFFFFF : 0x15000000);
-                canvas.drawRoundRect(rect, rect.height() / 2, rect.height() / 2, p);
-            }
-        }
-
         if (blurredBackground && actionBarColor != Color.TRANSPARENT) {
             rectTmp.set(0, 0, getMeasuredWidth(), getMeasuredHeight());
             blurScrimPaint.setColor(actionBarColor);
@@ -2311,9 +2277,6 @@ public class ActionBar extends FrameLayout implements Theme.Colorable {
     }
 
     private boolean isCentered() {
-        if (NaConfig.INSTANCE.getPillChatTitle().Bool() && parentFragment instanceof org.telegram.ui.ChatActivity) {
-            return true;
-        }
         return NaConfig.INSTANCE.getCenterActionBarTitle().Bool() && NaConfig.INSTANCE.getCenterActionBarTitleType().Int() != 3;
     }
 
