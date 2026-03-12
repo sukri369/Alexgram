@@ -47808,6 +47808,8 @@ public class ChatActivity extends BaseFragment implements
             if (selectedObject == null) {
                 return;
             }
+            final MessageObject messageToReply = selectedObject;
+
             if (getParentActivity() == null) {
                 return;
             }
@@ -47847,7 +47849,7 @@ public class ChatActivity extends BaseFragment implements
                     inputField.setEnabled(false);
                     dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
 
-                    startAiGeneration(prompt, selectedObject, new AiGenerationCallback() {
+                    startAiGeneration(prompt, messageToReply, new AiGenerationCallback() {
                         @Override
                         public void onSuccess(String result) {
                             AndroidUtilities.runOnUIThread(() -> {
