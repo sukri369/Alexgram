@@ -12673,7 +12673,7 @@ public class ChatActivity extends BaseFragment implements
             }
 
             videoTextureView = new TextureView(getParentActivity());
-            videoTextureView.setOpaque(false);
+            videoTextureView.setOpaque(true);
             aspectRatioFrameLayout.addView(videoTextureView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
         }
         ViewGroup parent = (ViewGroup) videoPlayerContainer.getParent();
