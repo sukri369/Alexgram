@@ -135,6 +135,7 @@ public class NekoChatSettingsActivity extends BaseNekoXSettingsActivity implemen
             getString(R.string.Official),
             "Nekogram",
     }, null));
+    private final AbstractConfigCell pillChatTitleRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getPillChatTitle(), "Pill Chat Title"));
     private final AbstractConfigCell dividerChats = cellGroup.appendCell(new ConfigCellDivider());
 
     // Live Video Wallpaper
