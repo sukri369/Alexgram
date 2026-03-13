@@ -427,6 +427,7 @@ public class ChatActivity extends BaseFragment implements
     private final static boolean DISABLE_PROGRESS_VIEW = true;
     private final static int SKELETON_DISAPPEAR_MS = 200;
     public static final int ACTION_BAR_BLUR_ALPHA = 178;
+    private static final int TAG_LAYOUT_NO_ACTIONBAR_OFFSET = 0xFF112233;
 
     private static int SKELETON_LIGHT_OVERLAY_ALPHA = 22;
     private static float SKELETON_SATURATION = 1.4f;
@@ -5062,6 +5063,7 @@ public class ChatActivity extends BaseFragment implements
         navbarContentDrawableFactory.setSourceRootView(viewPositionWatcher, contentView);
 
         contentView.setOccupyStatusBar(!inBubbleMode && !isInsideContainer && !inPreviewMode);
+        contentView.setTag(TAG_LAYOUT_NO_ACTIONBAR_OFFSET, isPillChatHeaderEnabled() ? Boolean.TRUE : null);
 
         fadeDrawable = new BlurredBackgroundWithFadeDrawable(
                 navbarContentDrawableFactory.create(chatInputViewsContainer, null));
@@ -30318,6 +30320,7 @@ public class ChatActivity extends BaseFragment implements
         }
         if (contentView != null) {
             contentView.setOccupyStatusBar(!inBubbleMode && !isInsideContainer && !inPreviewMode);
+            contentView.setTag(TAG_LAYOUT_NO_ACTIONBAR_OFFSET, isPillChatHeaderEnabled() ? Boolean.TRUE : null);
         }
     }
 
@@ -39364,6 +39367,15 @@ public class ChatActivity extends BaseFragment implements
         if (avatarContainer != null) {
             avatarContainer.setOccupyStatusBar(!inPreviewMode);
             avatarContainer.setTitleColors(pillForegroundColor, pillSubtitleColor);
+        }
+        if (contentView != null) {
+            contentView.setTag(TAG_LAYOUT_NO_ACTIONBAR_OFFSET, Boolean.TRUE);
+            final int targetTopPadding = actionBar.getMeasuredHeight() != 0
+                ? actionBar.getMeasuredHeight()
+                : ActionBar.getCurrentActionBarHeight() + (!inPreviewMode ? AndroidUtilities.statusBarHeight : 0);
+            if (contentView.getPaddingTop() < targetTopPadding) {
+                contentView.setPadding(contentView.getPaddingLeft(), targetTopPadding, contentView.getPaddingRight(), contentView.getPaddingBottom());
+            }
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && getParentActivity() != null) {
             AndroidUtilities.setLightStatusBar(getParentActivity().getWindow(), isLightStatusBar(), true);
