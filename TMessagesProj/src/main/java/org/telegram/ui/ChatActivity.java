@@ -39215,26 +39215,6 @@ public class ChatActivity extends BaseFragment implements
             }
         }
 
-    private void applyPillHeaderAppearance() {
-        if (!isPillChatHeaderEnabled() || actionBar == null) {
-            return;
-        }
-        actionBar.setBackgroundColor(Color.TRANSPARENT);
-        actionBar.setShadowAlpha(0);
-        actionBar.setOccupyStatusBar(false);
-        if (avatarContainer != null) {
-            avatarContainer.setOccupyStatusBar(false);
-        }
-        if (contentView != null) {
-            contentView.setOccupyStatusBar(false);
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && getParentActivity() != null) {
-            AndroidUtilities.setLightStatusBar(getParentActivity().getWindow(), isLightStatusBar(), true);
-            getParentActivity().getWindow().setStatusBarColor(Color.TRANSPARENT);
-        }
-        actionBar.invalidate();
-    }
-
         @Override
         public void onSearchPressed(EditText editText) {
             searchWas = true;
@@ -39365,6 +39345,26 @@ public class ChatActivity extends BaseFragment implements
             searchItemListener = new SearchItemListener();
         }
         return searchItemListener;
+    }
+
+    private void applyPillHeaderAppearance() {
+        if (!isPillChatHeaderEnabled() || actionBar == null) {
+            return;
+        }
+        actionBar.setBackgroundColor(Color.TRANSPARENT);
+        actionBar.setShadowAlpha(0);
+        actionBar.setOccupyStatusBar(false);
+        if (avatarContainer != null) {
+            avatarContainer.setOccupyStatusBar(false);
+        }
+        if (contentView != null) {
+            contentView.setOccupyStatusBar(false);
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && getParentActivity() != null) {
+            AndroidUtilities.setLightStatusBar(getParentActivity().getWindow(), isLightStatusBar(), true);
+            getParentActivity().getWindow().setStatusBarColor(Color.TRANSPARENT);
+        }
+        actionBar.invalidate();
     }
 
 	private boolean isSupportedTags() {
