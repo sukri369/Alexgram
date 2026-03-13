@@ -5061,7 +5061,7 @@ public class ChatActivity extends BaseFragment implements
         glassBackgroundDrawableFactoryFrosted.setSourceRootView(viewPositionWatcher, contentView);
         navbarContentDrawableFactory.setSourceRootView(viewPositionWatcher, contentView);
 
-        contentView.setOccupyStatusBar(!inBubbleMode && !isInsideContainer && !inPreviewMode && !isPillChatHeaderEnabled());
+        contentView.setOccupyStatusBar(!inBubbleMode && !isInsideContainer && !inPreviewMode);
 
         fadeDrawable = new BlurredBackgroundWithFadeDrawable(
                 navbarContentDrawableFactory.create(chatInputViewsContainer, null));
@@ -30317,7 +30317,7 @@ public class ChatActivity extends BaseFragment implements
             pinnedMessageView.setEnabled(!isInPreviewMode());
         }
         if (contentView != null) {
-            contentView.setOccupyStatusBar(!inBubbleMode && !isInsideContainer && !inPreviewMode && !isPillChatHeaderEnabled());
+            contentView.setOccupyStatusBar(!inBubbleMode && !isInsideContainer && !inPreviewMode);
         }
     }
 
@@ -39353,18 +39353,14 @@ public class ChatActivity extends BaseFragment implements
         }
         actionBar.setBackgroundColor(Color.TRANSPARENT);
         actionBar.setShadowAlpha(0);
-        actionBar.setOccupyStatusBar(false);
+        actionBar.setOccupyStatusBar(!inPreviewMode);
         final int pillForegroundColor = 0xFF1A1A1A;
         final int pillSubtitleColor = 0xFF6F6F76;
         actionBar.setItemsColor(pillForegroundColor, false);
         actionBar.setItemsColor(pillForegroundColor, true);
         actionBar.setItemsBackgroundColor(0x14000000, false);
         if (avatarContainer != null) {
-            avatarContainer.setOccupyStatusBar(false);
             avatarContainer.setTitleColors(pillForegroundColor, pillSubtitleColor);
-        }
-        if (contentView != null) {
-            contentView.setOccupyStatusBar(false);
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && getParentActivity() != null) {
             AndroidUtilities.setLightStatusBar(getParentActivity().getWindow(), isLightStatusBar(), true);
