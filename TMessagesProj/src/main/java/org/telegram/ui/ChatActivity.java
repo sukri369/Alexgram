@@ -39377,6 +39377,9 @@ public class ChatActivity extends BaseFragment implements
                 contentView.setPadding(contentView.getPaddingLeft(), targetTopPadding, contentView.getPaddingRight(), contentView.getPaddingBottom());
             }
         }
+        if (contentView != null) {
+            contentView.setClipToPadding(false);
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && getParentActivity() != null) {
             AndroidUtilities.setLightStatusBar(getParentActivity().getWindow(), isLightStatusBar(), true);
             getParentActivity().getWindow().setStatusBarColor(Color.TRANSPARENT);
