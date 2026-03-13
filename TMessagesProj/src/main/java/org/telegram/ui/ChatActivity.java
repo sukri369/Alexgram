@@ -4668,13 +4668,7 @@ public class ChatActivity extends BaseFragment implements
         ActionBarMenu menu = actionBar.createMenu();
         menu.setCenteredTitle(isTitleCentered());
         if (isPillChatHeaderEnabled()) {
-            actionBar.setBackgroundColor(android.graphics.Color.TRANSPARENT);
-            actionBar.setShadowAlpha(0);
-            actionBar.invalidate();
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && getParentActivity() != null) {
-                AndroidUtilities.setLightStatusBar(getParentActivity().getWindow(), isLightStatusBar(), true);
-                getParentActivity().getWindow().setStatusBarColor(Color.TRANSPARENT);
-            }
+            applyPillHeaderAppearance();
         }
 
         if (isThreadChat() && threadMessageId != 0 && !isTopic) {
@@ -5067,7 +5061,7 @@ public class ChatActivity extends BaseFragment implements
         glassBackgroundDrawableFactoryFrosted.setSourceRootView(viewPositionWatcher, contentView);
         navbarContentDrawableFactory.setSourceRootView(viewPositionWatcher, contentView);
 
-        contentView.setOccupyStatusBar(!inBubbleMode && !isInsideContainer && !inPreviewMode);
+        contentView.setOccupyStatusBar(!inBubbleMode && !isInsideContainer && !inPreviewMode && !isPillChatHeaderEnabled());
 
         fadeDrawable = new BlurredBackgroundWithFadeDrawable(
                 navbarContentDrawableFactory.create(chatInputViewsContainer, null));
@@ -18119,7 +18113,7 @@ public class ChatActivity extends BaseFragment implements
                     canvas.restore();
                 }
             }
-            if (child == actionBar && parentLayout != null) {
+            if (child == actionBar && parentLayout != null && !isPillChatHeaderEnabled()) {
                 parentLayout.drawHeaderShadow(canvas, actionBar.getVisibility() == VISIBLE ? (int) actionBar.getTranslationY() + actionBar.getMeasuredHeight() + (actionBarSearchTags != null ? actionBarSearchTags.getCurrentHeight() : 0) + (hashtagSearchTabs != null ? hashtagSearchTabs.getCurrentHeight() : 0) : 0);
             }
             return result;
@@ -30323,7 +30317,7 @@ public class ChatActivity extends BaseFragment implements
             pinnedMessageView.setEnabled(!isInPreviewMode());
         }
         if (contentView != null) {
-            contentView.setOccupyStatusBar(!inBubbleMode && !isInsideContainer && !inPreviewMode);
+            contentView.setOccupyStatusBar(!inBubbleMode && !isInsideContainer && !inPreviewMode && !isPillChatHeaderEnabled());
         }
     }
 
@@ -30355,6 +30349,7 @@ public class ChatActivity extends BaseFragment implements
         if (contentView != null) {
             contentView.onResume();
         }
+        applyPillHeaderAppearance();
         checkChecksHint();
 
         Bulletin.addDelegate(this, bulletinDelegate = new Bulletin.Delegate() {
@@ -39212,10 +39207,33 @@ public class ChatActivity extends BaseFragment implements
                     AndroidUtilities.setLightStatusBar(getParentActivity().getWindow(), isLightStatusBar());
                 }
             }
+            if (isPillChatHeaderEnabled()) {
+                applyPillHeaderAppearance();
+            }
             if (fragmentView != null) {
                 fragmentView.invalidate();
             }
         }
+
+    private void applyPillHeaderAppearance() {
+        if (!isPillChatHeaderEnabled() || actionBar == null) {
+            return;
+        }
+        actionBar.setBackgroundColor(Color.TRANSPARENT);
+        actionBar.setShadowAlpha(0);
+        actionBar.setOccupyStatusBar(false);
+        if (avatarContainer != null) {
+            avatarContainer.setOccupyStatusBar(false);
+        }
+        if (contentView != null) {
+            contentView.setOccupyStatusBar(false);
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && getParentActivity() != null) {
+            AndroidUtilities.setLightStatusBar(getParentActivity().getWindow(), isLightStatusBar(), true);
+            getParentActivity().getWindow().setStatusBarColor(Color.TRANSPARENT);
+        }
+        actionBar.invalidate();
+    }
 
         @Override
         public void onSearchPressed(EditText editText) {
