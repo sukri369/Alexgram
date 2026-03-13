@@ -4667,9 +4667,10 @@ public class ChatActivity extends BaseFragment implements
 
         ActionBarMenu menu = actionBar.createMenu();
         menu.setCenteredTitle(isTitleCentered());
-        if (NaConfig.INSTANCE.getPillChatTitle().Bool() && isTitleCentered()) {
+        if (NaConfig.INSTANCE.getPillChatTitle().Bool()) {
             actionBar.setBackgroundColor(android.graphics.Color.TRANSPARENT);
             actionBar.setShadowAlpha(0);
+            actionBar.invalidate();
         }
 
         if (isThreadChat() && threadMessageId != 0 && !isTopic) {
@@ -39191,7 +39192,12 @@ public class ChatActivity extends BaseFragment implements
                 int color2 = getThemedColor(Theme.key_actionBarActionModeDefaultSelector);
                 actionBar.setItemsBackgroundColor(ColorUtils.blendARGB(color1, color2, searchAnimationProgress), false);
 
-                actionBar.setBackgroundColor(ColorUtils.blendARGB(getThemedColor(Theme.key_actionBarDefault), getThemedColor(Theme.key_actionBarActionModeDefault), searchAnimationProgress));
+                if (NaConfig.INSTANCE.getPillChatTitle().Bool() && isTitleCentered()) {
+                    actionBar.setBackgroundColor(Color.TRANSPARENT);
+                    actionBar.setShadowAlpha(0);
+                } else {
+                    actionBar.setBackgroundColor(ColorUtils.blendARGB(getThemedColor(Theme.key_actionBarDefault), getThemedColor(Theme.key_actionBarActionModeDefault), searchAnimationProgress));
+                }
                 actionBar.setSearchTextColor(ColorUtils.blendARGB(Theme.getColor(Theme.key_actionBarDefaultSearch), getThemedColor(Theme.key_windowBackgroundWhiteBlackText), searchAnimationProgress), false);
                 actionBar.setSearchTextColor(ColorUtils.blendARGB(Theme.getColor(Theme.key_actionBarDefaultSearchPlaceholder), getThemedColor(Theme.key_windowBackgroundWhiteGrayText), searchAnimationProgress), true);
                 actionBar.setSearchCursorColor(ColorUtils.blendARGB(Theme.getColor(Theme.key_actionBarDefaultSearch), getThemedColor(Theme.key_windowBackgroundWhiteBlueText), searchAnimationProgress));
