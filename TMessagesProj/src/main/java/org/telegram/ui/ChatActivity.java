@@ -44399,7 +44399,13 @@ public class ChatActivity extends BaseFragment implements
     }
 
     private boolean isPillChatHeaderEnabled() {
-        return NaConfig.INSTANCE.getPillChatTitle().Bool() && isTitleCentered();
+        if (!NaConfig.INSTANCE.getPillChatTitle().Bool()) {
+            return false;
+        }
+        if (isReplyChatComment() || isReport()) {
+            return false;
+        }
+        return getChatMode() != ChatActivity.MODE_SEARCH && getChatMode() != ChatActivity.MODE_SAVED;
     }
 
     public MessageObject.GroupedMessages getGroup(long id) {
