@@ -5061,7 +5061,7 @@ public class ChatActivity extends BaseFragment implements
         glassBackgroundDrawableFactoryFrosted.setSourceRootView(viewPositionWatcher, contentView);
         navbarContentDrawableFactory.setSourceRootView(viewPositionWatcher, contentView);
 
-        contentView.setOccupyStatusBar(!inBubbleMode && !isInsideContainer && !inPreviewMode && !isPillChatHeaderEnabled());
+        contentView.setOccupyStatusBar(!inBubbleMode && !isInsideContainer && !inPreviewMode);
 
         fadeDrawable = new BlurredBackgroundWithFadeDrawable(
                 navbarContentDrawableFactory.create(chatInputViewsContainer, null));
@@ -30317,7 +30317,7 @@ public class ChatActivity extends BaseFragment implements
             pinnedMessageView.setEnabled(!isInPreviewMode());
         }
         if (contentView != null) {
-            contentView.setOccupyStatusBar(!inBubbleMode && !isInsideContainer && !inPreviewMode && !isPillChatHeaderEnabled());
+            contentView.setOccupyStatusBar(!inBubbleMode && !isInsideContainer && !inPreviewMode);
         }
     }
 
@@ -39364,9 +39364,6 @@ public class ChatActivity extends BaseFragment implements
         if (avatarContainer != null) {
             avatarContainer.setOccupyStatusBar(!inPreviewMode);
             avatarContainer.setTitleColors(pillForegroundColor, pillSubtitleColor);
-        }
-        if (contentView != null) {
-            contentView.setOccupyStatusBar(false);
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && getParentActivity() != null) {
             AndroidUtilities.setLightStatusBar(getParentActivity().getWindow(), isLightStatusBar(), true);
