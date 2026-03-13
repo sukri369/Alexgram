@@ -4667,10 +4667,14 @@ public class ChatActivity extends BaseFragment implements
 
         ActionBarMenu menu = actionBar.createMenu();
         menu.setCenteredTitle(isTitleCentered());
-        if (NaConfig.INSTANCE.getPillChatTitle().Bool()) {
+        if (isPillChatHeaderEnabled()) {
             actionBar.setBackgroundColor(android.graphics.Color.TRANSPARENT);
             actionBar.setShadowAlpha(0);
             actionBar.invalidate();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && getParentActivity() != null) {
+                AndroidUtilities.setLightStatusBar(getParentActivity().getWindow(), isLightStatusBar(), true);
+                getParentActivity().getWindow().setStatusBarColor(Color.TRANSPARENT);
+            }
         }
 
         if (isThreadChat() && threadMessageId != 0 && !isTopic) {
@@ -18121,7 +18125,7 @@ public class ChatActivity extends BaseFragment implements
 
         @Override
         protected boolean isActionBarVisible() {
-            if (NaConfig.INSTANCE.getPillChatTitle().Bool() && isTitleCentered()) {
+            if (isPillChatHeaderEnabled()) {
                 return false;
             }
             return actionBar.getVisibility() == VISIBLE;
@@ -18129,7 +18133,7 @@ public class ChatActivity extends BaseFragment implements
 
         @Override
         protected boolean isStatusBarVisible() {
-            if (NaConfig.INSTANCE.getPillChatTitle().Bool() && isTitleCentered()) {
+            if (isPillChatHeaderEnabled()) {
                 return false;
             }
             return true;
@@ -39192,7 +39196,7 @@ public class ChatActivity extends BaseFragment implements
                 int color2 = getThemedColor(Theme.key_actionBarActionModeDefaultSelector);
                 actionBar.setItemsBackgroundColor(ColorUtils.blendARGB(color1, color2, searchAnimationProgress), false);
 
-                if (NaConfig.INSTANCE.getPillChatTitle().Bool() && isTitleCentered()) {
+                if (isPillChatHeaderEnabled()) {
                     actionBar.setBackgroundColor(Color.TRANSPARENT);
                     actionBar.setShadowAlpha(0);
                 } else {
@@ -44372,6 +44376,11 @@ public class ChatActivity extends BaseFragment implements
     }
 
     @Override
+    public boolean hasForceLightStatusBar() {
+        return isPillChatHeaderEnabled();
+    }
+
+    @Override
     public boolean isLightStatusBar() {
         if (isReport()) {
             Theme.ResourcesProvider resourcesProvider = getResourceProvider();
@@ -44387,6 +44396,10 @@ public class ChatActivity extends BaseFragment implements
             return !Theme.isCurrentThemeDark();
         }
         return AndroidUtilities.computePerceivedBrightness(actionBar.getBackgroundColor()) > 0.721f;
+    }
+
+    private boolean isPillChatHeaderEnabled() {
+        return NaConfig.INSTANCE.getPillChatTitle().Bool() && isTitleCentered();
     }
 
     public MessageObject.GroupedMessages getGroup(long id) {
