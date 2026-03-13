@@ -39354,8 +39354,14 @@ public class ChatActivity extends BaseFragment implements
         actionBar.setBackgroundColor(Color.TRANSPARENT);
         actionBar.setShadowAlpha(0);
         actionBar.setOccupyStatusBar(false);
+        final int pillForegroundColor = 0xFF1A1A1A;
+        final int pillSubtitleColor = 0xFF6F6F76;
+        actionBar.setItemsColor(pillForegroundColor, false);
+        actionBar.setItemsColor(pillForegroundColor, true);
+        actionBar.setItemsBackgroundColor(0x14000000, false);
         if (avatarContainer != null) {
             avatarContainer.setOccupyStatusBar(false);
+            avatarContainer.setTitleColors(pillForegroundColor, pillSubtitleColor);
         }
         if (contentView != null) {
             contentView.setOccupyStatusBar(false);

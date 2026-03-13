@@ -506,6 +506,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
     }
 
     private final Paint pillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint pillStrokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
     @Override
     protected void dispatchDraw(Canvas canvas) {
@@ -564,12 +565,23 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             }
 
             if (found) {
-                float paddingH = dp(12);
-                float paddingV = dp(4);
+                float paddingH = dp(14);
+                float paddingV = dp(6);
                 RectF pillRect = new RectF(minX - paddingH, minY - paddingV, maxX + paddingH, maxY + paddingV);
-                pillPaint.setColor(Theme.isCurrentThemeDark() ? 0x28FFFFFF : 0x15000000);
+                float maxPillWidth = Math.min(getWidth() - dp(24), dp(260));
+                if (pillRect.width() > maxPillWidth) {
+                    float cx = pillRect.centerX();
+                    pillRect.left = cx - maxPillWidth / 2f;
+                    pillRect.right = cx + maxPillWidth / 2f;
+                }
+
+                pillPaint.setColor(0xCCFFFFFF);
+                pillStrokePaint.setStyle(Paint.Style.STROKE);
+                pillStrokePaint.setStrokeWidth(dp(1));
+                pillStrokePaint.setColor(0x1A000000);
                 float radius = pillRect.height() / 2f;
                 canvas.drawRoundRect(pillRect, radius, radius, pillPaint);
+                canvas.drawRoundRect(pillRect, radius, radius, pillStrokePaint);
             }
         }
 
@@ -817,8 +829,13 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
 
     public void setTitleColors(int title, int subtitle) {
         titleTextView.setTextColor(title);
-        subtitleTextView.setTextColor(subtitle);
-        subtitleTextView.setTag(subtitle);
+        if (subtitleTextView != null) {
+            subtitleTextView.setTextColor(subtitle);
+            subtitleTextView.setTag(subtitle);
+        } else if (animatedSubtitleTextView != null) {
+            animatedSubtitleTextView.setTextColor(subtitle);
+            animatedSubtitleTextView.setTag(subtitle);
+        }
     }
 
     @Override
