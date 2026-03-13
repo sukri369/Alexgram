@@ -5061,7 +5061,7 @@ public class ChatActivity extends BaseFragment implements
         glassBackgroundDrawableFactoryFrosted.setSourceRootView(viewPositionWatcher, contentView);
         navbarContentDrawableFactory.setSourceRootView(viewPositionWatcher, contentView);
 
-        contentView.setOccupyStatusBar(!inBubbleMode && !isInsideContainer && !inPreviewMode);
+        contentView.setOccupyStatusBar(!inBubbleMode && !isInsideContainer && !inPreviewMode && !isPillChatHeaderEnabled());
 
         fadeDrawable = new BlurredBackgroundWithFadeDrawable(
                 navbarContentDrawableFactory.create(chatInputViewsContainer, null));
@@ -9462,13 +9462,8 @@ public class ChatActivity extends BaseFragment implements
         final BlurredBackgroundDrawable topPanelLayoutBackground = glassBackgroundDrawableFactory.create(topPanelLayout, BlurredBackgroundProviderImpl.topPanelChatActivity(themeDelegate));
         topPanelLayoutBackground.setRadius(dp(18));
         topPanelLayoutBackground.setPadding(dp(7));
-        if (isPillChatHeaderEnabled()) {
-            topPanelLayout.setPadding(getSideMenuWidth(), 0, 0, 0);
-            topPanelLayout.setBlurredBackground(null);
-        } else {
-            topPanelLayout.setPadding(dp(7) + getSideMenuWidth(), dp(7), dp(7), dp(7));
-            topPanelLayout.setBlurredBackground(topPanelLayoutBackground);
-        }
+        topPanelLayout.setPadding(dp(7) + getSideMenuWidth(), dp(7), dp(7), dp(7));
+        topPanelLayout.setBlurredBackground(topPanelLayoutBackground);
 
         if (chatMode == MODE_SEARCH) {
             messagesSearchListContainer.setVisibility(View.VISIBLE);
@@ -30322,7 +30317,7 @@ public class ChatActivity extends BaseFragment implements
             pinnedMessageView.setEnabled(!isInPreviewMode());
         }
         if (contentView != null) {
-            contentView.setOccupyStatusBar(!inBubbleMode && !isInsideContainer && !inPreviewMode);
+            contentView.setOccupyStatusBar(!inBubbleMode && !isInsideContainer && !inPreviewMode && !isPillChatHeaderEnabled());
         }
     }
 
@@ -39363,8 +39358,8 @@ public class ChatActivity extends BaseFragment implements
         final int pillSubtitleColor = 0xFF6F6F76;
         actionBar.setItemsColor(pillForegroundColor, false);
         actionBar.setItemsColor(pillForegroundColor, true);
-        actionBar.setItemsBackgroundColor(Color.TRANSPARENT, false);
-        actionBar.setItemsBackgroundColor(Color.TRANSPARENT, true);
+        actionBar.setItemsBackgroundColor(0x14000000, false);
+        actionBar.setItemsBackgroundColor(0x14000000, true);
         if (avatarContainer != null) {
             avatarContainer.setTitleColors(pillForegroundColor, pillSubtitleColor);
         }
