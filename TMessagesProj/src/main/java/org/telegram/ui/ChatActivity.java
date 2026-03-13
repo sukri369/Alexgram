@@ -47448,8 +47448,7 @@ public class ChatActivity extends BaseFragment implements
 
         final float alpha = 1f - fadeAlphaInv;
         topPanelLayoutFade.setFadeHeight((int) fadeHeight);
-        topPanelLayoutFade.setAlpha(alpha);
-        topPanelLayoutFade.setVisibility(alpha > 0 ? View.VISIBLE : View.INVISIBLE);
+        topPanelLayoutFade.setVisibility(alpha > 0 && !isPillChatHeaderEnabled() ? View.VISIBLE : View.INVISIBLE);
     }
 
 
