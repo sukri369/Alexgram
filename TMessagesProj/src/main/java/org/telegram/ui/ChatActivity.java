@@ -9355,7 +9355,9 @@ public class ChatActivity extends BaseFragment implements
                 updateMessagesVisiblePart(false);
             }
         };
-        actionBar.setDrawBlurBackground(contentView);
+        if (!isPillChatHeaderEnabled()) {
+            actionBar.setDrawBlurBackground(contentView);
+        }
 
         if (isTopic) {
             reactionsMentionCount = forumTopic.unread_reactions_count;
