@@ -87,6 +87,7 @@ import org.telegram.ui.Components.FloatingDebug.FloatingDebugController;
 import org.telegram.ui.Components.FloatingDebug.FloatingDebugProvider;
 import org.telegram.ui.Components.GroupCallPip;
 import org.telegram.ui.Components.LayoutHelper;
+import org.telegram.ui.ChatActivity;
 import org.telegram.ui.LaunchActivity;
 import org.telegram.ui.Stories.StoryViewer;
 
@@ -232,6 +233,19 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
             canvas.drawRect(0, getHeight() - height, getWidth(), getHeight(), navbarPaint);
         }
 
+        private boolean shouldIgnoreActionBarOffset(View child) {
+            if (child.getTag(0xFF112233) != null || child.getFitsSystemWindows() || child instanceof BaseFragment.AttachedSheetWindow) {
+                return true;
+            }
+            for (int i = fragmentsStack.size() - 1; i >= 0; --i) {
+                BaseFragment fragment = fragmentsStack.get(i);
+                if (fragment != null && fragment.fragmentView == child && fragment instanceof ChatActivity) {
+                    return ((ChatActivity) fragment).isPillChatHeaderLayoutEnabled();
+                }
+            }
+            return false;
+        }
+
         @Override
         public boolean hasOverlappingRendering() {
             if (Build.VERSION.SDK_INT >= 28) {
@@ -274,7 +288,7 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
             for (int a = 0; a < count; a++) {
                 View child = getChildAt(a);
                 if (!(child instanceof ActionBar)) {
-                    if (child.getTag(0xFF112233) != null || child.getFitsSystemWindows() || child instanceof BaseFragment.AttachedSheetWindow) {
+                    if (shouldIgnoreActionBarOffset(child)) {
                         int addHeight = isSupportEdgeToEdge ? navigationBarInsetHeight : 0;
                         measureChildWithMargins(child, widthMeasureSpec, 0, heightMeasureSpec, bottomTabsHeight + addHeight);
                     } else {
@@ -301,7 +315,7 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                 View child = getChildAt(a);
                 if (!(child instanceof ActionBar)) {
                     FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) child.getLayoutParams();
-                    if (child.getTag(0xFF112233) != null || child.getFitsSystemWindows() || child instanceof BaseFragment.AttachedSheetWindow) {
+                    if (shouldIgnoreActionBarOffset(child)) {
                         child.layout(
                             layoutParams.leftMargin,
                             layoutParams.topMargin,

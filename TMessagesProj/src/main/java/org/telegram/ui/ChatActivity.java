@@ -44445,6 +44445,10 @@ public class ChatActivity extends BaseFragment implements
         return getChatMode() != ChatActivity.MODE_SEARCH && getChatMode() != ChatActivity.MODE_SAVED;
     }
 
+    public boolean isPillChatHeaderLayoutEnabled() {
+        return isPillChatHeaderEnabled();
+    }
+
     public MessageObject.GroupedMessages getGroup(long id) {
         return groupedMessagesMap.get(id);
     }
