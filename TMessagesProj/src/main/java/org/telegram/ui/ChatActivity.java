@@ -39355,7 +39355,11 @@ public class ChatActivity extends BaseFragment implements
     }
 
     private void applyPillHeaderAppearance() {
-        if (!isPillChatHeaderEnabled() || actionBar == null) {
+        if (actionBar == null) {
+            return;
+        }
+        actionBar.setForceTransparentBackground(isPillChatHeaderEnabled());
+        if (!isPillChatHeaderEnabled()) {
             return;
         }
         actionBar.setBackground(null);

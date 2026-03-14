@@ -168,6 +168,7 @@ public class ActionBar extends FrameLayout implements Theme.Colorable {
 
     SizeNotifierFrameLayout contentView;
     boolean blurredBackground;
+    private boolean forceTransparentBackground;
     public Paint blurScrimPaint = new Paint();
     Rect rectTmp = new Rect();
 
@@ -1093,6 +1094,11 @@ public class ActionBar extends FrameLayout implements Theme.Colorable {
 
     @Override
     public void setBackgroundColor(int color) {
+        if (forceTransparentBackground) {
+            actionBarColor = Color.TRANSPARENT;
+            super.setBackgroundColor(Color.TRANSPARENT);
+            return;
+        }
         actionBarColor = color;
         if (!blurredBackground) {
             super.setBackgroundColor(actionBarColor);
@@ -1107,6 +1113,18 @@ public class ActionBar extends FrameLayout implements Theme.Colorable {
 
     public int getBackgroundColor() {
         return actionBarColor;
+    }
+
+    public void setForceTransparentBackground(boolean forceTransparentBackground) {
+        if (this.forceTransparentBackground == forceTransparentBackground) {
+            return;
+        }
+        this.forceTransparentBackground = forceTransparentBackground;
+        if (forceTransparentBackground) {
+            actionBarColor = Color.TRANSPARENT;
+            super.setBackgroundColor(Color.TRANSPARENT);
+        }
+        invalidate();
     }
 
     public boolean isActionModeShowed() {
@@ -2054,7 +2072,7 @@ public class ActionBar extends FrameLayout implements Theme.Colorable {
 
     @Override
     protected void dispatchDraw(Canvas canvas) {
-        if (blurredBackground && actionBarColor != Color.TRANSPARENT) {
+        if (!forceTransparentBackground && blurredBackground && actionBarColor != Color.TRANSPARENT) {
             rectTmp.set(0, 0, getMeasuredWidth(), getMeasuredHeight());
             blurScrimPaint.setColor(actionBarColor);
             if (adaptiveBackground) {
@@ -2282,7 +2300,7 @@ public class ActionBar extends FrameLayout implements Theme.Colorable {
 
     // --- Spring Animation ---
     public void onDrawCrossfadeBackground(Canvas canvas) {
-        if (blurredBackground && actionBarColor != Color.TRANSPARENT) {
+        if (!forceTransparentBackground && blurredBackground && actionBarColor != Color.TRANSPARENT) {
             rectTmp.set(0, 0, getMeasuredWidth(), getMeasuredHeight());
             blurScrimPaint.setColor(actionBarColor);
             contentView.drawBlurRect(canvas, getY(), rectTmp, blurScrimPaint, true);
