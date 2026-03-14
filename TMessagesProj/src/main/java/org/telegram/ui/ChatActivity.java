@@ -5064,6 +5064,10 @@ public class ChatActivity extends BaseFragment implements
 
         contentView.setOccupyStatusBar(!inBubbleMode && !isInsideContainer && !inPreviewMode);
         contentView.setTag(TAG_LAYOUT_NO_ACTIONBAR_OFFSET, isPillChatHeaderEnabled() ? Boolean.TRUE : null);
+        if (isPillChatHeaderEnabled()) {
+            contentView.backgroundImageUnderActionBar = true;
+            contentView.setBackgroundColor(Color.TRANSPARENT);
+        }
 
         fadeDrawable = new BlurredBackgroundWithFadeDrawable(
                 navbarContentDrawableFactory.create(chatInputViewsContainer, null));
@@ -39354,7 +39358,9 @@ public class ChatActivity extends BaseFragment implements
         if (!isPillChatHeaderEnabled() || actionBar == null) {
             return;
         }
+        actionBar.setBackground(null);
         actionBar.setBackgroundColor(Color.TRANSPARENT);
+        actionBar.setCastShadows(false);
         actionBar.setShadowAlpha(0);
         actionBar.setOccupyStatusBar(!inPreviewMode);
         actionBar.setTranslationY(0);
@@ -39378,6 +39384,7 @@ public class ChatActivity extends BaseFragment implements
             if (contentView.getPaddingTop() < targetTopPadding) {
                 contentView.setPadding(contentView.getPaddingLeft(), targetTopPadding, contentView.getPaddingRight(), contentView.getPaddingBottom());
             }
+            contentView.requestLayout();
         }
         if (contentView != null) {
             contentView.setClipToPadding(false);
