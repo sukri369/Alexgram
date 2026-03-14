@@ -1020,6 +1020,14 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             l += dp(AndroidUtilities.isTablet() ? 80 : 72) / 2;
         }
 
+        if (isPillChatTitleEnabled() && isCentered()) {
+            int safeLeft = dp(isPreviewMode() ? 70 : 56);
+            int safeRight = getWidth() - safeLeft;
+            int safeCenter = (safeLeft + safeRight) / 2;
+            int titleHalfWidth = titleTextView.getMeasuredWidth() / 2;
+            l = Math.max(safeCenter - titleHalfWidth, safeLeft);
+        }
+
         SimpleTextView titleTextLargerCopyView = this.titleTextLargerCopyView.get();
         if (getSubtitleTextView().getVisibility() != GONE) {
             titleTextView.layout(l, viewTop + dp(1.3f) - titleTextView.getPaddingTop(), l + titleTextView.getMeasuredWidth(), viewTop + titleTextView.getTextHeight() + dp(1.3f) - titleTextView.getPaddingTop() + titleTextView.getPaddingBottom());
