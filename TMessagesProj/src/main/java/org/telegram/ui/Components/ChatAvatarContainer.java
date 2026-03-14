@@ -563,7 +563,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             boolean found = false;
 
             found |= appendViewBoundsToPill(titleTextView, bounds);
-            found |= appendViewBoundsToPill(subtitleTextView != null ? subtitleTextView : animatedSubtitleTextView, bounds);
+            found |= appendViewBoundsToPill(getSubtitleTextView(), bounds);
             found |= appendViewBoundsToPill(titleTextLargerCopyView.get(), bounds);
             found |= appendViewBoundsToPill(subtitleTextLargerCopyView.get(), bounds);
 
@@ -574,7 +574,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                 float maxY = bounds[3];
                 float contentWidth = maxX - minX;
                 float paddingH = contentWidth > dp(220) ? dp(12) : dp(16);
-                float paddingV = dp(7);
+                float paddingV = dp(8);
                 pillRect.set(minX - paddingH, minY - paddingV, maxX + paddingH, maxY + paddingV);
 
                 final float hardLeft = isCentered() ? dp(isPreviewMode() ? 70 : 56) : dp(8);
@@ -585,7 +585,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                     pillRect.left = cx - maxPillWidth / 2f;
                     pillRect.right = cx + maxPillWidth / 2f;
                 }
-                float minPillWidth = dp(128);
+                float minPillWidth = dp(140);
                 if (pillRect.width() < minPillWidth) {
                     float cx = pillRect.centerX();
                     pillRect.left = cx - minPillWidth / 2f;
