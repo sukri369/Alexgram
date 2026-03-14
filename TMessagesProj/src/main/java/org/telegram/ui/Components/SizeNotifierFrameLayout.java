@@ -605,6 +605,27 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
     }
 
     @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        if (backgroundImageUnderActionBar) {
+            int fullWidth = getMeasuredWidth();
+            int fullHeight = getMeasuredHeight();
+            if (backgroundView != null) {
+                backgroundView.measure(
+                    MeasureSpec.makeMeasureSpec(fullWidth, MeasureSpec.EXACTLY),
+                    MeasureSpec.makeMeasureSpec(fullHeight, MeasureSpec.EXACTLY)
+                );
+            }
+            if (videoTextureView != null) {
+                videoTextureView.measure(
+                    MeasureSpec.makeMeasureSpec(fullWidth, MeasureSpec.EXACTLY),
+                    MeasureSpec.makeMeasureSpec(fullHeight, MeasureSpec.EXACTLY)
+                );
+            }
+        }
+    }
+
+    @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         super.onLayout(changed, l, t, r, b);
         if (backgroundImageUnderActionBar && backgroundView != null) {
