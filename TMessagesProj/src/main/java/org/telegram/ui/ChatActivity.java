@@ -18812,7 +18812,11 @@ public class ChatActivity extends BaseFragment implements
             }
             measureChildWithMargins(actionBar, widthMeasureSpec, 0, heightMeasureSpec, 0);
             int actionBarHeight = actionBar.getMeasuredHeight();
-            if (actionBar.getVisibility() == VISIBLE) {
+            final boolean pillHeaderEnabled = isPillChatHeaderEnabled();
+            if (pillHeaderEnabled) {
+                actionBarHeight = 0;
+            }
+            if (actionBar.getVisibility() == VISIBLE && !pillHeaderEnabled) {
                 heightSize -= actionBarHeight;
             }
             int keyboardHeightOld = keyboardHeight + chatEmojiViewPadding;
@@ -19067,7 +19071,7 @@ public class ChatActivity extends BaseFragment implements
                 switch (verticalGravity) {
                     case Gravity.TOP:
                         childTop = lp.topMargin + getPaddingTop();
-                        if (child != actionBar && actionBar.getVisibility() == VISIBLE) {
+                        if (child != actionBar && actionBar.getVisibility() == VISIBLE && !isPillChatHeaderEnabled()) {
                             childTop += actionBar.getMeasuredHeight();
                         }
                         break;
@@ -19111,7 +19115,7 @@ public class ChatActivity extends BaseFragment implements
                 } else if (child == actionBar) {
                     childTop -= getPaddingTop();
                 } else if (child == videoPlayerContainer) {
-                    childTop = actionBar.getMeasuredHeight();
+                    childTop = isPillChatHeaderEnabled() ? 0 : actionBar.getMeasuredHeight();
                 } else if (child == instantCameraView || child == overlayView || child == animatingImageView) {
                     childTop = 0;
                 } else if (child == textSelectionHelper.getOverlayView(getContext())) {
