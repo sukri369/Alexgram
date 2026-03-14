@@ -607,6 +607,12 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         super.onLayout(changed, l, t, r, b);
+        if (backgroundImageUnderActionBar && backgroundView != null) {
+            backgroundView.layout(0, 0, r - l, b - t);
+        }
+        if (backgroundImageUnderActionBar && videoTextureView != null) {
+            videoTextureView.layout(0, 0, r - l, b - t);
+        }
         notifyHeightChanged();
     }
 
