@@ -537,6 +537,21 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         return titleTextView != null && AndroidUtilities.computePerceivedBrightness(titleTextView.getTextColor()) > 0.7f;
     }
 
+    private boolean appendViewBoundsToPill(View view, float[] bounds) {
+        if (view == null || view.getVisibility() != VISIBLE || view.getAlpha() <= 0f) {
+            return false;
+        }
+        float left = view.getX();
+        float top = view.getY();
+        float right = left + view.getMeasuredWidth();
+        float bottom = top + view.getMeasuredHeight();
+        bounds[0] = Math.min(bounds[0], left);
+        bounds[1] = Math.min(bounds[1], top);
+        bounds[2] = Math.max(bounds[2], right);
+        bounds[3] = Math.max(bounds[3], bottom);
+        return true;
+    }
+
     @Override
     protected void dispatchDraw(Canvas canvas) {
         canvas.save();
@@ -544,62 +559,27 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         canvas.scale(s, s, getWidth() / 2f, getHeight() / 2f);
 
         if (isPillChatTitleEnabled()) {
-            float minX = Float.MAX_VALUE;
-            float minY = Float.MAX_VALUE;
-            float maxX = Float.MIN_VALUE;
-            float maxY = Float.MIN_VALUE;
+            float[] bounds = new float[] {Float.MAX_VALUE, Float.MAX_VALUE, Float.MIN_VALUE, Float.MIN_VALUE};
             boolean found = false;
 
-            if (titleTextView != null && titleTextView.getVisibility() == VISIBLE && titleTextView.getAlpha() > 0) {
-                float titleContentWidth = getPillTitleContentWidth();
-                float titleLeft = titleTextView.getX();
-                float titleRight = titleLeft + titleContentWidth;
-                if (isCentered()) {
-                    float cx = titleTextView.getX() + titleTextView.getMeasuredWidth() / 2f;
-                    float halfW = titleContentWidth / 2f;
-                    titleLeft = cx - halfW;
-                    titleRight = cx + halfW;
-                }
-                minX = Math.min(minX, titleLeft);
-                maxX = Math.max(maxX, titleRight);
-                minY = Math.min(minY, titleTextView.getY() + titleTextView.getPaddingTop());
-                maxY = Math.max(maxY, titleTextView.getY() + titleTextView.getPaddingTop() + titleTextView.getTextHeight());
-                found = true;
-            }
-
-            View sub = subtitleTextView != null ? subtitleTextView : animatedSubtitleTextView;
-            if (sub != null && sub.getVisibility() == VISIBLE && sub.getAlpha() > 0) {
-                float subTextWidth;
-                int subTextHeight;
-                if (sub instanceof SimpleTextView) {
-                    subTextWidth = ((SimpleTextView) sub).getTextWidth();
-                    subTextHeight = ((SimpleTextView) sub).getTextHeight();
-                } else {
-                    subTextWidth = ((AnimatedTextView) sub).getDrawable().getCurrentWidth();
-                    subTextHeight = sub.getMeasuredHeight();
-                }
-                float visibleSubTextWidth = Math.min(subTextWidth, sub.getMeasuredWidth());
-                float subLeft = sub.getX();
-                float subRight = subLeft + visibleSubTextWidth;
-                if (isCentered()) {
-                    float cx = sub.getX() + sub.getMeasuredWidth() / 2f;
-                    float halfW = visibleSubTextWidth / 2f;
-                    subLeft = cx - halfW;
-                    subRight = cx + halfW;
-                }
-                minX = Math.min(minX, subLeft);
-                maxX = Math.max(maxX, subRight);
-                minY = Math.min(minY, sub.getY());
-                maxY = Math.max(maxY, sub.getY() + subTextHeight);
-                found = true;
-            }
+            found |= appendViewBoundsToPill(titleTextView, bounds);
+            found |= appendViewBoundsToPill(subtitleTextView != null ? subtitleTextView : animatedSubtitleTextView, bounds);
+            found |= appendViewBoundsToPill(titleTextLargerCopyView.get(), bounds);
+            found |= appendViewBoundsToPill(subtitleTextLargerCopyView.get(), bounds);
 
             if (found) {
+                float minX = bounds[0];
+                float minY = bounds[1];
+                float maxX = bounds[2];
+                float maxY = bounds[3];
                 float contentWidth = maxX - minX;
                 float paddingH = contentWidth > dp(220) ? dp(12) : dp(16);
                 float paddingV = dp(7);
                 pillRect.set(minX - paddingH, minY - paddingV, maxX + paddingH, maxY + paddingV);
-                float maxPillWidth = Math.min(getWidth() - dp(28), dp(320));
+
+                final float hardLeft = isCentered() ? dp(isPreviewMode() ? 70 : 56) : dp(8);
+                final float hardRight = getWidth() - (isCentered() ? dp(isPreviewMode() ? 70 : 56) : dp(8));
+                float maxPillWidth = Math.min(hardRight - hardLeft, dp(360));
                 if (pillRect.width() > maxPillWidth) {
                     float cx = pillRect.centerX();
                     pillRect.left = cx - maxPillWidth / 2f;
@@ -611,9 +591,6 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                     pillRect.left = cx - minPillWidth / 2f;
                     pillRect.right = cx + minPillWidth / 2f;
                 }
-
-                final float hardLeft = isCentered() ? dp(isPreviewMode() ? 70 : 56) : dp(8);
-                final float hardRight = getWidth() - (isCentered() ? dp(isPreviewMode() ? 70 : 56) : dp(8));
                 if (pillRect.left < hardLeft) {
                     pillRect.offset(hardLeft - pillRect.left, 0);
                 }
