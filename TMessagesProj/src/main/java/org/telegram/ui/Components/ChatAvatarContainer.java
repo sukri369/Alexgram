@@ -369,7 +369,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         titleTextView.setEllipsizeByGradient(true);
         titleTextView.setTextColor(getThemedColor(Theme.key_actionBarDefaultTitle));
         titleTextView.setTextSize(18);
-        titleTextView.setGravity(isCentered() ? Gravity.CENTER_HORIZONTAL : Gravity.LEFT);
+        titleTextView.setGravity(isCentered() && !isPillChatTitleEnabled() ? Gravity.CENTER_HORIZONTAL : Gravity.LEFT);
         titleTextView.setTypeface(AndroidUtilities.bold());
         titleTextView.setLeftDrawableTopPadding(-dp(1.3f));
         // titleTextView.setCanHideRightDrawable(false);
@@ -386,7 +386,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             animatedSubtitleTextView.setTextColor(getThemedColor(Theme.key_actionBarDefaultSubtitle));
             animatedSubtitleTextView.setTag(Theme.key_actionBarDefaultSubtitle);
             animatedSubtitleTextView.setTextSize(dp(14));
-            animatedSubtitleTextView.setGravity(isCentered() ? Gravity.CENTER_HORIZONTAL : Gravity.LEFT);
+            animatedSubtitleTextView.setGravity(isCentered() && !isPillChatTitleEnabled() ? Gravity.CENTER_HORIZONTAL : Gravity.LEFT);
             animatedSubtitleTextView.setPadding(0, 0, isCentered() ? 0 : dp(10), 0);
             animatedSubtitleTextView.setTranslationY(-dp(1));
             addView(animatedSubtitleTextView);
@@ -396,7 +396,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             subtitleTextView.setTextColor(getThemedColor(Theme.key_actionBarDefaultSubtitle));
             subtitleTextView.setTag(Theme.key_actionBarDefaultSubtitle);
             subtitleTextView.setTextSize(14);
-            subtitleTextView.setGravity(isCentered() ? Gravity.CENTER_HORIZONTAL : Gravity.LEFT);
+            subtitleTextView.setGravity(isCentered() && !isPillChatTitleEnabled() ? Gravity.CENTER_HORIZONTAL : Gravity.LEFT);
             subtitleTextView.setPadding(0, 0, isCentered() ? 0 : dp(10), 0);
             addView(subtitleTextView);
         }
@@ -898,10 +898,16 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        boolean pillCentered = isPillChatTitleEnabled() && isCentered();
+        if (pillCentered) {
+            titleTextView.setGravity(Gravity.LEFT);
+            if (subtitleTextView != null) subtitleTextView.setGravity(Gravity.LEFT);
+            if (animatedSubtitleTextView != null) animatedSubtitleTextView.setGravity(Gravity.LEFT);
+        }
         int padding = isCentered() ? dp(isPreviewMode() ? 35 : 10) : 0;
         int width = MeasureSpec.getSize(widthMeasureSpec) + (isCentered() ? 0 : titleTextView.getPaddingRight());
         int availableWidth = width - dp(((avatarImageView.getVisibility() == VISIBLE || isCentered()) ? 54 : 0) + 16);
-        if (isPillChatTitleEnabled() && isCentered()) {
+        if (pillCentered) {
             int sideSafe = dp(isPreviewMode() ? 90 : 74);
             availableWidth = Math.max(dp(140), width - sideSafe * 2);
         }
@@ -1016,7 +1022,8 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             int safeLeft = dp(isPreviewMode() ? 70 : 56);
             int safeRight = getWidth() - safeLeft;
             int centerX = (safeLeft + safeRight) / 2;
-            l = centerX - titleTextView.getMeasuredWidth() / 2;
+            float contentW = getPillTitleContentWidth();
+            l = (int) (centerX - contentW / 2f);
             l = Math.max(l, safeLeft);
         }
 
