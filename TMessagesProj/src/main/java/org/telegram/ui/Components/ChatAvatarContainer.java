@@ -908,10 +908,15 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         int width = MeasureSpec.getSize(widthMeasureSpec) + (isCentered() ? 0 : titleTextView.getPaddingRight());
         int availableWidth = width - dp(((avatarImageView.getVisibility() == VISIBLE || isCentered()) ? 54 : 0) + 16);
         if (pillCentered) {
-            int sideSafe = dp(isPreviewMode() ? 90 : 74);
-            availableWidth = Math.max(dp(140), width - sideSafe * 2);
+            int sideSafe = dp(isPreviewMode() ? 70 : 56);
+            int maxPillWidth = Math.max(dp(100), width - sideSafe * 2);
+            int maxPillContentWidth = Math.max(dp(72), maxPillWidth - dp(40));
+            availableWidth = maxPillContentWidth;
         }
         int textMaxWidth = Math.max(dp(72), availableWidth - padding);
+        if (pillCentered) {
+            textMaxWidth = Math.max(dp(72), availableWidth);
+        }
         avatarImageView.measure(MeasureSpec.makeMeasureSpec(dp(42), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(dp(42), MeasureSpec.EXACTLY));
         titleTextView.measure(MeasureSpec.makeMeasureSpec(textMaxWidth, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(dp(24 + 8) + titleTextView.getPaddingRight(), MeasureSpec.AT_MOST));
         if (subtitleTextView != null) {
