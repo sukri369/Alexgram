@@ -545,6 +545,24 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         float top = view.getY();
         float right = left + view.getMeasuredWidth();
         float bottom = top + view.getMeasuredHeight();
+
+        if (view instanceof SimpleTextView) {
+            SimpleTextView simpleText = (SimpleTextView) view;
+            if (simpleText.getLayout() != null) {
+                left = simpleText.getTextStartX();
+                right = left + simpleText.getTextWidth();
+            }
+        } else if (view instanceof AnimatedTextView) {
+            AnimatedTextView animatedText = (AnimatedTextView) view;
+            if (animatedText.getDrawable() != null) {
+                float currentW = animatedText.getDrawable().getCurrentWidth();
+                if (isCentered()) {
+                    left += (view.getMeasuredWidth() - currentW) / 2f;
+                }
+                right = left + currentW;
+            }
+        }
+
         bounds[0] = Math.min(bounds[0], left);
         bounds[1] = Math.min(bounds[1], top);
         bounds[2] = Math.max(bounds[2], right);
