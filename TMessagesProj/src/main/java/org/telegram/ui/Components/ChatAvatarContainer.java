@@ -552,18 +552,18 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
 
             if (titleTextView != null && titleTextView.getVisibility() == VISIBLE && titleTextView.getAlpha() > 0) {
                 float titleContentWidth = getPillTitleContentWidth();
-                float titleLeft = titleTextView.getLeft();
-                float titleRight = titleTextView.getLeft() + titleContentWidth;
+                float titleLeft = titleTextView.getX();
+                float titleRight = titleLeft + titleContentWidth;
                 if (isCentered()) {
-                    float cx = titleTextView.getLeft() + titleTextView.getMeasuredWidth() / 2f;
+                    float cx = titleTextView.getX() + titleTextView.getMeasuredWidth() / 2f;
                     float halfW = titleContentWidth / 2f;
                     titleLeft = cx - halfW;
                     titleRight = cx + halfW;
                 }
                 minX = Math.min(minX, titleLeft);
                 maxX = Math.max(maxX, titleRight);
-                minY = Math.min(minY, titleTextView.getTop() + titleTextView.getPaddingTop());
-                maxY = Math.max(maxY, titleTextView.getTop() + titleTextView.getPaddingTop() + titleTextView.getTextHeight());
+                minY = Math.min(minY, titleTextView.getY() + titleTextView.getPaddingTop());
+                maxY = Math.max(maxY, titleTextView.getY() + titleTextView.getPaddingTop() + titleTextView.getTextHeight());
                 found = true;
             }
 
@@ -579,18 +579,18 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                     subTextHeight = sub.getMeasuredHeight();
                 }
                 float visibleSubTextWidth = Math.min(subTextWidth, sub.getMeasuredWidth());
-                float subLeft = sub.getLeft();
-                float subRight = sub.getLeft() + visibleSubTextWidth;
+                float subLeft = sub.getX();
+                float subRight = subLeft + visibleSubTextWidth;
                 if (isCentered()) {
-                    float cx = sub.getLeft() + sub.getMeasuredWidth() / 2f;
+                    float cx = sub.getX() + sub.getMeasuredWidth() / 2f;
                     float halfW = visibleSubTextWidth / 2f;
                     subLeft = cx - halfW;
                     subRight = cx + halfW;
                 }
                 minX = Math.min(minX, subLeft);
                 maxX = Math.max(maxX, subRight);
-                minY = Math.min(minY, sub.getTop());
-                maxY = Math.max(maxY, sub.getTop() + subTextHeight);
+                minY = Math.min(minY, sub.getY());
+                maxY = Math.max(maxY, sub.getY() + subTextHeight);
                 found = true;
             }
 
@@ -612,23 +612,13 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                     pillRect.right = cx + minPillWidth / 2f;
                 }
 
-                final float hardLeft = dp(8);
-                final float hardRight = getWidth() - dp(8);
+                final float hardLeft = isCentered() ? dp(isPreviewMode() ? 70 : 56) : dp(8);
+                final float hardRight = getWidth() - (isCentered() ? dp(isPreviewMode() ? 70 : 56) : dp(8));
                 if (pillRect.left < hardLeft) {
                     pillRect.offset(hardLeft - pillRect.left, 0);
                 }
                 if (pillRect.right > hardRight) {
                     pillRect.offset(hardRight - pillRect.right, 0);
-                }
-                if (isCentered()) {
-                    final float leftSafe = dp(isPreviewMode() ? 74 : 58);
-                    final float rightSafe = getWidth() - dp(isPreviewMode() ? 74 : 58);
-                    if (pillRect.left < leftSafe) {
-                        pillRect.offset(leftSafe - pillRect.left, 0);
-                    }
-                    if (pillRect.right > rightSafe) {
-                        pillRect.offset(rightSafe - pillRect.right, 0);
-                    }
                 }
 
                 boolean darkPillSurface = useDarkPillSurface();
