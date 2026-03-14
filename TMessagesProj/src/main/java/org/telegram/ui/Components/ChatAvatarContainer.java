@@ -374,7 +374,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         // titleTextView.setCanHideRightDrawable(false);
         // titleTextView.setRightDrawableOutside(true);
         titleTextView.setRightDrawableOutside(!isCentered());
-        titleTextView.setScrollNonFitText(isCentered());
+        titleTextView.setScrollNonFitText(isCentered() && !isPillChatTitleEnabled());
         titleTextView.setPadding(0, dp(6), 0, dp(12));
         addView(titleTextView);
 
@@ -507,6 +507,32 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
 
     private final Paint pillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint pillStrokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final RectF pillRect = new RectF();
+
+    private boolean isPillChatTitleEnabled() {
+        return NaConfig.INSTANCE.getPillChatTitle().Bool();
+    }
+
+    private float getPillTitleContentWidth() {
+        float width = Math.min(titleTextView.getTextWidth(), titleTextView.getMeasuredWidth());
+        Drawable leftDrawable = titleTextView.getLeftDrawable();
+        Drawable rightDrawable = titleTextView.getRightDrawable();
+        Drawable rightDrawable2 = titleTextView.getRightDrawable2();
+        if (leftDrawable != null) {
+            width += Math.max(0, leftDrawable.getIntrinsicWidth()) + dp(4);
+        }
+        if (rightDrawable != null) {
+            width += Math.max(0, rightDrawable.getIntrinsicWidth()) + dp(4);
+        }
+        if (rightDrawable2 != null) {
+            width += Math.max(0, rightDrawable2.getIntrinsicWidth()) + dp(4);
+        }
+        return Math.min(width, titleTextView.getMeasuredWidth());
+    }
+
+    private boolean useDarkPillSurface() {
+        return titleTextView != null && AndroidUtilities.computePerceivedBrightness(titleTextView.getTextColor()) > 0.7f;
+    }
 
     @Override
     protected void dispatchDraw(Canvas canvas) {
@@ -514,7 +540,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         final float s = bounce.getScale(.02f);
         canvas.scale(s, s, getWidth() / 2f, getHeight() / 2f);
 
-        if (NaConfig.INSTANCE.getPillChatTitle().Bool()) {
+        if (isPillChatTitleEnabled()) {
             float minX = Float.MAX_VALUE;
             float minY = Float.MAX_VALUE;
             float maxX = Float.MIN_VALUE;
@@ -522,11 +548,12 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             boolean found = false;
 
             if (titleTextView != null && titleTextView.getVisibility() == VISIBLE && titleTextView.getAlpha() > 0) {
+                float titleContentWidth = getPillTitleContentWidth();
                 float titleLeft = titleTextView.getLeft();
-                float titleRight = titleTextView.getLeft() + Math.min(titleTextView.getTextWidth(), titleTextView.getMeasuredWidth());
+                float titleRight = titleTextView.getLeft() + titleContentWidth;
                 if (isCentered()) {
                     float cx = titleTextView.getLeft() + titleTextView.getMeasuredWidth() / 2f;
-                    float halfW = Math.min(titleTextView.getTextWidth(), titleTextView.getMeasuredWidth()) / 2f;
+                    float halfW = titleContentWidth / 2f;
                     titleLeft = cx - halfW;
                     titleRight = cx + halfW;
                 }
@@ -565,20 +592,28 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             }
 
             if (found) {
-                float paddingH = dp(14);
-                float paddingV = dp(6);
-                RectF pillRect = new RectF(minX - paddingH, minY - paddingV, maxX + paddingH, maxY + paddingV);
-                float maxPillWidth = Math.min(getWidth() - dp(24), dp(260));
+                float contentWidth = maxX - minX;
+                float paddingH = contentWidth > dp(220) ? dp(12) : dp(16);
+                float paddingV = dp(7);
+                pillRect.set(minX - paddingH, minY - paddingV, maxX + paddingH, maxY + paddingV);
+                float maxPillWidth = Math.min(getWidth() - dp(28), dp(320));
                 if (pillRect.width() > maxPillWidth) {
                     float cx = pillRect.centerX();
                     pillRect.left = cx - maxPillWidth / 2f;
                     pillRect.right = cx + maxPillWidth / 2f;
                 }
+                float minPillWidth = dp(128);
+                if (pillRect.width() < minPillWidth) {
+                    float cx = pillRect.centerX();
+                    pillRect.left = cx - minPillWidth / 2f;
+                    pillRect.right = cx + minPillWidth / 2f;
+                }
 
-                pillPaint.setColor(0xCCFFFFFF);
+                boolean darkPillSurface = useDarkPillSurface();
+                pillPaint.setColor(darkPillSurface ? 0xB81A1B20 : 0xD9FFFFFF);
                 pillStrokePaint.setStyle(Paint.Style.STROKE);
                 pillStrokePaint.setStrokeWidth(dp(1));
-                pillStrokePaint.setColor(0x1A000000);
+                pillStrokePaint.setColor(darkPillSurface ? 0x26FFFFFF : 0x14000000);
                 float radius = pillRect.height() / 2f;
                 canvas.drawRoundRect(pillRect, radius, radius, pillPaint);
                 canvas.drawRoundRect(pillRect, radius, radius, pillStrokePaint);
@@ -836,6 +871,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             animatedSubtitleTextView.setTextColor(subtitle);
             animatedSubtitleTextView.setTag(subtitle);
         }
+        invalidate();
     }
 
     @Override
@@ -1112,7 +1148,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         }
 
         titleTextView.setText(value);
-        titleTextView.setScrollNonFitText(scrollable || isCentered());
+        titleTextView.setScrollNonFitText(!isPillChatTitleEnabled() && (scrollable || isCentered()));
 
         if (scam || fake) {
             if (!(titleTextView.getRightDrawable() instanceof ScamDrawable)) {
