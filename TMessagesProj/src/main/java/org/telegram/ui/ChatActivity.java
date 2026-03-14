@@ -12642,7 +12642,7 @@ public class ChatActivity extends BaseFragment implements
             hashtagHistoryView.setTranslationY(getHashtagTabsHeight() + contentPanTranslation);
         }
         if (topPanelLayout != null) {
-            topPanelLayout.setTranslationY(contentPanTranslation + (topicsTabs != null ? (dp(48 + 7) * (1f - topicsTabs.sidemenuT)) : 0));
+            topPanelLayout.setTranslationY((isPillChatHeaderEnabled() ? contentPaddingTop : 0) + contentPanTranslation + (topicsTabs != null ? (dp(48 + 7) * (1f - topicsTabs.sidemenuT)) : 0));
         }
     }
 
@@ -47510,6 +47510,7 @@ public class ChatActivity extends BaseFragment implements
 
         final float alpha = 1f - fadeAlphaInv;
         topPanelLayoutFade.setFadeHeight((int) fadeHeight);
+        topPanelLayoutFade.setTranslationY(isPillChatHeaderEnabled() ? contentPaddingTop : 0);
         topPanelLayoutFade.setVisibility(alpha > 0 && !isPillChatHeaderEnabled() ? View.VISIBLE : View.INVISIBLE);
     }
 
