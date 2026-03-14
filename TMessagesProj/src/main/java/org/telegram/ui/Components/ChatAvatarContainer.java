@@ -537,37 +537,24 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         return titleTextView != null && AndroidUtilities.computePerceivedBrightness(titleTextView.getTextColor()) > 0.7f;
     }
 
-    private boolean appendViewBoundsToPill(View view, float[] bounds) {
-        if (view == null || view.getVisibility() != VISIBLE || view.getAlpha() <= 0f) {
-            return false;
-        }
-        float left = view.getX();
-        float top = view.getY();
-        float right = left + view.getMeasuredWidth();
-        float bottom = top + view.getMeasuredHeight();
-
+    private float getViewContentWidth(View view) {
         if (view instanceof SimpleTextView) {
-            SimpleTextView simpleText = (SimpleTextView) view;
-            if (simpleText.getLayout() != null) {
-                left = simpleText.getTextStartX();
-                right = left + simpleText.getTextWidth();
-            }
+            SimpleTextView stv = (SimpleTextView) view;
+            float w = stv.getTextWidth();
+            Drawable ld = stv.getLeftDrawable();
+            Drawable rd = stv.getRightDrawable();
+            Drawable rd2 = stv.getRightDrawable2();
+            if (ld != null) w += ld.getIntrinsicWidth() + dp(4);
+            if (rd != null) w += rd.getIntrinsicWidth() + dp(4);
+            if (rd2 != null) w += rd2.getIntrinsicWidth() + dp(4);
+            return Math.min(w, view.getMeasuredWidth());
         } else if (view instanceof AnimatedTextView) {
-            AnimatedTextView animatedText = (AnimatedTextView) view;
-            if (animatedText.getDrawable() != null) {
-                float currentW = animatedText.getDrawable().getCurrentWidth();
-                if (isCentered()) {
-                    left += (view.getMeasuredWidth() - currentW) / 2f;
-                }
-                right = left + currentW;
+            AnimatedTextView atv = (AnimatedTextView) view;
+            if (atv.getDrawable() != null) {
+                return atv.getDrawable().getCurrentWidth();
             }
         }
-
-        bounds[0] = Math.min(bounds[0], left);
-        bounds[1] = Math.min(bounds[1], top);
-        bounds[2] = Math.max(bounds[2], right);
-        bounds[3] = Math.max(bounds[3], bottom);
-        return true;
+        return view.getMeasuredWidth();
     }
 
     @Override
@@ -576,78 +563,83 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         final float s = bounce.getScale(.02f);
         canvas.scale(s, s, getWidth() / 2f, getHeight() / 2f);
 
-        if (isPillChatTitleEnabled()) {
-            float[] bounds = new float[] {Float.MAX_VALUE, Float.MAX_VALUE, Float.MIN_VALUE, Float.MIN_VALUE};
-            boolean found = false;
+        if (isPillChatTitleEnabled() && titleTextView != null) {
+            int actionBarHeight = ActionBar.getCurrentActionBarHeight();
+            int viewTop = (actionBarHeight - dp(42)) / 2 + (Build.VERSION.SDK_INT >= 21 && occupyStatusBar ? AndroidUtilities.statusBarHeight : 0);
 
-            found |= appendViewBoundsToPill(titleTextView, bounds);
-            found |= appendViewBoundsToPill(getSubtitleTextView(), bounds);
-            found |= appendViewBoundsToPill(titleTextLargerCopyView.get(), bounds);
-            found |= appendViewBoundsToPill(subtitleTextLargerCopyView.get(), bounds);
+            float titleContentW = getViewContentWidth(titleTextView);
+            View subView = getSubtitleTextView();
+            float subtitleContentW = subView != null && subView.getVisibility() != GONE ? getViewContentWidth(subView) : 0;
+            float contentW = Math.max(titleContentW, subtitleContentW);
 
-            if (found) {
-                float minX = bounds[0];
-                float minY = bounds[1];
-                float maxX = bounds[2];
-                float maxY = bounds[3];
-                float contentWidth = maxX - minX;
-                float paddingH = contentWidth > dp(220) ? dp(12) : dp(16);
-                float paddingV = dp(8);
-                pillRect.set(minX - paddingH, minY - paddingV, maxX + paddingH, maxY + paddingV);
+            float paddingH = dp(20);
+            float paddingV = dp(6);
+            float pillW = contentW + paddingH * 2;
 
-                final float hardLeft = isCentered() ? dp(isPreviewMode() ? 70 : 56) : dp(8);
-                final float hardRight = getWidth() - (isCentered() ? dp(isPreviewMode() ? 70 : 56) : dp(8));
-                float maxPillWidth = Math.min(hardRight - hardLeft, dp(360));
-                if (pillRect.width() > maxPillWidth) {
-                    float cx = pillRect.centerX();
-                    pillRect.left = cx - maxPillWidth / 2f;
-                    pillRect.right = cx + maxPillWidth / 2f;
-                }
-                float minPillWidth = dp(140);
-                if (pillRect.width() < minPillWidth) {
-                    float cx = pillRect.centerX();
-                    pillRect.left = cx - minPillWidth / 2f;
-                    pillRect.right = cx + minPillWidth / 2f;
-                }
-                if (pillRect.left < hardLeft) {
-                    pillRect.offset(hardLeft - pillRect.left, 0);
-                }
-                if (pillRect.right > hardRight) {
-                    pillRect.offset(hardRight - pillRect.right, 0);
-                }
+            final float hardLeft = isCentered() ? dp(isPreviewMode() ? 70 : 56) : dp(8);
+            final float hardRight = getWidth() - (isCentered() ? dp(isPreviewMode() ? 70 : 56) : dp(8));
+            float maxPillW = hardRight - hardLeft;
+            pillW = Math.min(pillW, maxPillW);
+            pillW = Math.max(pillW, dp(100));
 
-                boolean darkPillSurface = useDarkPillSurface();
-                pillPaint.setColor(darkPillSurface ? 0xB21A1B20 : 0xCFFFFFFF);
-                pillStrokePaint.setStyle(Paint.Style.STROKE);
-                pillStrokePaint.setStrokeWidth(dp(1));
-                pillStrokePaint.setColor(darkPillSurface ? 0x26FFFFFF : 0x14000000);
-                float radius = pillRect.height() / 2f;
-
-                boolean drewBlur = false;
-                if (parentFragment != null && parentFragment.getContentView() != null) {
-                    float blurY = getY();
-                    if (getParent() instanceof View) {
-                        blurY += ((View) getParent()).getY();
-                    }
-                    pillBlurRect.set((int) pillRect.left, (int) pillRect.top, (int) Math.ceil(pillRect.right), (int) Math.ceil(pillRect.bottom));
-                    if (!pillBlurRect.isEmpty()) {
-                        pillClipPath.rewind();
-                        pillClipPath.addRoundRect(pillRect, radius, radius, Path.Direction.CW);
-                        canvas.save();
-                        canvas.clipPath(pillClipPath);
-                        parentFragment.getContentView().drawBlurRect(canvas, blurY, pillBlurRect, pillPaint, true);
-                        canvas.restore();
-                        drewBlur = true;
-                    }
-                }
-                if (!drewBlur) {
-                    canvas.drawRoundRect(pillRect, radius, radius, pillPaint);
-                } else {
-                    pillPaint.setColor(darkPillSurface ? 0x2813161B : 0x1EFFFFFF);
-                    canvas.drawRoundRect(pillRect, radius, radius, pillPaint);
-                }
-                canvas.drawRoundRect(pillRect, radius, radius, pillStrokePaint);
+            float cx;
+            if (isCentered()) {
+                cx = (hardLeft + hardRight) / 2f;
+            } else {
+                cx = titleTextView.getX() + titleTextView.getMeasuredWidth() / 2f;
             }
+
+            float pillLeft = cx - pillW / 2f;
+            float pillRight = cx + pillW / 2f;
+            if (pillLeft < hardLeft) {
+                pillLeft = hardLeft;
+                pillRight = pillLeft + pillW;
+            }
+            if (pillRight > hardRight) {
+                pillRight = hardRight;
+                pillLeft = pillRight - pillW;
+            }
+
+            float pillTop = viewTop + dp(1) - paddingV;
+            float pillBottom;
+            if (subView != null && subView.getVisibility() != GONE) {
+                pillBottom = viewTop + dp(24) + dp(16) + paddingV;
+            } else {
+                pillBottom = viewTop + dp(24) + paddingV;
+            }
+            pillRect.set(pillLeft, pillTop, pillRight, pillBottom);
+
+            boolean darkPillSurface = useDarkPillSurface();
+            pillPaint.setColor(darkPillSurface ? 0xB21A1B20 : 0xCFFFFFFF);
+            pillStrokePaint.setStyle(Paint.Style.STROKE);
+            pillStrokePaint.setStrokeWidth(dpf2(0.66f));
+            pillStrokePaint.setColor(darkPillSurface ? 0x20FFFFFF : 0x14000000);
+            float radius = pillRect.height() / 2f;
+
+            boolean drewBlur = false;
+            if (parentFragment != null && parentFragment.getContentView() != null) {
+                float blurY = getY();
+                if (getParent() instanceof View) {
+                    blurY += ((View) getParent()).getY();
+                }
+                pillBlurRect.set((int) pillRect.left, (int) pillRect.top, (int) Math.ceil(pillRect.right), (int) Math.ceil(pillRect.bottom));
+                if (!pillBlurRect.isEmpty()) {
+                    pillClipPath.rewind();
+                    pillClipPath.addRoundRect(pillRect, radius, radius, Path.Direction.CW);
+                    canvas.save();
+                    canvas.clipPath(pillClipPath);
+                    parentFragment.getContentView().drawBlurRect(canvas, blurY, pillBlurRect, pillPaint, true);
+                    canvas.restore();
+                    drewBlur = true;
+                }
+            }
+            if (!drewBlur) {
+                canvas.drawRoundRect(pillRect, radius, radius, pillPaint);
+            } else {
+                pillPaint.setColor(darkPillSurface ? 0x2813161B : 0x1EFFFFFF);
+                canvas.drawRoundRect(pillRect, radius, radius, pillPaint);
+            }
+            canvas.drawRoundRect(pillRect, radius, radius, pillStrokePaint);
         }
 
         super.dispatchDraw(canvas);
@@ -1023,9 +1015,9 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         if (isPillChatTitleEnabled() && isCentered()) {
             int safeLeft = dp(isPreviewMode() ? 70 : 56);
             int safeRight = getWidth() - safeLeft;
-            int safeCenter = (safeLeft + safeRight) / 2;
-            int titleHalfWidth = titleTextView.getMeasuredWidth() / 2;
-            l = Math.max(safeCenter - titleHalfWidth, safeLeft);
+            int centerX = (safeLeft + safeRight) / 2;
+            l = centerX - titleTextView.getMeasuredWidth() / 2;
+            l = Math.max(l, safeLeft);
         }
 
         SimpleTextView titleTextLargerCopyView = this.titleTextLargerCopyView.get();
