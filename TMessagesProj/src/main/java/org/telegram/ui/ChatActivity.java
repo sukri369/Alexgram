@@ -39370,6 +39370,7 @@ public class ChatActivity extends BaseFragment implements
         }
         if (contentView != null) {
             contentView.setTag(TAG_LAYOUT_NO_ACTIONBAR_OFFSET, Boolean.TRUE);
+            contentView.backgroundImageUnderActionBar = true;
             final int targetTopPadding = actionBar.getMeasuredHeight() != 0
                 ? actionBar.getMeasuredHeight()
                 : ActionBar.getCurrentActionBarHeight() + (!inPreviewMode ? AndroidUtilities.statusBarHeight : 0);
@@ -39379,6 +39380,7 @@ public class ChatActivity extends BaseFragment implements
         }
         if (contentView != null) {
             contentView.setClipToPadding(false);
+            contentView.invalidateBackground();
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && getParentActivity() != null) {
             AndroidUtilities.setLightStatusBar(getParentActivity().getWindow(), isLightStatusBar(), true);

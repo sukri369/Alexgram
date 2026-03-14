@@ -1,0 +1,471 @@
+commit 9ba9d855cfd1abb190983b21aca60d28b7d85243
+Author: Alex <alexx62058@gmail.com>
+Date:   Sat Mar 14 00:26:50 2026 +0530
+
+    fix(chat): disable clipToPadding on contentView so wallpaper fills header area in pill mode
+
+diff --git a/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java b/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
+index bfdb278a8..9c9cde277 100644
+--- a/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
++++ b/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
+@@ -39377,6 +39377,9 @@ public class ChatActivity extends BaseFragment implements
+                 contentView.setPadding(contentView.getPaddingLeft(), targetTopPadding, contentView.getPaddingRight(), contentView.getPaddingBottom());
+             }
+         }
++        if (contentView != null) {
++            contentView.setClipToPadding(false);
++        }
+         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && getParentActivity() != null) {
+             AndroidUtilities.setLightStatusBar(getParentActivity().getWindow(), isLightStatusBar(), true);
+             getParentActivity().getWindow().setStatusBarColor(Color.TRANSPARENT);
+
+commit fafa80f0fec47cec936d727caaa8cd4642196852
+Author: Alex <alexx62058@gmail.com>
+Date:   Fri Mar 13 23:27:39 2026 +0530
+
+    fix(chat): layout pill chat content under action bar
+
+diff --git a/TMessagesProj/src/main/java/org/telegram/ui/ActionBar/ActionBarLayout.java b/TMessagesProj/src/main/java/org/telegram/ui/ActionBar/ActionBarLayout.java
+index 76cec8e05..841e4726b 100644
+--- a/TMessagesProj/src/main/java/org/telegram/ui/ActionBar/ActionBarLayout.java
++++ b/TMessagesProj/src/main/java/org/telegram/ui/ActionBar/ActionBarLayout.java
+@@ -87,6 +87,7 @@ import org.telegram.ui.Components.FloatingDebug.FloatingDebugController;
+ import org.telegram.ui.Components.FloatingDebug.FloatingDebugProvider;
+ import org.telegram.ui.Components.GroupCallPip;
+ import org.telegram.ui.Components.LayoutHelper;
++import org.telegram.ui.ChatActivity;
+ import org.telegram.ui.LaunchActivity;
+ import org.telegram.ui.Stories.StoryViewer;
+ 
+@@ -232,6 +233,19 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
+             canvas.drawRect(0, getHeight() - height, getWidth(), getHeight(), navbarPaint);
+         }
+ 
++        private boolean shouldIgnoreActionBarOffset(View child) {
++            if (child.getTag(0xFF112233) != null || child.getFitsSystemWindows() || child instanceof BaseFragment.AttachedSheetWindow) {
++                return true;
++            }
++            for (int i = fragmentsStack.size() - 1; i >= 0; --i) {
++                BaseFragment fragment = fragmentsStack.get(i);
++                if (fragment != null && fragment.fragmentView == child && fragment instanceof ChatActivity) {
++                    return ((ChatActivity) fragment).isPillChatHeaderLayoutEnabled();
++                }
++            }
++            return false;
++        }
++
+         @Override
+         public boolean hasOverlappingRendering() {
+             if (Build.VERSION.SDK_INT >= 28) {
+@@ -274,7 +288,7 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
+             for (int a = 0; a < count; a++) {
+                 View child = getChildAt(a);
+                 if (!(child instanceof ActionBar)) {
+-                    if (child.getTag(0xFF112233) != null || child.getFitsSystemWindows() || child instanceof BaseFragment.AttachedSheetWindow) {
++                    if (shouldIgnoreActionBarOffset(child)) {
+                         int addHeight = isSupportEdgeToEdge ? navigationBarInsetHeight : 0;
+                         measureChildWithMargins(child, widthMeasureSpec, 0, heightMeasureSpec, bottomTabsHeight + addHeight);
+                     } else {
+@@ -301,7 +315,7 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
+                 View child = getChildAt(a);
+                 if (!(child instanceof ActionBar)) {
+                     FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) child.getLayoutParams();
+-                    if (child.getTag(0xFF112233) != null || child.getFitsSystemWindows() || child instanceof BaseFragment.AttachedSheetWindow) {
++                    if (shouldIgnoreActionBarOffset(child)) {
+                         child.layout(
+                             layoutParams.leftMargin,
+                             layoutParams.topMargin,
+diff --git a/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java b/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
+index e23974c45..bfdb278a8 100644
+--- a/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
++++ b/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
+@@ -44445,6 +44445,10 @@ public class ChatActivity extends BaseFragment implements
+         return getChatMode() != ChatActivity.MODE_SEARCH && getChatMode() != ChatActivity.MODE_SAVED;
+     }
+ 
++    public boolean isPillChatHeaderLayoutEnabled() {
++        return isPillChatHeaderEnabled();
++    }
++
+     public MessageObject.GroupedMessages getGroup(long id) {
+         return groupedMessagesMap.get(id);
+     }
+
+commit a8a5bbb8d14ffca4102000c7b1538880bbb3cb3f
+Author: Alex <alexx62058@gmail.com>
+Date:   Fri Mar 13 23:11:05 2026 +0530
+
+    fix(chat): underlay wallpaper behind transparent pill header
+
+diff --git a/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java b/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
+index 91757df24..e23974c45 100644
+--- a/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
++++ b/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
+@@ -427,6 +427,7 @@ public class ChatActivity extends BaseFragment implements
+     private final static boolean DISABLE_PROGRESS_VIEW = true;
+     private final static int SKELETON_DISAPPEAR_MS = 200;
+     public static final int ACTION_BAR_BLUR_ALPHA = 178;
++    private static final int TAG_LAYOUT_NO_ACTIONBAR_OFFSET = 0xFF112233;
+ 
+     private static int SKELETON_LIGHT_OVERLAY_ALPHA = 22;
+     private static float SKELETON_SATURATION = 1.4f;
+@@ -5062,6 +5063,7 @@ public class ChatActivity extends BaseFragment implements
+         navbarContentDrawableFactory.setSourceRootView(viewPositionWatcher, contentView);
+ 
+         contentView.setOccupyStatusBar(!inBubbleMode && !isInsideContainer && !inPreviewMode);
++        contentView.setTag(TAG_LAYOUT_NO_ACTIONBAR_OFFSET, isPillChatHeaderEnabled() ? Boolean.TRUE : null);
+ 
+         fadeDrawable = new BlurredBackgroundWithFadeDrawable(
+                 navbarContentDrawableFactory.create(chatInputViewsContainer, null));
+@@ -30318,6 +30320,7 @@ public class ChatActivity extends BaseFragment implements
+         }
+         if (contentView != null) {
+             contentView.setOccupyStatusBar(!inBubbleMode && !isInsideContainer && !inPreviewMode);
++            contentView.setTag(TAG_LAYOUT_NO_ACTIONBAR_OFFSET, isPillChatHeaderEnabled() ? Boolean.TRUE : null);
+         }
+     }
+ 
+@@ -39365,6 +39368,15 @@ public class ChatActivity extends BaseFragment implements
+             avatarContainer.setOccupyStatusBar(!inPreviewMode);
+             avatarContainer.setTitleColors(pillForegroundColor, pillSubtitleColor);
+         }
++        if (contentView != null) {
++            contentView.setTag(TAG_LAYOUT_NO_ACTIONBAR_OFFSET, Boolean.TRUE);
++            final int targetTopPadding = actionBar.getMeasuredHeight() != 0
++                ? actionBar.getMeasuredHeight()
++                : ActionBar.getCurrentActionBarHeight() + (!inPreviewMode ? AndroidUtilities.statusBarHeight : 0);
++            if (contentView.getPaddingTop() < targetTopPadding) {
++                contentView.setPadding(contentView.getPaddingLeft(), targetTopPadding, contentView.getPaddingRight(), contentView.getPaddingBottom());
++            }
++        }
+         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && getParentActivity() != null) {
+             AndroidUtilities.setLightStatusBar(getParentActivity().getWindow(), isLightStatusBar(), true);
+             getParentActivity().getWindow().setStatusBarColor(Color.TRANSPARENT);
+
+commit 5de5cbbe4f5d2ad248798fb237d9804e3fefb4c2
+Author: Alex <alexx62058@gmail.com>
+Date:   Fri Mar 13 22:52:49 2026 +0530
+
+    fix(chat): remove pill override that forced black top inset
+
+diff --git a/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java b/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
+index a43bf3472..91757df24 100644
+--- a/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
++++ b/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
+@@ -5061,7 +5061,7 @@ public class ChatActivity extends BaseFragment implements
+         glassBackgroundDrawableFactoryFrosted.setSourceRootView(viewPositionWatcher, contentView);
+         navbarContentDrawableFactory.setSourceRootView(viewPositionWatcher, contentView);
+ 
+-        contentView.setOccupyStatusBar(!inBubbleMode && !isInsideContainer && !inPreviewMode && !isPillChatHeaderEnabled());
++        contentView.setOccupyStatusBar(!inBubbleMode && !isInsideContainer && !inPreviewMode);
+ 
+         fadeDrawable = new BlurredBackgroundWithFadeDrawable(
+                 navbarContentDrawableFactory.create(chatInputViewsContainer, null));
+@@ -30317,7 +30317,7 @@ public class ChatActivity extends BaseFragment implements
+             pinnedMessageView.setEnabled(!isInPreviewMode());
+         }
+         if (contentView != null) {
+-            contentView.setOccupyStatusBar(!inBubbleMode && !isInsideContainer && !inPreviewMode && !isPillChatHeaderEnabled());
++            contentView.setOccupyStatusBar(!inBubbleMode && !isInsideContainer && !inPreviewMode);
+         }
+     }
+ 
+@@ -39365,9 +39365,6 @@ public class ChatActivity extends BaseFragment implements
+             avatarContainer.setOccupyStatusBar(!inPreviewMode);
+             avatarContainer.setTitleColors(pillForegroundColor, pillSubtitleColor);
+         }
+-        if (contentView != null) {
+-            contentView.setOccupyStatusBar(false);
+-        }
+         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && getParentActivity() != null) {
+             AndroidUtilities.setLightStatusBar(getParentActivity().getWindow(), isLightStatusBar(), true);
+             getParentActivity().getWindow().setStatusBarColor(Color.TRANSPARENT);
+
+commit 98892fe5025996a77b2f3a576cbac10fc9869ffa
+Author: Alex <alexx62058@gmail.com>
+Date:   Fri Mar 13 22:25:48 2026 +0530
+
+    fix(chat): keep pill layout normal while drawing wallpaper behind header
+
+diff --git a/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java b/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
+index 9f06deece..a43bf3472 100644
+--- a/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
++++ b/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
+@@ -39353,8 +39353,8 @@ public class ChatActivity extends BaseFragment implements
+         }
+         actionBar.setBackgroundColor(Color.TRANSPARENT);
+         actionBar.setShadowAlpha(0);
+-        actionBar.setOccupyStatusBar(false);
+-        actionBar.setTranslationY(!inPreviewMode ? AndroidUtilities.statusBarHeight : 0);
++        actionBar.setOccupyStatusBar(!inPreviewMode);
++        actionBar.setTranslationY(0);
+         final int pillForegroundColor = 0xFF1A1A1A;
+         final int pillSubtitleColor = 0xFF6F6F76;
+         actionBar.setItemsColor(pillForegroundColor, false);
+@@ -39362,9 +39362,12 @@ public class ChatActivity extends BaseFragment implements
+         actionBar.setItemsBackgroundColor(0x14000000, false);
+         actionBar.setItemsBackgroundColor(0x14000000, true);
+         if (avatarContainer != null) {
+-            avatarContainer.setOccupyStatusBar(false);
++            avatarContainer.setOccupyStatusBar(!inPreviewMode);
+             avatarContainer.setTitleColors(pillForegroundColor, pillSubtitleColor);
+         }
++        if (contentView != null) {
++            contentView.setOccupyStatusBar(false);
++        }
+         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && getParentActivity() != null) {
+             AndroidUtilities.setLightStatusBar(getParentActivity().getWindow(), isLightStatusBar(), true);
+             getParentActivity().getWindow().setStatusBarColor(Color.TRANSPARENT);
+
+commit b671b3b725a518a4e780d9f3046c1bff01530095
+Author: Alex <alexx62058@gmail.com>
+Date:   Fri Mar 13 22:08:30 2026 +0530
+
+    fix(chat): render pill header over transparent status area
+
+diff --git a/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java b/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
+index beae84b05..9f06deece 100644
+--- a/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
++++ b/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
+@@ -39353,7 +39353,8 @@ public class ChatActivity extends BaseFragment implements
+         }
+         actionBar.setBackgroundColor(Color.TRANSPARENT);
+         actionBar.setShadowAlpha(0);
+-        actionBar.setOccupyStatusBar(!inPreviewMode);
++        actionBar.setOccupyStatusBar(false);
++        actionBar.setTranslationY(!inPreviewMode ? AndroidUtilities.statusBarHeight : 0);
+         final int pillForegroundColor = 0xFF1A1A1A;
+         final int pillSubtitleColor = 0xFF6F6F76;
+         actionBar.setItemsColor(pillForegroundColor, false);
+@@ -39361,6 +39362,7 @@ public class ChatActivity extends BaseFragment implements
+         actionBar.setItemsBackgroundColor(0x14000000, false);
+         actionBar.setItemsBackgroundColor(0x14000000, true);
+         if (avatarContainer != null) {
++            avatarContainer.setOccupyStatusBar(false);
+             avatarContainer.setTitleColors(pillForegroundColor, pillSubtitleColor);
+         }
+         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && getParentActivity() != null) {
+
+commit 5d0787e27d8dc38b1534be1a21ff38ac25eb94b8
+Author: Alex <alexx62058@gmail.com>
+Date:   Fri Mar 13 21:50:38 2026 +0530
+
+    fix(chat): restore pinned panel and keep pill-only transparency
+
+diff --git a/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java b/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
+index 3330b8b34..beae84b05 100644
+--- a/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
++++ b/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
+@@ -5061,7 +5061,7 @@ public class ChatActivity extends BaseFragment implements
+         glassBackgroundDrawableFactoryFrosted.setSourceRootView(viewPositionWatcher, contentView);
+         navbarContentDrawableFactory.setSourceRootView(viewPositionWatcher, contentView);
+ 
+-        contentView.setOccupyStatusBar(!inBubbleMode && !isInsideContainer && !inPreviewMode);
++        contentView.setOccupyStatusBar(!inBubbleMode && !isInsideContainer && !inPreviewMode && !isPillChatHeaderEnabled());
+ 
+         fadeDrawable = new BlurredBackgroundWithFadeDrawable(
+                 navbarContentDrawableFactory.create(chatInputViewsContainer, null));
+@@ -9462,13 +9462,8 @@ public class ChatActivity extends BaseFragment implements
+         final BlurredBackgroundDrawable topPanelLayoutBackground = glassBackgroundDrawableFactory.create(topPanelLayout, BlurredBackgroundProviderImpl.topPanelChatActivity(themeDelegate));
+         topPanelLayoutBackground.setRadius(dp(18));
+         topPanelLayoutBackground.setPadding(dp(7));
+-        if (isPillChatHeaderEnabled()) {
+-            topPanelLayout.setPadding(getSideMenuWidth(), 0, 0, 0);
+-            topPanelLayout.setBlurredBackground(null);
+-        } else {
+-            topPanelLayout.setPadding(dp(7) + getSideMenuWidth(), dp(7), dp(7), dp(7));
+-            topPanelLayout.setBlurredBackground(topPanelLayoutBackground);
+-        }
++        topPanelLayout.setPadding(dp(7) + getSideMenuWidth(), dp(7), dp(7), dp(7));
++        topPanelLayout.setBlurredBackground(topPanelLayoutBackground);
+ 
+         if (chatMode == MODE_SEARCH) {
+             messagesSearchListContainer.setVisibility(View.VISIBLE);
+@@ -30322,7 +30317,7 @@ public class ChatActivity extends BaseFragment implements
+             pinnedMessageView.setEnabled(!isInPreviewMode());
+         }
+         if (contentView != null) {
+-            contentView.setOccupyStatusBar(!inBubbleMode && !isInsideContainer && !inPreviewMode);
++            contentView.setOccupyStatusBar(!inBubbleMode && !isInsideContainer && !inPreviewMode && !isPillChatHeaderEnabled());
+         }
+     }
+ 
+@@ -39363,8 +39358,8 @@ public class ChatActivity extends BaseFragment implements
+         final int pillSubtitleColor = 0xFF6F6F76;
+         actionBar.setItemsColor(pillForegroundColor, false);
+         actionBar.setItemsColor(pillForegroundColor, true);
+-        actionBar.setItemsBackgroundColor(Color.TRANSPARENT, false);
+-        actionBar.setItemsBackgroundColor(Color.TRANSPARENT, true);
++        actionBar.setItemsBackgroundColor(0x14000000, false);
++        actionBar.setItemsBackgroundColor(0x14000000, true);
+         if (avatarContainer != null) {
+             avatarContainer.setTitleColors(pillForegroundColor, pillSubtitleColor);
+         }
+
+commit 15a4beab82d3b520af1e1cf4df24c93ab9cfdb32
+Author: Alex <alexx62058@gmail.com>
+Date:   Fri Mar 13 21:19:41 2026 +0530
+
+    fix(chat): remove dark overlays in pill mode
+
+diff --git a/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java b/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
+index c908d93f2..3330b8b34 100644
+--- a/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
++++ b/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
+@@ -9462,8 +9462,13 @@ public class ChatActivity extends BaseFragment implements
+         final BlurredBackgroundDrawable topPanelLayoutBackground = glassBackgroundDrawableFactory.create(topPanelLayout, BlurredBackgroundProviderImpl.topPanelChatActivity(themeDelegate));
+         topPanelLayoutBackground.setRadius(dp(18));
+         topPanelLayoutBackground.setPadding(dp(7));
+-        topPanelLayout.setPadding(dp(7) + getSideMenuWidth(), dp(7), dp(7), dp(7));
+-        topPanelLayout.setBlurredBackground(topPanelLayoutBackground);
++        if (isPillChatHeaderEnabled()) {
++            topPanelLayout.setPadding(getSideMenuWidth(), 0, 0, 0);
++            topPanelLayout.setBlurredBackground(null);
++        } else {
++            topPanelLayout.setPadding(dp(7) + getSideMenuWidth(), dp(7), dp(7), dp(7));
++            topPanelLayout.setBlurredBackground(topPanelLayoutBackground);
++        }
+ 
+         if (chatMode == MODE_SEARCH) {
+             messagesSearchListContainer.setVisibility(View.VISIBLE);
+@@ -39358,7 +39363,8 @@ public class ChatActivity extends BaseFragment implements
+         final int pillSubtitleColor = 0xFF6F6F76;
+         actionBar.setItemsColor(pillForegroundColor, false);
+         actionBar.setItemsColor(pillForegroundColor, true);
+-        actionBar.setItemsBackgroundColor(0x14000000, false);
++        actionBar.setItemsBackgroundColor(Color.TRANSPARENT, false);
++        actionBar.setItemsBackgroundColor(Color.TRANSPARENT, true);
+         if (avatarContainer != null) {
+             avatarContainer.setTitleColors(pillForegroundColor, pillSubtitleColor);
+         }
+
+commit 2960fdf437f3b8303ab8505320232c37b787398c
+Author: Alex <alexx62058@gmail.com>
+Date:   Fri Mar 13 21:03:46 2026 +0530
+
+    fix(chat): keep pill header below status bar
+
+diff --git a/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java b/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
+index 7a659f729..c908d93f2 100644
+--- a/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
++++ b/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
+@@ -5061,7 +5061,7 @@ public class ChatActivity extends BaseFragment implements
+         glassBackgroundDrawableFactoryFrosted.setSourceRootView(viewPositionWatcher, contentView);
+         navbarContentDrawableFactory.setSourceRootView(viewPositionWatcher, contentView);
+ 
+-        contentView.setOccupyStatusBar(!inBubbleMode && !isInsideContainer && !inPreviewMode && !isPillChatHeaderEnabled());
++        contentView.setOccupyStatusBar(!inBubbleMode && !isInsideContainer && !inPreviewMode);
+ 
+         fadeDrawable = new BlurredBackgroundWithFadeDrawable(
+                 navbarContentDrawableFactory.create(chatInputViewsContainer, null));
+@@ -30317,7 +30317,7 @@ public class ChatActivity extends BaseFragment implements
+             pinnedMessageView.setEnabled(!isInPreviewMode());
+         }
+         if (contentView != null) {
+-            contentView.setOccupyStatusBar(!inBubbleMode && !isInsideContainer && !inPreviewMode && !isPillChatHeaderEnabled());
++            contentView.setOccupyStatusBar(!inBubbleMode && !isInsideContainer && !inPreviewMode);
+         }
+     }
+ 
+@@ -39353,19 +39353,15 @@ public class ChatActivity extends BaseFragment implements
+         }
+         actionBar.setBackgroundColor(Color.TRANSPARENT);
+         actionBar.setShadowAlpha(0);
+-        actionBar.setOccupyStatusBar(false);
++        actionBar.setOccupyStatusBar(!inPreviewMode);
+         final int pillForegroundColor = 0xFF1A1A1A;
+         final int pillSubtitleColor = 0xFF6F6F76;
+         actionBar.setItemsColor(pillForegroundColor, false);
+         actionBar.setItemsColor(pillForegroundColor, true);
+         actionBar.setItemsBackgroundColor(0x14000000, false);
+         if (avatarContainer != null) {
+-            avatarContainer.setOccupyStatusBar(false);
+             avatarContainer.setTitleColors(pillForegroundColor, pillSubtitleColor);
+         }
+-        if (contentView != null) {
+-            contentView.setOccupyStatusBar(false);
+-        }
+         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && getParentActivity() != null) {
+             AndroidUtilities.setLightStatusBar(getParentActivity().getWindow(), isLightStatusBar(), true);
+             getParentActivity().getWindow().setStatusBarColor(Color.TRANSPARENT);
+
+commit c5f5d2b7010f257e84e3c9f666b1b4afbf96f00e
+Author: Alex <alexx62058@gmail.com>
+Date:   Fri Mar 13 20:46:55 2026 +0530
+
+    style(chat): refine pill header to light frosted capsule
+
+diff --git a/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java b/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
+index 1c19429f1..7a659f729 100644
+--- a/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
++++ b/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
+@@ -39354,8 +39354,14 @@ public class ChatActivity extends BaseFragment implements
+         actionBar.setBackgroundColor(Color.TRANSPARENT);
+         actionBar.setShadowAlpha(0);
+         actionBar.setOccupyStatusBar(false);
++        final int pillForegroundColor = 0xFF1A1A1A;
++        final int pillSubtitleColor = 0xFF6F6F76;
++        actionBar.setItemsColor(pillForegroundColor, false);
++        actionBar.setItemsColor(pillForegroundColor, true);
++        actionBar.setItemsBackgroundColor(0x14000000, false);
+         if (avatarContainer != null) {
+             avatarContainer.setOccupyStatusBar(false);
++            avatarContainer.setTitleColors(pillForegroundColor, pillSubtitleColor);
+         }
+         if (contentView != null) {
+             contentView.setOccupyStatusBar(false);
+diff --git a/TMessagesProj/src/main/java/org/telegram/ui/Components/ChatAvatarContainer.java b/TMessagesProj/src/main/java/org/telegram/ui/Components/ChatAvatarContainer.java
+index 2c049a052..c6b7a56b4 100644
+--- a/TMessagesProj/src/main/java/org/telegram/ui/Components/ChatAvatarContainer.java
++++ b/TMessagesProj/src/main/java/org/telegram/ui/Components/ChatAvatarContainer.java
+@@ -506,6 +506,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
+     }
+ 
+     private final Paint pillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
++    private final Paint pillStrokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+ 
+     @Override
+     protected void dispatchDraw(Canvas canvas) {
+@@ -564,12 +565,23 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
+             }
+ 
+             if (found) {
+-                float paddingH = dp(12);
+-                float paddingV = dp(4);
++                float paddingH = dp(14);
++                float paddingV = dp(6);
+                 RectF pillRect = new RectF(minX - paddingH, minY - paddingV, maxX + paddingH, maxY + paddingV);
+-                pillPaint.setColor(Theme.isCurrentThemeDark() ? 0x28FFFFFF : 0x15000000);
++                float maxPillWidth = Math.min(getWidth() - dp(24), dp(260));
++                if (pillRect.width() > maxPillWidth) {
++                    float cx = pillRect.centerX();
++                    pillRect.left = cx - maxPillWidth / 2f;
++                    pillRect.right = cx + maxPillWidth / 2f;
++                }
++
++                pillPaint.setColor(0xCCFFFFFF);
++                pillStrokePaint.setStyle(Paint.Style.STROKE);
++                pillStrokePaint.setStrokeWidth(dp(1));
++                pillStrokePaint.setColor(0x1A000000);
+                 float radius = pillRect.height() / 2f;
+                 canvas.drawRoundRect(pillRect, radius, radius, pillPaint);
++                canvas.drawRoundRect(pillRect, radius, radius, pillStrokePaint);
+             }
+         }
+ 
+@@ -817,8 +829,13 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
+ 
+     public void setTitleColors(int title, int subtitle) {
+         titleTextView.setTextColor(title);
+-        subtitleTextView.setTextColor(subtitle);
+-        subtitleTextView.setTag(subtitle);
++        if (subtitleTextView != null) {
++            subtitleTextView.setTextColor(subtitle);
++            subtitleTextView.setTag(subtitle);
++        } else if (animatedSubtitleTextView != null) {
++            animatedSubtitleTextView.setTextColor(subtitle);
++            animatedSubtitleTextView.setTag(subtitle);
++        }
+     }
+ 
+     @Override
