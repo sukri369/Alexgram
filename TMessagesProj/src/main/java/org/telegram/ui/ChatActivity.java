@@ -47898,7 +47898,12 @@ public class ChatActivity extends BaseFragment implements
             return;
         }
 
-        final int topClip = isInsideContainer ? 0 : ActionBar.getCurrentActionBarHeight() + windowInsetsStateHolder.getInsets(WindowInsetsCompat.Type.statusBars()).top;
+        final int topClip;
+        if (isPillChatHeaderEnabled() || isInsideContainer) {
+            topClip = 0;
+        } else {
+            topClip = ActionBar.getCurrentActionBarHeight() + windowInsetsStateHolder.getInsets(WindowInsetsCompat.Type.statusBars()).top;
+        }
         final int bottomClip = (int) Math.max(0,
             windowInsetsStateHolder.getAnimatedImeBottomInset() * windowInsetsStateHolder.getAnimatedKeyboardVisibility() - dp(29));
 
