@@ -39371,6 +39371,7 @@ public class ChatActivity extends BaseFragment implements
         if (contentView != null) {
             contentView.setTag(TAG_LAYOUT_NO_ACTIONBAR_OFFSET, Boolean.TRUE);
             contentView.backgroundImageUnderActionBar = true;
+            contentView.setBackgroundColor(Color.TRANSPARENT); // Override ActionBarLayout's default windowBackgroundWhite
             final int targetTopPadding = actionBar.getMeasuredHeight() != 0
                 ? actionBar.getMeasuredHeight()
                 : ActionBar.getCurrentActionBarHeight() + (!inPreviewMode ? AndroidUtilities.statusBarHeight : 0);
