@@ -18,6 +18,7 @@ import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.Rect;
@@ -508,6 +509,8 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
     private final Paint pillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint pillStrokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final RectF pillRect = new RectF();
+    private final Rect pillBlurRect = new Rect();
+    private final Path pillClipPath = new Path();
 
     private boolean isPillChatTitleEnabled() {
         return NaConfig.INSTANCE.getPillChatTitle().Bool();
@@ -609,13 +612,55 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                     pillRect.right = cx + minPillWidth / 2f;
                 }
 
+                final float hardLeft = dp(8);
+                final float hardRight = getWidth() - dp(8);
+                if (pillRect.left < hardLeft) {
+                    pillRect.offset(hardLeft - pillRect.left, 0);
+                }
+                if (pillRect.right > hardRight) {
+                    pillRect.offset(hardRight - pillRect.right, 0);
+                }
+                if (isCentered()) {
+                    final float leftSafe = dp(isPreviewMode() ? 74 : 58);
+                    final float rightSafe = getWidth() - dp(isPreviewMode() ? 74 : 58);
+                    if (pillRect.left < leftSafe) {
+                        pillRect.offset(leftSafe - pillRect.left, 0);
+                    }
+                    if (pillRect.right > rightSafe) {
+                        pillRect.offset(rightSafe - pillRect.right, 0);
+                    }
+                }
+
                 boolean darkPillSurface = useDarkPillSurface();
-                pillPaint.setColor(darkPillSurface ? 0xB81A1B20 : 0xD9FFFFFF);
+                pillPaint.setColor(darkPillSurface ? 0xB21A1B20 : 0xCFFFFFFF);
                 pillStrokePaint.setStyle(Paint.Style.STROKE);
                 pillStrokePaint.setStrokeWidth(dp(1));
                 pillStrokePaint.setColor(darkPillSurface ? 0x26FFFFFF : 0x14000000);
                 float radius = pillRect.height() / 2f;
-                canvas.drawRoundRect(pillRect, radius, radius, pillPaint);
+
+                boolean drewBlur = false;
+                if (parentFragment != null && parentFragment.getContentView() != null) {
+                    float blurY = getY();
+                    if (getParent() instanceof View) {
+                        blurY += ((View) getParent()).getY();
+                    }
+                    pillBlurRect.set((int) pillRect.left, (int) pillRect.top, (int) Math.ceil(pillRect.right), (int) Math.ceil(pillRect.bottom));
+                    if (!pillBlurRect.isEmpty()) {
+                        pillClipPath.rewind();
+                        pillClipPath.addRoundRect(pillRect, radius, radius, Path.Direction.CW);
+                        canvas.save();
+                        canvas.clipPath(pillClipPath);
+                        parentFragment.getContentView().drawBlurRect(canvas, blurY, pillBlurRect, pillPaint, true);
+                        canvas.restore();
+                        drewBlur = true;
+                    }
+                }
+                if (!drewBlur) {
+                    canvas.drawRoundRect(pillRect, radius, radius, pillPaint);
+                } else {
+                    pillPaint.setColor(darkPillSurface ? 0x2813161B : 0x1EFFFFFF);
+                    canvas.drawRoundRect(pillRect, radius, radius, pillPaint);
+                }
                 canvas.drawRoundRect(pillRect, radius, radius, pillStrokePaint);
             }
         }
@@ -879,12 +924,17 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         int padding = isCentered() ? dp(isPreviewMode() ? 35 : 10) : 0;
         int width = MeasureSpec.getSize(widthMeasureSpec) + (isCentered() ? 0 : titleTextView.getPaddingRight());
         int availableWidth = width - dp(((avatarImageView.getVisibility() == VISIBLE || isCentered()) ? 54 : 0) + 16);
+        if (isPillChatTitleEnabled() && isCentered()) {
+            int sideSafe = dp(isPreviewMode() ? 90 : 74);
+            availableWidth = Math.max(dp(140), width - sideSafe * 2);
+        }
+        int textMaxWidth = Math.max(dp(72), availableWidth - padding);
         avatarImageView.measure(MeasureSpec.makeMeasureSpec(dp(42), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(dp(42), MeasureSpec.EXACTLY));
-        titleTextView.measure(MeasureSpec.makeMeasureSpec(availableWidth - padding, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(dp(24 + 8) + titleTextView.getPaddingRight(), MeasureSpec.AT_MOST));
+        titleTextView.measure(MeasureSpec.makeMeasureSpec(textMaxWidth, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(dp(24 + 8) + titleTextView.getPaddingRight(), MeasureSpec.AT_MOST));
         if (subtitleTextView != null) {
-            subtitleTextView.measure(MeasureSpec.makeMeasureSpec(availableWidth - padding, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(dp(20), MeasureSpec.AT_MOST));
+            subtitleTextView.measure(MeasureSpec.makeMeasureSpec(textMaxWidth, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(dp(20), MeasureSpec.AT_MOST));
         } else if (animatedSubtitleTextView != null) {
-            animatedSubtitleTextView.measure(MeasureSpec.makeMeasureSpec(availableWidth - padding, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(dp(20), MeasureSpec.AT_MOST));
+            animatedSubtitleTextView.measure(MeasureSpec.makeMeasureSpec(textMaxWidth, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(dp(20), MeasureSpec.AT_MOST));
         }
         if (timeItem != null) {
             timeItem.measure(MeasureSpec.makeMeasureSpec(dp(34), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(dp(34), MeasureSpec.EXACTLY));
