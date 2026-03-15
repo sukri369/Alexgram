@@ -88,6 +88,7 @@ public class SimpleTextView extends View implements Drawable.Callback {
     private Paint fadePaint;
     private Paint fadePaintBack;
     private Paint fadeEllpsizePaint;
+    private Paint fadeEllpsizePaintBack;
     private int fadeEllpsizePaintWidth;
     private int lastWidth;
 
@@ -103,6 +104,7 @@ public class SimpleTextView extends View implements Drawable.Callback {
     private boolean leftDrawableOutside, rightDrawableOutside;
     private boolean rightDrawableInside;
     private boolean ellipsizeByGradient, ellipsizeByGradientLeft;
+    private boolean ellipsizeByGradientBothSides;
     private Boolean forceEllipsizeByGradientLeft;
     private int ellipsizeByGradientWidthDp = 16;
     private int paddingRight;
@@ -241,8 +243,20 @@ public class SimpleTextView extends View implements Drawable.Callback {
             return;
         }
         ellipsizeByGradient = value;
+        if (!value) {
+            ellipsizeByGradientBothSides = false;
+        }
         this.forceEllipsizeByGradientLeft = forceLeft;
         updateFadePaints();
+    }
+
+    public void setEllipsizeByGradientCentered(boolean value) {
+        if (ellipsizeByGradientBothSides == value) {
+            return;
+        }
+        ellipsizeByGradientBothSides = value;
+        updateFadePaints();
+        invalidate();
     }
 
     public void setEllipsizeByGradient(int value, Boolean forceLeft) {
@@ -276,13 +290,19 @@ public class SimpleTextView extends View implements Drawable.Callback {
             if (fadeEllpsizePaint == null) {
                 fadeEllpsizePaint = new Paint();
             }
+            if (fadeEllpsizePaintBack == null) {
+                fadeEllpsizePaintBack = new Paint();
+            }
             ellipsizeByGradientLeft = ellipsizeLeft;
             if (ellipsizeByGradientLeft) {
                 fadeEllpsizePaint.setShader(new LinearGradient(0, 0, fadeEllpsizePaintWidth = dp(ellipsizeByGradientWidthDp), 0, new int[]{0xffffffff, 0}, new float[]{0f, 1f}, Shader.TileMode.CLAMP));
+                fadeEllpsizePaintBack.setShader(new LinearGradient(0, 0, fadeEllpsizePaintWidth, 0, new int[]{0, 0xffffffff}, new float[]{0f, 1f}, Shader.TileMode.CLAMP));
             } else {
                 fadeEllpsizePaint.setShader(new LinearGradient(0, 0, fadeEllpsizePaintWidth = dp(ellipsizeByGradientWidthDp), 0, new int[]{0, 0xffffffff}, new float[]{0f, 1f}, Shader.TileMode.CLAMP));
+                fadeEllpsizePaintBack.setShader(new LinearGradient(0, 0, fadeEllpsizePaintWidth, 0, new int[]{0xffffffff, 0}, new float[]{0f, 1f}, Shader.TileMode.CLAMP));
             }
             fadeEllpsizePaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_OUT));
+            fadeEllpsizePaintBack.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_OUT));
         }
     }
 
@@ -1079,10 +1099,21 @@ public class SimpleTextView extends View implements Drawable.Callback {
             } else if (ellipsizeByGradient && textDoesNotFit && fadeEllpsizePaint != null) {
                 canvas.save();
                 updateFadePaints();
-                if (!ellipsizeByGradientLeft) {
-                    canvas.translate(getMaxTextWidth() - paddingRight - fadeEllpsizePaintWidth - dp(rightDrawable != null && !(rightDrawable instanceof AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable) && rightDrawableOutside ? +2 : 0), 0);
+                if (ellipsizeByGradientBothSides && fadeEllpsizePaintBack != null) {
+                    int rightFadeX = getMaxTextWidth() - paddingRight - fadeEllpsizePaintWidth - dp(rightDrawable != null && !(rightDrawable instanceof AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable) && rightDrawableOutside ? +2 : 0);
+                    canvas.translate(rightFadeX, 0);
+                    canvas.drawRect(0, 0, fadeEllpsizePaintWidth, getMeasuredHeight(), fadeEllpsizePaint);
+                    canvas.restore();
+
+                    canvas.save();
+                    canvas.translate(textOffsetX, 0);
+                    canvas.drawRect(0, 0, fadeEllpsizePaintWidth, getMeasuredHeight(), fadeEllpsizePaintBack);
+                } else {
+                    if (!ellipsizeByGradientLeft) {
+                        canvas.translate(getMaxTextWidth() - paddingRight - fadeEllpsizePaintWidth - dp(rightDrawable != null && !(rightDrawable instanceof AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable) && rightDrawableOutside ? +2 : 0), 0);
+                    }
+                    canvas.drawRect(textOffsetX, 0, fadeEllpsizePaintWidth, getMeasuredHeight(), fadeEllpsizePaint);
                 }
-                canvas.drawRect(textOffsetX, 0, fadeEllpsizePaintWidth, getMeasuredHeight(), fadeEllpsizePaint);
                 canvas.restore();
             }
             updateScrollAnimation();

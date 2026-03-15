@@ -155,6 +155,7 @@ public class AnimatedTextView extends View {
 
         private float rightPadding;
         private boolean ellipsizeByGradient;
+        private boolean ellipsizeByGradientBothSides;
         private LinearGradient ellipsizeGradient;
         private Matrix ellipsizeGradientMatrix;
         private Paint ellipsizePaint;
@@ -182,6 +183,14 @@ public class AnimatedTextView extends View {
 
         public void setEllipsizeByGradient(boolean enabled) {
             ellipsizeByGradient = enabled;
+            if (!enabled) {
+                ellipsizeByGradientBothSides = false;
+            }
+            invalidateSelf();
+        }
+
+        public void setEllipsizeByGradientCentered(boolean enabled) {
+            ellipsizeByGradientBothSides = enabled;
             invalidateSelf();
         }
 
@@ -333,6 +342,13 @@ public class AnimatedTextView extends View {
                 ellipsizeGradient.setLocalMatrix(ellipsizeGradientMatrix);
                 canvas.save();
                 canvas.drawRect(bounds.right - rightPadding - w, bounds.top, bounds.right - rightPadding + AndroidUtilities.dp(1), bounds.bottom, ellipsizePaint);
+                if (ellipsizeByGradientBothSides) {
+                    ellipsizeGradientMatrix.reset();
+                    ellipsizeGradientMatrix.postScale(-1, 1, w / 2f, 0);
+                    ellipsizeGradientMatrix.postTranslate(bounds.left, 0);
+                    ellipsizeGradient.setLocalMatrix(ellipsizeGradientMatrix);
+                    canvas.drawRect(bounds.left - AndroidUtilities.dp(1), bounds.top, bounds.left + w, bounds.bottom, ellipsizePaint);
+                }
                 canvas.restore();
                 canvas.restore();
             }
@@ -1347,6 +1363,10 @@ public class AnimatedTextView extends View {
 
     public void setEllipsizeByGradient(boolean enabled) {
         drawable.setEllipsizeByGradient(enabled);
+    }
+
+    public void setEllipsizeByGradientCentered(boolean enabled) {
+        drawable.setEllipsizeByGradientCentered(enabled);
     }
 
     public void setRightPadding(float rightPadding) {
