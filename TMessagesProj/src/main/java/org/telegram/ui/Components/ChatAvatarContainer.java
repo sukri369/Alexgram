@@ -990,7 +990,6 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                 animatedSubtitleTextView.setEllipsizeByGradient(false);
                 animatedSubtitleTextView.setEllipsizeByGradientCentered(false);
                 animatedSubtitleTextView.setEllipsizeMiddle(false);
-                animatedSubtitleTextView.setScrollNonFitText(false);
             }
         } else {
             titleTextView.setEllipsizeByGradient(true);
