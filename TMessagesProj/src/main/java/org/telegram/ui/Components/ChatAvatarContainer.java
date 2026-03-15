@@ -557,12 +557,20 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         return view.getMeasuredWidth();
     }
 
+    private int getPillCenteredSideSafeInset() {
+        int baseInset = dp(isPreviewMode() ? 70 : 56);
+        int avatarInset = avatarImageView != null && avatarImageView.getVisibility() == VISIBLE
+                ? leftPadding + dp(50)
+                : 0;
+        return Math.max(baseInset, avatarInset);
+    }
+
     private int getPillCenteredSafeLeft() {
-        return dp(isPreviewMode() ? 24 : 16);
+        return getPillCenteredSideSafeInset();
     }
 
     private int getPillCenteredSafeRight() {
-        return getWidth() - dp(isPreviewMode() ? 24 : 16);
+        return getWidth() - getPillCenteredSideSafeInset();
     }
 
     private int getPillCenteredTextLeft(int viewWidth) {
@@ -956,9 +964,8 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         int width = MeasureSpec.getSize(widthMeasureSpec) + (isCentered() ? 0 : titleTextView.getPaddingRight());
         int availableWidth = width - dp(((avatarImageView.getVisibility() == VISIBLE || isCentered()) ? 54 : 0) + 16);
         if (pillCentered) {
-            int leftSafe = dp(isPreviewMode() ? 24 : 16);
-            int rightSafe = dp(isPreviewMode() ? 24 : 16);
-            int maxPillWidth = Math.max(dp(100), width - leftSafe - rightSafe);
+            int sideSafe = getPillCenteredSideSafeInset();
+            int maxPillWidth = Math.max(dp(100), width - sideSafe * 2);
             int maxPillContentWidth = Math.max(dp(72), maxPillWidth - dp(40));
             availableWidth = maxPillContentWidth;
         }
