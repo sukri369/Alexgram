@@ -516,6 +516,30 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         return NaConfig.INSTANCE.getPillChatTitle().Bool();
     }
 
+    private int getPillHorizontalPadding() {
+        return dp(20);
+    }
+
+    private int getPillVerticalPadding() {
+        return dp(6);
+    }
+
+    private int getPillMinimumWidth() {
+        return dp(100);
+    }
+
+    private int getPillMinimumContentWidth() {
+        return dp(72);
+    }
+
+    private int getPillMaxWidth(int containerWidth) {
+        return Math.max(getPillMinimumWidth(), containerWidth - getPillCenteredSideSafeInset() * 2);
+    }
+
+    private int getPillMaxContentWidth(int containerWidth) {
+        return Math.max(getPillMinimumContentWidth(), getPillMaxWidth(containerWidth) - getPillHorizontalPadding() * 2);
+    }
+
     private float getPillTitleContentWidth() {
         float width = Math.min(titleTextView.getTextWidth(), titleTextView.getMeasuredWidth());
         Drawable leftDrawable = titleTextView.getLeftDrawable();
@@ -623,15 +647,15 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             float subtitleContentW = subView != null && subView.getVisibility() != GONE ? getViewContentWidth(subView) : 0;
             float contentW = Math.max(titleContentW, subtitleContentW);
 
-            float paddingH = dp(16);
-            float paddingV = dp(6);
+            float paddingH = getPillHorizontalPadding();
+            float paddingV = getPillVerticalPadding();
             float pillW = contentW + paddingH * 2;
 
             final float hardLeft = isCentered() ? getPillCenteredSafeLeft() : dp(8);
             final float hardRight = isCentered() ? getPillCenteredSafeRight() : getWidth() - dp(8);
             float maxPillW = hardRight - hardLeft;
             pillW = Math.min(pillW, maxPillW);
-            pillW = Math.max(pillW, dp(100));
+            pillW = Math.max(pillW, getPillMinimumWidth());
 
             float cx;
             if (isCentered()) {
@@ -982,14 +1006,11 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         int width = MeasureSpec.getSize(widthMeasureSpec) + (isCentered() ? 0 : titleTextView.getPaddingRight());
         int availableWidth = width - dp(((avatarImageView.getVisibility() == VISIBLE || isCentered()) ? 54 : 0) + 16);
         if (pillCentered) {
-            int sideSafe = getPillCenteredSideSafeInset();
-            int maxPillWidth = Math.max(dp(100), width - sideSafe * 2);
-            int maxPillContentWidth = Math.max(dp(72), maxPillWidth - dp(32));
-            availableWidth = maxPillContentWidth;
+            availableWidth = getPillMaxContentWidth(width);
         }
-        int textMaxWidth = Math.max(dp(72), availableWidth - padding);
+        int textMaxWidth = Math.max(getPillMinimumContentWidth(), availableWidth - padding);
         if (pillCentered) {
-            textMaxWidth = Math.max(dp(72), availableWidth);
+            textMaxWidth = Math.max(getPillMinimumContentWidth(), availableWidth);
         }
         avatarImageView.measure(MeasureSpec.makeMeasureSpec(dp(42), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(dp(42), MeasureSpec.EXACTLY));
         titleTextView.measure(MeasureSpec.makeMeasureSpec(textMaxWidth, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(dp(24 + 8) + titleTextView.getPaddingRight(), MeasureSpec.AT_MOST));
