@@ -1065,6 +1065,14 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             } else {
                 pillSubtitleOverflowing = false;
             }
+
+            // Gravity is part of child text layout; re-measure after deciding final alignment.
+            titleTextView.measure(MeasureSpec.makeMeasureSpec(textMaxWidth, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(dp(24 + 8) + titleTextView.getPaddingRight(), MeasureSpec.AT_MOST));
+            if (subtitleTextView != null) {
+                subtitleTextView.measure(MeasureSpec.makeMeasureSpec(textMaxWidth, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(dp(20), MeasureSpec.AT_MOST));
+            } else if (animatedSubtitleTextView != null) {
+                animatedSubtitleTextView.measure(MeasureSpec.makeMeasureSpec(textMaxWidth, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(dp(20), MeasureSpec.AT_MOST));
+            }
         } else {
             pillTitleOverflowing = false;
             pillSubtitleOverflowing = false;
@@ -1421,6 +1429,9 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             titleTextView.setRightDrawable(null);
             rightDrawableContentDescription = null;
         }
+
+        requestLayout();
+        invalidate();
     }
 
     private Drawable emojiStatusDefaultDrawable;
@@ -1438,6 +1449,9 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         } else {
             lastSubtitle = value;
         }
+
+        requestLayout();
+        invalidate();
     }
 
     public ImageView getTimeItem() {
