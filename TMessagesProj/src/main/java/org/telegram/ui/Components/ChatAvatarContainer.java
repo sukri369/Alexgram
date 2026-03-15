@@ -541,6 +541,10 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         if (view instanceof SimpleTextView) {
             SimpleTextView stv = (SimpleTextView) view;
             float w = stv.getTextWidth();
+            CharSequence text = stv.getText();
+            if (!TextUtils.isEmpty(text)) {
+                w = Math.max(w, stv.getPaint().measureText(text, 0, text.length()));
+            }
             Drawable ld = stv.getLeftDrawable();
             Drawable rd = stv.getRightDrawable();
             Drawable rd2 = stv.getRightDrawable2();
@@ -550,9 +554,15 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             return w;
         } else if (view instanceof AnimatedTextView) {
             AnimatedTextView atv = (AnimatedTextView) view;
-            if (atv.getDrawable() != null) {
-                return atv.getDrawable().getCurrentWidth();
+            float w = 0;
+            CharSequence text = atv.getText();
+            if (!TextUtils.isEmpty(text)) {
+                w = atv.getPaint().measureText(text, 0, text.length());
             }
+            if (atv.getDrawable() != null) {
+                w = Math.max(w, atv.getDrawable().getCurrentWidth());
+            }
+            return w;
         }
         return view.getMeasuredWidth();
     }
@@ -613,7 +623,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             float subtitleContentW = subView != null && subView.getVisibility() != GONE ? getViewContentWidth(subView) : 0;
             float contentW = Math.max(titleContentW, subtitleContentW);
 
-            float paddingH = dp(20);
+            float paddingH = dp(16);
             float paddingV = dp(6);
             float pillW = contentW + paddingH * 2;
 
@@ -942,23 +952,31 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         boolean pillCentered = isPillChatTitleEnabled() && isCentered();
         if (pillCentered) {
             titleTextView.setGravity(Gravity.CENTER_HORIZONTAL);
-            titleTextView.setEllipsizeByGradientCentered(false);
-            titleTextView.setEllipsizeMiddle(true);
-            if (subtitleTextView != null) subtitleTextView.setGravity(Gravity.CENTER_HORIZONTAL);
-            if (subtitleTextView != null) subtitleTextView.setEllipsizeByGradientCentered(false);
-            if (subtitleTextView != null) subtitleTextView.setEllipsizeMiddle(true);
-            if (animatedSubtitleTextView != null) {
-                animatedSubtitleTextView.setGravity(Gravity.CENTER_HORIZONTAL);
-                animatedSubtitleTextView.setEllipsizeByGradientCentered(false);
-                animatedSubtitleTextView.setEllipsizeMiddle(true);
-            }
-        } else {
+            titleTextView.setEllipsizeByGradient(false);
             titleTextView.setEllipsizeByGradientCentered(false);
             titleTextView.setEllipsizeMiddle(false);
+            if (subtitleTextView != null) subtitleTextView.setGravity(Gravity.CENTER_HORIZONTAL);
+            if (subtitleTextView != null) subtitleTextView.setEllipsizeByGradient(false);
             if (subtitleTextView != null) subtitleTextView.setEllipsizeByGradientCentered(false);
             if (subtitleTextView != null) subtitleTextView.setEllipsizeMiddle(false);
-            if (animatedSubtitleTextView != null) animatedSubtitleTextView.setEllipsizeByGradientCentered(false);
-            if (animatedSubtitleTextView != null) animatedSubtitleTextView.setEllipsizeMiddle(false);
+            if (animatedSubtitleTextView != null) {
+                animatedSubtitleTextView.setGravity(Gravity.CENTER_HORIZONTAL);
+                animatedSubtitleTextView.setEllipsizeByGradient(false);
+                animatedSubtitleTextView.setEllipsizeByGradientCentered(false);
+                animatedSubtitleTextView.setEllipsizeMiddle(false);
+            }
+        } else {
+            titleTextView.setEllipsizeByGradient(true);
+            titleTextView.setEllipsizeByGradientCentered(false);
+            titleTextView.setEllipsizeMiddle(false);
+            if (subtitleTextView != null) subtitleTextView.setEllipsizeByGradient(true);
+            if (subtitleTextView != null) subtitleTextView.setEllipsizeByGradientCentered(false);
+            if (subtitleTextView != null) subtitleTextView.setEllipsizeMiddle(false);
+            if (animatedSubtitleTextView != null) {
+                animatedSubtitleTextView.setEllipsizeByGradient(true);
+                animatedSubtitleTextView.setEllipsizeByGradientCentered(false);
+                animatedSubtitleTextView.setEllipsizeMiddle(false);
+            }
         }
         int padding = isCentered() ? dp(isPreviewMode() ? 35 : 10) : 0;
         int width = MeasureSpec.getSize(widthMeasureSpec) + (isCentered() ? 0 : titleTextView.getPaddingRight());
@@ -966,7 +984,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         if (pillCentered) {
             int sideSafe = getPillCenteredSideSafeInset();
             int maxPillWidth = Math.max(dp(100), width - sideSafe * 2);
-            int maxPillContentWidth = Math.max(dp(72), maxPillWidth - dp(40));
+            int maxPillContentWidth = Math.max(dp(72), maxPillWidth - dp(32));
             availableWidth = maxPillContentWidth;
         }
         int textMaxWidth = Math.max(dp(72), availableWidth - padding);
