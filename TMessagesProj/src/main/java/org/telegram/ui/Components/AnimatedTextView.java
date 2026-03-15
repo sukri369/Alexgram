@@ -156,6 +156,7 @@ public class AnimatedTextView extends View {
         private float rightPadding;
         private boolean ellipsizeByGradient;
         private boolean ellipsizeByGradientBothSides;
+        private boolean ellipsizeMiddle;
         private LinearGradient ellipsizeGradient;
         private Matrix ellipsizeGradientMatrix;
         private Paint ellipsizePaint;
@@ -191,6 +192,11 @@ public class AnimatedTextView extends View {
 
         public void setEllipsizeByGradientCentered(boolean enabled) {
             ellipsizeByGradientBothSides = enabled;
+            invalidateSelf();
+        }
+
+        public void setEllipsizeMiddle(boolean enabled) {
+            ellipsizeMiddle = enabled;
             invalidateSelf();
         }
 
@@ -594,12 +600,13 @@ public class AnimatedTextView extends View {
             if (width <= 0) {
                 width = Math.min(AndroidUtilities.displaySize.x, AndroidUtilities.displaySize.y);
             }
+            TextUtils.TruncateAt truncateAt = ellipsizeMiddle ? TextUtils.TruncateAt.MIDDLE : TextUtils.TruncateAt.END;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 return StaticLayout.Builder.obtain(textPart, 0, textPart.length(), textPaint, width)
                         .setMaxLines(1)
                         .setLineSpacing(0, 1)
                         .setAlignment(Layout.Alignment.ALIGN_NORMAL)
-                        .setEllipsize(TextUtils.TruncateAt.END)
+                        .setEllipsize(truncateAt)
                         .setEllipsizedWidth(width)
                         .setIncludePad(includeFontPadding)
                         .build();
@@ -613,7 +620,7 @@ public class AnimatedTextView extends View {
                     1,
                     0,
                     includeFontPadding,
-                    TextUtils.TruncateAt.END,
+                    truncateAt,
                     width
                 );
             }
@@ -1367,6 +1374,10 @@ public class AnimatedTextView extends View {
 
     public void setEllipsizeByGradientCentered(boolean enabled) {
         drawable.setEllipsizeByGradientCentered(enabled);
+    }
+
+    public void setEllipsizeMiddle(boolean enabled) {
+        drawable.setEllipsizeMiddle(enabled);
     }
 
     public void setRightPadding(float rightPadding) {

@@ -547,7 +547,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             if (ld != null) w += ld.getIntrinsicWidth() + dp(4);
             if (rd != null) w += rd.getIntrinsicWidth() + dp(4);
             if (rd2 != null) w += rd2.getIntrinsicWidth() + dp(4);
-            return Math.min(w, view.getMeasuredWidth());
+            return w;
         } else if (view instanceof AnimatedTextView) {
             AnimatedTextView atv = (AnimatedTextView) view;
             if (atv.getDrawable() != null) {
@@ -558,11 +558,11 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
     }
 
     private int getPillCenteredSafeLeft() {
-        return dp(isPreviewMode() ? 70 : 56);
+        return dp(isPreviewMode() ? 24 : 16);
     }
 
     private int getPillCenteredSafeRight() {
-        return getWidth() - dp(isPreviewMode() ? 70 : 56);
+        return getWidth() - dp(isPreviewMode() ? 24 : 16);
     }
 
     private int getPillCenteredTextLeft(int viewWidth) {
@@ -934,24 +934,30 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         boolean pillCentered = isPillChatTitleEnabled() && isCentered();
         if (pillCentered) {
             titleTextView.setGravity(Gravity.CENTER_HORIZONTAL);
-            titleTextView.setEllipsizeByGradientCentered(true);
+            titleTextView.setEllipsizeByGradientCentered(false);
+            titleTextView.setEllipsizeMiddle(true);
             if (subtitleTextView != null) subtitleTextView.setGravity(Gravity.CENTER_HORIZONTAL);
-            if (subtitleTextView != null) subtitleTextView.setEllipsizeByGradientCentered(true);
+            if (subtitleTextView != null) subtitleTextView.setEllipsizeByGradientCentered(false);
+            if (subtitleTextView != null) subtitleTextView.setEllipsizeMiddle(true);
             if (animatedSubtitleTextView != null) {
                 animatedSubtitleTextView.setGravity(Gravity.CENTER_HORIZONTAL);
-                animatedSubtitleTextView.setEllipsizeByGradientCentered(true);
+                animatedSubtitleTextView.setEllipsizeByGradientCentered(false);
+                animatedSubtitleTextView.setEllipsizeMiddle(true);
             }
         } else {
             titleTextView.setEllipsizeByGradientCentered(false);
+            titleTextView.setEllipsizeMiddle(false);
             if (subtitleTextView != null) subtitleTextView.setEllipsizeByGradientCentered(false);
+            if (subtitleTextView != null) subtitleTextView.setEllipsizeMiddle(false);
             if (animatedSubtitleTextView != null) animatedSubtitleTextView.setEllipsizeByGradientCentered(false);
+            if (animatedSubtitleTextView != null) animatedSubtitleTextView.setEllipsizeMiddle(false);
         }
         int padding = isCentered() ? dp(isPreviewMode() ? 35 : 10) : 0;
         int width = MeasureSpec.getSize(widthMeasureSpec) + (isCentered() ? 0 : titleTextView.getPaddingRight());
         int availableWidth = width - dp(((avatarImageView.getVisibility() == VISIBLE || isCentered()) ? 54 : 0) + 16);
         if (pillCentered) {
-            int leftSafe = dp(isPreviewMode() ? 70 : 56);
-            int rightSafe = dp(isPreviewMode() ? 70 : 56);
+            int leftSafe = dp(isPreviewMode() ? 24 : 16);
+            int rightSafe = dp(isPreviewMode() ? 24 : 16);
             int maxPillWidth = Math.max(dp(100), width - leftSafe - rightSafe);
             int maxPillContentWidth = Math.max(dp(72), maxPillWidth - dp(40));
             availableWidth = maxPillContentWidth;
