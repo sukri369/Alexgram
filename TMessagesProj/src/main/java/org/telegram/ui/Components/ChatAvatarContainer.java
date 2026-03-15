@@ -979,15 +979,18 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             titleTextView.setEllipsizeByGradient(false);
             titleTextView.setEllipsizeByGradientCentered(false);
             titleTextView.setEllipsizeMiddle(false);
+            titleTextView.setScrollNonFitText(false);
             if (subtitleTextView != null) subtitleTextView.setGravity(Gravity.CENTER_HORIZONTAL);
             if (subtitleTextView != null) subtitleTextView.setEllipsizeByGradient(false);
             if (subtitleTextView != null) subtitleTextView.setEllipsizeByGradientCentered(false);
             if (subtitleTextView != null) subtitleTextView.setEllipsizeMiddle(false);
+            if (subtitleTextView != null) subtitleTextView.setScrollNonFitText(false);
             if (animatedSubtitleTextView != null) {
                 animatedSubtitleTextView.setGravity(Gravity.CENTER_HORIZONTAL);
                 animatedSubtitleTextView.setEllipsizeByGradient(false);
                 animatedSubtitleTextView.setEllipsizeByGradientCentered(false);
                 animatedSubtitleTextView.setEllipsizeMiddle(false);
+                animatedSubtitleTextView.setScrollNonFitText(false);
             }
         } else {
             titleTextView.setEllipsizeByGradient(true);
@@ -1018,6 +1021,17 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             subtitleTextView.measure(MeasureSpec.makeMeasureSpec(textMaxWidth, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(dp(20), MeasureSpec.AT_MOST));
         } else if (animatedSubtitleTextView != null) {
             animatedSubtitleTextView.measure(MeasureSpec.makeMeasureSpec(textMaxWidth, pillCentered ? MeasureSpec.AT_MOST : MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(dp(20), MeasureSpec.AT_MOST));
+        }
+        if (pillCentered) {
+            boolean titleFits = getViewContentWidth(titleTextView) <= titleTextView.getMeasuredWidth() + 0.5f;
+            titleTextView.setGravity(titleFits ? Gravity.CENTER_HORIZONTAL : Gravity.LEFT);
+            if (subtitleTextView != null) {
+                boolean subtitleFits = getViewContentWidth(subtitleTextView) <= subtitleTextView.getMeasuredWidth() + 0.5f;
+                subtitleTextView.setGravity(subtitleFits ? Gravity.CENTER_HORIZONTAL : Gravity.LEFT);
+            } else if (animatedSubtitleTextView != null) {
+                boolean subtitleFits = getViewContentWidth(animatedSubtitleTextView) <= animatedSubtitleTextView.getMeasuredWidth() + 0.5f;
+                animatedSubtitleTextView.setGravity(subtitleFits ? Gravity.CENTER_HORIZONTAL : Gravity.LEFT);
+            }
         }
         if (timeItem != null) {
             timeItem.measure(MeasureSpec.makeMeasureSpec(dp(34), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(dp(34), MeasureSpec.EXACTLY));
