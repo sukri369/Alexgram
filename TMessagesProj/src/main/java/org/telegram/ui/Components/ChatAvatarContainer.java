@@ -1133,7 +1133,12 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
 
         if (isPillChatTitleEnabled() && isCentered()) {
             int pillContentWidth = Math.max(titleTextView.getMeasuredWidth(), getSubtitleTextView() != null ? getSubtitleTextView().getMeasuredWidth() : 0);
-            l = clampInsidePillContent(getPillCenteredTextLeft(titleTextView.getMeasuredWidth()), titleTextView.getMeasuredWidth(), pillContentWidth);
+            boolean titleLeftAligned = (titleTextView.getGravity() & Gravity.HORIZONTAL_GRAVITY_MASK) == Gravity.LEFT;
+            if (titleLeftAligned) {
+                l = getPillContentLeft(pillContentWidth);
+            } else {
+                l = clampInsidePillContent(getPillCenteredTextLeft(titleTextView.getMeasuredWidth()), titleTextView.getMeasuredWidth(), pillContentWidth);
+            }
         }
 
         SimpleTextView titleTextLargerCopyView = this.titleTextLargerCopyView.get();
@@ -1169,14 +1174,24 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             int subtitleLeft = l;
             if (isPillChatTitleEnabled() && isCentered()) {
                 int pillContentWidth = Math.max(titleTextView.getMeasuredWidth(), subtitleTextView.getMeasuredWidth());
-                subtitleLeft = clampInsidePillContent(getPillCenteredTextLeft(subtitleTextView.getMeasuredWidth()), subtitleTextView.getMeasuredWidth(), pillContentWidth);
+                boolean subtitleIsLeftAligned = (subtitleTextView.getGravity() & Gravity.HORIZONTAL_GRAVITY_MASK) == Gravity.LEFT;
+                if (subtitleIsLeftAligned) {
+                    subtitleLeft = getPillContentLeft(pillContentWidth);
+                } else {
+                    subtitleLeft = clampInsidePillContent(getPillCenteredTextLeft(subtitleTextView.getMeasuredWidth()), subtitleTextView.getMeasuredWidth(), pillContentWidth);
+                }
             }
             subtitleTextView.layout(subtitleLeft, viewTop + dp(24), subtitleLeft + subtitleTextView.getMeasuredWidth(), viewTop + subtitleTextView.getTextHeight() + dp(24));
         } else if (animatedSubtitleTextView != null) {
             int subtitleLeft = l;
             if (isPillChatTitleEnabled() && isCentered()) {
                 int pillContentWidth = Math.max(titleTextView.getMeasuredWidth(), animatedSubtitleTextView.getMeasuredWidth());
-                subtitleLeft = clampInsidePillContent(getPillCenteredTextLeft(animatedSubtitleTextView.getMeasuredWidth()), animatedSubtitleTextView.getMeasuredWidth(), pillContentWidth);
+                boolean subtitleIsLeftAligned = (animatedSubtitleTextView.getGravity() & Gravity.HORIZONTAL_GRAVITY_MASK) == Gravity.LEFT;
+                if (subtitleIsLeftAligned) {
+                    subtitleLeft = getPillContentLeft(pillContentWidth);
+                } else {
+                    subtitleLeft = clampInsidePillContent(getPillCenteredTextLeft(animatedSubtitleTextView.getMeasuredWidth()), animatedSubtitleTextView.getMeasuredWidth(), pillContentWidth);
+                }
             }
             animatedSubtitleTextView.layout(subtitleLeft, viewTop + dp(24), subtitleLeft + animatedSubtitleTextView.getMeasuredWidth(), viewTop + animatedSubtitleTextView.getTextHeight() + dp(24));
         }
@@ -1185,7 +1200,12 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             int subtitleCopyLeft = l;
             if (isPillChatTitleEnabled() && isCentered()) {
                 int pillContentWidth = Math.max(titleTextView.getMeasuredWidth(), subtitleTextLargerCopyView.getMeasuredWidth());
-                subtitleCopyLeft = clampInsidePillContent(getPillCenteredTextLeft(subtitleTextLargerCopyView.getMeasuredWidth()), subtitleTextLargerCopyView.getMeasuredWidth(), pillContentWidth);
+                boolean subtitleCopyIsLeftAligned = (subtitleTextLargerCopyView.getGravity() & Gravity.HORIZONTAL_GRAVITY_MASK) == Gravity.LEFT;
+                if (subtitleCopyIsLeftAligned) {
+                    subtitleCopyLeft = getPillContentLeft(pillContentWidth);
+                } else {
+                    subtitleCopyLeft = clampInsidePillContent(getPillCenteredTextLeft(subtitleTextLargerCopyView.getMeasuredWidth()), subtitleTextLargerCopyView.getMeasuredWidth(), pillContentWidth);
+                }
             }
             subtitleTextLargerCopyView.layout(subtitleCopyLeft, viewTop + dp(24), subtitleCopyLeft + subtitleTextLargerCopyView.getMeasuredWidth(), viewTop + subtitleTextLargerCopyView.getTextHeight() + dp(24));
         }
