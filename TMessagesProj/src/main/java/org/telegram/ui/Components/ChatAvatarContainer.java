@@ -1133,7 +1133,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
 
         if (isPillChatTitleEnabled() && isCentered()) {
             int pillContentWidth = Math.max(titleTextView.getMeasuredWidth(), getSubtitleTextView() != null ? getSubtitleTextView().getMeasuredWidth() : 0);
-            boolean titleLeftAligned = (titleTextView.getGravity() & Gravity.HORIZONTAL_GRAVITY_MASK) == Gravity.LEFT;
+            boolean titleLeftAligned = getViewContentWidth(titleTextView) > titleTextView.getMeasuredWidth() + 0.5f;
             if (titleLeftAligned) {
                 l = getPillContentLeft(pillContentWidth);
             } else {
@@ -1174,7 +1174,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             int subtitleLeft = l;
             if (isPillChatTitleEnabled() && isCentered()) {
                 int pillContentWidth = Math.max(titleTextView.getMeasuredWidth(), subtitleTextView.getMeasuredWidth());
-                boolean subtitleIsLeftAligned = (subtitleTextView.getGravity() & Gravity.HORIZONTAL_GRAVITY_MASK) == Gravity.LEFT;
+                boolean subtitleIsLeftAligned = getViewContentWidth(subtitleTextView) > subtitleTextView.getMeasuredWidth() + 0.5f;
                 if (subtitleIsLeftAligned) {
                     subtitleLeft = getPillContentLeft(pillContentWidth);
                 } else {
@@ -1186,7 +1186,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             int subtitleLeft = l;
             if (isPillChatTitleEnabled() && isCentered()) {
                 int pillContentWidth = Math.max(titleTextView.getMeasuredWidth(), animatedSubtitleTextView.getMeasuredWidth());
-                boolean subtitleIsLeftAligned = (animatedSubtitleTextView.getGravity() & Gravity.HORIZONTAL_GRAVITY_MASK) == Gravity.LEFT;
+                boolean subtitleIsLeftAligned = getViewContentWidth(animatedSubtitleTextView) > animatedSubtitleTextView.getMeasuredWidth() + 0.5f;
                 if (subtitleIsLeftAligned) {
                     subtitleLeft = getPillContentLeft(pillContentWidth);
                 } else {
@@ -1200,7 +1200,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             int subtitleCopyLeft = l;
             if (isPillChatTitleEnabled() && isCentered()) {
                 int pillContentWidth = Math.max(titleTextView.getMeasuredWidth(), subtitleTextLargerCopyView.getMeasuredWidth());
-                boolean subtitleCopyIsLeftAligned = (subtitleTextLargerCopyView.getGravity() & Gravity.HORIZONTAL_GRAVITY_MASK) == Gravity.LEFT;
+                boolean subtitleCopyIsLeftAligned = getViewContentWidth(subtitleTextLargerCopyView) > subtitleTextLargerCopyView.getMeasuredWidth() + 0.5f;
                 if (subtitleCopyIsLeftAligned) {
                     subtitleCopyLeft = getPillContentLeft(pillContentWidth);
                 } else {
