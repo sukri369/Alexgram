@@ -12,10 +12,21 @@ from urllib.request import Request, urlopen
 
 BOT_TOKEN = os.environ.get("TG_BOT_TOKEN") or "7350436755:AAEpoGCZXJg4TJP_VqJrnXD06qjLCLZfOTM"
 DEFAULT_CHAT_ID = os.environ.get("TG_UPLOAD_CHAT_ID") or "-1003616714912"
+PYROGRAM_SESSION_STRING = os.environ.get("TG_SESSION_STRING") or ""
+PYROGRAM_API_ID = int(os.environ.get("APP_ID") or "25830228")
+PYROGRAM_API_HASH = os.environ.get("APP_HASH") or "a23a5133bddbdab87df3df06ccf63a89"
+BOT_API_SIZE_LIMIT_BYTES = int(os.environ.get("TG_BOT_API_SIZE_LIMIT") or str(45 * 1024 * 1024))
 
 artifacts_path = Path("artifacts")
 test_version = argv[3] == "test" if len(argv) > 3 else None
 metadata_chat_id = argv[4] if len(argv) > 4 else None
+
+
+class TelegramUploadError(RuntimeError):
+    def __init__(self, method: str, description: str):
+        self.method = method
+        self.description = description
+        super().__init__(f"Telegram API {method} failed: {description}")
 
 
 def find_apk(abi: str) -> Path | None:
@@ -71,6 +82,31 @@ def get_metadata() -> str:
     commit_message = "<code>" + (os.environ.get("COMMIT_MESSAGE") or "unknown") + "</code>"
     build_timestamp = "<code>" + (os.environ.get("BUILD_TIMESTAMP") or "-1") + "</code>"
     return build_timestamp + " " + commit_id + "\n" + commit_message
+
+
+def get_workflow_url() -> str:
+    server_url = os.environ.get("GITHUB_SERVER_URL") or "https://github.com"
+    repository = os.environ.get("GITHUB_REPOSITORY") or "alexandeer1/Alexgram"
+    run_id = os.environ.get("GITHUB_RUN_ID")
+    if run_id:
+        return f"{server_url}/{repository}/actions/runs/{run_id}"
+    return os.environ.get("COMMIT_URL") or f"{server_url}/{repository}/actions"
+
+
+def get_large_file_notice(file_path: Path) -> str:
+    caption = get_caption()
+    workflow_url = get_workflow_url()
+    notice = (
+        "\n\n<blockquote expandable>"
+        "APK was too large for direct Telegram Bot API upload from CI. "
+        f"File: {file_path.name}. "
+        f"Open workflow artifacts here: {workflow_url}"
+        "</blockquote>"
+    )
+    full_text = caption + notice
+    if len(full_text) <= 4096:
+        return full_text
+    return notice[:4096]
 
 
 def get_documents() -> list[dict[str, str | Path]]:
@@ -148,14 +184,59 @@ def telegram_request(method: str, data: dict[str, str], files: dict[str, tuple[s
             continue
 
         description = payload.get("description", "Unknown Telegram API error")
-        raise RuntimeError(f"Telegram API {method} failed: {description}")
+        raise TelegramUploadError(method, description)
 
     if last_error is not None:
         raise RuntimeError(f"Telegram API {method} failed after retries: {last_error}") from last_error
     raise RuntimeError(f"Telegram API {method} failed after retries")
 
 
+def can_use_pyrogram_fallback() -> bool:
+    return bool(PYROGRAM_SESSION_STRING and PYROGRAM_API_ID and PYROGRAM_API_HASH)
+
+
+def send_document_via_pyrogram(chat_id: str, file_path: Path, caption: str = "") -> None:
+    from pyrogram import Client
+    from pyrogram.enums import ParseMode
+
+    with Client(
+        "telegram_uploader",
+        api_id=PYROGRAM_API_ID,
+        api_hash=PYROGRAM_API_HASH,
+        session_string=PYROGRAM_SESSION_STRING,
+        in_memory=True,
+    ) as client:
+        client.send_document(
+            chat_id=chat_id,
+            document=str(file_path),
+            caption=caption,
+            parse_mode=ParseMode.HTML,
+            disable_notification=True,
+        )
+
+
+def should_use_pyrogram_for_file(file_path: Path) -> bool:
+    return file_path.stat().st_size > BOT_API_SIZE_LIMIT_BYTES
+
+
+def send_large_file_fallback(chat_id: str, file_path: Path, caption: str) -> None:
+    if can_use_pyrogram_fallback():
+        print(f"Using Pyrogram fallback for large file: {file_path.name}")
+        send_document_via_pyrogram(chat_id, file_path, caption)
+        return
+
+    print(
+        "Large file cannot be uploaded through Telegram Bot API and no Pyrogram session fallback is configured. "
+        "Sending notice message instead."
+    )
+    send_message(chat_id, get_large_file_notice(file_path))
+
+
 def send_document(chat_id: str, file_path: Path, caption: str = "") -> None:
+    if should_use_pyrogram_for_file(file_path):
+        send_large_file_fallback(chat_id, file_path, caption)
+        return
+
     mime_type = mimetypes.guess_type(file_path.name)[0] or "application/octet-stream"
     fields = {
         "chat_id": str(chat_id),
@@ -167,7 +248,13 @@ def send_document(chat_id: str, file_path: Path, caption: str = "") -> None:
     files = {
         "document": (file_path.name, file_path.read_bytes(), mime_type),
     }
-    telegram_request("sendDocument", fields, files)
+    try:
+        telegram_request("sendDocument", fields, files)
+    except TelegramUploadError as error:
+        if "Request Entity Too Large" in error.description:
+            send_large_file_fallback(chat_id, file_path, caption)
+            return
+        raise
 
 
 def send_message(chat_id: str, text: str) -> None:
