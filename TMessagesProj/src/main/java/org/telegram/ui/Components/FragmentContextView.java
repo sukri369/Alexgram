@@ -3021,7 +3021,6 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
         @Override
         protected void onSizeChanged(int w, int h, int oldw, int oldh) {
             super.onSizeChanged(w, h, oldw, oldh);
-            java.util.Arrays.fill(amplitudes, 0f);
         }
 
         private int currentAudioSessionId = -1;
@@ -3114,78 +3113,107 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
 
             int width = getWidth();
             int height = getHeight();
-            if (height == 0) return;
-
-            // Hard-clip to view bounds so nothing overflows outside the pill
-            canvas.clipRect(0, 0, width, height);
-
-            // Leave a small bottom inset so bars stay inside the rounded-corner background
-            final float bottomInset = AndroidUtilities.dpf2(2);
-            final float drawableBottom = height - bottomInset;
-            // Cap bar height at 90% of drawable space so bars never fill the whole pill
-            final float maxBarHeight = drawableBottom * 0.90f;
-
+            
+            // Recalculate bar width
             float barTotalWidth = (float) width / numBars;
-            float space = barTotalWidth * 0.15f;
+            float space = barTotalWidth * 0.15f; // reduced spacing
             float barDrawWidth = barTotalWidth - space;
             if (barDrawWidth < 1) barDrawWidth = 1;
 
-            final int fftBins = Math.max(1, mBytes.length / 2);
-            final int minBin = 2; // Skip DC and near-DC bins that tend to stay high
-            final int maxBin = Math.max(minBin + 1, fftBins - 1);
-
+            // Define vibrant colors for full spectrum
+            // Using HSL allows us to easily cycle through the rainbow
+            
             for (int i = 0; i < numBars; i++) {
-                float barProgress = numBars > 1 ? (i / (float)(numBars - 1)) : 0f;
-                int bin = (int)(minBin + barProgress * (maxBin - minBin));
-                int index = bin * 2;
+                int m = mBytes.length / 2;
+                float barProgress = numBars > 1 ? i / (float) (numBars - 1) : 0f;
+                float fftProgress = i * 1.0f / numBars;
 
-                if (index + 1 >= mBytes.length) {
-                    break;
+                // The first yellow bars were sampling the very lowest FFT bins, which stay
+                // elevated almost all the time. Push only that edge slightly inward so it
+                // rests around medium height but can still climb on real bass peaks.
+                if (barProgress < 0.18f) {
+                    float edgeProgress = barProgress / 0.18f;
+                    fftProgress = 0.035f + edgeProgress * 0.145f;
                 }
 
-                int rfk = mBytes[index];
-                int ifk = mBytes[index + 1];
-                float magnitude = (float) Math.sqrt(rfk * rfk + ifk * ifk);
-                float dbValue = (float)(20f * Math.log10(magnitude + 1f));
+                int index = (int) (fftProgress * (m / 2)) * 2;
+                
+                if (index < 2) index = 2; // Skip DC
+                if (index + 1 >= mBytes.length) break;
+                
+                byte rfk = mBytes[index];
+                byte ifk = mBytes[index + 1];
+                float magnitude = (float) (rfk * rfk + ifk * ifk);
+                int dbValue = (int) (10 * Math.log10(magnitude));
 
-                float lowFreqDamping = 0.45f + 0.55f * barProgress;
-                float normalized = MathUtils.clamp(dbValue / 52f, 0f, 1f);
-                float targetAmplitude = normalized * maxBarHeight * lowFreqDamping;
+                float targetAmplitude = (dbValue > 0 ? dbValue : 0);
+                
+                // Boost sensitivity
+                targetAmplitude = (targetAmplitude * 4.5f);
 
+                // Keep the left yellow section a bit calmer, but not low. Peaks still pass.
+                if (barProgress < 0.18f) {
+                    float lowBandDamping = 0.68f + 0.32f * (barProgress / 0.18f);
+                    targetAmplitude *= lowBandDamping;
+                }
+
+                if (targetAmplitude > height) targetAmplitude = height;
+                
+                // Decay logic
                 if (targetAmplitude > amplitudes[i]) {
                     amplitudes[i] = targetAmplitude;
                 } else {
-                    amplitudes[i] = Math.max(amplitudes[i] - (maxBarHeight / 15.0f), 0);
+                    amplitudes[i] = Math.max(amplitudes[i] - (height / 15.0f), 0);
                 }
 
                 if (amplitudes[i] > 0) {
                     float x = i * barTotalWidth + (space / 2);
-                    float y = drawableBottom - amplitudes[i];
-
-                    float hue = (float) i / numBars * 360f;
-                    float blockSize = barDrawWidth;
-                    float blockSpace = 2f;
-
-                    float currentY = drawableBottom;
+                    float y = height - amplitudes[i];
+                    
+                    // Dynamic Color Calculation
+                    // Hue varies across the bars (rainbow layout)
+                    // We can also vary lightness based on amplitude for "pop"
+                    
+                    float hue = (float) i / numBars * 360f; // Full rainbow across width
+                    // Or reverse: 360 - ...
+                    
+                    // Convert HSL to Color
+                    int barColor = ColorUtils.HSLToColor(new float[]{hue, 1.0f, 0.5f});
+                    
+                    // Create per-bar gradient or set color
+                    // For the "tiles" look, we can draw small blocks
+                    
+                    // Drawing "tiles" or blocks
+                    float blockSize = barDrawWidth; // square blocks
+                    float blockSpace = 2f; 
+                    
+                    // If height is small, blocks might be too small, so fallback to solid bar if needed
+                    // But user asked for "break bars into many and small tiles"
+                    
+                    float currentY = height;
                     while (currentY > y) {
                         float top = currentY - blockSize;
-                        if (top < y) top = y;
-
-                        float heightFactor = (drawableBottom - currentY) / drawableBottom;
-                        float localHue = (hue + (heightFactor * 60)) % 360;
-
+                        if (top < y) top = y; // Clip top block
+                        
+                        // Gradient logic: lower blocks = darker, higher blocks = brighter?
+                        // Or color shift as it goes up?
+                        
+                        // Let's shift hue slightly as we go up for a "changing color" effect
+                        float heightFactor = (height - currentY) / height; // 0 at bottom, 1 at top
+                        float localHue = (hue + (heightFactor * 60)) % 360; 
+                        
                         int tileColor = ColorUtils.HSLToColor(new float[]{localHue, 1.0f, 0.5f});
                         mPaint.setColor(tileColor);
-                        mPaint.setAlpha(255);
-
+                        mPaint.setAlpha(255); // Full opacity
+                        
                         canvas.drawRect(x, top, x + barDrawWidth, currentY - blockSpace, mPaint);
-
+                        
                         currentY -= (blockSize + blockSpace);
                     }
                 }
             }
-
-            invalidate();
+            
+            invalidate(); 
         }
     }
 }
