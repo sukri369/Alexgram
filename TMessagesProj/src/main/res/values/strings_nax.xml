@@ -3,6 +3,8 @@
     <string name="NagramX" translatable="false">Alexgram</string>
     <string name="XChannel">Alexgram Channel</string>
     <string name="EnableSaveDeletedMessages">Save Deleted Messages</string>
+    <string name="RunInBackground">Run in Background</string>
+    <string name="RunInBackgroundInfo">Keeps Alexgram alive after you close it so deleted-message saving and other background features can continue running.</string>
     <string name="DeletedMessage">deleted</string>
     <string name="EnableSaveEditsHistory">Save Edits History</string>
     <string name="EditsHistoryMenuText">Edits History</string>

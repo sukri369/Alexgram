@@ -7,6 +7,8 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -24,7 +26,10 @@ import com.radolyn.ayugram.database.AyuData;
 import com.radolyn.ayugram.messages.AyuMessagesController;
 
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.ApplicationLoader;
+import org.telegram.messenger.ConnectionsManager;
 import org.telegram.messenger.LocaleController;
+import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
@@ -142,6 +147,7 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
     private final AbstractConfigCell GhostModeRow = cellGroup.appendCell(new ConfigCellText("GhostMode", () -> presentFragment(new GhostModeActivity())));
     private final AbstractConfigCell regexFiltersEnabledRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getRegexFiltersEnabled(), getString(R.string.RegexFiltersNotice)));
     private final AbstractConfigCell saveLastSeenRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getSaveLocalLastSeen()));
+    private final AbstractConfigCell runInBackgroundRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getRunInBackground(), getString(R.string.RunInBackgroundInfo)));
     private final AbstractConfigCell enableSaveDeletedMessagesRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getEnableSaveDeletedMessages()));
     private final AbstractConfigCell enableSaveEditsHistoryRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getEnableSaveEditsHistory()));
     private final AbstractConfigCell messageSavingSaveMediaRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getMessageSavingSaveMedia(), getString(R.string.MessageSavingSaveMediaHint)));
@@ -404,6 +410,8 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
                 tooltip.showWithAction(0, UndoView.ACTION_NEED_RESTART, null, null);
             } else if (key.equals(NaConfig.INSTANCE.getHideContacts().getKey())) {
                 tooltip.showWithAction(0, UndoView.ACTION_NEED_RESTART, null, null);
+            } else if (key.equals(NaConfig.INSTANCE.getRunInBackground().getKey())) {
+                updateRunInBackground((Boolean) newValue);
             } else if (key.equals(NaConfig.INSTANCE.getEnableSaveDeletedMessages().getKey())) {
                 checkSaveDeletedRows();
             } else if (key.equals(NaConfig.INSTANCE.getDisableStories().getKey())) {
@@ -774,6 +782,30 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
                 listAdapter.notifyItemRemoved(index);
             }
         }
+    }
+
+    private void updateRunInBackground(boolean enabled) {
+        SharedPreferences notificationsSettings = MessagesController.getNotificationsSettings(currentAccount);
+        notificationsSettings.edit()
+                .putBoolean("pushService", enabled)
+                .putBoolean("pushConnection", enabled)
+                .apply();
+
+        SharedPreferences mainSettings = MessagesController.getMainSettings(currentAccount);
+        mainSettings.edit()
+                .putBoolean("keepAliveService", enabled)
+                .putBoolean("backgroundConnection", enabled)
+                .apply();
+
+        getMessagesController().keepAliveService = enabled;
+        getMessagesController().backgroundConnection = enabled;
+        ConnectionsManager.getInstance(currentAccount).setPushConnectionEnabled(enabled);
+
+        Intent serviceIntent = new Intent(ApplicationLoader.applicationContext, org.telegram.messenger.NotificationsService.class);
+        if (!enabled) {
+            ApplicationLoader.applicationContext.stopService(serviceIntent);
+        }
+        ApplicationLoader.startPushService();
     }
 
     private void checkSaveDeletedRows() {

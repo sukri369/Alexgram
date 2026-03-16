@@ -29,7 +29,7 @@ public class NotificationsService extends Service {
     public void onCreate() {
         super.onCreate();
         ApplicationLoader.postInitApplication();
-        if (NaConfig.INSTANCE.getPushServiceTypeInAppDialog().Bool()) {
+        if (NaConfig.INSTANCE.getPushServiceTypeInAppDialog().Bool() || NaConfig.INSTANCE.getRunInBackground().Bool()) {
             String CHANNEL_ID = "push_service_channel";
             NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             NotificationChannel channel = new NotificationChannel(CHANNEL_ID, LocaleController.getString(R.string.NagramXPushService), NotificationManager.IMPORTANCE_DEFAULT);

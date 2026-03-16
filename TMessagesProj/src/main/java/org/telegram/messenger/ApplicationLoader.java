@@ -384,7 +384,18 @@ public class ApplicationLoader extends Application {
     }
 
     private static void startPushServiceInternal() {
-        if (PushListenerController.getProvider().hasServices()) {
+        boolean forceKeepAliveService = NaConfig.INSTANCE.getRunInBackground().Bool();
+        if (PushListenerController.getProvider().hasServices() && !forceKeepAliveService) {
+            AndroidUtilities.runOnUIThread(() -> {
+                applicationContext.stopService(new Intent(applicationContext, NotificationsService.class));
+
+                PendingIntent pintent = PendingIntent.getService(applicationContext, 0, new Intent(applicationContext, NotificationsService.class), PendingIntent.FLAG_MUTABLE);
+                AlarmManager alarm = (AlarmManager) applicationContext.getSystemService(Context.ALARM_SERVICE);
+                alarm.cancel(pintent);
+                if (pendingIntent != null) {
+                    alarm.cancel(pendingIntent);
+                }
+            });
             return;
         }
         SharedPreferences preferences = MessagesController.getNotificationsSettings(UserConfig.selectedAccount);
@@ -403,7 +414,7 @@ public class ApplicationLoader extends Application {
             AndroidUtilities.runOnUIThread(() -> {
                 try {
                     Log.d("TFOSS", "Starting push service...");
-                    if (NaConfig.INSTANCE.getPushServiceTypeInAppDialog().Bool()) {
+                    if (NaConfig.INSTANCE.getPushServiceTypeInAppDialog().Bool() || forceKeepAliveService) {
                         applicationContext.startForegroundService(new Intent(applicationContext, NotificationsService.class));
                     } else {
                         applicationContext.startService(new Intent(applicationContext, NotificationsService.class));

@@ -445,6 +445,12 @@ object NaConfig {
             ConfigItem.configTypeBool,
             false
         )
+    val runInBackground =
+        addConfig(
+            "RunInBackground",
+            ConfigItem.configTypeBool,
+            false
+        )
     val regexFiltersData =
         addConfig(
             "RegexFiltersData",
