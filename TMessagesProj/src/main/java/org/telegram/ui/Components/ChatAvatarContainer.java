@@ -755,6 +755,20 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
 
     @Override
     protected boolean drawChild(@NonNull Canvas canvas, View child, long drawingTime) {
+        SimpleTextView titleTextLargerCopyView = this.titleTextLargerCopyView.get();
+        SimpleTextView subtitleTextLargerCopyView = this.subtitleTextLargerCopyView.get();
+        boolean isPillTextChild = child == titleTextView || child == subtitleTextView || child == animatedSubtitleTextView
+                || child == titleTextLargerCopyView || child == subtitleTextLargerCopyView;
+        if (isPillChatTitleEnabled() && isCentered() && isPillTextChild && !pillRect.isEmpty()) {
+            float radius = pillRect.height() / 2f;
+            pillClipPath.rewind();
+            pillClipPath.addRoundRect(pillRect, radius, radius, Path.Direction.CW);
+            canvas.save();
+            canvas.clipPath(pillClipPath);
+            boolean drew = super.drawChild(canvas, child, drawingTime);
+            canvas.restore();
+            return drew;
+        }
         if (child == avatarImageView && timeItem != null && timeItem.getVisibility() == VISIBLE) {
             AndroidUtilities.rectTmp.set(child.getX(), child.getY(), child.getX() + child.getWidth(), child.getY() + child.getHeight());
             canvas.saveLayer(AndroidUtilities.rectTmp, null);
