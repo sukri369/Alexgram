@@ -3021,6 +3021,7 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
         @Override
         protected void onSizeChanged(int w, int h, int oldw, int oldh) {
             super.onSizeChanged(w, h, oldw, oldh);
+            java.util.Arrays.fill(amplitudes, 0f);
         }
 
         private int currentAudioSessionId = -1;
@@ -3113,23 +3114,29 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
 
             int width = getWidth();
             int height = getHeight();
-            
-            // Recalculate bar width
+            if (height == 0) return;
+
+            // Hard-clip to view bounds so nothing overflows outside the pill
+            canvas.clipRect(0, 0, width, height);
+
+            // Leave a small bottom inset so bars stay inside the rounded-corner background
+            final float bottomInset = AndroidUtilities.dpf2(2);
+            final float drawableBottom = height - bottomInset;
+            // Cap bar height at 90% of drawable space so bars never fill the whole pill
+            final float maxBarHeight = drawableBottom * 0.90f;
+
             float barTotalWidth = (float) width / numBars;
-            float space = barTotalWidth * 0.15f; // reduced spacing
+            float space = barTotalWidth * 0.15f;
             float barDrawWidth = barTotalWidth - space;
             if (barDrawWidth < 1) barDrawWidth = 1;
 
-            // Define vibrant colors for full spectrum
-            // Using HSL allows us to easily cycle through the rainbow
-            
             final int fftBins = Math.max(1, mBytes.length / 2);
             final int minBin = 2; // Skip DC and near-DC bins that tend to stay high
             final int maxBin = Math.max(minBin + 1, fftBins - 1);
 
             for (int i = 0; i < numBars; i++) {
-                float barProgress = numBars > 1 ? (i / (float) (numBars - 1)) : 0f;
-                int bin = (int) (minBin + barProgress * (maxBin - minBin));
+                float barProgress = numBars > 1 ? (i / (float)(numBars - 1)) : 0f;
+                int bin = (int)(minBin + barProgress * (maxBin - minBin));
                 int index = bin * 2;
 
                 if (index + 1 >= mBytes.length) {
@@ -3139,68 +3146,46 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
                 int rfk = mBytes[index];
                 int ifk = mBytes[index + 1];
                 float magnitude = (float) Math.sqrt(rfk * rfk + ifk * ifk);
-                float dbValue = (float) (20f * Math.log10(magnitude + 1f));
+                float dbValue = (float)(20f * Math.log10(magnitude + 1f));
 
-                // Keep bass bars controlled so the left side does not pin to full height.
                 float lowFreqDamping = 0.45f + 0.55f * barProgress;
                 float normalized = MathUtils.clamp(dbValue / 52f, 0f, 1f);
-                float targetAmplitude = normalized * height * lowFreqDamping;
-                
-                // Decay logic
+                float targetAmplitude = normalized * maxBarHeight * lowFreqDamping;
+
                 if (targetAmplitude > amplitudes[i]) {
                     amplitudes[i] = targetAmplitude;
                 } else {
-                    amplitudes[i] = Math.max(amplitudes[i] - (height / 15.0f), 0);
+                    amplitudes[i] = Math.max(amplitudes[i] - (maxBarHeight / 15.0f), 0);
                 }
 
                 if (amplitudes[i] > 0) {
                     float x = i * barTotalWidth + (space / 2);
-                    float y = height - amplitudes[i];
-                    
-                    // Dynamic Color Calculation
-                    // Hue varies across the bars (rainbow layout)
-                    // We can also vary lightness based on amplitude for "pop"
-                    
-                    float hue = (float) i / numBars * 360f; // Full rainbow across width
-                    // Or reverse: 360 - ...
-                    
-                    // Convert HSL to Color
-                    int barColor = ColorUtils.HSLToColor(new float[]{hue, 1.0f, 0.5f});
-                    
-                    // Create per-bar gradient or set color
-                    // For the "tiles" look, we can draw small blocks
-                    
-                    // Drawing "tiles" or blocks
-                    float blockSize = barDrawWidth; // square blocks
-                    float blockSpace = 2f; 
-                    
-                    // If height is small, blocks might be too small, so fallback to solid bar if needed
-                    // But user asked for "break bars into many and small tiles"
-                    
-                    float currentY = height;
+                    float y = drawableBottom - amplitudes[i];
+
+                    float hue = (float) i / numBars * 360f;
+                    float blockSize = barDrawWidth;
+                    float blockSpace = 2f;
+
+                    float currentY = drawableBottom;
                     while (currentY > y) {
                         float top = currentY - blockSize;
-                        if (top < y) top = y; // Clip top block
-                        
-                        // Gradient logic: lower blocks = darker, higher blocks = brighter?
-                        // Or color shift as it goes up?
-                        
-                        // Let's shift hue slightly as we go up for a "changing color" effect
-                        float heightFactor = (height - currentY) / height; // 0 at bottom, 1 at top
-                        float localHue = (hue + (heightFactor * 60)) % 360; 
-                        
+                        if (top < y) top = y;
+
+                        float heightFactor = (drawableBottom - currentY) / drawableBottom;
+                        float localHue = (hue + (heightFactor * 60)) % 360;
+
                         int tileColor = ColorUtils.HSLToColor(new float[]{localHue, 1.0f, 0.5f});
                         mPaint.setColor(tileColor);
-                        mPaint.setAlpha(255); // Full opacity
-                        
+                        mPaint.setAlpha(255);
+
                         canvas.drawRect(x, top, x + barDrawWidth, currentY - blockSpace, mPaint);
-                        
+
                         currentY -= (blockSize + blockSpace);
                     }
                 }
             }
-            
-            invalidate(); 
+
+            invalidate();
         }
     }
 }
