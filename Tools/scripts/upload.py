@@ -192,6 +192,14 @@ def telegram_request(method: str, data: dict[str, str], files: dict[str, tuple[s
     raise RuntimeError(f"Telegram API {method} failed after retries")
 
 
+def bot_api_get_chat(chat_id: str) -> dict | None:
+    try:
+        payload = telegram_request("getChat", {"chat_id": str(chat_id)})
+    except Exception:
+        return None
+    return payload.get("result")
+
+
 def can_use_pyrogram_fallback() -> bool:
     return bool(BOT_TOKEN and PYROGRAM_API_ID and PYROGRAM_API_HASH)
 
@@ -200,6 +208,7 @@ def send_document_via_pyrogram(chat_id: str, file_path: Path, caption: str = "")
     from pyrogram import Client
     from pyrogram.enums import ParseMode
     from pyrogram.errors import FloodWait
+    from pyrogram.errors import PeerIdInvalid
 
     client_kwargs = {
         "name": "telegram_uploader",
@@ -212,17 +221,52 @@ def send_document_via_pyrogram(chat_id: str, file_path: Path, caption: str = "")
     else:
         client_kwargs["bot_token"] = BOT_TOKEN
 
+    def resolve_target(client: "Client", target: str) -> str:
+        try:
+            client.get_chat(target)
+            return target
+        except Exception:
+            pass
+
+        # Populate peer cache from dialogs so numeric -100 IDs can be resolved.
+        with contextlib.suppress(Exception):
+            for dialog in client.get_dialogs(limit=500):
+                if str(dialog.chat.id) == str(target):
+                    return str(dialog.chat.id)
+
+        # Bridge via Bot API username when available.
+        chat_info = bot_api_get_chat(target)
+        if chat_info:
+            username = chat_info.get("username")
+            if username:
+                username_target = f"@{username}"
+                with contextlib.suppress(Exception):
+                    client.get_chat(username_target)
+                    return username_target
+
+        return target
+
     with Client(**client_kwargs) as client:
+        target = resolve_target(client, str(chat_id))
         for attempt in range(3):
             try:
                 client.send_document(
-                    chat_id=chat_id,
+                    chat_id=target,
                     document=str(file_path),
                     caption=caption,
                     parse_mode=ParseMode.HTML,
                     disable_notification=True,
                 )
                 return
+            except PeerIdInvalid as error:
+                # Retry one refresh cycle in case dialogs cache is stale.
+                if attempt == 0:
+                    target = resolve_target(client, str(chat_id))
+                    continue
+                raise RuntimeError(
+                    "Pyrogram fallback could not resolve target peer. "
+                    "If the chat is private without username, set TG_SESSION_STRING from an account that is in the group."
+                ) from error
             except FloodWait as error:
                 wait_seconds = int(error.value)
                 if wait_seconds > MAX_FLOOD_WAIT_SECONDS:
