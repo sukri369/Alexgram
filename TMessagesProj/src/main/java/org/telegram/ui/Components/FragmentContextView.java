@@ -3123,23 +3123,28 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
             // Define vibrant colors for full spectrum
             // Using HSL allows us to easily cycle through the rainbow
             
-            for (int i = 0; i < numBars; i++) {
-                int m = mBytes.length / 2;
-                int index = (int) ((i * 1.0f / numBars) * (m / 2)) * 2;
-                
-                if (index < 2) index = 2; // Skip DC
-                if (index + 1 >= mBytes.length) break;
-                
-                byte rfk = mBytes[index];
-                byte ifk = mBytes[index + 1];
-                float magnitude = (float) (rfk * rfk + ifk * ifk);
-                int dbValue = (int) (10 * Math.log10(magnitude));
+            final int fftBins = Math.max(1, mBytes.length / 2);
+            final int minBin = 2; // Skip DC and near-DC bins that tend to stay high
+            final int maxBin = Math.max(minBin + 1, fftBins - 1);
 
-                float targetAmplitude = (dbValue > 0 ? dbValue : 0);
-                
-                // Boost sensitivity
-                targetAmplitude = (targetAmplitude * 4.5f); 
-                if (targetAmplitude > height) targetAmplitude = height;
+            for (int i = 0; i < numBars; i++) {
+                float barProgress = numBars > 1 ? (i / (float) (numBars - 1)) : 0f;
+                int bin = (int) (minBin + barProgress * (maxBin - minBin));
+                int index = bin * 2;
+
+                if (index + 1 >= mBytes.length) {
+                    break;
+                }
+
+                int rfk = mBytes[index];
+                int ifk = mBytes[index + 1];
+                float magnitude = (float) Math.sqrt(rfk * rfk + ifk * ifk);
+                float dbValue = (float) (20f * Math.log10(magnitude + 1f));
+
+                // Keep bass bars controlled so the left side does not pin to full height.
+                float lowFreqDamping = 0.45f + 0.55f * barProgress;
+                float normalized = MathUtils.clamp(dbValue / 52f, 0f, 1f);
+                float targetAmplitude = normalized * height * lowFreqDamping;
                 
                 // Decay logic
                 if (targetAmplitude > amplitudes[i]) {
