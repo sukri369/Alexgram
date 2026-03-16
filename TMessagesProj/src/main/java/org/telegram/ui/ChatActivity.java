@@ -44482,7 +44482,7 @@ public class ChatActivity extends BaseFragment implements
         if (!NaConfig.INSTANCE.getPillChatTitle().Bool()) {
             return false;
         }
-        if (isReplyChatComment() || isReport()) {
+        if (isReplyChatComment() || isReport() || isComments) {
             return false;
         }
         return getChatMode() != ChatActivity.MODE_SEARCH && getChatMode() != ChatActivity.MODE_SAVED;
