@@ -4663,6 +4663,10 @@ public class ChatActivity extends BaseFragment implements
             });
             getConnectionsManager().bindRequestToGuid(req, classGuid);
         } else {
+            // AvatarContainer fully owns title/subtitle in normal chat header mode.
+            // Clear ActionBar text to avoid stale subtitle leaking from previous states.
+            actionBar.setTitle(null);
+            actionBar.setSubtitle(null);
                 actionBar.addView(avatarContainer, 0, LayoutHelper.createFrame(
                     LayoutHelper.WRAP_CONTENT,
                     LayoutHelper.MATCH_PARENT,
