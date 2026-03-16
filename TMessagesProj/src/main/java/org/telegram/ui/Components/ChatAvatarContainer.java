@@ -515,7 +515,10 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
     private boolean pillSubtitleOverflowing;
 
     private boolean isPillChatTitleEnabled() {
-        return NaConfig.INSTANCE.getPillChatTitle().Bool();
+        if (!NaConfig.INSTANCE.getPillChatTitle().Bool()) {
+            return false;
+        }
+        return parentFragment == null || parentFragment.isPillChatHeaderLayoutEnabled();
     }
 
     private int getPillHorizontalPadding() {
