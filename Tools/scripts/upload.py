@@ -16,10 +16,11 @@ PYROGRAM_SESSION_STRING = os.environ.get("TG_SESSION_STRING") or ""
 PYROGRAM_API_ID = int(os.environ.get("APP_ID") or "25830228")
 PYROGRAM_API_HASH = os.environ.get("APP_HASH") or "a23a5133bddbdab87df3df06ccf63a89"
 BOT_API_SIZE_LIMIT_BYTES = int(os.environ.get("TG_BOT_API_SIZE_LIMIT") or str(45 * 1024 * 1024))
+MAX_FLOOD_WAIT_SECONDS = int(os.environ.get("TG_MAX_FLOOD_WAIT") or "1800")
 
 artifacts_path = Path("artifacts")
-test_version = argv[3] == "test" if len(argv) > 3 else None
-metadata_chat_id = argv[4] if len(argv) > 4 else None
+test_version = any(arg.lower() == "test" for arg in argv[1:])
+metadata_chat_id = argv[2] if len(argv) > 2 and argv[2] else None
 
 
 class TelegramUploadError(RuntimeError):
@@ -192,27 +193,45 @@ def telegram_request(method: str, data: dict[str, str], files: dict[str, tuple[s
 
 
 def can_use_pyrogram_fallback() -> bool:
-    return bool(PYROGRAM_SESSION_STRING and PYROGRAM_API_ID and PYROGRAM_API_HASH)
+    return bool(BOT_TOKEN and PYROGRAM_API_ID and PYROGRAM_API_HASH)
 
 
 def send_document_via_pyrogram(chat_id: str, file_path: Path, caption: str = "") -> None:
     from pyrogram import Client
     from pyrogram.enums import ParseMode
+    from pyrogram.errors import FloodWait
 
-    with Client(
-        "telegram_uploader",
-        api_id=PYROGRAM_API_ID,
-        api_hash=PYROGRAM_API_HASH,
-        session_string=PYROGRAM_SESSION_STRING,
-        in_memory=True,
-    ) as client:
-        client.send_document(
-            chat_id=chat_id,
-            document=str(file_path),
-            caption=caption,
-            parse_mode=ParseMode.HTML,
-            disable_notification=True,
-        )
+    client_kwargs = {
+        "name": "telegram_uploader",
+        "api_id": PYROGRAM_API_ID,
+        "api_hash": PYROGRAM_API_HASH,
+        "in_memory": True,
+    }
+    if PYROGRAM_SESSION_STRING:
+        client_kwargs["session_string"] = PYROGRAM_SESSION_STRING
+    else:
+        client_kwargs["bot_token"] = BOT_TOKEN
+
+    with Client(**client_kwargs) as client:
+        for attempt in range(3):
+            try:
+                client.send_document(
+                    chat_id=chat_id,
+                    document=str(file_path),
+                    caption=caption,
+                    parse_mode=ParseMode.HTML,
+                    disable_notification=True,
+                )
+                return
+            except FloodWait as error:
+                wait_seconds = int(error.value)
+                if wait_seconds > MAX_FLOOD_WAIT_SECONDS:
+                    raise RuntimeError(
+                        f"FloodWait {wait_seconds}s exceeds configured limit {MAX_FLOOD_WAIT_SECONDS}s"
+                    ) from error
+                print(f"Pyrogram FloodWait while sending APK, sleeping {wait_seconds}s (attempt {attempt + 1}/3)")
+                time.sleep(wait_seconds + 1)
+        raise RuntimeError("Failed to send APK via Pyrogram after retries")
 
 
 def should_use_pyrogram_for_file(file_path: Path) -> bool:
