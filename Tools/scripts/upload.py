@@ -200,6 +200,17 @@ def bot_api_get_chat(chat_id: str) -> dict | None:
     return payload.get("result")
 
 
+def coerce_chat_target(value: str | int) -> str | int:
+    if isinstance(value, int):
+        return value
+    text = str(value).strip()
+    if text.startswith("@"):
+        return text
+    with contextlib.suppress(ValueError):
+        return int(text)
+    return text
+
+
 def can_use_pyrogram_fallback() -> bool:
     return bool(BOT_TOKEN and PYROGRAM_API_ID and PYROGRAM_API_HASH)
 
@@ -221,21 +232,22 @@ def send_document_via_pyrogram(chat_id: str, file_path: Path, caption: str = "")
     else:
         client_kwargs["bot_token"] = BOT_TOKEN
 
-    def resolve_target(client: "Client", target: str) -> str:
+    def resolve_target(client: "Client", target: str | int) -> str | int:
+        normalized_target = coerce_chat_target(target)
         try:
-            client.get_chat(target)
-            return target
+            client.get_chat(normalized_target)
+            return normalized_target
         except Exception:
             pass
 
         # Populate peer cache from dialogs so numeric -100 IDs can be resolved.
         with contextlib.suppress(Exception):
             for dialog in client.get_dialogs(limit=500):
-                if str(dialog.chat.id) == str(target):
-                    return str(dialog.chat.id)
+                if str(dialog.chat.id) == str(normalized_target):
+                    return dialog.chat.id
 
         # Bridge via Bot API username when available.
-        chat_info = bot_api_get_chat(target)
+        chat_info = bot_api_get_chat(str(normalized_target))
         if chat_info:
             username = chat_info.get("username")
             if username:
@@ -244,10 +256,10 @@ def send_document_via_pyrogram(chat_id: str, file_path: Path, caption: str = "")
                     client.get_chat(username_target)
                     return username_target
 
-        return target
+        return normalized_target
 
     with Client(**client_kwargs) as client:
-        target = resolve_target(client, str(chat_id))
+        target = resolve_target(client, chat_id)
         for attempt in range(3):
             try:
                 client.send_document(
@@ -261,7 +273,7 @@ def send_document_via_pyrogram(chat_id: str, file_path: Path, caption: str = "")
             except PeerIdInvalid as error:
                 # Retry one refresh cycle in case dialogs cache is stale.
                 if attempt == 0:
-                    target = resolve_target(client, str(chat_id))
+                    target = resolve_target(client, chat_id)
                     continue
                 raise RuntimeError(
                     "Pyrogram fallback could not resolve target peer. "
