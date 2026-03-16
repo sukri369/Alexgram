@@ -1056,12 +1056,18 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         if (pillCentered) {
             pillTitleOverflowing = getRawViewContentWidth(titleTextView) > titleTextView.getMeasuredWidth() + 0.5f;
             titleTextView.setGravity(pillTitleOverflowing ? Gravity.LEFT : Gravity.CENTER_HORIZONTAL);
+            titleTextView.setEllipsizeByGradient(pillTitleOverflowing);
+            titleTextView.setEllipsizeByGradientCentered(false);
             if (subtitleTextView != null) {
                 pillSubtitleOverflowing = getRawViewContentWidth(subtitleTextView) > subtitleTextView.getMeasuredWidth() + 0.5f;
                 subtitleTextView.setGravity(pillSubtitleOverflowing ? Gravity.LEFT : Gravity.CENTER_HORIZONTAL);
+                subtitleTextView.setEllipsizeByGradient(pillSubtitleOverflowing);
+                subtitleTextView.setEllipsizeByGradientCentered(false);
             } else if (animatedSubtitleTextView != null) {
                 pillSubtitleOverflowing = getRawViewContentWidth(animatedSubtitleTextView) > animatedSubtitleTextView.getMeasuredWidth() + 0.5f;
                 animatedSubtitleTextView.setGravity(pillSubtitleOverflowing ? Gravity.LEFT : Gravity.CENTER_HORIZONTAL);
+                animatedSubtitleTextView.setEllipsizeByGradient(pillSubtitleOverflowing);
+                animatedSubtitleTextView.setEllipsizeByGradientCentered(false);
             } else {
                 pillSubtitleOverflowing = false;
             }
@@ -1076,6 +1082,16 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         } else {
             pillTitleOverflowing = false;
             pillSubtitleOverflowing = false;
+            titleTextView.setEllipsizeByGradient(true);
+            titleTextView.setEllipsizeByGradientCentered(false);
+            if (subtitleTextView != null) {
+                subtitleTextView.setEllipsizeByGradient(true);
+                subtitleTextView.setEllipsizeByGradientCentered(false);
+            }
+            if (animatedSubtitleTextView != null) {
+                animatedSubtitleTextView.setEllipsizeByGradient(true);
+                animatedSubtitleTextView.setEllipsizeByGradientCentered(false);
+            }
         }
         if (timeItem != null) {
             timeItem.measure(MeasureSpec.makeMeasureSpec(dp(34), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(dp(34), MeasureSpec.EXACTLY));
