@@ -12496,6 +12496,10 @@ public class ChatActivity extends BaseFragment implements
         float topPanelViewH = 0;
         // topPanelViewH += (-topPanelViewH);
         float pinnedViewH = topPanelLayout.getAnimatedHeightWithPadding(dp(7));
+        int topPanelVisibleHeight = topPanelLayout.getSumHeightOfAllVisibleChild();
+        if (topPanelVisibleHeight > 0) {
+            pinnedViewH = Math.max(pinnedViewH, topPanelVisibleHeight + topPanelLayout.getPaddingTop() + topPanelLayout.getPaddingBottom());
+        }
         if (actionBarSearchTags != null) {
             pinnedViewH = Math.max(pinnedViewH, actionBarSearchTags.getCurrentHeight());
         }
