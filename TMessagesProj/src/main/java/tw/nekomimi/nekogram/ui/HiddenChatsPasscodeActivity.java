@@ -287,11 +287,10 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
         }
 
         controller.unlock();
-        finishFragment();
         if (mode == MODE_UNLOCK_SETTINGS) {
-            presentFragment(new HiddenChatsSettingsActivity());
+            presentFragment(new HiddenChatsSettingsActivity(), true);
         } else {
-            presentFragment(new HiddenChatsActivity(new Bundle()));
+            presentFragment(new HiddenChatsActivity(new Bundle()), true);
         }
     }
 }
