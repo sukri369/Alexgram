@@ -149,7 +149,7 @@ public class NekoConfig {
     public static ConfigItem autoPauseVideo = addConfig("AutoPauseVideo", configTypeBool, false);
     public static ConfigItem disableProximityEvents = addConfig("DisableProximityEvents", configTypeBool, false);
 
-    public static ConfigItem liquidGlassUI = addConfig("liquidGlassUI", configTypeBool, false);
+    public static ConfigItem liquidGlassUI = addConfig("liquidGlassUI", configTypeBool, true);
 
     public static ConfigItem ignoreContentRestrictions = addConfig("ignoreContentRestrictions", configTypeBool, true);
     public static ConfigItem useChatAttachMediaMenu = addConfig("UseChatAttachEnterMenu", configTypeBool, true);
