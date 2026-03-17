@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
+import android.text.method.PasswordTransformationMethod;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -17,7 +18,9 @@ import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.CodeFieldContainer;
+import org.telegram.ui.CodeNumberField;
 import org.telegram.ui.Components.BulletinFactory;
+import org.telegram.ui.Components.CustomPhoneKeyboardView;
 import org.telegram.ui.Components.LayoutHelper;
 
 import java.lang.annotation.Retention;
@@ -47,6 +50,7 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
     private TextView subtitleView;
     private TextView errorView;
     private CodeFieldContainer codeFieldContainer;
+    private CustomPhoneKeyboardView keyboardView;
 
     public HiddenChatsPasscodeActivity(@Mode int mode) {
         this.mode = mode;
@@ -72,7 +76,7 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
         LinearLayout content = new LinearLayout(context);
         content.setOrientation(LinearLayout.VERTICAL);
         content.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL);
-        root.addView(content, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, 42, 0, 0));
+        root.addView(content, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, 42, 0, CustomPhoneKeyboardView.KEYBOARD_HEIGHT_DP));
 
         titleView = new TextView(context);
         titleView.setTextColor(getThemedColor(Theme.key_windowBackgroundWhiteBlackText));
@@ -95,6 +99,15 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
             }
         };
         codeFieldContainer.setNumbersCount(4, CodeFieldContainer.TYPE_PASSCODE);
+        for (CodeNumberField f : codeFieldContainer.codeField) {
+            f.setShowSoftInputOnFocusCompat(false);
+            f.setTransformationMethod(PasswordTransformationMethod.getInstance());
+            f.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 24);
+            f.setOnFocusChangeListener((v, hasFocus) -> {
+                keyboardView.setEditText(f);
+                keyboardView.setDispatchBackWhenEmpty(true);
+            });
+        }
         content.addView(codeFieldContainer, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 0, 30, 0, 0));
 
         errorView = new TextView(context);
@@ -105,6 +118,9 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
         errorView.setPadding(0, AndroidUtilities.dp(14), 0, 0);
         content.addView(errorView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL));
 
+        keyboardView = new CustomPhoneKeyboardView(context);
+        root.addView(keyboardView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, CustomPhoneKeyboardView.KEYBOARD_HEIGHT_DP, Gravity.BOTTOM));
+
         root.setOnClickListener(v -> focusFirstEmptyField());
 
         updateTexts();
@@ -112,6 +128,19 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
 
         fragmentView = root;
         return fragmentView;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        AndroidUtilities.requestAltFocusable(getParentActivity(), classGuid);
+        AndroidUtilities.hideKeyboard(fragmentView);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        AndroidUtilities.removeAltFocusable(getParentActivity(), classGuid);
     }
 
     private void updateTexts() {
@@ -215,5 +244,6 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
         } else {
             presentFragment(new HiddenChatsActivity(new Bundle()));
         }
+        finishFragment();
     }
 }
