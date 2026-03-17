@@ -34,9 +34,10 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
     public static final int MODE_UNLOCK_CHATS = 0;
     public static final int MODE_UNLOCK_SETTINGS = 1;
     public static final int MODE_SETUP_PASSCODE = 2;
+    public static final int MODE_CHANGE_PASSCODE = 3;
 
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({MODE_UNLOCK_CHATS, MODE_UNLOCK_SETTINGS, MODE_SETUP_PASSCODE})
+    @IntDef({MODE_UNLOCK_CHATS, MODE_UNLOCK_SETTINGS, MODE_SETUP_PASSCODE, MODE_CHANGE_PASSCODE})
     public @interface Mode {
     }
 
@@ -44,7 +45,9 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
     private final int mode;
 
     private int setupStep;
+    private int changePasscodeStep;
     private String firstPasscode;
+    private String currentPasscodeVerified;
 
     private TextView titleView;
     private TextView subtitleView;
@@ -152,6 +155,17 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
                 titleView.setText("Confirm Passcode");
                 subtitleView.setText("Enter the same 4 digits again.");
             }
+        } else if (mode == MODE_CHANGE_PASSCODE) {
+            if (changePasscodeStep == 0) {
+                titleView.setText("Enter Current Passcode");
+                subtitleView.setText("Verify your current passcode to change it.");
+            } else if (changePasscodeStep == 1) {
+                titleView.setText("Create New Passcode");
+                subtitleView.setText("Create a new 4-digit passcode.");
+            } else {
+                titleView.setText("Confirm New Passcode");
+                subtitleView.setText("Enter the same 4 digits again.");
+            }
         } else {
             titleView.setText("Enter Passcode");
             subtitleView.setText("Use your Hidden Chats passcode to continue.");
@@ -232,6 +246,40 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
             return;
         }
 
+        if (mode == MODE_CHANGE_PASSCODE) {
+            if (changePasscodeStep == 0) {
+                if (!controller.checkPasscode(code)) {
+                    showInlineError("Incorrect Passcode");
+                    clearCode();
+                    return;
+                }
+                currentPasscodeVerified = code;
+                changePasscodeStep = 1;
+                clearCode();
+                updateTexts();
+                return;
+            }
+            if (changePasscodeStep == 1) {
+                firstPasscode = code;
+                changePasscodeStep = 2;
+                clearCode();
+                updateTexts();
+                return;
+            }
+            if (!code.equals(firstPasscode)) {
+                showInlineError("Passcodes do not match");
+                changePasscodeStep = 1;
+                firstPasscode = null;
+                clearCode();
+                updateTexts();
+                return;
+            }
+            controller.setPasscode(code);
+            BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Passcode Changed Successfully").show();
+            finishFragment();
+            return;
+        }
+
         if (!controller.checkPasscode(code)) {
             showInlineError("Incorrect Passcode");
             clearCode();
@@ -239,11 +287,11 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
         }
 
         controller.unlock();
+        finishFragment();
         if (mode == MODE_UNLOCK_SETTINGS) {
             presentFragment(new HiddenChatsSettingsActivity());
         } else {
             presentFragment(new HiddenChatsActivity(new Bundle()));
         }
-        finishFragment();
     }
 }

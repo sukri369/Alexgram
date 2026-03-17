@@ -26,6 +26,7 @@ import org.telegram.ui.Components.BulletinFactory;
 import android.text.InputType;
 import tw.nekomimi.nekogram.helpers.HiddenChatsController;
 import tw.nekomimi.nekogram.ui.HiddenChatsActivity;
+import tw.nekomimi.nekogram.ui.HiddenChatsPasscodeActivity;
 
 public class HiddenChatsSettingsActivity extends BaseFragment {
 
@@ -147,32 +148,6 @@ public class HiddenChatsSettingsActivity extends BaseFragment {
         editText.setFilters(new android.text.InputFilter[] { new android.text.InputFilter.LengthFilter(4) });
         editText.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
         editText.setGravity(Gravity.CENTER);
-        
-        LinearLayout container = new LinearLayout(context);
-        container.setOrientation(LinearLayout.VERTICAL);
-        container.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(12), AndroidUtilities.dp(24), 0);
-        container.addView(editText, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
-        builder.setView(container);
-
-        builder.setPositiveButton("Set", null);
-        builder.setNegativeButton("Cancel", null);
-        
-        AlertDialog dialog = builder.create();
-        dialog.setOnShowListener(di -> {
-            View b = dialog.getButton(android.content.DialogInterface.BUTTON_POSITIVE);
-            b.setOnClickListener(view -> {
-                String code = editText.getText().toString();
-                if (code.length() == 4) {
-                    HiddenChatsController.getInstance().setPasscode(code);
-                    AndroidUtilities.runOnUIThread(() -> {
-                         org.telegram.ui.Components.BulletinFactory.of(HiddenChatsSettingsActivity.this).createSimpleBulletin(R.raw.done, "Passcode Updated").show();
-                    });
-                    dialog.dismiss();
-                } else {
-                    AndroidUtilities.shakeView(editText);
-                }
-            });
-        });
-        dialog.show();
+        presentFragment(new HiddenChatsPasscodeActivity(HiddenChatsPasscodeActivity.MODE_CHANGE_PASSCODE));
     }
 }
