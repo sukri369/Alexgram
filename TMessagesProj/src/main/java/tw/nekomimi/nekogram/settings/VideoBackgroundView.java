@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Matrix;
 import android.graphics.SurfaceTexture;
 import android.media.MediaPlayer;
+import android.text.TextUtils;
 import android.view.Surface;
 import android.view.TextureView;
 import android.widget.FrameLayout;
@@ -11,6 +12,9 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 
 import org.telegram.messenger.FileLog;
+import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.ApplicationLoader;
+import org.telegram.messenger.FileLoader;
 import org.telegram.ui.Components.LayoutHelper;
 
 import java.io.File;
@@ -29,7 +33,7 @@ public class VideoBackgroundView extends FrameLayout implements TextureView.Surf
     public VideoBackgroundView(Context context) {
         super(context);
         
-        currentVideoPath = NekoConfig.videoHeaderPath.String();
+        currentVideoPath = ensurePersistentHeaderPath(NekoConfig.videoHeaderPath.String());
         
         isImage = isImageFile(currentVideoPath);
 
@@ -55,6 +59,53 @@ public class VideoBackgroundView extends FrameLayout implements TextureView.Surf
         if (path == null) return false;
         String lower = path.toLowerCase();
         return lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".png") || lower.endsWith(".webp") || lower.endsWith(".bmp") || lower.endsWith(".gif");
+    }
+
+    private String ensurePersistentHeaderPath(String sourcePath) {
+        if (TextUtils.isEmpty(sourcePath)) {
+            return sourcePath;
+        }
+        try {
+            File source = new File(sourcePath);
+            if (!source.exists() || !source.isFile()) {
+                return sourcePath;
+            }
+
+            File cacheDir = FileLoader.getDirectory(FileLoader.MEDIA_DIR_CACHE);
+            if (cacheDir == null) {
+                return sourcePath;
+            }
+            String cacheRoot = cacheDir.getAbsolutePath() + File.separator;
+            String sourceAbsolutePath = source.getAbsolutePath();
+            if (!sourceAbsolutePath.startsWith(cacheRoot)) {
+                return sourcePath;
+            }
+
+            File persistentDir = new File(ApplicationLoader.applicationContext.getFilesDir(), "live_header_media");
+            if (!persistentDir.exists() && !persistentDir.mkdirs()) {
+                return sourcePath;
+            }
+
+            String name = source.getName();
+            String extension = "";
+            int dot = name.lastIndexOf('.');
+            if (dot >= 0 && dot < name.length() - 1) {
+                extension = name.substring(dot);
+            }
+            if (TextUtils.isEmpty(extension)) {
+                extension = isImageFile(sourceAbsolutePath) ? ".jpg" : ".mp4";
+            }
+
+            File destination = new File(persistentDir, "live_header" + extension);
+            if (!sourceAbsolutePath.equals(destination.getAbsolutePath())) {
+                AndroidUtilities.copyFile(source, destination);
+                NekoConfig.videoHeaderPath.setConfigString(destination.getAbsolutePath());
+            }
+            return destination.getAbsolutePath();
+        } catch (Exception e) {
+            FileLog.e(e);
+            return sourcePath;
+        }
     }
 
     private void initMediaPlayer(Surface surface) {

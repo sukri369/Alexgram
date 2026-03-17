@@ -21,6 +21,7 @@ import android.text.Editable;
 import android.text.InputType;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.style.ForegroundColorSpan;
 import android.view.Gravity;
@@ -78,6 +79,7 @@ import java.util.function.Function;
 
 import kotlin.text.StringsKt;
 import org.telegram.messenger.FileLoader;
+import org.telegram.messenger.FileLog;
 import org.telegram.messenger.MediaController;
 import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.NotificationCenter;
@@ -327,7 +329,8 @@ public class NekoSettingsActivity extends BaseFragment {
                                             if (finalSize != 0) {
                                                 NotificationCenter.getInstance(currentAccount).removeObserver(videoConvertDelegate, NotificationCenter.fileNewChunkAvailable);
                                                 NotificationCenter.getInstance(currentAccount).removeObserver(videoConvertDelegate, NotificationCenter.filePreparingFailed);
-                                                NekoConfig.videoHeaderPath.setConfigString(finalPath);
+                                                String persistentPath = copyHeaderMediaToPersistentStorage(finalPath, true);
+                                                NekoConfig.videoHeaderPath.setConfigString(persistentPath);
                                                 NekoConfig.videoHeaderEnabled.setConfigBool(true);
                                                 convertingVideo = null;
                                                 AndroidUtilities.runOnUIThread(() -> {
@@ -362,7 +365,8 @@ public class NekoSettingsActivity extends BaseFragment {
                             progressDialog.setCanCancel(false);
                             showDialog(progressDialog);
                         } else if (info.path != null) {
-                            NekoConfig.videoHeaderPath.setConfigString(info.path);
+                            String persistentPath = copyHeaderMediaToPersistentStorage(info.path, false);
+                            NekoConfig.videoHeaderPath.setConfigString(persistentPath);
                             NekoConfig.videoHeaderEnabled.setConfigBool(true);
                             BulletinFactory.of(NekoSettingsActivity.this).createSimpleBulletin(R.raw.done, "Video header set!").show();
                             AndroidUtilities.runOnUIThread(() -> AppRestartHelper.triggerRebirth(getParentActivity(), new Intent(getParentActivity(), LaunchActivity.class)), 1500);
@@ -1237,5 +1241,46 @@ public class NekoSettingsActivity extends BaseFragment {
 
     private void showHiddenChatsPasscodeDialog(Context context) {
         presentFragment(new HiddenChatsPasscodeActivity(HiddenChatsPasscodeActivity.MODE_UNLOCK_SETTINGS));
+    }
+
+    private String copyHeaderMediaToPersistentStorage(String sourcePath, boolean preferVideoExt) {
+        if (TextUtils.isEmpty(sourcePath)) {
+            return sourcePath;
+        }
+        try {
+            File source = new File(sourcePath);
+            if (!source.exists() || !source.isFile()) {
+                return sourcePath;
+            }
+            File directory = new File(ApplicationLoader.applicationContext.getFilesDir(), "live_header_media");
+            if (!directory.exists() && !directory.mkdirs()) {
+                return sourcePath;
+            }
+
+            String extension = getFileExtensionWithDot(source.getName());
+            if (TextUtils.isEmpty(extension)) {
+                extension = preferVideoExt ? ".mp4" : ".jpg";
+            }
+
+            File destination = new File(directory, "live_header" + extension);
+            if (!source.getAbsolutePath().equals(destination.getAbsolutePath())) {
+                AndroidUtilities.copyFile(source, destination);
+            }
+            return destination.getAbsolutePath();
+        } catch (Exception e) {
+            FileLog.e(e);
+            return sourcePath;
+        }
+    }
+
+    private String getFileExtensionWithDot(String fileName) {
+        if (TextUtils.isEmpty(fileName)) {
+            return "";
+        }
+        int dot = fileName.lastIndexOf('.');
+        if (dot < 0 || dot == fileName.length() - 1) {
+            return "";
+        }
+        return fileName.substring(dot);
     }
 }
