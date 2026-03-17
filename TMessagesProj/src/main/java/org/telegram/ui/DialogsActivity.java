@@ -98,14 +98,13 @@ import androidx.viewpager.widget.ViewPager;
 import com.radolyn.ayugram.utils.LastSeenHelper;
 
 import tw.nekomimi.nekogram.ui.HiddenChatsActivity;
-import android.text.InputType;
-import org.telegram.ui.Components.EditTextBoldCursor;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.Components.BulletinFactory;
 import org.telegram.ui.Components.LayoutHelper;
 import android.view.Gravity;
 import android.widget.LinearLayout; // Ensure LinearLayout is imported
 import tw.nekomimi.nekogram.helpers.HiddenChatsController;
+import tw.nekomimi.nekogram.helpers.HiddenChatsPasscodeDialog;
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.AnimationNotificationsLocker;
@@ -9171,31 +9170,26 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     }
 
     private void showHiddenChatsPasscode() {
-         AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-         builder.setTitle("Enter Passcode");
-         final EditTextBoldCursor field = new EditTextBoldCursor(getParentActivity());
-         field.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_PASSWORD);
-         field.setGravity(Gravity.CENTER);
-         field.setTextSize(18);
-         field.setTextColor(getThemedColor(Theme.key_windowBackgroundWhiteBlackText));
-         field.setHint("Enter Passcode");
-         
-         LinearLayout container = new LinearLayout(getParentActivity());
-         container.setOrientation(LinearLayout.VERTICAL);
-         container.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(12), AndroidUtilities.dp(24), 0);
-         container.addView(field, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
-         builder.setView(container);
-
-         builder.setPositiveButton("Unlock", (d, w) -> {
-             if (HiddenChatsController.getInstance().checkPasscode(field.getText().toString())) {
-                 HiddenChatsController.getInstance().unlock();
-                 presentFragment(new HiddenChatsActivity(new Bundle()));
-             } else {
-                 BulletinFactory.of(DialogsActivity.this).createSimpleBulletin(R.raw.error, "Incorrect Passcode").show();
-             }
-         });
-         builder.setNegativeButton("Cancel", null);
-         builder.show();
+        if (getParentActivity() == null) {
+            return;
+        }
+        HiddenChatsPasscodeDialog.showFourDigitDialog(
+                this,
+                getParentActivity(),
+                "Enter Passcode",
+                null,
+                "Unlock",
+                "Passcode must be 4 digits",
+                "Incorrect Passcode",
+                code -> {
+                    if (HiddenChatsController.getInstance().checkPasscode(code)) {
+                        HiddenChatsController.getInstance().unlock();
+                        presentFragment(new HiddenChatsActivity(new Bundle()));
+                        return true;
+                    }
+                    return false;
+                }
+        );
     }
 
     private void performSelectedDialogsAction(ArrayList<Long> selectedDialogs, int action, boolean alert, boolean longPress, HashSet<Long> dialogsIdsToRevoke) {

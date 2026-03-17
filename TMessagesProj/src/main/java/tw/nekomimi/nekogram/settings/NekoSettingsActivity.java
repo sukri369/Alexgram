@@ -50,6 +50,7 @@ import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 
 import tw.nekomimi.nekogram.helpers.HiddenChatsController;
+import tw.nekomimi.nekogram.helpers.HiddenChatsPasscodeDialog;
 import org.telegram.messenger.SendMessagesHelper;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.ActionBarMenu;
@@ -1231,69 +1232,41 @@ public class NekoSettingsActivity extends BaseFragment {
     }
 
     private void showHiddenChatsSetupDialog(Context context) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle("Setup Hidden Chats");
-        builder.setMessage("Create a 4-digit passcode to protect your hidden chats.");
-
-        final EditTextBoldCursor editText = new EditTextBoldCursor(context);
-        editText.setTextSize(18);
-        editText.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_PASSWORD);
-        editText.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
-        editText.setHint("Enter 4-digit passcode");
-        editText.setGravity(Gravity.CENTER);
-
-        LinearLayout container = new LinearLayout(context);
-        container.setOrientation(LinearLayout.VERTICAL);
-        container.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(12), AndroidUtilities.dp(24), 0);
-        container.addView(editText, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
-        builder.setView(container);
-
-        builder.setPositiveButton("Set Passcode", (dialog, which) -> {
-            String code = editText.getText().toString();
-            if (code.length() == 4) {
-                HiddenChatsController.getInstance().setPasscode(code);
-                AndroidUtilities.runOnUIThread(() -> {
-                     BulletinFactory.of(NekoSettingsActivity.this).createSimpleBulletin(R.raw.done, "Hidden Chats Setup Complete").show();
-                });
-            } else {
-                AndroidUtilities.runOnUIThread(() -> {
-                    BulletinFactory.of(NekoSettingsActivity.this).createSimpleBulletin(R.raw.error, "Passcode must be 4 digits").show();
-                });
-            }
-        });
-        builder.setNegativeButton("Cancel", null);
-        builder.show();
+        HiddenChatsPasscodeDialog.showFourDigitDialog(
+                this,
+                context,
+                "Setup Hidden Chats",
+                "Create a 4-digit passcode to protect your hidden chats.",
+                "Set Passcode",
+                "Passcode must be 4 digits",
+                null,
+                code -> {
+                    HiddenChatsController.getInstance().setPasscode(code);
+                    AndroidUtilities.runOnUIThread(() ->
+                            BulletinFactory.of(NekoSettingsActivity.this).createSimpleBulletin(R.raw.done, "Hidden Chats Setup Complete").show()
+                    );
+                    return true;
+                }
+        );
     }
 
     private void showHiddenChatsPasscodeDialog(Context context) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle("Enter Passcode");
-
-        final EditTextBoldCursor editText = new EditTextBoldCursor(context);
-        editText.setTextSize(18);
-        editText.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_PASSWORD);
-        editText.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
-        editText.setGravity(Gravity.CENTER);
-
-        LinearLayout container = new LinearLayout(context);
-        container.setOrientation(LinearLayout.VERTICAL);
-        container.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(12), AndroidUtilities.dp(24), 0);
-        container.addView(editText, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
-        builder.setView(container);
-
-        builder.setPositiveButton("Unlock", (dialog, which) -> {
-            String code = editText.getText().toString();
-            if (HiddenChatsController.getInstance().checkPasscode(code)) {
-                HiddenChatsController.getInstance().unlock();
-                dialog.dismiss();
-                presentFragment(new HiddenChatsSettingsActivity());
-            } else {
-                 AndroidUtilities.runOnUIThread(() -> {
-                     BulletinFactory.of(NekoSettingsActivity.this).createSimpleBulletin(R.raw.error, "Incorrect Passcode").show();
-                });
-            }
-        });
-        builder.setNegativeButton("Cancel", null);
-        builder.show();
+        HiddenChatsPasscodeDialog.showFourDigitDialog(
+                this,
+                context,
+                "Enter Passcode",
+                null,
+                "Unlock",
+                "Passcode must be 4 digits",
+                "Incorrect Passcode",
+                code -> {
+                    if (HiddenChatsController.getInstance().checkPasscode(code)) {
+                        HiddenChatsController.getInstance().unlock();
+                        presentFragment(new HiddenChatsSettingsActivity());
+                        return true;
+                    }
+                    return false;
+                }
+        );
     }
 }
