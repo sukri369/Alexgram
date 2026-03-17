@@ -10402,4 +10402,5 @@
     <string name="ChannelAdmins">Channel admins</string>
     <string name="ChannelSubscribers2">Channel subscribers</string>
     <string name="MembersSearch">Search people</string>
+    <string name="ChangeFont">Change font</string>
 </resources>

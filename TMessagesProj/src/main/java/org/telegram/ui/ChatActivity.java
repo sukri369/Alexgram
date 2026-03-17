@@ -28082,6 +28082,7 @@ public class ChatActivity extends BaseFragment implements
                 menu.add(R.id.menu_translate, R.id.menu_translate, order.getAndIncrement(), LlmConfig.isLLMTranslatorAvailable() ? getString(R.string.TranslateMessageLLM) : getString(R.string.TranslateMessage));
             }
         });
+        addActions.put("change_font", () -> menu.add(R.id.menu_groupbolditalic, R.id.menu_change_font, order.getAndIncrement(), getString(R.string.ChangeFont)));
         addActions.put("bold", () -> {
             if (NaConfig.INSTANCE.getShowTextBold().Bool()) {
                 SpannableStringBuilder s = new SpannableStringBuilder(getString(R.string.Bold));
@@ -28165,7 +28166,7 @@ public class ChatActivity extends BaseFragment implements
                 Runnable r = addActions.get(k);
                 if (r != null) r.run();
             }
-            for (String k : new String[]{"translate","bold","italic","mono","code","strike","underline","quote","spoiler","link","mention","regular"}){
+            for (String k : new String[]{"translate","change_font","bold","italic","mono","code","strike","underline","quote","spoiler","link","mention","regular"}){
                 if (!orderStr.contains(k)){
                     Runnable r = addActions.get(k);
                     if (r != null) r.run();
@@ -28173,6 +28174,7 @@ public class ChatActivity extends BaseFragment implements
             }
         } else {
             addActions.get("translate").run();
+            addActions.get("change_font").run();
             addActions.get("bold").run();
             addActions.get("italic").run();
             addActions.get("mono").run();
