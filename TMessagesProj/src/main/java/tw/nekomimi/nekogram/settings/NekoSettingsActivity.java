@@ -50,7 +50,6 @@ import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 
 import tw.nekomimi.nekogram.helpers.HiddenChatsController;
-import tw.nekomimi.nekogram.helpers.HiddenChatsPasscodeDialog;
 import org.telegram.messenger.SendMessagesHelper;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.ActionBarMenu;
@@ -94,6 +93,7 @@ import tw.nekomimi.nekogram.helpers.CloudSettingsHelper;
 import tw.nekomimi.nekogram.helpers.LocalNameHelper;
 import tw.nekomimi.nekogram.helpers.SettingsHelper;
 import tw.nekomimi.nekogram.helpers.SettingsSearchResult;
+import tw.nekomimi.nekogram.ui.HiddenChatsPasscodeActivity;
 import tw.nekomimi.nekogram.utils.AlertUtil;
 import tw.nekomimi.nekogram.utils.FileUtil;
 import tw.nekomimi.nekogram.utils.GsonUtil;
@@ -1232,41 +1232,10 @@ public class NekoSettingsActivity extends BaseFragment {
     }
 
     private void showHiddenChatsSetupDialog(Context context) {
-        HiddenChatsPasscodeDialog.showFourDigitDialog(
-                this,
-                context,
-                "Setup Hidden Chats",
-                "Create a 4-digit passcode to protect your hidden chats.",
-                "Set Passcode",
-                "Passcode must be 4 digits",
-                null,
-                code -> {
-                    HiddenChatsController.getInstance().setPasscode(code);
-                    AndroidUtilities.runOnUIThread(() ->
-                            BulletinFactory.of(NekoSettingsActivity.this).createSimpleBulletin(R.raw.done, "Hidden Chats Setup Complete").show()
-                    );
-                    return true;
-                }
-        );
+        presentFragment(new HiddenChatsPasscodeActivity(HiddenChatsPasscodeActivity.MODE_SETUP_PASSCODE));
     }
 
     private void showHiddenChatsPasscodeDialog(Context context) {
-        HiddenChatsPasscodeDialog.showFourDigitDialog(
-                this,
-                context,
-                "Enter Passcode",
-                null,
-                "Unlock",
-                "Passcode must be 4 digits",
-                "Incorrect Passcode",
-                code -> {
-                    if (HiddenChatsController.getInstance().checkPasscode(code)) {
-                        HiddenChatsController.getInstance().unlock();
-                        presentFragment(new HiddenChatsSettingsActivity());
-                        return true;
-                    }
-                    return false;
-                }
-        );
+        presentFragment(new HiddenChatsPasscodeActivity(HiddenChatsPasscodeActivity.MODE_UNLOCK_SETTINGS));
     }
 }

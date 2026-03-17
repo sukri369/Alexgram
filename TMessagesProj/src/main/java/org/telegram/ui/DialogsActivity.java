@@ -104,7 +104,7 @@ import org.telegram.ui.Components.LayoutHelper;
 import android.view.Gravity;
 import android.widget.LinearLayout; // Ensure LinearLayout is imported
 import tw.nekomimi.nekogram.helpers.HiddenChatsController;
-import tw.nekomimi.nekogram.helpers.HiddenChatsPasscodeDialog;
+import tw.nekomimi.nekogram.ui.HiddenChatsPasscodeActivity;
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.AnimationNotificationsLocker;
@@ -9173,23 +9173,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         if (getParentActivity() == null) {
             return;
         }
-        HiddenChatsPasscodeDialog.showFourDigitDialog(
-                this,
-                getParentActivity(),
-                "Enter Passcode",
-                null,
-                "Unlock",
-                "Passcode must be 4 digits",
-                "Incorrect Passcode",
-                code -> {
-                    if (HiddenChatsController.getInstance().checkPasscode(code)) {
-                        HiddenChatsController.getInstance().unlock();
-                        presentFragment(new HiddenChatsActivity(new Bundle()));
-                        return true;
-                    }
-                    return false;
-                }
-        );
+        presentFragment(new HiddenChatsPasscodeActivity(HiddenChatsPasscodeActivity.MODE_UNLOCK_CHATS));
     }
 
     private void performSelectedDialogsAction(ArrayList<Long> selectedDialogs, int action, boolean alert, boolean longPress, HashSet<Long> dialogsIdsToRevoke) {
