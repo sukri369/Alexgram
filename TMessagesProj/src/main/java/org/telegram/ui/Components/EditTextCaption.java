@@ -90,7 +90,7 @@ public class EditTextCaption extends EditTextBoldCursor {
             "\uD835\uDD38", "\uD835\uDD39", "\u2102", "\uD835\uDD3B", "\uD835\uDD3C", "\uD835\uDD3D", "\uD835\uDD3E", "\u210D", "\uD835\uDD40", "\uD835\uDD41", "\uD835\uDD42", "\uD835\uDD43", "\uD835\uDD44", "\u2115", "\uD835\uDD46", "\u2119", "\u211A", "\u211D", "\uD835\uDD4A", "\uD835\uDD4B", "\uD835\uDD4C", "\uD835\uDD4D", "\uD835\uDD4E", "\uD835\uDD4F", "\uD835\uDD50", "\u2124"
         };
         private static final String[] SMALL_CAPS = {
-            "\u1D00", "\u0299", "\u1D04", "\u1D05", "\u1D07", "\uA730", "\u0262", "\u029C", "\u026A", "\u1D0A", "\u1D0B", "\u029F", "\u1D0D", "\u0274", "\u1D0F", "\u1D18", "\u01EB", "\u0280", "\uA731", "\u1D1B", "\u1D1C", "\u1D20", "\u1D21", "\u02E3", "\u028F", "\u1D22"
+            "\u1D00", "\u0299", "\u1D04", "\u1D05", "\u1D07", "\uA730", "\u0262", "\u029C", "\u026A", "\u1D0A", "\u1D0B", "\u029F", "\u1D0D", "\u0274", "\u1D0F", "\u1D18", "\u01EB", "\u0280", "\uA731", "\u1D1B", "\u1D1C", "\u1D20", "\u1D21", "x", "\u028F", "\u1D22"
         };
         private static final Map<Integer, String> UPSIDE_DOWN_MAP = createUpsideDownMap();
 
@@ -425,14 +425,14 @@ public class EditTextCaption extends EditTextBoldCursor {
         }
 
         CharSequence[] options = new CharSequence[]{
-                "Bold Serif Font  (\uD835\uDC07\uD835\uDC1E\uD835\uDC25\uD835\uDC25\uD835\uDC28 \uD835\uDC01\uD835\uDC2B\uD835\uDC28)",
-                "Fancy Script Font  (\uD835\uDCE7\uD835\uDCEE\uD835\uDCF5\uD835\uDCF5\uD835\uDCF8 \uD835\uDC91\uD835\uDCFB\uD835\uDCF8)",
-                "Double Struck Font  (\u210D\uD835\uDD56\uD835\uDD5D\uD835\uDD5D\uD835\uDD60 \uD835\uDD39\uD835\uDD63\uD835\uDD60)",
-                "Small Caps Font  (\u029C\u1D07\u029F\u029F\u1D0F \u0299\u0280\u1D0F)",
-                "Monospace Hacker Font  (\uD835\uDE77\uD835\uDE8E\uD835\uDE95\uD835\uDE95\uD835\uDE98 \uD835\uDE71\uD835\uDE9B\uD835\uDE98)",
-                "Bubble Circle Font  (\u24BD\u24D4\u24DB\u24DB\u24DE \u24B7\u24E1\u24DE)",
-                "Square Font  (\uD83C\uDD77\uD83C\uDD74\uD83C\uDD7B\uD83C\uDD7B\uD83C\uDD7E \uD83C\uDD71\uD83C\uDD81\uD83C\uDD7E)",
-                "Upside Down Font  (o\u0279q oll\u01DD\u0265)"
+                "Bold Serif Font  (\uD835\uDC07\uD835\uDC1E\uD835\uDC25\uD835\uDC25\uD835\uDC28)",
+                "Fancy Script Font  (\uD835\uDCE7\uD835\uDCEE\uD835\uDCF5\uD835\uDCF5\uD835\uDCF8)",
+                "Double Struck Font  (\u210D\uD835\uDD56\uD835\uDD5D\uD835\uDD5D\uD835\uDD60)",
+                "Small Caps Font  (\u029C\u1D07\u029F\u029F\u1D0F)",
+                "Monospace Hacker Font  (\uD835\uDE77\uD835\uDE8E\uD835\uDE95\uD835\uDE95\uD835\uDE98)",
+                "Bubble Circle Font  (\u24BD\u24D4\u24DB\u24DB\u24DE)",
+                "Square Font  (\uD83C\uDD77\uD83C\uDD74\uD83C\uDD7B\uD83C\uDD7B\uD83C\uDD7E)",
+                "Upside Down Font  (oll\u01DD\u0265)"
         };
 
         AlertDialog.Builder builder;
