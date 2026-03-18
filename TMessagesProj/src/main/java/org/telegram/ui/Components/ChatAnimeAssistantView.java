@@ -355,6 +355,8 @@ public class ChatAnimeAssistantView extends FrameLayout {
         float targetX = panelCenterX - characterContainer.getWidth() / 2f - AndroidUtilities.dp(60);
         characterContainer.animate().translationX(targetX - characterContainer.getLeft()).setDuration(400).setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT).start();
     }
+
+    public void setAssistantRequestDelegate(@Nullable AssistantRequestDelegate assistantRequestDelegate) {
         this.assistantRequestDelegate = assistantRequestDelegate;
     }
 
