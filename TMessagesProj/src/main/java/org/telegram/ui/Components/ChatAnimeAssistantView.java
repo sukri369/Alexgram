@@ -52,6 +52,9 @@ public class ChatAnimeAssistantView extends FrameLayout {
 
     public interface AssistantRequestDelegate {
         void onRequest(String prompt, AssistantRequestCallback callback);
+
+        default void onAutoReplyToggleChanged(long dialogId, boolean enabled) {
+        }
     }
 
     private static final int MAX_BUBBLES = 10;
@@ -514,6 +517,9 @@ public class ChatAnimeAssistantView extends FrameLayout {
             if (item.getItemId() == 1) {
                 autoReplyEnabled = !autoReplyEnabled;
                 preferences.edit().putBoolean(getAutoReplyPreferenceKey(), autoReplyEnabled).apply();
+                if (assistantRequestDelegate != null) {
+                    assistantRequestDelegate.onAutoReplyToggleChanged(assistantDialogId, autoReplyEnabled);
+                }
                 showReactionBubble(autoReplyEnabled ? "ON" : "OFF");
                 characterView.onTap();
                 return true;

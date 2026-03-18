@@ -9517,7 +9517,19 @@ public class ChatActivity extends BaseFragment implements
 
         if (chatMode == 0 && !isReport() && !isInPreviewMode()) {
             chatAnimeAssistantView = new ChatAnimeAssistantView(context, contentView, dialog_id);
-            chatAnimeAssistantView.setAssistantRequestDelegate((prompt, callback) -> requestAnimeAssistantReply(prompt, callback));
+            chatAnimeAssistantView.setAssistantRequestDelegate(new ChatAnimeAssistantView.AssistantRequestDelegate() {
+                @Override
+                public void onRequest(String prompt, ChatAnimeAssistantView.AssistantRequestCallback callback) {
+                    requestAnimeAssistantReply(prompt, callback);
+                }
+
+                @Override
+                public void onAutoReplyToggleChanged(long dialogId, boolean enabled) {
+                    if (enabled && dialogId == dialog_id) {
+                        tryAutoReplyWithLatestPendingMessage(true);
+                    }
+                }
+            });
             contentView.addView(chatAnimeAssistantView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
         }
 
@@ -30526,6 +30538,7 @@ public class ChatActivity extends BaseFragment implements
         }
         if (chatAnimeAssistantView != null) {
             chatAnimeAssistantView.onResume();
+            tryAutoReplyWithLatestPendingMessage(true);
         }
     }
 
@@ -48384,13 +48397,62 @@ public class ChatActivity extends BaseFragment implements
         if (text.length() > 120) {
             text = text.substring(0, 120).trim();
         }
+        text = text.replace('\n', ' ').replace('"', '\'').trim();
         if (TextUtils.isEmpty(text)) {
-            return "Okay, noted.";
+            return "I saw your message, I will reply soon.";
         }
         if (text.endsWith("?")) {
-            return "Got it, let me check and get back to you.";
+            return "About \"" + text + "\", let me check and get back to you.";
         }
-        return "Got it, thanks.";
+        return "About \"" + text + "\", got it.";
+    }
+
+    private void tryAutoReplyWithLatestPendingMessage(boolean preferUnreadOnly) {
+        if (!isAssistantAutoReplyEnabledForDialog() || !isAssistantAutoReplyModeSupported() || assistantAutoReplyInFlight) {
+            return;
+        }
+        if (messages == null || messages.isEmpty()) {
+            return;
+        }
+
+        MessageObject candidate = null;
+        for (int i = 0; i < messages.size(); i++) {
+            MessageObject messageObject = messages.get(i);
+            if (messageObject == null || messageObject.getId() <= 0) {
+                continue;
+            }
+            if (messageObject.getId() <= assistantLastAutoReplyMessageId) {
+                continue;
+            }
+            if (messageObject.isOut() || messageObject.isOutOwner() || messageObject.messageOwner == null || messageObject.messageOwner.action != null) {
+                continue;
+            }
+            long messageDialogId = messageObject.getDialogId();
+            if (messageDialogId != dialog_id && messageDialogId != mergeDialogId) {
+                continue;
+            }
+            if (preferUnreadOnly && !messageObject.isUnread()) {
+                continue;
+            }
+
+            CharSequence text = messageObject.messageText;
+            if (TextUtils.isEmpty(text) && messageObject.caption != null) {
+                text = messageObject.caption;
+            }
+            if (TextUtils.isEmpty(text)) {
+                continue;
+            }
+            candidate = messageObject;
+            break;
+        }
+
+        if (candidate == null && preferUnreadOnly) {
+            tryAutoReplyWithLatestPendingMessage(false);
+            return;
+        }
+        if (candidate != null) {
+            tryAutoReplyWithAssistant(candidate);
+        }
     }
 
     private void tryAutoReplyWithAssistant(MessageObject incomingMessage) {
@@ -48425,7 +48487,8 @@ public class ChatActivity extends BaseFragment implements
 
         String prompt = "Incoming message: \"" + sourceText.toString().replace('\n', ' ') + "\"\n"
                 + "Write a natural human reply in the same language, maximum one short sentence. "
-                + "Avoid robotic style. " + getAssistantPersonaHint();
+            + "Reply directly to the message content and intent, avoid generic acknowledgements. "
+            + "Avoid robotic style. " + getAssistantPersonaHint();
 
         requestAnimeAssistantReply(prompt, new ChatAnimeAssistantView.AssistantRequestCallback() {
             @Override
