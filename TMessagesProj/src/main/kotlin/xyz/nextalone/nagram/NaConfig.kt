@@ -353,7 +353,7 @@ object NaConfig {
         addConfig(
             "PillChatTitle",
             ConfigItem.configTypeBool,
-            false
+            true
         )
     val useLocalQuoteColorData =
         addConfig(

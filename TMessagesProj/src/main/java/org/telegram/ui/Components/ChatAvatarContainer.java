@@ -27,6 +27,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.text.TextPaint;
 import android.text.TextUtils;
 import android.view.Gravity;
@@ -511,14 +512,47 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
     private final RectF pillRect = new RectF();
     private final Rect pillBlurRect = new Rect();
     private final Path pillClipPath = new Path();
+    private final Paint pillHighlightPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private boolean pillTitleOverflowing;
     private boolean pillSubtitleOverflowing;
+    private long pillOnboardingHighlightStart;
+    private boolean pillOnboardingHighlightRunning;
+
+    private final Runnable pillOnboardingHighlightRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (!pillOnboardingHighlightRunning) {
+                return;
+            }
+            long elapsed = SystemClock.elapsedRealtime() - pillOnboardingHighlightStart;
+            if (elapsed >= 1850) {
+                pillOnboardingHighlightRunning = false;
+                invalidate();
+                return;
+            }
+            invalidate();
+            AndroidUtilities.runOnUIThread(this, 16);
+        }
+    };
 
     private boolean isPillChatTitleEnabled() {
         if (!NaConfig.INSTANCE.getPillChatTitle().Bool()) {
             return false;
         }
         return parentFragment == null || parentFragment.isPillChatHeaderLayoutEnabled();
+    }
+
+    public void playPillTitleOnboardingHighlight() {
+        if (!isPillChatTitleEnabled()) {
+            return;
+        }
+        pillOnboardingHighlightStart = SystemClock.elapsedRealtime();
+        if (pillOnboardingHighlightRunning) {
+            return;
+        }
+        pillOnboardingHighlightRunning = true;
+        AndroidUtilities.cancelRunOnUIThread(pillOnboardingHighlightRunnable);
+        AndroidUtilities.runOnUIThread(pillOnboardingHighlightRunnable);
     }
 
     private int getPillHorizontalPadding() {
@@ -750,6 +784,19 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                 canvas.drawRoundRect(pillRect, radius, radius, pillPaint);
             }
             canvas.drawRoundRect(pillRect, radius, radius, pillStrokePaint);
+
+            if (pillOnboardingHighlightRunning) {
+                float elapsed = SystemClock.elapsedRealtime() - pillOnboardingHighlightStart;
+                float t = Math.min(1f, elapsed / 1850f);
+                float pulse = (float) ((Math.sin(t * Math.PI * 3.0f) + 1f) * 0.5f);
+                float alpha = (1f - t) * (0.22f + 0.5f * pulse);
+                float extra = dpf2(1.25f + 2.5f * pulse);
+                pillHighlightPaint.setStyle(Paint.Style.STROKE);
+                pillHighlightPaint.setStrokeWidth(extra);
+                pillHighlightPaint.setColor(darkPillSurface ? 0xFFFFFFFF : 0xFF3C76FF);
+                pillHighlightPaint.setAlpha((int) (255 * alpha));
+                canvas.drawRoundRect(pillRect, radius, radius, pillHighlightPaint);
+            }
         }
 
         super.dispatchDraw(canvas);
@@ -1510,6 +1557,8 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
     }
 
     public void onDestroy() {
+        pillOnboardingHighlightRunning = false;
+        AndroidUtilities.cancelRunOnUIThread(pillOnboardingHighlightRunnable);
         if (sharedMediaPreloader != null) {
             sharedMediaPreloader.onDestroy(parentFragment);
         }

@@ -787,6 +787,8 @@ public class ChatActivity extends BaseFragment implements
     public static final int MODE_SEARCH = 7;
     public static final int MODE_SUGGESTIONS = 8;
 
+    private static final String PILL_TITLE_ONBOARDING_SHOWN_KEY = "pill_chat_title_onboarding_shown_v1";
+
     public static final int SEARCH_THIS_CHAT = 0;
     public static final int SEARCH_MY_MESSAGES = 1;
     public static final int SEARCH_PUBLIC_POSTS = 2;
@@ -27787,6 +27789,7 @@ public class ChatActivity extends BaseFragment implements
             }
 
             showScheduledOrNoSoundHint();
+            maybeShowPillTitleOnboarding(backward);
 
             if (!backward && firstOpen) {
                 if (chatActivityEnterView != null && (threadMessageObject != null && threadMessageObject.getRepliesCount() == 0 && ChatObject.canSendMessages(currentChat) && !isTopic || chatMode == MODE_EDIT_BUSINESS_LINK)) {
@@ -44496,6 +44499,42 @@ public class ChatActivity extends BaseFragment implements
 
     public boolean isPillChatHeaderLayoutEnabled() {
         return isPillChatHeaderEnabled();
+    }
+
+    private void maybeShowPillTitleOnboarding(boolean backward) {
+        if (backward || !isPillChatHeaderEnabled() || avatarContainer == null || getParentActivity() == null) {
+            return;
+        }
+        SharedPreferences preferences = NaConfig.INSTANCE.getPreferences();
+        if (preferences.getBoolean(PILL_TITLE_ONBOARDING_SHOWN_KEY, false)) {
+            return;
+        }
+        preferences.edit().putBoolean(PILL_TITLE_ONBOARDING_SHOWN_KEY, true).apply();
+        AndroidUtilities.runOnUIThread(() -> {
+            if (avatarContainer == null || !isPillChatHeaderEnabled() || paused) {
+                return;
+            }
+            avatarContainer.playPillTitleOnboardingHighlight();
+            if (!BulletinFactory.canShowBulletin(ChatActivity.this)) {
+                return;
+            }
+            BulletinFactory.of(ChatActivity.this)
+                .createSimpleBulletin(
+                    R.raw.chats_infotip,
+                    "New title style is now active",
+                    "Chat names appear in a clean pill. Keep it if you like the look, or turn it off now.",
+                    "Turn off",
+                    () -> {
+                        NaConfig.INSTANCE.getPillChatTitle().setConfigBool(false);
+                        if (parentLayout != null) {
+                            parentLayout.rebuildAllFragmentViews(false, false);
+                        } else if (avatarContainer != null) {
+                            avatarContainer.invalidate();
+                        }
+                    }
+                )
+                .show();
+        }, 280);
     }
 
     public MessageObject.GroupedMessages getGroup(long id) {
