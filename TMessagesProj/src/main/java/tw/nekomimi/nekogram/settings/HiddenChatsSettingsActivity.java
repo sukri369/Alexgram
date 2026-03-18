@@ -5,8 +5,10 @@ import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.drawable.GradientDrawable;
+import android.os.Build;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -27,13 +29,28 @@ import android.text.InputType;
 import tw.nekomimi.nekogram.helpers.HiddenChatsController;
 import tw.nekomimi.nekogram.ui.HiddenChatsActivity;
 import tw.nekomimi.nekogram.ui.HiddenChatsPasscodeActivity;
+import tw.nekomimi.nekogram.settings.AlexgramSettingsHeaderView;
 
 public class HiddenChatsSettingsActivity extends BaseFragment {
+    
+    private int cardBg;
+    private int cardBorder;
+    private int dividerColor;
+    private boolean isDark;
 
     @Override
     public View createView(Context context) {
+        setupColors();
+        
+        isDark = Theme.getActiveTheme().isDark();
+        
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
         actionBar.setTitle("Hidden Chats Settings");
+        actionBar.setBackgroundColor(Color.TRANSPARENT);
+        int actionBarColor = isDark ? Color.WHITE : 0xFF1A1A2E;
+        actionBar.setItemsColor(actionBarColor, false);
+        actionBar.setTitleColor(actionBarColor);
+        actionBar.setAddToContainer(false);
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
             public void onItemClick(int id) {
@@ -43,111 +60,164 @@ public class HiddenChatsSettingsActivity extends BaseFragment {
             }
         });
 
+        FrameLayout parentFrame = new FrameLayout(context);
+        
+        // Add animated background
+        AlexgramSettingsHeaderView backgroundView = new AlexgramSettingsHeaderView(context);
+        backgroundView.setVisibility(View.VISIBLE);
+        parentFrame.addView(backgroundView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        
         ScrollView scrollView = new ScrollView(context);
+        scrollView.setVerticalScrollBarEnabled(false);
+        scrollView.setBackgroundColor(Color.TRANSPARENT);
+        scrollView.setClipToPadding(false);
+        scrollView.setPadding(0, AndroidUtilities.dp(56) + AndroidUtilities.statusBarHeight, 0, 0);
+        parentFrame.addView(scrollView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        parentFrame.addView(actionBar, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+        
         LinearLayout contentLayout = new LinearLayout(context);
         contentLayout.setOrientation(LinearLayout.VERTICAL);
+        contentLayout.setPadding(AndroidUtilities.dp(16), 0, AndroidUtilities.dp(16), AndroidUtilities.dp(32));
         scrollView.addView(contentLayout);
-        fragmentView = scrollView;
+        fragmentView = parentFrame;
 
-        contentLayout.setPadding(0, AndroidUtilities.dp(10), 0, AndroidUtilities.dp(10));
+        // Options section
+        addGlassSection(contentLayout, context, "OPTIONS");
+        LinearLayout optionsCard = createGlassCard(context);
 
-        // Options
-        contentLayout.addView(createSettingItem(context, "Change Passcode", "Update your 4-digit PIN", R.drawable.msg_permissions_solar, 0xFFE91E63, v -> {
-             // For now, re-use setup dialog from NekoSettingsActivity via static method or duplication
-             // Or better, just clear passcode and ask to set new one
-             showChangePasscodeDialog(context);
-        }));
+        // Change Passcode
+        optionsCard.addView(createSettingItem(context, "Change Passcode", "Update your 4-digit PIN", R.drawable.msg_permissions_solar, 0xFFE91E63, v -> {
+            showChangePasscodeDialog(context);
+        }, false));
 
-        contentLayout.addView(createSettingItem(context, "Open Hidden Chats", "Access your hidden chats now", R.drawable.msg_folders_private_solar, 0xFFE91E63, v -> {
-             presentFragment(new HiddenChatsActivity(null));
-        }));
+        optionsCard.addView(createGlassDivider(context));
+
+        // Open Hidden Chats
+        optionsCard.addView(createSettingItem(context, "Open Hidden Chats", "Access your hidden chats now", R.drawable.msg_folders_private_solar, 0xFFE91E63, v -> {
+            presentFragment(new HiddenChatsActivity(null));
+        }, false));
+
+        optionsCard.addView(createGlassDivider(context));
 
         // Reset
-        contentLayout.addView(createSettingItem(context, "Reset Hidden Chats", "Clear all hidden chats and reset passcode", R.drawable.msg_delete, 0xFFE91E63, v -> {
-             AlertDialog.Builder builder = new AlertDialog.Builder(context);
-             builder.setTitle("Reset Hidden Chats");
-             builder.setMessage("This will unhide all chats and remove the passcode. Are you sure?");
-             builder.setPositiveButton("Reset", (d, w) -> {
-                 HiddenChatsController.getInstance().reset();
-                 finishFragment();
-             });
-             builder.setNegativeButton("Cancel", null);
-             builder.show();
-        }));
+        optionsCard.addView(createSettingItem(context, "Reset Hidden Chats", "Clear all hidden chats and reset passcode", R.drawable.msg_delete, 0xFFE91E63, v -> {
+            AlertDialog.Builder builder = new AlertDialog.Builder(context);
+            builder.setTitle("Reset Hidden Chats");
+            builder.setMessage("This will unhide all chats and remove the passcode. Are you sure?");
+            builder.setPositiveButton("Reset", (d, w) -> {
+                HiddenChatsController.getInstance().reset();
+                finishFragment();
+            });
+            builder.setNegativeButton("Cancel", null);
+            builder.show();
+        }, false));
+
+        optionsCard.addView(createGlassDivider(context));
 
         // How to Use
-        contentLayout.addView(createSettingItem(context, "How to Use", "Learn how to manage hidden chats", R.drawable.msg_info, 0xFFE91E63, v -> {
-             AlertDialog.Builder builder = new AlertDialog.Builder(context);
-             builder.setTitle("How to Use Hidden Chats");
-             builder.setMessage("Hide Chats:\nLong-press any chat in the chat list, you will see 3-dot menu then click option: Add to Hidden Chats or use the Plus icon in the Hidden Chats screen to add multiple chats at once.\n\nAccess Hidden Chats:\nLong-press on the Alexgram header/title bar on the main screen, or open them directly from Hidden Chats Settings.\n\nPrivacy:\nChats added to Hidden Chats are automatically muted. You can manually unmute them if you prefer.\n\nPasscode:\nYour hidden chats are protected by a 4-digit passcode.");
-             builder.setPositiveButton("Got It", null);
-             builder.show();
-        }));
+        optionsCard.addView(createSettingItem(context, "How to Use", "Learn how to manage hidden chats", R.drawable.msg_info, 0xFFE91E63, v -> {
+            AlertDialog.Builder builder = new AlertDialog.Builder(context);
+            builder.setTitle("How to Use Hidden Chats");
+            builder.setMessage("Hide Chats:\nLong-press any chat in the chat list, you will see 3-dot menu then click option: Add to Hidden Chats or use the Plus icon in the Hidden Chats screen to add multiple chats at once.\n\nAccess Hidden Chats:\nLong-press on the Alexgram header/title bar on the main screen, or open them directly from Hidden Chats Settings.\n\nPrivacy:\nChats added to Hidden Chats are automatically muted. You can manually unmute them if you prefer.\n\nPasscode:\nYour hidden chats are protected by a 4-digit passcode.");
+            builder.setPositiveButton("Got It", null);
+            builder.show();
+        }, true));
+
+        contentLayout.addView(optionsCard, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 12, 0, 12));
 
         return fragmentView;
     }
 
-    private View createSettingItem(Context context, String title, String subtitle, int iconRes, int iconColor, View.OnClickListener onClick) {
-        // Simple implementation mimicking NekoSettingsActivity style
-        FrameLayout frameLayout = new FrameLayout(context);
-        frameLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-        
-        LinearLayout linearLayout = new LinearLayout(context);
-        linearLayout.setOrientation(LinearLayout.HORIZONTAL);
-        linearLayout.setGravity(Gravity.CENTER_VERTICAL);
-        linearLayout.setPadding(AndroidUtilities.dp(20), AndroidUtilities.dp(10), AndroidUtilities.dp(20), AndroidUtilities.dp(10));
-        linearLayout.setBackground(Theme.getSelectorDrawable(false));
-        linearLayout.setOnClickListener(onClick);
+    private void setupColors() {
+        isDark = Theme.getActiveTheme().isDark();
+        if (isDark) {
+            cardBg = 0x30FFFFFF;       // frosted glass dark
+            cardBorder = 0x22FFFFFF;
+            dividerColor = 0x15FFFFFF;
+        } else {
+            cardBg = 0x60FFFFFF;       // frosted glass light
+            cardBorder = 0x30000000;
+            dividerColor = 0x18000000;
+        }
+    }
 
-        ImageView imageView = new ImageView(context);
-        imageView.setImageResource(iconRes);
-        imageView.setColorFilter(new PorterDuffColorFilter(iconColor, PorterDuff.Mode.SRC_IN));
-        
-        // Background for icon
-        GradientDrawable shape = new GradientDrawable();
-        shape.setShape(GradientDrawable.OVAL);
-        shape.setColor(Color.argb(30, Color.red(iconColor), Color.green(iconColor), Color.blue(iconColor)));
-        imageView.setBackground(shape);
-        imageView.setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8));
+    private void addGlassSection(LinearLayout parent, Context ctx, String title) {
+        TextView tv = new TextView(ctx);
+        tv.setText(title);
+        tv.setTextSize(11);
+        tv.setTextColor(isDark ? 0xCC8899AA : 0xCC5C6B7F);
+        tv.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+        tv.setLetterSpacing(0.1f);
+        parent.addView(tv, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 4, 0, 0, 8));
+    }
 
-        LinearLayout textLayout = new LinearLayout(context);
-        textLayout.setOrientation(LinearLayout.VERTICAL);
-        textLayout.setGravity(Gravity.CENTER_VERTICAL);
+    private LinearLayout createGlassCard(Context ctx) {
+        LinearLayout card = new LinearLayout(ctx);
+        card.setOrientation(LinearLayout.VERTICAL);
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(cardBg);
+        bg.setCornerRadius(AndroidUtilities.dp(16));
+        bg.setStroke(AndroidUtilities.dp(1), cardBorder);
+        card.setBackground(bg);
+        card.setClipChildren(true);
+        return card;
+    }
+
+    private View createGlassDivider(Context ctx) {
+        View v = new View(ctx);
+        v.setBackgroundColor(dividerColor);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 1);
+        lp.leftMargin = AndroidUtilities.dp(56);
+        v.setLayoutParams(lp);
+        return v;
+    }
+
+    private View createSettingItem(Context context, String title, String subtitle, int iconRes, int iconColor, View.OnClickListener onClick, boolean isLast) {
+        LinearLayout row = new LinearLayout(context);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(13), AndroidUtilities.dp(14), AndroidUtilities.dp(13));
+        row.setClickable(true);
+        row.setBackground(Theme.getSelectorDrawable(false));
+        row.setOnClickListener(onClick);
+
+        // Icon
+        ImageView iconView = new ImageView(context);
+        iconView.setImageResource(iconRes);
+        iconView.setColorFilter(Color.WHITE);
+        iconView.setScaleType(ImageView.ScaleType.CENTER);
+        GradientDrawable iconBg = new GradientDrawable();
+        iconBg.setShape(GradientDrawable.RECTANGLE);
+        iconBg.setCornerRadius(AndroidUtilities.dp(10));
+        iconBg.setColor(iconColor);
+        iconView.setBackground(iconBg);
+        row.addView(iconView, LayoutHelper.createLinear(32, 32));
+
+        // Texts
+        LinearLayout texts = new LinearLayout(context);
+        texts.setOrientation(LinearLayout.VERTICAL);
+        texts.setGravity(Gravity.CENTER_VERTICAL);
         
         TextView titleView = new TextView(context);
         titleView.setText(title);
         titleView.setTextSize(16);
-        titleView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+        titleView.setTextColor(isDark ? 0xFFFFFFFF : 0xFF1A1A2E);
         titleView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+        texts.addView(titleView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
 
         TextView subtitleView = new TextView(context);
         subtitleView.setText(subtitle);
         subtitleView.setTextSize(13);
-        subtitleView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
+        subtitleView.setTextColor(isDark ? 0xFF8899AA : 0xFF5C6B7F);
+        subtitleView.setPadding(0, AndroidUtilities.dp(2), 0, 0);
+        texts.addView(subtitleView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
 
-        textLayout.addView(titleView);
-        textLayout.addView(subtitleView);
+        row.addView(texts, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 1f, 0, 0, 14, 0));
 
-        linearLayout.addView(imageView, LayoutHelper.createLinear(40, 40, 0, 0, 16, 0));
-        linearLayout.addView(textLayout, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
-
-        frameLayout.addView(linearLayout);
-        return frameLayout;
+        return row;
     }
     
     private void showChangePasscodeDialog(Context context) {
-        // Reuse setup logic logic, potentially duplicate code due to time constraints (user waiting)
-        // Ideally should be shared.
-        
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle("Set New Passcode");
-        
-        final org.telegram.ui.Components.EditTextBoldCursor editText = new org.telegram.ui.Components.EditTextBoldCursor(context);
-        editText.setTextSize(18);
-        editText.setInputType(android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD);
-        editText.setFilters(new android.text.InputFilter[] { new android.text.InputFilter.LengthFilter(4) });
-        editText.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
-        editText.setGravity(Gravity.CENTER);
         presentFragment(new HiddenChatsPasscodeActivity(HiddenChatsPasscodeActivity.MODE_CHANGE_PASSCODE));
     }
 }
