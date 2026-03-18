@@ -22,6 +22,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.ui.ActionBar.ActionBar;
@@ -61,12 +62,15 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
 
     @Override
     public boolean onFragmentCreate() {
-        preferences = getContext().getSharedPreferences("ai_assistant_prefs", Context.MODE_PRIVATE);
+        preferences = ApplicationLoader.applicationContext.getSharedPreferences("ai_assistant_prefs", Context.MODE_PRIVATE);
         return super.onFragmentCreate();
     }
 
     @Override
     public View createView(Context context) {
+        if (preferences == null) {
+            preferences = context.getSharedPreferences("ai_assistant_prefs", Context.MODE_PRIVATE);
+        }
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
         actionBar.setAllowOverlayTitle(true);
         actionBar.setTitle("Alexgram AI Assistance");
@@ -116,10 +120,11 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
             if (position == 0 || position == ROW_COUNT + 1) {
                 return 1;
             }
-            if (position == ROW_ANIMATION_INTENSITY_SLIDER) {
+            int row = position - 1;
+            if (row == ROW_ANIMATION_INTENSITY_SLIDER) {
                 return 2;
             }
-            if (position == ROW_SKIN || position == ROW_PERSONA) {
+            if (row == ROW_SKIN || row == ROW_PERSONA) {
                 return 3;
             }
             return 0;
@@ -171,6 +176,7 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
 
         @Override
         public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+            int row = position - 1;
             switch (getItemViewType(position)) {
                 case 0:
                     TextCheckCell cell = (TextCheckCell) holder.itemView;
@@ -178,45 +184,54 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
                     String title = "";
                     String key = "";
 
-                    if (position == ROW_ENABLED) {
+                    if (row == ROW_ENABLED) {
                         title = "Enable AI Assistance";
                         key = "assistant_enabled";
                         checked = preferences.getBoolean(key, true);
-                    } else if (position == ROW_KEYBOARD_AUTO_HIDE) {
+                    } else if (row == ROW_KEYBOARD_AUTO_HIDE) {
                         title = "Hide on keyboard appearance";
                         key = "keyboard_auto_hide";
                         checked = preferences.getBoolean(key, true);
-                    } else if (position == ROW_AUTO_FOLLOW) {
+                    } else if (row == ROW_AUTO_FOLLOW) {
                         title = "Auto-position near chat";
                         key = "auto_follow";
                         checked = preferences.getBoolean(key, true);
-                    } else if (position == ROW_CHAT_CONTEXT) {
+                    } else if (row == ROW_CHAT_CONTEXT) {
                         title = "Use chat context for replies";
                         key = "use_context";
                         checked = preferences.getBoolean(key, true);
-                    } else if (position == ROW_PARTICLE_EFFECTS) {
+                    } else if (row == ROW_PARTICLE_EFFECTS) {
                         title = "Particle effects on interaction";
                         key = "particle_effects";
                         checked = preferences.getBoolean(key, true);
-                    } else if (position == ROW_REACTION_BUBBLES) {
+                    } else if (row == ROW_REACTION_BUBBLES) {
                         title = "Show reaction bubbles";
                         key = "reaction_bubbles";
                         checked = preferences.getBoolean(key, true);
                     }
 
+                    if (TextUtils.isEmpty(key)) {
+                        cell.setOnClickListener(null);
+                        cell.setTextAndCheck("", false, true);
+                        break;
+                    }
+
                     final String finalKey = key;
                     cell.setTextAndCheck(title, checked, true);
                     cell.setOnClickListener(v -> {
-                        boolean newValue = !preferences.getBoolean(finalKey, position == ROW_ENABLED || position == ROW_KEYBOARD_AUTO_HIDE || position == ROW_AUTO_FOLLOW || position == ROW_CHAT_CONTEXT || position == ROW_PARTICLE_EFFECTS || position == ROW_REACTION_BUBBLES);
+                        boolean newValue = !preferences.getBoolean(finalKey, true);
                         preferences.edit().putBoolean(finalKey, newValue).apply();
-                        adapter.notifyItemChanged(position);
+                        int adapterPosition = holder.getBindingAdapterPosition();
+                        if (adapterPosition != RecyclerView.NO_POSITION) {
+                            adapter.notifyItemChanged(adapterPosition);
+                        }
                     });
                     break;
                 case 2:
                     break;
                 case 3:
                     TextSettingsCell settingsCell = (TextSettingsCell) holder.itemView;
-                    if (position == ROW_SKIN) {
+                    if (row == ROW_SKIN) {
                         int skinIndex = preferences.getInt("character_skin", 0);
                         String[] skins = {"Sky Blue", "Mint Green", "Sunset"};
                         settingsCell.setTextAndValue("Character Skin", skins[Math.min(skinIndex, 2)], true);
@@ -224,9 +239,12 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
                             int current = preferences.getInt("character_skin", 0);
                             int next = (current + 1) % 3;
                             preferences.edit().putInt("character_skin", next).apply();
-                            adapter.notifyItemChanged(position);
+                            int adapterPosition = holder.getBindingAdapterPosition();
+                            if (adapterPosition != RecyclerView.NO_POSITION) {
+                                adapter.notifyItemChanged(adapterPosition);
+                            }
                         });
-                    } else if (position == ROW_PERSONA) {
+                    } else if (row == ROW_PERSONA) {
                         int personaIndex = preferences.getInt("persona_preset", 0);
                         String[] personas = {"Friendly Helper", "Playful Teaser", "Wise Mentor"};
                         settingsCell.setTextAndValue("Assistant Persona", personas[Math.min(personaIndex, 2)], true);
@@ -234,7 +252,10 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
                             int current = preferences.getInt("persona_preset", 0);
                             int next = (current + 1) % 3;
                             preferences.edit().putInt("persona_preset", next).apply();
-                            adapter.notifyItemChanged(position);
+                            int adapterPosition = holder.getBindingAdapterPosition();
+                            if (adapterPosition != RecyclerView.NO_POSITION) {
+                                adapter.notifyItemChanged(adapterPosition);
+                            }
                         });
                     }
                     break;

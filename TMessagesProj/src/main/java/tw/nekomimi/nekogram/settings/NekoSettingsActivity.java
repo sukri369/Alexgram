@@ -59,6 +59,7 @@ import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.BasePermissionsActivity;
 import org.telegram.ui.Cells.SettingsSearchCell;
+import org.telegram.ui.AIAssistanceSettingsActivity;
 import org.telegram.ui.Components.EditTextBoldCursor;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
@@ -460,6 +461,11 @@ public class NekoSettingsActivity extends BaseFragment {
 
         coreCard.addView(createSettingItem(context, "Chats", "UI, Privacy, Media", R.drawable.msg_discussion, 0xFF43A047, v -> {
             presentFragment(new NekoChatSettingsActivity());
+        }));
+        coreCard.addView(createGlassDivider(context));
+
+        coreCard.addView(createSettingItem(context, "AI Assistance", "Alexgram assistant behavior & animations", R.drawable.settings_chat, 0xFF8E44AD, v -> {
+            presentFragment(new AIAssistanceSettingsActivity());
         }));
         coreCard.addView(createGlassDivider(context));
 
