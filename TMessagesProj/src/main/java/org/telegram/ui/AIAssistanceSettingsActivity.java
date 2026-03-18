@@ -355,6 +355,166 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
         void onChanged(boolean enabled);
     }
 
+    public void importToRow(String key, String value, Runnable unknown) {
+        if (preferences == null) {
+            preferences = ApplicationLoader.applicationContext.getSharedPreferences("ai_assistant_prefs", Context.MODE_PRIVATE);
+        }
+
+        String normalized = normalizeKey(key);
+        if (normalized == null || normalized.isEmpty()) {
+            if (unknown != null) {
+                unknown.run();
+            }
+            return;
+        }
+
+        boolean recognized;
+        boolean applied = false;
+        SharedPreferences.Editor editor = preferences.edit();
+
+        switch (normalized) {
+            case "assistantenabled":
+            case "enableaiassistance":
+                recognized = true;
+                if (value != null) {
+                    editor.putBoolean("assistant_enabled", parseBoolean(value));
+                    applied = true;
+                }
+                break;
+            case "backgroundanimation":
+                recognized = true;
+                if (value != null) {
+                    boolean enabled = parseBoolean(value);
+                    editor.putBoolean("background_animation", enabled);
+                    applied = true;
+                    applyBackgroundState(enabled);
+                }
+                break;
+            case "keyboardautohide":
+            case "hideonkeyboardappearance":
+                recognized = true;
+                if (value != null) {
+                    editor.putBoolean("keyboard_auto_hide", parseBoolean(value));
+                    applied = true;
+                }
+                break;
+            case "autofollow":
+            case "autopositionnearchat":
+                recognized = true;
+                if (value != null) {
+                    editor.putBoolean("auto_follow", parseBoolean(value));
+                    applied = true;
+                }
+                break;
+            case "usecontext":
+            case "usechatcontextforreplies":
+                recognized = true;
+                if (value != null) {
+                    editor.putBoolean("use_context", parseBoolean(value));
+                    applied = true;
+                }
+                break;
+            case "particleeffects":
+            case "particleeffectsoninteraction":
+                recognized = true;
+                if (value != null) {
+                    editor.putBoolean("particle_effects", parseBoolean(value));
+                    applied = true;
+                }
+                break;
+            case "reactionbubbles":
+            case "showreactionbubbles":
+                recognized = true;
+                if (value != null) {
+                    editor.putBoolean("reaction_bubbles", parseBoolean(value));
+                    applied = true;
+                }
+                break;
+            case "characterskin":
+                recognized = true;
+                if (value != null) {
+                    int skin = clamp(parseIntSafe(value, preferences.getInt("character_skin", 0)), 0, 2);
+                    editor.putInt("character_skin", skin);
+                    applied = true;
+                    if (skinValueView != null) {
+                        skinValueView.setText(getSkinName());
+                    }
+                }
+                break;
+            case "personapreset":
+            case "assistantpersona":
+                recognized = true;
+                if (value != null) {
+                    int persona = clamp(parseIntSafe(value, preferences.getInt("persona_preset", 0)), 0, 2);
+                    editor.putInt("persona_preset", persona);
+                    applied = true;
+                    if (personaValueView != null) {
+                        personaValueView.setText(getPersonaName());
+                    }
+                }
+                break;
+            case "animationintensity":
+                recognized = true;
+                if (value != null) {
+                    int intensity = clamp(parseIntSafe(value, preferences.getInt("animation_intensity", 70)), 0, 100);
+                    editor.putInt("animation_intensity", intensity);
+                    applied = true;
+                    if (intensitySeekBar != null) {
+                        intensitySeekBar.setProgress(intensity);
+                    }
+                }
+                break;
+            default:
+                recognized = false;
+                break;
+        }
+
+        if (!recognized) {
+            if (unknown != null) {
+                unknown.run();
+            }
+            return;
+        }
+
+        if (applied) {
+            editor.apply();
+        }
+    }
+
+    private String normalizeKey(String key) {
+        if (key == null) {
+            return null;
+        }
+        StringBuilder out = new StringBuilder();
+        for (int i = 0; i < key.length(); i++) {
+            char c = Character.toLowerCase(key.charAt(i));
+            if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) {
+                out.append(c);
+            }
+        }
+        return out.toString();
+    }
+
+    private boolean parseBoolean(String value) {
+        String v = value == null ? "" : value.trim().toLowerCase(Locale.US);
+        return "1".equals(v) || "true".equals(v) || "on".equals(v) || "yes".equals(v) || "enabled".equals(v);
+    }
+
+    private int parseIntSafe(String value, int fallback) {
+        if (value == null) {
+            return fallback;
+        }
+        try {
+            return Integer.parseInt(value.trim());
+        } catch (Throwable ignore) {
+            return fallback;
+        }
+    }
+
+    private int clamp(int value, int min, int max) {
+        return Math.max(min, Math.min(max, value));
+    }
+
     @Override
     public ArrayList<ThemeDescription> getThemeDescriptions() {
         ArrayList<ThemeDescription> descriptions = new ArrayList<>();

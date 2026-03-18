@@ -9,6 +9,7 @@ import android.text.TextUtils;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.R;
+import org.telegram.ui.AIAssistanceSettingsActivity;
 import org.telegram.ui.ActionBar.BaseFragment;
 
 import java.util.ArrayList;
@@ -40,6 +41,7 @@ public class SettingsHelper {
         BaseFragment fragment;
         BaseNekoSettingsActivity neko_fragment = null;
         BaseNekoXSettingsActivity nekox_fragment = null;
+        AIAssistanceSettingsActivity ai_fragment = null;
         if (segments.size() == 1) {
             fragment = new NekoSettingsActivity();
         } else if (PasscodeHelper.getSettingsKey().equals(segments.get(1))) {
@@ -69,6 +71,12 @@ public class SettingsHelper {
                 case "translate":
                 case "t":
                     fragment = nekox_fragment = new NekoTranslatorSettingsActivity();
+                    break;
+                case "ai_assistance":
+                case "ai-assistance":
+                case "assistant":
+                case "ai":
+                    fragment = ai_fragment = new AIAssistanceSettingsActivity();
                     break;
                 case "send_logs":
                     sendLogs(activity, false);
@@ -100,6 +108,10 @@ public class SettingsHelper {
                 } else {
                     AndroidUtilities.runOnUIThread(() -> finalNekoX_fragment.scrollToRow(rowFinal, unknown));
                 }
+            } else if (ai_fragment != null) {
+                AIAssistanceSettingsActivity finalAiFragment = ai_fragment;
+                String finalValue = value;
+                AndroidUtilities.runOnUIThread(() -> finalAiFragment.importToRow(rowFinal, finalValue, unknown));
             }
         }
     }
