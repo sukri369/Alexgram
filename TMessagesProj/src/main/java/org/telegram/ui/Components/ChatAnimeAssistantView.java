@@ -1224,6 +1224,15 @@ public class ChatAnimeAssistantView extends FrameLayout {
         tv.setPadding(AndroidUtilities.dp(10), AndroidUtilities.dp(8), AndroidUtilities.dp(10), AndroidUtilities.dp(8));
         tv.setMaxWidth(AndroidUtilities.dp(260));
         tv.setBackground(Theme.createRoundRectDrawable(AndroidUtilities.dp(14), isUser ? 0xD9368EFF : 0x99495D7A));
+        tv.setLongClickable(true);
+        tv.setOnLongClickListener(v -> {
+            CharSequence value = tv.getText();
+            if (!TextUtils.isEmpty(value)) {
+                AndroidUtilities.addToClipboard(value.toString());
+                showReactionBubble("📋");
+            }
+            return true;
+        });
 
         LinearLayout.LayoutParams lp = LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT);
         lp.gravity = isUser ? Gravity.RIGHT : Gravity.LEFT;
