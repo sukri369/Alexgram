@@ -153,10 +153,13 @@ public class ChatAnimeAssistantView extends FrameLayout {
         panelContainer.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(14), AndroidUtilities.dp(14), AndroidUtilities.dp(12));
 
         final GradientDrawable panelShape = new GradientDrawable();
-        panelShape.setCornerRadius(AndroidUtilities.dp(32));
+        panelShape.setCornerRadius(AndroidUtilities.dp(40));
         panelShape.setColor(0xB8192B43);
         panelShape.setStroke(AndroidUtilities.dp(1), 0x66FFFFFF);
         panelContainer.setBackground(panelShape);
+        if (android.os.Build.VERSION.SDK_INT >= 21) {
+            panelContainer.setClipToOutline(true);
+        }
 
         final LinearLayout panelContent = new LinearLayout(context);
         panelContent.setOrientation(LinearLayout.VERTICAL);
@@ -406,6 +409,23 @@ public class ChatAnimeAssistantView extends FrameLayout {
         applyLinkedPositions(animated);
     }
 
+    private void dockPanelAfterLayout() {
+        if (panelContainer.getWidth() > 0 && panelContainer.getHeight() > 0) {
+            dockPanelToTopLeftMerged(false);
+            return;
+        }
+        panelContainer.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+            @Override
+            public boolean onPreDraw() {
+                if (panelContainer.getViewTreeObserver().isAlive()) {
+                    panelContainer.getViewTreeObserver().removeOnPreDrawListener(this);
+                }
+                dockPanelToTopLeftMerged(false);
+                return true;
+            }
+        });
+    }
+
     private void animateLinkedToCurrent() {
         if (!panelOpened) {
             return;
@@ -511,6 +531,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
 
     private void showPanel() {
         if (panelOpened) {
+            animateLinkedToCurrent();
             focusInputAndShowKeyboard();
             return;
         }
@@ -518,12 +539,9 @@ public class ChatAnimeAssistantView extends FrameLayout {
         keyboardShiftY = 0f;
         panelScrim.setVisibility(VISIBLE);
         panelContainer.setVisibility(VISIBLE);
-        dockPanelToTopLeftMerged(false);
-        post(() -> {
-            dockPanelToTopLeftMerged(false);
-            panelContainer.bringToFront();
-            characterContainer.bringToFront();
-        });
+        dockPanelAfterLayout();
+        panelContainer.bringToFront();
+        characterContainer.bringToFront();
         panelScrim.animate().alpha(1f).setDuration(220).start();
         panelContainer.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(220).setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT).start();
         characterView.onOpenPanel();
