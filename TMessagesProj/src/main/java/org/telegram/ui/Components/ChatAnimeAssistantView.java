@@ -257,7 +257,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
                     startTy = characterContainer.getTranslationY();
                     startPanelTx = panelContainer.getTranslationX();
                     startPanelTy = panelContainer.getTranslationY();
-                    return true;
+                    return false;
                 case MotionEvent.ACTION_MOVE:
                     float dx = event.getRawX() - downX;
                     float dy = event.getRawY() - downY;
