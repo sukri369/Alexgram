@@ -37,6 +37,12 @@ public class HiddenChatsActivity extends DialogsActivity {
     }
 
     @Override
+    public boolean hasHiddenArchive() {
+        // Hidden chats list is a custom subset and must not reserve archive pull space.
+        return false;
+    }
+
+    @Override
     public void onFragmentDestroy() {
         super.onFragmentDestroy();
         tw.nekomimi.nekogram.helpers.HiddenChatsController.getInstance().lock();
