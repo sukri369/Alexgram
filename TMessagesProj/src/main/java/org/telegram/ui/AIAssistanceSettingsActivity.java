@@ -24,13 +24,16 @@ import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.R;
 import org.telegram.ui.ActionBar.ActionBar;
+import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
+import org.telegram.ui.Components.BulletinFactory;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.Switch;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 import tw.nekomimi.nekogram.settings.AlexgramSettingsHeaderView;
 
@@ -104,11 +107,9 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
 
         addGlassSection(contentLayout, context, "GENERAL");
         LinearLayout generalCard = createGlassCard(context);
-        generalCard.addView(createCardHeader(context, "General"));
-        generalCard.addView(createCardDivider(context, 16, 16));
         generalCard.addView(createSwitchRow(context, "Enable AI Assistance", "assistant_enabled", true, null));
         generalCard.addView(createCardDivider(context, 16, 16));
-        generalCard.addView(createValueRow(context, "Character Skin", getSkinName(), () -> {
+        generalCard.addView(createValueRow(context, "Character Skin", getSkinName(), "character_skin", () -> {
             int current = preferences.getInt("character_skin", 0);
             int next = (current + 1) % 3;
             preferences.edit().putInt("character_skin", next).apply();
@@ -117,7 +118,7 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
             }
         }));
         generalCard.addView(createCardDivider(context, 16, 16));
-        generalCard.addView(createValueRow(context, "Assistant Persona", getPersonaName(), () -> {
+        generalCard.addView(createValueRow(context, "Assistant Persona", getPersonaName(), "persona_preset", () -> {
             int current = preferences.getInt("persona_preset", 0);
             int next = (current + 1) % 3;
             preferences.edit().putInt("persona_preset", next).apply();
@@ -129,8 +130,6 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
 
         addGlassSection(contentLayout, context, "APPEARANCE");
         LinearLayout appearanceCard = createGlassCard(context);
-        appearanceCard.addView(createCardHeader(context, "Appearance"));
-        appearanceCard.addView(createCardDivider(context, 16, 16));
         appearanceCard.addView(createSwitchRow(context, "Background animation", "background_animation", true, enabled -> {
             applyBackgroundState(enabled);
         }));
@@ -140,8 +139,6 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
 
         addGlassSection(contentLayout, context, "BEHAVIOR");
         LinearLayout behaviorCard = createGlassCard(context);
-        behaviorCard.addView(createCardHeader(context, "Behavior"));
-        behaviorCard.addView(createCardDivider(context, 16, 16));
         behaviorCard.addView(createSwitchRow(context, "Hide on keyboard appearance", "keyboard_auto_hide", true, null));
         behaviorCard.addView(createCardDivider(context, 16, 16));
         behaviorCard.addView(createSwitchRow(context, "Auto-position near chat", "auto_follow", true, null));
@@ -204,16 +201,6 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
         return card;
     }
 
-    private View createCardHeader(Context context, String title) {
-        TextView header = new TextView(context);
-        header.setText(title);
-        header.setTextColor(accentColor);
-        header.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
-        header.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
-        header.setPadding(AndroidUtilities.dp(20), AndroidUtilities.dp(16), AndroidUtilities.dp(20), AndroidUtilities.dp(12));
-        return header;
-    }
-
     private View createCardDivider(Context context, int left, int right) {
         View divider = new View(context);
         divider.setBackgroundColor(dividerColor);
@@ -251,10 +238,14 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
                 toggleChanged.onChanged(newValue);
             }
         });
+        row.setOnLongClickListener(v -> {
+            showSettingLinkDialog(context, prefKey, String.valueOf(preferences.getBoolean(prefKey, defaultValue)));
+            return true;
+        });
         return row;
     }
 
-    private View createValueRow(Context context, String title, String value, Runnable onClick) {
+    private View createValueRow(Context context, String title, String value, String prefKey, Runnable onClick) {
         LinearLayout row = new LinearLayout(context);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
@@ -282,6 +273,10 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
         }
 
         row.setOnClickListener(v -> onClick.run());
+        row.setOnLongClickListener(v -> {
+            showSettingLinkDialog(context, prefKey, String.valueOf(preferences.getInt(prefKey, 0)));
+            return true;
+        });
         return row;
     }
 
@@ -307,7 +302,27 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
             }
         });
         row.addView(intensitySeekBar, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_VERTICAL));
+        row.setOnLongClickListener(v -> {
+            showSettingLinkDialog(context, "animation_intensity", String.valueOf(preferences.getInt("animation_intensity", 70)));
+            return true;
+        });
         return row;
+    }
+
+    private void showSettingLinkDialog(Context context, String key, String value) {
+        String prefix = "ai_assistance";
+        String baseLink = String.format(Locale.getDefault(), "https://%s/alexsettings/%s?r=%s", getMessagesController().linkPrefix, prefix, key);
+        String valueLink = String.format(Locale.getDefault(), "https://%s/alexsettings/%s?r=%s&v=%s", getMessagesController().linkPrefix, prefix, key, value);
+        CharSequence[] items = new CharSequence[]{getString(R.string.CopyLink), getString(R.string.BackupSettings)};
+        showDialog(new AlertDialog.Builder(context)
+            .setItems(items, (dialog, which) -> {
+                if (which == 0) {
+                    AndroidUtilities.addToClipboard(baseLink);
+                } else {
+                    AndroidUtilities.addToClipboard(valueLink);
+                }
+                BulletinFactory.of(this).createCopyLinkBulletin().show();
+            }).create());
     }
 
     private void applyBackgroundState(boolean enabled) {
