@@ -22,6 +22,7 @@ import android.widget.TextView;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
+import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.AlertDialog;
@@ -313,7 +314,7 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
         String prefix = "ai_assistance";
         String baseLink = String.format(Locale.getDefault(), "https://%s/alexsettings/%s?r=%s", getMessagesController().linkPrefix, prefix, key);
         String valueLink = String.format(Locale.getDefault(), "https://%s/alexsettings/%s?r=%s&v=%s", getMessagesController().linkPrefix, prefix, key, value);
-        CharSequence[] items = new CharSequence[]{getString(R.string.CopyLink), getString(R.string.BackupSettings)};
+        CharSequence[] items = new CharSequence[]{LocaleController.getString(R.string.CopyLink), LocaleController.getString(R.string.BackupSettings)};
         showDialog(new AlertDialog.Builder(context)
             .setItems(items, (dialog, which) -> {
                 if (which == 0) {
