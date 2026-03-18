@@ -273,8 +273,9 @@ public class ChatAnimeAssistantView extends FrameLayout {
                             characterContainer.setTranslationX(startTx + dx);
                             characterContainer.setTranslationY(startTy + dy);
                         }
+                        return true;
                     }
-                    return true;
+                    return false;
                 case MotionEvent.ACTION_UP:
                 case MotionEvent.ACTION_CANCEL:
                     if (!dragging) {
