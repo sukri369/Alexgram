@@ -48381,6 +48381,11 @@ public class ChatActivity extends BaseFragment implements
         return preferences.getBoolean("assistant_auto_reply_" + dialog_id, false);
     }
 
+    private boolean isAssistantGroupTagOnlyModeEnabled() {
+        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("ai_assistant_prefs", Context.MODE_PRIVATE);
+        return preferences.getBoolean("group_tag_only", false);
+    }
+
     private String getAssistantPersonaHint() {
         SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("ai_assistant_prefs", Context.MODE_PRIVATE);
         int persona = preferences.getInt("persona_preset", 0);
@@ -48477,6 +48482,9 @@ public class ChatActivity extends BaseFragment implements
             if (TextUtils.isEmpty(text)) {
                 continue;
             }
+            if (!shouldAutoReplyToIncomingMessage(messageObject)) {
+                continue;
+            }
             candidate = messageObject;
             break;
         }
@@ -48504,6 +48512,9 @@ public class ChatActivity extends BaseFragment implements
         if (incomingMessage.isOut() || incomingMessage.isOutOwner() || incomingMessage.messageOwner == null || incomingMessage.messageOwner.action != null) {
             return;
         }
+        if (!shouldAutoReplyToIncomingMessage(incomingMessage)) {
+            return;
+        }
         if (assistantAutoReplyInFlight || incomingMessage.getId() <= assistantLastAutoReplyMessageId) {
             return;
         }
@@ -48519,6 +48530,7 @@ public class ChatActivity extends BaseFragment implements
 
         assistantAutoReplyInFlight = true;
         final int targetMessageId = incomingMessage.getId();
+        final MessageObject replySourceMessage = incomingMessage;
 
         String prompt = "Incoming message: \"" + sourceText.toString().replace('\n', ' ') + "\"\n"
                 + "Write a natural human reply in the same language, maximum one short sentence. "
@@ -48546,9 +48558,18 @@ public class ChatActivity extends BaseFragment implements
                     return;
                 }
 
+                ArrayList<TLRPC.MessageEntity> entities = null;
+                String finalReply = cleaned;
+                if (shouldTagSenderInAutoReply(replySourceMessage)) {
+                    String prefix = buildMentionPrefixForAutoReply(replySourceMessage);
+                    if (!TextUtils.isEmpty(prefix)) {
+                        finalReply = prefix + cleaned;
+                    }
+                }
+
                 assistantLastAutoReplyMessageId = targetMessageId;
                 SendMessagesHelper.getInstance(currentAccount)
-                        .sendMessage(cleaned, dialog_id, null, getThreadMessage(), null, false, null, null, null, !NaConfig.INSTANCE.getSilentMessageByDefault().Bool(), 0, 0, null, false);
+                        .sendMessage(finalReply, dialog_id, replySourceMessage, getThreadMessage(), null, false, entities, null, null, !NaConfig.INSTANCE.getSilentMessageByDefault().Bool(), 0, 0, null, false);
             }
 
             @Override
@@ -48566,10 +48587,86 @@ public class ChatActivity extends BaseFragment implements
                 if (TextUtils.isEmpty(fallback)) {
                     return;
                 }
+
+                ArrayList<TLRPC.MessageEntity> entities = null;
+                String finalFallback = fallback;
+                if (shouldTagSenderInAutoReply(replySourceMessage)) {
+                    String prefix = buildMentionPrefixForAutoReply(replySourceMessage);
+                    if (!TextUtils.isEmpty(prefix)) {
+                        finalFallback = prefix + fallback;
+                    }
+                }
                 SendMessagesHelper.getInstance(currentAccount)
-                        .sendMessage(fallback, dialog_id, null, getThreadMessage(), null, false, null, null, null, !NaConfig.INSTANCE.getSilentMessageByDefault().Bool(), 0, 0, null, false);
+                        .sendMessage(finalFallback, dialog_id, replySourceMessage, getThreadMessage(), null, false, entities, null, null, !NaConfig.INSTANCE.getSilentMessageByDefault().Bool(), 0, 0, null, false);
             }
         });
+    }
+
+    private boolean shouldAutoReplyToIncomingMessage(MessageObject incomingMessage) {
+        if (incomingMessage == null || !isAssistantGroupTagOnlyModeEnabled() || currentChat == null) {
+            return true;
+        }
+        if (incomingMessage.messageOwner != null && incomingMessage.messageOwner.mentioned) {
+            return true;
+        }
+
+        long selfUserId = getUserConfig().getClientUserId();
+        if (selfUserId != 0 && incomingMessage.messageOwner != null && incomingMessage.messageOwner.entities != null) {
+            for (int i = 0; i < incomingMessage.messageOwner.entities.size(); i++) {
+                TLRPC.MessageEntity entity = incomingMessage.messageOwner.entities.get(i);
+                if (entity instanceof TLRPC.TL_messageEntityMentionName) {
+                    if (((TLRPC.TL_messageEntityMentionName) entity).user_id == selfUserId) {
+                        return true;
+                    }
+                } else if (entity instanceof TLRPC.TL_inputMessageEntityMentionName) {
+                    TLRPC.InputUser inputUser = ((TLRPC.TL_inputMessageEntityMentionName) entity).user_id;
+                    if (inputUser != null && inputUser.user_id == selfUserId) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        TLRPC.User selfUser = getMessagesController().getUser(selfUserId);
+        String selfUsername = selfUser != null ? selfUser.username : null;
+        CharSequence text = incomingMessage.messageText;
+        if (TextUtils.isEmpty(text) && incomingMessage.caption != null) {
+            text = incomingMessage.caption;
+        }
+        if (!TextUtils.isEmpty(text) && !TextUtils.isEmpty(selfUsername)) {
+            String lowerText = text.toString().toLowerCase(Locale.US);
+            String at = ("@" + selfUsername).toLowerCase(Locale.US);
+            if (lowerText.contains(at)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean shouldTagSenderInAutoReply(MessageObject incomingMessage) {
+        return isAssistantGroupTagOnlyModeEnabled() && currentChat != null && incomingMessage != null;
+    }
+
+    private String buildMentionPrefixForAutoReply(MessageObject incomingMessage) {
+        if (incomingMessage == null || incomingMessage.messageOwner == null || incomingMessage.messageOwner.from_id == null) {
+            return "";
+        }
+        long fromUserId = incomingMessage.messageOwner.from_id.user_id;
+        if (fromUserId == 0 || fromUserId == getUserConfig().getClientUserId()) {
+            return "";
+        }
+        TLRPC.User fromUser = getMessagesController().getUser(fromUserId);
+        if (fromUser == null) {
+            return "";
+        }
+        if (!TextUtils.isEmpty(fromUser.username)) {
+            return "@" + fromUser.username + " ";
+        }
+        String firstName = UserObject.getForcedFirstName(fromUser);
+        if (TextUtils.isEmpty(firstName)) {
+            return "";
+        }
+        return firstName + " ";
     }
 
     private interface AiGenerationCallback {

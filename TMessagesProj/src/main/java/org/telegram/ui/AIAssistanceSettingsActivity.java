@@ -146,6 +146,8 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
         behaviorCard.addView(createCardDivider(context, 16, 16));
         behaviorCard.addView(createSwitchRow(context, "Use chat context for replies", "use_context", true, null));
         behaviorCard.addView(createCardDivider(context, 16, 16));
+        behaviorCard.addView(createSwitchRow(context, "Only reply to tagged messages in groups", "group_tag_only", false, null));
+        behaviorCard.addView(createCardDivider(context, 16, 16));
         behaviorCard.addView(createSwitchRow(context, "Particle effects on interaction", "particle_effects", true, null));
         behaviorCard.addView(createCardDivider(context, 16, 16));
         behaviorCard.addView(createSwitchRow(context, "Show reaction bubbles", "reaction_bubbles", true, null));
@@ -411,6 +413,14 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
                 recognized = true;
                 if (value != null) {
                     editor.putBoolean("use_context", parseBoolean(value));
+                    applied = true;
+                }
+                break;
+            case "grouptagonly":
+            case "onlyreplytotaggedmessagesingroups":
+                recognized = true;
+                if (value != null) {
+                    editor.putBoolean("group_tag_only", parseBoolean(value));
                     applied = true;
                 }
                 break;
