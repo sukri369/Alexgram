@@ -43,6 +43,8 @@ import org.telegram.ui.Components.RecyclerListView;
 import java.util.ArrayList;
 import java.util.List;
 
+import tw.nekomimi.nekogram.settings.AlexgramSettingsHeaderView;
+
 public class AIAssistanceSettingsActivity extends BaseFragment {
 
     private RecyclerListView listView;
@@ -73,9 +75,16 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
         if (preferences == null) {
             preferences = context.getSharedPreferences("ai_assistant_prefs", Context.MODE_PRIVATE);
         }
+        boolean isDark = Theme.getActiveTheme().isDark();
+
+        actionBar.setAddToContainer(false);
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
         actionBar.setAllowOverlayTitle(true);
         actionBar.setTitle("Alexgram AI Assistance");
+        actionBar.setBackgroundColor(Color.TRANSPARENT);
+        int actionBarColor = isDark ? Color.WHITE : 0xFF1A1A2E;
+        actionBar.setItemsColor(actionBarColor, false);
+        actionBar.setTitleColor(actionBarColor);
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
             public void onItemClick(int id) {
@@ -85,12 +94,23 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
             }
         });
 
-        FrameLayout fragmentView = new FrameLayout(context);
-        fragmentView.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundGray));
+        FrameLayout parentFrame = new FrameLayout(context);
+
+        AlexgramSettingsHeaderView backgroundView = new AlexgramSettingsHeaderView(context);
+        boolean backgroundEnabled = preferences.getBoolean("background_animation", true);
+        backgroundView.setVisibility(backgroundEnabled ? View.VISIBLE : View.GONE);
+        parentFrame.addView(backgroundView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+
+        if (!backgroundEnabled) {
+            parentFrame.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundGray));
+        }
 
         listView = new RecyclerListView(context);
         listView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
         listView.setVerticalScrollBarEnabled(false);
+        listView.setBackgroundColor(Color.TRANSPARENT);
+        listView.setClipToPadding(false);
+        listView.setPadding(0, AndroidUtilities.dp(56) + AndroidUtilities.statusBarHeight, 0, 0);
         adapter = new ListAdapter(context);
         DefaultItemAnimator itemAnimator = new DefaultItemAnimator();
         itemAnimator.setSupportsChangeAnimations(false);
@@ -99,8 +119,10 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
         itemAnimator.setDurations(350);
         listView.setItemAnimator(itemAnimator);
         listView.setAdapter(adapter);
-        fragmentView.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        parentFrame.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        parentFrame.addView(actionBar, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
+        fragmentView = parentFrame;
         return fragmentView;
     }
 
