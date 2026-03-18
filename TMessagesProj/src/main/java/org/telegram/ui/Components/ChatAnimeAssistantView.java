@@ -42,6 +42,7 @@ import org.telegram.ui.ActionBar.Theme;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -715,79 +716,268 @@ public class ChatAnimeAssistantView extends FrameLayout {
             return buildSettingsExamples();
         }
 
-        int action = -1; // 1=on, 0=off, 2=toggle, 3=status
-        if (normalized.contains("turn off") || normalized.contains("disable") || normalized.contains("hide") || normalized.contains("deactivate")) {
-            action = 0;
-        } else if (normalized.contains("turn on") || normalized.contains("enable") || normalized.contains("show") || normalized.contains("activate")) {
-            action = 1;
-        } else if (normalized.contains("toggle") || normalized.contains("switch")) {
-            action = 2;
-        } else if (normalized.startsWith("is ") || normalized.contains(" status") || normalized.contains(" state")) {
-            action = 3;
+        ParsedSettingsCommand command = parseSettingsCommand(normalized);
+        if (command == null) {
+            return null;
+        }
+        if (TextUtils.isEmpty(command.featureQuery)) {
+            return "Tell me the setting name too, for example: turn off pill chat title.";
         }
 
-        if (action == -1) {
+        List<ConfigMatch> matches = findConfigMatches(command.featureQuery);
+        if (matches.isEmpty()) {
+            return "I could not find that A-Setting. Try the exact name from A-Settings, for example: turn off pill chat title.";
+        }
+        if (isAmbiguousMatch(matches)) {
+            return buildAmbiguousReply(matches);
+        }
+
+        ConfigMatch match = matches.get(0);
+        return applySettingsCommand(match, command);
+    }
+
+    private ParsedSettingsCommand parseSettingsCommand(String normalizedPrompt) {
+        String normalized = normalizeSettingText(normalizedPrompt);
+        if (TextUtils.isEmpty(normalized)) {
             return null;
         }
 
-        String featureQuery = normalized;
-        featureQuery = featureQuery.replace("turn off", "").replace("turn on", "");
-        featureQuery = featureQuery.replace("disable", "").replace("enable", "");
-        featureQuery = featureQuery.replace("hide", "").replace("show", "");
-        featureQuery = featureQuery.replace("deactivate", "").replace("activate", "");
-        featureQuery = featureQuery.replace("toggle", "").replace("switch", "");
-        featureQuery = featureQuery.replace("status", "").replace("state", "").replace("is", "");
-        featureQuery = featureQuery.replace("a settings", "").replace("settings", "").replace("feature", "");
-        featureQuery = featureQuery.replace("please", "").replace("assistant", "").replace("alexgram", "").trim();
-
-        if (TextUtils.isEmpty(featureQuery)) {
-            return "Tell me the feature name too, for example: turn off pill chat title.";
+        if (normalized.startsWith("set ") || normalized.startsWith("change ") || normalized.startsWith("update ")) {
+            String valuePart = normalized;
+            if (normalized.startsWith("set ")) {
+                valuePart = normalized.substring(4);
+            } else if (normalized.startsWith("change ")) {
+                valuePart = normalized.substring(7);
+            } else if (normalized.startsWith("update ")) {
+                valuePart = normalized.substring(7);
+            }
+            int toIndex = valuePart.indexOf(" to ");
+            int separatorLength = 4;
+            if (toIndex < 0) {
+                toIndex = valuePart.indexOf(" = ");
+                separatorLength = 3;
+            }
+            if (toIndex < 0) {
+                return new ParsedSettingsCommand(ACTION_SET, cleanFeatureQuery(valuePart), null);
+            }
+            String feature = valuePart.substring(0, toIndex).trim();
+            String rawValue = valuePart.substring(toIndex + separatorLength).trim();
+            return new ParsedSettingsCommand(ACTION_SET, cleanFeatureQuery(feature), rawValue);
         }
 
-        ConfigMatch match = findBestBooleanConfigMatch(featureQuery);
+        int action = ACTION_UNKNOWN;
+        if (normalized.contains("turn off") || normalized.contains("trun off") || normalized.contains("disable") || normalized.contains("deactivate")) {
+            action = ACTION_OFF;
+        } else if (normalized.contains("turn on") || normalized.contains("trun on") || normalized.contains("enable") || normalized.contains("activate")) {
+            action = ACTION_ON;
+        } else if (normalized.contains("toggle") || normalized.contains("switch")) {
+            action = ACTION_TOGGLE;
+        } else if (normalized.startsWith("is ") || normalized.contains(" status") || normalized.contains(" state")) {
+            action = ACTION_STATUS;
+        }
+
+        if (action == ACTION_UNKNOWN) {
+            return null;
+        }
+
+        return new ParsedSettingsCommand(action, cleanFeatureQuery(normalized), null);
+    }
+
+    private String cleanFeatureQuery(String value) {
+        String featureQuery = " " + normalizeSettingText(value) + " ";
+        featureQuery = featureQuery.replace(" turn off ", " ").replace(" trun off ", " ").replace(" turn on ", " ").replace(" trun on ", " ");
+        featureQuery = featureQuery.replace(" disable ", " ").replace(" enable ", " ");
+        featureQuery = featureQuery.replace(" deactivate ", " ").replace(" activate ", " ");
+        featureQuery = featureQuery.replace(" toggle ", " ").replace(" switch ", " ");
+        featureQuery = featureQuery.replace(" status ", " ").replace(" state ", " ").replace(" is ", " ");
+        featureQuery = featureQuery.replace(" a settings ", " ").replace(" settings ", " ").replace(" feature ", " ");
+        featureQuery = featureQuery.replace(" please ", " ").replace(" assistant ", " ").replace(" alexgram ", " ");
+        return normalizeSettingText(featureQuery);
+    }
+
+    private String applySettingsCommand(ConfigMatch match, ParsedSettingsCommand command) {
         if (match == null || match.item == null) {
-            return "I could not find that A-Setting. Try the exact name from A-Settings, for example: turn off pill chat title.";
+            return "I could not resolve that setting.";
         }
 
-        String prettyName = humanizeSettingName(match.readableName);
-        boolean current = match.item.Bool();
-        boolean updated = current;
+        String settingName = humanizeSettingName(match.readableName);
+        ConfigItem item = match.item;
 
-        if (action == 1) {
-            updated = true;
-            match.item.setConfigBool(true);
-        } else if (action == 0) {
-            updated = false;
-            match.item.setConfigBool(false);
-        } else if (action == 2) {
-            updated = match.item.toggleConfigBool();
+        if (command.action == ACTION_STATUS) {
+            return settingName + " is currently " + formatSettingValue(item) + ".";
         }
 
-        if (action == 3) {
-            return prettyName + " is currently " + (current ? "ON." : "OFF.");
+        if (command.action == ACTION_ON || command.action == ACTION_OFF || command.action == ACTION_TOGGLE) {
+            if (item.type != ConfigItem.configTypeBool) {
+                return settingName + " is not an ON/OFF setting. Use: set " + normalizeSettingText(settingName) + " to <value>.";
+            }
+            boolean updated;
+            if (command.action == ACTION_ON) {
+                item.setConfigBool(true);
+                updated = true;
+            } else if (command.action == ACTION_OFF) {
+                item.setConfigBool(false);
+                updated = false;
+            } else {
+                updated = item.toggleConfigBool();
+            }
+            String response = settingName + " turned " + (updated ? "ON." : "OFF.");
+            if (doesSettingLikelyNeedRestart(match)) {
+                response += " Restart app once to fully apply this change.";
+            }
+            return response;
         }
-        return prettyName + " turned " + (updated ? "ON." : "OFF.");
+
+        if (command.action == ACTION_SET) {
+            if (TextUtils.isEmpty(command.rawValue)) {
+                return "Tell me the value too. Example: set " + normalizeSettingText(settingName) + " to 1.";
+            }
+            Object parsed = parseSettingValue(item, command.rawValue);
+            if (parsed == null) {
+                return "I could not parse that value for " + settingName + ".";
+            }
+
+            if (item.type == ConfigItem.configTypeBool) {
+                item.setConfigBool((Boolean) parsed);
+            } else if (item.type == ConfigItem.configTypeInt) {
+                item.setConfigInt((Integer) parsed);
+            } else if (item.type == ConfigItem.configTypeLong) {
+                item.setConfigLong((Long) parsed);
+            } else if (item.type == ConfigItem.configTypeFloat) {
+                item.setConfigFloat((Float) parsed);
+            } else if (item.type == ConfigItem.configTypeString) {
+                item.setConfigString((String) parsed);
+            } else {
+                return "This setting type is not supported yet.";
+            }
+
+            String response = settingName + " set to " + formatRawValue(parsed) + ".";
+            if (doesSettingLikelyNeedRestart(match)) {
+                response += " Restart app once to fully apply this change.";
+            }
+            return response;
+        }
+
+        return "I could not understand that command.";
+    }
+
+    private Object parseSettingValue(ConfigItem item, String rawValue) {
+        String normalized = normalizeSettingText(rawValue);
+        if (TextUtils.isEmpty(normalized)) {
+            return null;
+        }
+
+        if (item.type == ConfigItem.configTypeBool) {
+            if (normalized.equals("on") || normalized.equals("true") || normalized.equals("enable") || normalized.equals("enabled") || normalized.equals("1")) {
+                return Boolean.TRUE;
+            }
+            if (normalized.equals("off") || normalized.equals("false") || normalized.equals("disable") || normalized.equals("disabled") || normalized.equals("0")) {
+                return Boolean.FALSE;
+            }
+            Object parsed = item.checkConfigFromString(normalized);
+            return parsed instanceof Boolean ? parsed : null;
+        }
+
+        if (item.type == ConfigItem.configTypeInt) {
+            try {
+                String compact = normalized.replaceAll("[^0-9-]", "");
+                if (!TextUtils.isEmpty(compact)) {
+                    return Integer.parseInt(compact);
+                }
+            } catch (Throwable ignore) {
+            }
+            Object parsed = item.checkConfigFromString(normalized);
+            return parsed instanceof Integer ? parsed : null;
+        }
+
+        if (item.type == ConfigItem.configTypeLong) {
+            try {
+                String compact = normalized.replaceAll("[^0-9-]", "");
+                if (!TextUtils.isEmpty(compact)) {
+                    return Long.parseLong(compact);
+                }
+            } catch (Throwable ignore) {
+            }
+            Object parsed = item.checkConfigFromString(normalized);
+            return parsed instanceof Long ? parsed : null;
+        }
+
+        if (item.type == ConfigItem.configTypeFloat) {
+            try {
+                String compact = normalized.replaceAll("[^0-9.-]", "");
+                if (!TextUtils.isEmpty(compact)) {
+                    return Float.parseFloat(compact);
+                }
+            } catch (Throwable ignore) {
+            }
+            Object parsed = item.checkConfigFromString(normalized);
+            return parsed instanceof Float ? parsed : null;
+        }
+
+        if (item.type == ConfigItem.configTypeString) {
+            String value = rawValue.trim();
+            if (value.startsWith("\"") && value.endsWith("\"") && value.length() > 1) {
+                value = value.substring(1, value.length() - 1);
+            }
+            return value;
+        }
+
+        return null;
+    }
+
+    private String formatSettingValue(ConfigItem item) {
+        if (item.type == ConfigItem.configTypeBool) {
+            return item.Bool() ? "ON" : "OFF";
+        }
+        if (item.value == null) {
+            return "empty";
+        }
+        return formatRawValue(item.value);
+    }
+
+    private String formatRawValue(Object value) {
+        if (value == null) {
+            return "empty";
+        }
+        if (value instanceof String) {
+            return "\"" + value + "\"";
+        }
+        return String.valueOf(value);
+    }
+
+    private boolean doesSettingLikelyNeedRestart(ConfigMatch match) {
+        String name = normalizeSettingText(match.readableName + " " + match.methodName + " " + match.item.getKey());
+        return name.contains("notification")
+                || name.contains("icon")
+                || name.contains("push service")
+                || name.contains("proxy")
+                || name.contains("service type")
+                || name.contains("dc")
+                || name.contains("id dc")
+                || name.contains("language")
+                || name.contains("font");
     }
 
     private String buildSettingsExamples() {
         List<String> examples = new ArrayList<>();
         examples.add("- turn off pill chat title");
         examples.add("- turn on hide stories from header");
-        examples.add("- disable reactions");
-        examples.add("- toggle center action bar title");
-        examples.add("- is folder name as title on");
+        examples.add("- toggle reactions");
+        examples.add("- is center action bar title on");
+        examples.add("- set double tap action to 3");
+        examples.add("- set custom title to Alexgram");
+        examples.add("- set notification icon to 1");
         return "You can control A-Settings here. Try:\n" + TextUtils.join("\n", examples);
     }
 
-    private ConfigMatch findBestBooleanConfigMatch(String featureQuery) {
+    private List<ConfigMatch> findConfigMatches(String featureQuery) {
         String query = normalizeSettingText(featureQuery);
         if (TextUtils.isEmpty(query)) {
-            return null;
+            return Collections.emptyList();
         }
 
         Method[] methods = NaConfig.class.getMethods();
-        float bestScore = 0f;
-        ConfigMatch best = null;
+        List<ConfigMatch> matches = new ArrayList<>();
 
         for (Method method : methods) {
             if (!method.getName().startsWith("get") || method.getParameterTypes().length != 0 || method.getReturnType() != ConfigItem.class) {
@@ -799,25 +989,75 @@ public class ChatAnimeAssistantView extends FrameLayout {
                     continue;
                 }
                 ConfigItem item = (ConfigItem) result;
-                if (item.type != ConfigItem.configTypeBool) {
+
+                int type = item.type;
+                if (type != ConfigItem.configTypeBool
+                        && type != ConfigItem.configTypeInt
+                        && type != ConfigItem.configTypeLong
+                        && type != ConfigItem.configTypeFloat
+                        && type != ConfigItem.configTypeString) {
                     continue;
                 }
 
                 String methodName = splitCamel(method.getName().substring(3));
                 String keyName = splitCamel(item.getKey());
                 float score = matchScore(query, methodName, keyName);
-                if (score > bestScore) {
-                    bestScore = score;
-                    best = new ConfigMatch(item, keyName, score);
+                if (score >= 0.34f) {
+                    matches.add(new ConfigMatch(item, keyName, methodName, score));
                 }
             } catch (Throwable ignore) {
             }
         }
 
-        if (best == null || best.score < 0.34f) {
-            return null;
+        if (matches.isEmpty()) {
+            return Collections.emptyList();
         }
-        return best;
+
+        Collections.sort(matches, (a, b) -> Float.compare(b.score, a.score));
+        return matches;
+    }
+
+    private boolean isAmbiguousMatch(List<ConfigMatch> matches) {
+        if (matches == null || matches.size() < 2) {
+            return false;
+        }
+        float first = matches.get(0).score;
+        float second = matches.get(1).score;
+        return first >= 0.40f && second >= 0.40f && Math.abs(first - second) <= 0.12f;
+    }
+
+    private String buildAmbiguousReply(List<ConfigMatch> matches) {
+        List<String> options = new ArrayList<>();
+        Set<String> dedupe = new LinkedHashSet<>();
+        int limit = Math.min(4, matches.size());
+        for (int i = 0; i < limit; i++) {
+            ConfigMatch match = matches.get(i);
+            String name = humanizeSettingName(match.readableName);
+            if (!dedupe.add(name)) {
+                continue;
+            }
+            options.add("- " + name + " (" + settingTypeLabel(match.item.type) + ")");
+        }
+        return "I found multiple matching settings. Reply with exact setting name:\n" + TextUtils.join("\n", options);
+    }
+
+    private String settingTypeLabel(int type) {
+        if (type == ConfigItem.configTypeBool) {
+            return "on/off";
+        }
+        if (type == ConfigItem.configTypeInt) {
+            return "integer";
+        }
+        if (type == ConfigItem.configTypeLong) {
+            return "long";
+        }
+        if (type == ConfigItem.configTypeFloat) {
+            return "float";
+        }
+        if (type == ConfigItem.configTypeString) {
+            return "text";
+        }
+        return "value";
     }
 
     private float matchScore(String query, String... candidates) {
@@ -907,15 +1147,36 @@ public class ChatAnimeAssistantView extends FrameLayout {
         return sb.toString();
     }
 
+    private static final int ACTION_UNKNOWN = -1;
+    private static final int ACTION_ON = 1;
+    private static final int ACTION_OFF = 0;
+    private static final int ACTION_TOGGLE = 2;
+    private static final int ACTION_STATUS = 3;
+    private static final int ACTION_SET = 4;
+
     private static class ConfigMatch {
         final ConfigItem item;
         final String readableName;
+        final String methodName;
         final float score;
 
-        ConfigMatch(ConfigItem item, String readableName, float score) {
+        ConfigMatch(ConfigItem item, String readableName, String methodName, float score) {
             this.item = item;
             this.readableName = readableName;
+            this.methodName = methodName;
             this.score = score;
+        }
+    }
+
+    private static class ParsedSettingsCommand {
+        final int action;
+        final String featureQuery;
+        final String rawValue;
+
+        ParsedSettingsCommand(int action, String featureQuery, String rawValue) {
+            this.action = action;
+            this.featureQuery = featureQuery;
+            this.rawValue = rawValue;
         }
     }
 
