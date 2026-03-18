@@ -48371,11 +48371,36 @@ public class ChatActivity extends BaseFragment implements
         return "Friendly and practical.";
     }
 
+    private boolean isAssistantAutoReplyModeSupported() {
+        return chatMode != MODE_SCHEDULED
+                && chatMode != MODE_PINNED
+                && chatMode != MODE_EDIT_BUSINESS_LINK
+                && chatMode != MODE_SEARCH;
+    }
+
+    private String buildAutoReplyFallback(CharSequence sourceText) {
+        String text = sourceText == null ? "" : sourceText.toString().trim();
+        if (text.length() > 120) {
+            text = text.substring(0, 120).trim();
+        }
+        if (TextUtils.isEmpty(text)) {
+            return "Okay, noted.";
+        }
+        if (text.endsWith("?")) {
+            return "Got it, let me check and get back to you.";
+        }
+        return "Got it, thanks.";
+    }
+
     private void tryAutoReplyWithAssistant(MessageObject incomingMessage) {
-        if (!isAssistantAutoReplyEnabledForDialog() || chatMode != MODE_DEFAULT) {
+        if (!isAssistantAutoReplyEnabledForDialog() || !isAssistantAutoReplyModeSupported()) {
             return;
         }
-        if (incomingMessage == null || incomingMessage.getDialogId() != dialog_id || incomingMessage.getId() <= 0) {
+        if (incomingMessage == null || incomingMessage.getId() <= 0) {
+            return;
+        }
+        long messageDialogId = incomingMessage.getDialogId();
+        if (messageDialogId != dialog_id && messageDialogId != mergeDialogId) {
             return;
         }
         if (incomingMessage.isOut() || incomingMessage.isOutOwner() || incomingMessage.messageOwner == null || incomingMessage.messageOwner.action != null) {
@@ -48394,7 +48419,7 @@ public class ChatActivity extends BaseFragment implements
         }
 
         assistantAutoReplyInFlight = true;
-        assistantLastAutoReplyMessageId = incomingMessage.getId();
+        final int targetMessageId = incomingMessage.getId();
 
         String prompt = "Incoming message: \"" + sourceText.toString().replace('\n', ' ') + "\"\n"
                 + "Write a natural human reply in the same language, maximum one short sentence. "
@@ -48405,6 +48430,7 @@ public class ChatActivity extends BaseFragment implements
             public void onSuccess(String response) {
                 assistantAutoReplyInFlight = false;
                 if (TextUtils.isEmpty(response) || dialog_id == 0) {
+                    assistantLastAutoReplyMessageId = targetMessageId;
                     return;
                 }
                 String cleaned = response.trim();
@@ -48416,9 +48442,11 @@ public class ChatActivity extends BaseFragment implements
                     cleaned = cleaned.substring(0, 220).trim();
                 }
                 if (TextUtils.isEmpty(cleaned)) {
+                    assistantLastAutoReplyMessageId = targetMessageId;
                     return;
                 }
 
+                assistantLastAutoReplyMessageId = targetMessageId;
                 SendMessagesHelper.getInstance(currentAccount)
                         .sendMessage(cleaned, dialog_id, null, getThreadMessage(), null, false, null, null, null, !NaConfig.INSTANCE.getSilentMessageByDefault().Bool(), 0, 0, null, false);
             }
@@ -48426,6 +48454,16 @@ public class ChatActivity extends BaseFragment implements
             @Override
             public void onError(String error) {
                 assistantAutoReplyInFlight = false;
+                assistantLastAutoReplyMessageId = targetMessageId;
+                if (dialog_id == 0) {
+                    return;
+                }
+                String fallback = buildAutoReplyFallback(sourceText);
+                if (TextUtils.isEmpty(fallback)) {
+                    return;
+                }
+                SendMessagesHelper.getInstance(currentAccount)
+                        .sendMessage(fallback, dialog_id, null, getThreadMessage(), null, false, null, null, null, !NaConfig.INSTANCE.getSilentMessageByDefault().Bool(), 0, 0, null, false);
             }
         });
     }
