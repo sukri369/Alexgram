@@ -8,6 +8,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.GradientDrawable;
 import android.os.SystemClock;
@@ -90,11 +91,18 @@ public class ChatAnimeAssistantView extends FrameLayout {
     private float downY;
     private float startTx;
     private float startTy;
+    private float startPanelTx;
+    private float startPanelTy;
+    private float panelBaseTx;
+    private float panelBaseTy;
+    private float keyboardShiftY;
     private boolean dragging;
+    private boolean panelDragging;
+    private boolean panelDragAllowed;
     private long lastFrameTime;
     private int typingDots;
     private Runnable typingRunnable;
-    private int keyboardHeight;
+    private final Rect visibleFrame = new Rect();
 
     public ChatAnimeAssistantView(@NonNull Context context, @Nullable SizeNotifierFrameLayout blurParent) {
         super(context);
@@ -145,7 +153,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
         panelContainer.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(14), AndroidUtilities.dp(14), AndroidUtilities.dp(12));
 
         final GradientDrawable panelShape = new GradientDrawable();
-        panelShape.setCornerRadius(AndroidUtilities.dp(20));
+        panelShape.setCornerRadius(AndroidUtilities.dp(26));
         panelShape.setColor(0xB8192B43);
         panelShape.setStroke(AndroidUtilities.dp(1), 0x66FFFFFF);
         panelContainer.setBackground(panelShape);
@@ -184,7 +192,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
         panelContent.addView(composer, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
         inputField = new EditText(context);
-        inputField.setBackground(Theme.createRoundRectDrawable(AndroidUtilities.dp(14), 0x66FFFFFF));
+        inputField.setBackground(Theme.createRoundRectDrawable(AndroidUtilities.dp(18), 0x66FFFFFF));
         inputField.setHint("Ask me anything...");
         inputField.setHintTextColor(0x99FFFFFF);
         inputField.setTextColor(Color.WHITE);
@@ -240,6 +248,8 @@ public class ChatAnimeAssistantView extends FrameLayout {
                     downY = event.getRawY();
                     startTx = characterContainer.getTranslationX();
                     startTy = characterContainer.getTranslationY();
+                    startPanelTx = panelContainer.getTranslationX();
+                    startPanelTy = panelContainer.getTranslationY();
                     return true;
                 case MotionEvent.ACTION_MOVE:
                     float dx = event.getRawX() - downX;
@@ -248,8 +258,14 @@ public class ChatAnimeAssistantView extends FrameLayout {
                         dragging = true;
                     }
                     if (dragging) {
-                        characterContainer.setTranslationX(startTx + dx);
-                        characterContainer.setTranslationY(startTy + dy);
+                        if (panelOpened && preferences.getBoolean("auto_follow", true)) {
+                            panelBaseTx = startPanelTx + dx;
+                            panelBaseTy = startPanelTy + dy - keyboardShiftY;
+                            applyLinkedPositions(false);
+                        } else {
+                            characterContainer.setTranslationX(startTx + dx);
+                            characterContainer.setTranslationY(startTy + dy);
+                        }
                     }
                     return true;
                 case MotionEvent.ACTION_UP:
@@ -258,13 +274,13 @@ public class ChatAnimeAssistantView extends FrameLayout {
                         performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
                         characterView.onTap();
                         showReactionBubble(randomReaction());
-                        if (panelOpened) {
-                            hidePanel();
-                        } else {
-                            showPanel();
-                        }
+                        showPanel();
                     } else {
-                        snapToBounds();
+                        if (panelOpened && preferences.getBoolean("auto_follow", true)) {
+                            snapPanelToBounds();
+                        } else {
+                            snapToBounds();
+                        }
                     }
                     return true;
                 default:
@@ -348,77 +364,170 @@ public class ChatAnimeAssistantView extends FrameLayout {
 
     private void updateCharacterPosition() {
         if (!preferences.getBoolean("auto_follow", true)) {
-            return;
+            private int lastInset = 0;
         }
         float panelCenterX = panelContainer.getX() + panelContainer.getTranslationX() + panelContainer.getWidth() / 2f;
         float targetX = panelCenterX - characterContainer.getWidth() / 2f - AndroidUtilities.dp(60);
-        characterContainer.animate().translationX(targetX - characterContainer.getLeft()).setDuration(400).setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT).start();
-    }
-
-    public void setAssistantRequestDelegate(@Nullable AssistantRequestDelegate assistantRequestDelegate) {
-        this.assistantRequestDelegate = assistantRequestDelegate;
-    }
-
-    public void onPause() {
-        paused = true;
-        removeCallbacks(frameRunnable);
-    }
-
+                if (!panelOpened || !preferences.getBoolean("keyboard_auto_hide", true)) {
+                    return;
+                }
+                View root = getRootView();
+                root.getWindowVisibleDisplayFrame(visibleFrame);
+                int inset = Math.max(0, root.getHeight() - visibleFrame.bottom);
+                if (Math.abs(inset - lastInset) < AndroidUtilities.dp(8)) {
+                    return;
+                }
+                if (inset > AndroidUtilities.dp(100)) {
+                    keyboardShiftY = -Math.max(0, inset - AndroidUtilities.dp(12));
+                } else {
+                    keyboardShiftY = 0f;
     public void onResume() {
+                animateLinkedToCurrent();
+                lastInset = inset;
         if (paused) {
             paused = false;
             lastFrameTime = SystemClock.uptimeMillis();
             postOnAnimation(frameRunnable);
         }
     }
+            switch (event.getActionMasked()) {
+                case MotionEvent.ACTION_DOWN:
+                    panelDragAllowed = event.getY() <= AndroidUtilities.dp(56);
+                    panelDragging = false;
+                    if (!panelDragAllowed) {
+                        return false;
+                    }
+                    downX = event.getRawX();
+                    downY = event.getRawY();
+                    startTx = panelContainer.getTranslationX();
+                    startTy = panelContainer.getTranslationY();
+                    return true;
+                case MotionEvent.ACTION_MOVE:
+                    if (!panelDragAllowed) {
+                        return false;
+                    }
+                    float dx = event.getRawX() - downX;
+                    float dy = event.getRawY() - downY;
+                    if (!panelDragging && (Math.abs(dx) > ViewConfiguration.get(getContext()).getScaledTouchSlop() || Math.abs(dy) > ViewConfiguration.get(getContext()).getScaledTouchSlop())) {
+                        panelDragging = true;
+                    }
+                    if (!panelDragging) {
+                        return true;
+                    }
+                    panelBaseTx = startTx + dx;
+                    panelBaseTy = startTy + dy - keyboardShiftY;
+                    applyLinkedPositions(false);
+                    return true;
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    if (!panelDragAllowed) {
+                        return false;
+                    }
+                    if (panelDragging) {
+                        snapPanelToBounds();
+                    }
+                    panelDragging = false;
+                    panelDragAllowed = false;
+                    return true;
+                default:
+                    return false;
+            }
+        });
+    }
 
-    public void onDestroy() {
-        removeCallbacks(frameRunnable);
-        if (typingRunnable != null) {
-            AndroidUtilities.cancelRunOnUIThread(typingRunnable);
-            typingRunnable = null;
+    private float getCharacterLinkedOffsetX() {
+        return -AndroidUtilities.dp(52);
+    }
+
+    private float getCharacterLinkedOffsetY() {
+        return -AndroidUtilities.dp(72);
+    }
+
+    private void applyLinkedPositions(boolean animated) {
+        float panelTx = panelBaseTx;
+        float panelTy = panelBaseTy + keyboardShiftY;
+        float characterTx = panelBaseTx + getCharacterLinkedOffsetX();
+        float characterTy = panelBaseTy + getCharacterLinkedOffsetY() + keyboardShiftY;
+
+        if (animated) {
+            panelContainer.animate().translationX(panelTx).translationY(panelTy).setDuration(260).setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT).start();
+            characterContainer.animate().translationX(characterTx).translationY(characterTy).setDuration(260).setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT).start();
+        } else {
+            panelContainer.setTranslationX(panelTx);
+            panelContainer.setTranslationY(panelTy);
+            characterContainer.setTranslationX(characterTx);
+            characterContainer.setTranslationY(characterTy);
         }
     }
 
-    public void onTypingStateChanged(boolean active) {
-        typingActive = active;
-        if (active && preferences.getBoolean("reaction_bubbles", true)) {
-            characterView.onTypingPulse();
-            showReactionBubble("✍️");
-        }
+    private void dockPanelToTopLeftMerged(boolean animated) {
+        panelBaseTx = AndroidUtilities.dp(14) - panelContainer.getLeft();
+        panelBaseTy = AndroidUtilities.statusBarHeight + AndroidUtilities.dp(18) - panelContainer.getTop();
+        applyLinkedPositions(animated);
     }
 
-    public void onChatScrolled(int dy) {
-        if (Math.abs(dy) < 2) {
+    private void animateLinkedToCurrent() {
+        if (!panelOpened) {
             return;
         }
-        scrollEnergy = Math.min(1f, scrollEnergy + Math.abs(dy) / 140f);
-        characterView.onScrollImpulse(dy);
-        if (Math.abs(dy) > AndroidUtilities.dp(4) && preferences.getBoolean("reaction_bubbles", true)) {
-            showReactionBubble(dy > 0 ? "👀" : "✨");
-        }
+        applyLinkedPositions(true);
     }
 
-    private void snapToBounds() {
-        final float maxX = Math.max(0, getWidth() - characterContainer.getWidth() - AndroidUtilities.dp(4));
-        final float maxY = Math.max(0, getHeight() - characterContainer.getHeight() - AndroidUtilities.dp(84));
-        final float targetX = characterContainer.getX() + characterContainer.getTranslationX() > getWidth() * 0.5f ? maxX - characterContainer.getLeft() : -characterContainer.getLeft();
-        final float clampedY = Math.max(-characterContainer.getTop(), Math.min(maxY - characterContainer.getTop(), characterContainer.getTranslationY()));
-        characterContainer.animate()
-                .translationX(targetX)
-                .translationY(clampedY)
-                .setDuration(280)
+    private void animatePanelUpForKeyboard(int kbHeight) {
+        if (!panelOpened) {
+            return;
+        }
+        keyboardShiftY = -Math.max(0, kbHeight - AndroidUtilities.dp(12));
+        animateLinkedToCurrent();
+    }
+
+    private void animatePanelDownFromKeyboard() {
+        if (!panelOpened) {
+            return;
+        }
+        keyboardShiftY = 0f;
+        animateLinkedToCurrent();
+    }
+
+    private void snapPanelToBounds() {
+        float minX = -panelContainer.getLeft() + AndroidUtilities.dp(8);
+        float maxX = getWidth() - panelContainer.getLeft() - panelContainer.getWidth() - AndroidUtilities.dp(8);
+        float minY = -panelContainer.getTop() + AndroidUtilities.statusBarHeight + AndroidUtilities.dp(8);
+        float maxY = getHeight() - panelContainer.getTop() - panelContainer.getHeight() - AndroidUtilities.dp(96);
+
+        panelBaseTx = Math.max(minX, Math.min(maxX, panelBaseTx));
+        panelBaseTy = Math.max(minY, Math.min(maxY, panelBaseTy));
+        applyLinkedPositions(true);
+    }
+
+    private void updateCharacterPosition() {
+        if (!preferences.getBoolean("auto_follow", true) || !panelOpened) {
+            return;
+        }
+        applyLinkedPositions(true);
+    }
+
+    private void focusInputAndShowKeyboard() {
+        inputField.requestFocus();
+        AndroidUtilities.showKeyboard(inputField);
+    }
                 .setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT)
                 .start();
     }
 
     private void showPanel() {
         if (panelOpened) {
+            focusInputAndShowKeyboard();
             return;
         }
         panelOpened = true;
+        keyboardShiftY = 0f;
         panelScrim.setVisibility(VISIBLE);
         panelContainer.setVisibility(VISIBLE);
+        dockPanelToTopLeftMerged(false);
+        characterContainer.bringToFront();
+        panelContainer.bringToFront();
+        characterContainer.bringToFront();
         panelScrim.animate().alpha(1f).setDuration(220).start();
         panelContainer.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(220).setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT).start();
         characterView.onOpenPanel();
@@ -439,6 +548,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
             public void onAnimationEnd(Animator animation) {
                 panelContainer.setVisibility(GONE);
                 panelContainer.animate().setListener(null);
+                keyboardShiftY = 0f;
             }
         }).start();
     }
