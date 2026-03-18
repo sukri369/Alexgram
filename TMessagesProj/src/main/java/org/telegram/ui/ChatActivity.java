@@ -26236,6 +26236,7 @@ public class ChatActivity extends BaseFragment implements
                         continue;
                     }
                 }
+                tryAutoReplyWithAssistant(obj);
                 if (obj.isOut() && messagesDict[0].indexOfKey(obj.getId()) < 0) {
                     rotateMotionBackgroundDrawable();
                 }
