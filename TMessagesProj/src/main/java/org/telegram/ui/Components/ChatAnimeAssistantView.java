@@ -189,7 +189,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
         sendButton = new ImageView(context);
         sendButton.setImageResource(R.drawable.msg_send);
         sendButton.setColorFilter(new android.graphics.PorterDuffColorFilter(Color.WHITE, android.graphics.PorterDuff.Mode.SRC_IN));
-        sendButton.setBackground(Theme.createSelectorCircleDrawable(AndroidUtilities.dp(20), 0x33FFFFFF, 0x55FFFFFF));
+        sendButton.setBackground(Theme.createSimpleSelectorCircleDrawable(AndroidUtilities.dp(20), 0x33FFFFFF, 0x55FFFFFF));
         sendButton.setPadding(AndroidUtilities.dp(9), AndroidUtilities.dp(9), AndroidUtilities.dp(9), AndroidUtilities.dp(9));
         composer.addView(sendButton, LayoutHelper.createLinear(40, 40, Gravity.CENTER_VERTICAL));
 
