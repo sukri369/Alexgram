@@ -3,6 +3,7 @@ package org.telegram.ui.Components;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -19,6 +20,7 @@ import android.view.HapticFeedbackConstants;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
+import android.view.ViewTreeObserver;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -60,6 +62,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
     private final ScrollView bubblesScrollView;
     private final EditText inputField;
     private final ImageView sendButton;
+    private final SharedPreferences preferences;
 
     private final Runnable frameRunnable = new Runnable() {
         @Override
@@ -68,7 +71,8 @@ public class ChatAnimeAssistantView extends FrameLayout {
             final float dt = Math.min(33f, now - lastFrameTime) / 1000f;
             lastFrameTime = now;
             if (!paused) {
-                characterView.tick(now, dt, typingActive, scrollEnergy);
+                float intensity = preferences.getInt("animation_intensity", 70) / 100f;
+                characterView.tick(now, dt, typingActive, scrollEnergy, intensity);
                 scrollEnergy *= 0.84f;
                 postOnAnimation(frameRunnable);
             }
@@ -90,11 +94,19 @@ public class ChatAnimeAssistantView extends FrameLayout {
     private long lastFrameTime;
     private int typingDots;
     private Runnable typingRunnable;
+    private int keyboardHeight;
 
     public ChatAnimeAssistantView(@NonNull Context context, @Nullable SizeNotifierFrameLayout blurParent) {
         super(context);
         setClipChildren(false);
         setClipToPadding(false);
+
+        preferences = context.getSharedPreferences("ai_assistant_prefs", Context.MODE_PRIVATE);
+
+        if (!preferences.getBoolean("assistant_enabled", true)) {
+            setVisibility(GONE);
+            return;
+        }
 
         panelScrim = new View(context);
         panelScrim.setBackgroundColor(0x33000000);
@@ -109,7 +121,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
         characterContainer.setClickable(true);
         characterContainer.setFocusable(true);
 
-        characterView = new AssistantCharacterView(context);
+        characterView = new AssistantCharacterView(context, preferences);
         characterContainer.addView(characterView, LayoutHelper.createFrame(86, 108, Gravity.CENTER));
 
         reactionBubble = new TextView(context);
@@ -148,7 +160,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
         panelContainer.addView(panelContent, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
         final TextView title = new TextView(context);
-        title.setText(LocaleController.getString(R.string.AppName) + " Assistant");
+        title.setText("Alexgram Assistance");
         title.setTextColor(Color.WHITE);
         title.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
         title.setTypeface(AndroidUtilities.bold());
@@ -194,6 +206,9 @@ public class ChatAnimeAssistantView extends FrameLayout {
         composer.addView(sendButton, LayoutHelper.createLinear(40, 40, Gravity.CENTER_VERTICAL));
 
         addView(panelContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 272, Gravity.BOTTOM | Gravity.RIGHT, 44, 0, 14, 86));
+
+        setupPanelDragging();
+        setupKeyboardListener();
 
         sendButton.setOnClickListener(v -> sendPrompt());
         inputField.setOnEditorActionListener((v, actionId, event) -> {
@@ -262,14 +277,84 @@ public class ChatAnimeAssistantView extends FrameLayout {
             }
         });
 
-        addMessageBubble("Hi, I am your chat companion. Tap me and ask anything.", false, false);
+        addMessageBubble("Hi, I am Alexgram Assistant. Tap me and ask anything.", false, false);
         addMessageBubble("Try long-press to switch my style.", false, false);
 
         lastFrameTime = SystemClock.uptimeMillis();
         postOnAnimation(frameRunnable);
     }
 
-    public void setAssistantRequestDelegate(@Nullable AssistantRequestDelegate assistantRequestDelegate) {
+    private void setupKeyboardListener() {
+        getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            private int lastHeight = 0;
+
+            @Override
+            public void onGlobalLayout() {
+                int height = getRootView().getHeight() - (getHeight() + getTop());
+                if (height > 100 && height != lastHeight) {
+                    keyboardHeight = height;
+                    if (preferences.getBoolean("keyboard_auto_hide", true) && panelOpened) {
+                        animatePanelUpForKeyboard(height);
+                    }
+                    lastHeight = height;
+                } else if (height < 100 && lastHeight > 100) {
+                    if (preferences.getBoolean("keyboard_auto_hide", true) && panelOpened) {
+                        animatePanelDownFromKeyboard();
+                    }
+                    lastHeight = 0;
+                }
+            }
+        });
+    }
+
+    private void setupPanelDragging() {
+        panelContainer.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                downX = event.getRawX();
+                downY = event.getRawY();
+                startTx = panelContainer.getTranslationX();
+                startTy = panelContainer.getTranslationY();
+                return true;
+            } else if (event.getAction() == MotionEvent.ACTION_MOVE) {
+                float dx = event.getRawX() - downX;
+                float dy = event.getRawY() - downY;
+                panelContainer.setTranslationX(startTx + dx);
+                panelContainer.setTranslationY(startTy + dy);
+                if (preferences.getBoolean("auto_follow", true)) {
+                    updateCharacterPosition();
+                }
+                return true;
+            } else if (event.getAction() == MotionEvent.ACTION_UP || event.getAction() == MotionEvent.ACTION_CANCEL) {
+                snapPanelToBounds();
+                return true;
+            }
+            return false;
+        });
+    }
+
+    private void animatePanelUpForKeyboard(int kbHeight) {
+        int targetY = (int) (-kbHeight - AndroidUtilities.dp(16));
+        panelContainer.animate().translationY(targetY).setDuration(240).setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT).start();
+    }
+
+    private void animatePanelDownFromKeyboard() {
+        panelContainer.animate().translationY(0).setDuration(240).setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT).start();
+    }
+
+    private void snapPanelToBounds() {
+        final float maxX = Math.max(0, getWidth() - panelContainer.getWidth() - AndroidUtilities.dp(8));
+        final float clampedX = Math.max(-panelContainer.getLeft(), Math.min(maxX - panelContainer.getLeft(), panelContainer.getTranslationX()));
+        panelContainer.animate().translationX(clampedX).setDuration(280).setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT).start();
+    }
+
+    private void updateCharacterPosition() {
+        if (!preferences.getBoolean("auto_follow", true)) {
+            return;
+        }
+        float panelCenterX = panelContainer.getX() + panelContainer.getTranslationX() + panelContainer.getWidth() / 2f;
+        float targetX = panelCenterX - characterContainer.getWidth() / 2f - AndroidUtilities.dp(60);
+        characterContainer.animate().translationX(targetX - characterContainer.getLeft()).setDuration(400).setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT).start();
+    }
         this.assistantRequestDelegate = assistantRequestDelegate;
     }
 
@@ -296,7 +381,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
 
     public void onTypingStateChanged(boolean active) {
         typingActive = active;
-        if (active) {
+        if (active && preferences.getBoolean("reaction_bubbles", true)) {
             characterView.onTypingPulse();
             showReactionBubble("✍️");
         }
@@ -308,7 +393,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
         }
         scrollEnergy = Math.min(1f, scrollEnergy + Math.abs(dy) / 140f);
         characterView.onScrollImpulse(dy);
-        if (Math.abs(dy) > AndroidUtilities.dp(4)) {
+        if (Math.abs(dy) > AndroidUtilities.dp(4) && preferences.getBoolean("reaction_bubbles", true)) {
             showReactionBubble(dy > 0 ? "👀" : "✨");
         }
     }
@@ -337,6 +422,9 @@ public class ChatAnimeAssistantView extends FrameLayout {
         panelContainer.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(220).setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT).start();
         characterView.onOpenPanel();
         showReactionBubble("💬");
+        if (preferences.getBoolean("auto_follow", true)) {
+            updateCharacterPosition();
+        }
     }
 
     private void hidePanel() {
@@ -487,6 +575,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
         private final RectF tempRect = new RectF();
         private final Path hairPath = new Path();
         private final List<Particle> particles = new ArrayList<>();
+        private final SharedPreferences preferences;
 
         private float tapKick;
         private float typingPulse;
@@ -498,16 +587,19 @@ public class ChatAnimeAssistantView extends FrameLayout {
         private static final int[] SKIN_MINT = {0xFFFDE2D0, 0xFF1F3644, 0xFF2D4F5D, 0xFF73F5CF};
         private static final int[] SKIN_SUNSET = {0xFFFFD4C3, 0xFF43315A, 0xFF5D3D79, 0xFFFF9F77};
 
-        public AssistantCharacterView(Context context) {
+        public AssistantCharacterView(Context context, SharedPreferences prefs) {
             super(context);
+            this.preferences = prefs;
             outlinePaint.setStyle(Paint.Style.STROKE);
             outlinePaint.setStrokeWidth(AndroidUtilities.dp(1.3f));
             outlinePaint.setColor(0x66FFFFFF);
+            skinIndex = preferences.getInt("character_skin", 0);
             setSkinColors();
         }
 
         void cycleSkin() {
             skinIndex = (skinIndex + 1) % 3;
+            preferences.edit().putInt("character_skin", skinIndex).apply();
             setSkinColors();
             spawnParticles(6);
             invalidate();
@@ -538,13 +630,13 @@ public class ChatAnimeAssistantView extends FrameLayout {
             scrollTilt = Math.max(-1f, Math.min(1f, scrollTilt + (dy > 0 ? 0.18f : -0.18f)));
         }
 
-        void tick(long now, float dt, boolean typingActive, float scrollEnergy) {
-            tapKick = Math.max(0f, tapKick - dt * 2.8f);
-            typingPulse = Math.max(0f, typingPulse - dt * 1.6f + (typingActive ? dt * 0.8f : 0f));
+        void tick(long now, float dt, boolean typingActive, float scrollEnergy, float animationIntensity) {
+            tapKick = Math.max(0f, tapKick - dt * 2.8f * animationIntensity);
+            typingPulse = Math.max(0f, typingPulse - dt * 1.6f * animationIntensity + (typingActive ? dt * 0.8f : 0f));
             scrollTilt *= 0.88f;
             panelFocus = Math.max(0f, panelFocus - dt * 0.9f);
 
-            if (particles.size() < (SharedConfig.getDevicePerformanceClass() == SharedConfig.PERFORMANCE_CLASS_LOW ? 6 : 14) && (typingActive || scrollEnergy > 0.3f)) {
+            if (particles.size() < (SharedConfig.getDevicePerformanceClass() == SharedConfig.PERFORMANCE_CLASS_LOW ? 6 : 14) && (typingActive || scrollEnergy > 0.3f) && preferences.getBoolean("particle_effects", true)) {
                 spawnParticles(1);
             }
 
