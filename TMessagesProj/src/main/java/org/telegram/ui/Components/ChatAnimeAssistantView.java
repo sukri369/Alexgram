@@ -508,6 +508,20 @@ public class ChatAnimeAssistantView extends FrameLayout {
         return "assistant_auto_reply_" + assistantDialogId;
     }
 
+    private boolean isQuotaOrRateLimitError(String error) {
+        if (TextUtils.isEmpty(error)) {
+            return false;
+        }
+        String lower = error.toLowerCase();
+        return lower.contains("quota")
+                || lower.contains("resource_exhausted")
+                || lower.contains("rate limit")
+                || lower.contains("too many requests")
+                || lower.contains("insufficient_quota")
+                || lower.contains("retrydelay")
+                || lower.contains("http 429");
+    }
+
     private void showLongPressMenu(View anchor) {
         PopupMenu popupMenu = new PopupMenu(getContext(), anchor);
         popupMenu.getMenu().add(Menu.NONE, 1, 0, autoReplyEnabled ? "Auto Reply Mode: ON" : "Auto Reply Mode: OFF");
@@ -539,6 +553,11 @@ public class ChatAnimeAssistantView extends FrameLayout {
 
     public boolean isAutoReplyEnabled() {
         return autoReplyEnabled;
+    }
+
+    public void setAutoReplyEnabledState(boolean enabled) {
+        autoReplyEnabled = enabled;
+        preferences.edit().putBoolean(getAutoReplyPreferenceKey(), enabled).apply();
     }
 
     public void setAssistantRequestDelegate(@Nullable AssistantRequestDelegate assistantRequestDelegate) {
@@ -659,7 +678,13 @@ public class ChatAnimeAssistantView extends FrameLayout {
 
             @Override
             public void onError(String error) {
-                AndroidUtilities.runOnUIThread(() -> hideTypingBubble("Oops, network mood swing. " + (TextUtils.isEmpty(error) ? "Please try again." : error)));
+                AndroidUtilities.runOnUIThread(() -> {
+                    if (isQuotaOrRateLimitError(error)) {
+                        hideTypingBubble("API quota reached. Please top up or wait, then try again.");
+                    } else {
+                        hideTypingBubble("Oops, network mood swing. Please try again.");
+                    }
+                });
             }
         });
     }

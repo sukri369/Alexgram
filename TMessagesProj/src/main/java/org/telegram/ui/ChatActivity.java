@@ -721,6 +721,7 @@ public class ChatActivity extends BaseFragment implements
     private ChatAnimeAssistantView chatAnimeAssistantView;
     private int assistantLastAutoReplyMessageId;
     private boolean assistantAutoReplyInFlight;
+    private boolean assistantQuotaNotified;
     private float intoTopViewTop;
     private ChatActionCell infoTopView;
     private int hideDateDelay = 500;
@@ -9525,8 +9526,14 @@ public class ChatActivity extends BaseFragment implements
 
                 @Override
                 public void onAutoReplyToggleChanged(long dialogId, boolean enabled) {
-                    if (enabled && dialogId == dialog_id) {
+                    if (dialogId != dialog_id) {
+                        return;
+                    }
+                    if (enabled) {
+                        assistantQuotaNotified = false;
                         tryAutoReplyWithLatestPendingMessage(true);
+                    } else {
+                        assistantQuotaNotified = false;
                     }
                 }
             });
@@ -48407,6 +48414,34 @@ public class ChatActivity extends BaseFragment implements
         return "About \"" + text + "\", got it.";
     }
 
+    private boolean isAssistantQuotaOrRateLimitError(String error) {
+        if (TextUtils.isEmpty(error)) {
+            return false;
+        }
+        String lower = error.toLowerCase();
+        return lower.contains("quota")
+                || lower.contains("resource_exhausted")
+                || lower.contains("rate limit")
+                || lower.contains("too many requests")
+                || lower.contains("insufficient_quota")
+                || lower.contains("retrydelay")
+                || lower.contains("http 429");
+    }
+
+    private void disableAssistantAutoReplyDueToQuota() {
+        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("ai_assistant_prefs", Context.MODE_PRIVATE);
+        preferences.edit().putBoolean("assistant_auto_reply_" + dialog_id, false).apply();
+        if (chatAnimeAssistantView != null) {
+            chatAnimeAssistantView.setAutoReplyEnabledState(false);
+        }
+        if (!assistantQuotaNotified) {
+            assistantQuotaNotified = true;
+            BulletinFactory.of(ChatActivity.this)
+                    .createSimpleBulletin(R.raw.error, "API quota reached. Auto Reply turned off.")
+                    .show();
+        }
+    }
+
     private void tryAutoReplyWithLatestPendingMessage(boolean preferUnreadOnly) {
         if (!isAssistantAutoReplyEnabledForDialog() || !isAssistantAutoReplyModeSupported() || assistantAutoReplyInFlight) {
             return;
@@ -48521,6 +48556,10 @@ public class ChatActivity extends BaseFragment implements
                 assistantAutoReplyInFlight = false;
                 assistantLastAutoReplyMessageId = targetMessageId;
                 if (dialog_id == 0) {
+                    return;
+                }
+                if (isAssistantQuotaOrRateLimitError(error)) {
+                    disableAssistantAutoReplyDueToQuota();
                     return;
                 }
                 String fallback = buildAutoReplyFallback(fallbackSourceText);
