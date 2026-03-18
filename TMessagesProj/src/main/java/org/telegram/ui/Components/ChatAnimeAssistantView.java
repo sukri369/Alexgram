@@ -16,6 +16,7 @@ import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.TypedValue;
+import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.HapticFeedbackConstants;
 import android.view.MotionEvent;
@@ -106,6 +107,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
     private int typingDots;
     private Runnable typingRunnable;
     private final Rect visibleFrame = new Rect();
+    private GestureDetector gestureDetector;
 
     public ChatAnimeAssistantView(@NonNull Context context, @Nullable SizeNotifierFrameLayout blurParent, long dialogId) {
         super(context);
@@ -241,10 +243,27 @@ public class ChatAnimeAssistantView extends FrameLayout {
             }
         });
 
-        characterContainer.setOnLongClickListener(v -> {
-            showLongPressMenu(v);
-            return true;
+        // Setup gesture detector for proper single tap vs long press detection
+        gestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
+            @Override
+            public boolean onSingleTapUp(MotionEvent e) {
+                if (!dragging) {
+                    performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
+                    characterView.onTap();
+                    showReactionBubble(randomReaction());
+                    showPanel();
+                }
+                return true;
+            }
+
+            @Override
+            public void onLongPress(MotionEvent e) {
+                if (!dragging) {
+                    showLongPressMenu(characterContainer);
+                }
+            }
         });
+        gestureDetector.setIsLongpressEnabled(true);
 
         characterContainer.setOnTouchListener((v, event) -> {
             final int touchSlop = ViewConfiguration.get(getContext()).getScaledTouchSlop();
@@ -257,6 +276,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
                     startTy = characterContainer.getTranslationY();
                     startPanelTx = panelContainer.getTranslationX();
                     startPanelTy = panelContainer.getTranslationY();
+                    gestureDetector.onTouchEvent(event);
                     return false;
                 case MotionEvent.ACTION_MOVE:
                     float dx = event.getRawX() - downX;
@@ -278,19 +298,17 @@ public class ChatAnimeAssistantView extends FrameLayout {
                     return false;
                 case MotionEvent.ACTION_UP:
                 case MotionEvent.ACTION_CANCEL:
-                    if (!dragging) {
-                        performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
-                        characterView.onTap();
-                        showReactionBubble(randomReaction());
-                        showPanel();
-                    } else {
+                    if (dragging) {
                         if (panelOpened && preferences.getBoolean("auto_follow", true)) {
                             snapPanelToBounds();
                         } else {
                             snapToBounds();
                         }
+                        return true;
                     }
-                    return true;
+                    // Pass to gesture detector for tap/long-press handling
+                    gestureDetector.onTouchEvent(event);
+                    return false;
                 default:
                     return false;
             }
