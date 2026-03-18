@@ -8501,6 +8501,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         final int newTop = (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + ActionBar.getCurrentActionBarHeight();
         final float diff = calculateHeaderExtraDiff();
         boolean textMeasured = false;
+        final int fallbackViewportWidth = AndroidUtilities.isTablet() ? AndroidUtilities.dp(490) : AndroidUtilities.displaySize.x;
 
         FrameLayout.LayoutParams layoutParams;
         if (listView != null && !openAnimationInProgress) {
@@ -8653,7 +8654,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     }
                     ViewGroup.LayoutParams params = avatarsViewPager.getLayoutParams();
                     int oldHeight = params.height;
-                    params.width = listView.getMeasuredWidth();
+                    params.width = listView.getMeasuredWidth() > 0 ? listView.getMeasuredWidth() : fallbackViewportWidth;
                     params.height = /*hasActions && avatarsViewPager.getAlpha() <= 0f ? params.width + getActionsExtraHeight() :*/ (int) (h + newTop);
                     if (oldHeight != params.height) {
                         avatarsViewPager.requestLayout();
@@ -8878,6 +8879,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 }
 
                 int viewportWidth = listView.getMeasuredWidth();
+                if (viewportWidth <= 0) {
+                    viewportWidth = fallbackViewportWidth;
+                }
                 for (int a = 0; a < nameTextView.length; a++) {
                     if (nameTextView[a] == null) {
                         continue;
@@ -8964,14 +8968,15 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         needLayoutText(1f);
 
         float nameScale = 1.0f + 0.12f;
+        final int viewportWidth = listView.getMeasuredWidth() > 0 ? listView.getMeasuredWidth() : (AndroidUtilities.isTablet() ? AndroidUtilities.dp(490) : AndroidUtilities.displaySize.x);
         for (int a = 0; a < nameTextView.length; a++) {
             if (nameTextView[a] == null) {
                 continue;
             }
             FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) nameTextView[a].getLayoutParams();
-            float nameX = listView.getMeasuredWidth() / 2f - (params.leftMargin + nameTextView[a].getExactWidth() * nameScale * 0.5f);
+            float nameX = viewportWidth / 2f - (params.leftMargin + nameTextView[a].getExactWidth() * nameScale * 0.5f);
             params = (FrameLayout.LayoutParams) onlineTextView[a].getLayoutParams();
-            float onlineX = listView.getMeasuredWidth() / 2f - (params.leftMargin + onlineTextView[a].getExactWidth() * 0.5f);
+            float onlineX = viewportWidth / 2f - (params.leftMargin + onlineTextView[a].getExactWidth() * 0.5f);
 
             if (a == 1) {
                 this.nameX = nameX;
