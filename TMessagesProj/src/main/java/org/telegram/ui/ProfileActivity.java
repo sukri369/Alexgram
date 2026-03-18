@@ -9665,6 +9665,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         updateProfileData(true);
         fixLayout();
         if (nameTextView[1] != null) {
+            nameTextView[1].resetScrolling();
+            nameTextView[1].setText(nameTextView[1].getText(), true);
             setParentActivityTitle(nameTextView[1].getText());
         }
         if (userId != 0) {
@@ -9865,6 +9867,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     fragmentOpened = true;
                     invalidateScroll = true;
                     fragmentView.requestLayout();
+                }
+                if (nameTextView[1] != null) {
+                    // Ensure the title starts from a clean layout state on first open.
+                    nameTextView[1].resetScrolling();
+                    nameTextView[1].setText(nameTextView[1].getText(), true);
+                    nameTextView[1].requestLayout();
                 }
             }
             getNotificationCenter().onAnimationFinish(transitionIndex);

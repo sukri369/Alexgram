@@ -44521,9 +44521,9 @@ public class ChatActivity extends BaseFragment implements
             BulletinFactory.of(ChatActivity.this)
                 .createSimpleBulletin(
                     R.raw.chats_infotip,
-                    "New title style is now active",
-                    "Chat names appear in a clean pill. Keep it if you like the look, or turn it off now.",
+                    "New title style is on. Chat names now appear in a clean top pill. Tap Turn off to restore the normal header.",
                     "Turn off",
+                    10000,
                     () -> {
                         NaConfig.INSTANCE.getPillChatTitle().setConfigBool(false);
                         if (parentLayout != null) {
