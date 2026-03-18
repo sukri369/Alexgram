@@ -48417,6 +48417,7 @@ public class ChatActivity extends BaseFragment implements
         if (TextUtils.isEmpty(sourceText)) {
             return;
         }
+        final CharSequence fallbackSourceText = sourceText;
 
         assistantAutoReplyInFlight = true;
         final int targetMessageId = incomingMessage.getId();
@@ -48458,7 +48459,7 @@ public class ChatActivity extends BaseFragment implements
                 if (dialog_id == 0) {
                     return;
                 }
-                String fallback = buildAutoReplyFallback(sourceText);
+                String fallback = buildAutoReplyFallback(fallbackSourceText);
                 if (TextUtils.isEmpty(fallback)) {
                     return;
                 }
