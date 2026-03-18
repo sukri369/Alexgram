@@ -544,6 +544,8 @@ public class ChatAnimeAssistantView extends FrameLayout {
         }
         panelOpened = true;
         keyboardShiftY = 0f;
+        panelBaseTx = panelContainer.getTranslationX();
+        panelBaseTy = panelContainer.getTranslationY();
         panelScrim.setVisibility(VISIBLE);
         panelContainer.setVisibility(VISIBLE);
         positionPanelFromCharacterAfterLayout(false);
@@ -553,9 +555,6 @@ public class ChatAnimeAssistantView extends FrameLayout {
         panelContainer.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(220).setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT).start();
         characterView.onOpenPanel();
         showReactionBubble("💬");
-        if (preferences.getBoolean("auto_follow", true)) {
-            updateCharacterPosition();
-        }
     }
 
     private void hidePanel() {
