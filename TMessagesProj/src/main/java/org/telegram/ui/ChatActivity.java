@@ -48288,7 +48288,9 @@ public class ChatActivity extends BaseFragment implements
         final String context = buildAnimeAssistantContext();
         final String decoratedPrompt = "Persona: You are Alexgram's anime-style floating assistant. " +
                 "Tone: friendly, playful, slightly teasing but respectful. " +
-                "Keep responses concise, practical, and conversational. User prompt: " + prompt;
+            "Keep responses concise, practical, and conversational. " +
+            "Identity rule: when the user asks about 'my name' or 'who am I', refer to the account owner from context, never other chat participants. " +
+            "User prompt: " + prompt;
         final String url1;
         final String key1;
 
@@ -48337,6 +48339,16 @@ public class ChatActivity extends BaseFragment implements
     private String buildAnimeAssistantContext() {
         StringBuilder sb = new StringBuilder(512);
         sb.append("You are replying inside Alexgram chat.\n");
+        long ownerId = getUserConfig().getClientUserId();
+        TLRPC.User ownerUser = getMessagesController().getUser(ownerId);
+        if (ownerUser != null) {
+            sb.append("Account owner (this is the user you assist): ")
+                    .append(UserObject.getForcedFirstName(ownerUser));
+            if (!TextUtils.isEmpty(ownerUser.username)) {
+                sb.append(" (@").append(ownerUser.username).append(")");
+            }
+            sb.append("\n");
+        }
         if (currentUser != null) {
             sb.append("Dialog with user: ").append(UserObject.getForcedFirstName(currentUser)).append("\n");
         } else if (currentChat != null) {
@@ -48560,12 +48572,6 @@ public class ChatActivity extends BaseFragment implements
 
                 ArrayList<TLRPC.MessageEntity> entities = null;
                 String finalReply = cleaned;
-                if (shouldTagSenderInAutoReply(replySourceMessage)) {
-                    String prefix = buildMentionPrefixForAutoReply(replySourceMessage);
-                    if (!TextUtils.isEmpty(prefix)) {
-                        finalReply = prefix + cleaned;
-                    }
-                }
 
                 assistantLastAutoReplyMessageId = targetMessageId;
                 SendMessagesHelper.getInstance(currentAccount)
@@ -48590,12 +48596,6 @@ public class ChatActivity extends BaseFragment implements
 
                 ArrayList<TLRPC.MessageEntity> entities = null;
                 String finalFallback = fallback;
-                if (shouldTagSenderInAutoReply(replySourceMessage)) {
-                    String prefix = buildMentionPrefixForAutoReply(replySourceMessage);
-                    if (!TextUtils.isEmpty(prefix)) {
-                        finalFallback = prefix + fallback;
-                    }
-                }
                 SendMessagesHelper.getInstance(currentAccount)
                         .sendMessage(finalFallback, dialog_id, replySourceMessage, getThreadMessage(), null, false, entities, null, null, !NaConfig.INSTANCE.getSilentMessageByDefault().Bool(), 0, 0, null, false);
             }
@@ -48641,32 +48641,6 @@ public class ChatActivity extends BaseFragment implements
             }
         }
         return false;
-    }
-
-    private boolean shouldTagSenderInAutoReply(MessageObject incomingMessage) {
-        return isAssistantGroupTagOnlyModeEnabled() && currentChat != null && incomingMessage != null;
-    }
-
-    private String buildMentionPrefixForAutoReply(MessageObject incomingMessage) {
-        if (incomingMessage == null || incomingMessage.messageOwner == null || incomingMessage.messageOwner.from_id == null) {
-            return "";
-        }
-        long fromUserId = incomingMessage.messageOwner.from_id.user_id;
-        if (fromUserId == 0 || fromUserId == getUserConfig().getClientUserId()) {
-            return "";
-        }
-        TLRPC.User fromUser = getMessagesController().getUser(fromUserId);
-        if (fromUser == null) {
-            return "";
-        }
-        if (!TextUtils.isEmpty(fromUser.username)) {
-            return "@" + fromUser.username + " ";
-        }
-        String firstName = UserObject.getForcedFirstName(fromUser);
-        if (TextUtils.isEmpty(firstName)) {
-            return "";
-        }
-        return firstName + " ";
     }
 
     private interface AiGenerationCallback {
