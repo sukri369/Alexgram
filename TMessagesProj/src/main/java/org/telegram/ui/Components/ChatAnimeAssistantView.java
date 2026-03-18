@@ -403,15 +403,18 @@ public class ChatAnimeAssistantView extends FrameLayout {
         }
     }
 
-    private void dockPanelToTopLeftMerged(boolean animated) {
-        panelBaseTx = AndroidUtilities.dp(14) - panelContainer.getLeft();
-        panelBaseTy = AndroidUtilities.statusBarHeight + AndroidUtilities.dp(18) - panelContainer.getTop();
+    private void positionPanelFromCharacter(boolean animated) {
+        float characterLeft = characterContainer.getLeft() + characterContainer.getTranslationX();
+        float characterTop = characterContainer.getTop() + characterContainer.getTranslationY();
+        panelBaseTx = (characterLeft - getCharacterLinkedOffsetX()) - panelContainer.getLeft();
+        panelBaseTy = (characterTop - getCharacterLinkedOffsetY()) - panelContainer.getTop();
+        clampPanelBaseToBounds();
         applyLinkedPositions(animated);
     }
 
-    private void dockPanelAfterLayout() {
+    private void positionPanelFromCharacterAfterLayout(boolean animated) {
         if (panelContainer.getWidth() > 0 && panelContainer.getHeight() > 0) {
-            dockPanelToTopLeftMerged(false);
+            positionPanelFromCharacter(animated);
             return;
         }
         panelContainer.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
@@ -420,10 +423,19 @@ public class ChatAnimeAssistantView extends FrameLayout {
                 if (panelContainer.getViewTreeObserver().isAlive()) {
                     panelContainer.getViewTreeObserver().removeOnPreDrawListener(this);
                 }
-                dockPanelToTopLeftMerged(false);
+                positionPanelFromCharacter(animated);
                 return true;
             }
         });
+    }
+
+    private void clampPanelBaseToBounds() {
+        float minX = -panelContainer.getLeft() + AndroidUtilities.dp(8);
+        float maxX = getWidth() - panelContainer.getLeft() - panelContainer.getWidth() - AndroidUtilities.dp(8);
+        float minY = -panelContainer.getTop() + AndroidUtilities.statusBarHeight + AndroidUtilities.dp(8);
+        float maxY = getHeight() - panelContainer.getTop() - panelContainer.getHeight() - AndroidUtilities.dp(96);
+        panelBaseTx = Math.max(minX, Math.min(maxX, panelBaseTx));
+        panelBaseTy = Math.max(minY, Math.min(maxY, panelBaseTy));
     }
 
     private void animateLinkedToCurrent() {
@@ -450,13 +462,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
     }
 
     private void snapPanelToBounds() {
-        float minX = -panelContainer.getLeft() + AndroidUtilities.dp(8);
-        float maxX = getWidth() - panelContainer.getLeft() - panelContainer.getWidth() - AndroidUtilities.dp(8);
-        float minY = -panelContainer.getTop() + AndroidUtilities.statusBarHeight + AndroidUtilities.dp(8);
-        float maxY = getHeight() - panelContainer.getTop() - panelContainer.getHeight() - AndroidUtilities.dp(96);
-
-        panelBaseTx = Math.max(minX, Math.min(maxX, panelBaseTx));
-        panelBaseTy = Math.max(minY, Math.min(maxY, panelBaseTy));
+        clampPanelBaseToBounds();
         applyLinkedPositions(true);
     }
 
@@ -531,6 +537,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
 
     private void showPanel() {
         if (panelOpened) {
+            clampPanelBaseToBounds();
             animateLinkedToCurrent();
             focusInputAndShowKeyboard();
             return;
@@ -539,7 +546,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
         keyboardShiftY = 0f;
         panelScrim.setVisibility(VISIBLE);
         panelContainer.setVisibility(VISIBLE);
-        dockPanelAfterLayout();
+        positionPanelFromCharacterAfterLayout(false);
         panelContainer.bringToFront();
         characterContainer.bringToFront();
         panelScrim.animate().alpha(1f).setDuration(220).start();
