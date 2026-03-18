@@ -19,6 +19,7 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.HapticFeedbackConstants;
 import android.view.MotionEvent;
+import android.view.Menu;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewTreeObserver;
@@ -26,6 +27,7 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.PopupMenu;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -33,7 +35,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.ui.ActionBar.Theme;
@@ -64,6 +65,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
     private final EditText inputField;
     private final ImageView sendButton;
     private final SharedPreferences preferences;
+    private final long assistantDialogId;
 
     private final Runnable frameRunnable = new Runnable() {
         @Override
@@ -99,17 +101,20 @@ public class ChatAnimeAssistantView extends FrameLayout {
     private boolean dragging;
     private boolean panelDragging;
     private boolean panelDragAllowed;
+    private boolean autoReplyEnabled;
     private long lastFrameTime;
     private int typingDots;
     private Runnable typingRunnable;
     private final Rect visibleFrame = new Rect();
 
-    public ChatAnimeAssistantView(@NonNull Context context, @Nullable SizeNotifierFrameLayout blurParent) {
+    public ChatAnimeAssistantView(@NonNull Context context, @Nullable SizeNotifierFrameLayout blurParent, long dialogId) {
         super(context);
         setClipChildren(false);
         setClipToPadding(false);
 
         preferences = context.getSharedPreferences("ai_assistant_prefs", Context.MODE_PRIVATE);
+        assistantDialogId = dialogId;
+        autoReplyEnabled = preferences.getBoolean(getAutoReplyPreferenceKey(), false);
 
         panelScrim = new View(context);
         panelScrim.setBackgroundColor(0x33000000);
@@ -237,8 +242,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
         });
 
         characterContainer.setOnLongClickListener(v -> {
-            characterView.cycleSkin();
-            showReactionBubble("🎨");
+            showLongPressMenu(v);
             return true;
         });
 
@@ -476,6 +480,40 @@ public class ChatAnimeAssistantView extends FrameLayout {
     private void focusInputAndShowKeyboard() {
         inputField.requestFocus();
         AndroidUtilities.showKeyboard(inputField);
+    }
+
+    private String getAutoReplyPreferenceKey() {
+        return "assistant_auto_reply_" + assistantDialogId;
+    }
+
+    private void showLongPressMenu(View anchor) {
+        PopupMenu popupMenu = new PopupMenu(getContext(), anchor);
+        popupMenu.getMenu().add(Menu.NONE, 1, 0, autoReplyEnabled ? "Auto Reply Mode: ON" : "Auto Reply Mode: OFF");
+        popupMenu.getMenu().add(Menu.NONE, 2, 1, "Switch Style");
+        popupMenu.getMenu().add(Menu.NONE, 3, 2, "Focus Chat Panel");
+        popupMenu.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == 1) {
+                autoReplyEnabled = !autoReplyEnabled;
+                preferences.edit().putBoolean(getAutoReplyPreferenceKey(), autoReplyEnabled).apply();
+                showReactionBubble(autoReplyEnabled ? "ON" : "OFF");
+                characterView.onTap();
+                return true;
+            } else if (item.getItemId() == 2) {
+                characterView.cycleSkin();
+                showReactionBubble("STYLE");
+                return true;
+            } else if (item.getItemId() == 3) {
+                showPanel();
+                focusInputAndShowKeyboard();
+                return true;
+            }
+            return false;
+        });
+        popupMenu.show();
+    }
+
+    public boolean isAutoReplyEnabled() {
+        return autoReplyEnabled;
     }
 
     public void setAssistantRequestDelegate(@Nullable AssistantRequestDelegate assistantRequestDelegate) {

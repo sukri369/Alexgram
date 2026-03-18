@@ -719,6 +719,8 @@ public class ChatActivity extends BaseFragment implements
     private ChatActionCell floatingDateView;
     private TopicSeparator.Cell floatingTopicSeparator;
     private ChatAnimeAssistantView chatAnimeAssistantView;
+    private int assistantLastAutoReplyMessageId;
+    private boolean assistantAutoReplyInFlight;
     private float intoTopViewTop;
     private ChatActionCell infoTopView;
     private int hideDateDelay = 500;
@@ -9514,7 +9516,7 @@ public class ChatActivity extends BaseFragment implements
         }
 
         if (chatMode == 0 && !isReport() && !isInPreviewMode()) {
-            chatAnimeAssistantView = new ChatAnimeAssistantView(context, contentView);
+            chatAnimeAssistantView = new ChatAnimeAssistantView(context, contentView, dialog_id);
             chatAnimeAssistantView.setAssistantRequestDelegate((prompt, callback) -> requestAnimeAssistantReply(prompt, callback));
             contentView.addView(chatAnimeAssistantView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
         }
@@ -26110,6 +26112,7 @@ public class ChatActivity extends BaseFragment implements
                         continue;
                     }
                 }
+                tryAutoReplyWithAssistant(obj);
                 int messageId = obj.getId();
 
                 if (obj.isOut() && waitingForSendingMessageLoad) {
@@ -48350,6 +48353,81 @@ public class ChatActivity extends BaseFragment implements
         }
 
         return sb.toString();
+    }
+
+    private boolean isAssistantAutoReplyEnabledForDialog() {
+        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("ai_assistant_prefs", Context.MODE_PRIVATE);
+        return preferences.getBoolean("assistant_auto_reply_" + dialog_id, false);
+    }
+
+    private String getAssistantPersonaHint() {
+        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("ai_assistant_prefs", Context.MODE_PRIVATE);
+        int persona = preferences.getInt("persona_preset", 0);
+        if (persona == 1) {
+            return "Playful but respectful.";
+        } else if (persona == 2) {
+            return "Wise, calm, and concise.";
+        }
+        return "Friendly and practical.";
+    }
+
+    private void tryAutoReplyWithAssistant(MessageObject incomingMessage) {
+        if (!isAssistantAutoReplyEnabledForDialog() || chatMode != MODE_DEFAULT) {
+            return;
+        }
+        if (incomingMessage == null || incomingMessage.getDialogId() != dialog_id || incomingMessage.getId() <= 0) {
+            return;
+        }
+        if (incomingMessage.isOut() || incomingMessage.isOutOwner() || incomingMessage.messageOwner == null || incomingMessage.messageOwner.action != null) {
+            return;
+        }
+        if (assistantAutoReplyInFlight || incomingMessage.getId() <= assistantLastAutoReplyMessageId) {
+            return;
+        }
+
+        CharSequence sourceText = incomingMessage.messageText;
+        if (TextUtils.isEmpty(sourceText) && incomingMessage.caption != null) {
+            sourceText = incomingMessage.caption;
+        }
+        if (TextUtils.isEmpty(sourceText)) {
+            return;
+        }
+
+        assistantAutoReplyInFlight = true;
+        assistantLastAutoReplyMessageId = incomingMessage.getId();
+
+        String prompt = "Incoming message: \"" + sourceText.toString().replace('\n', ' ') + "\"\n"
+                + "Write a natural human reply in the same language, maximum one short sentence. "
+                + "Avoid robotic style. " + getAssistantPersonaHint();
+
+        requestAnimeAssistantReply(prompt, new ChatAnimeAssistantView.AssistantRequestCallback() {
+            @Override
+            public void onSuccess(String response) {
+                assistantAutoReplyInFlight = false;
+                if (TextUtils.isEmpty(response) || dialog_id == 0) {
+                    return;
+                }
+                String cleaned = response.trim();
+                int lineBreak = cleaned.indexOf('\n');
+                if (lineBreak > 0) {
+                    cleaned = cleaned.substring(0, lineBreak).trim();
+                }
+                if (cleaned.length() > 220) {
+                    cleaned = cleaned.substring(0, 220).trim();
+                }
+                if (TextUtils.isEmpty(cleaned)) {
+                    return;
+                }
+
+                SendMessagesHelper.getInstance(currentAccount)
+                        .sendMessage(cleaned, dialog_id, null, getThreadMessage(), null, false, null, null, null, !NaConfig.INSTANCE.getSilentMessageByDefault().Bool(), 0, 0, null, false);
+            }
+
+            @Override
+            public void onError(String error) {
+                assistantAutoReplyInFlight = false;
+            }
+        });
     }
 
     private interface AiGenerationCallback {
