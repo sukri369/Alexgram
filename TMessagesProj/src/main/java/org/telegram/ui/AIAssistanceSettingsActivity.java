@@ -49,17 +49,18 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
     private ListAdapter adapter;
     private SharedPreferences preferences;
 
-    private static final int ROW_ENABLED = 0;
-    private static final int ROW_SKIN = 1;
-    private static final int ROW_ANIMATION_INTENSITY = 2;
-    private static final int ROW_ANIMATION_INTENSITY_SLIDER = 3;
-    private static final int ROW_PERSONA = 4;
-    private static final int ROW_KEYBOARD_AUTO_HIDE = 5;
-    private static final int ROW_AUTO_FOLLOW = 6;
-    private static final int ROW_CHAT_CONTEXT = 7;
-    private static final int ROW_PARTICLE_EFFECTS = 8;
-    private static final int ROW_REACTION_BUBBLES = 9;
-    private static final int ROW_COUNT = 10;
+    private static final int ROW_GENERAL_HEADER = 0;
+    private static final int ROW_ENABLED = 1;
+    private static final int ROW_SKIN = 2;
+    private static final int ROW_BACKGROUND_ANIMATION = 3;
+    private static final int ROW_ANIMATION_INTENSITY_SLIDER = 4;
+    private static final int ROW_PERSONA = 5;
+    private static final int ROW_KEYBOARD_AUTO_HIDE = 6;
+    private static final int ROW_AUTO_FOLLOW = 7;
+    private static final int ROW_CHAT_CONTEXT = 8;
+    private static final int ROW_PARTICLE_EFFECTS = 9;
+    private static final int ROW_REACTION_BUBBLES = 10;
+    private static final int ROW_COUNT = 11;
 
     @Override
     public boolean onFragmentCreate() {
@@ -122,6 +123,9 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
                 return 1;
             }
             int row = position - 1;
+            if (row == ROW_GENERAL_HEADER) {
+                return 4;
+            }
             if (row == ROW_ANIMATION_INTENSITY_SLIDER) {
                 return 2;
             }
@@ -164,6 +168,9 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
                     });
                     ((FrameLayout) view).addView(seekBar, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.CENTER, 16, 8, 16, 8));
                     break;
+                case 4:
+                    view = new HeaderCell(context, resourceProvider);
+                    break;
                 case 3:
                     view = new TextSettingsCell(context, resourceProvider);
                     break;
@@ -188,6 +195,10 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
                     if (row == ROW_ENABLED) {
                         title = "Enable AI Assistance";
                         key = "assistant_enabled";
+                        checked = preferences.getBoolean(key, true);
+                    } else if (row == ROW_BACKGROUND_ANIMATION) {
+                        title = "Background animation";
+                        key = "background_animation";
                         checked = preferences.getBoolean(key, true);
                     } else if (row == ROW_KEYBOARD_AUTO_HIDE) {
                         title = "Hide on keyboard appearance";
@@ -225,10 +236,24 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
                         int adapterPosition = holder.getAdapterPosition();
                         if (adapterPosition != RecyclerView.NO_POSITION) {
                             adapter.notifyItemChanged(adapterPosition);
+                            if (row == ROW_BACKGROUND_ANIMATION) {
+                                adapter.notifyItemChanged(ROW_ANIMATION_INTENSITY_SLIDER + 1);
+                            }
                         }
                     });
                     break;
                 case 2:
+                    FrameLayout sliderContainer = (FrameLayout) holder.itemView;
+                    SeekBar slider = null;
+                    if (sliderContainer.getChildCount() > 0 && sliderContainer.getChildAt(0) instanceof SeekBar) {
+                        slider = (SeekBar) sliderContainer.getChildAt(0);
+                    }
+                    if (slider != null) {
+                        boolean animationEnabled = preferences.getBoolean("background_animation", true);
+                        slider.setProgress(preferences.getInt("animation_intensity", 70));
+                        slider.setEnabled(animationEnabled);
+                        slider.setAlpha(animationEnabled ? 1f : 0.45f);
+                    }
                     break;
                 case 3:
                     TextSettingsCell settingsCell = (TextSettingsCell) holder.itemView;
@@ -259,6 +284,10 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
                             }
                         });
                     }
+                    break;
+                case 4:
+                    HeaderCell headerCell = (HeaderCell) holder.itemView;
+                    headerCell.setText("General");
                     break;
             }
         }

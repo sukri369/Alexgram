@@ -86,8 +86,10 @@ public class ChatAnimeAssistantView extends FrameLayout {
             final float dt = Math.min(33f, now - lastFrameTime) / 1000f;
             lastFrameTime = now;
             if (!paused) {
-                float intensity = preferences.getInt("animation_intensity", 70) / 100f;
-                characterView.tick(now, dt, typingActive, scrollEnergy, intensity);
+                boolean backgroundAnimationEnabled = preferences.getBoolean("background_animation", true);
+                float intensity = backgroundAnimationEnabled ? preferences.getInt("animation_intensity", 70) / 100f : 0f;
+                float runtimeScrollEnergy = backgroundAnimationEnabled ? scrollEnergy : 0f;
+                characterView.tick(now, dt, typingActive, runtimeScrollEnergy, intensity);
                 scrollEnergy *= 0.84f;
                 postOnAnimation(frameRunnable);
             }
