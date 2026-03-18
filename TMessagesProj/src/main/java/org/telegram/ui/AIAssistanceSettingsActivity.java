@@ -9,81 +9,48 @@ package org.telegram.ui;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-import androidx.recyclerview.widget.DefaultItemAnimator;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
-import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.ui.ActionBar.ActionBar;
-import org.telegram.ui.ActionBar.ActionBarLayout;
-import org.telegram.ui.ActionBar.BackDrawable;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
-import org.telegram.ui.Cells.HeaderCell;
-import org.telegram.ui.Cells.ShadowSectionCell;
-import org.telegram.ui.Cells.TextCheckCell;
-import org.telegram.ui.Cells.TextSettingsCell;
-import org.telegram.ui.Components.CubicBezierInterpolator;
 import org.telegram.ui.Components.LayoutHelper;
-import org.telegram.ui.Components.RecyclerListView;
+import org.telegram.ui.Components.Switch;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import tw.nekomimi.nekogram.settings.AlexgramSettingsHeaderView;
 
 public class AIAssistanceSettingsActivity extends BaseFragment {
 
-    private RecyclerListView listView;
-    private ListAdapter adapter;
     private SharedPreferences preferences;
 
-    // Section headers and dividers
-    private static final int ROW_SPACE_TOP = 0;
-    private static final int ROW_GENERAL_SECTION = 1;
-    private static final int ROW_GENERAL_HEADER = 2;
-    private static final int ROW_ENABLED = 3;
-    private static final int ROW_DIVIDER_1 = 4;
-    private static final int ROW_SKIN = 5;
-    private static final int ROW_DIVIDER_2 = 6;
-    private static final int ROW_PERSONA = 7;
-    private static final int ROW_GENERAL_FOOTER = 8;
-    
-    private static final int ROW_APPEARANCE_SECTION = 9;
-    private static final int ROW_APPEARANCE_HEADER = 10;
-    private static final int ROW_BACKGROUND_ANIMATION = 11;
-    private static final int ROW_DIVIDER_3 = 12;
-    private static final int ROW_ANIMATION_INTENSITY_SLIDER = 13;
-    private static final int ROW_APPEARANCE_FOOTER = 14;
-    
-    private static final int ROW_BEHAVIOR_SECTION = 15;
-    private static final int ROW_BEHAVIOR_HEADER = 16;
-    private static final int ROW_KEYBOARD_AUTO_HIDE = 17;
-    private static final int ROW_DIVIDER_4 = 18;
-    private static final int ROW_AUTO_FOLLOW = 19;
-    private static final int ROW_DIVIDER_5 = 20;
-    private static final int ROW_CHAT_CONTEXT = 21;
-    private static final int ROW_DIVIDER_6 = 22;
-    private static final int ROW_PARTICLE_EFFECTS = 23;
-    private static final int ROW_DIVIDER_7 = 24;
-    private static final int ROW_REACTION_BUBBLES = 25;
-    private static final int ROW_BEHAVIOR_FOOTER = 26;
-    private static final int ROW_SPACE_BOTTOM = 27;
-    
-    private static final int ROW_COUNT = 28;
+    private FrameLayout rootFrame;
+    private AlexgramSettingsHeaderView backgroundView;
+    private SeekBar intensitySeekBar;
+    private TextView skinValueView;
+    private TextView personaValueView;
+
+    private boolean isDark;
+    private int cardBg;
+    private int cardBorder;
+    private int textTitle;
+    private int textSub;
+    private int sectionLabel;
+    private int accentColor;
+    private int dividerColor;
 
     @Override
     public boolean onFragmentCreate() {
@@ -96,7 +63,7 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
         if (preferences == null) {
             preferences = context.getSharedPreferences("ai_assistant_prefs", Context.MODE_PRIVATE);
         }
-        boolean isDark = Theme.getActiveTheme().isDark();
+        setupColors();
 
         actionBar.setAddToContainer(false);
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
@@ -115,278 +82,260 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
             }
         });
 
-        FrameLayout parentFrame = new FrameLayout(context);
+        rootFrame = new FrameLayout(context);
 
-        AlexgramSettingsHeaderView backgroundView = new AlexgramSettingsHeaderView(context);
+        backgroundView = new AlexgramSettingsHeaderView(context);
         boolean backgroundEnabled = preferences.getBoolean("background_animation", true);
         backgroundView.setVisibility(backgroundEnabled ? View.VISIBLE : View.GONE);
-        parentFrame.addView(backgroundView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        rootFrame.addView(backgroundView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
-        if (!backgroundEnabled) {
-            parentFrame.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundGray));
-        }
+        ScrollView scrollView = new ScrollView(context);
+        scrollView.setVerticalScrollBarEnabled(false);
+        scrollView.setOverScrollMode(View.OVER_SCROLL_NEVER);
+        scrollView.setClipToPadding(true);
+        scrollView.setPadding(0, AndroidUtilities.dp(56) + AndroidUtilities.statusBarHeight, 0, 0);
+        rootFrame.addView(scrollView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
-        listView = new RecyclerListView(context);
-        listView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
-        listView.setVerticalScrollBarEnabled(false);
-        listView.setBackgroundColor(Color.TRANSPARENT);
-        listView.setClipToPadding(false);
-        listView.setPadding(0, AndroidUtilities.dp(56) + AndroidUtilities.statusBarHeight, 0, 0);
-        adapter = new ListAdapter(context);
-        DefaultItemAnimator itemAnimator = new DefaultItemAnimator();
-        itemAnimator.setSupportsChangeAnimations(false);
-        itemAnimator.setDelayAnimations(false);
-        itemAnimator.setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT);
-        itemAnimator.setDurations(350);
-        listView.setItemAnimator(itemAnimator);
-        listView.setAdapter(adapter);
-        parentFrame.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
-        parentFrame.addView(actionBar, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+        LinearLayout contentLayout = new LinearLayout(context);
+        contentLayout.setOrientation(LinearLayout.VERTICAL);
+        contentLayout.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(6), AndroidUtilities.dp(16), AndroidUtilities.dp(24));
+        scrollView.addView(contentLayout, new ScrollView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
-        fragmentView = parentFrame;
+        addGlassSection(contentLayout, context, "GENERAL");
+        LinearLayout generalCard = createGlassCard(context);
+        generalCard.addView(createCardHeader(context, "General"));
+        generalCard.addView(createCardDivider(context, 16, 16));
+        generalCard.addView(createSwitchRow(context, "Enable AI Assistance", "assistant_enabled", true, null));
+        generalCard.addView(createCardDivider(context, 16, 16));
+        generalCard.addView(createValueRow(context, "Character Skin", getSkinName(), () -> {
+            int current = preferences.getInt("character_skin", 0);
+            int next = (current + 1) % 3;
+            preferences.edit().putInt("character_skin", next).apply();
+            if (skinValueView != null) {
+                skinValueView.setText(getSkinName());
+            }
+        }));
+        generalCard.addView(createCardDivider(context, 16, 16));
+        generalCard.addView(createValueRow(context, "Assistant Persona", getPersonaName(), () -> {
+            int current = preferences.getInt("persona_preset", 0);
+            int next = (current + 1) % 3;
+            preferences.edit().putInt("persona_preset", next).apply();
+            if (personaValueView != null) {
+                personaValueView.setText(getPersonaName());
+            }
+        }));
+        contentLayout.addView(generalCard, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 18));
+
+        addGlassSection(contentLayout, context, "APPEARANCE");
+        LinearLayout appearanceCard = createGlassCard(context);
+        appearanceCard.addView(createCardHeader(context, "Appearance"));
+        appearanceCard.addView(createCardDivider(context, 16, 16));
+        appearanceCard.addView(createSwitchRow(context, "Background animation", "background_animation", true, enabled -> {
+            applyBackgroundState(enabled);
+        }));
+        appearanceCard.addView(createCardDivider(context, 16, 16));
+        appearanceCard.addView(createSliderRow(context));
+        contentLayout.addView(appearanceCard, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 18));
+
+        addGlassSection(contentLayout, context, "BEHAVIOR");
+        LinearLayout behaviorCard = createGlassCard(context);
+        behaviorCard.addView(createCardHeader(context, "Behavior"));
+        behaviorCard.addView(createCardDivider(context, 16, 16));
+        behaviorCard.addView(createSwitchRow(context, "Hide on keyboard appearance", "keyboard_auto_hide", true, null));
+        behaviorCard.addView(createCardDivider(context, 16, 16));
+        behaviorCard.addView(createSwitchRow(context, "Auto-position near chat", "auto_follow", true, null));
+        behaviorCard.addView(createCardDivider(context, 16, 16));
+        behaviorCard.addView(createSwitchRow(context, "Use chat context for replies", "use_context", true, null));
+        behaviorCard.addView(createCardDivider(context, 16, 16));
+        behaviorCard.addView(createSwitchRow(context, "Particle effects on interaction", "particle_effects", true, null));
+        behaviorCard.addView(createCardDivider(context, 16, 16));
+        behaviorCard.addView(createSwitchRow(context, "Show reaction bubbles", "reaction_bubbles", true, null));
+        contentLayout.addView(behaviorCard, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+
+        rootFrame.addView(actionBar, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+        applyBackgroundState(backgroundEnabled);
+
+        fragmentView = rootFrame;
         return fragmentView;
     }
 
-    private class ListAdapter extends RecyclerListView.SelectionAdapter {
-
-        private final Context context;
-
-        public ListAdapter(Context context) {
-            this.context = context;
+    private void setupColors() {
+        isDark = Theme.getActiveTheme().isDark();
+        if (isDark) {
+            cardBg = 0x55FFFFFF;
+            cardBorder = 0x22FFFFFF;
+            textTitle = 0xFFFFFFFF;
+            textSub = 0xFF9BB0C7;
+            sectionLabel = 0xCC9BB0C7;
+            accentColor = 0xFF5AB6FF;
+            dividerColor = 0x1AFFFFFF;
+        } else {
+            cardBg = 0xB3FFFFFF;
+            cardBorder = 0x22000000;
+            textTitle = 0xFF1E2733;
+            textSub = 0xFF5C6B7F;
+            sectionLabel = 0xCC6B7E95;
+            accentColor = 0xFF2E93DE;
+            dividerColor = 0x14000000;
         }
+    }
 
-        @Override
-        public int getItemCount() {
-            return ROW_COUNT;
-        }
+    private void addGlassSection(LinearLayout parent, Context context, String title) {
+        TextView label = new TextView(context);
+        label.setText(title);
+        label.setTextColor(sectionLabel);
+        label.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 10.5f);
+        label.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+        label.setLetterSpacing(0.08f);
+        parent.addView(label, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 8));
+    }
 
-        @Override
-        public int getItemViewType(int position) {
-            if (position == ROW_SPACE_TOP || position == ROW_SPACE_BOTTOM) return 5;
-            if (position == ROW_GENERAL_SECTION || position == ROW_APPEARANCE_SECTION || position == ROW_BEHAVIOR_SECTION) return 6;
-            if (position == ROW_GENERAL_HEADER || position == ROW_APPEARANCE_HEADER || position == ROW_BEHAVIOR_HEADER) return 4;
-            if (position == ROW_GENERAL_FOOTER || position == ROW_APPEARANCE_FOOTER || position == ROW_BEHAVIOR_FOOTER) return 7;
-            if (position == ROW_DIVIDER_1 || position == ROW_DIVIDER_2 || position == ROW_DIVIDER_3 || 
-                position == ROW_DIVIDER_4 || position == ROW_DIVIDER_5 || position == ROW_DIVIDER_6 || position == ROW_DIVIDER_7) return 8;
-            if (position == ROW_ANIMATION_INTENSITY_SLIDER) return 2;
-            if (position == ROW_SKIN || position == ROW_PERSONA) return 3;
-            return 0;
-        }
+    private LinearLayout createGlassCard(Context context) {
+        LinearLayout card = new LinearLayout(context);
+        card.setOrientation(LinearLayout.VERTICAL);
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(cardBg);
+        bg.setCornerRadius(AndroidUtilities.dp(24));
+        bg.setStroke(AndroidUtilities.dp(1), cardBorder);
+        card.setBackground(bg);
+        card.setClipToPadding(false);
+        card.setClipChildren(true);
+        return card;
+    }
 
-        @Override
-        public RecyclerView.ViewHolder onCreateViewHolder(android.view.ViewGroup parent, int viewType) {
-            View view;
-            switch (viewType) {
-                case 2: // Slider
-                    view = new FrameLayout(context) {
-                        @Override
-                        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-                            super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(60), MeasureSpec.EXACTLY));
-                        }
-                    };
-                    SeekBar seekBar = new SeekBar(context);
-                    seekBar.setMax(100);
-                    seekBar.setProgress(preferences.getInt("animation_intensity", 70));
-                    seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-                        @Override
-                        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                            preferences.edit().putInt("animation_intensity", progress).apply();
-                        }
-                        @Override
-                        public void onStartTrackingTouch(SeekBar seekBar) {}
-                        @Override
-                        public void onStopTrackingTouch(SeekBar seekBar) {}
-                    });
-                    ((FrameLayout) view).addView(seekBar, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.CENTER, 16, 8, 16, 8));
-                    break;
-                case 3: // TextSettingsCell
-                    view = new TextSettingsCell(context, resourceProvider);
-                    break;
-                case 4: // HeaderCell
-                    view = new HeaderCell(context, resourceProvider);
-                    break;
-                case 5: // Space
-                    view = new View(context) {
-                        @Override
-                        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-                            super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(8), MeasureSpec.EXACTLY));
-                        }
-                    };
-                    view.setBackgroundColor(Color.TRANSPARENT);
-                    break;
-                case 6: // Section label
-                    view = new TextView(context);
-                    TextView sectionLabel = (TextView) view;
-                    sectionLabel.setTextSize(11);
-                    sectionLabel.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
-                    sectionLabel.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
-                    sectionLabel.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(12), AndroidUtilities.dp(16), AndroidUtilities.dp(8));
-                    break;
-                case 7: // Card footer (ShadowSectionCell)
-                    view = new ShadowSectionCell(context);
-                    break;
-                case 8: // Divider
-                    view = new View(context) {
-                        @Override
-                        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-                            super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(1, MeasureSpec.EXACTLY));
-                        }
-                    };
-                    int dividerColor = isDarkTheme() ? 0x15FFFFFF : 0x18000000;
-                    view.setBackgroundColor(dividerColor);
-                    break;
-                default: // TextCheckCell
-                    view = new TextCheckCell(context, resourceProvider);
-                    break;
+    private View createCardHeader(Context context, String title) {
+        TextView header = new TextView(context);
+        header.setText(title);
+        header.setTextColor(accentColor);
+        header.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
+        header.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+        header.setPadding(AndroidUtilities.dp(20), AndroidUtilities.dp(16), AndroidUtilities.dp(20), AndroidUtilities.dp(12));
+        return header;
+    }
+
+    private View createCardDivider(Context context, int left, int right) {
+        View divider = new View(context);
+        divider.setBackgroundColor(dividerColor);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 1);
+        lp.leftMargin = AndroidUtilities.dp(left);
+        lp.rightMargin = AndroidUtilities.dp(right);
+        divider.setLayoutParams(lp);
+        return divider;
+    }
+
+    private View createSwitchRow(Context context, String title, String prefKey, boolean defaultValue, OnToggleChanged toggleChanged) {
+        LinearLayout row = new LinearLayout(context);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(AndroidUtilities.dp(20), AndroidUtilities.dp(14), AndroidUtilities.dp(20), AndroidUtilities.dp(14));
+        row.setBackground(Theme.getSelectorDrawable(false));
+
+        TextView titleView = new TextView(context);
+        titleView.setText(title);
+        titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
+        titleView.setTextColor(textTitle);
+        titleView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+        row.addView(titleView, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f));
+
+        Switch toggle = new Switch(context);
+        toggle.setColors(Theme.key_switchTrack, Theme.key_switchTrackChecked, Theme.key_windowBackgroundWhite, Theme.key_windowBackgroundWhite);
+        toggle.setChecked(preferences.getBoolean(prefKey, defaultValue), false);
+        row.addView(toggle, LayoutHelper.createLinear(44, 24));
+
+        row.setOnClickListener(v -> {
+            boolean newValue = !toggle.isChecked();
+            toggle.setChecked(newValue, true);
+            preferences.edit().putBoolean(prefKey, newValue).apply();
+            if (toggleChanged != null) {
+                toggleChanged.onChanged(newValue);
             }
-            view.setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
-            return new RecyclerListView.Holder(view);
+        });
+        return row;
+    }
+
+    private View createValueRow(Context context, String title, String value, Runnable onClick) {
+        LinearLayout row = new LinearLayout(context);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(AndroidUtilities.dp(20), AndroidUtilities.dp(15), AndroidUtilities.dp(20), AndroidUtilities.dp(15));
+        row.setBackground(Theme.getSelectorDrawable(false));
+
+        TextView titleView = new TextView(context);
+        titleView.setText(title);
+        titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
+        titleView.setTextColor(textTitle);
+        titleView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+        row.addView(titleView, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f));
+
+        TextView valueView = new TextView(context);
+        valueView.setText(value);
+        valueView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
+        valueView.setTextColor(accentColor);
+        valueView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+        row.addView(valueView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
+
+        if ("Character Skin".equals(title)) {
+            skinValueView = valueView;
+        } else if ("Assistant Persona".equals(title)) {
+            personaValueView = valueView;
         }
 
-        @Override
-        public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-            switch (getItemViewType(position)) {
-                case 0: // TextCheckCell
-                    TextCheckCell cell = (TextCheckCell) holder.itemView;
-                    boolean checked = false;
-                    String title = "";
-                    String key = "";
+        row.setOnClickListener(v -> onClick.run());
+        return row;
+    }
 
-                    switch (position) {
-                        case ROW_ENABLED:
-                            title = "Enable AI Assistance";
-                            key = "assistant_enabled";
-                            break;
-                        case ROW_BACKGROUND_ANIMATION:
-                            title = "Background animation";
-                            key = "background_animation";
-                            break;
-                        case ROW_KEYBOARD_AUTO_HIDE:
-                            title = "Hide on keyboard appearance";
-                            key = "keyboard_auto_hide";
-                            break;
-                        case ROW_AUTO_FOLLOW:
-                            title = "Auto-position near chat";
-                            key = "auto_follow";
-                            break;
-                        case ROW_CHAT_CONTEXT:
-                            title = "Use chat context for replies";
-                            key = "use_context";
-                            break;
-                        case ROW_PARTICLE_EFFECTS:
-                            title = "Particle effects on interaction";
-                            key = "particle_effects";
-                            break;
-                        case ROW_REACTION_BUBBLES:
-                            title = "Show reaction bubbles";
-                            key = "reaction_bubbles";
-                            break;
-                    }
+    private View createSliderRow(Context context) {
+        FrameLayout row = new FrameLayout(context);
+        row.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(10), AndroidUtilities.dp(16), AndroidUtilities.dp(16));
 
-                    if (TextUtils.isEmpty(key)) {
-                        cell.setOnClickListener(null);
-                        cell.setTextAndCheck("", false, true);
-                        break;
-                    }
-
-                    checked = preferences.getBoolean(key, true);
-                    final String finalKey = key;
-                    cell.setTextAndCheck(title, checked, isLastInCard(position));
-                    cell.setOnClickListener(v -> {
-                        boolean newValue = !preferences.getBoolean(finalKey, true);
-                        preferences.edit().putBoolean(finalKey, newValue).apply();
-                        int adapterPosition = holder.getAdapterPosition();
-                        if (adapterPosition != RecyclerView.NO_POSITION) {
-                            adapter.notifyItemChanged(adapterPosition);
-                            if (position == ROW_BACKGROUND_ANIMATION) {
-                                adapter.notifyItemChanged(ROW_ANIMATION_INTENSITY_SLIDER);
-                            }
-                        }
-                    });
-                    break;
-
-                case 2: // Slider
-                    FrameLayout sliderContainer = (FrameLayout) holder.itemView;
-                    SeekBar slider = null;
-                    if (sliderContainer.getChildCount() > 0 && sliderContainer.getChildAt(0) instanceof SeekBar) {
-                        slider = (SeekBar) sliderContainer.getChildAt(0);
-                    }
-                    if (slider != null) {
-                        boolean animationEnabled = preferences.getBoolean("background_animation", true);
-                        slider.setProgress(preferences.getInt("animation_intensity", 70));
-                        slider.setEnabled(animationEnabled);
-                        slider.setAlpha(animationEnabled ? 1f : 0.45f);
-                    }
-                    break;
-
-                case 3: // TextSettingsCell
-                    TextSettingsCell settingsCell = (TextSettingsCell) holder.itemView;
-                    if (position == ROW_SKIN) {
-                        int skinIndex = preferences.getInt("character_skin", 0);
-                        String[] skins = {"Sky Blue", "Mint Green", "Sunset"};
-                        settingsCell.setTextAndValue("Character Skin", skins[Math.min(skinIndex, 2)], !isLastInCard(position));
-                        settingsCell.setOnClickListener(v -> {
-                            int current = preferences.getInt("character_skin", 0);
-                            int next = (current + 1) % 3;
-                            preferences.edit().putInt("character_skin", next).apply();
-                            int adapterPosition = holder.getAdapterPosition();
-                            if (adapterPosition != RecyclerView.NO_POSITION) {
-                                adapter.notifyItemChanged(adapterPosition);
-                            }
-                        });
-                    } else if (position == ROW_PERSONA) {
-                        int personaIndex = preferences.getInt("persona_preset", 0);
-                        String[] personas = {"Friendly Helper", "Playful Teaser", "Wise Mentor"};
-                        settingsCell.setTextAndValue("Assistant Persona", personas[Math.min(personaIndex, 2)], isLastInCard(position));
-                        settingsCell.setOnClickListener(v -> {
-                            int current = preferences.getInt("persona_preset", 0);
-                            int next = (current + 1) % 3;
-                            preferences.edit().putInt("persona_preset", next).apply();
-                            int adapterPosition = holder.getAdapterPosition();
-                            if (adapterPosition != RecyclerView.NO_POSITION) {
-                                adapter.notifyItemChanged(adapterPosition);
-                            }
-                        });
-                    }
-                    break;
-
-                case 4: // HeaderCell
-                    HeaderCell headerCell = (HeaderCell) holder.itemView;
-                    if (position == ROW_GENERAL_HEADER) {
-                        headerCell.setText("General");
-                    } else if (position == ROW_APPEARANCE_HEADER) {
-                        headerCell.setText("Appearance");
-                    } else if (position == ROW_BEHAVIOR_HEADER) {
-                        headerCell.setText("Behavior");
-                    }
-                    break;
-
-                case 6: // Section label
-                    TextView sectionLabel = (TextView) holder.itemView;
-                    if (position == ROW_GENERAL_SECTION) {
-                        sectionLabel.setText("GENERAL");
-                    } else if (position == ROW_APPEARANCE_SECTION) {
-                        sectionLabel.setText("APPEARANCE");
-                    } else if (position == ROW_BEHAVIOR_SECTION) {
-                        sectionLabel.setText("BEHAVIOR");
-                    }
-                    break;
+        intensitySeekBar = new SeekBar(context);
+        intensitySeekBar.setMax(100);
+        intensitySeekBar.setProgress(preferences.getInt("animation_intensity", 70));
+        intensitySeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                preferences.edit().putInt("animation_intensity", progress).apply();
             }
-        }
 
-        private boolean isLastInCard(int position) {
-            return (position == ROW_PERSONA) || (position == ROW_REACTION_BUBBLES) || (position == ROW_ANIMATION_INTENSITY_SLIDER);
-        }
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
 
-        private boolean isDarkTheme() {
-            return Theme.getActiveTheme().isDark();
-        }
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+        });
+        row.addView(intensitySeekBar, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_VERTICAL));
+        return row;
+    }
 
-        @Override
-        public boolean isEnabled(RecyclerView.ViewHolder holder) {
-            int viewType = getItemViewType(holder.getAdapterPosition());
-            return viewType == 0 || viewType == 3;
+    private void applyBackgroundState(boolean enabled) {
+        if (backgroundView != null) {
+            backgroundView.setVisibility(enabled ? View.VISIBLE : View.GONE);
         }
+        if (rootFrame != null) {
+            rootFrame.setBackgroundColor(enabled ? Color.TRANSPARENT : Theme.getColor(Theme.key_windowBackgroundGray));
+        }
+        if (intensitySeekBar != null) {
+            intensitySeekBar.setEnabled(enabled);
+            intensitySeekBar.setAlpha(enabled ? 1f : 0.45f);
+        }
+    }
+
+    private String getSkinName() {
+        int skinIndex = preferences.getInt("character_skin", 0);
+        String[] skins = {"Sky Blue", "Mint Green", "Sunset"};
+        return skins[Math.min(skinIndex, 2)];
+    }
+
+    private String getPersonaName() {
+        int personaIndex = preferences.getInt("persona_preset", 0);
+        String[] personas = {"Friendly Helper", "Playful Teaser", "Wise Mentor"};
+        return personas[Math.min(personaIndex, 2)];
+    }
+
+    private interface OnToggleChanged {
+        void onChanged(boolean enabled);
     }
 
     @Override
