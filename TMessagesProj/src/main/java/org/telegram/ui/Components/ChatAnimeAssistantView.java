@@ -103,11 +103,6 @@ public class ChatAnimeAssistantView extends FrameLayout {
 
         preferences = context.getSharedPreferences("ai_assistant_prefs", Context.MODE_PRIVATE);
 
-        if (!preferences.getBoolean("assistant_enabled", true)) {
-            setVisibility(GONE);
-            return;
-        }
-
         panelScrim = new View(context);
         panelScrim.setBackgroundColor(0x33000000);
         panelScrim.setVisibility(GONE);
@@ -281,7 +276,11 @@ public class ChatAnimeAssistantView extends FrameLayout {
         addMessageBubble("Try long-press to switch my style.", false, false);
 
         lastFrameTime = SystemClock.uptimeMillis();
-        postOnAnimation(frameRunnable);
+        if (preferences.getBoolean("assistant_enabled", true)) {
+            postOnAnimation(frameRunnable);
+        } else {
+            setVisibility(GONE);
+        }
     }
 
     private void setupKeyboardListener() {
