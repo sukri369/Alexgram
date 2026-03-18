@@ -301,73 +301,10 @@ public class ChatAnimeAssistantView extends FrameLayout {
 
     private void setupKeyboardListener() {
         getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            private int lastHeight = 0;
+            private int lastInset = 0;
 
             @Override
             public void onGlobalLayout() {
-                int height = getRootView().getHeight() - (getHeight() + getTop());
-                if (height > 100 && height != lastHeight) {
-                    keyboardHeight = height;
-                    if (preferences.getBoolean("keyboard_auto_hide", true) && panelOpened) {
-                        animatePanelUpForKeyboard(height);
-                    }
-                    lastHeight = height;
-                } else if (height < 100 && lastHeight > 100) {
-                    if (preferences.getBoolean("keyboard_auto_hide", true) && panelOpened) {
-                        animatePanelDownFromKeyboard();
-                    }
-                    lastHeight = 0;
-                }
-            }
-        });
-    }
-
-    private void setupPanelDragging() {
-        panelContainer.setOnTouchListener((v, event) -> {
-            if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                downX = event.getRawX();
-                downY = event.getRawY();
-                startTx = panelContainer.getTranslationX();
-                startTy = panelContainer.getTranslationY();
-                return true;
-            } else if (event.getAction() == MotionEvent.ACTION_MOVE) {
-                float dx = event.getRawX() - downX;
-                float dy = event.getRawY() - downY;
-                panelContainer.setTranslationX(startTx + dx);
-                panelContainer.setTranslationY(startTy + dy);
-                if (preferences.getBoolean("auto_follow", true)) {
-                    updateCharacterPosition();
-                }
-                return true;
-            } else if (event.getAction() == MotionEvent.ACTION_UP || event.getAction() == MotionEvent.ACTION_CANCEL) {
-                snapPanelToBounds();
-                return true;
-            }
-            return false;
-        });
-    }
-
-    private void animatePanelUpForKeyboard(int kbHeight) {
-        int targetY = (int) (-kbHeight - AndroidUtilities.dp(16));
-        panelContainer.animate().translationY(targetY).setDuration(240).setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT).start();
-    }
-
-    private void animatePanelDownFromKeyboard() {
-        panelContainer.animate().translationY(0).setDuration(240).setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT).start();
-    }
-
-    private void snapPanelToBounds() {
-        final float maxX = Math.max(0, getWidth() - panelContainer.getWidth() - AndroidUtilities.dp(8));
-        final float clampedX = Math.max(-panelContainer.getLeft(), Math.min(maxX - panelContainer.getLeft(), panelContainer.getTranslationX()));
-        panelContainer.animate().translationX(clampedX).setDuration(280).setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT).start();
-    }
-
-    private void updateCharacterPosition() {
-        if (!preferences.getBoolean("auto_follow", true)) {
-            private int lastInset = 0;
-        }
-        float panelCenterX = panelContainer.getX() + panelContainer.getTranslationX() + panelContainer.getWidth() / 2f;
-        float targetX = panelCenterX - characterContainer.getWidth() / 2f - AndroidUtilities.dp(60);
                 if (!panelOpened || !preferences.getBoolean("keyboard_auto_hide", true)) {
                     return;
                 }
@@ -381,15 +318,15 @@ public class ChatAnimeAssistantView extends FrameLayout {
                     keyboardShiftY = -Math.max(0, inset - AndroidUtilities.dp(12));
                 } else {
                     keyboardShiftY = 0f;
-    public void onResume() {
+                }
                 animateLinkedToCurrent();
                 lastInset = inset;
-        if (paused) {
-            paused = false;
-            lastFrameTime = SystemClock.uptimeMillis();
-            postOnAnimation(frameRunnable);
-        }
+            }
+        });
     }
+
+    private void setupPanelDragging() {
+        panelContainer.setOnTouchListener((v, event) -> {
             switch (event.getActionMasked()) {
                 case MotionEvent.ACTION_DOWN:
                     panelDragAllowed = event.getY() <= AndroidUtilities.dp(56);
@@ -408,7 +345,8 @@ public class ChatAnimeAssistantView extends FrameLayout {
                     }
                     float dx = event.getRawX() - downX;
                     float dy = event.getRawY() - downY;
-                    if (!panelDragging && (Math.abs(dx) > ViewConfiguration.get(getContext()).getScaledTouchSlop() || Math.abs(dy) > ViewConfiguration.get(getContext()).getScaledTouchSlop())) {
+                    int touchSlop = ViewConfiguration.get(getContext()).getScaledTouchSlop();
+                    if (!panelDragging && (Math.abs(dx) > touchSlop || Math.abs(dy) > touchSlop)) {
                         panelDragging = true;
                     }
                     if (!panelDragging) {
@@ -511,6 +449,60 @@ public class ChatAnimeAssistantView extends FrameLayout {
         inputField.requestFocus();
         AndroidUtilities.showKeyboard(inputField);
     }
+
+    public void setAssistantRequestDelegate(@Nullable AssistantRequestDelegate assistantRequestDelegate) {
+        this.assistantRequestDelegate = assistantRequestDelegate;
+    }
+
+    public void onPause() {
+        paused = true;
+        removeCallbacks(frameRunnable);
+    }
+
+    public void onResume() {
+        if (paused) {
+            paused = false;
+            lastFrameTime = SystemClock.uptimeMillis();
+            postOnAnimation(frameRunnable);
+        }
+    }
+
+    public void onDestroy() {
+        removeCallbacks(frameRunnable);
+        if (typingRunnable != null) {
+            AndroidUtilities.cancelRunOnUIThread(typingRunnable);
+            typingRunnable = null;
+        }
+    }
+
+    public void onTypingStateChanged(boolean active) {
+        typingActive = active;
+        if (active && preferences.getBoolean("reaction_bubbles", true)) {
+            characterView.onTypingPulse();
+            showReactionBubble("✍️");
+        }
+    }
+
+    public void onChatScrolled(int dy) {
+        if (Math.abs(dy) < 2) {
+            return;
+        }
+        scrollEnergy = Math.min(1f, scrollEnergy + Math.abs(dy) / 140f);
+        characterView.onScrollImpulse(dy);
+        if (Math.abs(dy) > AndroidUtilities.dp(4) && preferences.getBoolean("reaction_bubbles", true)) {
+            showReactionBubble(dy > 0 ? "👀" : "✨");
+        }
+    }
+
+    private void snapToBounds() {
+        final float maxX = Math.max(0, getWidth() - characterContainer.getWidth() - AndroidUtilities.dp(4));
+        final float maxY = Math.max(0, getHeight() - characterContainer.getHeight() - AndroidUtilities.dp(84));
+        final float targetX = characterContainer.getX() + characterContainer.getTranslationX() > getWidth() * 0.5f ? maxX - characterContainer.getLeft() : -characterContainer.getLeft();
+        final float clampedY = Math.max(-characterContainer.getTop(), Math.min(maxY - characterContainer.getTop(), characterContainer.getTranslationY()));
+        characterContainer.animate()
+                .translationX(targetX)
+                .translationY(clampedY)
+                .setDuration(280)
                 .setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT)
                 .start();
     }
