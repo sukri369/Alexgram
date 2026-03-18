@@ -40,8 +40,15 @@ import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.ui.ActionBar.Theme;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+
+import tw.nekomimi.nekogram.config.ConfigItem;
+import xyz.nextalone.nagram.NaConfig;
 
 public class ChatAnimeAssistantView extends FrameLayout {
 
@@ -662,6 +669,14 @@ public class ChatAnimeAssistantView extends FrameLayout {
         }
         inputField.setText("");
         addMessageBubble(prompt, true, false);
+
+        String localSettingsReply = handleLocalSettingsCommand(prompt);
+        if (!TextUtils.isEmpty(localSettingsReply)) {
+            addMessageBubble(localSettingsReply, false, true);
+            showReactionBubble("⚙️");
+            return;
+        }
+
         showTypingBubble();
         characterView.onSendPrompt();
 
@@ -687,6 +702,221 @@ public class ChatAnimeAssistantView extends FrameLayout {
                 });
             }
         });
+    }
+
+    private String handleLocalSettingsCommand(String prompt) {
+        String normalized = normalizeSettingText(prompt);
+        if (TextUtils.isEmpty(normalized)) {
+            return null;
+        }
+
+        boolean asksList = normalized.contains("list") && (normalized.contains("a settings") || normalized.contains("settings"));
+        if (asksList) {
+            return buildSettingsExamples();
+        }
+
+        int action = -1; // 1=on, 0=off, 2=toggle, 3=status
+        if (normalized.contains("turn off") || normalized.contains("disable") || normalized.contains("hide") || normalized.contains("deactivate")) {
+            action = 0;
+        } else if (normalized.contains("turn on") || normalized.contains("enable") || normalized.contains("show") || normalized.contains("activate")) {
+            action = 1;
+        } else if (normalized.contains("toggle") || normalized.contains("switch")) {
+            action = 2;
+        } else if (normalized.startsWith("is ") || normalized.contains(" status") || normalized.contains(" state")) {
+            action = 3;
+        }
+
+        if (action == -1) {
+            return null;
+        }
+
+        String featureQuery = normalized;
+        featureQuery = featureQuery.replace("turn off", "").replace("turn on", "");
+        featureQuery = featureQuery.replace("disable", "").replace("enable", "");
+        featureQuery = featureQuery.replace("hide", "").replace("show", "");
+        featureQuery = featureQuery.replace("deactivate", "").replace("activate", "");
+        featureQuery = featureQuery.replace("toggle", "").replace("switch", "");
+        featureQuery = featureQuery.replace("status", "").replace("state", "").replace("is", "");
+        featureQuery = featureQuery.replace("a settings", "").replace("settings", "").replace("feature", "");
+        featureQuery = featureQuery.replace("please", "").replace("assistant", "").replace("alexgram", "").trim();
+
+        if (TextUtils.isEmpty(featureQuery)) {
+            return "Tell me the feature name too, for example: turn off pill chat title.";
+        }
+
+        ConfigMatch match = findBestBooleanConfigMatch(featureQuery);
+        if (match == null || match.item == null) {
+            return "I could not find that A-Setting. Try the exact name from A-Settings, for example: turn off pill chat title.";
+        }
+
+        String prettyName = humanizeSettingName(match.readableName);
+        boolean current = match.item.Bool();
+        boolean updated = current;
+
+        if (action == 1) {
+            updated = true;
+            match.item.setConfigBool(true);
+        } else if (action == 0) {
+            updated = false;
+            match.item.setConfigBool(false);
+        } else if (action == 2) {
+            updated = match.item.toggleConfigBool();
+        }
+
+        if (action == 3) {
+            return prettyName + " is currently " + (current ? "ON." : "OFF.");
+        }
+        return prettyName + " turned " + (updated ? "ON." : "OFF.");
+    }
+
+    private String buildSettingsExamples() {
+        List<String> examples = new ArrayList<>();
+        examples.add("- turn off pill chat title");
+        examples.add("- turn on hide stories from header");
+        examples.add("- disable reactions");
+        examples.add("- toggle center action bar title");
+        examples.add("- is folder name as title on");
+        return "You can control A-Settings here. Try:\n" + TextUtils.join("\n", examples);
+    }
+
+    private ConfigMatch findBestBooleanConfigMatch(String featureQuery) {
+        String query = normalizeSettingText(featureQuery);
+        if (TextUtils.isEmpty(query)) {
+            return null;
+        }
+
+        Method[] methods = NaConfig.class.getMethods();
+        float bestScore = 0f;
+        ConfigMatch best = null;
+
+        for (Method method : methods) {
+            if (!method.getName().startsWith("get") || method.getParameterTypes().length != 0 || method.getReturnType() != ConfigItem.class) {
+                continue;
+            }
+            try {
+                Object result = method.invoke(NaConfig.INSTANCE);
+                if (!(result instanceof ConfigItem)) {
+                    continue;
+                }
+                ConfigItem item = (ConfigItem) result;
+                if (item.type != ConfigItem.configTypeBool) {
+                    continue;
+                }
+
+                String methodName = splitCamel(method.getName().substring(3));
+                String keyName = splitCamel(item.getKey());
+                float score = matchScore(query, methodName, keyName);
+                if (score > bestScore) {
+                    bestScore = score;
+                    best = new ConfigMatch(item, keyName, score);
+                }
+            } catch (Throwable ignore) {
+            }
+        }
+
+        if (best == null || best.score < 0.34f) {
+            return null;
+        }
+        return best;
+    }
+
+    private float matchScore(String query, String... candidates) {
+        Set<String> queryTokens = tokenize(query);
+        if (queryTokens.isEmpty()) {
+            return 0f;
+        }
+
+        float best = 0f;
+        for (String candidate : candidates) {
+            String normalizedCandidate = normalizeSettingText(candidate);
+            if (TextUtils.isEmpty(normalizedCandidate)) {
+                continue;
+            }
+
+            float score = 0f;
+            if (normalizedCandidate.contains(query)) {
+                score += 0.45f;
+            }
+            if (query.contains(normalizedCandidate) && normalizedCandidate.length() > 5) {
+                score += 0.2f;
+            }
+
+            Set<String> candidateTokens = tokenize(normalizedCandidate);
+            int hits = 0;
+            for (String token : queryTokens) {
+                if (candidateTokens.contains(token) || normalizedCandidate.contains(token)) {
+                    hits++;
+                }
+            }
+            score += (hits / (float) queryTokens.size()) * 0.8f;
+            best = Math.max(best, score);
+        }
+        return best;
+    }
+
+    private Set<String> tokenize(String value) {
+        Set<String> tokens = new LinkedHashSet<>();
+        String[] parts = normalizeSettingText(value).split(" ");
+        for (String part : parts) {
+            if (part.length() >= 2) {
+                tokens.add(part);
+            }
+        }
+        return tokens;
+    }
+
+    private String normalizeSettingText(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value.toLowerCase(Locale.US)
+                .replaceAll("[^a-z0-9 ]", " ")
+                .replaceAll("\\s+", " ")
+                .trim();
+    }
+
+    private String splitCamel(String value) {
+        if (value == null) {
+            return "";
+        }
+        String spaced = value.replaceAll("([a-z])([A-Z])", "$1 $2")
+                .replaceAll("([A-Z]+)([A-Z][a-z])", "$1 $2");
+        return normalizeSettingText(spaced);
+    }
+
+    private String humanizeSettingName(String value) {
+        String normalized = normalizeSettingText(value);
+        if (TextUtils.isEmpty(normalized)) {
+            return "Setting";
+        }
+        String[] parts = normalized.split(" ");
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < parts.length; i++) {
+            String part = parts[i];
+            if (part.isEmpty()) {
+                continue;
+            }
+            if (sb.length() > 0) {
+                sb.append(' ');
+            }
+            sb.append(Character.toUpperCase(part.charAt(0)));
+            if (part.length() > 1) {
+                sb.append(part.substring(1));
+            }
+        }
+        return sb.toString();
+    }
+
+    private static class ConfigMatch {
+        final ConfigItem item;
+        final String readableName;
+        final float score;
+
+        ConfigMatch(ConfigItem item, String readableName, float score) {
+            this.item = item;
+            this.readableName = readableName;
+            this.score = score;
+        }
     }
 
     private void showTypingBubble() {
