@@ -718,6 +718,7 @@ public class ChatActivity extends BaseFragment implements
     private AnimatedTextView searchOtherButton;
     private ChatActionCell floatingDateView;
     private TopicSeparator.Cell floatingTopicSeparator;
+    private ChatAnimeAssistantView chatAnimeAssistantView;
     private float intoTopViewTop;
     private ChatActionCell infoTopView;
     private int hideDateDelay = 500;
@@ -2415,6 +2416,9 @@ public class ChatActivity extends BaseFragment implements
             if (mentionContainer != null && mentionContainer.getAdapter() != null) {
                 mentionContainer.getAdapter().searchUsernameOrHashtag(text, chatActivityEnterView.getCursorPosition(), messages, false, false);
             }
+            if (chatAnimeAssistantView != null) {
+                chatAnimeAssistantView.onTypingStateChanged(!TextUtils.isEmpty(text));
+            }
             if (waitingForCharaterEnterRunnable != null) {
                 AndroidUtilities.cancelRunOnUIThread(waitingForCharaterEnterRunnable);
                 waitingForCharaterEnterRunnable = null;
@@ -3541,6 +3545,11 @@ public class ChatActivity extends BaseFragment implements
     @Override
     public void onFragmentDestroy() {
         super.onFragmentDestroy();
+        if (chatAnimeAssistantView != null) {
+            chatAnimeAssistantView.onDestroy();
+            AndroidUtilities.removeFromParent(chatAnimeAssistantView);
+            chatAnimeAssistantView = null;
+        }
         if (chatActivityEnterView != null) {
             chatActivityEnterView.onDestroy();
         }
@@ -7281,6 +7290,9 @@ public class ChatActivity extends BaseFragment implements
                 if (contentView != null) {
                     contentView.updateBlurContent();
                 }
+                if (chatAnimeAssistantView != null) {
+                    chatAnimeAssistantView.onChatScrolled(dy);
+                }
                 if (privacyBlurOverlayView != null) {
                     privacyBlurOverlayView.invalidateBlur();
                 }
@@ -9499,6 +9511,12 @@ public class ChatActivity extends BaseFragment implements
 
         if (useTabsView) {
             createTopicsTabs();
+        }
+
+        if (chatMode == 0 && !isReport() && !isInPreviewMode()) {
+            chatAnimeAssistantView = new ChatAnimeAssistantView(context, contentView);
+            chatAnimeAssistantView.setAssistantRequestDelegate((prompt, callback) -> requestAnimeAssistantReply(prompt, callback));
+            contentView.addView(chatAnimeAssistantView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
         }
 
         if (context instanceof LaunchActivity) {
@@ -30502,6 +30520,9 @@ public class ChatActivity extends BaseFragment implements
         if (starReactionsOverlay != null) {
             starReactionsOverlay.bringToFront();
         }
+        if (chatAnimeAssistantView != null) {
+            chatAnimeAssistantView.onResume();
+        }
     }
 
     public float getPullingDownOffset() {
@@ -30556,6 +30577,9 @@ public class ChatActivity extends BaseFragment implements
     @Override
     public void onPause() {
         super.onPause();
+        if (chatAnimeAssistantView != null) {
+            chatAnimeAssistantView.onPause();
+        }
         scrolling = false;
         if (scrimPopupWindow != null) {
             scrimPopupWindow.setPauseNotifications(false);
@@ -48234,6 +48258,98 @@ public class ChatActivity extends BaseFragment implements
             }
             e.printStackTrace();
         }
+    }
+
+    private void requestAnimeAssistantReply(String prompt, ChatAnimeAssistantView.AssistantRequestCallback callback) {
+        final String context = buildAnimeAssistantContext();
+        final String decoratedPrompt = "Persona: You are Alexgram's anime-style floating assistant. " +
+                "Tone: friendly, playful, slightly teasing but respectful. " +
+                "Keep responses concise, practical, and conversational. User prompt: " + prompt;
+        final String url1;
+        final String key1;
+
+        try {
+            url1 = NaConfig.INSTANCE.getAiModelUrl().String();
+            key1 = NaConfig.INSTANCE.getAiApiKey().String();
+        } catch (Throwable e) {
+            AndroidUtilities.runOnUIThread(() -> callback.onError("Config loading failed: " + e.getMessage()));
+            return;
+        }
+
+        callAiApi(url1, key1, decoratedPrompt, context, null, new AiGenerationCallback() {
+            @Override
+            public void onSuccess(String result) {
+                AndroidUtilities.runOnUIThread(() -> callback.onSuccess(result));
+            }
+
+            @Override
+            public void onError(String error) {
+                try {
+                    String url2 = NaConfig.INSTANCE.getAiModelUrl2().String();
+                    String key2 = NaConfig.INSTANCE.getAiApiKey2().String();
+                    if (TextUtils.isEmpty(url2)) {
+                        AndroidUtilities.runOnUIThread(() -> callback.onError(error));
+                        return;
+                    }
+
+                    callAiApi(url2, key2, decoratedPrompt, context, null, new AiGenerationCallback() {
+                        @Override
+                        public void onSuccess(String result) {
+                            AndroidUtilities.runOnUIThread(() -> callback.onSuccess(result));
+                        }
+
+                        @Override
+                        public void onError(String fallbackError) {
+                            AndroidUtilities.runOnUIThread(() -> callback.onError(fallbackError));
+                        }
+                    });
+                } catch (Throwable failoverCrash) {
+                    AndroidUtilities.runOnUIThread(() -> callback.onError(error + "\n(Failover crash: " + failoverCrash.getMessage() + ")"));
+                }
+            }
+        });
+    }
+
+    private String buildAnimeAssistantContext() {
+        StringBuilder sb = new StringBuilder(512);
+        sb.append("You are replying inside Alexgram chat.\n");
+        if (currentUser != null) {
+            sb.append("Dialog with user: ").append(UserObject.getForcedFirstName(currentUser)).append("\n");
+        } else if (currentChat != null) {
+            sb.append("Dialog in chat: ").append(currentChat.title).append("\n");
+        }
+
+        if (chatActivityEnterView != null) {
+            CharSequence draft = chatActivityEnterView.getFieldText();
+            if (!TextUtils.isEmpty(draft)) {
+                sb.append("Current input draft: ").append(draft).append("\n");
+            }
+        }
+
+        if (messages != null && !messages.isEmpty()) {
+            int added = 0;
+            sb.append("Recent messages:\n");
+            for (int i = 0; i < messages.size() && added < 3; i++) {
+                MessageObject messageObject = messages.get(i);
+                if (messageObject == null) {
+                    continue;
+                }
+                CharSequence text = messageObject.messageText;
+                if (TextUtils.isEmpty(text) && messageObject.caption != null) {
+                    text = messageObject.caption;
+                }
+                if (!TextUtils.isEmpty(text)) {
+                    String sample = text.toString();
+                    if (sample.length() > 160) {
+                        sample = sample.substring(0, 160) + "...";
+                    }
+                    sb.append("- ").append(sample.replace('\n', ' ')).append("\n");
+                    added++;
+                }
+            }
+        }
+
+        return sb.toString();
     }
 
     private interface AiGenerationCallback {
