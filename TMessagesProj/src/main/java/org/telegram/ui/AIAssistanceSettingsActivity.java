@@ -9,6 +9,7 @@ package org.telegram.ui;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -221,7 +222,7 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
                     cell.setOnClickListener(v -> {
                         boolean newValue = !preferences.getBoolean(finalKey, true);
                         preferences.edit().putBoolean(finalKey, newValue).apply();
-                        int adapterPosition = holder.getBindingAdapterPosition();
+                        int adapterPosition = holder.getAdapterPosition();
                         if (adapterPosition != RecyclerView.NO_POSITION) {
                             adapter.notifyItemChanged(adapterPosition);
                         }
@@ -239,7 +240,7 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
                             int current = preferences.getInt("character_skin", 0);
                             int next = (current + 1) % 3;
                             preferences.edit().putInt("character_skin", next).apply();
-                            int adapterPosition = holder.getBindingAdapterPosition();
+                            int adapterPosition = holder.getAdapterPosition();
                             if (adapterPosition != RecyclerView.NO_POSITION) {
                                 adapter.notifyItemChanged(adapterPosition);
                             }
@@ -252,7 +253,7 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
                             int current = preferences.getInt("persona_preset", 0);
                             int next = (current + 1) % 3;
                             preferences.edit().putInt("persona_preset", next).apply();
-                            int adapterPosition = holder.getBindingAdapterPosition();
+                            int adapterPosition = holder.getAdapterPosition();
                             if (adapterPosition != RecyclerView.NO_POSITION) {
                                 adapter.notifyItemChanged(adapterPosition);
                             }
