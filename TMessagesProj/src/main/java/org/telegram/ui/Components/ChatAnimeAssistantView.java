@@ -153,7 +153,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
         panelContainer.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(14), AndroidUtilities.dp(14), AndroidUtilities.dp(12));
 
         final GradientDrawable panelShape = new GradientDrawable();
-        panelShape.setCornerRadius(AndroidUtilities.dp(26));
+        panelShape.setCornerRadius(AndroidUtilities.dp(32));
         panelShape.setColor(0xB8192B43);
         panelShape.setStroke(AndroidUtilities.dp(1), 0x66FFFFFF);
         panelContainer.setBackground(panelShape);
@@ -384,8 +384,10 @@ public class ChatAnimeAssistantView extends FrameLayout {
     private void applyLinkedPositions(boolean animated) {
         float panelTx = panelBaseTx;
         float panelTy = panelBaseTy + keyboardShiftY;
-        float characterTx = panelBaseTx + getCharacterLinkedOffsetX();
-        float characterTy = panelBaseTy + getCharacterLinkedOffsetY() + keyboardShiftY;
+        float panelLeft = panelContainer.getLeft() + panelTx;
+        float panelTop = panelContainer.getTop() + panelTy;
+        float characterTx = panelLeft + getCharacterLinkedOffsetX() - characterContainer.getLeft();
+        float characterTy = panelTop + getCharacterLinkedOffsetY() - characterContainer.getTop();
 
         if (animated) {
             panelContainer.animate().translationX(panelTx).translationY(panelTy).setDuration(260).setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT).start();
@@ -517,9 +519,11 @@ public class ChatAnimeAssistantView extends FrameLayout {
         panelScrim.setVisibility(VISIBLE);
         panelContainer.setVisibility(VISIBLE);
         dockPanelToTopLeftMerged(false);
-        characterContainer.bringToFront();
-        panelContainer.bringToFront();
-        characterContainer.bringToFront();
+        post(() -> {
+            dockPanelToTopLeftMerged(false);
+            panelContainer.bringToFront();
+            characterContainer.bringToFront();
+        });
         panelScrim.animate().alpha(1f).setDuration(220).start();
         panelContainer.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(220).setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT).start();
         characterView.onOpenPanel();
