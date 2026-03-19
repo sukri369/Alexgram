@@ -9188,13 +9188,25 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             args.putLong("chat_id", -dialogId);
         }
         args.putInt("dialog_folder_id", folderId);
-        args.putInt("dialog_filter_id", filterId);
+        args.putInt("dialog_filter_id", getCurrentDialogFilterIdForAssistant());
 
         if (!getMessagesController().checkCanOpenChat(args, this)) {
             return false;
         }
         presentFragment(new ChatActivity(args));
         return true;
+    }
+
+    private int getCurrentDialogFilterIdForAssistant() {
+        int dialogsType = initialDialogsType;
+        if (viewPages != null && viewPages.length > 0 && viewPages[0] != null && viewPages[0].dialogsAdapter != null) {
+            dialogsType = viewPages[0].dialogsAdapter.getDialogsType();
+        }
+        if (dialogsType == DIALOGS_TYPE_FOLDER1 || dialogsType == DIALOGS_TYPE_FOLDER2) {
+            MessagesController.DialogFilter dialogFilter = getMessagesController().selectedDialogFilter[dialogsType == DIALOGS_TYPE_FOLDER1 ? 0 : 1];
+            return dialogFilter == null ? 0 : dialogFilter.id;
+        }
+        return 0;
     }
 
     private void requestHomeAssistantReply(String prompt, ChatAnimeAssistantView.AssistantRequestCallback callback) {
