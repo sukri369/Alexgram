@@ -783,6 +783,26 @@ public class ChatAnimeAssistantView extends FrameLayout {
             return false;
         }
 
+        if (normalized.contains("open chat") || normalized.contains("go to chat") || normalized.startsWith("open ")) {
+            String chatName = extractChatNameQuery(prompt, normalized);
+            if (TextUtils.isEmpty(chatName)) {
+                addMessageBubble("Tell me chat name, for example: open chat family.", false, true);
+                return true;
+            }
+            executeLocalAction("open_chat_by_name", chatName, "Opening chat...");
+            return true;
+        }
+
+        if (normalized.contains("unread") && (normalized.contains("scroll") || normalized.contains("jump") || normalized.contains("go") || normalized.contains("open"))) {
+            executeLocalAction("scroll_unread", "", "Finding unread chats...");
+            return true;
+        }
+
+        if (normalized.contains("list chats") || normalized.contains("show chats") || normalized.contains("chat list") || normalized.contains("list dialogs")) {
+            executeLocalAction("list_chats", "", "Collecting chats...");
+            return true;
+        }
+
         if (normalized.contains("find message") || normalized.contains("search message") || normalized.contains("find msg") || normalized.contains("search msg") || normalized.startsWith("find ") || normalized.startsWith("search ")) {
             String query = extractSearchQuery(prompt, normalized);
             if (TextUtils.isEmpty(query)) {
@@ -867,6 +887,22 @@ public class ChatAnimeAssistantView extends FrameLayout {
             query = query.replaceFirst("(?i)^find\\s+", "");
         } else if (normalizedPrompt.startsWith("search ")) {
             query = query.replaceFirst("(?i)^search\\s+", "");
+        }
+        return query.trim();
+    }
+
+    private String extractChatNameQuery(String originalPrompt, String normalizedPrompt) {
+        if (TextUtils.isEmpty(originalPrompt)) {
+            return "";
+        }
+        String query = originalPrompt.trim();
+        String normalized = " " + normalizedPrompt + " ";
+        if (normalized.contains(" open chat ")) {
+            query = query.replaceFirst("(?i)^.*open\\s+chat\\s+", "");
+        } else if (normalized.contains(" go to chat ")) {
+            query = query.replaceFirst("(?i)^.*go\\s+to\\s+chat\\s+", "");
+        } else if (normalizedPrompt.startsWith("open ")) {
+            query = query.replaceFirst("(?i)^open\\s+", "");
         }
         return query.trim();
     }

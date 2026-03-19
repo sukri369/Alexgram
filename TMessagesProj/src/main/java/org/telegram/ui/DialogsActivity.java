@@ -52,6 +52,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.text.TextUtils;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
@@ -94,6 +95,20 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.LinearSmoothScrollerCustom;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager.widget.ViewPager;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 import com.radolyn.ayugram.utils.LastSeenHelper;
 
@@ -4959,7 +4974,12 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             homeAnimeAssistantView.setAssistantRequestDelegate(new ChatAnimeAssistantView.AssistantRequestDelegate() {
                 @Override
                 public void onRequest(String prompt, ChatAnimeAssistantView.AssistantRequestCallback callback) {
-                    callback.onSuccess("Home assistant is ready. For chat actions and auto-reply, open any chat.");
+                    requestHomeAssistantReply(prompt, callback);
+                }
+
+                @Override
+                public void onAction(String action, String argument, ChatAnimeAssistantView.AssistantRequestCallback callback) {
+                    executeHomeAssistantAction(action, argument, callback);
                 }
             });
             contentView.addView(homeAnimeAssistantView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
@@ -8969,6 +8989,381 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 && folderId == 0
                 && TextUtils.isEmpty(searchString)
                 && !(this instanceof tw.nekomimi.nekogram.ui.HiddenChatsActivity);
+    }
+
+    private void executeHomeAssistantAction(String action, String argument, ChatAnimeAssistantView.AssistantRequestCallback callback) {
+        AndroidUtilities.runOnUIThread(() -> {
+            try {
+                String normalizedAction = action == null ? "" : action.trim().toLowerCase();
+                String normalizedArgument = argument == null ? "" : argument.trim();
+
+                if ("open_chat_by_name".equals(normalizedAction)) {
+                    if (TextUtils.isEmpty(normalizedArgument)) {
+                        callback.onError("Tell me a chat name, for example: open chat family.");
+                        return;
+                    }
+                    String result = openDialogByNameFromAssistant(normalizedArgument);
+                    if (result == null) {
+                        callback.onError("I could not find that chat in your main list.");
+                    } else {
+                        callback.onSuccess(result);
+                    }
+                    return;
+                }
+
+                if ("scroll_unread".equals(normalizedAction)) {
+                    String result = scrollToUnreadDialogFromAssistant();
+                    if (result == null) {
+                        callback.onError("No unread chats found right now.");
+                    } else {
+                        callback.onSuccess(result);
+                    }
+                    return;
+                }
+
+                if ("list_chats".equals(normalizedAction)) {
+                    callback.onSuccess(listTopChatsForAssistant());
+                    return;
+                }
+
+                if ("find_message".equals(normalizedAction) || "play_media".equals(normalizedAction)) {
+                    callback.onSuccess("This action works inside a chat. Open any chat and ask again.");
+                    return;
+                }
+
+                if ("scroll_chat".equals(normalizedAction)) {
+                    if (viewPages == null || viewPages.length == 0 || viewPages[0] == null || viewPages[0].listView == null) {
+                        callback.onError("Chat list is not ready yet.");
+                        return;
+                    }
+                    int delta = AndroidUtilities.dp(480);
+                    String direction = TextUtils.isEmpty(normalizedArgument) ? "down" : normalizedArgument.toLowerCase();
+                    if ("up".equals(direction)) {
+                        viewPages[0].listView.smoothScrollBy(0, -delta);
+                        callback.onSuccess("Scrolled up in chat list.");
+                    } else if ("top".equals(direction)) {
+                        int position = hasHiddenArchive() ? 1 : 0;
+                        viewPages[0].layoutManager.scrollToPositionWithOffset(position, (int) scrollYOffset);
+                        callback.onSuccess("Jumped to top of chat list.");
+                    } else {
+                        viewPages[0].listView.smoothScrollBy(0, delta);
+                        callback.onSuccess("Scrolled down in chat list.");
+                    }
+                    return;
+                }
+
+                callback.onError("That action is not available on home yet.");
+            } catch (Throwable t) {
+                callback.onError("Could not run action: " + t.getMessage());
+            }
+        });
+    }
+
+    private String openDialogByNameFromAssistant(String query) {
+        if (viewPages == null || viewPages.length == 0 || viewPages[0] == null) {
+            return null;
+        }
+        ArrayList<TLRPC.Dialog> dialogs = getDialogsArray(currentAccount, viewPages[0].dialogsType, folderId, false);
+        if (dialogs == null || dialogs.isEmpty()) {
+            return null;
+        }
+
+        String normalizedQuery = query.toLowerCase().trim();
+        long bestDialogId = 0;
+        String bestTitle = null;
+        int bestScore = -1;
+
+        for (int i = 0; i < dialogs.size(); i++) {
+            TLRPC.Dialog dialog = dialogs.get(i);
+            if (dialog == null) {
+                continue;
+            }
+            String title = getDialogTitleForAssistant(dialog.id);
+            if (TextUtils.isEmpty(title)) {
+                continue;
+            }
+            String normalizedTitle = title.toLowerCase().trim();
+            int score = 0;
+            if (normalizedTitle.equals(normalizedQuery)) {
+                score = 100;
+            } else if (normalizedTitle.startsWith(normalizedQuery)) {
+                score = 85;
+            } else if (normalizedTitle.contains(normalizedQuery)) {
+                score = 70;
+            } else if (normalizedQuery.contains(normalizedTitle) && normalizedTitle.length() > 2) {
+                score = 60;
+            }
+            if (score > bestScore) {
+                bestScore = score;
+                bestDialogId = dialog.id;
+                bestTitle = title;
+            }
+        }
+
+        if (bestScore < 60 || bestDialogId == 0) {
+            return null;
+        }
+
+        if (!openDialogFromAssistant(bestDialogId)) {
+            return "I found \"" + bestTitle + "\" but could not open it right now.";
+        }
+        return "Opened chat: " + bestTitle;
+    }
+
+    private String scrollToUnreadDialogFromAssistant() {
+        if (viewPages == null || viewPages.length == 0 || viewPages[0] == null) {
+            return null;
+        }
+        ArrayList<TLRPC.Dialog> dialogs = getDialogsArray(currentAccount, viewPages[0].dialogsType, folderId, false);
+        if (dialogs == null || dialogs.isEmpty()) {
+            return null;
+        }
+        for (int i = 0; i < dialogs.size(); i++) {
+            TLRPC.Dialog dialog = dialogs.get(i);
+            if (dialog != null && (dialog.unread_count > 0 || dialog.unread_mark)) {
+                int position = i;
+                if (viewPages[0].dialogsType == DIALOGS_TYPE_DEFAULT && hasHiddenArchive()) {
+                    position += 1;
+                }
+                viewPages[0].layoutManager.scrollToPositionWithOffset(position, (int) scrollYOffset);
+                String title = getDialogTitleForAssistant(dialog.id);
+                return "Jumped to unread chat: " + (TextUtils.isEmpty(title) ? "Unknown" : title);
+            }
+        }
+        return null;
+    }
+
+    private String listTopChatsForAssistant() {
+        if (viewPages == null || viewPages.length == 0 || viewPages[0] == null) {
+            return "Chat list is not ready yet.";
+        }
+        ArrayList<TLRPC.Dialog> dialogs = getDialogsArray(currentAccount, viewPages[0].dialogsType, folderId, false);
+        if (dialogs == null || dialogs.isEmpty()) {
+            return "No chats available in this tab yet.";
+        }
+        ArrayList<String> lines = new ArrayList<>();
+        int limit = Math.min(8, dialogs.size());
+        for (int i = 0; i < limit; i++) {
+            TLRPC.Dialog dialog = dialogs.get(i);
+            if (dialog == null) {
+                continue;
+            }
+            String title = getDialogTitleForAssistant(dialog.id);
+            if (TextUtils.isEmpty(title)) {
+                continue;
+            }
+            boolean unread = dialog.unread_count > 0 || dialog.unread_mark;
+            lines.add((i + 1) + ". " + title + (unread ? " (unread)" : ""));
+        }
+        if (lines.isEmpty()) {
+            return "No chats available in this tab yet.";
+        }
+        return "Top chats:\n" + TextUtils.join("\n", lines);
+    }
+
+    private String getDialogTitleForAssistant(long dialogId) {
+        if (DialogObject.isUserDialog(dialogId)) {
+            TLRPC.User user = getMessagesController().getUser(dialogId);
+            return user != null ? UserObject.getUserName(user) : null;
+        }
+        if (DialogObject.isEncryptedDialog(dialogId)) {
+            TLRPC.EncryptedChat encryptedChat = getMessagesController().getEncryptedChat(DialogObject.getEncryptedChatId(dialogId));
+            if (encryptedChat != null) {
+                TLRPC.User user = getMessagesController().getUser(encryptedChat.user_id);
+                return user != null ? UserObject.getUserName(user) : null;
+            }
+            return null;
+        }
+        TLRPC.Chat chat = getMessagesController().getChat(-dialogId);
+        return chat != null ? chat.title : null;
+    }
+
+    private boolean openDialogFromAssistant(long dialogId) {
+        Bundle args = new Bundle();
+        if (DialogObject.isEncryptedDialog(dialogId)) {
+            args.putInt("enc_id", DialogObject.getEncryptedChatId(dialogId));
+        } else if (DialogObject.isUserDialog(dialogId)) {
+            args.putLong("user_id", dialogId);
+        } else {
+            args.putLong("chat_id", -dialogId);
+        }
+        args.putInt("dialog_folder_id", folderId);
+        args.putInt("dialog_filter_id", filterId);
+
+        if (!getMessagesController().checkCanOpenChat(args, this)) {
+            return false;
+        }
+        presentFragment(new ChatActivity(args));
+        return true;
+    }
+
+    private void requestHomeAssistantReply(String prompt, ChatAnimeAssistantView.AssistantRequestCallback callback) {
+        final String context = buildHomeAssistantContext();
+        final String decoratedPrompt = "Persona: You are Alexgram home assistant. " +
+                "Tone: concise, practical, and friendly. " +
+                "You are on the main chats screen. Suggest direct actions when possible. " +
+                "User prompt: " + prompt;
+        final String url1;
+        final String key1;
+
+        try {
+            url1 = NaConfig.INSTANCE.getAiModelUrl().String();
+            key1 = NaConfig.INSTANCE.getAiApiKey().String();
+        } catch (Throwable e) {
+            callback.onError("Config loading failed: " + e.getMessage());
+            return;
+        }
+
+        callHomeAssistantApi(url1, key1, decoratedPrompt, context, new ChatAnimeAssistantView.AssistantRequestCallback() {
+            @Override
+            public void onSuccess(String response) {
+                callback.onSuccess(response);
+            }
+
+            @Override
+            public void onError(String error) {
+                try {
+                    String url2 = NaConfig.INSTANCE.getAiModelUrl2().String();
+                    String key2 = NaConfig.INSTANCE.getAiApiKey2().String();
+                    if (TextUtils.isEmpty(url2)) {
+                        callback.onError(error);
+                        return;
+                    }
+                    callHomeAssistantApi(url2, key2, decoratedPrompt, context, callback);
+                } catch (Throwable failoverCrash) {
+                    callback.onError(error + "\n(Failover crash: " + failoverCrash.getMessage() + ")");
+                }
+            }
+        });
+    }
+
+    private String buildHomeAssistantContext() {
+        StringBuilder sb = new StringBuilder(400);
+        sb.append("Context: Alexgram home/main chats list.\n");
+        sb.append("Actions available: open chat by name, jump to unread, list chats, scroll list.\n");
+        if (viewPages != null && viewPages.length > 0 && viewPages[0] != null) {
+            ArrayList<TLRPC.Dialog> dialogs = getDialogsArray(currentAccount, viewPages[0].dialogsType, folderId, false);
+            if (dialogs != null) {
+                sb.append("Visible dialogs count: ").append(dialogs.size()).append("\n");
+            }
+        }
+        sb.append("If asked to perform action, answer briefly and suggest exact command phrasing.");
+        return sb.toString();
+    }
+
+    private void callHomeAssistantApi(String apiUrl,
+                                      String apiKey,
+                                      String userPrompt,
+                                      String context,
+                                      ChatAnimeAssistantView.AssistantRequestCallback callback) {
+        if (TextUtils.isEmpty(apiUrl)) {
+            callback.onError("API URL is not configured.");
+            return;
+        }
+
+        final boolean isGeminiNative = (apiUrl.contains("generativelanguage.googleapis.com") || apiUrl.contains("googleapis.com")) && !apiUrl.contains("openai");
+        String finalUrl = apiUrl;
+        if (isGeminiNative && !apiUrl.contains(":generateContent")) {
+            finalUrl = apiUrl.endsWith("/") ? apiUrl.substring(0, apiUrl.length() - 1) + ":generateContent" : apiUrl + ":generateContent";
+        }
+
+        try {
+            OkHttpClient client = new OkHttpClient.Builder()
+                    .connectTimeout(30, TimeUnit.SECONDS)
+                    .readTimeout(60, TimeUnit.SECONDS)
+                    .build();
+
+            JSONObject jsonBody = new JSONObject();
+            if (isGeminiNative) {
+                JSONArray contents = new JSONArray();
+                JSONObject contentObj = new JSONObject();
+                JSONArray parts = new JSONArray();
+                JSONObject textPart = new JSONObject();
+                textPart.put("text", context + "\n\n" + userPrompt);
+                parts.put(textPart);
+                contentObj.put("parts", parts);
+                contents.put(contentObj);
+                jsonBody.put("contents", contents);
+            } else {
+                jsonBody.put("model", "gpt-4o");
+                JSONArray messages = new JSONArray();
+
+                JSONObject systemMsg = new JSONObject();
+                systemMsg.put("role", "system");
+                systemMsg.put("content", "You are Alexgram home assistant. Be concise and practical.");
+                messages.put(systemMsg);
+
+                JSONObject userMsg = new JSONObject();
+                userMsg.put("role", "user");
+                userMsg.put("content", context + "\n\n" + userPrompt);
+                messages.put(userMsg);
+
+                jsonBody.put("messages", messages);
+            }
+
+            Request.Builder requestBuilder = new Request.Builder()
+                    .url(finalUrl)
+                    .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), jsonBody.toString()));
+
+            if (!TextUtils.isEmpty(apiKey)) {
+                if (isGeminiNative) {
+                    requestBuilder.addHeader("x-goog-api-key", apiKey);
+                } else {
+                    requestBuilder.addHeader("Authorization", "Bearer " + apiKey);
+                }
+            }
+
+            client.newCall(requestBuilder.build()).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    callback.onError(e.getMessage());
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    try {
+                        String responseBody = response.body() != null ? response.body().string() : "";
+                        if (!response.isSuccessful()) {
+                            callback.onError("HTTP " + response.code() + ": " + responseBody);
+                            return;
+                        }
+
+                        JSONObject jsonResponse = new JSONObject(responseBody);
+                        if (isGeminiNative) {
+                            if (jsonResponse.has("candidates")) {
+                                JSONArray candidates = jsonResponse.getJSONArray("candidates");
+                                if (candidates.length() > 0) {
+                                    JSONObject candidate = candidates.getJSONObject(0);
+                                    if (candidate.has("content")) {
+                                        JSONObject content = candidate.getJSONObject("content");
+                                        JSONArray parts = content.getJSONArray("parts");
+                                        if (parts.length() > 0) {
+                                            callback.onSuccess(parts.getJSONObject(0).optString("text", ""));
+                                            return;
+                                        }
+                                    }
+                                }
+                            }
+                            callback.onError("No text generated.");
+                        } else {
+                            if (jsonResponse.has("choices")) {
+                                JSONArray choices = jsonResponse.getJSONArray("choices");
+                                if (choices.length() > 0) {
+                                    JSONObject message = choices.getJSONObject(0).getJSONObject("message");
+                                    callback.onSuccess(message.optString("content", ""));
+                                    return;
+                                }
+                            }
+                            callback.onError("Unexpected response format.");
+                        }
+                    } catch (Throwable e) {
+                        callback.onError("Parse crash: " + e.getMessage());
+                    }
+                }
+            });
+        } catch (Throwable e) {
+            callback.onError("Build request crash: " + e.getMessage());
+        }
     }
 
     private boolean waitingForDialogsAnimationEnd(ViewPage viewPage) {
