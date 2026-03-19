@@ -8991,6 +8991,34 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 && !(this instanceof tw.nekomimi.nekogram.ui.HiddenChatsActivity);
     }
 
+    private static final int ASSISTANT_TARGET_ANY = 0;
+    private static final int ASSISTANT_TARGET_GROUP = 1;
+    private static final int ASSISTANT_TARGET_CHANNEL = 2;
+
+    private static class AssistantDialogMatch {
+        final long dialogId;
+        final String title;
+        final int score;
+        final int type;
+
+        AssistantDialogMatch(long dialogId, String title, int score, int type) {
+            this.dialogId = dialogId;
+            this.title = title;
+            this.score = score;
+            this.type = type;
+        }
+    }
+
+    private static class AssistantDialogResolve {
+        final AssistantDialogMatch match;
+        final String error;
+
+        AssistantDialogResolve(AssistantDialogMatch match, String error) {
+            this.match = match;
+            this.error = error;
+        }
+    }
+
     private void executeHomeAssistantAction(String action, String argument, ChatAnimeAssistantView.AssistantRequestCallback callback) {
         AndroidUtilities.runOnUIThread(() -> {
             try {
@@ -9026,8 +9054,47 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     return;
                 }
 
-                if ("find_message".equals(normalizedAction) || "play_media".equals(normalizedAction)) {
-                    callback.onSuccess("This action works inside a chat. Open any chat and ask again.");
+                if ("mark_all_read".equals(normalizedAction)) {
+                    callback.onSuccess(markAllReadFromAssistant());
+                    return;
+                }
+
+                if ("mute_chat_by_name".equals(normalizedAction)) {
+                    callback.onSuccess(setMuteStateForDialogFromAssistant(normalizedArgument, true));
+                    return;
+                }
+
+                if ("unmute_chat_by_name".equals(normalizedAction)) {
+                    callback.onSuccess(setMuteStateForDialogFromAssistant(normalizedArgument, false));
+                    return;
+                }
+
+                if ("pin_chat_by_name".equals(normalizedAction)) {
+                    callback.onSuccess(setPinnedStateForDialogFromAssistant(normalizedArgument, true));
+                    return;
+                }
+
+                if ("unpin_chat_by_name".equals(normalizedAction)) {
+                    callback.onSuccess(setPinnedStateForDialogFromAssistant(normalizedArgument, false));
+                    return;
+                }
+
+                if ("delete_chat_by_name".equals(normalizedAction)) {
+                    callback.onSuccess(deleteDialogByNameFromAssistant(normalizedArgument));
+                    return;
+                }
+
+                if ("find_message".equals(normalizedAction)) {
+                    if (TextUtils.isEmpty(normalizedArgument)) {
+                        callback.onError("Tell me what to find, for example: find message project update.");
+                    } else {
+                        callback.onSuccess(findMessageFromHomeAssistant(normalizedArgument));
+                    }
+                    return;
+                }
+
+                if ("play_media".equals(normalizedAction)) {
+                    callback.onSuccess("Media playback works inside a chat. Open any chat and ask again.");
                     return;
                 }
 
@@ -9060,54 +9127,199 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     }
 
     private String openDialogByNameFromAssistant(String query) {
-        if (viewPages == null || viewPages.length == 0 || viewPages[0] == null) {
-            return null;
+        AssistantDialogResolve resolved = resolveAssistantDialogByName(query, ASSISTANT_TARGET_ANY);
+        if (resolved.match == null) {
+            return resolved.error;
         }
+        if (!openDialogFromAssistant(resolved.match.dialogId)) {
+            return "I found \"" + resolved.match.title + "\" but could not open it right now.";
+        }
+        return "Opened chat: " + resolved.match.title;
+    }
+
+    private AssistantDialogResolve resolveAssistantDialogByName(String rawQuery, int forceTargetType) {
+        if (viewPages == null || viewPages.length == 0 || viewPages[0] == null) {
+            return new AssistantDialogResolve(null, "Chat list is not ready yet.");
+        }
+        String query = TextUtils.isEmpty(rawQuery) ? "" : rawQuery.trim();
+        int targetType = forceTargetType;
+        if (query.toLowerCase().startsWith("channel:")) {
+            targetType = ASSISTANT_TARGET_CHANNEL;
+            query = query.substring("channel:".length()).trim();
+        } else if (query.toLowerCase().startsWith("group:")) {
+            targetType = ASSISTANT_TARGET_GROUP;
+            query = query.substring("group:".length()).trim();
+        }
+        if (TextUtils.isEmpty(query)) {
+            return new AssistantDialogResolve(null, "Tell me chat name too.");
+        }
+
+        ArrayList<AssistantDialogMatch> matches = findAssistantDialogMatches(query, targetType);
+        if (matches.isEmpty()) {
+            return new AssistantDialogResolve(null, "I could not find that chat in your main list.");
+        }
+        if (matches.size() > 1 && matches.get(0).score - matches.get(1).score <= 8) {
+            return new AssistantDialogResolve(null, buildAssistantDisambiguation(matches, targetType));
+        }
+        return new AssistantDialogResolve(matches.get(0), null);
+    }
+
+    private ArrayList<AssistantDialogMatch> findAssistantDialogMatches(String query, int targetType) {
+        ArrayList<AssistantDialogMatch> result = new ArrayList<>();
         ArrayList<TLRPC.Dialog> dialogs = getDialogsArray(currentAccount, viewPages[0].dialogsType, folderId, false);
         if (dialogs == null || dialogs.isEmpty()) {
-            return null;
+            return result;
         }
-
         String normalizedQuery = query.toLowerCase().trim();
-        long bestDialogId = 0;
-        String bestTitle = null;
-        int bestScore = -1;
-
         for (int i = 0; i < dialogs.size(); i++) {
             TLRPC.Dialog dialog = dialogs.get(i);
-            if (dialog == null) {
+            if (dialog == null || DialogObject.isFolderDialogId(dialog.id)) {
                 continue;
             }
             String title = getDialogTitleForAssistant(dialog.id);
             if (TextUtils.isEmpty(title)) {
                 continue;
             }
+            int dialogType = getAssistantDialogType(dialog.id);
+            if (targetType == ASSISTANT_TARGET_CHANNEL && dialogType != ASSISTANT_TARGET_CHANNEL) {
+                continue;
+            }
+            if (targetType == ASSISTANT_TARGET_GROUP && dialogType != ASSISTANT_TARGET_GROUP) {
+                continue;
+            }
+
             String normalizedTitle = title.toLowerCase().trim();
             int score = 0;
             if (normalizedTitle.equals(normalizedQuery)) {
                 score = 100;
             } else if (normalizedTitle.startsWith(normalizedQuery)) {
-                score = 85;
+                score = 88;
             } else if (normalizedTitle.contains(normalizedQuery)) {
-                score = 70;
+                score = 74;
             } else if (normalizedQuery.contains(normalizedTitle) && normalizedTitle.length() > 2) {
-                score = 60;
+                score = 64;
             }
-            if (score > bestScore) {
-                bestScore = score;
-                bestDialogId = dialog.id;
-                bestTitle = title;
+            if (score >= 60) {
+                result.add(new AssistantDialogMatch(dialog.id, title, score, dialogType));
             }
         }
 
-        if (bestScore < 60 || bestDialogId == 0) {
-            return null;
-        }
+        Collections.sort(result, (a, b) -> {
+            if (a.score != b.score) {
+                return b.score - a.score;
+            }
+            return a.title.compareToIgnoreCase(b.title);
+        });
+        return result;
+    }
 
-        if (!openDialogFromAssistant(bestDialogId)) {
-            return "I found \"" + bestTitle + "\" but could not open it right now.";
+    private int getAssistantDialogType(long dialogId) {
+        if (DialogObject.isUserDialog(dialogId) || DialogObject.isEncryptedDialog(dialogId)) {
+            return ASSISTANT_TARGET_ANY;
         }
-        return "Opened chat: " + bestTitle;
+        TLRPC.Chat chat = getMessagesController().getChat(-dialogId);
+        if (chat == null) {
+            return ASSISTANT_TARGET_ANY;
+        }
+        if (ChatObject.isChannel(chat) && !chat.megagroup) {
+            return ASSISTANT_TARGET_CHANNEL;
+        }
+        return ASSISTANT_TARGET_GROUP;
+    }
+
+    private String buildAssistantDisambiguation(ArrayList<AssistantDialogMatch> matches, int targetType) {
+        ArrayList<String> options = new ArrayList<>();
+        int limit = Math.min(5, matches.size());
+        for (int i = 0; i < limit; i++) {
+            AssistantDialogMatch match = matches.get(i);
+            options.add((i + 1) + ". " + match.title + assistantTypeSuffix(match.type));
+        }
+        String typeHint = targetType == ASSISTANT_TARGET_CHANNEL ? "channel" : targetType == ASSISTANT_TARGET_GROUP ? "group" : "chat";
+        return "I found multiple " + typeHint + " matches. Be more specific:\n" + TextUtils.join("\n", options);
+    }
+
+    private String assistantTypeSuffix(int type) {
+        if (type == ASSISTANT_TARGET_CHANNEL) {
+            return " [channel]";
+        }
+        if (type == ASSISTANT_TARGET_GROUP) {
+            return " [group]";
+        }
+        return "";
+    }
+
+    private String markAllReadFromAssistant() {
+        if (viewPages == null || viewPages.length == 0 || viewPages[0] == null) {
+            return "Chat list is not ready yet.";
+        }
+        ArrayList<TLRPC.Dialog> dialogs = getDialogsArray(currentAccount, viewPages[0].dialogsType, folderId, false);
+        if (dialogs == null || dialogs.isEmpty()) {
+            return "No chats available in this tab yet.";
+        }
+        ArrayList<TLRPC.Dialog> unreadDialogs = new ArrayList<>();
+        for (int i = 0; i < dialogs.size(); i++) {
+            TLRPC.Dialog dialog = dialogs.get(i);
+            if (dialog != null && (dialog.unread_count > 0 || dialog.unread_mark)) {
+                unreadDialogs.add(dialog);
+            }
+        }
+        if (unreadDialogs.isEmpty()) {
+            return "Everything is already read.";
+        }
+        markDialogsAsRead(unreadDialogs);
+        return "Marked " + unreadDialogs.size() + " chats as read.";
+    }
+
+    private String setMuteStateForDialogFromAssistant(String query, boolean mute) {
+        AssistantDialogResolve resolved = resolveAssistantDialogByName(query, ASSISTANT_TARGET_ANY);
+        if (resolved.match == null) {
+            return resolved.error;
+        }
+        long did = resolved.match.dialogId;
+        boolean currentlyMuted = getMessagesController().isDialogMuted(did, 0);
+        if (mute == currentlyMuted) {
+            return resolved.match.title + (mute ? " is already muted." : " is already unmuted.");
+        }
+        getNotificationsController().setDialogNotificationsSettings(did, 0, mute ? NotificationsController.SETTING_MUTE_FOREVER : NotificationsController.SETTING_MUTE_UNMUTE);
+        return (mute ? "Muted: " : "Unmuted: ") + resolved.match.title;
+    }
+
+    private String setPinnedStateForDialogFromAssistant(String query, boolean pin) {
+        AssistantDialogResolve resolved = resolveAssistantDialogByName(query, ASSISTANT_TARGET_ANY);
+        if (resolved.match == null) {
+            return resolved.error;
+        }
+        long did = resolved.match.dialogId;
+        TLRPC.Dialog dialog = getMessagesController().dialogs_dict.get(did);
+        boolean currentlyPinned = dialog != null && dialog.pinned;
+        if (pin == currentlyPinned) {
+            return resolved.match.title + (pin ? " is already pinned." : " is already unpinned.");
+        }
+        pinDialog(did, pin, null, -1, true);
+        return (pin ? "Pinned: " : "Unpinned: ") + resolved.match.title;
+    }
+
+    private String deleteDialogByNameFromAssistant(String query) {
+        AssistantDialogResolve resolved = resolveAssistantDialogByName(query, ASSISTANT_TARGET_ANY);
+        if (resolved.match == null) {
+            return resolved.error;
+        }
+        long did = resolved.match.dialogId;
+        getMessagesController().deleteDialog(did, 0, false);
+        getMessagesController().checkIfFolderEmpty(folderId);
+        return "Deleted chat: " + resolved.match.title;
+    }
+
+    private String findMessageFromHomeAssistant(String query) {
+        if (fragmentSearchField == null || fragmentSearchFieldWatcher == null) {
+            return "Search is not ready yet.";
+        }
+        fragmentSearchFieldWatcher.toggleSearch(true);
+        fragmentSearchField.editText.requestFocus();
+        fragmentSearchField.editText.setText(query);
+        fragmentSearchField.editText.setSelection(fragmentSearchField.editText.length());
+        AndroidUtilities.showKeyboard(fragmentSearchField.editText);
+        return "Searching for: \"" + query + "\".";
     }
 
     private String scrollToUnreadDialogFromAssistant() {
@@ -9252,7 +9464,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private String buildHomeAssistantContext() {
         StringBuilder sb = new StringBuilder(400);
         sb.append("Context: Alexgram home/main chats list.\n");
-        sb.append("Actions available: open chat by name, jump to unread, list chats, scroll list.\n");
+        sb.append("Actions available: open chat/channel/group by name, jump to unread, list chats, scroll list, find message, mark all read, mute/unmute chat by name, pin/unpin chat by name, delete chat by name.\n");
         if (viewPages != null && viewPages.length > 0 && viewPages[0] != null) {
             ArrayList<TLRPC.Dialog> dialogs = getDialogsArray(currentAccount, viewPages[0].dialogsType, folderId, false);
             if (dialogs != null) {

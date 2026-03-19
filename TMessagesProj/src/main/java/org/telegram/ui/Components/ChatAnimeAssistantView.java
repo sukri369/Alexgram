@@ -783,6 +783,81 @@ public class ChatAnimeAssistantView extends FrameLayout {
             return false;
         }
 
+        if (normalized.contains("mark all read") || normalized.contains("read all chats") || normalized.contains("clear unread")) {
+            executeLocalAction("mark_all_read", "", "Marking chats as read...");
+            return true;
+        }
+
+        if (normalized.contains("unmute")) {
+            String chatName = extractNamedTargetQuery(prompt, "unmute");
+            if (TextUtils.isEmpty(chatName)) {
+                addMessageBubble("Tell me which chat to unmute, for example: unmute chat family.", false, true);
+                return true;
+            }
+            executeLocalAction("unmute_chat_by_name", chatName, "Unmuting chat...");
+            return true;
+        }
+
+        if (normalized.contains("mute")) {
+            String chatName = extractNamedTargetQuery(prompt, "mute");
+            if (TextUtils.isEmpty(chatName)) {
+                addMessageBubble("Tell me which chat to mute, for example: mute chat work.", false, true);
+                return true;
+            }
+            executeLocalAction("mute_chat_by_name", chatName, "Muting chat...");
+            return true;
+        }
+
+        if (normalized.contains("unpin")) {
+            String chatName = extractNamedTargetQuery(prompt, "unpin");
+            if (TextUtils.isEmpty(chatName)) {
+                addMessageBubble("Tell me which chat to unpin, for example: unpin chat updates.", false, true);
+                return true;
+            }
+            executeLocalAction("unpin_chat_by_name", chatName, "Unpinning chat...");
+            return true;
+        }
+
+        if (normalized.contains("pin")) {
+            String chatName = extractNamedTargetQuery(prompt, "pin");
+            if (TextUtils.isEmpty(chatName)) {
+                addMessageBubble("Tell me which chat to pin, for example: pin chat family.", false, true);
+                return true;
+            }
+            executeLocalAction("pin_chat_by_name", chatName, "Pinning chat...");
+            return true;
+        }
+
+        if (normalized.contains("delete chat") || normalized.contains("remove chat") || normalized.startsWith("delete ") || normalized.startsWith("remove ")) {
+            String chatName = extractNamedTargetQuery(prompt, normalized.startsWith("remove") ? "remove" : "delete");
+            if (TextUtils.isEmpty(chatName)) {
+                addMessageBubble("Tell me which chat to delete, for example: delete chat spam.", false, true);
+                return true;
+            }
+            executeLocalAction("delete_chat_by_name", chatName, "Deleting chat...");
+            return true;
+        }
+
+        if (normalized.contains("open channel") || normalized.contains("go to channel")) {
+            String channelName = extractChatNameQuery(prompt, normalized);
+            if (TextUtils.isEmpty(channelName)) {
+                addMessageBubble("Tell me channel name, for example: open channel alexgram updates.", false, true);
+                return true;
+            }
+            executeLocalAction("open_chat_by_name", "channel:" + channelName, "Opening channel...");
+            return true;
+        }
+
+        if (normalized.contains("open group") || normalized.contains("go to group")) {
+            String groupName = extractChatNameQuery(prompt, normalized);
+            if (TextUtils.isEmpty(groupName)) {
+                addMessageBubble("Tell me group name, for example: open group dev team.", false, true);
+                return true;
+            }
+            executeLocalAction("open_chat_by_name", "group:" + groupName, "Opening group...");
+            return true;
+        }
+
         if (normalized.contains("open chat") || normalized.contains("go to chat") || normalized.startsWith("open ")) {
             String chatName = extractChatNameQuery(prompt, normalized);
             if (TextUtils.isEmpty(chatName)) {
@@ -899,12 +974,37 @@ public class ChatAnimeAssistantView extends FrameLayout {
         String normalized = " " + normalizedPrompt + " ";
         if (normalized.contains(" open chat ")) {
             query = query.replaceFirst("(?i)^.*open\\s+chat\\s+", "");
+        } else if (normalized.contains(" open channel ")) {
+            query = query.replaceFirst("(?i)^.*open\\s+channel\\s+", "");
+        } else if (normalized.contains(" open group ")) {
+            query = query.replaceFirst("(?i)^.*open\\s+group\\s+", "");
         } else if (normalized.contains(" go to chat ")) {
             query = query.replaceFirst("(?i)^.*go\\s+to\\s+chat\\s+", "");
+        } else if (normalized.contains(" go to channel ")) {
+            query = query.replaceFirst("(?i)^.*go\\s+to\\s+channel\\s+", "");
+        } else if (normalized.contains(" go to group ")) {
+            query = query.replaceFirst("(?i)^.*go\\s+to\\s+group\\s+", "");
         } else if (normalizedPrompt.startsWith("open ")) {
             query = query.replaceFirst("(?i)^open\\s+", "");
         }
         return query.trim();
+    }
+
+    private String extractNamedTargetQuery(String originalPrompt, String actionKeyword) {
+        if (TextUtils.isEmpty(originalPrompt)) {
+            return "";
+        }
+        String query = originalPrompt.trim();
+        String keyword = TextUtils.isEmpty(actionKeyword) ? "" : actionKeyword.trim();
+        if (!TextUtils.isEmpty(keyword)) {
+            query = query.replaceFirst("(?i)^.*" + keyword + "\\s+", "");
+        }
+        query = query.replaceFirst("(?i)^chat\\s+", "")
+                .replaceFirst("(?i)^group\\s+", "")
+                .replaceFirst("(?i)^channel\\s+", "")
+                .replaceFirst("(?i)^dialog\\s+", "")
+                .trim();
+        return query;
     }
 
     private boolean containsAny(String source, String... values) {
