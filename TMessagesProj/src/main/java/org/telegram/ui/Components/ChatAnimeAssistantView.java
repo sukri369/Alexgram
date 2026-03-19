@@ -84,6 +84,9 @@ public class ChatAnimeAssistantView extends FrameLayout {
     private final ImageView sendButton;
     private final SharedPreferences preferences;
     private final long assistantDialogId;
+    private final boolean showAutoReplyOption;
+    private final boolean autoReplySupported;
+    private final String autoReplyUnsupportedMessage;
 
     private final Runnable frameRunnable = new Runnable() {
         @Override
@@ -129,13 +132,27 @@ public class ChatAnimeAssistantView extends FrameLayout {
     private GestureDetector gestureDetector;
 
     public ChatAnimeAssistantView(@NonNull Context context, @Nullable SizeNotifierFrameLayout blurParent, long dialogId) {
+        this(context, blurParent, dialogId, true, true, "This feature only works in chats.", 92, 86);
+    }
+
+    public ChatAnimeAssistantView(@NonNull Context context,
+                                  @Nullable SizeNotifierFrameLayout blurParent,
+                                  long dialogId,
+                                  boolean showAutoReplyOption,
+                                  boolean autoReplySupported,
+                                  @Nullable String autoReplyUnsupportedMessage,
+                                  int characterBottomMarginDp,
+                                  int panelBottomMarginDp) {
         super(context);
         setClipChildren(false);
         setClipToPadding(false);
 
         preferences = context.getSharedPreferences("ai_assistant_prefs", Context.MODE_PRIVATE);
         assistantDialogId = dialogId;
-        autoReplyEnabled = preferences.getBoolean(getAutoReplyPreferenceKey(), false);
+        this.showAutoReplyOption = showAutoReplyOption;
+        this.autoReplySupported = autoReplySupported;
+        this.autoReplyUnsupportedMessage = TextUtils.isEmpty(autoReplyUnsupportedMessage) ? "This feature only works in chats." : autoReplyUnsupportedMessage;
+        autoReplyEnabled = autoReplySupported && preferences.getBoolean(getAutoReplyPreferenceKey(), false);
 
         panelScrim = new View(context);
         panelScrim.setBackgroundColor(0x33000000);
@@ -162,7 +179,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
         reactionBubble.setVisibility(GONE);
         characterContainer.addView(reactionBubble, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, -8, 0, 0));
 
-        addView(characterContainer, LayoutHelper.createFrame(100, 122, Gravity.BOTTOM | Gravity.RIGHT, 0, 0, 12, 92));
+        addView(characterContainer, LayoutHelper.createFrame(100, 122, Gravity.BOTTOM | Gravity.RIGHT, 0, 0, 12, characterBottomMarginDp));
 
         panelContainer = blurParent != null ? new BlurredFrameLayout(context, blurParent) : new FrameLayout(context);
         if (panelContainer instanceof BlurredFrameLayout) {
@@ -237,7 +254,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
         sendButton.setPadding(AndroidUtilities.dp(9), AndroidUtilities.dp(9), AndroidUtilities.dp(9), AndroidUtilities.dp(9));
         composer.addView(sendButton, LayoutHelper.createLinear(40, 40, Gravity.CENTER_VERTICAL));
 
-        addView(panelContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 272, Gravity.BOTTOM | Gravity.RIGHT, 44, 0, 14, 86));
+        addView(panelContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 272, Gravity.BOTTOM | Gravity.RIGHT, 44, 0, 14, panelBottomMarginDp));
 
         setupPanelDragging();
         setupKeyboardListener();
@@ -540,11 +557,19 @@ public class ChatAnimeAssistantView extends FrameLayout {
 
     private void showLongPressMenu(View anchor) {
         PopupMenu popupMenu = new PopupMenu(getContext(), anchor);
-        popupMenu.getMenu().add(Menu.NONE, 1, 0, autoReplyEnabled ? "Auto Reply Mode: ON" : "Auto Reply Mode: OFF");
-        popupMenu.getMenu().add(Menu.NONE, 2, 1, "Switch Style");
-        popupMenu.getMenu().add(Menu.NONE, 3, 2, "Focus Chat Panel");
+        int order = 0;
+        if (showAutoReplyOption) {
+            popupMenu.getMenu().add(Menu.NONE, 1, order++, autoReplyEnabled ? "Auto Reply Mode: ON" : "Auto Reply Mode: OFF");
+        }
+        popupMenu.getMenu().add(Menu.NONE, 2, order++, "Switch Style");
+        popupMenu.getMenu().add(Menu.NONE, 3, order, "Focus Chat Panel");
         popupMenu.setOnMenuItemClickListener(item -> {
             if (item.getItemId() == 1) {
+                if (!autoReplySupported) {
+                    showReactionBubble("INFO");
+                    addMessageBubble(autoReplyUnsupportedMessage, false, true);
+                    return true;
+                }
                 autoReplyEnabled = !autoReplyEnabled;
                 preferences.edit().putBoolean(getAutoReplyPreferenceKey(), autoReplyEnabled).apply();
                 if (assistantRequestDelegate != null) {
@@ -572,6 +597,10 @@ public class ChatAnimeAssistantView extends FrameLayout {
     }
 
     public void setAutoReplyEnabledState(boolean enabled) {
+        if (!autoReplySupported) {
+            autoReplyEnabled = false;
+            return;
+        }
         autoReplyEnabled = enabled;
         preferences.edit().putBoolean(getAutoReplyPreferenceKey(), enabled).apply();
     }

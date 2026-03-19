@@ -223,6 +223,7 @@ import org.telegram.ui.bots.BotWebViewSheet;
 import org.telegram.ui.Components.Bulletin;
 import org.telegram.ui.Components.BulletinFactory;
 import org.telegram.ui.Components.ChatActivityEnterView;
+import org.telegram.ui.Components.ChatAnimeAssistantView;
 import org.telegram.ui.Components.ChatAvatarContainer;
 import org.telegram.ui.Components.CombinedDrawable;
 import org.telegram.ui.Components.CubicBezierInterpolator;
@@ -517,6 +518,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private boolean storyHintShown;
     private FragmentFloatingButton floatingButton3;
     private FragmentFloatingButton floatingButtonStories;
+    private ChatAnimeAssistantView homeAnimeAssistantView;
     private ChatAvatarContainer avatarContainer;
     private int undoViewIndex;
     private UndoView[] undoView = new UndoView[2];
@@ -3112,6 +3114,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         if (commentView != null) {
             commentView.onDestroy();
         }
+        if (homeAnimeAssistantView != null) {
+            homeAnimeAssistantView.onDestroy();
+            AndroidUtilities.removeFromParent(homeAnimeAssistantView);
+            homeAnimeAssistantView = null;
+        }
         if (undoView[0] != null) {
             undoView[0].hide(true, 0);
         }
@@ -4937,6 +4944,26 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 openWriteContacts();
             }
         });
+
+        if (shouldShowAssistantOnHome()) {
+            homeAnimeAssistantView = new ChatAnimeAssistantView(
+                    context,
+                    contentView,
+                    0,
+                    false,
+                    false,
+                    "This feature only works in chats.",
+                    160,
+                    154
+            );
+            homeAnimeAssistantView.setAssistantRequestDelegate(new ChatAnimeAssistantView.AssistantRequestDelegate() {
+                @Override
+                public void onRequest(String prompt, ChatAnimeAssistantView.AssistantRequestCallback callback) {
+                    callback.onSuccess("Home assistant is ready. For chat actions and auto-reply, open any chat.");
+                }
+            });
+            contentView.addView(homeAnimeAssistantView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        }
 
         if (!isArchive() && initialDialogsType == DIALOGS_TYPE_DEFAULT) {
             if (MessagesController.getInstance(currentAccount).getMainSettings().getBoolean("storyhint", true)) {
@@ -7122,6 +7149,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     @Override
     public void onResume() {
         super.onResume();
+        if (homeAnimeAssistantView != null) {
+            homeAnimeAssistantView.onResume();
+        }
         if (dialogStoriesCell != null) {
             dialogStoriesCell.onResume();
         }
@@ -7342,6 +7372,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     @Override
     public void onPause() {
         super.onPause();
+        if (homeAnimeAssistantView != null) {
+            homeAnimeAssistantView.onPause();
+        }
         if (storiesBulletin != null) {
             storiesBulletin.hide();
             storiesBulletin = null;
@@ -8928,6 +8961,14 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     public boolean hasHiddenArchive() {
         return !onlySelect && initialDialogsType == DIALOGS_TYPE_DEFAULT && folderId == 0 && getMessagesController().hasHiddenArchive();
+    }
+
+    private boolean shouldShowAssistantOnHome() {
+        return initialDialogsType == DIALOGS_TYPE_DEFAULT
+                && !onlySelect
+                && folderId == 0
+                && TextUtils.isEmpty(searchString)
+                && !(this instanceof tw.nekomimi.nekogram.ui.HiddenChatsActivity);
     }
 
     private boolean waitingForDialogsAnimationEnd(ViewPage viewPage) {

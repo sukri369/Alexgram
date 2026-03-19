@@ -9517,7 +9517,17 @@ public class ChatActivity extends BaseFragment implements
         }
 
         if (chatMode == 0 && !isReport() && !isInPreviewMode()) {
-            chatAnimeAssistantView = new ChatAnimeAssistantView(context, contentView, dialog_id);
+            final boolean autoReplySupportedInThisDialog = currentChat == null || !ChatObject.isChannelAndNotMegaGroup(currentChat);
+            chatAnimeAssistantView = new ChatAnimeAssistantView(
+                    context,
+                    contentView,
+                    dialog_id,
+                    true,
+                    autoReplySupportedInThisDialog,
+                    "This feature only works in chats.",
+                    92,
+                    86
+            );
             chatAnimeAssistantView.setAssistantRequestDelegate(new ChatAnimeAssistantView.AssistantRequestDelegate() {
                 @Override
                 public void onRequest(String prompt, ChatAnimeAssistantView.AssistantRequestCallback callback) {
