@@ -9525,6 +9525,11 @@ public class ChatActivity extends BaseFragment implements
                 }
 
                 @Override
+                public void onAction(String action, String argument, ChatAnimeAssistantView.AssistantRequestCallback callback) {
+                    executeAnimeAssistantAction(action, argument, callback);
+                }
+
+                @Override
                 public void onAutoReplyToggleChanged(long dialogId, boolean enabled) {
                     if (dialogId != dialog_id) {
                         return;
@@ -48282,6 +48287,153 @@ public class ChatActivity extends BaseFragment implements
             }
             e.printStackTrace();
         }
+    }
+
+    private void executeAnimeAssistantAction(String action, String argument, ChatAnimeAssistantView.AssistantRequestCallback callback) {
+        AndroidUtilities.runOnUIThread(() -> {
+            try {
+                String normalizedAction = action == null ? "" : action.toLowerCase(Locale.US).trim();
+                String normalizedArgument = argument == null ? "" : argument.trim();
+
+                if ("find_message".equals(normalizedAction)) {
+                    if (TextUtils.isEmpty(normalizedArgument)) {
+                        callback.onError("Tell me the text to find in this chat.");
+                        return;
+                    }
+                    openSearchWithText(normalizedArgument);
+                    callback.onSuccess("Opened chat search for: \"" + normalizedArgument + "\".");
+                    return;
+                }
+
+                if ("scroll_chat".equals(normalizedAction)) {
+                    String direction = normalizedArgument.toLowerCase(Locale.US);
+                    if (TextUtils.isEmpty(direction)) {
+                        direction = "down";
+                    }
+                    if ("bottom".equals(direction) || "latest".equals(direction) || "newest".equals(direction)) {
+                        scrollToLastMessage(true, true);
+                        callback.onSuccess("Scrolled to latest messages.");
+                        return;
+                    }
+                    if ("top".equals(direction) || "oldest".equals(direction)) {
+                        if (messages != null && !messages.isEmpty()) {
+                            MessageObject oldest = messages.get(messages.size() - 1);
+                            scrollToMessageId(oldest.getId(), 0, false, 0, true, 0);
+                            callback.onSuccess("Jumped toward older messages.");
+                        } else {
+                            callback.onError("No loaded messages yet to jump.");
+                        }
+                        return;
+                    }
+                    if (chatListView == null) {
+                        callback.onError("Chat list is not ready yet.");
+                        return;
+                    }
+                    int delta = AndroidUtilities.dp(420);
+                    if ("up".equals(direction)) {
+                        chatListView.smoothScrollBy(0, -delta);
+                        callback.onSuccess("Scrolled up.");
+                    } else {
+                        chatListView.smoothScrollBy(0, delta);
+                        callback.onSuccess("Scrolled down.");
+                    }
+                    return;
+                }
+
+                if ("play_media".equals(normalizedAction)) {
+                    String mediaType = TextUtils.isEmpty(normalizedArgument) ? "any" : normalizedArgument.toLowerCase(Locale.US);
+                    if (playMediaRequestedByAssistant(mediaType)) {
+                        if ("video".equals(mediaType)) {
+                            callback.onSuccess("Playing a visible video in this chat.");
+                        } else if ("audio".equals(mediaType)) {
+                            callback.onSuccess("Playing a visible audio/voice message.");
+                        } else {
+                            callback.onSuccess("Playing visible media in this chat.");
+                        }
+                    } else {
+                        callback.onError("No playable " + mediaType + " found on screen right now.");
+                    }
+                    return;
+                }
+
+                callback.onError("That action is not supported yet.");
+            } catch (Throwable t) {
+                callback.onError("Could not run action: " + t.getMessage());
+            }
+        });
+    }
+
+    private boolean playMediaRequestedByAssistant(String mediaType) {
+        String type = TextUtils.isEmpty(mediaType) ? "any" : mediaType;
+        MessageObject playing = MediaController.getInstance().getPlayingMessageObject();
+        if (playing != null && (playing.getDialogId() == dialog_id || playing.getDialogId() == mergeDialogId)) {
+            if ("any".equals(type)
+                    || ("video".equals(type) && (playing.isVideo() || playing.isRoundVideo()))
+                    || ("audio".equals(type) && (playing.isVoice() || playing.isMusic() || playing.isRoundVideo()))) {
+                return true;
+            }
+        }
+
+        if ("video".equals(type)) {
+            if (maybePlayVisibleVideo()) {
+                return true;
+            }
+            return playVisibleMessageByType(false, true);
+        }
+        if ("audio".equals(type)) {
+            return playVisibleMessageByType(true, false);
+        }
+        return playVisibleMessageByType(true, false) || maybePlayVisibleVideo() || playVisibleMessageByType(false, true);
+    }
+
+    private boolean playVisibleMessageByType(boolean preferAudio, boolean preferVideo) {
+        if (chatListView == null) {
+            return false;
+        }
+        MessageObject candidate = null;
+        int count = chatListView.getChildCount();
+        for (int i = 0; i < count; i++) {
+            View child = chatListView.getChildAt(i);
+            if (!(child instanceof ChatMessageCell)) {
+                continue;
+            }
+            ChatMessageCell cell = (ChatMessageCell) child;
+            MessageObject messageObject = cell.getMessageObject();
+            if (messageObject == null || messageObject.isVoiceOnce() || messageObject.isRoundOnce()) {
+                continue;
+            }
+
+            boolean isAudio = messageObject.isVoice() || messageObject.isMusic() || messageObject.isRoundVideo();
+            boolean isVideo = messageObject.isVideo() || messageObject.isRoundVideo();
+            if (!isAudio && !isVideo) {
+                continue;
+            }
+
+            if (preferAudio && isAudio) {
+                candidate = messageObject;
+                break;
+            }
+            if (preferVideo && isVideo) {
+                candidate = messageObject;
+                break;
+            }
+            if (!preferAudio && !preferVideo) {
+                candidate = messageObject;
+                break;
+            }
+            if (candidate == null) {
+                candidate = messageObject;
+            }
+        }
+
+        if (candidate == null) {
+            return false;
+        }
+        boolean result = MediaController.getInstance().playMessage(candidate);
+        if (result && (candidate.isVoice() || candidate.isRoundVideo())) {
+            MediaController.getInstance().setVoiceMessagesPlaylist(createVoiceMessagesPlaylist(candidate, false), false);
+        }
+        return result;
     }
 
     private void requestAnimeAssistantReply(String prompt, ChatAnimeAssistantView.AssistantRequestCallback callback) {

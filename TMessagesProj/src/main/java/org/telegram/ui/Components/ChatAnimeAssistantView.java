@@ -63,6 +63,12 @@ public class ChatAnimeAssistantView extends FrameLayout {
 
         default void onAutoReplyToggleChanged(long dialogId, boolean enabled) {
         }
+
+        default void onAction(String action, String argument, AssistantRequestCallback callback) {
+            if (callback != null) {
+                callback.onError("This action is not available in this chat yet.");
+            }
+        }
     }
 
     private static final int MAX_BUBBLES = 10;
@@ -673,6 +679,10 @@ public class ChatAnimeAssistantView extends FrameLayout {
         inputField.setText("");
         addMessageBubble(prompt, true, false);
 
+        if (handleLocalChatActionCommand(prompt)) {
+            return;
+        }
+
         String localSettingsReply = handleLocalSettingsCommand(prompt);
         if (!TextUtils.isEmpty(localSettingsReply)) {
             addMessageBubble(localSettingsReply, false, true);
@@ -736,6 +746,112 @@ public class ChatAnimeAssistantView extends FrameLayout {
 
         ConfigMatch match = matches.get(0);
         return applySettingsCommand(match, command);
+    }
+
+    private boolean handleLocalChatActionCommand(String prompt) {
+        String normalized = normalizeSettingText(prompt);
+        if (TextUtils.isEmpty(normalized)) {
+            return false;
+        }
+
+        if (normalized.contains("find message") || normalized.contains("search message") || normalized.contains("find msg") || normalized.contains("search msg") || normalized.startsWith("find ") || normalized.startsWith("search ")) {
+            String query = extractSearchQuery(prompt, normalized);
+            if (TextUtils.isEmpty(query)) {
+                addMessageBubble("Tell me what to find, for example: find message project update.", false, true);
+                return true;
+            }
+            executeLocalAction("find_message", query, "Searching messages...");
+            return true;
+        }
+
+        if (normalized.contains("scroll") || normalized.contains("go up") || normalized.contains("go down") || normalized.contains("jump to top") || normalized.contains("jump to bottom")) {
+            String direction = "down";
+            if (containsAny(normalized, "top", "oldest", "beginning", "start")) {
+                direction = "top";
+            } else if (containsAny(normalized, "bottom", "latest", "newest", "end", "last")) {
+                direction = "bottom";
+            } else if (containsAny(normalized, "up", "above", "previous")) {
+                direction = "up";
+            } else if (containsAny(normalized, "down", "below", "next")) {
+                direction = "down";
+            }
+            executeLocalAction("scroll_chat", direction, "Scrolling chat...");
+            return true;
+        }
+
+        if (normalized.contains("play") && containsAny(normalized, "video", "audio", "voice", "music", "media", "song")) {
+            String mediaType = "any";
+            if (containsAny(normalized, "video", "clip")) {
+                mediaType = "video";
+            } else if (containsAny(normalized, "audio", "voice", "music", "song")) {
+                mediaType = "audio";
+            }
+            executeLocalAction("play_media", mediaType, "Trying to play media...");
+            return true;
+        }
+
+        return false;
+    }
+
+    private void executeLocalAction(String action, String argument, String typingText) {
+        if (assistantRequestDelegate == null) {
+            addMessageBubble("Assistant action bridge is not connected yet.", false, true);
+            return;
+        }
+
+        showTypingBubble();
+        if (!TextUtils.isEmpty(typingText) && !messageViews.isEmpty()) {
+            View last = messageViews.get(messageViews.size() - 1);
+            if (last instanceof TextView) {
+                ((TextView) last).setText(typingText);
+            }
+        }
+
+        assistantRequestDelegate.onAction(action, argument, new AssistantRequestCallback() {
+            @Override
+            public void onSuccess(String response) {
+                AndroidUtilities.runOnUIThread(() -> hideTypingBubble(TextUtils.isEmpty(response) ? "Done." : response));
+            }
+
+            @Override
+            public void onError(String error) {
+                AndroidUtilities.runOnUIThread(() -> hideTypingBubble(TextUtils.isEmpty(error) ? "I could not run that action right now." : error));
+            }
+        });
+    }
+
+    private String extractSearchQuery(String originalPrompt, String normalizedPrompt) {
+        if (TextUtils.isEmpty(originalPrompt)) {
+            return "";
+        }
+        String query = originalPrompt.trim();
+        String normalized = " " + normalizedPrompt + " ";
+        if (normalized.contains(" find message ")) {
+            query = query.replaceFirst("(?i)^.*find\\s+message\\s+", "");
+        } else if (normalized.contains(" search message ")) {
+            query = query.replaceFirst("(?i)^.*search\\s+message\\s+", "");
+        } else if (normalized.contains(" find msg ")) {
+            query = query.replaceFirst("(?i)^.*find\\s+msg\\s+", "");
+        } else if (normalized.contains(" search msg ")) {
+            query = query.replaceFirst("(?i)^.*search\\s+msg\\s+", "");
+        } else if (normalizedPrompt.startsWith("find ")) {
+            query = query.replaceFirst("(?i)^find\\s+", "");
+        } else if (normalizedPrompt.startsWith("search ")) {
+            query = query.replaceFirst("(?i)^search\\s+", "");
+        }
+        return query.trim();
+    }
+
+    private boolean containsAny(String source, String... values) {
+        if (TextUtils.isEmpty(source) || values == null) {
+            return false;
+        }
+        for (String value : values) {
+            if (!TextUtils.isEmpty(value) && source.contains(value)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private ParsedSettingsCommand parseSettingsCommand(String normalizedPrompt) {
