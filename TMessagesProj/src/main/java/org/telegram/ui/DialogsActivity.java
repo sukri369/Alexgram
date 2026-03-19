@@ -534,12 +534,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private FragmentFloatingButton floatingButton3;
     private FragmentFloatingButton floatingButtonStories;
     private ChatAnimeAssistantView homeAnimeAssistantView;
-        // ...existing code...
-        // Ensure assistant is always above other views
-        homeAnimeAssistantView.setElevation(AndroidUtilities.dp(100));
-        homeAnimeAssistantView.bringToFront();
-        // Always bring assistant to front after move
-        homeAnimeAssistantView.bringToFront();
     private ChatAvatarContainer avatarContainer;
     private int undoViewIndex;
     private UndoView[] undoView = new UndoView[2];
@@ -4989,6 +4983,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 }
             });
             contentView.addView(homeAnimeAssistantView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+                    // Ensure assistant overlay stays above all UI elements
+                    homeAnimeAssistantView.setElevation(AndroidUtilities.dp(100));
+                    homeAnimeAssistantView.bringToFront();
         }
 
         if (!isArchive() && initialDialogsType == DIALOGS_TYPE_DEFAULT) {
