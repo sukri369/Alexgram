@@ -44574,8 +44574,19 @@ public class ChatActivity extends BaseFragment implements
     }
 
     private void maybeShowPillTitleOnboarding(boolean backward) {
-        // Onboarding logic intentionally left empty to avoid interfering with pill chat title
-        return;
+        // Restore onboarding logic for pill chat title
+        if (!isPillChatHeaderEnabled()) {
+            return;
+        }
+        // Example onboarding logic (restore as needed):
+        // Show onboarding highlight or message if pill chat title is enabled and not shown before
+        // if (!SharedPreferences.getBoolean(PILL_TITLE_ONBOARDING_SHOWN_KEY, false)) {
+        //     showPillTitleOnboardingHighlight();
+        //     SharedPreferences.edit().putBoolean(PILL_TITLE_ONBOARDING_SHOWN_KEY, true).apply();
+        // }
+        // If you have a highlight or message function, call it here
+        // showPillTitleOnboardingHighlight();
+        // (You may need to adjust this logic based on your original code)
     }
 
     public MessageObject.GroupedMessages getGroup(long id) {
