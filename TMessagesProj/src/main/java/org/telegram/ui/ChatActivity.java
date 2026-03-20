@@ -719,6 +719,7 @@ public class ChatActivity extends BaseFragment implements
     private ChatActionCell floatingDateView;
     private TopicSeparator.Cell floatingTopicSeparator;
     private ChatAnimeAssistantView chatAnimeAssistantView;
+    private MiniChatAssistantView miniChatAssistantView;
     private int assistantLastAutoReplyMessageId;
     private boolean assistantAutoReplyInFlight;
     private boolean assistantQuotaNotified;
@@ -9524,6 +9525,14 @@ public class ChatActivity extends BaseFragment implements
         }
 
         if (chatMode == 0 && !isReport() && !isInPreviewMode()) {
+                        // Initialize MiniChatAssistantView alongside ChatAnimeAssistantView
+                        miniChatAssistantView = new MiniChatAssistantView();
+                        contentView.addView(miniChatAssistantView.getView(context), LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM));
+                    if (miniChatAssistantView != null) {
+                        miniChatAssistantView.clearHistory();
+                        AndroidUtilities.removeFromParent(miniChatAssistantView.getView(getContext()));
+                        miniChatAssistantView = null;
+                    }
             final boolean autoReplySupportedInThisDialog = currentChat == null || !ChatObject.isChannelAndNotMegaGroup(currentChat);
             chatAnimeAssistantView = new ChatAnimeAssistantView(
                     context,
