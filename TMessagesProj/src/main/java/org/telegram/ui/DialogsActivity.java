@@ -3270,30 +3270,18 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         ActionBarMenu menu = actionBar.createMenu();
         searchItem = menu.addItem(0, R.drawable.outline_header_search).setIsSearchField(true, false);
         searchItem.setOnClickListener(v -> {
+            // Always open search UI, never archive chats, regardless of scroll or archive state
+            fixScrollYAfterArchiveOpened = false; // Reset archive scroll state
             showSearch(true, false, true);
             fragmentSearchFieldWatcher.toggleSearch(true);
             AndroidUtilities.runOnUIThread(() -> {
                 fragmentSearchField.editText.requestFocus();
                 AndroidUtilities.showKeyboard(fragmentSearchField.editText);
             }, 100);
-
-            /*
-            AnimatorSet animatorSet = new AnimatorSet();
-            animatorSet.playTogether(ObjectAnimator.ofFloat(this, SCROLL_Y, hasStories ? -dp(DialogStoriesCell.HEIGHT_IN_DP) : 0));
-            animatorSet.setInterpolator(CubicBezierInterpolator.DEFAULT);
-            animatorSet.setDuration(250);
-            animatorSet.addListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    super.onAnimationEnd(animation);
-                    showSearch(true, false, true);
-                    fragmentSearchFieldWatcher.toggleSearch(true);
-                    fragmentSearchField.editText.requestFocus();
-                    AndroidUtilities.showKeyboard(fragmentSearchField.editText);
-                }
-            });
-            animatorSet.start();
-            */
+            // Defensive: ensure archive logic cannot override search click
+            if (folderId == 0 && viewPages != null && viewPages.length > 0) {
+                viewPages[0].archivePullViewState = 0;
+            }
         });
         if (initialDialogsType == DIALOGS_TYPE_ADD_USERS_TO || isArchive() && getDialogsArray(currentAccount, initialDialogsType, folderId, false).isEmpty()) {
             searchItem.setVisibility(View.GONE);

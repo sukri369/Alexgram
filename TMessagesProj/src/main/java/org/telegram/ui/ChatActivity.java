@@ -44565,39 +44565,8 @@ public class ChatActivity extends BaseFragment implements
     }
 
     private void maybeShowPillTitleOnboarding(boolean backward) {
-        if (backward || !isPillChatHeaderEnabled() || avatarContainer == null || getParentActivity() == null) {
-            return;
-        }
-        SharedPreferences preferences = NaConfig.INSTANCE.getPreferences();
-        if (preferences.getBoolean(PILL_TITLE_ONBOARDING_SHOWN_KEY, false)) {
-            return;
-        }
-        preferences.edit().putBoolean(PILL_TITLE_ONBOARDING_SHOWN_KEY, true).apply();
-        AndroidUtilities.runOnUIThread(() -> {
-            if (avatarContainer == null || !isPillChatHeaderEnabled() || paused) {
-                return;
-            }
-            avatarContainer.playPillTitleOnboardingHighlight();
-            if (!BulletinFactory.canShowBulletin(ChatActivity.this)) {
-                return;
-            }
-            BulletinFactory.of(ChatActivity.this)
-                .createSimpleBulletin(
-                    R.raw.chats_infotip,
-                    "New title style is on. Chat names now appear in a clean top pill. Tap Turn off to restore the normal header.",
-                    "Turn off",
-                    10000,
-                    () -> {
-                        NaConfig.INSTANCE.getPillChatTitle().setConfigBool(false);
-                        if (parentLayout != null) {
-                            parentLayout.rebuildAllFragmentViews(false, false);
-                        } else if (avatarContainer != null) {
-                            avatarContainer.invalidate();
-                        }
-                    }
-                )
-                .show();
-        }, 280);
+        // Pill onboarding message and highlight removed
+        return;
     }
 
     public MessageObject.GroupedMessages getGroup(long id) {

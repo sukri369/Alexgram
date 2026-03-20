@@ -536,23 +536,13 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
     };
 
     private boolean isPillChatTitleEnabled() {
-        if (!NaConfig.INSTANCE.getPillChatTitle().Bool()) {
-            return false;
-        }
-        return parentFragment == null || parentFragment.isPillChatHeaderLayoutEnabled();
+        // Always return false to disable pill chat title by default
+        return false;
     }
 
     public void playPillTitleOnboardingHighlight() {
-        if (!isPillChatTitleEnabled()) {
-            return;
-        }
-        pillOnboardingHighlightStart = SystemClock.elapsedRealtime();
-        if (pillOnboardingHighlightRunning) {
-            return;
-        }
-        pillOnboardingHighlightRunning = true;
-        AndroidUtilities.cancelRunOnUIThread(pillOnboardingHighlightRunnable);
-        AndroidUtilities.runOnUIThread(pillOnboardingHighlightRunnable);
+        // Remove onboarding highlight for pill title
+        // No operation
     }
 
     private int getPillHorizontalPadding() {
