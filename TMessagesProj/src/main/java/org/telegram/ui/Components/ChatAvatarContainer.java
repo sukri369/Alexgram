@@ -536,8 +536,8 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
     };
 
     private boolean isPillChatTitleEnabled() {
-        // Always return false to disable pill chat title by default
-        return false;
+        // Restore original pill chat title logic
+        return NaConfig.INSTANCE.getPillChatTitle().Bool();
     }
 
     public void playPillTitleOnboardingHighlight() {
