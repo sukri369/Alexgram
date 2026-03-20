@@ -2173,6 +2173,10 @@ public class ChatActivity extends BaseFragment implements
 
         @Override
         public void onMessageSend(CharSequence message, boolean notify, int scheduleDate, int scheduleRepeatPeriod, long payStars) {
+                        // Store user-assistant conversation history in MiniChatAssistantView
+                        if (miniChatAssistantView != null && !TextUtils.isEmpty(message)) {
+                            miniChatAssistantView.addMessage(message.toString());
+                        }
             if (chatListItemAnimator != null) {
                 chatActivityEnterViewAnimateFromTop = chatActivityEnterView.getBackgroundTop();
                 if (chatActivityEnterViewAnimateFromTop != 0) {
