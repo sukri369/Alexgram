@@ -4696,6 +4696,13 @@ public class ChatActivity extends BaseFragment implements
         menu.setCenteredTitle(isTitleCentered());
         if (isPillChatHeaderEnabled()) {
             applyPillHeaderAppearance();
+            // Ensure avatarContainer is attached and visible
+            if (avatarContainer != null && actionBar != null) {
+                if (avatarContainer.getParent() != actionBar) {
+                    actionBar.addView(avatarContainer);
+                }
+                avatarContainer.setVisibility(View.VISIBLE);
+            }
         }
 
         if (isThreadChat() && threadMessageId != 0 && !isTopic) {
@@ -44551,12 +44558,14 @@ public class ChatActivity extends BaseFragment implements
     }
 
     private boolean isPillChatHeaderEnabled() {
+        // Restore original pill chat title logic
         if (!NaConfig.INSTANCE.getPillChatTitle().Bool()) {
             return false;
         }
         if (isReplyChatComment() || isReport() || isComments) {
             return false;
         }
+        // Only disable pill chat title for search and saved modes
         return getChatMode() != ChatActivity.MODE_SEARCH && getChatMode() != ChatActivity.MODE_SAVED;
     }
 
@@ -44565,7 +44574,7 @@ public class ChatActivity extends BaseFragment implements
     }
 
     private void maybeShowPillTitleOnboarding(boolean backward) {
-        // Pill onboarding message and highlight removed
+        // Onboarding logic intentionally left empty to avoid interfering with pill chat title
         return;
     }
 
