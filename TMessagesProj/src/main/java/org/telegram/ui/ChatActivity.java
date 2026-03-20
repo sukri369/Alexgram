@@ -12,6 +12,7 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Toast;
+import org.telegram.ui.Components.chat.MiniChatAssistantView;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
