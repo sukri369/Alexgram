@@ -9149,6 +9149,14 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         if (matches.isEmpty()) {
             return new AssistantDialogResolve(null, "I could not find that chat in your main list.");
         }
+        // Prioritize exact match when type is specified
+        for (AssistantDialogMatch match : matches) {
+            String normalizedTitle = match.title.toLowerCase().trim();
+            String normalizedQuery = query.toLowerCase().trim();
+            if (normalizedTitle.equals(normalizedQuery) && match.type == targetType) {
+                return new AssistantDialogResolve(match, null);
+            }
+        }
         if (matches.size() > 1 && matches.get(0).score - matches.get(1).score <= 8) {
             return new AssistantDialogResolve(null, buildAssistantDisambiguation(matches, targetType));
         }
