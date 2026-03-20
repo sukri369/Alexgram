@@ -9531,13 +9531,10 @@ public class ChatActivity extends BaseFragment implements
 
         if (chatMode == 0 && !isReport() && !isInPreviewMode()) {
                         // Initialize MiniChatAssistantView alongside ChatAnimeAssistantView
-                        miniChatAssistantView = new MiniChatAssistantView(context);
-                        contentView.addView(miniChatAssistantView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM));
-                    if (miniChatAssistantView != null) {
-                        miniChatAssistantView.clearHistory();
-                        AndroidUtilities.removeFromParent(miniChatAssistantView);
-                        miniChatAssistantView = null;
-                    }
+                        if (miniChatAssistantView == null) {
+                            miniChatAssistantView = new MiniChatAssistantView(context);
+                            contentView.addView(miniChatAssistantView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM));
+                        }
             final boolean autoReplySupportedInThisDialog = currentChat == null || !ChatObject.isChannelAndNotMegaGroup(currentChat);
             chatAnimeAssistantView = new ChatAnimeAssistantView(
                     context,
