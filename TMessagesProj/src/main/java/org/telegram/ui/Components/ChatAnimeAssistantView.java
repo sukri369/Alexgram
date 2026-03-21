@@ -686,6 +686,12 @@ public class ChatAnimeAssistantView extends FrameLayout {
                 lp.bottomMargin = offsetPx;
                 characterContainer.setLayoutParams(lp);
                 
+                // DEBUG: Force UI to display the calculated offset value
+                if (reactionBubble != null) {
+                    reactionBubble.setText("O: " + offsetPx);
+                    reactionBubble.setVisibility(VISIBLE);
+                }
+                
                 // Keep panel relative to character by tracking the original dp difference (92 vs 86 = 6dp diff)
                 if (panelContainer != null && panelContainer.getLayoutParams() instanceof FrameLayout.LayoutParams) {
                     FrameLayout.LayoutParams panelLp = (FrameLayout.LayoutParams) panelContainer.getLayoutParams();
