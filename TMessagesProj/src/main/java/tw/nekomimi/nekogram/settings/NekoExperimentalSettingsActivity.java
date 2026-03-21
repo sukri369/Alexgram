@@ -234,24 +234,82 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
     private final AbstractConfigCell enableSummarizeChatRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getEnableSummarizeChat(), "Summarize Chat"));
     private final AbstractConfigCell aiModelUrlRow = cellGroup.appendCell(new ConfigCellTextInput("Model URL 1", NaConfig.INSTANCE.getAiModelUrl(), "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash", null));
     private final AbstractConfigCell aiApiKeyRow = cellGroup.appendCell(new ConfigCellTextInput("API Key 1", NaConfig.INSTANCE.getAiApiKey(), "Api Key", null));
-    // Add Test API 1 button
+    // Add universal Test API 1 button
     private final AbstractConfigCell testApi1Row = cellGroup.appendCell(new ConfigCellText("Test API 1", () -> {
         String url = NaConfig.INSTANCE.getAiModelUrl().String();
         String key = NaConfig.INSTANCE.getAiApiKey().String();
         Context ctx = getParentActivity();
         if (ctx == null) return;
         new Thread(() -> {
-            var res = tw.nekomimi.nekogram.llm.net.OpenAICompatClient.fetchModels(url, key);
-            AndroidUtilities.runOnUIThread(() -> {
-                String msg;
-                if (res.isSuccess()) {
-                    msg = "API 1 Test Success! Models: " + (res.data() != null ? res.data().toString() : "<none>");
+            String msg;
+            boolean success = false;
+            try {
+                String urlLower = url.toLowerCase();
+                if (urlLower.contains("generativelanguage.googleapis.com")) { // Gemini
+                    // Gemini expects POST to :generateContent
+                    String endpoint = url.endsWith(":generateContent") ? url : (url.endsWith("/") ? url.substring(0, url.length()-1) : url) + ":generateContent";
+                    okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
+                    org.json.JSONObject req = new org.json.JSONObject();
+                    org.json.JSONArray contents = new org.json.JSONArray();
+                    org.json.JSONObject contentObj = new org.json.JSONObject();
+                    org.json.JSONArray parts = new org.json.JSONArray();
+                    org.json.JSONObject textPart = new org.json.JSONObject();
+                    textPart.put("text", "Test");
+                    parts.put(textPart);
+                    contentObj.put("parts", parts);
+                    contents.put(contentObj);
+                    req.put("contents", contents);
+                    okhttp3.RequestBody body = okhttp3.RequestBody.create(req.toString(), tw.nekomimi.nekogram.utils.HttpClient.MEDIA_TYPE_JSON);
+                    okhttp3.Request request = new okhttp3.Request.Builder()
+                        .url(endpoint)
+                        .header("Authorization", "Bearer " + key)
+                        .post(body)
+                        .build();
+                    try (okhttp3.Response response = client.newCall(request).execute()) {
+                        int code = response.code();
+                        String resp = response.body().string();
+                        if (code >= 200 && code < 300) {
+                            msg = "Gemini API Test Success! Response: " + resp;
+                            success = true;
+                        } else {
+                            msg = "Gemini API Test Failed: HTTP " + code + "\n" + resp;
+                        }
+                    }
+                } else if (urlLower.contains("openai.com") || urlLower.contains("groq.com") || urlLower.contains("deepseek.com") || urlLower.contains("x.ai") || urlLower.contains("cerebras.ai") || urlLower.contains("openrouter.ai") || urlLower.contains("vercel.sh") || urlLower.contains("ollama.com")) {
+                    // OpenAI-compatible: try fetchModels, fallback to chat completion
+                    var res = tw.nekomimi.nekogram.llm.net.OpenAICompatClient.fetchModels(url, key);
+                    if (res.isSuccess()) {
+                        msg = "API 1 Test Success! Models: " + (res.data() != null ? res.data().toString() : "<none>");
+                        success = true;
+                    } else {
+                        // Try chat completion with a test prompt
+                        var chatRes = tw.nekomimi.nekogram.llm.net.OpenAICompatClient.testChatCompletions(url, key, "gpt-3.5-turbo");
+                        if (chatRes.isSuccess()) {
+                            msg = "API 1 Chat Test Success! Response: " + chatRes.data();
+                            success = true;
+                        } else {
+                            msg = "API 1 Test Failed: " + res.error() + "\nChat Test: " + chatRes.error();
+                        }
+                    }
                 } else {
-                    msg = "API 1 Test Failed: " + (res.error() != null ? res.error() : "Unknown error");
+                    // Unknown: try generic chat completion
+                    var chatRes = tw.nekomimi.nekogram.llm.net.OpenAICompatClient.testChatCompletions(url, key, "gpt-3.5-turbo");
+                    if (chatRes.isSuccess()) {
+                        msg = "API 1 Generic Chat Test Success! Response: " + chatRes.data();
+                        success = true;
+                    } else {
+                        msg = "API 1 Test Failed (Unknown Provider): " + chatRes.error();
+                    }
                 }
+            } catch (Throwable e) {
+                msg = "API 1 Test Exception: " + e.getMessage();
+            }
+            boolean finalSuccess = success;
+            String finalMsg = msg;
+            AndroidUtilities.runOnUIThread(() -> {
                 new AlertDialog.Builder(ctx)
-                        .setTitle("Test API 1 Result")
-                        .setMessage(msg)
+                        .setTitle(finalSuccess ? "Test API 1 Result (Success)" : "Test API 1 Result (Failed)")
+                        .setMessage(finalMsg)
                         .setPositiveButton("OK", null)
                         .show();
             });
@@ -259,24 +317,78 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
     }));
     private final AbstractConfigCell aiModelUrl2Row = cellGroup.appendCell(new ConfigCellTextInput("Model URL 2 (Failover)", NaConfig.INSTANCE.getAiModelUrl2(), "https://api.openai.com/v1/", null));
     private final AbstractConfigCell aiApiKey2Row = cellGroup.appendCell(new ConfigCellTextInput("API Key 2 (Failover)", NaConfig.INSTANCE.getAiApiKey2(), "sk-...", null));
-    // Add Test API 2 button
+    // Add universal Test API 2 button
     private final AbstractConfigCell testApi2Row = cellGroup.appendCell(new ConfigCellText("Test API 2", () -> {
         String url = NaConfig.INSTANCE.getAiModelUrl2().String();
         String key = NaConfig.INSTANCE.getAiApiKey2().String();
         Context ctx = getParentActivity();
         if (ctx == null) return;
         new Thread(() -> {
-            var res = tw.nekomimi.nekogram.llm.net.OpenAICompatClient.fetchModels(url, key);
-            AndroidUtilities.runOnUIThread(() -> {
-                String msg;
-                if (res.isSuccess()) {
-                    msg = "API 2 Test Success! Models: " + (res.data() != null ? res.data().toString() : "<none>");
+            String msg;
+            boolean success = false;
+            try {
+                String urlLower = url.toLowerCase();
+                if (urlLower.contains("generativelanguage.googleapis.com")) { // Gemini
+                    String endpoint = url.endsWith(":generateContent") ? url : (url.endsWith("/") ? url.substring(0, url.length()-1) : url) + ":generateContent";
+                    okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
+                    org.json.JSONObject req = new org.json.JSONObject();
+                    org.json.JSONArray contents = new org.json.JSONArray();
+                    org.json.JSONObject contentObj = new org.json.JSONObject();
+                    org.json.JSONArray parts = new org.json.JSONArray();
+                    org.json.JSONObject textPart = new org.json.JSONObject();
+                    textPart.put("text", "Test");
+                    parts.put(textPart);
+                    contentObj.put("parts", parts);
+                    contents.put(contentObj);
+                    req.put("contents", contents);
+                    okhttp3.RequestBody body = okhttp3.RequestBody.create(req.toString(), tw.nekomimi.nekogram.utils.HttpClient.MEDIA_TYPE_JSON);
+                    okhttp3.Request request = new okhttp3.Request.Builder()
+                        .url(endpoint)
+                        .header("Authorization", "Bearer " + key)
+                        .post(body)
+                        .build();
+                    try (okhttp3.Response response = client.newCall(request).execute()) {
+                        int code = response.code();
+                        String resp = response.body().string();
+                        if (code >= 200 && code < 300) {
+                            msg = "Gemini API Test Success! Response: " + resp;
+                            success = true;
+                        } else {
+                            msg = "Gemini API Test Failed: HTTP " + code + "\n" + resp;
+                        }
+                    }
+                } else if (urlLower.contains("openai.com") || urlLower.contains("groq.com") || urlLower.contains("deepseek.com") || urlLower.contains("x.ai") || urlLower.contains("cerebras.ai") || urlLower.contains("openrouter.ai") || urlLower.contains("vercel.sh") || urlLower.contains("ollama.com")) {
+                    var res = tw.nekomimi.nekogram.llm.net.OpenAICompatClient.fetchModels(url, key);
+                    if (res.isSuccess()) {
+                        msg = "API 2 Test Success! Models: " + (res.data() != null ? res.data().toString() : "<none>");
+                        success = true;
+                    } else {
+                        var chatRes = tw.nekomimi.nekogram.llm.net.OpenAICompatClient.testChatCompletions(url, key, "gpt-3.5-turbo");
+                        if (chatRes.isSuccess()) {
+                            msg = "API 2 Chat Test Success! Response: " + chatRes.data();
+                            success = true;
+                        } else {
+                            msg = "API 2 Test Failed: " + res.error() + "\nChat Test: " + chatRes.error();
+                        }
+                    }
                 } else {
-                    msg = "API 2 Test Failed: " + (res.error() != null ? res.error() : "Unknown error");
+                    var chatRes = tw.nekomimi.nekogram.llm.net.OpenAICompatClient.testChatCompletions(url, key, "gpt-3.5-turbo");
+                    if (chatRes.isSuccess()) {
+                        msg = "API 2 Generic Chat Test Success! Response: " + chatRes.data();
+                        success = true;
+                    } else {
+                        msg = "API 2 Test Failed (Unknown Provider): " + chatRes.error();
+                    }
                 }
+            } catch (Throwable e) {
+                msg = "API 2 Test Exception: " + e.getMessage();
+            }
+            boolean finalSuccess = success;
+            String finalMsg = msg;
+            AndroidUtilities.runOnUIThread(() -> {
                 new AlertDialog.Builder(ctx)
-                        .setTitle("Test API 2 Result")
-                        .setMessage(msg)
+                        .setTitle(finalSuccess ? "Test API 2 Result (Success)" : "Test API 2 Result (Failed)")
+                        .setMessage(finalMsg)
                         .setPositiveButton("OK", null)
                         .show();
             });
