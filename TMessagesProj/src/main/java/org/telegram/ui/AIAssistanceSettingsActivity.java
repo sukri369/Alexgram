@@ -141,29 +141,6 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
         });
         apiSetupCard.addView(setupButton);
         contentLayout.addView(apiSetupCard, 0);
-                    "4. Paste your Model URL and API Key.\n\n" +
-                    "Need help? Tap 'Go to AI Reply Settings' to jump there now.")
-                .setPositiveButton("Go to AI Reply Settings", (dialog, which) -> {
-                    // Deep link or navigate to Experimental Settings > AI Reply
-                    Context ctx = getParentActivity();
-                    if (ctx != null) {
-                        try {
-                            android.net.Uri uri = android.net.Uri.parse("alexsettings://experimental?scroll=ai_reply");
-                            android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_VIEW, uri);
-                            ctx.startActivity(intent);
-                        } catch (Exception e) {
-                            // fallback: show a message
-                            new AlertDialog.Builder(ctx)
-                                .setTitle("Navigation Failed")
-                                .setMessage("Please open Experimental Settings manually and scroll to the AI Reply section.")
-                                .setPositiveButton("OK", null)
-                                .show();
-                        }
-                    }
-                })
-                .setNegativeButton("Close", null)
-                .show();
-        });
 
         if (preferences == null) {
             preferences = context.getSharedPreferences("ai_assistant_prefs", Context.MODE_PRIVATE);
