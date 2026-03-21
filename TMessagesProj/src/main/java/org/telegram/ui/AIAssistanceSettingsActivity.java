@@ -65,66 +65,107 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
 
     @Override
     public View createView(Context context) {
-                // --- AI Assistance API Setup Card ---
-                LinearLayout apiSetupCard = createGlassCard(context);
-                TextView apiSetupTitle = new TextView(context);
-                apiSetupTitle.setText("Setup API for AI Replies");
-                apiSetupTitle.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
-                apiSetupTitle.setTextColor(accentColor);
-                apiSetupTitle.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
-                apiSetupTitle.setPadding(AndroidUtilities.dp(20), AndroidUtilities.dp(18), AndroidUtilities.dp(20), AndroidUtilities.dp(6));
-                apiSetupCard.addView(apiSetupTitle);
+        if (preferences == null) {
+            preferences = context.getSharedPreferences("ai_assistant_prefs", Context.MODE_PRIVATE);
+        }
+        setupColors();
 
-                TextView apiSetupDesc = new TextView(context);
-                apiSetupDesc.setText("To use AI Replies, you need to set up your Model URL and API Key. Tap below for a step-by-step guide and quick access to the configuration section.");
-                apiSetupDesc.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
-                apiSetupDesc.setTextColor(textSub);
-                apiSetupDesc.setPadding(AndroidUtilities.dp(20), 0, AndroidUtilities.dp(20), AndroidUtilities.dp(10));
-                apiSetupCard.addView(apiSetupDesc);
+        actionBar.setAddToContainer(false);
+        actionBar.setBackButtonImage(R.drawable.ic_ab_back);
+        actionBar.setAllowOverlayTitle(true);
+        actionBar.setTitle("Alexgram AI Assistance");
+        actionBar.setBackgroundColor(Color.TRANSPARENT);
+        int actionBarColor = isDark ? Color.WHITE : 0xFF1A1A2E;
+        actionBar.setItemsColor(actionBarColor, false);
+        actionBar.setTitleColor(actionBarColor);
+        actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
+            @Override
+            public void onItemClick(int id) {
+                if (id == -1) {
+                    finishFragment();
+                }
+            }
+        });
 
-                TextView setupButton = new TextView(context);
-                setupButton.setText("Setup API Now");
-                setupButton.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
-                setupButton.setTextColor(Color.WHITE);
-                setupButton.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
-                setupButton.setGravity(Gravity.CENTER);
-                setupButton.setBackground(Theme.createSimpleSelectorRoundRectDrawable(AndroidUtilities.dp(8), accentColor, 0x22000000));
-                setupButton.setPadding(AndroidUtilities.dp(0), AndroidUtilities.dp(12), AndroidUtilities.dp(0), AndroidUtilities.dp(12));
-                LinearLayout.LayoutParams btnLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-                btnLp.setMargins(AndroidUtilities.dp(20), AndroidUtilities.dp(8), AndroidUtilities.dp(20), AndroidUtilities.dp(18));
-                setupButton.setLayoutParams(btnLp);
-                setupButton.setOnClickListener(v -> {
-                    new AlertDialog.Builder(getParentActivity())
-                        .setTitle("AI Reply Setup Guide")
-                        .setMessage("To enable AI Replies, follow these steps:\n\n" +
-                            "1. Sign up at an AI provider (OpenAI, DeepSeek, Groq, Gemini, etc.).\n" +
-                            "2. Get your API Key and Model URL from their dashboard.\n" +
-                            "3. Go to Experimental Settings > AI Reply section.\n" +
-                            "4. Paste your Model URL and API Key.\n\n" +
-                            "Need help? Tap 'Go to AI Reply Settings' to jump there now.")
-                        .setPositiveButton("Go to AI Reply Settings", (dialog, which) -> {
-                            // Deep link or navigate to Experimental Settings > AI Reply
-                            Context ctx = getParentActivity();
-                            if (ctx != null) {
-                                try {
-                                    android.net.Uri uri = android.net.Uri.parse("alexsettings://experimental?scroll=ai_reply");
-                                    android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_VIEW, uri);
-                                    ctx.startActivity(intent);
-                                } catch (Exception e) {
-                                    // fallback: show a message
-                                    new AlertDialog.Builder(ctx)
-                                        .setTitle("Navigation Failed")
-                                        .setMessage("Please open Experimental Settings manually and scroll to the AI Reply section.")
-                                        .setPositiveButton("OK", null)
-                                        .show();
-                                }
-                            }
-                        })
-                        .setNegativeButton("Close", null)
-                        .show();
-                });
-                apiSetupCard.addView(setupButton);
-                contentLayout.addView(apiSetupCard, 0);
+        rootFrame = new FrameLayout(context);
+
+        backgroundView = new AlexgramSettingsHeaderView(context);
+        boolean backgroundEnabled = preferences.getBoolean("background_animation", true);
+        backgroundView.setVisibility(backgroundEnabled ? View.VISIBLE : View.GONE);
+        rootFrame.addView(backgroundView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+
+        ScrollView scrollView = new ScrollView(context);
+        scrollView.setVerticalScrollBarEnabled(false);
+        scrollView.setOverScrollMode(View.OVER_SCROLL_NEVER);
+        scrollView.setClipToPadding(true);
+        scrollView.setPadding(0, AndroidUtilities.dp(56) + AndroidUtilities.statusBarHeight, 0, 0);
+        rootFrame.addView(scrollView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+
+        LinearLayout contentLayout = new LinearLayout(context);
+        contentLayout.setOrientation(LinearLayout.VERTICAL);
+        contentLayout.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(6), AndroidUtilities.dp(16), AndroidUtilities.dp(24));
+        scrollView.addView(contentLayout, new ScrollView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+        // --- AI Assistance API Setup Card ---
+        LinearLayout apiSetupCard = createGlassCard(context);
+        TextView apiSetupTitle = new TextView(context);
+        apiSetupTitle.setText("Setup API for AI Replies");
+        apiSetupTitle.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
+        apiSetupTitle.setTextColor(accentColor);
+        apiSetupTitle.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+        apiSetupTitle.setPadding(AndroidUtilities.dp(20), AndroidUtilities.dp(18), AndroidUtilities.dp(20), AndroidUtilities.dp(6));
+        apiSetupCard.addView(apiSetupTitle);
+
+        TextView apiSetupDesc = new TextView(context);
+        apiSetupDesc.setText("To use AI Replies, you need to set up your Model URL and API Key. Tap below for a step-by-step guide and quick access to the configuration section.");
+        apiSetupDesc.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
+        apiSetupDesc.setTextColor(textSub);
+        apiSetupDesc.setPadding(AndroidUtilities.dp(20), 0, AndroidUtilities.dp(20), AndroidUtilities.dp(10));
+        apiSetupCard.addView(apiSetupDesc);
+
+        TextView setupButton = new TextView(context);
+        setupButton.setText("Setup API Now");
+        setupButton.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
+        setupButton.setTextColor(Color.WHITE);
+        setupButton.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+        setupButton.setGravity(Gravity.CENTER);
+        setupButton.setBackground(Theme.createSimpleSelectorRoundRectDrawable(AndroidUtilities.dp(8), accentColor, 0x22000000));
+        setupButton.setPadding(AndroidUtilities.dp(0), AndroidUtilities.dp(12), AndroidUtilities.dp(0), AndroidUtilities.dp(12));
+        LinearLayout.LayoutParams btnLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        btnLp.setMargins(AndroidUtilities.dp(20), AndroidUtilities.dp(8), AndroidUtilities.dp(20), AndroidUtilities.dp(18));
+        setupButton.setLayoutParams(btnLp);
+        setupButton.setOnClickListener(v -> {
+            new AlertDialog.Builder(getParentActivity())
+                .setTitle("AI Reply Setup Guide")
+                .setMessage("To enable AI Replies, follow these steps:\n\n" +
+                    "1. Sign up at an AI provider (OpenAI, DeepSeek, Groq, Gemini, etc.).\n" +
+                    "2. Get your API Key and Model URL from their dashboard.\n" +
+                    "3. Go to Experimental Settings > AI Reply section.\n" +
+                    "4. Paste your Model URL and API Key.\n\n" +
+                    "Need help? Tap 'Go to AI Reply Settings' to jump there now.")
+                .setPositiveButton("Go to AI Reply Settings", (dialog, which) -> {
+                    // Deep link or navigate to Experimental Settings > AI Reply
+                    Context ctx = getParentActivity();
+                    if (ctx != null) {
+                        try {
+                            android.net.Uri uri = android.net.Uri.parse("alexsettings://experimental?scroll=ai_reply");
+                            android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_VIEW, uri);
+                            ctx.startActivity(intent);
+                        } catch (Exception e) {
+                            // fallback: show a message
+                            new AlertDialog.Builder(ctx)
+                                .setTitle("Navigation Failed")
+                                .setMessage("Please open Experimental Settings manually and scroll to the AI Reply section.")
+                                .setPositiveButton("OK", null)
+                                .show();
+                        }
+                    }
+                })
+                .setNegativeButton("Close", null)
+                .show();
+        });
+        apiSetupCard.addView(setupButton);
+        contentLayout.addView(apiSetupCard, 0);
         if (preferences == null) {
             preferences = context.getSharedPreferences("ai_assistant_prefs", Context.MODE_PRIVATE);
         }

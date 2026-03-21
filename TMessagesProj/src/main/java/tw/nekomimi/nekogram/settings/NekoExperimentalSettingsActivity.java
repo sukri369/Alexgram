@@ -252,8 +252,8 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
 
     // AI Reply Section
     private final AbstractConfigCell headerAIReply = cellGroup.appendCell(new ConfigCellHeader("AI Reply"));
-    // Info row for Model URL/API Key
-    private final AbstractConfigCell aiInfoRow = cellGroup.appendCell(new ConfigCellTextDetail("Model URL & API Key", "Enter your provider's endpoint and secret key. These are required for AI replies.", "Learn More", () -> {
+    // Info/help row for Model URL/API Key (use ConfigCellText for compatibility)
+    private final AbstractConfigCell aiInfoRow = cellGroup.appendCell(new ConfigCellText("Model URL & API Key Info", "Enter your provider's endpoint and secret key. Tap for help.", () -> {
         AndroidUtilities.runOnUIThread(() -> {
             new AlertDialog.Builder(getParentActivity())
                 .setTitle("AI Assistance Setup Guide")
