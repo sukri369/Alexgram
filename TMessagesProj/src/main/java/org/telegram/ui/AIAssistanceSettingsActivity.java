@@ -116,7 +116,7 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
                     Context ctx = getParentActivity();
                     if (ctx != null) {
                         try {
-                            android.net.Uri uri = android.net.Uri.parse("alexsettings://experimental?scroll=ai_reply");
+                            android.net.Uri uri = android.net.Uri.parse("https://t.me/alexsettings/experimental?r=aiModelUrl");
                             android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_VIEW, uri);
                             ctx.startActivity(intent);
                         } catch (Exception e) {

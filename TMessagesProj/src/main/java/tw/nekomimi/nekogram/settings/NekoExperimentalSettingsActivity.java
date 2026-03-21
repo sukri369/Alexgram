@@ -229,26 +229,7 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
     private final AbstractConfigCell dividerPangu = cellGroup.appendCell(new ConfigCellDivider());
 
     // AI Assistance Help & Setup Section
-    private final AbstractConfigCell headerAIHelp = cellGroup.appendCell(new ConfigCellHeader("AI Assistance Setup"));
-    private final AbstractConfigCell aiSetupGuideRow = cellGroup.appendCell(new ConfigCellText("AI Assistance Setup Guide", "Help & Setup", () -> {
-        AndroidUtilities.runOnUIThread(() -> {
-            new AlertDialog.Builder(getParentActivity())
-                .setTitle("AI Assistance Setup Guide")
-                .setMessage("To use AI Assistance, you need a Model URL and API Key. Please avoid using public APIs.\n\n" +
-                    "1. Sign up at an AI provider (e.g., OpenAI, DeepSeek, Groq, Gemini, etc.).\n" +
-                    "2. Find the API Keys section in your provider's dashboard.\n" +
-                    "3. Create a new secret key and copy it.\n" +
-                    "4. Copy the Model URL from your provider's API docs.\n" +
-                    "5. Paste both into the fields below.\n\n" +
-                    "Need help? Tap 'Go to AI Reply Settings' to jump to the configuration section.")
-                .setPositiveButton("Go to AI Reply Settings", (dialog, which) -> {
-                    // Scroll to AI Reply section
-                    AndroidUtilities.runOnUIThread(() -> scrollToAIRelaySection());
-                })
-                .setNegativeButton("Close", null)
-                .show();
-        });
-    }));
+    // Removed AI Assistance Setup Guide row as requested
 
     // AI Reply Section
     private final AbstractConfigCell headerAIReply = cellGroup.appendCell(new ConfigCellHeader("AI Reply"));
@@ -256,7 +237,7 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
     private final AbstractConfigCell aiInfoRow = cellGroup.appendCell(new ConfigCellText("Model URL & API Key Info", "Enter your provider's endpoint and secret key. Tap for help.", () -> {
         AndroidUtilities.runOnUIThread(() -> {
             new AlertDialog.Builder(getParentActivity())
-                .setTitle("AI Assistance Setup Guide")
+                .setTitle("Model URL & API Key Setup Guide")
                 .setMessage("To use AI Assistance, you need a Model URL and API Key. Please avoid using public APIs.\n\n" +
                     "1. Sign up at an AI provider (e.g., OpenAI, DeepSeek, Groq, Gemini, etc.).\n" +
                     "2. Find the API Keys section in your provider's dashboard.\n" +
@@ -265,7 +246,21 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
                     "5. Paste both into the fields below.\n\n" +
                     "Need help? Tap 'Go to AI Reply Settings' to jump to the configuration section.")
                 .setPositiveButton("Go to AI Reply Settings", (dialog, which) -> {
-                    AndroidUtilities.runOnUIThread(() -> scrollToAIRelaySection());
+                    // Open external link as requested
+                    Context ctx = getParentActivity();
+                    if (ctx != null) {
+                        try {
+                            Intent intent = new Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://t.me/alexsettings/experimental?r=aiModelUrl"));
+                            ctx.startActivity(intent);
+                        } catch (Exception e) {
+                            // fallback: show a message
+                            new AlertDialog.Builder(ctx)
+                                .setTitle("Navigation Failed")
+                                .setMessage("Please open https://t.me/alexsettings/experimental?r=aiModelUrl manually in your browser.")
+                                .setPositiveButton("OK", null)
+                                .show();
+                        }
+                    }
                 })
                 .setNegativeButton("Close", null)
                 .show();
