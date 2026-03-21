@@ -9559,16 +9559,6 @@ public class ChatActivity extends BaseFragment implements
                             }
                         }
             final boolean autoReplySupportedInThisDialog = currentChat == null || !ChatObject.isChannelAndNotMegaGroup(currentChat);
-            int assistantBottomMargin = 92;
-            int panelBottomMargin = 86;
-            
-            try {
-                if (!xyz.nextalone.nagram.NaConfig.INSTANCE.getPillChatTitle().Bool()) {
-                    assistantBottomMargin += 48;
-                    panelBottomMargin += 48;
-                }
-            } catch (Exception ignore) {}
-
             chatAnimeAssistantView = new ChatAnimeAssistantView(
                     context,
                     contentView,
@@ -9576,8 +9566,8 @@ public class ChatActivity extends BaseFragment implements
                     true,
                     autoReplySupportedInThisDialog,
                     "This feature only works in chats.",
-                    assistantBottomMargin,
-                    panelBottomMargin
+                    0,
+                    -6 // Slight negative margin because the panel extends further down
             );
             chatAnimeAssistantView.setAssistantRequestDelegate(new ChatAnimeAssistantView.AssistantRequestDelegate() {
                 @Override
@@ -11524,6 +11514,20 @@ public class ChatActivity extends BaseFragment implements
             float baseTranslationY2 = -windowInsetsStateHolder.getAnimatedMaxBottomInset()
                 - dp(ChatInputViewsContainer.INPUT_BUBBLE_BOTTOM + 7);
             suggestEmojiPanel.setTranslationY(baseTranslationY2);
+        }
+
+        if (chatAnimeAssistantView != null) {
+            int extraClearance = 20; // Clearance above scroll down button in Pill mode
+            try {
+                if (!xyz.nextalone.nagram.NaConfig.INSTANCE.getPillChatTitle().Bool()) {
+                    extraClearance += 38; // Extra padding when Pill mode is OFF (to clear taller attach bar / scroll down)
+                }
+            } catch (Exception ignore) {}
+            
+            float assistantTranslationY = -windowInsetsStateHolder.getAnimatedMaxBottomInset()
+                - (hideBottomForGesture ? 0 : chatInputViewsContainer.getInputBubbleHeight())
+                - dp(ChatInputViewsContainer.INPUT_BUBBLE_BOTTOM + extraClearance);
+            chatAnimeAssistantView.setTranslationY(assistantTranslationY);
         }
     }
 

@@ -362,29 +362,8 @@ public class ChatAnimeAssistantView extends FrameLayout {
     }
 
     private void setupKeyboardListener() {
-        getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            private int lastInset = 0;
-
-            @Override
-            public void onGlobalLayout() {
-                if (!panelOpened || !preferences.getBoolean("keyboard_auto_hide", true)) {
-                    return;
-                }
-                View root = getRootView();
-                root.getWindowVisibleDisplayFrame(visibleFrame);
-                int inset = Math.max(0, root.getHeight() - visibleFrame.bottom);
-                if (Math.abs(inset - lastInset) < AndroidUtilities.dp(8)) {
-                    return;
-                }
-                if (inset > AndroidUtilities.dp(100)) {
-                    keyboardShiftY = -Math.max(0, inset - AndroidUtilities.dp(12));
-                } else {
-                    keyboardShiftY = 0f;
-                }
-                animateLinkedToCurrent();
-                lastInset = inset;
-            }
-        });
+        // Disabled internal keyboard listener: ChatActivity now translates the entire ChatAnimeAssistantView 
+        // using updatePagedownButtonsPosition(), meaning it perfectly tracks the keyboard natively.
     }
 
     private void setupPanelDragging() {
@@ -491,7 +470,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
     private void clampPanelBaseToBounds() {
         float minX = -panelContainer.getLeft() + AndroidUtilities.dp(8);
         float maxX = getWidth() - panelContainer.getLeft() - panelContainer.getWidth() - AndroidUtilities.dp(8);
-        float minY = -panelContainer.getTop() + AndroidUtilities.statusBarHeight + AndroidUtilities.dp(8);
+        float minY = -panelContainer.getTop() + AndroidUtilities.statusBarHeight + AndroidUtilities.dp(8) - getTranslationY();
         float maxY = getHeight() - panelContainer.getTop() - panelContainer.getHeight() - AndroidUtilities.dp(96);
         panelBaseTx = Math.max(minX, Math.min(maxX, panelBaseTx));
         panelBaseTy = Math.max(minY, Math.min(maxY, panelBaseTy));
@@ -653,7 +632,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
         final float maxX = Math.max(0, getWidth() - characterContainer.getWidth() - AndroidUtilities.dp(4));
         final float maxY = Math.max(0, getHeight() - characterContainer.getHeight() - AndroidUtilities.dp(84));
         final float targetX = characterContainer.getX() + characterContainer.getTranslationX() > getWidth() * 0.5f ? maxX - characterContainer.getLeft() : -characterContainer.getLeft();
-        final float clampedY = Math.max(-characterContainer.getTop(), Math.min(maxY - characterContainer.getTop(), characterContainer.getTranslationY()));
+        final float clampedY = Math.max(-characterContainer.getTop() - getTranslationY(), Math.min(maxY - characterContainer.getTop(), characterContainer.getTranslationY()));
         characterContainer.animate()
                 .translationX(targetX)
                 .translationY(clampedY)
