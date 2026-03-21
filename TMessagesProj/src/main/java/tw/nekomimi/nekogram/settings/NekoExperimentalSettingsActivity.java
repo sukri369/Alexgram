@@ -309,8 +309,12 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
             boolean finalSuccess = success;
             String finalMsg = msg;
             AndroidUtilities.runOnUIThread(() -> {
+                String title = finalSuccess ? "Test API 1 Result (Success)" : "Test API 1 Result (Failed)";
+                int color = finalSuccess ? android.graphics.Color.parseColor("#2ecc40") : android.graphics.Color.parseColor("#ff3b30");
+                android.text.SpannableString sTitle = new android.text.SpannableString(title);
+                sTitle.setSpan(new android.text.style.ForegroundColorSpan(color), 0, title.length(), android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                 new AlertDialog.Builder(ctx)
-                        .setTitle(finalSuccess ? "Test API 1 Result (Success)" : "Test API 1 Result (Failed)")
+                        .setTitle(sTitle)
                         .setMessage(finalMsg)
                         .setPositiveButton("OK", null)
                         .show();
@@ -390,8 +394,12 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
             boolean finalSuccess = success;
             String finalMsg = msg;
             AndroidUtilities.runOnUIThread(() -> {
+                String title = finalSuccess ? "Test API 2 Result (Success)" : "Test API 2 Result (Failed)";
+                int color = finalSuccess ? android.graphics.Color.parseColor("#2ecc40") : android.graphics.Color.parseColor("#ff3b30");
+                android.text.SpannableString sTitle = new android.text.SpannableString(title);
+                sTitle.setSpan(new android.text.style.ForegroundColorSpan(color), 0, title.length(), android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                 new AlertDialog.Builder(ctx)
-                        .setTitle(finalSuccess ? "Test API 2 Result (Success)" : "Test API 2 Result (Failed)")
+                        .setTitle(sTitle)
                         .setMessage(finalMsg)
                         .setPositiveButton("OK", null)
                         .show();
