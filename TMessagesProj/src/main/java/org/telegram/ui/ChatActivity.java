@@ -9559,6 +9559,16 @@ public class ChatActivity extends BaseFragment implements
                             }
                         }
             final boolean autoReplySupportedInThisDialog = currentChat == null || !ChatObject.isChannelAndNotMegaGroup(currentChat);
+            int assistantBottomMargin = 92;
+            int panelBottomMargin = 86;
+            
+            try {
+                if (!xyz.nextalone.nagram.NaConfig.INSTANCE.getPillChatTitle().Bool()) {
+                    assistantBottomMargin += 48;
+                    panelBottomMargin += 48;
+                }
+            } catch (Exception ignore) {}
+
             chatAnimeAssistantView = new ChatAnimeAssistantView(
                     context,
                     contentView,
@@ -9566,8 +9576,8 @@ public class ChatActivity extends BaseFragment implements
                     true,
                     autoReplySupportedInThisDialog,
                     "This feature only works in chats.",
-                    92,
-                    86
+                    assistantBottomMargin,
+                    panelBottomMargin
             );
             chatAnimeAssistantView.setAssistantRequestDelegate(new ChatAnimeAssistantView.AssistantRequestDelegate() {
                 @Override
