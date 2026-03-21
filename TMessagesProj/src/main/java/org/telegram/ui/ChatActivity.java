@@ -11517,10 +11517,10 @@ public class ChatActivity extends BaseFragment implements
         }
 
         if (chatAnimeAssistantView != null) {
-            float assistantTranslationY = -windowInsetsStateHolder.getAnimatedMaxBottomInset()
-                - (hideBottomForGesture ? 0 : chatInputViewsContainer.getInputBubbleHeight())
-                - dp(ChatInputViewsContainer.INPUT_BUBBLE_BOTTOM + 68);
-            chatAnimeAssistantView.setTranslationY(assistantTranslationY);
+            int offsetPx = Math.round(windowInsetsStateHolder.getAnimatedMaxBottomInset()
+                + (hideBottomForGesture ? 0 : chatInputViewsContainer.getInputBubbleHeight())
+                + dp(ChatInputViewsContainer.INPUT_BUBBLE_BOTTOM + 68));
+            chatAnimeAssistantView.setAssistantBottomOffset(offsetPx);
         }
     }
 

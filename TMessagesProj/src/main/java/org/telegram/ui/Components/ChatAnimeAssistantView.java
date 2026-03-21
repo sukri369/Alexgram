@@ -470,7 +470,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
     private void clampPanelBaseToBounds() {
         float minX = -panelContainer.getLeft() + AndroidUtilities.dp(8);
         float maxX = getWidth() - panelContainer.getLeft() - panelContainer.getWidth() - AndroidUtilities.dp(8);
-        float minY = -panelContainer.getTop() + AndroidUtilities.statusBarHeight + AndroidUtilities.dp(8) - getTranslationY();
+        float minY = -panelContainer.getTop() + AndroidUtilities.statusBarHeight + AndroidUtilities.dp(8);
         float maxY = getHeight() - panelContainer.getTop() - panelContainer.getHeight() - AndroidUtilities.dp(96);
         panelBaseTx = Math.max(minX, Math.min(maxX, panelBaseTx));
         panelBaseTy = Math.max(minY, Math.min(maxY, panelBaseTy));
@@ -632,7 +632,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
         final float maxX = Math.max(0, getWidth() - characterContainer.getWidth() - AndroidUtilities.dp(4));
         final float maxY = Math.max(0, getHeight() - characterContainer.getHeight() - AndroidUtilities.dp(84));
         final float targetX = characterContainer.getX() + characterContainer.getTranslationX() > getWidth() * 0.5f ? maxX - characterContainer.getLeft() : -characterContainer.getLeft();
-        final float clampedY = Math.max(-characterContainer.getTop() - getTranslationY(), Math.min(maxY - characterContainer.getTop(), characterContainer.getTranslationY()));
+        final float clampedY = Math.max(-characterContainer.getTop(), Math.min(maxY - characterContainer.getTop(), characterContainer.getTranslationY()));
         characterContainer.animate()
                 .translationX(targetX)
                 .translationY(clampedY)
@@ -677,6 +677,23 @@ public class ChatAnimeAssistantView extends FrameLayout {
                 keyboardShiftY = 0f;
             }
         }).start();
+    }
+
+    public void setAssistantBottomOffset(int offsetPx) {
+        if (characterContainer != null && characterContainer.getLayoutParams() instanceof FrameLayout.LayoutParams) {
+            FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) characterContainer.getLayoutParams();
+            if (lp.bottomMargin != offsetPx) {
+                lp.bottomMargin = offsetPx;
+                characterContainer.setLayoutParams(lp);
+                
+                // Keep panel relative to character by tracking the original dp difference (92 vs 86 = 6dp diff)
+                if (panelContainer != null && panelContainer.getLayoutParams() instanceof FrameLayout.LayoutParams) {
+                    FrameLayout.LayoutParams panelLp = (FrameLayout.LayoutParams) panelContainer.getLayoutParams();
+                    panelLp.bottomMargin = offsetPx - AndroidUtilities.dp(6);
+                    panelContainer.setLayoutParams(panelLp);
+                }
+            }
+        }
     }
 
     private void sendPrompt() {
