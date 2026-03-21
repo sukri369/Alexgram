@@ -72,14 +72,7 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
 
         actionBar.setAddToContainer(false);
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
-        scrollView.setClipToPadding(true);
-        scrollView.setPadding(0, AndroidUtilities.dp(56) + AndroidUtilities.statusBarHeight, 0, 0);
-        rootFrame.addView(scrollView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
-
-        LinearLayout contentLayout = new LinearLayout(context);
-        contentLayout.setOrientation(LinearLayout.VERTICAL);
-        contentLayout.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(6), AndroidUtilities.dp(16), AndroidUtilities.dp(24));
-        scrollView.addView(contentLayout, new ScrollView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        // scrollView and contentLayout are declared and initialized below after rootFrame and backgroundView
 
         // --- AI Assistance API Setup Card ---
         LinearLayout apiSetupCard = createGlassCard(context);
