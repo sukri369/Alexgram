@@ -1,3 +1,4 @@
+
 package org.telegram.ui.Components.chat;
 
 import android.content.Context;
@@ -7,31 +8,6 @@ import android.widget.LinearLayout;
 import java.util.ArrayList;
 
 public class MiniChatAssistantView extends LinearLayout {
-        public void addGeminiResponse(String response) {
-            // Try to detect image (base64 or URL)
-            android.graphics.Bitmap image = null;
-            if (response != null && (response.startsWith("data:image/") || response.startsWith("http"))) {
-                try {
-                    if (response.startsWith("data:image/")) {
-                        String base64 = response.substring(response.indexOf(",") + 1);
-                        byte[] decoded = android.util.Base64.decode(base64, android.util.Base64.DEFAULT);
-                        image = android.graphics.BitmapFactory.decodeByteArray(decoded, 0, decoded.length);
-                    } else if (response.startsWith("http")) {
-                        java.net.URL url = new java.net.URL(response);
-                        java.io.InputStream is = url.openStream();
-                        image = android.graphics.BitmapFactory.decodeStream(is);
-                        is.close();
-                    }
-                } catch (Throwable e) {
-                    // fallback to text
-                }
-            }
-            if (image != null) {
-                addImage(image);
-            } else {
-                addMessage(response);
-            }
-        }
     private ArrayList<Object> history; // String or Bitmap
 
     public MiniChatAssistantView(Context context) {
@@ -48,6 +24,31 @@ public class MiniChatAssistantView extends LinearLayout {
         history = new ArrayList<>();
         setOrientation(VERTICAL);
     }
+
+    public void addGeminiResponse(String response) {
+        // Try to detect image (base64 or URL)
+        android.graphics.Bitmap image = null;
+        if (response != null && (response.startsWith("data:image/") || response.startsWith("http"))) {
+            try {
+                if (response.startsWith("data:image/")) {
+                    String base64 = response.substring(response.indexOf(",") + 1);
+                    byte[] decoded = android.util.Base64.decode(base64, android.util.Base64.DEFAULT);
+                    image = android.graphics.BitmapFactory.decodeByteArray(decoded, 0, decoded.length);
+                } else if (response.startsWith("http")) {
+                    java.net.URL url = new java.net.URL(response);
+                    java.io.InputStream is = url.openStream();
+                    image = android.graphics.BitmapFactory.decodeStream(is);
+                    is.close();
+                }
+            } catch (Throwable e) {
+                // fallback to text
+            }
+        }
+        if (image != null) {
+            addImage(image);
+        } else {
+            addMessage(response);
+        }
     }
 
     public void addMessage(String message) {
