@@ -9533,12 +9533,29 @@ public class ChatActivity extends BaseFragment implements
                         // Initialize MiniChatAssistantView alongside ChatAnimeAssistantView
                         if (miniChatAssistantView == null) {
                             miniChatAssistantView = new MiniChatAssistantView(context);
-                            // Insert MiniChatAssistantView just before chatInputViewsContainer so it appears above the input bar
+                            FrameLayout.LayoutParams params = LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM);
+                            // Set initial bottom margin to input bar height if available
+                            int inputBarHeight = 0;
+                            if (chatInputViewsContainer != null) {
+                                inputBarHeight = chatInputViewsContainer.getHeight();
+                            }
+                            params.bottomMargin = inputBarHeight;
                             int inputIndex = contentView.indexOfChild(chatInputViewsContainer);
                             if (inputIndex != -1) {
-                                contentView.addView(miniChatAssistantView, inputIndex, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+                                contentView.addView(miniChatAssistantView, inputIndex, params);
                             } else {
-                                contentView.addView(miniChatAssistantView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+                                contentView.addView(miniChatAssistantView, params);
+                            }
+                            // Listen for input bar layout changes to update margin
+                            if (chatInputViewsContainer != null) {
+                                chatInputViewsContainer.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+                                    @Override
+                                    public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
+                                        FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) miniChatAssistantView.getLayoutParams();
+                                        lp.bottomMargin = chatInputViewsContainer.getHeight();
+                                        miniChatAssistantView.setLayoutParams(lp);
+                                    }
+                                });
                             }
                         }
             final boolean autoReplySupportedInThisDialog = currentChat == null || !ChatObject.isChannelAndNotMegaGroup(currentChat);
