@@ -281,30 +281,39 @@ public class AndroidUtilities {
         if (activity == null) return;
         String manufacturer = Build.MANUFACTURER.toLowerCase();
         Intent intent = null;
-        if (manufacturer.contains("xiaomi")) {
-            intent = new Intent();
-            intent.setComponent(new android.content.ComponentName("com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity"));
-        } else if (manufacturer.contains("oppo")) {
-            intent = new Intent();
-            intent.setComponent(new android.content.ComponentName("com.coloros.safecenter", "com.coloros.safecenter.permission.startup.StartupAppListActivity"));
-        } else if (manufacturer.contains("vivo")) {
-            intent = new Intent();
-            intent.setComponent(new android.content.ComponentName("com.iqoo.secure", "com.iqoo.secure.ui.phoneoptimize.AddWhiteListActivity"));
-        } else if (manufacturer.contains("letv")) {
-            intent = new Intent();
-            intent.setComponent(new android.content.ComponentName("com.letv.android.letvsafe", "com.letv.android.letvsafe.AutobootManageActivity"));
-        } else if (manufacturer.contains("honor") || manufacturer.contains("huawei")) {
-            intent = new Intent();
-            intent.setComponent(new android.content.ComponentName("com.huawei.systemmanager", "com.huawei.systemmanager.startupmgr.ui.StartupNormalAppListActivity"));
-        }
-        if (intent != null) {
-            try {
+        try {
+            if (manufacturer.contains("xiaomi") || manufacturer.contains("redmi")) {
+                intent = new Intent();
+                intent.setComponent(new android.content.ComponentName("com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity"));
+            } else if (manufacturer.contains("oppo") || manufacturer.contains("realme")) {
+                intent = new Intent();
+                intent.setComponent(new android.content.ComponentName("com.coloros.safecenter", "com.coloros.safecenter.permission.startup.StartupAppListActivity"));
+            } else if (manufacturer.contains("vivo")) {
+                intent = new Intent();
+                intent.setComponent(new android.content.ComponentName("com.iqoo.secure", "com.iqoo.secure.ui.phoneoptimize.AddWhiteListActivity"));
+            } else if (manufacturer.contains("letv")) {
+                intent = new Intent();
+                intent.setComponent(new android.content.ComponentName("com.letv.android.letvsafe", "com.letv.android.letvsafe.AutobootManageActivity"));
+            } else if (manufacturer.contains("honor") || manufacturer.contains("huawei")) {
+                intent = new Intent();
+                intent.setComponent(new android.content.ComponentName("com.huawei.systemmanager", "com.huawei.systemmanager.startupmgr.ui.StartupNormalAppListActivity"));
+            } else if (manufacturer.contains("samsung")) {
+                // Samsung: open app settings directly, user must enable background activity manually
+                intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                intent.setData(Uri.parse("package:" + activity.getPackageName()));
+            } else if (manufacturer.contains("asus")) {
+                intent = new Intent();
+                intent.setComponent(new android.content.ComponentName("com.asus.mobilemanager", "com.asus.mobilemanager.entry.FunctionActivity"));
+            } else if (manufacturer.contains("oneplus")) {
+                intent = new Intent();
+                intent.setComponent(new android.content.ComponentName("com.oneplus.security", "com.oneplus.security.chainlaunch.view.ChainLaunchAppListActivity"));
+            }
+            if (intent != null) {
                 activity.startActivity(intent);
-            } catch (Exception e) {
-                // fallback: show a dialog with instructions
+            } else {
                 showAutoStartManualDialog(activity);
             }
-        } else {
+        } catch (Exception e) {
             showAutoStartManualDialog(activity);
         }
     }
