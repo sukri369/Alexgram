@@ -234,8 +234,54 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
     private final AbstractConfigCell enableSummarizeChatRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getEnableSummarizeChat(), "Summarize Chat"));
     private final AbstractConfigCell aiModelUrlRow = cellGroup.appendCell(new ConfigCellTextInput("Model URL 1", NaConfig.INSTANCE.getAiModelUrl(), "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash", null));
     private final AbstractConfigCell aiApiKeyRow = cellGroup.appendCell(new ConfigCellTextInput("API Key 1", NaConfig.INSTANCE.getAiApiKey(), "Api Key", null));
+    // Add Test API 1 button
+    private final AbstractConfigCell testApi1Row = cellGroup.appendCell(new ConfigCellText("Test API 1", () -> {
+        String url = NaConfig.INSTANCE.getAiModelUrl().String();
+        String key = NaConfig.INSTANCE.getAiApiKey().String();
+        Context ctx = getParentActivity();
+        if (ctx == null) return;
+        new Thread(() -> {
+            var res = tw.nekomimi.nekogram.llm.net.OpenAICompatClient.fetchModels(url, key);
+            AndroidUtilities.runOnUIThread(() -> {
+                String msg;
+                if (res.isSuccess()) {
+                    msg = "API 1 Test Success! Models: " + (res.data() != null ? res.data().toString() : "<none>");
+                } else {
+                    msg = "API 1 Test Failed: " + (res.error() != null ? res.error() : "Unknown error");
+                }
+                new AlertDialog.Builder(ctx)
+                        .setTitle("Test API 1 Result")
+                        .setMessage(msg)
+                        .setPositiveButton("OK", null)
+                        .show();
+            });
+        }).start();
+    }));
     private final AbstractConfigCell aiModelUrl2Row = cellGroup.appendCell(new ConfigCellTextInput("Model URL 2 (Failover)", NaConfig.INSTANCE.getAiModelUrl2(), "https://api.openai.com/v1/", null));
     private final AbstractConfigCell aiApiKey2Row = cellGroup.appendCell(new ConfigCellTextInput("API Key 2 (Failover)", NaConfig.INSTANCE.getAiApiKey2(), "sk-...", null));
+    // Add Test API 2 button
+    private final AbstractConfigCell testApi2Row = cellGroup.appendCell(new ConfigCellText("Test API 2", () -> {
+        String url = NaConfig.INSTANCE.getAiModelUrl2().String();
+        String key = NaConfig.INSTANCE.getAiApiKey2().String();
+        Context ctx = getParentActivity();
+        if (ctx == null) return;
+        new Thread(() -> {
+            var res = tw.nekomimi.nekogram.llm.net.OpenAICompatClient.fetchModels(url, key);
+            AndroidUtilities.runOnUIThread(() -> {
+                String msg;
+                if (res.isSuccess()) {
+                    msg = "API 2 Test Success! Models: " + (res.data() != null ? res.data().toString() : "<none>");
+                } else {
+                    msg = "API 2 Test Failed: " + (res.error() != null ? res.error() : "Unknown error");
+                }
+                new AlertDialog.Builder(ctx)
+                        .setTitle("Test API 2 Result")
+                        .setMessage(msg)
+                        .setPositiveButton("OK", null)
+                        .show();
+            });
+        }).start();
+    }));
     private final AbstractConfigCell aiHelpRow = cellGroup.appendCell(new ConfigCellText("How to get API?", "Help", () -> {
          AndroidUtilities.runOnUIThread(() -> {
             new AlertDialog.Builder(getParentActivity())
