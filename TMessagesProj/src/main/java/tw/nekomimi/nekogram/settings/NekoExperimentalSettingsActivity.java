@@ -246,8 +246,11 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
             try {
                 String urlLower = url.toLowerCase();
                 if (urlLower.contains("generativelanguage.googleapis.com")) { // Gemini
-                    // Gemini expects POST to :generateContent
+                    // Gemini expects API key as query param, not Bearer header
                     String endpoint = url.endsWith(":generateContent") ? url : (url.endsWith("/") ? url.substring(0, url.length()-1) : url) + ":generateContent";
+                    if (!endpoint.contains("?key=")) {
+                        endpoint += (endpoint.contains("?") ? "&" : "?") + "key=" + key;
+                    }
                     okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
                     org.json.JSONObject req = new org.json.JSONObject();
                     org.json.JSONArray contents = new org.json.JSONArray();
@@ -262,7 +265,6 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
                     okhttp3.RequestBody body = okhttp3.RequestBody.create(req.toString(), tw.nekomimi.nekogram.utils.HttpClient.MEDIA_TYPE_JSON);
                     okhttp3.Request request = new okhttp3.Request.Builder()
                         .url(endpoint)
-                        .header("Authorization", "Bearer " + key)
                         .post(body)
                         .build();
                     try (okhttp3.Response response = client.newCall(request).execute()) {
@@ -330,6 +332,9 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
                 String urlLower = url.toLowerCase();
                 if (urlLower.contains("generativelanguage.googleapis.com")) { // Gemini
                     String endpoint = url.endsWith(":generateContent") ? url : (url.endsWith("/") ? url.substring(0, url.length()-1) : url) + ":generateContent";
+                    if (!endpoint.contains("?key=")) {
+                        endpoint += (endpoint.contains("?") ? "&" : "?") + "key=" + key;
+                    }
                     okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
                     org.json.JSONObject req = new org.json.JSONObject();
                     org.json.JSONArray contents = new org.json.JSONArray();
@@ -344,7 +349,6 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
                     okhttp3.RequestBody body = okhttp3.RequestBody.create(req.toString(), tw.nekomimi.nekogram.utils.HttpClient.MEDIA_TYPE_JSON);
                     okhttp3.Request request = new okhttp3.Request.Builder()
                         .url(endpoint)
-                        .header("Authorization", "Bearer " + key)
                         .post(body)
                         .build();
                     try (okhttp3.Response response = client.newCall(request).execute()) {
