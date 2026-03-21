@@ -238,6 +238,89 @@ import xyz.nextalone.nagram.NaConfig;
 
 public class AndroidUtilities {
 
+    /**
+     * Requests the user to disable battery optimizations for the app (needed for background services).
+     */
+    public static void requestIgnoreBatteryOptimizations(Activity activity) {
+        if (activity == null) return;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PowerManager pm = (PowerManager) activity.getSystemService(Context.POWER_SERVICE);
+            String packageName = activity.getPackageName();
+            if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+                try {
+                    Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                    intent.setData(Uri.parse("package:" + packageName));
+                    activity.startActivity(intent);
+                } catch (Exception e) {
+                    FileLog.e(e);
+                }
+            }
+        }
+    }
+
+    /**
+     * Requests notification permission on Android 13+ (SDK 33+).
+     */
+    public static void requestNotificationPermission(Activity activity) {
+        if (activity == null) return;
+        if (Build.VERSION.SDK_INT >= 33) {
+            if (activity.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                try {
+                    activity.requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 1001);
+                } catch (Exception e) {
+                    FileLog.e(e);
+                }
+            }
+        }
+    }
+
+    /**
+     * Shows a guide for enabling auto-start/background run on OEMs like Xiaomi, Oppo, Vivo, etc.
+     */
+    public static void showAutoStartPermissionGuide(Activity activity) {
+        if (activity == null) return;
+        String manufacturer = Build.MANUFACTURER.toLowerCase();
+        Intent intent = null;
+        if (manufacturer.contains("xiaomi")) {
+            intent = new Intent();
+            intent.setComponent(new android.content.ComponentName("com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity"));
+        } else if (manufacturer.contains("oppo")) {
+            intent = new Intent();
+            intent.setComponent(new android.content.ComponentName("com.coloros.safecenter", "com.coloros.safecenter.permission.startup.StartupAppListActivity"));
+        } else if (manufacturer.contains("vivo")) {
+            intent = new Intent();
+            intent.setComponent(new android.content.ComponentName("com.iqoo.secure", "com.iqoo.secure.ui.phoneoptimize.AddWhiteListActivity"));
+        } else if (manufacturer.contains("letv")) {
+            intent = new Intent();
+            intent.setComponent(new android.content.ComponentName("com.letv.android.letvsafe", "com.letv.android.letvsafe.AutobootManageActivity"));
+        } else if (manufacturer.contains("honor") || manufacturer.contains("huawei")) {
+            intent = new Intent();
+            intent.setComponent(new android.content.ComponentName("com.huawei.systemmanager", "com.huawei.systemmanager.startupmgr.ui.StartupNormalAppListActivity"));
+        }
+        if (intent != null) {
+            try {
+                activity.startActivity(intent);
+            } catch (Exception e) {
+                // fallback: show a dialog with instructions
+                showAutoStartManualDialog(activity);
+            }
+        } else {
+            showAutoStartManualDialog(activity);
+        }
+    }
+
+    private static void showAutoStartManualDialog(Activity activity) {
+        try {
+            new AlertDialog.Builder(activity)
+                .setTitle("Enable Auto-Start/Background Run")
+                .setMessage("To ensure background features work reliably, please enable auto-start or background run for this app in your device settings.")
+                .setPositiveButton("OK", null)
+                .show();
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+    }
+
         /**
          * Saves a Bitmap to the Alexgram directory in the Pictures folder and registers it with the gallery.
          * @param bitmap The Bitmap to save.

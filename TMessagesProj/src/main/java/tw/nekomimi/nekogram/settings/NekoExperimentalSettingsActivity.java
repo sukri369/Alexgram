@@ -787,15 +787,15 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
     private void updateRunInBackground(boolean enabled) {
         SharedPreferences notificationsSettings = MessagesController.getNotificationsSettings(currentAccount);
         notificationsSettings.edit()
-                .putBoolean("pushService", enabled)
-                .putBoolean("pushConnection", enabled)
-                .apply();
+            .putBoolean("pushService", enabled)
+            .putBoolean("pushConnection", enabled)
+            .apply();
 
         SharedPreferences mainSettings = MessagesController.getMainSettings(currentAccount);
         mainSettings.edit()
-                .putBoolean("keepAliveService", enabled)
-                .putBoolean("backgroundConnection", enabled)
-                .apply();
+            .putBoolean("keepAliveService", enabled)
+            .putBoolean("backgroundConnection", enabled)
+            .apply();
 
         getMessagesController().keepAliveService = enabled;
         getMessagesController().backgroundConnection = enabled;
@@ -806,6 +806,13 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
             ApplicationLoader.applicationContext.stopService(serviceIntent);
         }
         ApplicationLoader.startPushService();
+
+        // Request all necessary permissions and settings when enabling background run
+        if (enabled && getParentActivity() != null) {
+            AndroidUtilities.requestIgnoreBatteryOptimizations(getParentActivity());
+            AndroidUtilities.requestNotificationPermission(getParentActivity());
+            AndroidUtilities.showAutoStartPermissionGuide(getParentActivity());
+        }
     }
 
     private void checkSaveDeletedRows() {
