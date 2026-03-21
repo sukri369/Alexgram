@@ -72,31 +72,6 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
 
         actionBar.setAddToContainer(false);
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
-        actionBar.setAllowOverlayTitle(true);
-        actionBar.setTitle("Alexgram AI Assistance");
-        actionBar.setBackgroundColor(Color.TRANSPARENT);
-        int actionBarColor = isDark ? Color.WHITE : 0xFF1A1A2E;
-        actionBar.setItemsColor(actionBarColor, false);
-        actionBar.setTitleColor(actionBarColor);
-        actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
-            @Override
-            public void onItemClick(int id) {
-                if (id == -1) {
-                    finishFragment();
-                }
-            }
-        });
-
-        rootFrame = new FrameLayout(context);
-
-        backgroundView = new AlexgramSettingsHeaderView(context);
-        boolean backgroundEnabled = preferences.getBoolean("background_animation", true);
-        backgroundView.setVisibility(backgroundEnabled ? View.VISIBLE : View.GONE);
-        rootFrame.addView(backgroundView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
-
-        ScrollView scrollView = new ScrollView(context);
-        scrollView.setVerticalScrollBarEnabled(false);
-        scrollView.setOverScrollMode(View.OVER_SCROLL_NEVER);
         scrollView.setClipToPadding(true);
         scrollView.setPadding(0, AndroidUtilities.dp(56) + AndroidUtilities.statusBarHeight, 0, 0);
         rootFrame.addView(scrollView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
@@ -141,6 +116,31 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
                     "1. Sign up at an AI provider (OpenAI, DeepSeek, Groq, Gemini, etc.).\n" +
                     "2. Get your API Key and Model URL from their dashboard.\n" +
                     "3. Go to Experimental Settings > AI Reply section.\n" +
+                    "4. Paste your Model URL and API Key.\n\n" +
+                    "Need help? Tap 'Go to AI Reply Settings' to jump there now.")
+                .setPositiveButton("Go to AI Reply Settings", (dialog, which) -> {
+                    // Deep link or navigate to Experimental Settings > AI Reply
+                    Context ctx = getParentActivity();
+                    if (ctx != null) {
+                        try {
+                            android.net.Uri uri = android.net.Uri.parse("alexsettings://experimental?scroll=ai_reply");
+                            android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_VIEW, uri);
+                            ctx.startActivity(intent);
+                        } catch (Exception e) {
+                            // fallback: show a message
+                            new AlertDialog.Builder(ctx)
+                                .setTitle("Navigation Failed")
+                                .setMessage("Please open Experimental Settings manually and scroll to the AI Reply section.")
+                                .setPositiveButton("OK", null)
+                                .show();
+                        }
+                    }
+                })
+                .setNegativeButton("Close", null)
+                .show();
+        });
+        apiSetupCard.addView(setupButton);
+        contentLayout.addView(apiSetupCard, 0);
                     "4. Paste your Model URL and API Key.\n\n" +
                     "Need help? Tap 'Go to AI Reply Settings' to jump there now.")
                 .setPositiveButton("Go to AI Reply Settings", (dialog, which) -> {
