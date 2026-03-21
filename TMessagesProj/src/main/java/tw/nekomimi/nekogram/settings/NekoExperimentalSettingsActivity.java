@@ -228,9 +228,50 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
     private final AbstractConfigCell enablePanguOnSendingRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getEnablePanguOnSending(), getString(R.string.PanguInfo)));
     private final AbstractConfigCell dividerPangu = cellGroup.appendCell(new ConfigCellDivider());
 
-    // AI Reply
+    // AI Assistance Help & Setup Section
+    private final AbstractConfigCell headerAIHelp = cellGroup.appendCell(new ConfigCellHeader("AI Assistance Setup"));
+    private final AbstractConfigCell aiSetupGuideRow = cellGroup.appendCell(new ConfigCellText("AI Assistance Setup Guide", "Help & Setup", () -> {
+        AndroidUtilities.runOnUIThread(() -> {
+            new AlertDialog.Builder(getParentActivity())
+                .setTitle("AI Assistance Setup Guide")
+                .setMessage("To use AI Assistance, you need a Model URL and API Key. Please avoid using public APIs.\n\n" +
+                    "1. Sign up at an AI provider (e.g., OpenAI, DeepSeek, Groq, Gemini, etc.).\n" +
+                    "2. Find the API Keys section in your provider's dashboard.\n" +
+                    "3. Create a new secret key and copy it.\n" +
+                    "4. Copy the Model URL from your provider's API docs.\n" +
+                    "5. Paste both into the fields below.\n\n" +
+                    "Need help? Tap 'Go to AI Reply Settings' to jump to the configuration section.")
+                .setPositiveButton("Go to AI Reply Settings", (dialog, which) -> {
+                    // Scroll to AI Reply section
+                    AndroidUtilities.runOnUIThread(() -> scrollToAIRelaySection());
+                })
+                .setNegativeButton("Close", null)
+                .show();
+        });
+    }));
+
+    // AI Reply Section
     private final AbstractConfigCell headerAIReply = cellGroup.appendCell(new ConfigCellHeader("AI Reply"));
-    private final AbstractConfigCell enableAIReplyRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getEnableAIReply(), "enableAIReply"));
+    // Info row for Model URL/API Key
+    private final AbstractConfigCell aiInfoRow = cellGroup.appendCell(new ConfigCellTextDetail("Model URL & API Key", "Enter your provider's endpoint and secret key. These are required for AI replies.", "Learn More", () -> {
+        AndroidUtilities.runOnUIThread(() -> {
+            new AlertDialog.Builder(getParentActivity())
+                .setTitle("AI Assistance Setup Guide")
+                .setMessage("To use AI Assistance, you need a Model URL and API Key. Please avoid using public APIs.\n\n" +
+                    "1. Sign up at an AI provider (e.g., OpenAI, DeepSeek, Groq, Gemini, etc.).\n" +
+                    "2. Find the API Keys section in your provider's dashboard.\n" +
+                    "3. Create a new secret key and copy it.\n" +
+                    "4. Copy the Model URL from your provider's API docs.\n" +
+                    "5. Paste both into the fields below.\n\n" +
+                    "Need help? Tap 'Go to AI Reply Settings' to jump to the configuration section.")
+                .setPositiveButton("Go to AI Reply Settings", (dialog, which) -> {
+                    AndroidUtilities.runOnUIThread(() -> scrollToAIRelaySection());
+                })
+                .setNegativeButton("Close", null)
+                .show();
+        });
+    }));
+    private final AbstractConfigCell enableAIReplyRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getEnableAIReply(), "Enable AI Reply"));
     private final AbstractConfigCell enableSummarizeChatRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getEnableSummarizeChat(), "Summarize Chat"));
     private final AbstractConfigCell aiModelUrlRow = cellGroup.appendCell(new ConfigCellTextInput("Model URL 1", NaConfig.INSTANCE.getAiModelUrl(), "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash", null));
     private final AbstractConfigCell aiApiKeyRow = cellGroup.appendCell(new ConfigCellTextInput("API Key 1", NaConfig.INSTANCE.getAiApiKey(), "Api Key", null));
@@ -416,15 +457,17 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
             });
         }).start();
     }));
-    private final AbstractConfigCell aiHelpRow = cellGroup.appendCell(new ConfigCellText("How to get API?", "Help", () -> {
-         AndroidUtilities.runOnUIThread(() -> {
-            new AlertDialog.Builder(getParentActivity())
-                .setTitle("How to get API Key")
-                .setMessage("1. Sign up for an AI provider (e.g., OpenAI, DeepSeek).\n2. Go to their API Keys section.\n3. Create a new secret key.\n4. Paste it here.\n\nMake sure your account has credits!")
-                .setPositiveButton("OK", null)
-                .show();
-        });
-    }));
+
+    // Remove old help row (replaced by new setup guide and info row)
+
+    // Helper: Scroll to AI Reply section
+    private void scrollToAIRelaySection() {
+        // Try to scroll to the AI Reply header row
+        int index = cellGroup.rows.indexOf(headerAIReply);
+        if (index >= 0 && listView != null) {
+            listView.smoothScrollToPosition(index);
+        }
+    }
 
     public NekoExperimentalSettingsActivity() {
         if (NaConfig.INSTANCE.getUseDeletedIcon().Bool()) {
