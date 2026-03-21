@@ -109,7 +109,11 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
             LinearLayout dialogLayout = new LinearLayout(ctx);
             dialogLayout.setOrientation(LinearLayout.VERTICAL);
             dialogLayout.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(24), AndroidUtilities.dp(24), AndroidUtilities.dp(8));
-            dialogLayout.setBackground(AndroidUtilities.createSimpleSelectorRoundRectDrawable(AndroidUtilities.dp(24), 0xF21A2236, 0x22000000));
+            // Glassy/rounded background
+            GradientDrawable dialogBg = new GradientDrawable();
+            dialogBg.setColor(isDark ? 0xF21A2236 : 0xF2FFFFFF);
+            dialogBg.setCornerRadius(AndroidUtilities.dp(24));
+            dialogLayout.setBackground(dialogBg);
 
             // Icon
             TextView icon = new TextView(ctx);
@@ -147,7 +151,11 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
                 stepNum.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
                 stepNum.setTextColor(stepColor);
                 stepNum.setGravity(Gravity.CENTER);
-                stepNum.setBackground(AndroidUtilities.createCircleDrawable(AndroidUtilities.dp(28), 0x22FFFFFF));
+                // Use a round background for the number
+                GradientDrawable circle = new GradientDrawable();
+                circle.setShape(GradientDrawable.OVAL);
+                circle.setColor(0x22FFFFFF);
+                stepNum.setBackground(circle);
                 LinearLayout.LayoutParams numLp = new LinearLayout.LayoutParams(AndroidUtilities.dp(28), AndroidUtilities.dp(28));
                 numLp.rightMargin = AndroidUtilities.dp(12);
                 stepRow.addView(stepNum, numLp);
@@ -176,13 +184,21 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
             buttonRow.setGravity(Gravity.END);
             buttonRow.setPadding(0, AndroidUtilities.dp(8), 0, 0);
 
+            // We'll create the dialog first so we can reference it in listeners
+            AlertDialog alert = new AlertDialog.Builder(ctx)
+                .setView(dialogLayout)
+                .create();
+
             TextView closeBtn = new TextView(ctx);
             closeBtn.setText("Close");
             closeBtn.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
             closeBtn.setTextColor(accentColor);
             closeBtn.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
             closeBtn.setPadding(AndroidUtilities.dp(18), AndroidUtilities.dp(10), AndroidUtilities.dp(18), AndroidUtilities.dp(10));
-            closeBtn.setBackground(Theme.createSimpleSelectorRoundRectDrawable(AndroidUtilities.dp(8), 0x00000000, 0x22000000));
+            GradientDrawable closeBg = new GradientDrawable();
+            closeBg.setCornerRadius(AndroidUtilities.dp(8));
+            closeBg.setColor(0x00000000);
+            closeBtn.setBackground(closeBg);
             closeBtn.setOnClickListener(vv -> {
                 alert.dismiss();
             });
@@ -217,7 +233,6 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
 
             dialogLayout.addView(buttonRow);
 
-            AlertDialog alert = new AlertDialog(ctx, dialogLayout, true, false);
             alert.show();
         });
         apiSetupCard.addView(setupButton);
