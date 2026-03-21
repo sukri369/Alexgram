@@ -9533,7 +9533,13 @@ public class ChatActivity extends BaseFragment implements
                         // Initialize MiniChatAssistantView alongside ChatAnimeAssistantView
                         if (miniChatAssistantView == null) {
                             miniChatAssistantView = new MiniChatAssistantView(context);
-                            contentView.addView(miniChatAssistantView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM));
+                            // Insert MiniChatAssistantView just before chatInputViewsContainer so it appears above the input bar
+                            int inputIndex = contentView.indexOfChild(chatInputViewsContainer);
+                            if (inputIndex != -1) {
+                                contentView.addView(miniChatAssistantView, inputIndex, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+                            } else {
+                                contentView.addView(miniChatAssistantView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+                            }
                         }
             final boolean autoReplySupportedInThisDialog = currentChat == null || !ChatObject.isChannelAndNotMegaGroup(currentChat);
             chatAnimeAssistantView = new ChatAnimeAssistantView(
