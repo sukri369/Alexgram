@@ -237,33 +237,34 @@ import tw.nekomimi.nekogram.helpers.TypefaceHelper;
 import xyz.nextalone.nagram.NaConfig;
 
 public class AndroidUtilities {
+
         /**
-     * Saves a Bitmap to the Alexgram directory in the Pictures folder and registers it with the gallery.
-     * @param bitmap The Bitmap to save.
-     * @param fileName The name of the file (without extension).
-     * @return The File object of the saved image, or null if failed.
-     */
-    public static File saveBitmapToGallery(Bitmap bitmap, String fileName) {
-        if (bitmap == null || fileName == null) return null;
-        File dir = getAlbumDir(false);
-        if (dir == null) return null;
-        File imageFile = new File(dir, fileName + ".jpg");
-        FileOutputStream out = null;
-        try {
-            out = new FileOutputStream(imageFile);
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 95, out);
-            out.flush();
-            addMediaToGallery(imageFile);
-            return imageFile;
-        } catch (Exception e) {
-            FileLog.e(e);
-        } finally {
-            if (out != null) {
-                try { out.close(); } catch (Exception ignore) {}
+         * Saves a Bitmap to the Alexgram directory in the Pictures folder and registers it with the gallery.
+         * @param bitmap The Bitmap to save.
+         * @param fileName The name of the file (without extension).
+         * @return The File object of the saved image, or null if failed.
+         */
+        public static File saveBitmapToGallery(Bitmap bitmap, String fileName) {
+            if (bitmap == null || fileName == null) return null;
+            File dir = getAlbumDir(false);
+            if (dir == null) return null;
+            File imageFile = new File(dir, fileName + ".jpg");
+            FileOutputStream out = null;
+            try {
+                out = new FileOutputStream(imageFile);
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 95, out);
+                out.flush();
+                addMediaToGallery(imageFile);
+                return imageFile;
+            } catch (Exception e) {
+                FileLog.e(e);
+            } finally {
+                if (out != null) {
+                    try { out.close(); } catch (Exception ignore) {}
+                }
             }
+            return null;
         }
-        return null;
-    }
     public final static int LIGHT_STATUS_BAR_OVERLAY = 0x0f000000, DARK_STATUS_BAR_OVERLAY = 0x33000000;
 
     public final static int REPLACING_TAG_TYPE_LINK = 0;
