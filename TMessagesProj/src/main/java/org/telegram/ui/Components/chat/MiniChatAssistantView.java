@@ -100,12 +100,17 @@ public class MiniChatAssistantView extends LinearLayout {
 
     private void saveAndCopyImage(android.graphics.Bitmap image) {
         // Save image to device storage
-        String savedPath = org.telegram.messenger.AndroidUtilities.saveBitmapToGallery(getContext(), image, "Alexgram_Assistant_Image");
-        // Copy image to clipboard
-        android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getContext().getSystemService(android.content.Context.CLIPBOARD_SERVICE);
-        android.content.ClipData clip = android.content.ClipData.newUri(getContext().getContentResolver(), "Image", android.net.Uri.parse(savedPath));
-        clipboard.setPrimaryClip(clip);
-        android.widget.Toast.makeText(getContext(), "Image saved and copied!", android.widget.Toast.LENGTH_SHORT).show();
+        java.io.File savedFile = org.telegram.messenger.AndroidUtilities.saveBitmapToGallery(image, "Alexgram_Assistant_Image");
+        if (savedFile != null) {
+            // Copy image to clipboard
+            android.net.Uri uri = android.net.Uri.fromFile(savedFile);
+            android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getContext().getSystemService(android.content.Context.CLIPBOARD_SERVICE);
+            android.content.ClipData clip = android.content.ClipData.newUri(getContext().getContentResolver(), "Image", uri);
+            clipboard.setPrimaryClip(clip);
+            android.widget.Toast.makeText(getContext(), "Image saved and copied!", android.widget.Toast.LENGTH_SHORT).show();
+        } else {
+            android.widget.Toast.makeText(getContext(), "Failed to save image!", android.widget.Toast.LENGTH_SHORT).show();
+        }
     }
 
     public ArrayList<Object> getHistory() {
