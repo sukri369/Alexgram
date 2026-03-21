@@ -103,34 +103,122 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
         btnLp.setMargins(AndroidUtilities.dp(20), AndroidUtilities.dp(8), AndroidUtilities.dp(20), AndroidUtilities.dp(18));
         setupButton.setLayoutParams(btnLp);
         setupButton.setOnClickListener(v -> {
-            new AlertDialog.Builder(getParentActivity())
-                .setTitle("AI Reply Setup Guide")
-                .setMessage("To enable AI Replies, follow these steps:\n\n" +
-                    "1. Sign up at an AI provider (OpenAI, DeepSeek, Groq, Gemini, etc.).\n" +
-                    "2. Get your API Key and Model URL from their dashboard.\n" +
-                    "3. Go to Experimental Settings > AI Reply section.\n" +
-                    "4. Paste your Model URL and API Key.\n\n" +
-                    "Need help? Tap 'Go to AI Reply Settings' to jump there now.")
-                .setPositiveButton("Go to AI Reply Settings", (dialog, which) -> {
-                    // Deep link or navigate to Experimental Settings > AI Reply
-                    Context ctx = getParentActivity();
-                    if (ctx != null) {
-                        try {
-                            android.net.Uri uri = android.net.Uri.parse("https://t.me/alexsettings/experimental?r=aiModelUrl");
-                            android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_VIEW, uri);
-                            ctx.startActivity(intent);
-                        } catch (Exception e) {
-                            // fallback: show a message
-                            new AlertDialog.Builder(ctx)
-                                .setTitle("Navigation Failed")
-                                .setMessage("Please open Experimental Settings manually and scroll to the AI Reply section.")
-                                .setPositiveButton("OK", null)
-                                .show();
-                        }
-                    }
-                })
-                .setNegativeButton("Close", null)
-                .show();
+            Context ctx = getParentActivity();
+            if (ctx == null) return;
+            // Custom dialog layout
+            LinearLayout dialogLayout = new LinearLayout(ctx);
+            dialogLayout.setOrientation(LinearLayout.VERTICAL);
+            dialogLayout.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(24), AndroidUtilities.dp(24), AndroidUtilities.dp(8));
+            dialogLayout.setBackground(AndroidUtilities.createSimpleSelectorRoundRectDrawable(AndroidUtilities.dp(24), 0xF21A2236, 0x22000000));
+
+            // Icon
+            TextView icon = new TextView(ctx);
+            icon.setText("\uD83E\uDD16"); // robot face emoji as a placeholder for AI icon
+            icon.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 44);
+            icon.setGravity(Gravity.CENTER);
+            icon.setPadding(0, 0, 0, AndroidUtilities.dp(8));
+            dialogLayout.addView(icon, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+            // Title
+            TextView title = new TextView(ctx);
+            title.setText("AI Reply Setup Guide");
+            title.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 22);
+            title.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+            title.setTextColor(accentColor);
+            title.setGravity(Gravity.CENTER);
+            title.setPadding(0, 0, 0, AndroidUtilities.dp(10));
+            dialogLayout.addView(title, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+            // Steps
+            int stepColor = isDark ? 0xFF5AB6FF : 0xFF2E93DE;
+            String[] steps = new String[] {
+                "Sign up at an AI provider (OpenAI, DeepSeek, Groq, Gemini, etc.)",
+                "Get your API Key and Model URL from their dashboard",
+                "Go to Experimental Settings > AI Reply section",
+                "Paste your Model URL and API Key"
+            };
+            for (int i = 0; i < steps.length; i++) {
+                LinearLayout stepRow = new LinearLayout(ctx);
+                stepRow.setOrientation(LinearLayout.HORIZONTAL);
+                stepRow.setGravity(Gravity.CENTER_VERTICAL);
+                TextView stepNum = new TextView(ctx);
+                stepNum.setText("" + (i + 1));
+                stepNum.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 18);
+                stepNum.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+                stepNum.setTextColor(stepColor);
+                stepNum.setGravity(Gravity.CENTER);
+                stepNum.setBackground(AndroidUtilities.createCircleDrawable(AndroidUtilities.dp(28), 0x22FFFFFF));
+                LinearLayout.LayoutParams numLp = new LinearLayout.LayoutParams(AndroidUtilities.dp(28), AndroidUtilities.dp(28));
+                numLp.rightMargin = AndroidUtilities.dp(12);
+                stepRow.addView(stepNum, numLp);
+                TextView stepText = new TextView(ctx);
+                stepText.setText(steps[i]);
+                stepText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15.5f);
+                stepText.setTextColor(textTitle);
+                stepText.setLineSpacing(0, 1.08f);
+                stepRow.addView(stepText, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                stepRow.setPadding(0, AndroidUtilities.dp(i == 0 ? 0 : 8), 0, 0);
+                dialogLayout.addView(stepRow);
+            }
+
+            // Help text
+            TextView help = new TextView(ctx);
+            help.setText("Need help? Tap 'Go to AI Reply Settings' to jump there now.");
+            help.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
+            help.setTextColor(textSub);
+            help.setGravity(Gravity.CENTER);
+            help.setPadding(0, AndroidUtilities.dp(18), 0, AndroidUtilities.dp(8));
+            dialogLayout.addView(help);
+
+            // Buttons
+            LinearLayout buttonRow = new LinearLayout(ctx);
+            buttonRow.setOrientation(LinearLayout.HORIZONTAL);
+            buttonRow.setGravity(Gravity.END);
+            buttonRow.setPadding(0, AndroidUtilities.dp(8), 0, 0);
+
+            TextView closeBtn = new TextView(ctx);
+            closeBtn.setText("Close");
+            closeBtn.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
+            closeBtn.setTextColor(accentColor);
+            closeBtn.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+            closeBtn.setPadding(AndroidUtilities.dp(18), AndroidUtilities.dp(10), AndroidUtilities.dp(18), AndroidUtilities.dp(10));
+            closeBtn.setBackground(Theme.createSimpleSelectorRoundRectDrawable(AndroidUtilities.dp(8), 0x00000000, 0x22000000));
+            closeBtn.setOnClickListener(vv -> {
+                alert.dismiss();
+            });
+            buttonRow.addView(closeBtn);
+
+            TextView gotoBtn = new TextView(ctx);
+            gotoBtn.setText("Go to AI Reply Settings");
+            gotoBtn.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
+            gotoBtn.setTextColor(Color.WHITE);
+            gotoBtn.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+            gotoBtn.setPadding(AndroidUtilities.dp(18), AndroidUtilities.dp(10), AndroidUtilities.dp(18), AndroidUtilities.dp(10));
+            GradientDrawable btnBg = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, new int[]{accentColor, stepColor});
+            btnBg.setCornerRadius(AndroidUtilities.dp(8));
+            gotoBtn.setBackground(btnBg);
+            gotoBtn.setOnClickListener(vv -> {
+                try {
+                    android.net.Uri uri = android.net.Uri.parse("https://t.me/alexsettings/experimental?r=aiModelUrl");
+                    android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_VIEW, uri);
+                    ctx.startActivity(intent);
+                } catch (Exception e) {
+                    new AlertDialog.Builder(ctx)
+                        .setTitle("Navigation Failed")
+                        .setMessage("Please open Experimental Settings manually and scroll to the AI Reply section.")
+                        .setPositiveButton("OK", null)
+                        .show();
+                }
+                alert.dismiss();
+            });
+            LinearLayout.LayoutParams gotoLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            gotoLp.leftMargin = AndroidUtilities.dp(12);
+            buttonRow.addView(gotoBtn, gotoLp);
+
+            dialogLayout.addView(buttonRow);
+
+            AlertDialog alert = new AlertDialog(ctx, dialogLayout, true, false);
+            alert.show();
         });
         apiSetupCard.addView(setupButton);
 
