@@ -133,7 +133,7 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
                 .show();
         });
         apiSetupCard.addView(setupButton);
-        contentLayout.addView(apiSetupCard, 0);
+
 
         if (preferences == null) {
             preferences = context.getSharedPreferences("ai_assistant_prefs", Context.MODE_PRIVATE);
@@ -175,6 +175,9 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
         contentLayout.setOrientation(LinearLayout.VERTICAL);
         contentLayout.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(6), AndroidUtilities.dp(16), AndroidUtilities.dp(24));
         scrollView.addView(contentLayout, new ScrollView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+    // Add the API setup card at the top of the content layout
+    contentLayout.addView(apiSetupCard, 0);
 
 
         addGlassSection(contentLayout, context, "GENERAL");
