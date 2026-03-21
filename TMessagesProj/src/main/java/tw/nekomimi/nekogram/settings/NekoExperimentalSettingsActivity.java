@@ -240,6 +240,10 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
         String key = NaConfig.INSTANCE.getAiApiKey().String();
         Context ctx = getParentActivity();
         if (ctx == null) return;
+        AlertDialog progressDialog = new AlertDialog(ctx, AlertDialog.ALERT_TYPE_SPINNER);
+        progressDialog.setCanCancel(false);
+        progressDialog.setMessage("Testing API, please wait...");
+        progressDialog.show();
         new Thread(() -> {
             String msg;
             boolean success = false;
@@ -309,6 +313,7 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
             boolean finalSuccess = success;
             String finalMsg = msg;
             AndroidUtilities.runOnUIThread(() -> {
+                progressDialog.dismiss();
                 String title = finalSuccess ? "Test API 1 Result (Success)" : "Test API 1 Result (Failed)";
                 int color = finalSuccess ? android.graphics.Color.parseColor("#2ecc40") : android.graphics.Color.parseColor("#ff3b30");
                 android.text.SpannableString sTitle = new android.text.SpannableString(title);
@@ -329,6 +334,10 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
         String key = NaConfig.INSTANCE.getAiApiKey2().String();
         Context ctx = getParentActivity();
         if (ctx == null) return;
+        AlertDialog progressDialog = new AlertDialog(ctx, AlertDialog.ALERT_TYPE_SPINNER);
+        progressDialog.setCanCancel(false);
+        progressDialog.setMessage("Testing API, please wait...");
+        progressDialog.show();
         new Thread(() -> {
             String msg;
             boolean success = false;
@@ -394,6 +403,7 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
             boolean finalSuccess = success;
             String finalMsg = msg;
             AndroidUtilities.runOnUIThread(() -> {
+                progressDialog.dismiss();
                 String title = finalSuccess ? "Test API 2 Result (Success)" : "Test API 2 Result (Failed)";
                 int color = finalSuccess ? android.graphics.Color.parseColor("#2ecc40") : android.graphics.Color.parseColor("#ff3b30");
                 android.text.SpannableString sTitle = new android.text.SpannableString(title);
