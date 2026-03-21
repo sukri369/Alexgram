@@ -107,7 +107,6 @@ public class MiniChatAssistantView extends LinearLayout {
         clipboard.setPrimaryClip(clip);
         android.widget.Toast.makeText(getContext(), "Image saved and copied!", android.widget.Toast.LENGTH_SHORT).show();
     }
-    }
 
     public ArrayList<Object> getHistory() {
         return history;
