@@ -11517,16 +11517,9 @@ public class ChatActivity extends BaseFragment implements
         }
 
         if (chatAnimeAssistantView != null) {
-            int extraClearance = 20; // Clearance above scroll down button in Pill mode
-            try {
-                if (!xyz.nextalone.nagram.NaConfig.INSTANCE.getPillChatTitle().Bool()) {
-                    extraClearance += 38; // Extra padding when Pill mode is OFF (to clear taller attach bar / scroll down)
-                }
-            } catch (Exception ignore) {}
-            
             float assistantTranslationY = -windowInsetsStateHolder.getAnimatedMaxBottomInset()
                 - (hideBottomForGesture ? 0 : chatInputViewsContainer.getInputBubbleHeight())
-                - dp(ChatInputViewsContainer.INPUT_BUBBLE_BOTTOM + extraClearance);
+                - dp(ChatInputViewsContainer.INPUT_BUBBLE_BOTTOM + 68);
             chatAnimeAssistantView.setTranslationY(assistantTranslationY);
         }
     }
