@@ -362,29 +362,8 @@ public class ChatAnimeAssistantView extends FrameLayout {
     }
 
     private void setupKeyboardListener() {
-        getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            private int lastInset = 0;
-
-            @Override
-            public void onGlobalLayout() {
-                if (!panelOpened || !preferences.getBoolean("keyboard_auto_hide", true)) {
-                    return;
-                }
-                View root = getRootView();
-                root.getWindowVisibleDisplayFrame(visibleFrame);
-                int inset = Math.max(0, root.getHeight() - visibleFrame.bottom);
-                if (Math.abs(inset - lastInset) < AndroidUtilities.dp(8)) {
-                    return;
-                }
-                if (inset > AndroidUtilities.dp(100)) {
-                    keyboardShiftY = -Math.max(0, inset - AndroidUtilities.dp(12));
-                } else {
-                    keyboardShiftY = 0f;
-                }
-                animateLinkedToCurrent();
-                lastInset = inset;
-            }
-        });
+        // Disabled internal keyboard listener: ChatActivity now translates the entire ChatAnimeAssistantView 
+        // using updatePagedownButtonsPosition(), meaning it perfectly tracks the keyboard natively.
     }
 
     private void setupPanelDragging() {
@@ -698,6 +677,42 @@ public class ChatAnimeAssistantView extends FrameLayout {
                 keyboardShiftY = 0f;
             }
         }).start();
+    }
+
+    private int customBottomOffset = 0;
+
+    public void setAssistantBottomOffset(int offsetPx) {
+        if (customBottomOffset != offsetPx) {
+            customBottomOffset = offsetPx;
+            requestLayout();
+        }
+    }
+
+    @Override
+    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        super.onLayout(changed, left, top, right, bottom);
+        
+        if (customBottomOffset > 0) {
+            int parentHeight = bottom - top;
+            
+            if (characterContainer != null) {
+                int cWidth = characterContainer.getMeasuredWidth();
+                int cHeight = characterContainer.getMeasuredHeight();
+                int cLeft = characterContainer.getLeft();
+                int cBottom = parentHeight - customBottomOffset;
+                int cTop = cBottom - cHeight;
+                characterContainer.layout(cLeft, cTop, cLeft + cWidth, cBottom);
+            }
+            
+            if (panelContainer != null) {
+                int pWidth = panelContainer.getMeasuredWidth();
+                int pHeight = panelContainer.getMeasuredHeight();
+                int pLeft = panelContainer.getLeft();
+                int pBottom = parentHeight - (customBottomOffset - AndroidUtilities.dp(6));
+                int pTop = pBottom - pHeight;
+                panelContainer.layout(pLeft, pTop, pLeft + pWidth, pBottom);
+            }
+        }
     }
 
     private void sendPrompt() {

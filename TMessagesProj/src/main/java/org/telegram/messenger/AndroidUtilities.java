@@ -279,6 +279,19 @@ public class AndroidUtilities {
      */
     public static void showAutoStartPermissionGuide(Activity activity) {
         if (activity == null) return;
+        Intent intent = getAutoStartIntent();
+        try {
+            if (intent != null) {
+                activity.startActivity(intent);
+            } else {
+                showAutoStartManualDialog(activity);
+            }
+        } catch (Exception e) {
+            showAutoStartManualDialog(activity);
+        }
+    }
+
+    public static Intent getAutoStartIntent() {
         String manufacturer = Build.MANUFACTURER.toLowerCase();
         Intent intent = null;
         try {
@@ -298,9 +311,8 @@ public class AndroidUtilities {
                 intent = new Intent();
                 intent.setComponent(new android.content.ComponentName("com.huawei.systemmanager", "com.huawei.systemmanager.startupmgr.ui.StartupNormalAppListActivity"));
             } else if (manufacturer.contains("samsung")) {
-                // Samsung: open app settings directly, user must enable background activity manually
                 intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                intent.setData(Uri.parse("package:" + activity.getPackageName()));
+                intent.setData(Uri.parse("package:" + ApplicationLoader.applicationContext.getPackageName()));
             } else if (manufacturer.contains("asus")) {
                 intent = new Intent();
                 intent.setComponent(new android.content.ComponentName("com.asus.mobilemanager", "com.asus.mobilemanager.entry.FunctionActivity"));
@@ -308,15 +320,10 @@ public class AndroidUtilities {
                 intent = new Intent();
                 intent.setComponent(new android.content.ComponentName("com.oneplus.security", "com.oneplus.security.chainlaunch.view.ChainLaunchAppListActivity"));
             }
-            if (intent != null) {
-                activity.startActivity(intent);
-            } else {
-                showAutoStartManualDialog(activity);
-            }
-        } catch (Exception e) {
-            showAutoStartManualDialog(activity);
-        }
+        } catch (Exception ignore) {}
+        return intent;
     }
+
 
     private static void showAutoStartManualDialog(Activity activity) {
         try {

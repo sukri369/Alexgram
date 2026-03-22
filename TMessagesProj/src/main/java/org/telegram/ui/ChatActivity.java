@@ -9533,7 +9533,30 @@ public class ChatActivity extends BaseFragment implements
                         // Initialize MiniChatAssistantView alongside ChatAnimeAssistantView
                         if (miniChatAssistantView == null) {
                             miniChatAssistantView = new MiniChatAssistantView(context);
-                            contentView.addView(miniChatAssistantView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM));
+                            FrameLayout.LayoutParams params = LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM);
+                            // Set initial bottom margin to input bar height if available
+                            int inputBarHeight = 0;
+                            if (chatInputViewsContainer != null) {
+                                inputBarHeight = chatInputViewsContainer.getHeight();
+                            }
+                            params.bottomMargin = inputBarHeight;
+                            int inputIndex = contentView.indexOfChild(chatInputViewsContainer);
+                            if (inputIndex != -1) {
+                                contentView.addView(miniChatAssistantView, inputIndex, params);
+                            } else {
+                                contentView.addView(miniChatAssistantView, params);
+                            }
+                            // Listen for input bar layout changes to update margin
+                            if (chatInputViewsContainer != null) {
+                                chatInputViewsContainer.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+                                    @Override
+                                    public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
+                                        FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) miniChatAssistantView.getLayoutParams();
+                                        lp.bottomMargin = chatInputViewsContainer.getHeight();
+                                        miniChatAssistantView.setLayoutParams(lp);
+                                    }
+                                });
+                            }
                         }
             final boolean autoReplySupportedInThisDialog = currentChat == null || !ChatObject.isChannelAndNotMegaGroup(currentChat);
             chatAnimeAssistantView = new ChatAnimeAssistantView(
@@ -9543,8 +9566,8 @@ public class ChatActivity extends BaseFragment implements
                     true,
                     autoReplySupportedInThisDialog,
                     "This feature only works in chats.",
-                    92,
-                    86
+                    0,
+                    -6 // Slight negative margin because the panel extends further down
             );
             chatAnimeAssistantView.setAssistantRequestDelegate(new ChatAnimeAssistantView.AssistantRequestDelegate() {
                 @Override
@@ -11491,6 +11514,13 @@ public class ChatActivity extends BaseFragment implements
             float baseTranslationY2 = -windowInsetsStateHolder.getAnimatedMaxBottomInset()
                 - dp(ChatInputViewsContainer.INPUT_BUBBLE_BOTTOM + 7);
             suggestEmojiPanel.setTranslationY(baseTranslationY2);
+        }
+
+        if (chatAnimeAssistantView != null) {
+            int offsetPx = Math.round(windowInsetsStateHolder.getAnimatedMaxBottomInset()
+                + (hideBottomForGesture ? 0 : chatInputViewsContainer.getInputBubbleHeight())
+                + dp(ChatInputViewsContainer.INPUT_BUBBLE_BOTTOM + 68));
+            chatAnimeAssistantView.setAssistantBottomOffset(offsetPx);
         }
     }
 

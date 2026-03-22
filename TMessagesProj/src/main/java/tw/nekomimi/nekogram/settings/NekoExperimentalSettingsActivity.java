@@ -1003,21 +1003,33 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
     }
 
     private void updateRunInBackground(boolean enabled) {
-        SharedPreferences notificationsSettings = MessagesController.getNotificationsSettings(currentAccount);
-        notificationsSettings.edit()
+        MessagesController.getGlobalNotificationsSettings().edit()
             .putBoolean("pushService", enabled)
             .putBoolean("pushConnection", enabled)
             .apply();
 
-        SharedPreferences mainSettings = MessagesController.getMainSettings(currentAccount);
-        mainSettings.edit()
+        MessagesController.getGlobalMainSettings().edit()
             .putBoolean("keepAliveService", enabled)
             .putBoolean("backgroundConnection", enabled)
             .apply();
 
-        getMessagesController().keepAliveService = enabled;
-        getMessagesController().backgroundConnection = enabled;
-        ConnectionsManager.getInstance(currentAccount).setPushConnectionEnabled(enabled);
+        for (int i = 0; i < org.telegram.messenger.UserConfig.MAX_ACCOUNT_COUNT; i++) {
+            SharedPreferences notificationsSettings = MessagesController.getNotificationsSettings(i);
+            notificationsSettings.edit()
+                .putBoolean("pushService", enabled)
+                .putBoolean("pushConnection", enabled)
+                .apply();
+
+            SharedPreferences mainSettings = MessagesController.getMainSettings(i);
+            mainSettings.edit()
+                .putBoolean("keepAliveService", enabled)
+                .putBoolean("backgroundConnection", enabled)
+                .apply();
+
+            MessagesController.getInstance(i).keepAliveService = enabled;
+            MessagesController.getInstance(i).backgroundConnection = enabled;
+            ConnectionsManager.getInstance(i).setPushConnectionEnabled(enabled);
+        }
 
         Intent serviceIntent = new Intent(ApplicationLoader.applicationContext, org.telegram.messenger.NotificationsService.class);
         if (!enabled) {
@@ -1027,9 +1039,30 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
 
         // Request all necessary permissions and settings when enabling background run
         if (enabled && getParentActivity() != null) {
-            AndroidUtilities.requestIgnoreBatteryOptimizations(getParentActivity());
-            AndroidUtilities.requestNotificationPermission(getParentActivity());
-            AndroidUtilities.showAutoStartPermissionGuide(getParentActivity());
+            SharedPreferences prefs = MessagesController.getGlobalMainSettings();
+            if (!prefs.getBoolean("asked_background_permissions", false)) {
+                AndroidUtilities.requestIgnoreBatteryOptimizations(getParentActivity());
+                AndroidUtilities.requestNotificationPermission(getParentActivity());
+                
+                Intent autoStart = AndroidUtilities.getAutoStartIntent();
+                if (autoStart != null) {
+                    new org.telegram.ui.ActionBar.AlertDialog.Builder(getParentActivity())
+                        .setTitle("Background Reliability")
+                        .setMessage("To ensure the background service works perfectly, please enable Auto-Start or Background Activity in your device settings. Allow battery optimizations first if prompted.")
+                        .setPositiveButton("Open Settings", (dialog, which) -> {
+                            try { getParentActivity().startActivity(autoStart); } catch (Exception ignored) {}
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .show();
+                } else {
+                    new org.telegram.ui.ActionBar.AlertDialog.Builder(getParentActivity())
+                        .setTitle("Background Reliability")
+                        .setMessage("To ensure background features work reliably, please enable auto-start or background run for this app in your device settings.")
+                        .setPositiveButton("OK", null)
+                        .show();
+                }
+                prefs.edit().putBoolean("asked_background_permissions", true).apply();
+            }
         }
     }
 

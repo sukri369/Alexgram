@@ -90,6 +90,21 @@ public class HiddenChatsSettingsActivity extends BaseFragment {
             showChangePasscodeDialog(context);
         }, false));
 
+        if (android.os.Build.VERSION.SDK_INT >= 23) {
+            try {
+                org.telegram.messenger.support.fingerprint.FingerprintManagerCompat fingerprintManager = org.telegram.messenger.support.fingerprint.FingerprintManagerCompat.from(org.telegram.messenger.ApplicationLoader.applicationContext);
+                if (fingerprintManager.isHardwareDetected()) {
+                    optionsCard.addView(createGlassDivider(context));
+                    optionsCard.addView(createSwitchItem(context, "Unlock with Fingerprint", "Use fingerprint to access Hidden Chats", R.drawable.fingerprint, 0xFF009688,
+                            HiddenChatsController.getInstance().isBiometricEnabled(), isChecked -> {
+                                HiddenChatsController.getInstance().setBiometricEnabled(isChecked);
+                            }));
+                }
+            } catch (Throwable e) {
+                org.telegram.messenger.FileLog.e(e);
+            }
+        }
+
         optionsCard.addView(createGlassDivider(context));
 
         // Open Hidden Chats
@@ -116,11 +131,43 @@ public class HiddenChatsSettingsActivity extends BaseFragment {
 
         // How to Use
         optionsCard.addView(createSettingItem(context, "How to Use", "Learn how to manage hidden chats", R.drawable.msg_info, 0xFFE91E63, v -> {
-            AlertDialog.Builder builder = new AlertDialog.Builder(context);
-            builder.setTitle("How to Use Hidden Chats");
-            builder.setMessage("Hide Chats:\nLong-press any chat in the chat list, you will see 3-dot menu then click option: Add to Hidden Chats or use the Plus icon in the Hidden Chats screen to add multiple chats at once.\n\nAccess Hidden Chats:\nLong-press on the Alexgram header/title bar on the main screen, or open them directly from Hidden Chats Settings.\n\nPrivacy:\nChats added to Hidden Chats are automatically muted. You can manually unmute them if you prefer.\n\nPasscode:\nYour hidden chats are protected by a 4-digit passcode.");
-            builder.setPositiveButton("Got It", null);
-            builder.show();
+            org.telegram.ui.ActionBar.BottomSheet.Builder builder = new org.telegram.ui.ActionBar.BottomSheet.Builder(context);
+            builder.setApplyBottomPadding(false);
+
+            LinearLayout container = new LinearLayout(context);
+            container.setOrientation(LinearLayout.VERTICAL);
+            container.setPadding(0, AndroidUtilities.dp(16), 0, 0);
+
+            TextView titleView = new TextView(context);
+            titleView.setText("How to Use Hidden Chats");
+            titleView.setTextColor(isDark ? 0xFFFFFFFF : 0xFF1A1A2E);
+            titleView.setTextSize(20);
+            titleView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+            titleView.setGravity(Gravity.CENTER_HORIZONTAL);
+            container.addView(titleView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 16));
+
+            container.addView(createGuideItem(context, R.drawable.msg_folders_private_solar, 0xFF00bcd4, "Hide Chats", "Long-press any chat in the chat list, open the 3-dot menu and select 'Add to Hidden Chats'. You can also use the Plus icon inside Hidden Chats to add multiple chats at once."));
+            container.addView(createGuideItem(context, R.drawable.msg_search, 0xFFf06292, "Access Hidden Chats", "Long-press on the Alexgram header on the main screen to quickly access your Hidden Chats, or open them directly from these settings."));
+            container.addView(createGuideItem(context, R.drawable.msg_permissions_solar, 0xFFba68c8, "Privacy", "Chats added to Hidden Chats are automatically muted to ensure maximum privacy. You can manually unmute them later if you prefer."));
+            container.addView(createGuideItem(context, R.drawable.outline_shield_lock_24, 0xFF4db6ac, "Security", "Your hidden chats are strictly protected by a 4-digit passcode, and optionally your fingerprint."));
+
+            TextView btn = new TextView(context);
+            btn.setText("Got It");
+            btn.setTextColor(0xFFFFFFFF);
+            btn.setTextSize(14);
+            btn.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+            btn.setGravity(Gravity.CENTER);
+            GradientDrawable btnBg = new GradientDrawable();
+            btnBg.setCornerRadius(AndroidUtilities.dp(8));
+            btnBg.setColor(Theme.getColor(Theme.key_featuredStickers_addButton));
+            btn.setBackground(btnBg);
+            btn.setPadding(0, AndroidUtilities.dp(10), 0, AndroidUtilities.dp(10));
+            btn.setOnClickListener(b -> builder.getDismissRunnable().run());
+            
+            container.addView(btn, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 44, 16, 16, 16, 16));
+
+            builder.setCustomView(container);
+            showDialog(builder.create());
         }, true));
 
         contentLayout.addView(optionsCard, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 12, 0, 12));
@@ -212,7 +259,98 @@ public class HiddenChatsSettingsActivity extends BaseFragment {
         subtitleView.setPadding(0, AndroidUtilities.dp(2), 0, 0);
         texts.addView(subtitleView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
 
-        row.addView(texts, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 1f, 0, 0, 14, 0));
+        row.addView(texts, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 1f, 12, 0, 14, 0));
+
+        return row;
+    }
+
+    private View createGuideItem(Context ctx, int iconRes, int iconColor, String title, String text) {
+        LinearLayout row = new LinearLayout(ctx);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(12), AndroidUtilities.dp(16), AndroidUtilities.dp(12));
+
+        ImageView iconView = new ImageView(ctx);
+        iconView.setImageResource(iconRes);
+        iconView.setColorFilter(Color.WHITE);
+        iconView.setScaleType(ImageView.ScaleType.CENTER);
+        GradientDrawable iconBg = new GradientDrawable();
+        iconBg.setShape(GradientDrawable.OVAL);
+        iconBg.setColor(iconColor);
+        iconView.setBackground(iconBg);
+        row.addView(iconView, LayoutHelper.createLinear(40, 40));
+
+        LinearLayout texts = new LinearLayout(ctx);
+        texts.setOrientation(LinearLayout.VERTICAL);
+
+        TextView titleView = new TextView(ctx);
+        titleView.setText(title);
+        titleView.setTextColor(isDark ? 0xFFFFFFFF : 0xFF1A1A2E);
+        titleView.setTextSize(15);
+        titleView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+        texts.addView(titleView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+
+        TextView subView = new TextView(ctx);
+        subView.setText(text);
+        subView.setTextColor(isDark ? 0xFF8899AA : 0xFF5C6B7F);
+        subView.setTextSize(13);
+        subView.setLineSpacing(AndroidUtilities.dp(2), 1.0f);
+        texts.addView(subView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 2, 0, 0));
+
+        row.addView(texts, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 14, 0, 0, 0));
+
+        return row;
+    }
+
+    interface OnSettingSwitchListener {
+        void onSwitch(boolean isChecked);
+    }
+
+    private View createSwitchItem(Context ctx, String title, String subtitle, int iconRes, int iconColor, boolean checked, OnSettingSwitchListener onChange) {
+        LinearLayout row = new LinearLayout(ctx);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(13), AndroidUtilities.dp(14), AndroidUtilities.dp(13));
+        row.setBackground(Theme.getSelectorDrawable(false));
+
+        ImageView iconView = new ImageView(ctx);
+        iconView.setImageResource(iconRes);
+        iconView.setColorFilter(Color.WHITE);
+        iconView.setScaleType(ImageView.ScaleType.CENTER);
+        GradientDrawable iconBg = new GradientDrawable();
+        iconBg.setShape(GradientDrawable.RECTANGLE);
+        iconBg.setCornerRadius(AndroidUtilities.dp(10));
+        iconBg.setColor(iconColor);
+        iconView.setBackground(iconBg);
+        row.addView(iconView, LayoutHelper.createLinear(32, 32));
+
+        LinearLayout texts = new LinearLayout(ctx);
+        texts.setOrientation(LinearLayout.VERTICAL);
+
+        TextView titleView = new TextView(ctx);
+        titleView.setText(title);
+        titleView.setTextColor(isDark ? 0xFFFFFFFF : 0xFF1A1A2E);
+        titleView.setTextSize(15);
+        titleView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+        texts.addView(titleView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+
+        TextView subView = new TextView(ctx);
+        subView.setText(subtitle);
+        subView.setTextColor(isDark ? 0xFF8899AA : 0xFF5C6B7F);
+        subView.setTextSize(12);
+        texts.addView(subView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 1, 0, 0));
+
+        row.addView(texts, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f, 12, 0, 0, 0));
+
+        org.telegram.ui.Components.Switch sw = new org.telegram.ui.Components.Switch(ctx);
+        sw.setChecked(checked, false);
+        sw.setColors(Theme.key_switchTrack, Theme.key_switchTrackChecked, Theme.key_windowBackgroundWhite, Theme.key_windowBackgroundWhite);
+        row.addView(sw, LayoutHelper.createLinear(44, 24));
+
+        row.setOnClickListener(v -> {
+            boolean isChecked = !sw.isChecked();
+            sw.setChecked(isChecked, true);
+            onChange.onSwitch(isChecked);
+        });
 
         return row;
     }
