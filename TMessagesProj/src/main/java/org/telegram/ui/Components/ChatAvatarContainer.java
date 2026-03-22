@@ -774,8 +774,8 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                     pillPaint.setAlpha(255);
                     parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true);
                     
-                    // Add a subtle tint to the blurred header
-                    pillPaint.setColor(darkPillSurface ? 0x1A000000 : 0x0D000000);
+                    // Add a very subtle tint to the blurred header (low intensity)
+                    pillPaint.setColor(darkPillSurface ? 0x0A000000 : 0x05000000); // reduced from 0x1A/0x0D
                     canvas.drawRect(headerBlurRect, pillPaint);
                 }
 
@@ -786,7 +786,8 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                     pillClipPath.addRoundRect(pillRect, radius, radius, Path.Direction.CW);
                     canvas.save();
                     canvas.clipPath(pillClipPath);
-                    pillPaint.setColor(darkPillSurface ? 0xB21A1B20 : 0xCFFFFFFF);
+                    // Draw a more opaque background tint for the pill (high intensity)
+                    pillPaint.setColor(darkPillSurface ? 0xE01A1B20 : 0xEDFFFFFF); // increased from 0xB2/0xCF
                     parentFragment.getContentView().drawBlurRect(canvas, blurY, pillBlurRect, pillPaint, true);
                     canvas.restore();
                     drewBlur = true;
