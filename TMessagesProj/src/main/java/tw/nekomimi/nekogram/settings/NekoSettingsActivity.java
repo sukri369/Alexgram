@@ -443,21 +443,6 @@ public class NekoSettingsActivity extends BaseFragment {
             }
         }));
 
-        if (android.os.Build.VERSION.SDK_INT >= 23) {
-            try {
-                org.telegram.messenger.support.fingerprint.FingerprintManagerCompat fingerprintManager = org.telegram.messenger.support.fingerprint.FingerprintManagerCompat.from(org.telegram.messenger.ApplicationLoader.applicationContext);
-                if (fingerprintManager.isHardwareDetected()) {
-                    privacyCard.addView(createGlassDivider(context));
-                    privacyCard.addView(createSwitchItem(context, "Unlock with Fingerprint", "Use fingerprint for Hidden Chats", R.drawable.fingerprint, 0xFF009688,
-                            HiddenChatsController.getInstance().isBiometricEnabled(), isChecked -> {
-                                HiddenChatsController.getInstance().setBiometricEnabled(isChecked);
-                            }));
-                }
-            } catch (Throwable e) {
-                org.telegram.messenger.FileLog.e(e);
-            }
-        }
-
         contentLayout.addView(privacyCard, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 20));
 
         // ===== CORE SETTINGS =====
