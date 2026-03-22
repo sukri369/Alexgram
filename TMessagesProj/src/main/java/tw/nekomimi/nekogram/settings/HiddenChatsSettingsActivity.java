@@ -90,6 +90,21 @@ public class HiddenChatsSettingsActivity extends BaseFragment {
             showChangePasscodeDialog(context);
         }, false));
 
+        if (android.os.Build.VERSION.SDK_INT >= 23) {
+            try {
+                org.telegram.messenger.support.fingerprint.FingerprintManagerCompat fingerprintManager = org.telegram.messenger.support.fingerprint.FingerprintManagerCompat.from(org.telegram.messenger.ApplicationLoader.applicationContext);
+                if (fingerprintManager.isHardwareDetected()) {
+                    optionsCard.addView(createGlassDivider(context));
+                    optionsCard.addView(createSwitchItem(context, "Unlock with Fingerprint", "Use fingerprint to access Hidden Chats", R.drawable.fingerprint, 0xFF009688,
+                            HiddenChatsController.getInstance().isBiometricEnabled(), isChecked -> {
+                                HiddenChatsController.getInstance().setBiometricEnabled(isChecked);
+                            }));
+                }
+            } catch (Throwable e) {
+                org.telegram.messenger.FileLog.e(e);
+            }
+        }
+
         optionsCard.addView(createGlassDivider(context));
 
         // Open Hidden Chats
@@ -213,6 +228,60 @@ public class HiddenChatsSettingsActivity extends BaseFragment {
         texts.addView(subtitleView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
 
         row.addView(texts, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 1f, 0, 0, 14, 0));
+
+        return row;
+    }
+
+    interface OnSettingSwitchListener {
+        void onSwitch(boolean isChecked);
+    }
+
+    private View createSwitchItem(Context ctx, String title, String subtitle, int iconRes, int iconColor, boolean checked, OnSettingSwitchListener onChange) {
+        LinearLayout row = new LinearLayout(ctx);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(13), AndroidUtilities.dp(14), AndroidUtilities.dp(13));
+        row.setBackground(Theme.getSelectorDrawable(false));
+
+        ImageView iconView = new ImageView(ctx);
+        iconView.setImageResource(iconRes);
+        iconView.setColorFilter(Color.WHITE);
+        iconView.setScaleType(ImageView.ScaleType.CENTER);
+        GradientDrawable iconBg = new GradientDrawable();
+        iconBg.setShape(GradientDrawable.RECTANGLE);
+        iconBg.setCornerRadius(AndroidUtilities.dp(10));
+        iconBg.setColor(iconColor);
+        iconView.setBackground(iconBg);
+        row.addView(iconView, LayoutHelper.createLinear(32, 32));
+
+        LinearLayout texts = new LinearLayout(ctx);
+        texts.setOrientation(LinearLayout.VERTICAL);
+
+        TextView titleView = new TextView(ctx);
+        titleView.setText(title);
+        titleView.setTextColor(isDark ? 0xFFFFFFFF : 0xFF1A1A2E);
+        titleView.setTextSize(15);
+        titleView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+        texts.addView(titleView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+
+        TextView subView = new TextView(ctx);
+        subView.setText(subtitle);
+        subView.setTextColor(isDark ? 0xFF8899AA : 0xFF5C6B7F);
+        subView.setTextSize(12);
+        texts.addView(subView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 1, 0, 0));
+
+        row.addView(texts, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f, 12, 0, 0, 0));
+
+        org.telegram.ui.Components.Switch sw = new org.telegram.ui.Components.Switch(ctx);
+        sw.setChecked(checked, false);
+        sw.setColors(Theme.key_switchTrack, Theme.key_switchTrackChecked, Theme.key_windowBackgroundWhite, Theme.key_windowBackgroundWhite);
+        row.addView(sw, LayoutHelper.createLinear(44, 24));
+
+        row.setOnClickListener(v -> {
+            boolean isChecked = !sw.isChecked();
+            sw.setChecked(isChecked, true);
+            onChange.onSwitch(isChecked);
+        });
 
         return row;
     }

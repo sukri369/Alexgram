@@ -29,6 +29,18 @@ import java.lang.annotation.RetentionPolicy;
 import tw.nekomimi.nekogram.helpers.HiddenChatsController;
 import tw.nekomimi.nekogram.settings.HiddenChatsSettingsActivity;
 
+import androidx.annotation.NonNull;
+import androidx.biometric.BiometricManager;
+import androidx.biometric.BiometricPrompt;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.FragmentActivity;
+
+import org.telegram.messenger.FileLog;
+import org.telegram.messenger.FingerprintController;
+import org.telegram.messenger.LocaleController;
+
+import java.util.concurrent.Executor;
+
 public class HiddenChatsPasscodeActivity extends BaseFragment {
 
     public static final int MODE_UNLOCK_CHATS = 0;
@@ -121,6 +133,17 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
         errorView.setPadding(0, AndroidUtilities.dp(14), 0, 0);
         content.addView(errorView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL));
 
+        if (android.os.Build.VERSION.SDK_INT >= 23 && (mode == MODE_UNLOCK_CHATS || mode == MODE_UNLOCK_SETTINGS)) {
+            android.widget.ImageView fingerprintImage = new android.widget.ImageView(context);
+            fingerprintImage.setImageResource(R.drawable.fingerprint);
+            fingerprintImage.setScaleType(android.widget.ImageView.ScaleType.CENTER);
+            fingerprintImage.setBackgroundResource(R.drawable.bar_selector_lock);
+            fingerprintImage.setOnClickListener(v -> checkFingerprint());
+            fingerprintImage.setContentDescription(LocaleController.getString(R.string.AccDescrFingerprint));
+            fingerprintImage.setVisibility(HiddenChatsController.getInstance().isBiometricEnabled() ? View.VISIBLE : View.GONE);
+            content.addView(fingerprintImage, LayoutHelper.createLinear(56, 56, Gravity.CENTER_HORIZONTAL, 0, 20, 0, 0));
+        }
+
         keyboardView = new CustomPhoneKeyboardView(context);
         root.addView(keyboardView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, CustomPhoneKeyboardView.KEYBOARD_HEIGHT_DP, Gravity.BOTTOM));
 
@@ -138,6 +161,60 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
         super.onResume();
         AndroidUtilities.requestAltFocusable(getParentActivity(), classGuid);
         AndroidUtilities.hideKeyboard(fragmentView);
+        if (mode == MODE_UNLOCK_CHATS || mode == MODE_UNLOCK_SETTINGS) {
+            checkFingerprint();
+        }
+    }
+
+    private void checkFingerprint() {
+        if (android.os.Build.VERSION.SDK_INT < 23) {
+            return;
+        }
+        if (!HiddenChatsController.getInstance().isBiometricEnabled()) {
+            return;
+        }
+        android.app.Activity parentActivity = getParentActivity();
+        if (parentActivity instanceof FragmentActivity) {
+            try {
+                if (BiometricManager.from(getContext()).canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG) == BiometricManager.BIOMETRIC_SUCCESS && FingerprintController.isKeyReady() && !FingerprintController.checkDeviceFingerprintsChanged()) {
+                    final Executor executor = ContextCompat.getMainExecutor(getContext());
+                    BiometricPrompt prompt = new BiometricPrompt((FragmentActivity) parentActivity, executor, new BiometricPrompt.AuthenticationCallback() {
+                        @Override
+                        public void onAuthenticationError(int errMsgId, @NonNull CharSequence errString) {
+                            FileLog.d("HiddenChatsPasscodeActivity onAuthenticationError " + errMsgId + " \"" + errString + "\"");
+                            focusFirstEmptyField();
+                        }
+
+                        @Override
+                        public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
+                            FileLog.d("HiddenChatsPasscodeActivity onAuthenticationSucceeded");
+                            AndroidUtilities.runOnUIThread(() -> {
+                                HiddenChatsController.getInstance().unlock();
+                                if (mode == MODE_UNLOCK_SETTINGS) {
+                                    presentFragment(new HiddenChatsSettingsActivity(), true);
+                                } else {
+                                    presentFragment(new tw.nekomimi.nekogram.ui.HiddenChatsActivity(new android.os.Bundle()), true);
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void onAuthenticationFailed() {
+                            FileLog.d("HiddenChatsPasscodeActivity onAuthenticationFailed");
+                            AndroidUtilities.runOnUIThread(() -> showInlineError("Fingerprint not recognized"));
+                        }
+                    });
+                    final BiometricPrompt.PromptInfo promptInfo = new BiometricPrompt.PromptInfo.Builder()
+                            .setTitle("Hidden Chats")
+                            .setNegativeButtonText(LocaleController.getString(R.string.UsePIN))
+                            .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
+                            .build();
+                    prompt.authenticate(promptInfo);
+                }
+            } catch (Exception e) {
+                FileLog.e(e);
+            }
+        }
     }
 
     @Override
