@@ -259,7 +259,7 @@ public class HiddenChatsSettingsActivity extends BaseFragment {
         subtitleView.setPadding(0, AndroidUtilities.dp(2), 0, 0);
         texts.addView(subtitleView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
 
-        row.addView(texts, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 1f, 0, 0, 14, 0));
+        row.addView(texts, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 1f, 12, 0, 14, 0));
 
         return row;
     }
