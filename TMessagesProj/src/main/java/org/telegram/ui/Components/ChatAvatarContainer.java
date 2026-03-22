@@ -771,13 +771,13 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                     int statusBarHeight = occupyStatusBar ? AndroidUtilities.statusBarHeight : 0;
                     
                     // Draw SINGLE BASE HEADER BLUR (High intensity / Glassy)
-                    // Draw SINGLE BASE HEADER GLASS (Transparent, NO BLUR)
+                    // Draw SINGLE BASE HEADER GLASS (Light Frost Effect)
                     headerBlurRect.set(-xOffset, -statusBarHeight, pWidth - xOffset, getMeasuredHeight());
                     if (!headerBlurRect.isEmpty()) {
-                        int glassAlpha = 50; // Very transparent glass outside
                         pillPaint.setColor(darkPillSurface ? 0xFF1A1B20 : 0xFFFFFFFF);
-                        pillPaint.setAlpha(glassAlpha);
-                        canvas.drawRect(headerBlurRect, pillPaint);
+                        final int glassBlurAlpha = 120; // Scrim opacity
+                        final int glassSourceAlpha = 70; // Subtle blur source
+                        parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true, glassBlurAlpha, glassSourceAlpha);
                     }
                 }
 
@@ -791,7 +791,8 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                     // Pill: Keep the solid-ish blur look they liked
                     pillPaint.setColor(darkPillSurface ? 0xFF1B1D22 : 0xFFFFFFFF);
                     final int pillOverlayAlpha = 252;
-                    parentFragment.getContentView().drawBlurRect(canvas, blurY, pillBlurRect, pillPaint, true, pillOverlayAlpha);
+                    final int pillSourceAlpha = 255;
+                    parentFragment.getContentView().drawBlurRect(canvas, blurY, pillBlurRect, pillPaint, true, pillOverlayAlpha, pillSourceAlpha);
                     canvas.restore();
                     drewBlur = true;
                 }
