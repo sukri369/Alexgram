@@ -17839,11 +17839,8 @@ public class ChatActivity extends BaseFragment implements
             }
 
             final BlurredBackgroundSource blurSource = glassBackgroundSourceFrostedRenderNode;
-            if (blurSource != null && blurAlpha < 255 && blurSourceAlpha > 0) {
+            if (blurSource != null && blurAlpha < 255) {
                 canvas.save();
-                if (blurSourceAlpha < 255) {
-                    canvas.saveLayerAlpha(rectTmp.left, rectTmp.top + y, rectTmp.right, rectTmp.bottom + y, blurSourceAlpha, Canvas.ALL_SAVE_FLAG);
-                }
                 canvas.translate(0, -y);
                 blurSource.draw(canvas,
                     rectTmp.left,
@@ -17851,9 +17848,6 @@ public class ChatActivity extends BaseFragment implements
                     rectTmp.right,
                     rectTmp.bottom + y
                 );
-                if (blurSourceAlpha < 255) {
-                    canvas.restore();
-                }
                 canvas.restore();
             } else if (blurSource == null) {
                 blurAlpha = 255;

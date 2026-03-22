@@ -768,32 +768,35 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                     View p = (View) getParent();
                     int pWidth = p.getWidth();
                     int xOffset = (int) getX();
+                    int statusBarHeight = occupyStatusBar ? AndroidUtilities.statusBarHeight : 0;
+                    int topY = -statusBarHeight;
                     
                     // Header Left
-                    headerBlurRect.set(-xOffset, 0, (int) pillRect.left, getMeasuredHeight());
+                    headerBlurRect.set(-xOffset, topY, (int) pillRect.left, getMeasuredHeight());
                     if (!headerBlurRect.isEmpty()) {
                         pillPaint.setColor(darkPillSurface ? 0xFF1A1B20 : 0xFFFFFFFF);
-                        parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true, 255, 0);
+                        parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true, 255);
                     }
                     
                     // Header Right
-                    headerBlurRect.set((int) Math.ceil(pillRect.right), 0, pWidth - xOffset, getMeasuredHeight());
+                    headerBlurRect.set((int) Math.ceil(pillRect.right), topY, pWidth - xOffset, getMeasuredHeight());
                     if (!headerBlurRect.isEmpty()) {
                         pillPaint.setColor(darkPillSurface ? 0xFF1A1B20 : 0xFFFFFFFF);
-                        parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true, 255, 0);
+                        parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true, 255);
                     }
                     
-                    // Possible Header Top/Bottom (if pill is not full height)
-                    if (pillRect.top > 0) {
-                        headerBlurRect.set((int) pillRect.left, 0, (int) Math.ceil(pillRect.right), (int) pillRect.top);
-                        if (!headerBlurRect.isEmpty()) {
-                             parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true, 255, 0);
-                        }
+                    // Header Top (Above pill)
+                    if (pillRect.top > topY) {
+                         headerBlurRect.set((int) pillRect.left, topY, (int) Math.ceil(pillRect.right), (int) pillRect.top);
+                         if (!headerBlurRect.isEmpty()) {
+                              parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true, 255);
+                         }
                     }
+                    // Header Bottom (Below pill)
                     if (pillRect.bottom < getMeasuredHeight()) {
                          headerBlurRect.set((int) pillRect.left, (int) pillRect.bottom, (int) Math.ceil(pillRect.right), getMeasuredHeight());
                          if (!headerBlurRect.isEmpty()) {
-                             parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true, 255, 0);
+                             parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true, 255);
                          }
                     }
                 }
@@ -805,11 +808,10 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                     pillClipPath.addRoundRect(pillRect, radius, radius, Path.Direction.CW);
                     canvas.save();
                     canvas.clipPath(pillClipPath);
-                    // Pill: High intensity (Strong blur + very glassy scrim)
+                    // Pill: High intensity (Glassy)
                     pillPaint.setColor(darkPillSurface ? 0xAA1A1B20 : 0xAAFFFFFF);
-                    final int pillBlurAlpha = 80;
-                    final int pillSourceAlpha = 255;
-                    parentFragment.getContentView().drawBlurRect(canvas, blurY, pillBlurRect, pillPaint, true, pillBlurAlpha, pillSourceAlpha);
+                    final int pillBlurAlpha = 150;
+                    parentFragment.getContentView().drawBlurRect(canvas, blurY, pillBlurRect, pillPaint, true, pillBlurAlpha);
                     canvas.restore();
                     drewBlur = true;
                 }
