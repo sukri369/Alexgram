@@ -537,7 +537,14 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
     };
 
     private boolean isPillChatTitleEnabled() {
-        return parentFragment != null && parentFragment.isPillChatHeaderEnabled();
+        if (parentFragment == null || !parentFragment.isPillChatHeaderEnabled()) {
+            return false;
+        }
+        ActionBar actionBar = parentFragment.getActionBar();
+        if (actionBar != null && actionBar.isSearchFieldVisible()) {
+            return false;
+        }
+        return true;
     }
 
     public void playPillTitleOnboardingHighlight() {
