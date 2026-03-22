@@ -765,41 +765,49 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
 
                 // Draw full-width header blur
                 if (getParent() instanceof View) {
-                    View parent = (View) getParent();
-                    headerBlurRect.set(-(int) getX(), 0, parent.getWidth() - (int) getX(), getMeasuredHeight());
-                } else {
-                    headerBlurRect.set(0, 0, getWidth(), getMeasuredHeight());
-                }
-                
-                if (!headerBlurRect.isEmpty()) {
-                    canvas.save();
-                    // Clip out the pill area from the header blur to prevent double drawing
-                    pillBlurRect.set((int) pillRect.left, (int) pillRect.top, (int) Math.ceil(pillRect.right), (int) Math.ceil(pillRect.bottom));
-                    if (!pillBlurRect.isEmpty()) {
-                        pillClipPath.rewind();
-                        pillClipPath.addRoundRect(pillRect, radius, radius, Path.Direction.CW);
-                        if (Build.VERSION.SDK_INT >= 26) {
-                            canvas.clipOutPath(pillClipPath);
-                        } else {
-                            canvas.clipPath(pillClipPath, android.graphics.Region.Op.DIFFERENCE);
-                        }
+                    View p = (View) getParent();
+                    int pWidth = p.getWidth();
+                    int xOffset = (int) getX();
+                    
+                    // Header Left
+                    headerBlurRect.set(-xOffset, 0, (int) pillRect.left, getMeasuredHeight());
+                    if (!headerBlurRect.isEmpty()) {
+                        pillPaint.setColor(darkPillSurface ? 0xFF1A1B20 : 0xFFFFFFFF);
+                        parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true, 255, 0);
                     }
                     
-                    // Header: Low intensity (Subtle blur + close to solid scrim)
-                    pillPaint.setColor(darkPillSurface ? 0xFF1A1B20 : 0xFFFFFFFF);
-                    final int headerBlurAlpha = 250;
-                    final int headerSourceAlpha = 45;
-                    parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true, headerBlurAlpha, headerSourceAlpha);
-                    canvas.restore();
+                    // Header Right
+                    headerBlurRect.set((int) Math.ceil(pillRect.right), 0, pWidth - xOffset, getMeasuredHeight());
+                    if (!headerBlurRect.isEmpty()) {
+                        pillPaint.setColor(darkPillSurface ? 0xFF1A1B20 : 0xFFFFFFFF);
+                        parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true, 255, 0);
+                    }
+                    
+                    // Possible Header Top/Bottom (if pill is not full height)
+                    if (pillRect.top > 0) {
+                        headerBlurRect.set((int) pillRect.left, 0, (int) Math.ceil(pillRect.right), (int) pillRect.top);
+                        if (!headerBlurRect.isEmpty()) {
+                             parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true, 255, 0);
+                        }
+                    }
+                    if (pillRect.bottom < getMeasuredHeight()) {
+                         headerBlurRect.set((int) pillRect.left, (int) pillRect.bottom, (int) Math.ceil(pillRect.right), getMeasuredHeight());
+                         if (!headerBlurRect.isEmpty()) {
+                             parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true, 255, 0);
+                         }
+                    }
                 }
 
                 // Draw pill background (High intensity)
-                if (!pillBlurRect.isEmpty()) {
+                if (!pillRect.isEmpty()) {
+                    pillBlurRect.set((int) pillRect.left, (int) pillRect.top, (int) Math.ceil(pillRect.right), (int) Math.ceil(pillRect.bottom));
+                    pillClipPath.rewind();
+                    pillClipPath.addRoundRect(pillRect, radius, radius, Path.Direction.CW);
                     canvas.save();
                     canvas.clipPath(pillClipPath);
-                    // Pill: High intensity (Strong blur + glassy scrim)
+                    // Pill: High intensity (Strong blur + very glassy scrim)
                     pillPaint.setColor(darkPillSurface ? 0xAA1A1B20 : 0xAAFFFFFF);
-                    final int pillBlurAlpha = 110;
+                    final int pillBlurAlpha = 80;
                     final int pillSourceAlpha = 255;
                     parentFragment.getContentView().drawBlurRect(canvas, blurY, pillBlurRect, pillPaint, true, pillBlurAlpha, pillSourceAlpha);
                     canvas.restore();
