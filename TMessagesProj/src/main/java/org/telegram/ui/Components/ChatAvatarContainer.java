@@ -771,12 +771,9 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                     headerBlurRect.set(0, 0, getWidth(), getMeasuredHeight());
                 }
                 if (!headerBlurRect.isEmpty()) {
-                    pillPaint.setAlpha(255);
-                    parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true);
-                    
-                    // Add a very subtle tint to the blurred header (low intensity)
-                    pillPaint.setColor(darkPillSurface ? 0x0A000000 : 0x05000000); // reduced from 0x1A/0x0D
-                    canvas.drawRect(headerBlurRect, pillPaint);
+                    // Header: Low intensity (More opaque scrim makes the blur background less prominent)
+                    final int headerBlurAlpha = darkPillSurface ? 240 : 235;
+                    parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true, headerBlurAlpha);
                 }
 
                 // Draw pill background (over the header blur)
@@ -786,9 +783,9 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                     pillClipPath.addRoundRect(pillRect, radius, radius, Path.Direction.CW);
                     canvas.save();
                     canvas.clipPath(pillClipPath);
-                    // Draw a more opaque background tint for the pill (high intensity)
-                    pillPaint.setColor(darkPillSurface ? 0xE01A1B20 : 0xEDFFFFFF); // increased from 0xB2/0xCF
-                    parentFragment.getContentView().drawBlurRect(canvas, blurY, pillBlurRect, pillPaint, true);
+                    // Pill: High intensity (More transparent scrim makes the blur background more prominent/glassy)
+                    final int pillBlurAlpha = darkPillSurface ? 170 : 190;
+                    parentFragment.getContentView().drawBlurRect(canvas, blurY, pillBlurRect, pillPaint, true, pillBlurAlpha);
                     canvas.restore();
                     drewBlur = true;
                 }

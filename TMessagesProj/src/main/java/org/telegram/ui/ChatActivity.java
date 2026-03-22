@@ -17817,15 +17817,22 @@ public class ChatActivity extends BaseFragment implements
 
         @Override
         public void drawBlurRect(Canvas canvas, float y, Rect rectTmp, Paint blurScrimPaint, boolean top) {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q || !SharedConfig.chatBlurEnabled() || !BlurredBackgroundProviderImpl.checkBlurEnabled(currentAccount, themeDelegate)) {
-                canvas.drawRect(rectTmp, blurScrimPaint);
-                return;
-            }
-
-
             final boolean isThemeLight = themeDelegate != null && !themeDelegate.isDark();
             int blurAlpha = isThemeLight ? 216 : ACTION_BAR_BLUR_ALPHA;
             if (NekoConfig.forceBlurInChat.Bool()) blurAlpha = NekoConfig.chatBlueAlphaValue.Int();
+            drawBlurRect(canvas, y, rectTmp, blurScrimPaint, top, blurAlpha);
+        }
+
+        @Override
+        public void drawBlurRect(Canvas canvas, float y, Rect rectTmp, Paint blurScrimPaint, boolean top, int blurAlpha) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q || !SharedConfig.chatBlurEnabled() || !BlurredBackgroundProviderImpl.checkBlurEnabled(currentAccount, themeDelegate)) {
+                final int oldAlpha = blurScrimPaint.getAlpha();
+                blurScrimPaint.setAlpha(blurAlpha);
+                canvas.drawRect(rectTmp, blurScrimPaint);
+                blurScrimPaint.setAlpha(oldAlpha);
+                return;
+            }
+
             final BlurredBackgroundSource blurSource = glassBackgroundSourceFrostedRenderNode;
             if (blurSource != null && blurAlpha < 255) {
                 canvas.save();
