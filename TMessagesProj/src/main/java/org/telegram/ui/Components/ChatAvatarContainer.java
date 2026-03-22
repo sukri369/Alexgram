@@ -770,13 +770,32 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                     int xOffset = (int) getX();
                     int statusBarHeight = occupyStatusBar ? AndroidUtilities.statusBarHeight : 0;
                     
-                    // Draw SINGLE BASE HEADER GLASS (Liquid Glass Effect - Half Cut)
-                    headerBlurRect.set(-xOffset, -statusBarHeight, pWidth - xOffset, (int) pillRect.centerY());
+                    // Draw BASE HEADER GLASS with GRADIENT MERGE
+                    int fadeStart = (int) pillRect.centerY() - AndroidUtilities.dp(16);
+                    int fadeHeight = AndroidUtilities.dp(32);
+                    
+                    // 1. Static part (Top to fade start)
+                    headerBlurRect.set(-xOffset, -statusBarHeight, pWidth - xOffset, fadeStart);
                     if (!headerBlurRect.isEmpty()) {
                         pillPaint.setColor(darkPillSurface ? 0xFF1A1B20 : 0xFFFFFFFF);
-                        final int glassBlurAlpha = 35; // Very low tint for "liquid" look
-                        final int glassSourceAlpha = 220; // High blur depth
+                        final int glassBlurAlpha = 35;
+                        final int glassSourceAlpha = 220;
                         parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true, glassBlurAlpha, glassSourceAlpha);
+                    }
+                    
+                    // 2. Gradient strips (Smooth merge into chat)
+                    int strips = 8;
+                    int stripHeight = fadeHeight / strips;
+                    for (int i = 0; i < strips; i++) {
+                        float t = 1.0f - (i / (float) strips); // 1.0 down to 0.1
+                        int y1 = fadeStart + i * stripHeight;
+                        int y2 = y1 + stripHeight;
+                        headerBlurRect.set(-xOffset, y1, pWidth - xOffset, y2);
+                        if (!headerBlurRect.isEmpty()) {
+                            int stripBlurAlpha = (int) (35 * t);
+                            int stripSourceAlpha = (int) (220 * t);
+                            parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true, stripBlurAlpha, stripSourceAlpha);
+                        }
                     }
                 }
 
