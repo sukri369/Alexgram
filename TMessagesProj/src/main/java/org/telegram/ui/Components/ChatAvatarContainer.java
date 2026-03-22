@@ -1846,6 +1846,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         } else {
             lastSubtitle = newSubtitle;
         }
+        requestLayout();
     }
 
     public static CharSequence getChatSubtitle(TLRPC.Chat chat, TLRPC.ChatFull info, int onlineCount) {
@@ -2066,6 +2067,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         super.onAttachedToWindow();
         if (parentFragment != null) {
             NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.didUpdateConnectionState);
+            NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.updateInterfaces);
             NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.emojiLoaded);
             if (parentFragment.getChatMode() == ChatActivity.MODE_SAVED) {
                 NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.savedMessagesDialogsUpdate);
@@ -2086,6 +2088,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         super.onDetachedFromWindow();
         if (parentFragment != null) {
             NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.didUpdateConnectionState);
+            NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.updateInterfaces);
             NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.emojiLoaded);
             if (parentFragment.getChatMode() == ChatActivity.MODE_SAVED) {
                 NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.savedMessagesDialogsUpdate);
@@ -2114,9 +2117,18 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             if (getSubtitleTextView() != null) {
                 getSubtitleTextView().invalidate();
             }
+            requestLayout();
             invalidate();
         } else if (id == NotificationCenter.savedMessagesDialogsUpdate) {
             updateSubtitle(true);
+            requestLayout();
+        } else if (id == NotificationCenter.updateInterfaces) {
+            int mask = (int) args[0];
+            if ((mask & (MessagesController.UPDATE_MASK_NAME | MessagesController.UPDATE_MASK_STATUS | MessagesController.UPDATE_MASK_AVATAR | MessagesController.UPDATE_MASK_CHAT_NAME)) != 0) {
+                checkAndUpdateAvatar();
+                updateSubtitle(true);
+                requestLayout();
+            }
         }
     }
 
