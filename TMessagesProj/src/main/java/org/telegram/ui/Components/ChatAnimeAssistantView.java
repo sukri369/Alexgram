@@ -179,7 +179,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
         reactionBubble.setVisibility(GONE);
         characterContainer.addView(reactionBubble, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, -8, 0, 0));
 
-        addView(characterContainer, LayoutHelper.createFrame(100, 122, Gravity.BOTTOM | Gravity.LEFT, 12, 0, 0, characterBottomMarginDp));
+        addView(characterContainer, LayoutHelper.createFrame(100, 122, Gravity.BOTTOM | Gravity.RIGHT, 0, 0, 12, characterBottomMarginDp));
 
         panelContainer = blurParent != null ? new BlurredFrameLayout(context, blurParent) : new FrameLayout(context);
         if (panelContainer instanceof BlurredFrameLayout) {
@@ -685,12 +685,6 @@ public class ChatAnimeAssistantView extends FrameLayout {
         if (customBottomOffset != offsetPx) {
             customBottomOffset = offsetPx;
             requestLayout();
-            
-            // DEBUG: Force UI to display the calculated offset value
-            if (reactionBubble != null) {
-                reactionBubble.setText("L: " + offsetPx);
-                reactionBubble.setVisibility(VISIBLE);
-            }
         }
     }
 
