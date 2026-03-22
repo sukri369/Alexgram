@@ -770,21 +770,33 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                 } else {
                     headerBlurRect.set(0, 0, getWidth(), getMeasuredHeight());
                 }
+                
                 if (!headerBlurRect.isEmpty()) {
-                    // Header: Low intensity (More opaque scrim makes the blur background less prominent)
-                    final int headerBlurAlpha = darkPillSurface ? 240 : 235;
+                    canvas.save();
+                    // Clip out the pill area from the header blur to prevent double drawing
+                    pillBlurRect.set((int) pillRect.left, (int) pillRect.top, (int) Math.ceil(pillRect.right), (int) Math.ceil(pillRect.bottom));
+                    if (!pillBlurRect.isEmpty()) {
+                        pillClipPath.rewind();
+                        pillClipPath.addRoundRect(pillRect, radius, radius, Path.Direction.CW);
+                        if (Build.VERSION.SDK_INT >= 26) {
+                            canvas.clipOutPath(pillClipPath);
+                        } else {
+                            canvas.clipPath(pillClipPath, android.graphics.Region.Op.DIFFERENCE);
+                        }
+                    }
+                    
+                    // Header: Low intensity (More opaque/solid)
+                    final int headerBlurAlpha = darkPillSurface ? 250 : 245;
                     parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true, headerBlurAlpha);
+                    canvas.restore();
                 }
 
-                // Draw pill background (over the header blur)
-                pillBlurRect.set((int) pillRect.left, (int) pillRect.top, (int) Math.ceil(pillRect.right), (int) Math.ceil(pillRect.bottom));
+                // Draw pill background (High intensity)
                 if (!pillBlurRect.isEmpty()) {
-                    pillClipPath.rewind();
-                    pillClipPath.addRoundRect(pillRect, radius, radius, Path.Direction.CW);
                     canvas.save();
                     canvas.clipPath(pillClipPath);
-                    // Pill: High intensity (More transparent scrim makes the blur background more prominent/glassy)
-                    final int pillBlurAlpha = darkPillSurface ? 170 : 190;
+                    // Pill: High intensity (Stronger glass effect)
+                    final int pillBlurAlpha = darkPillSurface ? 130 : 150;
                     parentFragment.getContentView().drawBlurRect(canvas, blurY, pillBlurRect, pillPaint, true, pillBlurAlpha);
                     canvas.restore();
                     drewBlur = true;
