@@ -1,0 +1,26 @@
+    private ChatAnimeAssistantView chatAnimeAssistantView;
+            if (chatAnimeAssistantView != null) {
+                chatAnimeAssistantView.onTypingStateChanged(!TextUtils.isEmpty(text));
+        if (chatAnimeAssistantView != null) {
+            chatAnimeAssistantView.onDestroy();
+            AndroidUtilities.removeFromParent(chatAnimeAssistantView);
+            chatAnimeAssistantView = null;
+                if (chatAnimeAssistantView != null) {
+                    chatAnimeAssistantView.onChatScrolled(dy);
+                        // Initialize MiniChatAssistantView alongside ChatAnimeAssistantView
+            chatAnimeAssistantView = new ChatAnimeAssistantView(
+            chatAnimeAssistantView.setAssistantRequestDelegate(new ChatAnimeAssistantView.AssistantRequestDelegate() {
+                public void onRequest(String prompt, ChatAnimeAssistantView.AssistantRequestCallback callback) {
+                public void onAction(String action, String argument, ChatAnimeAssistantView.AssistantRequestCallback callback) {
+            contentView.addView(chatAnimeAssistantView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        if (chatAnimeAssistantView != null) {
+            chatAnimeAssistantView.setTranslationY(assistantTranslationY);
+        if (chatAnimeAssistantView != null) {
+            chatAnimeAssistantView.onResume();
+        if (chatAnimeAssistantView != null) {
+            chatAnimeAssistantView.onPause();
+    private void executeAnimeAssistantAction(String action, String argument, ChatAnimeAssistantView.AssistantRequestCallback callback) {
+    private void requestAnimeAssistantReply(String prompt, ChatAnimeAssistantView.AssistantRequestCallback callback) {
+        if (chatAnimeAssistantView != null) {
+            chatAnimeAssistantView.setAutoReplyEnabledState(false);
+        requestAnimeAssistantReply(prompt, new ChatAnimeAssistantView.AssistantRequestCallback() {

@@ -1003,21 +1003,33 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
     }
 
     private void updateRunInBackground(boolean enabled) {
-        SharedPreferences notificationsSettings = MessagesController.getNotificationsSettings(currentAccount);
-        notificationsSettings.edit()
+        MessagesController.getGlobalNotificationsSettings().edit()
             .putBoolean("pushService", enabled)
             .putBoolean("pushConnection", enabled)
             .apply();
 
-        SharedPreferences mainSettings = MessagesController.getMainSettings(currentAccount);
-        mainSettings.edit()
+        MessagesController.getGlobalMainSettings().edit()
             .putBoolean("keepAliveService", enabled)
             .putBoolean("backgroundConnection", enabled)
             .apply();
 
-        getMessagesController().keepAliveService = enabled;
-        getMessagesController().backgroundConnection = enabled;
-        ConnectionsManager.getInstance(currentAccount).setPushConnectionEnabled(enabled);
+        for (int i = 0; i < org.telegram.messenger.UserConfig.MAX_ACCOUNT_COUNT; i++) {
+            SharedPreferences notificationsSettings = MessagesController.getNotificationsSettings(i);
+            notificationsSettings.edit()
+                .putBoolean("pushService", enabled)
+                .putBoolean("pushConnection", enabled)
+                .apply();
+
+            SharedPreferences mainSettings = MessagesController.getMainSettings(i);
+            mainSettings.edit()
+                .putBoolean("keepAliveService", enabled)
+                .putBoolean("backgroundConnection", enabled)
+                .apply();
+
+            MessagesController.getInstance(i).keepAliveService = enabled;
+            MessagesController.getInstance(i).backgroundConnection = enabled;
+            ConnectionsManager.getInstance(i).setPushConnectionEnabled(enabled);
+        }
 
         Intent serviceIntent = new Intent(ApplicationLoader.applicationContext, org.telegram.messenger.NotificationsService.class);
         if (!enabled) {
@@ -1029,7 +1041,15 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
         if (enabled && getParentActivity() != null) {
             AndroidUtilities.requestIgnoreBatteryOptimizations(getParentActivity());
             AndroidUtilities.requestNotificationPermission(getParentActivity());
-            AndroidUtilities.showAutoStartPermissionGuide(getParentActivity());
+            
+            new org.telegram.ui.ActionBar.AlertDialog.Builder(getParentActivity())
+                .setTitle("Background Reliability")
+                .setMessage("To ensure the background service works perfectly, please enable Auto-Start or Background Activity in your device settings. Allow battery optimizations first if prompted.")
+                .setPositiveButton("Open Settings", (dialog, which) -> {
+                    AndroidUtilities.showAutoStartPermissionGuide(getParentActivity());
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
         }
     }
 
