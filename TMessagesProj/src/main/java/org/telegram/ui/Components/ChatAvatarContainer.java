@@ -536,8 +536,14 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
     };
 
     private boolean isPillChatTitleEnabled() {
-        // Restore original pill chat title logic
-        return NaConfig.INSTANCE.getPillChatTitle().Bool();
+        if (!NaConfig.INSTANCE.getPillChatTitle().Bool()) {
+            return false;
+        }
+        // Disable pill in thread/comments sections (e.g. channel comments), but keep it for topics
+        if (parentFragment != null && parentFragment.isThreadChat() && !parentFragment.isTopic) {
+            return false;
+        }
+        return true;
     }
 
     public void playPillTitleOnboardingHighlight() {
