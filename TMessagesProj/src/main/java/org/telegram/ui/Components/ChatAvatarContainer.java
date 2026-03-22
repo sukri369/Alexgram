@@ -785,10 +785,11 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                         }
                     }
                     
-                    // Header: Low intensity (More solid)
+                    // Header: Low intensity (Subtle blur + close to solid scrim)
                     pillPaint.setColor(darkPillSurface ? 0xFF1A1B20 : 0xFFFFFFFF);
-                    final int headerBlurAlpha = 252;
-                    parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true, headerBlurAlpha);
+                    final int headerBlurAlpha = 250;
+                    final int headerSourceAlpha = 45;
+                    parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true, headerBlurAlpha, headerSourceAlpha);
                     canvas.restore();
                 }
 
@@ -796,10 +797,11 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                 if (!pillBlurRect.isEmpty()) {
                     canvas.save();
                     canvas.clipPath(pillClipPath);
-                    // Pill: High intensity (Stronger glass effect)
+                    // Pill: High intensity (Strong blur + glassy scrim)
                     pillPaint.setColor(darkPillSurface ? 0xAA1A1B20 : 0xAAFFFFFF);
                     final int pillBlurAlpha = 110;
-                    parentFragment.getContentView().drawBlurRect(canvas, blurY, pillBlurRect, pillPaint, true, pillBlurAlpha);
+                    final int pillSourceAlpha = 255;
+                    parentFragment.getContentView().drawBlurRect(canvas, blurY, pillBlurRect, pillPaint, true, pillBlurAlpha, pillSourceAlpha);
                     canvas.restore();
                     drewBlur = true;
                 }
