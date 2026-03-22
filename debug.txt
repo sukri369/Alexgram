@@ -1,9 +1,0 @@
-10815:        undoView.setAdditionalTranslationY(shouldHideBottomForGesture() ? 0 : AndroidUtilities.dp(51));
-11502:        updatePagedownButtonsPosition(shouldHideBottomForGesture());
-12755:                    + (shouldHideBottomForGesture() ? 0 : chatInputViewsContainer.getInputBubbleHeight()));
-16535:        int recyclerChatViewHeight = (contentView.getMeasuredHeight() - (inPreviewMode || isInsideContainer || shouldHideBottomForGesture() ? 0 : AndroidUtilities.dp(48)) - chatListView.getTop());
-18348:            final boolean hideBottomForGesture = shouldHideBottomForGesture();
-19020:                    if (shouldHideBottomForGesture()) {
-28320:    private boolean shouldHideBottomForGesture() {
-28736:        if (shouldHideBottomForGesture()) {
-47629:        if (shouldHideBottomForGesture()) {
