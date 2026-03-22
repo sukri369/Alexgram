@@ -774,7 +774,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                     headerBlurRect.set(-xOffset, -statusBarHeight, pWidth - xOffset, getMeasuredHeight());
                     if (!headerBlurRect.isEmpty()) {
                         pillPaint.setColor(darkPillSurface ? 0xFF1A1B20 : 0xFFFFFFFF);
-                        final int baseBlurAlpha = 185; // Subtle glassy outside
+                        final int baseBlurAlpha = 225; // Very subtle glassy outside
                         parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true, baseBlurAlpha);
                     }
                 }
@@ -788,7 +788,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                     canvas.clipPath(pillClipPath);
                     // Pill: Very low intensity (Draw on top of base blur to make it very opaque)
                     pillPaint.setColor(darkPillSurface ? 0xFF1B1D22 : 0xFFFFFFFF);
-                    final int pillOverlayAlpha = 240; // Close to solid inside
+                    final int pillOverlayAlpha = 252; // Solid inside
                     parentFragment.getContentView().drawBlurRect(canvas, blurY, pillBlurRect, pillPaint, true, pillOverlayAlpha);
                     canvas.restore();
                     drewBlur = true;
