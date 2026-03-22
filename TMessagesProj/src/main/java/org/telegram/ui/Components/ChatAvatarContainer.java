@@ -536,14 +536,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
     };
 
     private boolean isPillChatTitleEnabled() {
-        if (!NaConfig.INSTANCE.getPillChatTitle().Bool()) {
-            return false;
-        }
-        // Disable pill in thread/comments sections (e.g. channel comments), but keep it for topics
-        if (parentFragment != null && parentFragment.isThreadChat() && !parentFragment.isTopic) {
-            return false;
-        }
-        return true;
+        return parentFragment != null && parentFragment.isPillChatHeaderEnabled();
     }
 
     public void playPillTitleOnboardingHighlight() {
@@ -705,7 +698,13 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
 
         if (isPillChatTitleEnabled() && titleTextView != null) {
             int actionBarHeight = ActionBar.getCurrentActionBarHeight();
-            int viewTop = (actionBarHeight - dp(42)) / 2 + (Build.VERSION.SDK_INT >= 21 && occupyStatusBar ? AndroidUtilities.statusBarHeight : 0);
+            int statusBarH = (Build.VERSION.SDK_INT >= 21 && occupyStatusBar ? AndroidUtilities.statusBarHeight : 0);
+            
+            // Adjust viewTop to be lower if it's too high up into status bar
+            int viewTop = (actionBarHeight - dp(42)) / 2 + statusBarH;
+            if (statusBarH > 0 && viewTop < statusBarH + dp(8)) {
+                viewTop = statusBarH + dp(8);
+            }
 
             float titleContentW = getViewContentWidth(titleTextView);
             View subView = getSubtitleTextView();
@@ -762,12 +761,31 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                 if (getParent() instanceof View) {
                     blurY += ((View) getParent()).getY();
                 }
+
+                // Draw full-width header blur
+                if (getParent() instanceof View) {
+                    View parent = (View) getParent();
+                    rectTmp.set(-(int) getX(), 0, parent.getWidth() - (int) getX(), getMeasuredHeight());
+                } else {
+                    rectTmp.set(0, 0, getWidth(), getMeasuredHeight());
+                }
+                if (!rectTmp.isEmpty()) {
+                    pillPaint.setAlpha(255);
+                    parentFragment.getContentView().drawBlurRect(canvas, blurY, rectTmp, pillPaint, true);
+                    
+                    // Add a subtle tint to the blurred header
+                    pillPaint.setColor(darkPillSurface ? 0x1A000000 : 0x0D000000);
+                    canvas.drawRect(rectTmp, pillPaint);
+                }
+
+                // Draw pill background (over the header blur)
                 pillBlurRect.set((int) pillRect.left, (int) pillRect.top, (int) Math.ceil(pillRect.right), (int) Math.ceil(pillRect.bottom));
                 if (!pillBlurRect.isEmpty()) {
                     pillClipPath.rewind();
                     pillClipPath.addRoundRect(pillRect, radius, radius, Path.Direction.CW);
                     canvas.save();
                     canvas.clipPath(pillClipPath);
+                    pillPaint.setColor(darkPillSurface ? 0xB21A1B20 : 0xCFFFFFFF);
                     parentFragment.getContentView().drawBlurRect(canvas, blurY, pillBlurRect, pillPaint, true);
                     canvas.restore();
                     drewBlur = true;

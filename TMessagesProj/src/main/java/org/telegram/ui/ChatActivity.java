@@ -44598,7 +44598,7 @@ public class ChatActivity extends BaseFragment implements
         return AndroidUtilities.computePerceivedBrightness(actionBar.getBackgroundColor()) > 0.721f;
     }
 
-    private boolean isPillChatHeaderEnabled() {
+    public boolean isPillChatHeaderEnabled() {
         // Restore original pill chat title logic
         if (!NaConfig.INSTANCE.getPillChatTitle().Bool()) {
             return false;
