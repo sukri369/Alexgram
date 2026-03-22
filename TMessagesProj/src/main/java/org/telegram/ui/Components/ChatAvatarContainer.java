@@ -771,24 +771,26 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                     int statusBarHeight = occupyStatusBar ? AndroidUtilities.statusBarHeight : 0;
                     
                     // Draw SINGLE BASE HEADER BLUR (High intensity / Glassy)
+                    // Draw SINGLE BASE HEADER GLASS (Transparent, NO BLUR)
                     headerBlurRect.set(-xOffset, -statusBarHeight, pWidth - xOffset, getMeasuredHeight());
                     if (!headerBlurRect.isEmpty()) {
+                        int glassAlpha = 50; // Very transparent glass outside
                         pillPaint.setColor(darkPillSurface ? 0xFF1A1B20 : 0xFFFFFFFF);
-                        final int baseBlurAlpha = 225; // Very subtle glassy outside
-                        parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true, baseBlurAlpha);
+                        pillPaint.setAlpha(glassAlpha);
+                        canvas.drawRect(headerBlurRect, pillPaint);
                     }
                 }
 
-                // Draw pill background ON TOP (Low intensity / More solid)
+                // Draw pill background ON TOP (Maintaining the "great" look from before)
                 if (!pillRect.isEmpty()) {
                     pillBlurRect.set((int) pillRect.left, (int) pillRect.top, (int) Math.ceil(pillRect.right), (int) Math.ceil(pillRect.bottom));
                     pillClipPath.rewind();
                     pillClipPath.addRoundRect(pillRect, radius, radius, Path.Direction.CW);
                     canvas.save();
                     canvas.clipPath(pillClipPath);
-                    // Pill: Very low intensity (Draw on top of base blur to make it very opaque)
+                    // Pill: Keep the solid-ish blur look they liked
                     pillPaint.setColor(darkPillSurface ? 0xFF1B1D22 : 0xFFFFFFFF);
-                    final int pillOverlayAlpha = 252; // Solid inside
+                    final int pillOverlayAlpha = 252;
                     parentFragment.getContentView().drawBlurRect(canvas, blurY, pillBlurRect, pillPaint, true, pillOverlayAlpha);
                     canvas.restore();
                     drewBlur = true;
