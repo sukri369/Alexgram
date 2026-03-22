@@ -679,25 +679,44 @@ public class ChatAnimeAssistantView extends FrameLayout {
         }).start();
     }
 
+    private int customBottomOffset = 0;
+
     public void setAssistantBottomOffset(int offsetPx) {
-        if (characterContainer != null && characterContainer.getLayoutParams() instanceof FrameLayout.LayoutParams) {
-            FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) characterContainer.getLayoutParams();
-            if (lp.bottomMargin != offsetPx) {
-                lp.bottomMargin = offsetPx;
-                characterContainer.setLayoutParams(lp);
-                
-                // DEBUG: Force UI to display the calculated offset value
-                if (reactionBubble != null) {
-                    reactionBubble.setText("O: " + offsetPx);
-                    reactionBubble.setVisibility(VISIBLE);
-                }
-                
-                // Keep panel relative to character by tracking the original dp difference (92 vs 86 = 6dp diff)
-                if (panelContainer != null && panelContainer.getLayoutParams() instanceof FrameLayout.LayoutParams) {
-                    FrameLayout.LayoutParams panelLp = (FrameLayout.LayoutParams) panelContainer.getLayoutParams();
-                    panelLp.bottomMargin = offsetPx - AndroidUtilities.dp(6);
-                    panelContainer.setLayoutParams(panelLp);
-                }
+        if (customBottomOffset != offsetPx) {
+            customBottomOffset = offsetPx;
+            requestLayout();
+            
+            // DEBUG: Force UI to display the calculated offset value
+            if (reactionBubble != null) {
+                reactionBubble.setText("L: " + offsetPx);
+                reactionBubble.setVisibility(VISIBLE);
+            }
+        }
+    }
+
+    @Override
+    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        super.onLayout(changed, left, top, right, bottom);
+        
+        if (customBottomOffset > 0) {
+            int parentHeight = bottom - top;
+            
+            if (characterContainer != null) {
+                int cWidth = characterContainer.getMeasuredWidth();
+                int cHeight = characterContainer.getMeasuredHeight();
+                int cLeft = characterContainer.getLeft();
+                int cBottom = parentHeight - customBottomOffset;
+                int cTop = cBottom - cHeight;
+                characterContainer.layout(cLeft, cTop, cLeft + cWidth, cBottom);
+            }
+            
+            if (panelContainer != null) {
+                int pWidth = panelContainer.getMeasuredWidth();
+                int pHeight = panelContainer.getMeasuredHeight();
+                int pLeft = panelContainer.getLeft();
+                int pBottom = parentHeight - (customBottomOffset - AndroidUtilities.dp(6));
+                int pTop = pBottom - pHeight;
+                panelContainer.layout(pLeft, pTop, pLeft + pWidth, pBottom);
             }
         }
     }
