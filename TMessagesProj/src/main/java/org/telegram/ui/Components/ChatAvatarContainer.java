@@ -511,6 +511,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
     private final Paint pillStrokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final RectF pillRect = new RectF();
     private final Rect pillBlurRect = new Rect();
+    private final Rect headerBlurRect = new Rect();
     private final Path pillClipPath = new Path();
     private final Paint pillHighlightPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private boolean pillTitleOverflowing;
@@ -765,17 +766,17 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                 // Draw full-width header blur
                 if (getParent() instanceof View) {
                     View parent = (View) getParent();
-                    rectTmp.set(-(int) getX(), 0, parent.getWidth() - (int) getX(), getMeasuredHeight());
+                    headerBlurRect.set(-(int) getX(), 0, parent.getWidth() - (int) getX(), getMeasuredHeight());
                 } else {
-                    rectTmp.set(0, 0, getWidth(), getMeasuredHeight());
+                    headerBlurRect.set(0, 0, getWidth(), getMeasuredHeight());
                 }
-                if (!rectTmp.isEmpty()) {
+                if (!headerBlurRect.isEmpty()) {
                     pillPaint.setAlpha(255);
-                    parentFragment.getContentView().drawBlurRect(canvas, blurY, rectTmp, pillPaint, true);
+                    parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true);
                     
                     // Add a subtle tint to the blurred header
                     pillPaint.setColor(darkPillSurface ? 0x1A000000 : 0x0D000000);
-                    canvas.drawRect(rectTmp, pillPaint);
+                    canvas.drawRect(headerBlurRect, pillPaint);
                 }
 
                 // Draw pill background (over the header blur)
