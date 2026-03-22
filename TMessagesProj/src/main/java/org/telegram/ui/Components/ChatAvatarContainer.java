@@ -778,8 +778,8 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                     headerBlurRect.set(-xOffset, -statusBarHeight, pWidth - xOffset, fadeStart);
                     if (!headerBlurRect.isEmpty()) {
                         pillPaint.setColor(darkPillSurface ? 0xFF1A1B20 : 0xFFFFFFFF);
-                        final int glassBlurAlpha = 35;
-                        final int glassSourceAlpha = 220;
+                        final int glassBlurAlpha = 45; // Slightly more tint
+                        final int glassSourceAlpha = 245; // Even more blur depth
                         parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true, glassBlurAlpha, glassSourceAlpha);
                     }
                     
@@ -792,8 +792,8 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                         int y2 = y1 + stripHeight;
                         headerBlurRect.set(-xOffset, y1, pWidth - xOffset, y2);
                         if (!headerBlurRect.isEmpty()) {
-                            int stripBlurAlpha = (int) (35 * t);
-                            int stripSourceAlpha = (int) (220 * t);
+                            int stripBlurAlpha = (int) (45 * t);
+                            int stripSourceAlpha = (int) (245 * t);
                             parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true, stripBlurAlpha, stripSourceAlpha);
                         }
                     }
