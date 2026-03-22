@@ -770,8 +770,8 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                     int xOffset = (int) getX();
                     int statusBarHeight = occupyStatusBar ? AndroidUtilities.statusBarHeight : 0;
                     
-                    // Draw SINGLE BASE HEADER GLASS (Liquid Glass Effect)
-                    headerBlurRect.set(-xOffset, -statusBarHeight, pWidth - xOffset, getMeasuredHeight());
+                    // Draw SINGLE BASE HEADER GLASS (Liquid Glass Effect - Half Cut)
+                    headerBlurRect.set(-xOffset, -statusBarHeight, pWidth - xOffset, (int) pillRect.centerY());
                     if (!headerBlurRect.isEmpty()) {
                         pillPaint.setColor(darkPillSurface ? 0xFF1A1B20 : 0xFFFFFFFF);
                         final int glassBlurAlpha = 35; // Very low tint for "liquid" look
