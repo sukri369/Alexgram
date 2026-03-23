@@ -39362,23 +39362,25 @@ public class ChatActivity extends BaseFragment implements
                 int color2 = getThemedColor(Theme.key_actionBarActionModeDefaultSelector);
                 actionBar.setItemsBackgroundColor(ColorUtils.blendARGB(color1, color2, searchAnimationProgress), false);
 
-                if (isPillChatHeaderEnabled()) {
-                    actionBar.setBackgroundColor(Color.TRANSPARENT);
-                    actionBar.setShadowAlpha(0);
-                } else {
-                    actionBar.setBackgroundColor(ColorUtils.blendARGB(getThemedColor(Theme.key_actionBarDefault), getThemedColor(Theme.key_actionBarActionModeDefault), searchAnimationProgress));
+            }
+            if (isPillChatHeaderEnabled()) {
+                actionBar.setBackgroundColor(Color.TRANSPARENT);
+                actionBar.setShadowAlpha(0);
+            } else {
+                actionBar.setBackgroundColor(ColorUtils.blendARGB(getThemedColor(Theme.key_actionBarDefault), getThemedColor(Theme.key_actionBarActionModeDefault), searchAnimationProgress));
+                if (searchAnimationProgress == 0) {
+                   actionBar.setShadowAlpha(255);
                 }
+            }
+            if (whiteActionBar) {
                 actionBar.setSearchTextColor(ColorUtils.blendARGB(Theme.getColor(Theme.key_actionBarDefaultSearch), getThemedColor(Theme.key_windowBackgroundWhiteBlackText), searchAnimationProgress), false);
                 actionBar.setSearchTextColor(ColorUtils.blendARGB(Theme.getColor(Theme.key_actionBarDefaultSearchPlaceholder), getThemedColor(Theme.key_windowBackgroundWhiteGrayText), searchAnimationProgress), true);
                 actionBar.setSearchCursorColor(ColorUtils.blendARGB(Theme.getColor(Theme.key_actionBarDefaultSearch), getThemedColor(Theme.key_windowBackgroundWhiteBlueText), searchAnimationProgress));
-
-                if (!isInsideContainer && getParentActivity() != null) {
-                    AndroidUtilities.setLightStatusBar(getParentActivity().getWindow(), isLightStatusBar());
-                }
             }
-            if (isPillChatHeaderEnabled()) {
-                applyPillHeaderAppearance();
+            if (!isInsideContainer && getParentActivity() != null) {
+                AndroidUtilities.setLightStatusBar(getParentActivity().getWindow(), isLightStatusBar());
             }
+            applyPillHeaderAppearance();
             if (fragmentView != null) {
                 fragmentView.invalidate();
             }
@@ -39520,8 +39522,17 @@ public class ChatActivity extends BaseFragment implements
         if (actionBar == null) {
             return;
         }
-        actionBar.setForceTransparentBackground(isPillChatHeaderEnabled());
-        if (!isPillChatHeaderEnabled()) {
+        boolean enabled = isPillChatHeaderEnabled();
+        actionBar.setForceTransparentBackground(enabled);
+        if (!enabled) {
+            actionBar.setCastShadows(true);
+            actionBar.setShadowAlpha(255);
+            actionBar.setOccupyStatusBar(!inPreviewMode);
+            int color = getThemedColor(Theme.key_actionBarDefaultIcon);
+            actionBar.setItemsColor(color, false);
+            actionBar.setItemsColor(color, true);
+            actionBar.setItemsBackgroundColor(getThemedColor(Theme.key_actionBarDefaultSelector), false);
+            actionBar.setItemsBackgroundColor(getThemedColor(Theme.key_actionBarDefaultSelector), true);
             return;
         }
         actionBar.setBackground(null);
