@@ -5133,6 +5133,9 @@ public class ChatActivity extends BaseFragment implements
             glassBackgroundDrawableFactory.create(chatInputViewsContainer, blurredBackgroundColorProvider));
         chatInputViewsContainer.setUnderKeyboardBackgroundDrawable(
             glassBackgroundDrawableFactoryFrosted.create(chatInputViewsContainer, blurredBackgroundColorProvider));
+        if (xyz.nextalone.nagram.NaConfig.INSTANCE.getIosStyleInputBar().Bool()) {
+            chatInputViewsContainer.setInputBubbleAlpha(0);
+        }
 
 
         chatInputBubbleContainer = chatInputViewsContainer.getInputIslandBubbleContainer();
