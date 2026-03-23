@@ -35,6 +35,8 @@ public class ChatInputViewsContainer extends FrameLayout {
     private final FrameLayout inputIslandBubbleContainer;
     private final FrameLayout inAppKeyboardBubbleContainer;
 
+    private boolean iosStyle;
+
     public ChatInputViewsContainer(@NonNull Context context) {
         super(context);
 
@@ -77,8 +79,15 @@ public class ChatInputViewsContainer extends FrameLayout {
     private BlurredBackgroundDrawable underKeyboardBackgroundDrawable;
     public void setInputIslandBubbleDrawable(BlurredBackgroundDrawable drawable) {
         blurredBackgroundDrawable = drawable;
-        blurredBackgroundDrawable.setPadding(dp(7));
-        blurredBackgroundDrawable.setRadius(dp(INPUT_BUBBLE_RADIUS));
+        if (blurredBackgroundDrawable != null) {
+            blurredBackgroundDrawable.setPadding(dp(7));
+            blurredBackgroundDrawable.setRadius(dp(INPUT_BUBBLE_RADIUS));
+        }
+    }
+
+    public void setIosStyle(boolean iosStyle) {
+        this.iosStyle = iosStyle;
+        invalidate();
     }
 
     public void setUnderKeyboardBackgroundDrawable(BlurredBackgroundDrawable drawable) {
@@ -90,8 +99,12 @@ public class ChatInputViewsContainer extends FrameLayout {
     }
 
     public void updateColors() {
-        blurredBackgroundDrawable.updateColors();
-        underKeyboardBackgroundDrawable.updateColors();
+        if (blurredBackgroundDrawable != null) {
+            blurredBackgroundDrawable.updateColors();
+        }
+        if (underKeyboardBackgroundDrawable != null) {
+            underKeyboardBackgroundDrawable.updateColors();
+        }
         invalidate();
     }
 
@@ -264,8 +277,10 @@ public class ChatInputViewsContainer extends FrameLayout {
         tmpRect.inset(0, -dp(7));
         tmpRect.offset(0, blurTop + (int) bubbleInputTranlationY);
 
-        blurredBackgroundDrawable.setBounds(tmpRect);
-        blurredBackgroundDrawable.draw(canvas);
+        if (!iosStyle && blurredBackgroundDrawable != null) {
+            blurredBackgroundDrawable.setBounds(tmpRect);
+            blurredBackgroundDrawable.draw(canvas);
+        }
 
         if (needDrawInAppKeyboard) {
             underKeyboardBackgroundDrawable.draw(canvas);
