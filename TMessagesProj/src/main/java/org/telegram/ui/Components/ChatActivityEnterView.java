@@ -2719,6 +2719,9 @@ public class ChatActivityEnterView extends FrameLayout implements
         };
         frameLayout.setClipChildren(false);
         textFieldContainer.addView(frameLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, iosStyle ? 68 : 0, 0, iosStyle ? 68 : DEFAULT_HEIGHT, 0));
+        if (iosStyle) {
+            checkIosMargins();
+        }
 
         emojiButton = new ChatActivityEnterViewAnimatedIconView(context) {
             @Override
@@ -14665,12 +14668,42 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
                 iosTextBackground.draw(canvas);
             }
             if (iosSendBackground != null && sendButtonContainer.getVisibility() == VISIBLE) {
-                int centerX = (int) (sendButtonContainer.getX() + textFieldContainer.getX() + sendButtonContainer.getMeasuredWidth() / 2);
-                int centerY = (int) (sendButtonContainer.getY() + textFieldContainer.getY() + sendButtonContainer.getMeasuredHeight() / 2);
+                View visibleChild = null;
+                for (int i = 0; i < sendButtonContainer.getChildCount(); i++) {
+                    View child = sendButtonContainer.getChildAt(i);
+                    if (child.getVisibility() == VISIBLE) {
+                        visibleChild = child;
+                        if (visibleChild instanceof ViewGroup) {
+                            ViewGroup vg = (ViewGroup) visibleChild;
+                            for (int j = 0; j < vg.getChildCount(); j++) {
+                                View c = vg.getChildAt(j);
+                                if (c.getVisibility() == VISIBLE) {
+                                    visibleChild = c;
+                                    break;
+                                }
+                            }
+                        }
+                        break;
+                    }
+                }
+                float centerX, centerY;
+                if (visibleChild != null) {
+                    centerX = sendButtonContainer.getX() + textFieldContainer.getX() + visibleChild.getX() + visibleChild.getMeasuredWidth() / 2f;
+                    centerY = sendButtonContainer.getY() + textFieldContainer.getY() + visibleChild.getY() + visibleChild.getMeasuredHeight() / 2f;
+                    if (visibleChild.getParent() != sendButtonContainer && visibleChild.getParent() instanceof View) {
+                        View parent = (View) visibleChild.getParent();
+                        centerX += parent.getX();
+                        centerY += parent.getY();
+                    }
+                } else {
+                    centerX = sendButtonContainer.getX() + textFieldContainer.getX() + sendButtonContainer.getMeasuredWidth() / 2f;
+                    centerY = sendButtonContainer.getY() + textFieldContainer.getY() + sendButtonContainer.getMeasuredHeight() / 2f;
+                }
                 int radius = dp(52) / 2;
-                iosSendBackground.setBounds(centerX - radius, centerY - radius, centerX + radius, centerY + radius);
+                iosSendBackground.setBounds((int) (centerX - radius), (int) (centerY - radius), (int) (centerX + radius), (int) (centerY + radius));
                 iosSendBackground.draw(canvas);
             }
+            checkIosMargins();
         }
         if (emojiView == null || emojiView.getVisibility() != View.VISIBLE || emojiView.getStickersExpandOffset() == 0) {
             super.dispatchDraw(canvas);
@@ -15636,5 +15669,20 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
         cameraSelectionPopup.showAtLocation(anchorView, Gravity.LEFT | Gravity.TOP, x, y);
         cameraSelectionPopup.dimBehind();
         if (!NekoConfig.disableVibration.Bool()) performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
+    }
+
+    private void checkIosMargins() {
+        if (!iosStyle || messageEditTextContainer == null || textFieldContainer == null) return;
+        boolean hasAttach = attachButton != null && attachButton.getVisibility() == VISIBLE;
+        boolean hasSend = sendButtonContainer != null && sendButtonContainer.getVisibility() == VISIBLE;
+
+        FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) messageEditTextContainer.getLayoutParams();
+        int left = hasAttach ? dp(68) : dp(12);
+        int right = hasSend ? dp(68) : dp(12);
+        if (lp.leftMargin != left || lp.rightMargin != right) {
+            lp.leftMargin = left;
+            lp.rightMargin = right;
+            messageEditTextContainer.setLayoutParams(lp);
+        }
     }
 }
