@@ -24,6 +24,7 @@ import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.ScaleStateListAnimator;
 import org.telegram.ui.Components.blur3.BlurredBackgroundDrawableViewFactory;
 import org.telegram.ui.Components.blur3.drawable.color.BlurredBackgroundColorProvider;
+import org.telegram.ui.Components.blur3.drawable.BlurredBackgroundDrawable;
 import org.telegram.ui.Components.chat.buttons.ChatActivityBlurredRoundButton;
 
 import me.vkryl.android.animator.BoolAnimator;
@@ -43,7 +44,7 @@ public class ChatActivityChannelButtonsLayout extends FrameLayout implements Fac
     private OnButtonsTotalWidthChanged onButtonsTotalWidthChanged;
     private final FrameLayout container;
     private boolean iosStyle;
-    private android.graphics.drawable.Drawable iosBackground;
+    private BlurredBackgroundDrawable iosBackground;
 
     private static final @DrawableRes int[] buttonIcons = new int[] {
         R.drawable.msg_search,
@@ -82,10 +83,14 @@ public class ChatActivityChannelButtonsLayout extends FrameLayout implements Fac
             }
         });
         addView(container, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 44, Gravity.CENTER_VERTICAL));
-        iosBackground = context.getResources().getDrawable(R.drawable.chat_input_island_pill).mutate();
+        iosBackground = blurredBackgroundDrawableViewFactory.create(this, colorProvider);
+        iosBackground.setRadius(dp(22));
     }
 
     public void updateColors() {
+        if (iosBackground != null) {
+            iosBackground.updateColors();
+        }
         for (ButtonHolder holder : buttonHolders) {
             if (holder != null) {
                 holder.button.updateColors();
