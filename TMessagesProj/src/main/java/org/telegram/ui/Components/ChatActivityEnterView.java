@@ -9472,6 +9472,10 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
         if (messageEditText == null || (editingMessageObject != null && !editingMessageObject.needResendWhenEdit())) {
             return;
         }
+        if (iosStyle) {
+            updateMessageEditTextMargins();
+            return;
+        }
         FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) messageEditText.getLayoutParams();
         int oldRightMargin = layoutParams.rightMargin;
         if (isStories && isLiveComment) {
@@ -14519,20 +14523,23 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        if (botCommandsMenuButton != null && botCommandsMenuButton.getTag() != null) {
+        if (iosStyle) {
+            updateMessageEditTextMargins();
+        }
+        if (!iosStyle && botCommandsMenuButton != null && botCommandsMenuButton.getTag() != null) {
             botCommandsMenuButton.measure(widthMeasureSpec, heightMeasureSpec);
             ((MarginLayoutParams) emojiButton.getLayoutParams()).leftMargin = dp(10) + (botCommandsMenuButton == null ? 0 : botCommandsMenuButton.getMeasuredWidth());
             if (messageEditText != null) {
                 ((MarginLayoutParams) messageEditText.getLayoutParams()).leftMargin = dp(57) + (botCommandsMenuButton == null ? 0 : botCommandsMenuButton.getMeasuredWidth());
             }
-        } else if (senderSelectView != null && senderSelectView.getVisibility() == View.VISIBLE) {
+        } else if (!iosStyle && senderSelectView != null && senderSelectView.getVisibility() == View.VISIBLE) {
             int width = senderSelectView.getLayoutParams().width, height = senderSelectView.getLayoutParams().height;
             senderSelectView.measure(MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY));
             ((MarginLayoutParams) emojiButton.getLayoutParams()).leftMargin = dp(16) + width;
             if (messageEditText != null) {
                 ((MarginLayoutParams) messageEditText.getLayoutParams()).leftMargin = dp(63) + width;
             }
-        } else {
+        } else if (!iosStyle) {
             ((MarginLayoutParams) emojiButton.getLayoutParams()).leftMargin = dp(3);
             if (messageEditText != null) {
                 ((MarginLayoutParams) messageEditText.getLayoutParams()).leftMargin = dp(50);
