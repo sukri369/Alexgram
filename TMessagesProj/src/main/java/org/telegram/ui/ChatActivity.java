@@ -44624,8 +44624,8 @@ public class ChatActivity extends BaseFragment implements
         if (isReplyChatComment() || isReport() || isComments) {
             return false;
         }
-        // Only disable pill chat title for search and saved modes
-        return getChatMode() != ChatActivity.MODE_SEARCH && getChatMode() != ChatActivity.MODE_SAVED;
+        // Only disable pill chat title for search and saved modes, OR when searching in chat
+        return getChatMode() != ChatActivity.MODE_SEARCH && getChatMode() != ChatActivity.MODE_SAVED && !searching;
     }
 
     public boolean isPillChatHeaderLayoutEnabled() {
