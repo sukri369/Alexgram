@@ -14695,17 +14695,23 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
                 }
                 float centerX, centerY;
                 if (visibleChild != null) {
-                    centerX = visibleChild.getX() + visibleChild.getTranslationX() + visibleChild.getMeasuredWidth() / 2f;
-                    centerY = visibleChild.getY() + visibleChild.getTranslationY() + visibleChild.getMeasuredHeight() / 2f;
-                    View p = (View) visibleChild.getParent();
-                    while (p != null && p != this) {
-                        centerX += p.getX() + p.getTranslationX();
-                        centerY += p.getY() + p.getTranslationY();
-                        p = (View) p.getParent();
+                    centerX = visibleChild.getMeasuredWidth() / 2f;
+                    centerY = visibleChild.getMeasuredHeight() / 2f;
+                    View v = visibleChild;
+                    while (v != null && v != this) {
+                        centerX += v.getLeft() + v.getTranslationX();
+                        centerY += v.getTop() + v.getTranslationY();
+                        v = (View) v.getParent();
                     }
                 } else {
-                    centerX = sendButtonContainer.getX() + textFieldContainer.getX() + sendButtonContainer.getMeasuredWidth() / 2f;
-                    centerY = sendButtonContainer.getY() + textFieldContainer.getY() + sendButtonContainer.getMeasuredHeight() / 2f;
+                    centerX = sendButtonContainer.getLeft() + sendButtonContainer.getMeasuredWidth() / 2f;
+                    centerY = sendButtonContainer.getTop() + sendButtonContainer.getMeasuredHeight() / 2f;
+                    View p = (View) sendButtonContainer.getParent();
+                    while (p != null && p != this) {
+                        centerX += p.getLeft() + p.getTranslationX();
+                        centerY += p.getTop() + p.getTranslationY();
+                        p = (View) p.getParent();
+                    }
                 }
                 int radius = dp(52) / 2;
                 iosSendBackground.setBounds((int) (centerX - radius), (int) (centerY - radius), (int) (centerX + radius), (int) (centerY + radius));
@@ -15704,16 +15710,15 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
             View child = messageEditTextContainer.getChildAt(i);
             if (child == messageEditText || child.getVisibility() != VISIBLE || child.getAlpha() <= 0) continue;
 
+            int width = getChildWidth(child);
+            if (width <= 0) continue;
+
             FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) child.getLayoutParams();
             int gravity = lp.gravity & Gravity.HORIZONTAL_GRAVITY_MASK;
-            int width = getChildWidth(child);
             if (gravity == Gravity.LEFT) {
                 left = Math.max(left, lp.leftMargin + width + dp(4));
             } else if (gravity == Gravity.RIGHT) {
                 right = Math.max(right, lp.rightMargin + width + dp(4));
-            } else if (gravity == Gravity.CENTER_HORIZONTAL || gravity == 0) {
-                // If a child is centered, it might be overlapping with text in a way we can't easily avoid with margins alone
-                // but usually these are overlays like recordedAudioPanel which are handled separately.
             }
         }
 
@@ -15747,7 +15752,6 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
         if (w == 0) {
             ViewGroup.LayoutParams lp = view.getLayoutParams();
             if (lp != null && lp.width > 0) w = lp.width;
-            else w = dp(50);
         }
         return w;
     }
