@@ -14646,28 +14646,7 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
         return stickersArrow;
     }
 
-    @Override
-    protected void dispatchDraw(Canvas canvas) {
-        if (iosStyle) {
-            if (iosAttachBackground != null && attachButton.getVisibility() == VISIBLE) {
-                int x = (int) (attachButton.getX() + textFieldContainer.getX());
-                int y = (int) (attachButton.getY() + textFieldContainer.getY());
-                iosAttachBackground.setBounds(x, y, x + attachButton.getMeasuredWidth(), y + attachButton.getMeasuredHeight());
-                iosAttachBackground.draw(canvas);
-            }
-            if (iosTextBackground != null && messageEditTextContainer.getVisibility() == VISIBLE) {
-                int x = (int) (messageEditTextContainer.getX() + textFieldContainer.getX());
-                int y = (int) (messageEditTextContainer.getY() + textFieldContainer.getY());
-                iosTextBackground.setBounds(x, y, x + messageEditTextContainer.getMeasuredWidth(), y + messageEditTextContainer.getMeasuredHeight());
-                iosTextBackground.draw(canvas);
-            }
-            if (iosSendBackground != null && sendButtonContainer.getVisibility() == VISIBLE) {
-                int centerX = (int) (sendButtonContainer.getX() + textFieldContainer.getX() + sendButtonContainer.getMeasuredWidth() - dp(DEFAULT_HEIGHT) / 2);
-                int centerY = (int) (sendButtonContainer.getY() + textFieldContainer.getY() + dp(DEFAULT_HEIGHT) / 2);
-                iosSendBackground.setBounds(centerX - dp(DEFAULT_HEIGHT) / 2, centerY - dp(DEFAULT_HEIGHT) / 2, centerX + dp(DEFAULT_HEIGHT) / 2, centerY + dp(DEFAULT_HEIGHT) / 2);
-                iosSendBackground.draw(canvas);
-            }
-        }
+
     @Override
     protected void dispatchDraw(Canvas canvas) {
         if (iosStyle) {
