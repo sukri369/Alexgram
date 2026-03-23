@@ -14663,14 +14663,22 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
     protected void dispatchDraw(Canvas canvas) {
         if (iosStyle) {
             if (iosAttachBackground != null && attachButton.getVisibility() == VISIBLE) {
-                int x = (int) (attachButton.getX() + textFieldContainer.getX());
-                int y = (int) (attachButton.getY() + textFieldContainer.getY());
+                int[] loc = new int[2];
+                int[] myLoc = new int[2];
+                attachButton.getLocationInWindow(loc);
+                getLocationInWindow(myLoc);
+                int x = loc[0] - myLoc[0];
+                int y = loc[1] - myLoc[1];
                 iosAttachBackground.setBounds(x, y, x + attachButton.getMeasuredWidth(), y + attachButton.getMeasuredHeight());
                 iosAttachBackground.draw(canvas);
             }
             if (iosTextBackground != null && messageEditTextContainer.getVisibility() == VISIBLE) {
-                int x = (int) (messageEditTextContainer.getX() + textFieldContainer.getX());
-                int y = (int) (messageEditTextContainer.getY() + textFieldContainer.getY());
+                int[] loc = new int[2];
+                int[] myLoc = new int[2];
+                messageEditTextContainer.getLocationInWindow(loc);
+                getLocationInWindow(myLoc);
+                int x = loc[0] - myLoc[0];
+                int y = loc[1] - myLoc[1];
                 iosTextBackground.setBounds(x, y, x + messageEditTextContainer.getMeasuredWidth(), y + messageEditTextContainer.getMeasuredHeight());
                 iosTextBackground.draw(canvas);
             }
@@ -14695,23 +14703,19 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
                 }
                 float centerX, centerY;
                 if (visibleChild != null) {
-                    centerX = visibleChild.getMeasuredWidth() / 2f;
-                    centerY = visibleChild.getMeasuredHeight() / 2f;
-                    View v = visibleChild;
-                    while (v != null && v != this) {
-                        centerX += v.getLeft() + v.getTranslationX();
-                        centerY += v.getTop() + v.getTranslationY();
-                        v = (View) v.getParent();
-                    }
+                    int[] loc = new int[2];
+                    int[] myLoc = new int[2];
+                    visibleChild.getLocationInWindow(loc);
+                    getLocationInWindow(myLoc);
+                    centerX = loc[0] - myLoc[0] + visibleChild.getMeasuredWidth() / 2f;
+                    centerY = loc[1] - myLoc[1] + visibleChild.getMeasuredHeight() / 2f;
                 } else {
-                    centerX = sendButtonContainer.getLeft() + sendButtonContainer.getMeasuredWidth() / 2f;
-                    centerY = sendButtonContainer.getTop() + sendButtonContainer.getMeasuredHeight() / 2f;
-                    View p = (View) sendButtonContainer.getParent();
-                    while (p != null && p != this) {
-                        centerX += p.getLeft() + p.getTranslationX();
-                        centerY += p.getTop() + p.getTranslationY();
-                        p = (View) p.getParent();
-                    }
+                    int[] loc = new int[2];
+                    int[] myLoc = new int[2];
+                    sendButtonContainer.getLocationInWindow(loc);
+                    getLocationInWindow(myLoc);
+                    centerX = loc[0] - myLoc[0] + sendButtonContainer.getMeasuredWidth() / 2f;
+                    centerY = loc[1] - myLoc[1] + sendButtonContainer.getMeasuredHeight() / 2f;
                 }
                 int radius = dp(52) / 2;
                 iosSendBackground.setBounds((int) (centerX - radius), (int) (centerY - radius), (int) (centerX + radius), (int) (centerY + radius));
