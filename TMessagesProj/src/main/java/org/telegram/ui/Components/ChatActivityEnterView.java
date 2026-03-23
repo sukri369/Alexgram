@@ -14695,12 +14695,13 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
                 }
                 float centerX, centerY;
                 if (visibleChild != null) {
-                    centerX = textFieldContainer.getX() + sendButtonContainer.getX() + visibleChild.getX() + visibleChild.getTranslationX() + visibleChild.getMeasuredWidth() / 2f;
-                    centerY = textFieldContainer.getY() + sendButtonContainer.getY() + visibleChild.getY() + visibleChild.getTranslationY() + visibleChild.getMeasuredHeight() / 2f;
-                    if (visibleChild.getParent() != sendButtonContainer && visibleChild.getParent() instanceof View) {
-                        View parent = (View) visibleChild.getParent();
-                        centerX += parent.getX() + parent.getTranslationX();
-                        centerY += parent.getY() + parent.getTranslationY();
+                    centerX = visibleChild.getX() + visibleChild.getTranslationX() + visibleChild.getMeasuredWidth() / 2f;
+                    centerY = visibleChild.getY() + visibleChild.getTranslationY() + visibleChild.getMeasuredHeight() / 2f;
+                    View p = (View) visibleChild.getParent();
+                    while (p != null && p != this) {
+                        centerX += p.getX() + p.getTranslationX();
+                        centerY += p.getY() + p.getTranslationY();
+                        p = (View) p.getParent();
                     }
                 } else {
                     centerX = sendButtonContainer.getX() + textFieldContainer.getX() + sendButtonContainer.getMeasuredWidth() / 2f;

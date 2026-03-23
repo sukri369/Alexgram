@@ -42,6 +42,8 @@ public class ChatActivityChannelButtonsLayout extends FrameLayout implements Fac
     private final OnButtonFullyVisibleListener[] onButtonFullyVisible = new OnButtonFullyVisibleListener[BUTTONS_COUNT];
     private OnButtonsTotalWidthChanged onButtonsTotalWidthChanged;
     private final FrameLayout container;
+    private boolean iosStyle;
+    private android.graphics.drawable.Drawable iosBackground;
 
     private static final @DrawableRes int[] buttonIcons = new int[] {
         R.drawable.msg_search,
@@ -80,6 +82,7 @@ public class ChatActivityChannelButtonsLayout extends FrameLayout implements Fac
             }
         });
         addView(container, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 44, Gravity.CENTER_VERTICAL));
+        iosBackground = context.getResources().getDrawable(R.drawable.chat_input_island_pill).mutate();
     }
 
     public void updateColors() {
@@ -88,6 +91,11 @@ public class ChatActivityChannelButtonsLayout extends FrameLayout implements Fac
                 holder.button.updateColors();
             }
         }
+    }
+
+    public void setIosStyle(boolean iosStyle) {
+        this.iosStyle = iosStyle;
+        invalidate();
     }
 
     public FrameLayout getContainer() {
@@ -335,6 +343,10 @@ public class ChatActivityChannelButtonsLayout extends FrameLayout implements Fac
 
     @Override
     protected void dispatchDraw(@NonNull Canvas canvas) {
+        if (iosStyle) {
+            iosBackground.setBounds(container.getLeft(), container.getTop(), container.getRight(), container.getBottom());
+            iosBackground.draw(canvas);
+        }
         final int accentAlpha = (int) (255 * totalVisibilityFactor * animatorCenterAccentBackground.getFloatValue());
         if (accentAlpha > 0) {
             tmpRect.set(
