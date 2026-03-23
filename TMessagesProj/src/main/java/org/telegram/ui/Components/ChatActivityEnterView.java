@@ -10,6 +10,8 @@ package org.telegram.ui.Components;
 
 import static tw.nekomimi.nekogram.helpers.MessageHelper.canSendAsDice;
 import static tw.nekomimi.nekogram.helpers.MessageHelper.containsMarkdown;
+import tw.nekomimi.nekogram.NekoConfig;
+import xyz.nextalone.nagram.NaConfig;
 import static org.telegram.messenger.AndroidUtilities.dp;
 import static org.telegram.messenger.AndroidUtilities.dpf2;
 import static org.telegram.messenger.AndroidUtilities.lerp;
@@ -748,6 +750,13 @@ public class ChatActivityEnterView extends FrameLayout implements
     private long dialog_id;
     private boolean ignoreTextChange;
     private int innerTextChange;
+
+    private final boolean iosStyle;
+    private BlurredBackgroundDrawable iosAttachBackground;
+    private BlurredBackgroundDrawable iosTextBackground;
+    private BlurredBackgroundDrawable iosSendBackground;
+    private BlurredBackgroundColorProviderThemed iosColorProvider;
+    private BlurredBackgroundDrawableViewFactory iosBackgroundFactory;
     private MessageObject replyingMessageObject;
     private MessageObject replyingTopMessage;
     private ChatActivity.ReplyQuote replyingQuote;
@@ -2652,6 +2661,7 @@ public class ChatActivityEnterView extends FrameLayout implements
         sizeNotifierLayout.setDelegate(this);
         SharedPreferences preferences = MessagesController.getGlobalMainSettings();
         sendByEnter = preferences.getBoolean("send_by_enter", false);
+        iosStyle = NaConfig.INSTANCE.getIosStyleInputBar().Bool();
 
         textFieldContainer = new FrameLayout(context) {
             @Override
@@ -2708,7 +2718,7 @@ public class ChatActivityEnterView extends FrameLayout implements
             }
         };
         frameLayout.setClipChildren(false);
-        textFieldContainer.addView(frameLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, 0, 0, DEFAULT_HEIGHT, 0));
+        textFieldContainer.addView(frameLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, iosStyle ? DEFAULT_HEIGHT + 2 : 0, 0, iosStyle ? DEFAULT_HEIGHT + 2 : DEFAULT_HEIGHT, 0));
 
         emojiButton = new ChatActivityEnterViewAnimatedIconView(context) {
             @Override
@@ -2768,7 +2778,7 @@ public class ChatActivityEnterView extends FrameLayout implements
                 }
             }
         });
-        messageEditTextContainer.addView(emojiButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.LEFT, 2, 0, 0, 0));
+        messageEditTextContainer.addView(emojiButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, (iosStyle ? Gravity.RIGHT : Gravity.LEFT) | Gravity.BOTTOM, iosStyle ? 0 : 2, 0, iosStyle ? 2 : 0, 0));
         setEmojiButtonImage(false, false);
 
         if (isChat) {
@@ -2826,7 +2836,11 @@ public class ChatActivityEnterView extends FrameLayout implements
             attachButton.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_glass_defaultIcon), PorterDuff.Mode.MULTIPLY));
             attachButton.setImageResource(R.drawable.msg_input_attach2);
             attachButton.setBackground(Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector)));
-            messageEditTextContainer.addView(attachButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.RIGHT));
+            if (iosStyle) {
+                textFieldContainer.addView(attachButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.LEFT, 0, 0, 0, 0));
+            } else {
+                messageEditTextContainer.addView(attachButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.RIGHT));
+            }
             attachButton.setOnClickListener(v -> {
                 if (adjustPanLayoutHelper != null && adjustPanLayoutHelper.animationInProgress() || attachLayoutPaddingAlpha == 0f) {
                     return;
@@ -3486,6 +3500,53 @@ public class ChatActivityEnterView extends FrameLayout implements
         checkChannelRights();
 
         createMessageEditText();
+    }
+
+    public void setBlurredBackgroundFactory(BlurredBackgroundDrawableViewFactory factory) {
+        if (!iosStyle) return;
+        iosBackgroundFactory = factory;
+        if (iosColorProvider == null) {
+            iosColorProvider = new BlurredBackgroundColorProviderThemed(resourcesProvider, Theme.key_chat_messagePanelBackground);
+        }
+        iosAttachBackground = factory.create(this, iosColorProvider);
+        iosAttachBackground.setRadius(dp(100));
+        iosTextBackground = factory.create(this, iosColorProvider);
+        iosTextBackground.setRadius(dp(22));
+        iosSendBackground = factory.create(this, iosColorProvider);
+        iosSendBackground.setRadius(dp(100));
+        updateIosColors();
+    }
+
+    private void updateIosColors() {
+        if (iosColorProvider != null) iosColorProvider.updateColors();
+        if (iosAttachBackground != null) iosAttachBackground.updateColors();
+        if (iosTextBackground != null) iosTextBackground.updateColors();
+        if (iosSendBackground != null) iosSendBackground.updateColors();
+    }
+
+    @Override
+    protected void dispatchDraw(Canvas canvas) {
+        if (iosStyle) {
+            if (iosAttachBackground != null && attachButton.getVisibility() == VISIBLE) {
+                int x = (int) (attachButton.getX() + textFieldContainer.getX());
+                int y = (int) (attachButton.getY() + textFieldContainer.getY());
+                iosAttachBackground.setBounds(x, y, x + attachButton.getMeasuredWidth(), y + attachButton.getMeasuredHeight());
+                iosAttachBackground.draw(canvas);
+            }
+            if (iosTextBackground != null && messageEditTextContainer.getVisibility() == VISIBLE) {
+                int x = (int) (messageEditTextContainer.getX() + textFieldContainer.getX());
+                int y = (int) (messageEditTextContainer.getY() + textFieldContainer.getY());
+                iosTextBackground.setBounds(x, y, x + messageEditTextContainer.getMeasuredWidth(), y + messageEditTextContainer.getMeasuredHeight());
+                iosTextBackground.draw(canvas);
+            }
+            if (iosSendBackground != null && sendButtonContainer.getVisibility() == VISIBLE) {
+                int centerX = (int) (sendButtonContainer.getX() + textFieldContainer.getX() + sendButtonContainer.getMeasuredWidth() - DEFAULT_HEIGHT / 2);
+                int centerY = (int) (sendButtonContainer.getY() + textFieldContainer.getY() + DEFAULT_HEIGHT / 2);
+                iosSendBackground.setBounds(centerX - dp(DEFAULT_HEIGHT) / 2, centerY - dp(DEFAULT_HEIGHT) / 2, centerX + dp(DEFAULT_HEIGHT) / 2, centerY + dp(DEFAULT_HEIGHT) / 2);
+                iosSendBackground.draw(canvas);
+            }
+        }
+        super.dispatchDraw(canvas);
     }
 
     public void setViewParentForEmoji(ViewGroup viewParent) {
@@ -6167,7 +6228,7 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
         messageEditText.setHintTextColor(getThemedColor(Theme.key_chat_messagePanelHint));
         messageEditText.setCursorColor(getThemedColor(Theme.key_chat_messagePanelCursor));
         messageEditText.setHandlesColor(getThemedColor(Theme.key_chat_TextSelectionCursor));
-        messageEditTextContainer.addView(messageEditText, 1, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, 52, 0, isChat ? 50 : 2, 1.5f));
+        messageEditTextContainer.addView(messageEditText, 1, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, iosStyle ? 2 : 52, 0, (isChat || iosStyle) ? 50 : 2, 1.5f));
         messageEditText.setOnKeyListener(new OnKeyListener() {
 
             @Override
@@ -11025,6 +11086,7 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
     }
 
     public void updateColors() {
+        updateIosColors();
         if (messageEditText != null) {
             messageEditText.setHintColor(getThemedColor(Theme.key_chat_messagePanelHint));
         }

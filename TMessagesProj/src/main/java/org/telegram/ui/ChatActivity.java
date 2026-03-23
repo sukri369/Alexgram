@@ -8557,6 +8557,7 @@ public class ChatActivity extends BaseFragment implements
         contentView.addView(topPanelLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP));
 
         chatActivityEnterView.setViewParentForEmoji(chatInputInAppContainer);
+        chatActivityEnterView.setBlurredBackgroundFactory(glassBackgroundDrawableFactory);
 
         chatInputBubbleContainer.addView(chatActivityEnterView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.BOTTOM, 7, 0, 7, 0));
         contentView.addView(chatInputViewsContainer.getFadeView(), LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
