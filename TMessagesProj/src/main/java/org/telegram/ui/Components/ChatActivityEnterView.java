@@ -2718,7 +2718,7 @@ public class ChatActivityEnterView extends FrameLayout implements
             }
         };
         frameLayout.setClipChildren(false);
-        textFieldContainer.addView(frameLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, iosStyle ? 52 : 0, 0, iosStyle ? 52 : DEFAULT_HEIGHT, 0));
+        textFieldContainer.addView(frameLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, iosStyle ? 64 : 0, 0, iosStyle ? 64 : DEFAULT_HEIGHT, 0));
         if (iosStyle) {
             checkIosMargins();
         }
@@ -14695,8 +14695,8 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
                 }
                 float centerX, centerY;
                 if (visibleChild != null) {
-                    centerX = sendButtonContainer.getX() + textFieldContainer.getX() + visibleChild.getX() + visibleChild.getTranslationX() + visibleChild.getMeasuredWidth() / 2f;
-                    centerY = sendButtonContainer.getY() + textFieldContainer.getY() + visibleChild.getY() + visibleChild.getTranslationY() + visibleChild.getMeasuredHeight() / 2f;
+                    centerX = textFieldContainer.getX() + sendButtonContainer.getX() + visibleChild.getX() + visibleChild.getTranslationX() + visibleChild.getMeasuredWidth() / 2f;
+                    centerY = textFieldContainer.getY() + sendButtonContainer.getY() + visibleChild.getY() + visibleChild.getTranslationY() + visibleChild.getMeasuredHeight() / 2f;
                     if (visibleChild.getParent() != sendButtonContainer && visibleChild.getParent() instanceof View) {
                         View parent = (View) visibleChild.getParent();
                         centerX += parent.getX() + parent.getTranslationX();
@@ -15684,8 +15684,8 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
         boolean hasSend = sendButtonContainer != null && sendButtonContainer.getVisibility() == VISIBLE;
 
         FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) messageEditTextContainer.getLayoutParams();
-        int left = hasAttach ? dp(52) : dp(12);
-        int right = hasSend ? dp(52) : dp(12);
+        int left = hasAttach ? dp(64) : dp(12);
+        int right = hasSend ? dp(64) : dp(12);
         if (lp.leftMargin != left || lp.rightMargin != right) {
             lp.leftMargin = left;
             lp.rightMargin = right;
@@ -15729,7 +15729,19 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
     }
 
     private int getChildWidth(View view) {
-        if (view == null || view.getVisibility() != VISIBLE) return 0;
+        if (view == null || view.getVisibility() != VISIBLE || view.getAlpha() <= 0) return 0;
+        if (view instanceof ViewGroup) {
+            ViewGroup vg = (ViewGroup) view;
+            boolean hasVisibleChild = false;
+            for (int i = 0; i < vg.getChildCount(); i++) {
+                View child = vg.getChildAt(i);
+                if (child.getVisibility() == VISIBLE && child.getAlpha() > 0) {
+                    hasVisibleChild = true;
+                    break;
+                }
+            }
+            if (!hasVisibleChild) return 0;
+        }
         int w = view.getMeasuredWidth();
         if (w == 0) {
             ViewGroup.LayoutParams lp = view.getLayoutParams();
