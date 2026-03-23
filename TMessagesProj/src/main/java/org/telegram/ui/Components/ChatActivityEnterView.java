@@ -2718,7 +2718,7 @@ public class ChatActivityEnterView extends FrameLayout implements
             }
         };
         frameLayout.setClipChildren(false);
-        textFieldContainer.addView(frameLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, iosStyle ? 68 : 0, 0, iosStyle ? 68 : DEFAULT_HEIGHT, 0));
+        textFieldContainer.addView(frameLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, iosStyle ? 52 : 0, 0, iosStyle ? 52 : DEFAULT_HEIGHT, 0));
         if (iosStyle) {
             checkIosMargins();
         }
@@ -14695,12 +14695,12 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
                 }
                 float centerX, centerY;
                 if (visibleChild != null) {
-                    centerX = sendButtonContainer.getX() + textFieldContainer.getX() + visibleChild.getX() + visibleChild.getMeasuredWidth() / 2f;
-                    centerY = sendButtonContainer.getY() + textFieldContainer.getY() + visibleChild.getY() + visibleChild.getMeasuredHeight() / 2f;
+                    centerX = sendButtonContainer.getX() + textFieldContainer.getX() + visibleChild.getX() + visibleChild.getTranslationX() + visibleChild.getMeasuredWidth() / 2f;
+                    centerY = sendButtonContainer.getY() + textFieldContainer.getY() + visibleChild.getY() + visibleChild.getTranslationY() + visibleChild.getMeasuredHeight() / 2f;
                     if (visibleChild.getParent() != sendButtonContainer && visibleChild.getParent() instanceof View) {
                         View parent = (View) visibleChild.getParent();
-                        centerX += parent.getX();
-                        centerY += parent.getY();
+                        centerX += parent.getX() + parent.getTranslationX();
+                        centerY += parent.getY() + parent.getTranslationY();
                     }
                 } else {
                     centerX = sendButtonContainer.getX() + textFieldContainer.getX() + sendButtonContainer.getMeasuredWidth() / 2f;
@@ -15684,8 +15684,8 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
         boolean hasSend = sendButtonContainer != null && sendButtonContainer.getVisibility() == VISIBLE;
 
         FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) messageEditTextContainer.getLayoutParams();
-        int left = hasAttach ? dp(68) : dp(12);
-        int right = hasSend ? dp(68) : dp(12);
+        int left = hasAttach ? dp(52) : dp(12);
+        int right = hasSend ? dp(52) : dp(12);
         if (lp.leftMargin != left || lp.rightMargin != right) {
             lp.leftMargin = left;
             lp.rightMargin = right;
@@ -15697,33 +15697,34 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
     private void updateMessageEditTextMargins() {
         if (!iosStyle || messageEditText == null || messageEditTextContainer == null) return;
         int left = dp(12);
-        if (senderSelectView != null && senderSelectView.getVisibility() == VISIBLE) {
-            left += dp(32 + 8);
-        }
-        if (botCommandsMenuButton != null && botCommandsMenuButton.getVisibility() == VISIBLE) {
-            left += getChildWidth(botCommandsMenuButton) + dp(4);
-        }
-        
         int right = dp(12);
-        if (emojiButton != null && emojiButton.getVisibility() == VISIBLE) {
-            right += getChildWidth(emojiButton);
+
+        for (int i = 0; i < messageEditTextContainer.getChildCount(); i++) {
+            View child = messageEditTextContainer.getChildAt(i);
+            if (child == messageEditText || child.getVisibility() != VISIBLE || child.getAlpha() <= 0) continue;
+
+            FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) child.getLayoutParams();
+            int gravity = lp.gravity & Gravity.HORIZONTAL_GRAVITY_MASK;
+            int width = getChildWidth(child);
+            if (gravity == Gravity.LEFT) {
+                left = Math.max(left, lp.leftMargin + width + dp(4));
+            } else if (gravity == Gravity.RIGHT) {
+                right = Math.max(right, lp.rightMargin + width + dp(4));
+            } else if (gravity == Gravity.CENTER_HORIZONTAL || gravity == 0) {
+                // If a child is centered, it might be overlapping with text in a way we can't easily avoid with margins alone
+                // but usually these are overlays like recordedAudioPanel which are handled separately.
+            }
         }
-        if (attachLayout != null && attachLayout.getVisibility() == VISIBLE) {
-            right += getChildWidth(attachLayout);
-        }
-        if (scheduledButton != null && scheduledButton.getVisibility() == VISIBLE) {
-            right += getChildWidth(scheduledButton);
-        }
-        
+
         FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) messageEditText.getLayoutParams();
-        if (lp.leftMargin != left || lp.rightMargin != right || lp.gravity != (Gravity.LEFT | Gravity.BOTTOM)) {
+        if (lp.leftMargin != left || lp.rightMargin != right || lp.gravity != (Gravity.LEFT | Gravity.CENTER_VERTICAL)) {
             lp.leftMargin = left;
             lp.rightMargin = right;
-            lp.gravity = Gravity.LEFT | Gravity.BOTTOM;
+            lp.gravity = Gravity.LEFT | Gravity.CENTER_VERTICAL;
             messageEditText.setLayoutParams(lp);
         }
-        if (messageEditText.getGravity() != (Gravity.LEFT | Gravity.BOTTOM)) {
-            messageEditText.setGravity(Gravity.LEFT | Gravity.BOTTOM);
+        if (messageEditText.getGravity() != (Gravity.LEFT | Gravity.CENTER_VERTICAL)) {
+            messageEditText.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
         }
     }
 
