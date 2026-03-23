@@ -15694,18 +15694,40 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
             left += dp(32 + 8);
         }
         if (botCommandsMenuButton != null && botCommandsMenuButton.getVisibility() == VISIBLE) {
-            left += botCommandsMenuButton.getMeasuredWidth() + dp(4);
+            left += getChildWidth(botCommandsMenuButton) + dp(4);
         }
-        int right = dp(50);
+        
+        int right = dp(12);
+        if (emojiButton != null && emojiButton.getVisibility() == VISIBLE) {
+            right += getChildWidth(emojiButton);
+        }
+        if (attachLayout != null && attachLayout.getVisibility() == VISIBLE) {
+            right += getChildWidth(attachLayout);
+        }
         if (scheduledButton != null && scheduledButton.getVisibility() == VISIBLE) {
-            right += dp(48);
+            right += getChildWidth(scheduledButton);
         }
         
         FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) messageEditText.getLayoutParams();
-        if (lp.leftMargin != left || lp.rightMargin != right) {
+        if (lp.leftMargin != left || lp.rightMargin != right || lp.gravity != (Gravity.LEFT | Gravity.BOTTOM)) {
             lp.leftMargin = left;
             lp.rightMargin = right;
+            lp.gravity = Gravity.LEFT | Gravity.BOTTOM;
             messageEditText.setLayoutParams(lp);
         }
+        if (messageEditText.getGravity() != (Gravity.LEFT | Gravity.BOTTOM)) {
+            messageEditText.setGravity(Gravity.LEFT | Gravity.BOTTOM);
+        }
+    }
+
+    private int getChildWidth(View view) {
+        if (view == null || view.getVisibility() != VISIBLE) return 0;
+        int w = view.getMeasuredWidth();
+        if (w == 0) {
+            ViewGroup.LayoutParams lp = view.getLayoutParams();
+            if (lp != null && lp.width > 0) w = lp.width;
+            else w = dp(50);
+        }
+        return w;
     }
 }
