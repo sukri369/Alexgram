@@ -14686,7 +14686,7 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
                 View visibleChild = null;
                 for (int i = 0; i < sendButtonContainer.getChildCount(); i++) {
                     View child = sendButtonContainer.getChildAt(i);
-                    if (child.getVisibility() == VISIBLE) {
+                    if (child.getVisibility() == VISIBLE && child.getAlpha() > 0 && child.getScaleX() > 0) {
                         visibleChild = child;
                         if (visibleChild instanceof ViewGroup) {
                             ViewGroup vg = (ViewGroup) visibleChild;
@@ -14707,7 +14707,11 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
                     int[] myLoc = new int[2];
                     visibleChild.getLocationInWindow(loc);
                     getLocationInWindow(myLoc);
-                    centerX = loc[0] - myLoc[0] + visibleChild.getMeasuredWidth() / 2f;
+                    if (visibleChild instanceof SendButton) {
+                        centerX = loc[0] - myLoc[0] + visibleChild.getMeasuredWidth() - dp(24);
+                    } else {
+                        centerX = loc[0] - myLoc[0] + visibleChild.getMeasuredWidth() / 2f;
+                    }
                     centerY = loc[1] - myLoc[1] + visibleChild.getMeasuredHeight() / 2f;
                 } else {
                     int[] loc = new int[2];
