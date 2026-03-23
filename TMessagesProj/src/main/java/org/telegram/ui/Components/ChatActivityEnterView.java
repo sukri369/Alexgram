@@ -15684,5 +15684,28 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
             lp.rightMargin = right;
             messageEditTextContainer.setLayoutParams(lp);
         }
+        updateMessageEditTextMargins();
+    }
+
+    private void updateMessageEditTextMargins() {
+        if (!iosStyle || messageEditText == null || messageEditTextContainer == null) return;
+        int left = dp(12);
+        if (senderSelectView != null && senderSelectView.getVisibility() == VISIBLE) {
+            left += dp(32 + 8);
+        }
+        if (botCommandsMenuButton != null && botCommandsMenuButton.getVisibility() == VISIBLE) {
+            left += botCommandsMenuButton.getMeasuredWidth() + dp(4);
+        }
+        int right = dp(50);
+        if (scheduledButton != null && scheduledButton.getVisibility() == VISIBLE) {
+            right += dp(48);
+        }
+        
+        FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) messageEditText.getLayoutParams();
+        if (lp.leftMargin != left || lp.rightMargin != right) {
+            lp.leftMargin = left;
+            lp.rightMargin = right;
+            messageEditText.setLayoutParams(lp);
+        }
     }
 }
