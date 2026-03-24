@@ -14529,7 +14529,7 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         if (iosStyle) {
-            updateMessageEditTextMargins();
+            checkIosMargins();
         }
         if (!iosStyle && botCommandsMenuButton != null && botCommandsMenuButton.getTag() != null) {
             botCommandsMenuButton.measure(widthMeasureSpec, heightMeasureSpec);
@@ -14741,9 +14741,6 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
                 iosSendBackground.setBounds((int) (centerX - radius), (int) (centerY - radius), (int) (centerX + radius), (int) (centerY + radius));
                 iosSendBackground.draw(canvas);
             }
-            checkIosMargins();
-        }
-        if (emojiView == null || emojiView.getVisibility() != View.VISIBLE || emojiView.getStickersExpandOffset() == 0) {
             super.dispatchDraw(canvas);
         } else {
             canvas.save();
@@ -15710,13 +15707,13 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
     }
 
     private void checkIosMargins() {
-        if (!iosStyle || messageEditTextContainer == null || textFieldContainer == null) return;
+        if (!iosStyle || messageEditTextContainer == null || textFieldContainer == null || messageEditText == null) return;
         boolean hasAttach = attachButton != null && attachButton.getVisibility() == VISIBLE;
         boolean hasSend = sendButtonContainer != null && sendButtonContainer.getVisibility() == VISIBLE;
 
         FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) messageEditTextContainer.getLayoutParams();
-        int left = hasAttach ? dp(48) : dp(12);
-        int right = hasSend ? dp(48) : dp(12);
+        int left = hasAttach ? dp(56) : dp(12);
+        int right = hasSend ? dp(56) : dp(12);
         if (lp.leftMargin != left || lp.rightMargin != right) {
             lp.leftMargin = left;
             lp.rightMargin = right;
