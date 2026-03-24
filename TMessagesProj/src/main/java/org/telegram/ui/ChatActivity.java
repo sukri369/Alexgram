@@ -5133,6 +5133,10 @@ public class ChatActivity extends BaseFragment implements
             glassBackgroundDrawableFactory.create(chatInputViewsContainer, blurredBackgroundColorProvider));
         chatInputViewsContainer.setUnderKeyboardBackgroundDrawable(
             glassBackgroundDrawableFactoryFrosted.create(chatInputViewsContainer, blurredBackgroundColorProvider));
+        chatInputViewsContainer.setIosStyle(xyz.nextalone.nagram.NaConfig.INSTANCE.getIosStyleInputBar().Bool());
+        if (xyz.nextalone.nagram.NaConfig.INSTANCE.getIosStyleInputBar().Bool()) {
+            chatInputViewsContainer.setInputBubbleAlpha(0);
+        }
 
 
         chatInputBubbleContainer = chatInputViewsContainer.getInputIslandBubbleContainer();
@@ -8557,6 +8561,7 @@ public class ChatActivity extends BaseFragment implements
         contentView.addView(topPanelLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP));
 
         chatActivityEnterView.setViewParentForEmoji(chatInputInAppContainer);
+        chatActivityEnterView.setBlurredBackgroundFactory(glassBackgroundDrawableFactory);
 
         chatInputBubbleContainer.addView(chatActivityEnterView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.BOTTOM, 7, 0, 7, 0));
         contentView.addView(chatInputViewsContainer.getFadeView(), LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
@@ -8923,6 +8928,7 @@ public class ChatActivity extends BaseFragment implements
                 bottomViewsVisibilityController.setViewVisible(BOTTOM_OVERLAY_CHAT_CONTAINER, visibility == VISIBLE, getMeasuredWidth() > 0);
             }
         };
+        bottomChannelButtonsLayout.setIosStyle(xyz.nextalone.nagram.NaConfig.INSTANCE.getIosStyleInputBar().Bool());
         bottomChannelButtonsLayout.setVisibility(View.INVISIBLE);
         bottomChannelButtonsLayout.setClipChildren(false);
         bottomChannelButtonsLayout.setAccentColor(getThemedColor(Theme.key_featuredStickers_addButton));
@@ -17817,18 +17823,33 @@ public class ChatActivity extends BaseFragment implements
 
         @Override
         public void drawBlurRect(Canvas canvas, float y, Rect rectTmp, Paint blurScrimPaint, boolean top) {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q || !SharedConfig.chatBlurEnabled() || !BlurredBackgroundProviderImpl.checkBlurEnabled(currentAccount, themeDelegate)) {
-                canvas.drawRect(rectTmp, blurScrimPaint);
-                return;
-            }
-
-
             final boolean isThemeLight = themeDelegate != null && !themeDelegate.isDark();
             int blurAlpha = isThemeLight ? 216 : ACTION_BAR_BLUR_ALPHA;
             if (NekoConfig.forceBlurInChat.Bool()) blurAlpha = NekoConfig.chatBlueAlphaValue.Int();
+            drawBlurRect(canvas, y, rectTmp, blurScrimPaint, top, blurAlpha);
+        }
+
+        @Override
+        public void drawBlurRect(Canvas canvas, float y, Rect rectTmp, Paint blurScrimPaint, boolean top, int blurAlpha) {
+            drawBlurRect(canvas, y, rectTmp, blurScrimPaint, top, blurAlpha, 255);
+        }
+
+        @Override
+        public void drawBlurRect(Canvas canvas, float y, Rect rectTmp, Paint blurScrimPaint, boolean top, int blurAlpha, int blurSourceAlpha) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q || !SharedConfig.chatBlurEnabled() || !BlurredBackgroundProviderImpl.checkBlurEnabled(currentAccount, themeDelegate)) {
+                final int oldAlpha = blurScrimPaint.getAlpha();
+                blurScrimPaint.setAlpha(blurAlpha);
+                canvas.drawRect(rectTmp, blurScrimPaint);
+                blurScrimPaint.setAlpha(oldAlpha);
+                return;
+            }
+
             final BlurredBackgroundSource blurSource = glassBackgroundSourceFrostedRenderNode;
-            if (blurSource != null && blurAlpha < 255) {
+            if (blurSource != null && blurAlpha < 255 && blurSourceAlpha > 0) {
                 canvas.save();
+                if (blurSourceAlpha < 255) {
+                    canvas.saveLayerAlpha(null, blurSourceAlpha, Canvas.ALL_SAVE_FLAG);
+                }
                 canvas.translate(0, -y);
                 blurSource.draw(canvas,
                     rectTmp.left,
@@ -17836,8 +17857,11 @@ public class ChatActivity extends BaseFragment implements
                     rectTmp.right,
                     rectTmp.bottom + y
                 );
+                if (blurSourceAlpha < 255) {
+                    canvas.restore();
+                }
                 canvas.restore();
-            } else {
+            } else if (blurSource == null) {
                 blurAlpha = 255;
             }
 
@@ -39175,6 +39199,11 @@ public class ChatActivity extends BaseFragment implements
             searchingUserMessages = null;
             searchingChatMessages = null;
             searchingHashtag = null;
+            if (chatInputViewsContainer != null) {
+                boolean ios = xyz.nextalone.nagram.NaConfig.INSTANCE.getIosStyleInputBar().Bool();
+                chatInputViewsContainer.setIosStyle(ios);
+                chatInputViewsContainer.setInputBubbleAlpha(ios ? 0 : 255);
+            }
 			searchItem.setSearchFieldHint(isSupportedTags() ? LocaleController.getString(R.string.SavedTagSearchHint) : LocaleController.getString(R.string.Search));
             searchItem.setSearchFieldCaption(null);
             AndroidUtilities.updateViewVisibilityAnimated(avatarContainer, true, 0.95f, true);
@@ -39298,6 +39327,12 @@ public class ChatActivity extends BaseFragment implements
             searching = true;
             updatePagedownButtonVisibility(true);
             updateSearchUpDownButtonVisibility(true);
+            if (chatMode != MODE_SEARCH) {
+                if (chatInputViewsContainer != null) {
+                    chatInputViewsContainer.setIosStyle(false);
+                    chatInputViewsContainer.setInputBubbleAlpha(255);
+                }
+            }
             if ((threadMessageId != 0 && chatMode != MODE_SAVED || UserObject.isReplyUser(currentUser)) && !preventReopenSearchWithText) {
                 openSearchWithText(null);
             }
@@ -39344,23 +39379,25 @@ public class ChatActivity extends BaseFragment implements
                 int color2 = getThemedColor(Theme.key_actionBarActionModeDefaultSelector);
                 actionBar.setItemsBackgroundColor(ColorUtils.blendARGB(color1, color2, searchAnimationProgress), false);
 
-                if (isPillChatHeaderEnabled()) {
-                    actionBar.setBackgroundColor(Color.TRANSPARENT);
-                    actionBar.setShadowAlpha(0);
-                } else {
-                    actionBar.setBackgroundColor(ColorUtils.blendARGB(getThemedColor(Theme.key_actionBarDefault), getThemedColor(Theme.key_actionBarActionModeDefault), searchAnimationProgress));
+            }
+            if (isPillChatHeaderEnabled()) {
+                actionBar.setBackgroundColor(Color.TRANSPARENT);
+                actionBar.setShadowAlpha(0);
+            } else {
+                actionBar.setBackgroundColor(ColorUtils.blendARGB(getThemedColor(Theme.key_actionBarDefault), getThemedColor(Theme.key_actionBarActionModeDefault), searchAnimationProgress));
+                if (searchAnimationProgress == 0) {
+                   actionBar.setShadowAlpha(255);
                 }
+            }
+            if (whiteActionBar) {
                 actionBar.setSearchTextColor(ColorUtils.blendARGB(Theme.getColor(Theme.key_actionBarDefaultSearch), getThemedColor(Theme.key_windowBackgroundWhiteBlackText), searchAnimationProgress), false);
                 actionBar.setSearchTextColor(ColorUtils.blendARGB(Theme.getColor(Theme.key_actionBarDefaultSearchPlaceholder), getThemedColor(Theme.key_windowBackgroundWhiteGrayText), searchAnimationProgress), true);
                 actionBar.setSearchCursorColor(ColorUtils.blendARGB(Theme.getColor(Theme.key_actionBarDefaultSearch), getThemedColor(Theme.key_windowBackgroundWhiteBlueText), searchAnimationProgress));
-
-                if (!isInsideContainer && getParentActivity() != null) {
-                    AndroidUtilities.setLightStatusBar(getParentActivity().getWindow(), isLightStatusBar());
-                }
             }
-            if (isPillChatHeaderEnabled()) {
-                applyPillHeaderAppearance();
+            if (!isInsideContainer && getParentActivity() != null) {
+                AndroidUtilities.setLightStatusBar(getParentActivity().getWindow(), isLightStatusBar());
             }
+            applyPillHeaderAppearance();
             if (fragmentView != null) {
                 fragmentView.invalidate();
             }
@@ -39502,8 +39539,17 @@ public class ChatActivity extends BaseFragment implements
         if (actionBar == null) {
             return;
         }
-        actionBar.setForceTransparentBackground(isPillChatHeaderEnabled());
-        if (!isPillChatHeaderEnabled()) {
+        boolean enabled = isPillChatHeaderEnabled();
+        actionBar.setForceTransparentBackground(enabled);
+        if (!enabled) {
+            actionBar.setCastShadows(true);
+            actionBar.setShadowAlpha(255);
+            actionBar.setOccupyStatusBar(!inPreviewMode);
+            int color = getThemedColor(Theme.key_actionBarDefaultIcon);
+            actionBar.setItemsColor(color, false);
+            actionBar.setItemsColor(color, true);
+            actionBar.setItemsBackgroundColor(getThemedColor(Theme.key_actionBarDefaultSelector), false);
+            actionBar.setItemsBackgroundColor(getThemedColor(Theme.key_actionBarDefaultSelector), true);
             return;
         }
         actionBar.setBackground(null);
@@ -44598,7 +44644,7 @@ public class ChatActivity extends BaseFragment implements
         return AndroidUtilities.computePerceivedBrightness(actionBar.getBackgroundColor()) > 0.721f;
     }
 
-    private boolean isPillChatHeaderEnabled() {
+    public boolean isPillChatHeaderEnabled() {
         // Restore original pill chat title logic
         if (!NaConfig.INSTANCE.getPillChatTitle().Bool()) {
             return false;
@@ -44606,8 +44652,8 @@ public class ChatActivity extends BaseFragment implements
         if (isReplyChatComment() || isReport() || isComments) {
             return false;
         }
-        // Only disable pill chat title for search and saved modes
-        return getChatMode() != ChatActivity.MODE_SEARCH && getChatMode() != ChatActivity.MODE_SAVED;
+        // Only disable pill chat title for search and saved modes, OR when searching in chat
+        return getChatMode() != ChatActivity.MODE_SEARCH && getChatMode() != ChatActivity.MODE_SAVED && !searching;
     }
 
     public boolean isPillChatHeaderLayoutEnabled() {

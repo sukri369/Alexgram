@@ -511,6 +511,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
     private final Paint pillStrokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final RectF pillRect = new RectF();
     private final Rect pillBlurRect = new Rect();
+    private final Rect headerBlurRect = new Rect();
     private final Path pillClipPath = new Path();
     private final Paint pillHighlightPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private boolean pillTitleOverflowing;
@@ -536,8 +537,14 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
     };
 
     private boolean isPillChatTitleEnabled() {
-        // Restore original pill chat title logic
-        return NaConfig.INSTANCE.getPillChatTitle().Bool();
+        if (parentFragment == null || !parentFragment.isPillChatHeaderEnabled()) {
+            return false;
+        }
+        ActionBar actionBar = parentFragment.getActionBar();
+        if (actionBar != null && actionBar.isSearchFieldVisible()) {
+            return false;
+        }
+        return true;
     }
 
     public void playPillTitleOnboardingHighlight() {
@@ -699,7 +706,13 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
 
         if (isPillChatTitleEnabled() && titleTextView != null) {
             int actionBarHeight = ActionBar.getCurrentActionBarHeight();
-            int viewTop = (actionBarHeight - dp(42)) / 2 + (Build.VERSION.SDK_INT >= 21 && occupyStatusBar ? AndroidUtilities.statusBarHeight : 0);
+            int statusBarH = (Build.VERSION.SDK_INT >= 21 && occupyStatusBar ? AndroidUtilities.statusBarHeight : 0);
+            
+            // Adjust viewTop to be lower if it's too high up into status bar
+            int viewTop = (actionBarHeight - dp(42)) / 2 + statusBarH;
+            if (statusBarH > 0 && viewTop < statusBarH + dp(8)) {
+                viewTop = statusBarH + dp(8);
+            }
 
             float titleContentW = getViewContentWidth(titleTextView);
             View subView = getSubtitleTextView();
@@ -756,13 +769,55 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                 if (getParent() instanceof View) {
                     blurY += ((View) getParent()).getY();
                 }
-                pillBlurRect.set((int) pillRect.left, (int) pillRect.top, (int) Math.ceil(pillRect.right), (int) Math.ceil(pillRect.bottom));
-                if (!pillBlurRect.isEmpty()) {
+
+                // Draw full-width header blur
+                if (getParent() instanceof View) {
+                    View p = (View) getParent();
+                    int pWidth = p.getWidth();
+                    int xOffset = (int) getX();
+                    int statusBarHeight = occupyStatusBar ? AndroidUtilities.statusBarHeight : 0;
+                    
+                    // Draw BASE HEADER GLASS with GRADIENT MERGE
+                    int fadeStart = (int) pillRect.centerY() - AndroidUtilities.dp(16);
+                    int fadeHeight = AndroidUtilities.dp(32);
+                    
+                    // 1. Static part (Top to fade start)
+                    headerBlurRect.set(-xOffset, -statusBarHeight, pWidth - xOffset, fadeStart);
+                    if (!headerBlurRect.isEmpty()) {
+                        pillPaint.setColor(darkPillSurface ? 0xFF1A1B20 : 0xFFFFFFFF);
+                        final int glassBlurAlpha = 45; // Slightly more tint
+                        final int glassSourceAlpha = 245; // Even more blur depth
+                        parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true, glassBlurAlpha, glassSourceAlpha);
+                    }
+                    
+                    // 2. Gradient strips (Smooth merge into chat)
+                    int strips = 8;
+                    int stripHeight = fadeHeight / strips;
+                    for (int i = 0; i < strips; i++) {
+                        float t = 1.0f - (i / (float) strips); // 1.0 down to 0.1
+                        int y1 = fadeStart + i * stripHeight;
+                        int y2 = y1 + stripHeight;
+                        headerBlurRect.set(-xOffset, y1, pWidth - xOffset, y2);
+                        if (!headerBlurRect.isEmpty()) {
+                            int stripBlurAlpha = (int) (45 * t);
+                            int stripSourceAlpha = (int) (245 * t);
+                            parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true, stripBlurAlpha, stripSourceAlpha);
+                        }
+                    }
+                }
+
+                // Draw pill background ON TOP (Maintaining the "great" look from before)
+                if (!pillRect.isEmpty()) {
+                    pillBlurRect.set((int) pillRect.left, (int) pillRect.top, (int) Math.ceil(pillRect.right), (int) Math.ceil(pillRect.bottom));
                     pillClipPath.rewind();
                     pillClipPath.addRoundRect(pillRect, radius, radius, Path.Direction.CW);
                     canvas.save();
                     canvas.clipPath(pillClipPath);
-                    parentFragment.getContentView().drawBlurRect(canvas, blurY, pillBlurRect, pillPaint, true);
+                    // Pill: Solid-ish frosted look they liked
+                    pillPaint.setColor(darkPillSurface ? 0xFF1B1D22 : 0xFFFFFFFF);
+                    final int pillOverlayAlpha = 252;
+                    final int pillSourceAlpha = 255;
+                    parentFragment.getContentView().drawBlurRect(canvas, blurY, pillBlurRect, pillPaint, true, pillOverlayAlpha, pillSourceAlpha);
                     canvas.restore();
                     drewBlur = true;
                 }
@@ -1798,6 +1853,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         } else {
             lastSubtitle = newSubtitle;
         }
+        requestLayout();
     }
 
     public static CharSequence getChatSubtitle(TLRPC.Chat chat, TLRPC.ChatFull info, int onlineCount) {
@@ -2018,6 +2074,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         super.onAttachedToWindow();
         if (parentFragment != null) {
             NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.didUpdateConnectionState);
+            NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.updateInterfaces);
             NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.emojiLoaded);
             if (parentFragment.getChatMode() == ChatActivity.MODE_SAVED) {
                 NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.savedMessagesDialogsUpdate);
@@ -2038,6 +2095,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         super.onDetachedFromWindow();
         if (parentFragment != null) {
             NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.didUpdateConnectionState);
+            NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.updateInterfaces);
             NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.emojiLoaded);
             if (parentFragment.getChatMode() == ChatActivity.MODE_SAVED) {
                 NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.savedMessagesDialogsUpdate);
@@ -2066,9 +2124,18 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             if (getSubtitleTextView() != null) {
                 getSubtitleTextView().invalidate();
             }
+            requestLayout();
             invalidate();
         } else if (id == NotificationCenter.savedMessagesDialogsUpdate) {
             updateSubtitle(true);
+            requestLayout();
+        } else if (id == NotificationCenter.updateInterfaces) {
+            int mask = (int) args[0];
+            if ((mask & (MessagesController.UPDATE_MASK_NAME | MessagesController.UPDATE_MASK_STATUS | MessagesController.UPDATE_MASK_AVATAR | MessagesController.UPDATE_MASK_CHAT_NAME)) != 0) {
+                checkAndUpdateAvatar();
+                updateSubtitle(true);
+                requestLayout();
+            }
         }
     }
 

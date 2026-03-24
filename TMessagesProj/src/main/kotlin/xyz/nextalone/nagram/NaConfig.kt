@@ -355,6 +355,12 @@ object NaConfig {
             ConfigItem.configTypeBool,
             true
         )
+    val iosStyleInputBar =
+        addConfig(
+            "IosStyleInputBar",
+            ConfigItem.configTypeBool,
+            false
+        )
     val useLocalQuoteColorData =
         addConfig(
             "useLocalQuoteColorData",
