@@ -3948,8 +3948,8 @@ public class ChatActivityEnterView extends FrameLayout implements
         expandStickersButton.setScaleX(0.1f);
         expandStickersButton.setScaleY(0.1f);
         expandStickersButton.setAlpha(0.0f);
-        expandStickersButton.setBackground(Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector)));
-        sendButtonContainer.addView(expandStickersButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.RIGHT | Gravity.BOTTOM));
+        expandStickersButton.setBackground(Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector), 1, AndroidUtilities.dp(22)));
+        sendButtonContainer.addView(expandStickersButton, LayoutHelper.createFrame(iosStyle ? 44 : DEFAULT_HEIGHT, iosStyle ? 44 : DEFAULT_HEIGHT, (iosStyle ? Gravity.CENTER : Gravity.RIGHT | Gravity.BOTTOM)));
         expandStickersButton.setOnClickListener(v -> {
             if (expandStickersButton.getVisibility() != VISIBLE || expandStickersButton.getAlpha() != 1.0f || waitingForKeyboardOpen || (keyboardVisible && messageEditText != null && messageEditText.isFocused())) {
                 return;
@@ -6214,7 +6214,7 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
         messageEditText.setHintTextColor(getThemedColor(Theme.key_chat_messagePanelHint));
         messageEditText.setCursorColor(getThemedColor(Theme.key_chat_messagePanelCursor));
         messageEditText.setHandlesColor(getThemedColor(Theme.key_chat_TextSelectionCursor));
-        messageEditTextContainer.addView(messageEditText, 1, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, iosStyle ? 2 : 52, 0, (isChat || iosStyle) ? 50 : 2, 1.5f));
+        messageEditTextContainer.addView(messageEditText, 1, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, (iosStyle ? Gravity.CENTER_VERTICAL : Gravity.BOTTOM), iosStyle ? 2 : 52, 0, (isChat || iosStyle) ? 50 : 2, iosStyle ? 0 : 1.5f));
         messageEditText.setOnKeyListener(new OnKeyListener() {
 
             @Override
