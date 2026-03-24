@@ -14688,7 +14688,8 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
                 }
                 int left = (attachButton != null && attachButton.getVisibility() == VISIBLE) ? dp(64) : dp(12);
                 int right = (sendButtonContainer != null && sendButtonContainer.getVisibility() == VISIBLE) ? dp(64) : dp(12);
-                iosTopBackground.setBounds(left, (int) y, getMeasuredWidth() - right, (int) (y + topView.getMeasuredHeight()));
+                int gap = dp(4);
+                iosTopBackground.setBounds(left, (int) y, getMeasuredWidth() - right, (int) (y + topView.getMeasuredHeight() - gap));
                 iosTopBackground.draw(canvas);
             }
             if (iosTextBackground != null && messageEditTextContainer.getVisibility() == VISIBLE) {
