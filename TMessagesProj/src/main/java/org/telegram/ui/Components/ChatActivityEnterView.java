@@ -3517,7 +3517,7 @@ public class ChatActivityEnterView extends FrameLayout implements
         iosTextBackground = factory.create(this, iosColorProvider);
         iosTextBackground.setRadius(dp(22));
         iosTopBackground = factory.create(this, iosColorProvider);
-        iosTopBackground.setRadius(dp(22));
+        iosTopBackground.setRadius(dp(12));
         iosSendBackground = factory.create(this, iosColorProvider);
         iosSendBackground.setRadius(dp(100));
         updateIosColors();
@@ -14686,8 +14686,8 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
                     y += v.getTop() + v.getTranslationY();
                     v = (View) v.getParent();
                 }
-                int left = (attachButton != null && attachButton.getVisibility() == VISIBLE) ? dp(64) : dp(12);
-                int right = (sendButtonContainer != null && sendButtonContainer.getVisibility() == VISIBLE) ? dp(64) : dp(12);
+                int left = dp(8);
+                int right = dp(8);
                 int gap = dp(4);
                 iosTopBackground.setBounds(left, (int) y, getMeasuredWidth() - right, (int) (y + topView.getMeasuredHeight() - gap));
                 iosTopBackground.draw(canvas);
