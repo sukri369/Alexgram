@@ -39199,6 +39199,11 @@ public class ChatActivity extends BaseFragment implements
             searchingUserMessages = null;
             searchingChatMessages = null;
             searchingHashtag = null;
+            if (chatInputViewsContainer != null) {
+                boolean ios = xyz.nextalone.nagram.NaConfig.INSTANCE.getIosStyleInputBar().Bool();
+                chatInputViewsContainer.setIosStyle(ios);
+                chatInputViewsContainer.setInputBubbleAlpha(ios ? 0 : 255);
+            }
 			searchItem.setSearchFieldHint(isSupportedTags() ? LocaleController.getString(R.string.SavedTagSearchHint) : LocaleController.getString(R.string.Search));
             searchItem.setSearchFieldCaption(null);
             AndroidUtilities.updateViewVisibilityAnimated(avatarContainer, true, 0.95f, true);
@@ -39322,6 +39327,12 @@ public class ChatActivity extends BaseFragment implements
             searching = true;
             updatePagedownButtonVisibility(true);
             updateSearchUpDownButtonVisibility(true);
+            if (chatMode != MODE_SEARCH) {
+                if (chatInputViewsContainer != null) {
+                    chatInputViewsContainer.setIosStyle(false);
+                    chatInputViewsContainer.setInputBubbleAlpha(255);
+                }
+            }
             if ((threadMessageId != 0 && chatMode != MODE_SAVED || UserObject.isReplyUser(currentUser)) && !preventReopenSearchWithText) {
                 openSearchWithText(null);
             }

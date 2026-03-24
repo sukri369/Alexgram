@@ -14663,15 +14663,16 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
     protected void dispatchDraw(Canvas canvas) {
         if (iosStyle) {
             if (iosAttachBackground != null && attachButton.getVisibility() == VISIBLE) {
-                float x = 0;
-                float y = 0;
+                float centerX = attachButton.getMeasuredWidth() / 2f;
+                float centerY = attachButton.getMeasuredHeight() / 2f;
                 View v = attachButton;
                 while (v != null && v != this) {
-                    x += v.getLeft() + v.getTranslationX();
-                    y += v.getTop() + v.getTranslationY();
+                    centerX += v.getLeft() + v.getTranslationX();
+                    centerY += v.getTop() + v.getTranslationY();
                     v = (View) v.getParent();
                 }
-                iosAttachBackground.setBounds((int) x, (int) y, (int) (x + attachButton.getMeasuredWidth()), (int) (y + attachButton.getMeasuredHeight()));
+                int radius = dp(44) / 2;
+                iosAttachBackground.setBounds((int) (centerX - radius), (int) (centerY - radius), (int) (centerX + radius), (int) (centerY + radius));
                 iosAttachBackground.draw(canvas);
             }
             if (iosTextBackground != null && messageEditTextContainer.getVisibility() == VISIBLE) {
@@ -14718,7 +14719,7 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
                     v = (View) v.getParent();
                 }
 
-                int radius = dp(52) / 2;
+                int radius = dp(44) / 2;
                 iosSendBackground.setBounds((int) (centerX - radius), (int) (centerY - radius), (int) (centerX + radius), (int) (centerY + radius));
                 iosSendBackground.draw(canvas);
             }
