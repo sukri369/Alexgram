@@ -548,8 +548,17 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
     }
 
     public void playPillTitleOnboardingHighlight() {
-        // Remove onboarding highlight for pill title
-        // No operation
+        if (!isPillChatTitleEnabled()) {
+            return;
+        }
+        pillOnboardingHighlightRunning = true;
+        pillOnboardingHighlightStart = SystemClock.elapsedRealtime();
+        invalidate();
+        AndroidUtilities.runOnUIThread(pillOnboardingHighlightRunnable, 16);
+    }
+
+    public RectF getPillRect() {
+        return pillRect;
     }
 
     private int getPillHorizontalPadding() {
