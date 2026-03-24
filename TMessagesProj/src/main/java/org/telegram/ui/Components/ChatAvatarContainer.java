@@ -16,13 +16,16 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.content.Context;
-import android.graphics.Canvas;
+import android.graphics.LinearGradient;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
+import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.Shader;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
@@ -518,6 +521,9 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
     private boolean pillSubtitleOverflowing;
     private long pillOnboardingHighlightStart;
     private boolean pillOnboardingHighlightRunning;
+    private LinearGradient fadeGradient;
+    private Paint fadeGradientPaint;
+    private Matrix fadeMatrix;
 
     private final Runnable pillOnboardingHighlightRunnable = new Runnable() {
         @Override
@@ -799,19 +805,34 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                         parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true, glassBlurAlpha, glassSourceAlpha);
                     }
                     
-                    // 2. Gradient strips (Smooth merge into chat)
-                    int strips = 8;
-                    int stripHeight = fadeHeight / strips;
-                    for (int i = 0; i < strips; i++) {
-                        float t = 1.0f - (i / (float) strips); // 1.0 down to 0.1
-                        int y1 = fadeStart + i * stripHeight;
-                        int y2 = y1 + stripHeight;
-                        headerBlurRect.set(-xOffset, y1, pWidth - xOffset, y2);
-                        if (!headerBlurRect.isEmpty()) {
-                            int stripBlurAlpha = (int) (45 * t);
-                            int stripSourceAlpha = (int) (245 * t);
-                            parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true, stripBlurAlpha, stripSourceAlpha);
+                    // 2. Smooth Gradient Fade (replacing discrete strips)
+                    headerBlurRect.set(-xOffset, fadeStart, pWidth - xOffset, fadeStart + fadeHeight);
+                    if (!headerBlurRect.isEmpty()) {
+                        canvas.saveLayer(headerBlurRect.left, headerBlurRect.top, headerBlurRect.right, headerBlurRect.bottom, null);
+                        
+                        // Draw full blur density
+                        final int baseBlurAlpha = 45;
+                        final int baseSourceAlpha = 245;
+                        if (parentFragment != null && parentFragment.getContentView() != null) {
+                            parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true, baseBlurAlpha, baseSourceAlpha);
                         }
+                        
+                        // Apply smooth alpha mask
+                        if (fadeGradientPaint == null) {
+                            fadeGradientPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+                            fadeGradientPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_IN));
+                        }
+                        if (fadeGradient == null) {
+                            fadeGradient = new LinearGradient(0, 0, 0, 1, 0xFF000000, 0x00000000, Shader.TileMode.CLAMP);
+                            fadeMatrix = new Matrix();
+                        }
+                        fadeMatrix.setScale(1, fadeHeight);
+                        fadeMatrix.postTranslate(0, fadeStart);
+                        fadeGradient.setLocalMatrix(fadeMatrix);
+                        fadeGradientPaint.setShader(fadeGradient);
+                        
+                        canvas.drawRect(headerBlurRect, fadeGradientPaint);
+                        canvas.restore();
                     }
                 }
 
