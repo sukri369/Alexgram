@@ -754,6 +754,7 @@ public class ChatActivityEnterView extends FrameLayout implements
     private final boolean iosStyle;
     private BlurredBackgroundDrawable iosAttachBackground;
     private BlurredBackgroundDrawable iosTextBackground;
+    private BlurredBackgroundDrawable iosTopBackground;
     private BlurredBackgroundDrawable iosSendBackground;
     private BlurredBackgroundColorProviderThemed iosColorProvider;
     private BlurredBackgroundDrawableViewFactory iosBackgroundFactory;
@@ -3515,6 +3516,8 @@ public class ChatActivityEnterView extends FrameLayout implements
         iosAttachBackground.setRadius(dp(100));
         iosTextBackground = factory.create(this, iosColorProvider);
         iosTextBackground.setRadius(dp(22));
+        iosTopBackground = factory.create(this, iosColorProvider);
+        iosTopBackground.setRadius(dp(22));
         iosSendBackground = factory.create(this, iosColorProvider);
         iosSendBackground.setRadius(dp(100));
         updateIosColors();
@@ -3524,6 +3527,7 @@ public class ChatActivityEnterView extends FrameLayout implements
         if (iosColorProvider != null) iosColorProvider.updateColors();
         if (iosAttachBackground != null) iosAttachBackground.updateColors();
         if (iosTextBackground != null) iosTextBackground.updateColors();
+        if (iosTopBackground != null) iosTopBackground.updateColors();
         if (iosSendBackground != null) iosSendBackground.updateColors();
     }
 
@@ -14674,6 +14678,18 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
                 int radius = dp(44) / 2;
                 iosAttachBackground.setBounds((int) (centerX - radius), (int) (centerY - radius), (int) (centerX + radius), (int) (centerY + radius));
                 iosAttachBackground.draw(canvas);
+            }
+            if (iosTopBackground != null && topView != null && topView.getVisibility() == VISIBLE) {
+                float y = 0;
+                View v = topView;
+                while (v != null && v != this) {
+                    y += v.getTop() + v.getTranslationY();
+                    v = (View) v.getParent();
+                }
+                int left = (attachButton != null && attachButton.getVisibility() == VISIBLE) ? dp(64) : dp(12);
+                int right = (sendButtonContainer != null && sendButtonContainer.getVisibility() == VISIBLE) ? dp(64) : dp(12);
+                iosTopBackground.setBounds(left, (int) y, getMeasuredWidth() - right, (int) (y + topView.getMeasuredHeight()));
+                iosTopBackground.draw(canvas);
             }
             if (iosTextBackground != null && messageEditTextContainer.getVisibility() == VISIBLE) {
                 float x = 0;
