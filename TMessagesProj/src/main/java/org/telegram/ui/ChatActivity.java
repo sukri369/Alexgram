@@ -75,6 +75,7 @@ import android.graphics.Shader;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.net.Uri;
@@ -44661,19 +44662,171 @@ public class ChatActivity extends BaseFragment implements
     }
 
     private void maybeShowPillTitleOnboarding(boolean backward) {
-        // Restore onboarding logic for pill chat title
         if (!isPillChatHeaderEnabled()) {
             return;
         }
-        // Example onboarding logic (restore as needed):
-        // Show onboarding highlight or message if pill chat title is enabled and not shown before
-        // if (!SharedPreferences.getBoolean(PILL_TITLE_ONBOARDING_SHOWN_KEY, false)) {
-        //     showPillTitleOnboardingHighlight();
-        //     SharedPreferences.edit().putBoolean(PILL_TITLE_ONBOARDING_SHOWN_KEY, true).apply();
-        // }
-        // If you have a highlight or message function, call it here
-        // showPillTitleOnboardingHighlight();
-        // (You may need to adjust this logic based on your original code)
+        if (NaConfig.INSTANCE.getPillChatTitleOnboardingShown().Bool()) {
+            return;
+        }
+        NaConfig.INSTANCE.getPillChatTitleOnboardingShown().setConfigBool(true);
+
+        AndroidUtilities.runOnUIThread(() -> {
+            if (avatarContainer == null || contentView == null || getParentActivity() == null) {
+                return;
+            }
+
+            avatarContainer.playPillTitleOnboardingHighlight();
+
+            RectF pill = avatarContainer.getPillRect();
+            if (pill == null || pill.isEmpty()) {
+                return;
+            }
+
+            // Compute pill center in contentView coordinates
+            int[] avatarLoc = new int[2];
+            avatarContainer.getLocationInWindow(avatarLoc);
+            int[] contentLoc = new int[2];
+            contentView.getLocationInWindow(contentLoc);
+
+            float pillCenterX = avatarLoc[0] - contentLoc[0] + pill.centerX();
+            float pillBottom = avatarLoc[1] - contentLoc[1] + pill.bottom;
+
+            Context ctx = getParentActivity();
+
+            // === Arrow View (triangle pointing up) ===
+            int arrowW = AndroidUtilities.dp(14);
+            int arrowH = AndroidUtilities.dp(7);
+            View arrowView = new View(ctx) {
+                private final Paint arrowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+                private final Path arrowPath = new Path();
+                {
+                    arrowPaint.setColor(0xE6222328);
+                    arrowPaint.setStyle(Paint.Style.FILL);
+                }
+                @Override
+                protected void onDraw(Canvas canvas) {
+                    arrowPath.rewind();
+                    float w = getWidth();
+                    float h = getHeight();
+                    arrowPath.moveTo(w / 2f, 0);
+                    arrowPath.lineTo(w, h);
+                    arrowPath.lineTo(0, h);
+                    arrowPath.close();
+                    canvas.drawPath(arrowPath, arrowPaint);
+                }
+            };
+
+            // === Bubble container ===
+            LinearLayout bubble = new LinearLayout(ctx);
+            bubble.setOrientation(LinearLayout.VERTICAL);
+            bubble.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(14), AndroidUtilities.dp(16), AndroidUtilities.dp(14));
+            GradientDrawable bubbleBg = new GradientDrawable();
+            bubbleBg.setColor(0xE6222328);
+            bubbleBg.setCornerRadius(AndroidUtilities.dp(14));
+            bubble.setBackground(bubbleBg);
+
+            // Message text
+            TextView msgText = new TextView(ctx);
+            msgText.setText("This is your new header\nIf you don't like it, you can switch it off");
+            msgText.setTextColor(0xFFFFFFFF);
+            msgText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
+            msgText.setGravity(Gravity.CENTER);
+            msgText.setLineSpacing(AndroidUtilities.dp(2), 1f);
+            bubble.addView(msgText, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER, 0, 0, 0, 10));
+
+            // Turn off button
+            TextView turnOffBtn = new TextView(ctx);
+            turnOffBtn.setText("Turn off");
+            turnOffBtn.setTextColor(0xFF222328);
+            turnOffBtn.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
+            turnOffBtn.setTypeface(AndroidUtilities.bold());
+            turnOffBtn.setGravity(Gravity.CENTER);
+            turnOffBtn.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(8), AndroidUtilities.dp(24), AndroidUtilities.dp(8));
+            GradientDrawable btnBg = new GradientDrawable();
+            btnBg.setColor(0xFFFFFFFF);
+            btnBg.setCornerRadius(AndroidUtilities.dp(20));
+            turnOffBtn.setBackground(btnBg);
+
+            bubble.addView(turnOffBtn, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER));
+
+            // === Wrapper holding arrow + bubble ===
+            LinearLayout wrapper = new LinearLayout(ctx);
+            wrapper.setOrientation(LinearLayout.VERTICAL);
+            wrapper.setGravity(Gravity.CENTER_HORIZONTAL);
+            wrapper.addView(arrowView, new LinearLayout.LayoutParams(arrowW, arrowH));
+            wrapper.addView(bubble, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER, 0, -1, 0, 0));
+
+            // Measure to get width for centering
+            wrapper.measure(
+                    View.MeasureSpec.makeMeasureSpec(AndroidUtilities.displaySize.x, View.MeasureSpec.AT_MOST),
+                    View.MeasureSpec.makeMeasureSpec(AndroidUtilities.displaySize.y, View.MeasureSpec.AT_MOST)
+            );
+            int wrapperW = wrapper.getMeasuredWidth();
+
+            // Position: centered on pill, just below pill bottom
+            FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.WRAP_CONTENT,
+                    FrameLayout.LayoutParams.WRAP_CONTENT
+            );
+            lp.gravity = Gravity.TOP | Gravity.LEFT;
+            float tooltipX = pillCenterX - wrapperW / 2f;
+            // Clamp to screen edges with padding
+            tooltipX = Math.max(AndroidUtilities.dp(12), Math.min(tooltipX, AndroidUtilities.displaySize.x - wrapperW - AndroidUtilities.dp(12)));
+            lp.leftMargin = (int) tooltipX;
+            lp.topMargin = (int) (pillBottom + AndroidUtilities.dp(4));
+
+            // Animate in
+            wrapper.setAlpha(0f);
+            wrapper.setScaleX(0.85f);
+            wrapper.setScaleY(0.85f);
+            wrapper.setPivotX(wrapperW / 2f);
+            wrapper.setPivotY(0);
+            contentView.addView(wrapper, lp);
+
+            wrapper.animate()
+                    .alpha(1f)
+                    .scaleX(1f)
+                    .scaleY(1f)
+                    .setDuration(280)
+                    .setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT)
+                    .start();
+
+            // Dismiss helper
+            Runnable[] dismissRunnable = new Runnable[1];
+            dismissRunnable[0] = () -> {
+                wrapper.animate()
+                        .alpha(0f)
+                        .scaleX(0.9f)
+                        .scaleY(0.9f)
+                        .setDuration(200)
+                        .setInterpolator(CubicBezierInterpolator.DEFAULT)
+                        .withEndAction(() -> {
+                            if (wrapper.getParent() != null) {
+                                contentView.removeView(wrapper);
+                            }
+                        })
+                        .start();
+            };
+
+            // Turn off button click
+            turnOffBtn.setOnClickListener(v -> {
+                AndroidUtilities.cancelRunOnUIThread(dismissRunnable[0]);
+                if (wrapper.getParent() != null) {
+                    contentView.removeView(wrapper);
+                }
+                NaConfig.INSTANCE.getPillChatTitle().setConfigBool(false);
+                finishFragment();
+            });
+
+            // Dismiss on tap outside
+            wrapper.setOnClickListener(v -> {
+                AndroidUtilities.cancelRunOnUIThread(dismissRunnable[0]);
+                dismissRunnable[0].run();
+            });
+
+            // Auto-dismiss after 6 seconds
+            AndroidUtilities.runOnUIThread(dismissRunnable[0], 6000);
+        }, 600);
     }
 
     public MessageObject.GroupedMessages getGroup(long id) {

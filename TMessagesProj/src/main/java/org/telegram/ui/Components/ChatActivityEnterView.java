@@ -754,6 +754,7 @@ public class ChatActivityEnterView extends FrameLayout implements
     private final boolean iosStyle;
     private BlurredBackgroundDrawable iosAttachBackground;
     private BlurredBackgroundDrawable iosTextBackground;
+    private BlurredBackgroundDrawable iosTopBackground;
     private BlurredBackgroundDrawable iosSendBackground;
     private BlurredBackgroundColorProviderThemed iosColorProvider;
     private BlurredBackgroundDrawableViewFactory iosBackgroundFactory;
@@ -2840,7 +2841,7 @@ public class ChatActivityEnterView extends FrameLayout implements
             attachButton.setImageResource(R.drawable.msg_input_attach2);
             attachButton.setBackground(Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector)));
             if (iosStyle) {
-                textFieldContainer.addView(attachButton, LayoutHelper.createFrame(48, 48, Gravity.BOTTOM | Gravity.LEFT, 8, 0, 0, 0));
+                textFieldContainer.addView(attachButton, LayoutHelper.createFrame(48, 48, Gravity.BOTTOM | Gravity.LEFT, 4, 0, 0, 0));
             } else {
                 messageEditTextContainer.addView(attachButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.RIGHT));
             }
@@ -2885,7 +2886,7 @@ public class ChatActivityEnterView extends FrameLayout implements
         };
         sendButtonContainer.setClipChildren(false);
         sendButtonContainer.setClipToPadding(false);
-        textFieldContainer.addView(sendButtonContainer, LayoutHelper.createFrame(48, 48, Gravity.BOTTOM | Gravity.RIGHT, 0, 0, 8, 0));
+        textFieldContainer.addView(sendButtonContainer, LayoutHelper.createFrame(48, 48, Gravity.BOTTOM | Gravity.RIGHT, 0, 0, 4, 0));
 
         audioVideoButtonContainer = new FrameLayout(context) {
 
@@ -3515,6 +3516,8 @@ public class ChatActivityEnterView extends FrameLayout implements
         iosAttachBackground.setRadius(dp(100));
         iosTextBackground = factory.create(this, iosColorProvider);
         iosTextBackground.setRadius(dp(22));
+        iosTopBackground = factory.create(this, iosColorProvider);
+        iosTopBackground.setRadius(dp(12));
         iosSendBackground = factory.create(this, iosColorProvider);
         iosSendBackground.setRadius(dp(100));
         updateIosColors();
@@ -3524,6 +3527,7 @@ public class ChatActivityEnterView extends FrameLayout implements
         if (iosColorProvider != null) iosColorProvider.updateColors();
         if (iosAttachBackground != null) iosAttachBackground.updateColors();
         if (iosTextBackground != null) iosTextBackground.updateColors();
+        if (iosTopBackground != null) iosTopBackground.updateColors();
         if (iosSendBackground != null) iosSendBackground.updateColors();
     }
 
@@ -3944,8 +3948,8 @@ public class ChatActivityEnterView extends FrameLayout implements
         expandStickersButton.setScaleX(0.1f);
         expandStickersButton.setScaleY(0.1f);
         expandStickersButton.setAlpha(0.0f);
-        expandStickersButton.setBackground(Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector)));
-        sendButtonContainer.addView(expandStickersButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.RIGHT | Gravity.BOTTOM));
+        expandStickersButton.setBackground(Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector), 1, AndroidUtilities.dp(22)));
+        sendButtonContainer.addView(expandStickersButton, LayoutHelper.createFrame(iosStyle ? 44 : DEFAULT_HEIGHT, iosStyle ? 44 : DEFAULT_HEIGHT, (iosStyle ? Gravity.CENTER : Gravity.RIGHT | Gravity.BOTTOM)));
         expandStickersButton.setOnClickListener(v -> {
             if (expandStickersButton.getVisibility() != VISIBLE || expandStickersButton.getAlpha() != 1.0f || waitingForKeyboardOpen || (keyboardVisible && messageEditText != null && messageEditText.isFocused())) {
                 return;
@@ -6210,7 +6214,8 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
         messageEditText.setHintTextColor(getThemedColor(Theme.key_chat_messagePanelHint));
         messageEditText.setCursorColor(getThemedColor(Theme.key_chat_messagePanelCursor));
         messageEditText.setHandlesColor(getThemedColor(Theme.key_chat_TextSelectionCursor));
-        messageEditTextContainer.addView(messageEditText, 1, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, iosStyle ? 2 : 52, 0, (isChat || iosStyle) ? 50 : 2, 1.5f));
+        messageEditText.setIncludeFontPadding(false);
+        messageEditTextContainer.addView(messageEditText, 1, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, iosStyle ? 2 : 52, 0, (isChat || iosStyle) ? 50 : 2, iosStyle ? 4 : 1.5f));
         messageEditText.setOnKeyListener(new OnKeyListener() {
 
             @Override
@@ -14524,7 +14529,7 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         if (iosStyle) {
-            updateMessageEditTextMargins();
+            checkIosMargins();
         }
         if (!iosStyle && botCommandsMenuButton != null && botCommandsMenuButton.getTag() != null) {
             botCommandsMenuButton.measure(widthMeasureSpec, heightMeasureSpec);
@@ -14675,6 +14680,19 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
                 iosAttachBackground.setBounds((int) (centerX - radius), (int) (centerY - radius), (int) (centerX + radius), (int) (centerY + radius));
                 iosAttachBackground.draw(canvas);
             }
+            if (iosTopBackground != null && topView != null && topView.getVisibility() == VISIBLE) {
+                float y = 0;
+                View v = topView;
+                while (v != null && v != this) {
+                    y += v.getTop() + v.getTranslationY();
+                    v = (View) v.getParent();
+                }
+                int left = dp(12);
+                int right = dp(12);
+                int gap = dp(4);
+                iosTopBackground.setBounds(left, (int) y, getMeasuredWidth() - right, (int) (y + topView.getMeasuredHeight() - gap));
+                iosTopBackground.draw(canvas);
+            }
             if (iosTextBackground != null && messageEditTextContainer.getVisibility() == VISIBLE) {
                 float x = 0;
                 float y = 0;
@@ -14723,9 +14741,6 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
                 iosSendBackground.setBounds((int) (centerX - radius), (int) (centerY - radius), (int) (centerX + radius), (int) (centerY + radius));
                 iosSendBackground.draw(canvas);
             }
-            checkIosMargins();
-        }
-        if (emojiView == null || emojiView.getVisibility() != View.VISIBLE || emojiView.getStickersExpandOffset() == 0) {
             super.dispatchDraw(canvas);
         } else {
             canvas.save();
@@ -15692,13 +15707,13 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
     }
 
     private void checkIosMargins() {
-        if (!iosStyle || messageEditTextContainer == null || textFieldContainer == null) return;
+        if (!iosStyle || messageEditTextContainer == null || textFieldContainer == null || messageEditText == null) return;
         boolean hasAttach = attachButton != null && attachButton.getVisibility() == VISIBLE;
         boolean hasSend = sendButtonContainer != null && sendButtonContainer.getVisibility() == VISIBLE;
 
         FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) messageEditTextContainer.getLayoutParams();
-        int left = hasAttach ? dp(64) : dp(12);
-        int right = hasSend ? dp(64) : dp(12);
+        int left = hasAttach ? dp(56) : dp(12);
+        int right = hasSend ? dp(56) : dp(12);
         if (lp.leftMargin != left || lp.rightMargin != right) {
             lp.leftMargin = left;
             lp.rightMargin = right;
@@ -15729,14 +15744,18 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
         }
 
         FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) messageEditText.getLayoutParams();
-        if (lp.leftMargin != left || lp.rightMargin != right || lp.gravity != (Gravity.LEFT | Gravity.CENTER_VERTICAL)) {
+        int gravity = iosStyle ? Gravity.BOTTOM : Gravity.LEFT | Gravity.CENTER_VERTICAL;
+        float bottomMargin = iosStyle ? 4 : 1.5f;
+        if (lp.leftMargin != left || lp.rightMargin != right || lp.gravity != gravity || lp.bottomMargin != dp(bottomMargin)) {
             lp.leftMargin = left;
             lp.rightMargin = right;
-            lp.gravity = Gravity.LEFT | Gravity.CENTER_VERTICAL;
+            lp.gravity = gravity;
+            lp.bottomMargin = dp(bottomMargin);
             messageEditText.setLayoutParams(lp);
         }
-        if (messageEditText.getGravity() != (Gravity.LEFT | Gravity.CENTER_VERTICAL)) {
-            messageEditText.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
+        int textGravity = iosStyle ? Gravity.BOTTOM : Gravity.LEFT | Gravity.CENTER_VERTICAL;
+        if (messageEditText.getGravity() != textGravity) {
+            messageEditText.setGravity(textGravity);
         }
     }
 

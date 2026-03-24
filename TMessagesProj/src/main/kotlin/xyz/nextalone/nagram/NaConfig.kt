@@ -355,6 +355,12 @@ object NaConfig {
             ConfigItem.configTypeBool,
             true
         )
+    val pillChatTitleOnboardingShown =
+        addConfig(
+            "PillChatTitleOnboardingShown",
+            ConfigItem.configTypeBool,
+            false
+        )
     val iosStyleInputBar =
         addConfig(
             "IosStyleInputBar",
