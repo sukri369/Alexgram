@@ -2841,7 +2841,7 @@ public class ChatActivityEnterView extends FrameLayout implements
             attachButton.setImageResource(R.drawable.msg_input_attach2);
             attachButton.setBackground(Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector)));
             if (iosStyle) {
-                textFieldContainer.addView(attachButton, LayoutHelper.createFrame(48, 48, Gravity.BOTTOM | Gravity.LEFT, 8, 0, 0, 0));
+                textFieldContainer.addView(attachButton, LayoutHelper.createFrame(48, 48, Gravity.BOTTOM | Gravity.LEFT, 4, 0, 0, 0));
             } else {
                 messageEditTextContainer.addView(attachButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.RIGHT));
             }
@@ -2886,7 +2886,7 @@ public class ChatActivityEnterView extends FrameLayout implements
         };
         sendButtonContainer.setClipChildren(false);
         sendButtonContainer.setClipToPadding(false);
-        textFieldContainer.addView(sendButtonContainer, LayoutHelper.createFrame(48, 48, Gravity.BOTTOM | Gravity.RIGHT, 0, 0, 8, 0));
+        textFieldContainer.addView(sendButtonContainer, LayoutHelper.createFrame(48, 48, Gravity.BOTTOM | Gravity.RIGHT, 0, 0, 4, 0));
 
         audioVideoButtonContainer = new FrameLayout(context) {
 
@@ -6214,7 +6214,8 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
         messageEditText.setHintTextColor(getThemedColor(Theme.key_chat_messagePanelHint));
         messageEditText.setCursorColor(getThemedColor(Theme.key_chat_messagePanelCursor));
         messageEditText.setHandlesColor(getThemedColor(Theme.key_chat_TextSelectionCursor));
-        messageEditTextContainer.addView(messageEditText, 1, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, (iosStyle ? Gravity.CENTER_VERTICAL : Gravity.BOTTOM), iosStyle ? 2 : 52, 0, (isChat || iosStyle) ? 50 : 2, iosStyle ? 0 : 1.5f));
+        messageEditText.setIncludeFontPadding(false);
+        messageEditTextContainer.addView(messageEditText, 1, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, iosStyle ? 2 : 52, 0, (isChat || iosStyle) ? 50 : 2, iosStyle ? 4 : 1.5f));
         messageEditText.setOnKeyListener(new OnKeyListener() {
 
             @Override
@@ -15714,8 +15715,8 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
         boolean hasSend = sendButtonContainer != null && sendButtonContainer.getVisibility() == VISIBLE;
 
         FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) messageEditTextContainer.getLayoutParams();
-        int left = hasAttach ? dp(52) : dp(12);
-        int right = hasSend ? dp(52) : dp(12);
+        int left = hasAttach ? dp(48) : dp(12);
+        int right = hasSend ? dp(48) : dp(12);
         if (lp.leftMargin != left || lp.rightMargin != right) {
             lp.leftMargin = left;
             lp.rightMargin = right;
@@ -15746,14 +15747,18 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
         }
 
         FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) messageEditText.getLayoutParams();
-        if (lp.leftMargin != left || lp.rightMargin != right || lp.gravity != (Gravity.LEFT | Gravity.CENTER_VERTICAL)) {
+        int gravity = iosStyle ? Gravity.BOTTOM : Gravity.LEFT | Gravity.CENTER_VERTICAL;
+        float bottomMargin = iosStyle ? 4 : 1.5f;
+        if (lp.leftMargin != left || lp.rightMargin != right || lp.gravity != gravity || lp.bottomMargin != dp(bottomMargin)) {
             lp.leftMargin = left;
             lp.rightMargin = right;
-            lp.gravity = Gravity.LEFT | Gravity.CENTER_VERTICAL;
+            lp.gravity = gravity;
+            lp.bottomMargin = dp(bottomMargin);
             messageEditText.setLayoutParams(lp);
         }
-        if (messageEditText.getGravity() != (Gravity.LEFT | Gravity.CENTER_VERTICAL)) {
-            messageEditText.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
+        int textGravity = iosStyle ? Gravity.BOTTOM : Gravity.LEFT | Gravity.CENTER_VERTICAL;
+        if (messageEditText.getGravity() != textGravity) {
+            messageEditText.setGravity(textGravity);
         }
     }
 
