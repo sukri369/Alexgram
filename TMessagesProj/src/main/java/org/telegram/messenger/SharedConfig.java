@@ -1908,7 +1908,7 @@ public class SharedConfig {
     }
 
     public static boolean chatBlurEnabled() {
-        return (canBlurChat() && LiteMode.isEnabled(LiteMode.FLAG_CHAT_BLUR)) || NekoConfig.forceBlurInChat.Bool();
+        return (canBlurChat() && (LiteMode.isEnabled(LiteMode.FLAG_CHAT_BLUR) || NaConfig.INSTANCE.getPillChatTitle().Bool())) || NekoConfig.forceBlurInChat.Bool();
     }
 
     public static class BackgroundActivityPrefs {
