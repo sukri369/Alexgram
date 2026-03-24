@@ -14686,8 +14686,8 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
                     y += v.getTop() + v.getTranslationY();
                     v = (View) v.getParent();
                 }
-                int left = dp(8);
-                int right = dp(8);
+                int left = dp(12);
+                int right = dp(12);
                 int gap = dp(4);
                 iosTopBackground.setBounds(left, (int) y, getMeasuredWidth() - right, (int) (y + topView.getMeasuredHeight() - gap));
                 iosTopBackground.draw(canvas);
@@ -15714,8 +15714,8 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
         boolean hasSend = sendButtonContainer != null && sendButtonContainer.getVisibility() == VISIBLE;
 
         FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) messageEditTextContainer.getLayoutParams();
-        int left = hasAttach ? dp(64) : dp(12);
-        int right = hasSend ? dp(64) : dp(12);
+        int left = hasAttach ? dp(52) : dp(12);
+        int right = hasSend ? dp(52) : dp(12);
         if (lp.leftMargin != left || lp.rightMargin != right) {
             lp.leftMargin = left;
             lp.rightMargin = right;
