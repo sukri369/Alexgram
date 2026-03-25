@@ -773,7 +773,8 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             pillRect.set(pillLeft, pillTop, pillRight, pillBottom);
 
             boolean darkPillSurface = useDarkPillSurface();
-            pillPaint.setColor(darkPillSurface ? 0xB21A1B20 : 0xCFFFFFFF);
+            int pillBgColor = getThemedColor(Theme.key_actionBarDefault);
+            pillPaint.setColor((pillBgColor & 0x00FFFFFF) | (darkPillSurface ? 0xB2000000 : 0xCF000000));
             pillStrokePaint.setStyle(Paint.Style.STROKE);
             pillStrokePaint.setStrokeWidth(dpf2(0.66f));
             pillStrokePaint.setColor(darkPillSurface ? 0x20FFFFFF : 0x14000000);
@@ -800,7 +801,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                     // 1. Static part (Top to fade start)
                     headerBlurRect.set(-xOffset, -statusBarHeight, pWidth - xOffset, fadeStart);
                     if (!headerBlurRect.isEmpty()) {
-                        pillPaint.setColor(darkPillSurface ? 0xFF1A1B20 : 0xFFFFFFFF);
+                        pillPaint.setColor(pillBgColor | 0xFF000000);
                         final int glassBlurAlpha = 45; // Slightly more tint
                         final int glassSourceAlpha = 245; // Even more blur depth
                         parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true, glassBlurAlpha, glassSourceAlpha);
@@ -845,7 +846,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                     canvas.save();
                     canvas.clipPath(pillClipPath);
                     // Pill: Solid-ish frosted look they liked
-                    pillPaint.setColor(darkPillSurface ? 0xFF1B1D22 : 0xFFFFFFFF);
+                    pillPaint.setColor(pillBgColor | 0xFF000000);
                     final int pillOverlayAlpha = 252;
                     final int pillSourceAlpha = 255;
                     parentFragment.getContentView().drawBlurRect(canvas, blurY, pillBlurRect, pillPaint, true, pillOverlayAlpha, pillSourceAlpha);
@@ -856,7 +857,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             if (!drewBlur) {
                 canvas.drawRoundRect(pillRect, radius, radius, pillPaint);
             } else {
-                pillPaint.setColor(darkPillSurface ? 0x2813161B : 0x1EFFFFFF);
+                pillPaint.setColor((pillBgColor & 0x00FFFFFF) | (darkPillSurface ? 0x28000000 : 0x1E000000));
                 canvas.drawRoundRect(pillRect, radius, radius, pillPaint);
             }
             canvas.drawRoundRect(pillRect, radius, radius, pillStrokePaint);
