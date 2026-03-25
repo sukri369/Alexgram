@@ -2796,7 +2796,7 @@ public class ChatActivityEnterView extends FrameLayout implements
             attachLayout.setOrientation(LinearLayout.HORIZONTAL);
             attachLayout.setEnabled(false);
             attachLayout.setClipChildren(false);
-            messageEditTextContainer.addView(attachLayout, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.RIGHT, 0, 0, iosStyle ? 51 : DEFAULT_HEIGHT, 0));
+            messageEditTextContainer.addView(attachLayout, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.RIGHT, 0, 0, iosStyle ? 48 : DEFAULT_HEIGHT, 0));
 
             notifyButton = new ImageView(context);
             notifySilentDrawable = new CrossOutDrawable(context, R.drawable.input_notify_on, Theme.key_glass_defaultIcon);
@@ -15139,6 +15139,10 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
             if (isNewDesignSendButton) {
                 float cx = center ? getMeasuredWidth() / 2f : backgroundRect.right - backgroundRect.height() / 2f;
                 float cy = center ? getMeasuredHeight() / 2f : backgroundRect.top + backgroundRect.height() / 2f;
+                if (center) {
+                    cx -= dpf2(0.5f);
+                    cy -= dpf2(0.5f);
+                }
                 x = Math.round(cx - drawable.getIntrinsicWidth() / 2f);
                 y = Math.round(cy - drawable.getIntrinsicHeight() / 2f);
             } else {
