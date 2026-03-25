@@ -15176,7 +15176,7 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
             if (isNewDesignSendButton) {
                 float cx = center ? getWidth() / 2f : backgroundRect.right - backgroundRect.height() / 2f;
                 float cy = center ? getHeight() / 2f : backgroundRect.top + backgroundRect.height() / 2f;
-                if (iosStyle) {
+                if (NaConfig.INSTANCE.getIosStyleInputBar().Bool()) {
                     float width = backgroundRect.width();
                     float height = backgroundRect.height();
                     if (Math.abs(width - height) < 1.0f) {
