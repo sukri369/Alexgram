@@ -3909,7 +3909,7 @@ public class ChatActivityEnterView extends FrameLayout implements
         if (bounceable) {
             ScaleStateListAnimator.apply(doneButton);
         }
-        textFieldContainer.addView(doneButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.RIGHT));
+        textFieldContainer.addView(doneButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, (iosStyle ? Gravity.LEFT : Gravity.RIGHT) | Gravity.BOTTOM, iosStyle ? 4 : 0, 0, iosStyle ? 0 : 0, 0));
     }
 
     @SuppressLint("AppCompatCustomView")
@@ -10684,11 +10684,11 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
 
             if (editingMessageObject.needResendWhenEdit() && paidMessagesPrice > 0) {
                 doneButton.setStarsPrice(paidMessagesPrice, 1, true);
-                doneButton.setLayoutParams(LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.RIGHT));
+                doneButton.setLayoutParams(LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, (iosStyle ? Gravity.LEFT : Gravity.RIGHT) | Gravity.BOTTOM, iosStyle ? 4 : 0, 0, iosStyle ? 0 : 0, 0));
                 doneButton.requestLayout();
             } else {
                 doneButton.setStarsPrice(0, 1, true);
-                doneButton.setLayoutParams(LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.RIGHT));
+                doneButton.setLayoutParams(LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, (iosStyle ? Gravity.LEFT : Gravity.RIGHT) | Gravity.BOTTOM, iosStyle ? 4 : 0, 0, iosStyle ? 0 : 0, 0));
                 doneButton.requestLayout();
             }
 
