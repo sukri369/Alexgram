@@ -2799,12 +2799,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         iBlur3FactoryFade = new BlurredBackgroundDrawableViewFactory(iBlur3SourceColor);
     }
 
-    private MainTabsActivityController mainTabsActivityController;
-
-    public void setMainTabsActivityController(MainTabsActivityController controller) {
-        mainTabsActivityController = controller;
+     public static class MainTabsActivityController {
+        public void setTabsVisible(boolean visible) {
+            NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.setTabsVisible, visible);
+        }
     }
-
 
     @Override
     public boolean onFragmentCreate() {
@@ -2896,6 +2895,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             getNotificationCenter().addObserver(this, NotificationCenter.userEmojiStatusUpdated);
             getNotificationCenter().addObserver(this, NotificationCenter.currentUserPremiumStatusChanged);
             getNotificationCenter().addObserver(this, NotificationCenter.mainUserInfoChanged);
+        getNotificationCenter().addObserver(this, NotificationCenter.setTabsVisibleProgress);
 
             NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.didSetPasscode);
         }
@@ -2946,7 +2946,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         additionFloatingButtonOffset = hasMainTabs ? dp(DialogsActivity.MAIN_TABS_HEIGHT + DialogsActivity.MAIN_TABS_MARGIN) : 0;
 
         LastSeenHelper.preload();
-
+        getNotificationCenter().addObserver(this, NotificationCenter.setTabsVisibleProgress);
         return true;
     }
 
@@ -3069,6 +3069,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     @Override
     public void onFragmentDestroy() {
+        getNotificationCenter().removeObserver(this, NotificationCenter.setTabsVisibleProgress);
         super.onFragmentDestroy();
         if (searchString == null) {
             getNotificationCenter().removeObserver(this, NotificationCenter.dialogsNeedReload);
@@ -4705,6 +4706,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                                 }
                                 if (changed && scrollUpdated && (goingDown || scrollingManually)) {
                                     hideFloatingButton(goingDown);
+                                    if (NaConfig.INSTANCE.getHideTabsOnScroll().Bool()) {
+                                        NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.setTabsVisible, !goingDown);
+                                    }
                                 }
                                 prevPosition = firstVisiblePosition;
                                 prevTop = firstViewTop;
@@ -8931,7 +8935,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             additionalBottom = (dp(36 + 14) * filterTabsView.getAlpha());
         }
 
-        final float top = -navigationBarHeight - additionFloatingButtonOffset - additionalFloatingTranslation - additionalBottom;
+        final float top = -navigationBarHeight - additionFloatingButtonOffset * tabsVisibilityFactor - additionalFloatingTranslation - additionalBottom;
         final float baseTranslationY = top
             - floatingButtonPanOffset;
 
@@ -11337,6 +11341,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             updateVisibleRows(MessagesController.UPDATE_MASK_SEND_STATE);
         } else if (id == NotificationCenter.didSetPasscode) {
             checkUi_itemPasscodeVisibility();
+        } else if (id == NotificationCenter.setTabsVisibleProgress) {
+            tabsVisibilityFactor = (Float) args[0];
+            updateFloatingButtonOffset();
         } else if (id == NotificationCenter.needReloadRecentDialogsSearch) {
             if (searchViewPager != null && searchViewPager.dialogsSearchAdapter != null) {
                 searchViewPager.dialogsSearchAdapter.loadRecentSearch();
@@ -14251,6 +14258,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private int imeInsetHeight;
     private int additionNavigationBarHeight;
     private int additionFloatingButtonOffset;
+    private float tabsVisibilityFactor = 1.0f;
 
     @NonNull
     private WindowInsetsCompat onApplyWindowInsets(@NonNull View v, @NonNull WindowInsetsCompat insets) {
@@ -14435,9 +14443,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     private void checkUi_mainTabsVisible() {
         final boolean mainTabsVisible = !searching && (blurredView == null || blurredView.getBackground() == null || blurredView.getAlpha() < 0.01f || blurredView.getVisibility() == View.GONE);
-        if (mainTabsActivityController != null) {
-            mainTabsActivityController.setTabsVisible(mainTabsVisible);
-        }
+        NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.setTabsVisible, mainTabsVisible);
     }
 
     private void checkUi_searchFieldVisibility() {

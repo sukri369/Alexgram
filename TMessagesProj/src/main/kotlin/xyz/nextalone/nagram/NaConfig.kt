@@ -99,6 +99,12 @@ object NaConfig {
             ConfigItem.configTypeBool,
             true
         )
+    val hideTabsOnScroll =
+        addConfig(
+            "HideTabsOnScroll",
+            ConfigItem.configTypeBool,
+            false
+        )
     val musicGraph =
         addConfig(
             "MusicGraph",
