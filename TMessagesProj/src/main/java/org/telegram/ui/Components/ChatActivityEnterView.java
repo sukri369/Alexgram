@@ -2796,7 +2796,7 @@ public class ChatActivityEnterView extends FrameLayout implements
             attachLayout.setOrientation(LinearLayout.HORIZONTAL);
             attachLayout.setEnabled(false);
             attachLayout.setClipChildren(false);
-            messageEditTextContainer.addView(attachLayout, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.RIGHT, 0, 0, iosStyle ? 36 : DEFAULT_HEIGHT, 0));
+            messageEditTextContainer.addView(attachLayout, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.RIGHT, 0, 0, iosStyle ? 30 : DEFAULT_HEIGHT, 0));
 
             notifyButton = new ImageView(context);
             notifySilentDrawable = new CrossOutDrawable(context, R.drawable.input_notify_on, Theme.key_glass_defaultIcon);
@@ -2841,7 +2841,7 @@ public class ChatActivityEnterView extends FrameLayout implements
             attachButton.setImageResource(R.drawable.msg_input_attach2);
             attachButton.setBackground(Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector)));
             if (iosStyle) {
-                textFieldContainer.addView(attachButton, LayoutHelper.createFrame(48, 48, Gravity.BOTTOM | Gravity.LEFT, 8, 0, 0, 0));
+                addView(attachButton, LayoutHelper.createFrame(48, 48, Gravity.BOTTOM | Gravity.LEFT, 8, 0, 0, 0));
             } else {
                 messageEditTextContainer.addView(attachButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.RIGHT));
             }
@@ -3910,7 +3910,11 @@ public class ChatActivityEnterView extends FrameLayout implements
             ScaleStateListAnimator.apply(doneButton);
         }
         doneButton.center = true;
-        textFieldContainer.addView(doneButton, LayoutHelper.createFrame(iosStyle ? 48 : DEFAULT_HEIGHT, iosStyle ? 48 : DEFAULT_HEIGHT, (iosStyle ? Gravity.LEFT : Gravity.RIGHT) | Gravity.BOTTOM, iosStyle ? 8 : 0, 0, iosStyle ? 0 : 0, 0));
+        if (iosStyle) {
+            addView(doneButton, LayoutHelper.createFrame(48, 48, Gravity.LEFT | Gravity.BOTTOM, 8, 0, 0, 0));
+        } else {
+            textFieldContainer.addView(doneButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.RIGHT | Gravity.BOTTOM, 0, 0, 0, 0));
+        }
     }
 
     @SuppressLint("AppCompatCustomView")
@@ -10821,10 +10825,20 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
             audioVideoButtonContainer.setVisibility(GONE);
             attachLayout.setVisibility(GONE);
             if (attachButton != null) {
-                attachButton.setVisibility(GONE);
-                attachButton.setAlpha(attachButtonAlpha = 0.0f);
-                attachButton.setScaleX(0.5f);
-                attachButton.setScaleY(0.5f);
+                if (iosStyle) {
+                    attachButton.setVisibility(VISIBLE);
+                    attachButton.setImageAlpha(0);
+                    attachButton.setAlpha(attachButtonAlpha = 1.0f);
+                    attachButton.setScaleX(1.0f);
+                    attachButton.setScaleY(1.0f);
+                } else {
+                    attachButton.setAlpha(attachButtonAlpha = 0.0f);
+                    attachButton.setScaleX(0.5f);
+                    attachButton.setScaleY(0.5f);
+                }
+            }
+            if (iosStyle && doneButton != null) {
+                doneButton.bringToFront();
             }
             sendButtonContainer.setVisibility(GONE);
             if (scheduledButton != null) {
@@ -10842,6 +10856,7 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
             delegate.onMessageEditEnd(false);
             if (attachButton != null) {
                 attachButton.setVisibility(VISIBLE);
+                if (iosStyle) attachButton.setImageAlpha(255);
                 attachButton.setAlpha(1.0f);
                 attachButton.setScaleX(1.0f);
                 attachButton.setScaleY(1.0f);
@@ -15144,7 +15159,7 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
 
             int x, y;
             if (isNewDesignSendButton) {
-                float cx = center ? (getWidth() / 2f + dpf2(2f)) : backgroundRect.right - backgroundRect.height() / 2f;
+                float cx = center ? getWidth() / 2f : backgroundRect.right - backgroundRect.height() / 2f;
                 float cy = center ? getHeight() / 2f : backgroundRect.top + backgroundRect.height() / 2f;
                 x = Math.round(cx - drawable.getIntrinsicWidth() / 2f);
                 y = Math.round(cy - drawable.getIntrinsicHeight() / 2f);
