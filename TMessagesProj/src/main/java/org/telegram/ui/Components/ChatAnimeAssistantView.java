@@ -1648,8 +1648,8 @@ public class ChatAnimeAssistantView extends FrameLayout {
         }
 
         void tick(long now, float dt, boolean typingActive, float scrollEnergy, float animationIntensity) {
-            tapKick = Math.max(0f, tapKick - dt * 2.8f * animationIntensity);
-            typingPulse = Math.max(0f, typingPulse - dt * 1.6f * animationIntensity + (typingActive ? dt * 0.8f : 0f));
+            tapKick = Math.max(0f, tapKick - dt * 3.0f);
+            typingPulse = Math.max(0f, Math.min(1.0f, typingPulse - dt * 2.0f + (typingActive ? dt * 4.0f : 0f)));
             scrollTilt *= 0.88f;
             panelFocus = Math.max(0f, panelFocus - dt * 0.9f);
 

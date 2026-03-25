@@ -8666,7 +8666,8 @@ public class ChatActivity extends BaseFragment implements
         }
 
         final FrameLayout replyLayout = new FrameLayout(context);
-        chatActivityEnterTopView.addReplyView(replyLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.NO_GRAVITY, 0, 0, 52, 0));
+        final boolean iosStyle = NaConfig.INSTANCE.getIosStyleInputBar().Bool();
+        chatActivityEnterTopView.addReplyView(replyLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.NO_GRAVITY, 0, 0, iosStyle ? 56 : 52, 0));
 
         boolean[] byButtonPress = new boolean[1];
         replyLayout.setOnClickListener(v -> {
@@ -8740,14 +8741,14 @@ public class ChatActivity extends BaseFragment implements
         replyIconImageView = new ImageView(context);
         replyIconImageView.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_chat_replyPanelIcons), PorterDuff.Mode.MULTIPLY));
         replyIconImageView.setScaleType(ImageView.ScaleType.CENTER);
-        replyLayout.addView(replyIconImageView, LayoutHelper.createFrame(52, 46, Gravity.TOP | Gravity.LEFT));
+        replyLayout.addView(replyIconImageView, LayoutHelper.createFrame(iosStyle ? 48 : 52, 46, Gravity.TOP | Gravity.LEFT, iosStyle ? 8 : 0, 0, 0, 0));
 
         replyCloseImageView = new ImageView(context);
         replyCloseImageView.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_glass_defaultIcon), PorterDuff.Mode.MULTIPLY));
         replyCloseImageView.setImageResource(R.drawable.input_clear);
         replyCloseImageView.setScaleType(ImageView.ScaleType.CENTER);
         replyCloseImageView.setBackgroundDrawable(Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector), 1, AndroidUtilities.dp(19)));
-        chatActivityEnterTopView.addView(replyCloseImageView, LayoutHelper.createFrame(52, 46, Gravity.RIGHT | Gravity.TOP, 0, 0.5f, 0, 0));
+        chatActivityEnterTopView.addView(replyCloseImageView, LayoutHelper.createFrame(iosStyle ? 48 : 52, 46, Gravity.RIGHT | Gravity.TOP, 0, 0.5f, iosStyle ? 8 : 0, 0));
         replyCloseImageView.setOnClickListener(v -> {
             messageSuggestionParams = null;
             if (fieldPanelShown == 2) {
@@ -33008,9 +33009,9 @@ public class ChatActivity extends BaseFragment implements
             int totalHeight = contentView.getHeight();
             int height = scrimPopupContainerLayout.getMeasuredHeight() + AndroidUtilities.dp(48);
             int keyboardHeight = contentView.measureKeyboardHeight();
-            if (keyboardHeight > AndroidUtilities.dp(20)) {
+/*            if (keyboardHeight > AndroidUtilities.dp(20)) {
                 totalHeight += keyboardHeight;
-            }
+            }*/
             int popupY;
             int minY = (int) (chatListView.getY() + dp(24));
             int maxY = totalHeight - height - dp(8);
@@ -46441,9 +46442,9 @@ public class ChatActivity extends BaseFragment implements
             int totalHeight = contentView.getHeight();
             int height = scrimPopupContainerLayout.getMeasuredHeight();
             int keyboardHeight = contentView.measureKeyboardHeight();
-            if (keyboardHeight > AndroidUtilities.dp(20)) {
+/*            if (keyboardHeight > AndroidUtilities.dp(20)) {
                 totalHeight += keyboardHeight;
-            }
+            }*/
 
             int popupX = (int) (left - AndroidUtilities.dp(28));
             popupX = Math.max(AndroidUtilities.dp(6), Math.min(chatListView.getMeasuredWidth() - AndroidUtilities.dp(6) - scrimPopupContainerLayout.getMeasuredWidth(), popupX));
