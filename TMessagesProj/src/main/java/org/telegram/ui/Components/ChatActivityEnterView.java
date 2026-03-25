@@ -2796,7 +2796,7 @@ public class ChatActivityEnterView extends FrameLayout implements
             attachLayout.setOrientation(LinearLayout.HORIZONTAL);
             attachLayout.setEnabled(false);
             attachLayout.setClipChildren(false);
-            messageEditTextContainer.addView(attachLayout, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.RIGHT, 0, 0, iosStyle ? (DEFAULT_HEIGHT + 8 + 2) : DEFAULT_HEIGHT, 0));
+            messageEditTextContainer.addView(attachLayout, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.RIGHT, 0, 0, iosStyle ? 51 : DEFAULT_HEIGHT, 0));
 
             notifyButton = new ImageView(context);
             notifySilentDrawable = new CrossOutDrawable(context, R.drawable.input_notify_on, Theme.key_glass_defaultIcon);
@@ -15128,7 +15128,8 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
             updateColors();
             if (isNewDesignSendButton) {
                 checkBackgroundRect();
-                canvas.drawRoundRect(backgroundRect, dp(RADIUS), dp(RADIUS), backgroundPaint);
+                float r = center ? backgroundRect.height() / 2f : dp(RADIUS);
+                canvas.drawRoundRect(backgroundRect, r, r, backgroundPaint);
             }
 
             final boolean inactive = isInactive();
@@ -15406,11 +15407,12 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
             final float height = dpf2(38);
             final float width = Math.max(height, dpf2(10 + 10) + priceText.getCurrentWidth());
             if (center) {
+                final float size = dpf2(42);
                 backgroundRect.set(
-                        (getMeasuredWidth() - width) / 2f,
-                        (getMeasuredHeight() - height) / 2f,
-                        (getMeasuredWidth() + width) / 2f,
-                        (getMeasuredHeight() + height) / 2f
+                        (getMeasuredWidth() - size) / 2f,
+                        (getMeasuredHeight() - size) / 2f,
+                        (getMeasuredWidth() + size) / 2f,
+                        (getMeasuredHeight() + size) / 2f
                 );
             } else {
                 backgroundRect.set(
