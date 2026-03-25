@@ -4007,7 +4007,11 @@ public class ChatActivityEnterView extends FrameLayout implements
         updateRecordedDeleteIconColors();
         recordDeleteImageView.setContentDescription(getString("Delete", R.string.Delete));
         recordDeleteImageView.setBackgroundDrawable(Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector)));
-        recordedAudioPanel.addView(recordDeleteImageView, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT));
+        if (iosStyle) {
+            addView(recordDeleteImageView, LayoutHelper.createFrame(48, 48, Gravity.LEFT | Gravity.BOTTOM, 8, 0, 0, 0));
+        } else {
+            recordedAudioPanel.addView(recordDeleteImageView, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT));
+        }
         recordDeleteImageView.setOnClickListener(v -> {
             if (runningAnimationAudio != null && runningAnimationAudio.isRunning()) {
                 return;
@@ -4086,6 +4090,7 @@ public class ChatActivityEnterView extends FrameLayout implements
         MediaController.getInstance().stopRecording(0, false, 0, false, 0);
         millisecondsRecorded = 0;
         hideRecordedAudioPanel(false);
+        if (iosStyle && recordDeleteImageView != null) recordDeleteImageView.setVisibility(GONE);
         checkSendButton(true);
     }
 
@@ -7880,6 +7885,9 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
         if (recordedAudioPanel != null) {
             recordedAudioPanel.setVisibility(GONE);
         }
+        if (iosStyle && recordDeleteImageView != null) {
+            recordDeleteImageView.setVisibility(GONE);
+        }
         isRecordingStateChanged();
     }
 
@@ -9591,6 +9599,9 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
             if (recordPanel != null) {
                 recordPanel.setVisibility(VISIBLE);
             }
+            if (iosStyle && attachButton != null) {
+                attachButton.setVisibility(GONE);
+            }
             createRecordCircle();
             if (recordCircle != null) {
                 recordCircle.voiceEnterTransitionInProgress = false;
@@ -9690,11 +9701,15 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
                     attachButtonAnimator.cancel();
                     attachButtonAnimator = null;
                 }
-                viewTransition.playTogether(
-                    ObjectAnimator.ofFloat(attachButton, View.ALPHA, attachButtonAlpha = 0f),
-                    ObjectAnimator.ofFloat(attachButton, View.SCALE_X, 0.5f),
-                    ObjectAnimator.ofFloat(attachButton, View.SCALE_Y, 0.5f)
-                );
+                if (iosStyle) {
+                    attachButton.setVisibility(GONE);
+                } else {
+                    viewTransition.playTogether(
+                        ObjectAnimator.ofFloat(attachButton, View.ALPHA, attachButtonAlpha = 0f),
+                        ObjectAnimator.ofFloat(attachButton, View.SCALE_X, 0.5f),
+                        ObjectAnimator.ofFloat(attachButton, View.SCALE_Y, 0.5f)
+                    );
+                }
             }
             if (sideButtons != null) {
                 sideButtons.showButton(ChatActivitySideControlsButtonsLayout.BUTTON_ATTACH, false, true);
@@ -15161,6 +15176,16 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
             if (isNewDesignSendButton) {
                 float cx = center ? getWidth() / 2f : backgroundRect.right - backgroundRect.height() / 2f;
                 float cy = center ? getHeight() / 2f : backgroundRect.top + backgroundRect.height() / 2f;
+                if (iosStyle) {
+                    float width = backgroundRect.width();
+                    float height = backgroundRect.height();
+                    if (Math.abs(width - height) < 1.0f) {
+                        cx = getWidth() / 2f;
+                        cy = getHeight() / 2f;
+                    } else if (!center) {
+                        cx = getWidth() - dp(4) - (height / 2f);
+                    }
+                }
                 x = Math.round(cx - drawable.getIntrinsicWidth() / 2f);
                 y = Math.round(cy - drawable.getIntrinsicHeight() / 2f);
             } else {
@@ -15744,8 +15769,21 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
 
     private void checkIosMargins() {
         if (!iosStyle || messageEditTextContainer == null || textFieldContainer == null || messageEditText == null) return;
-        boolean hasAttach = attachButton != null && attachButton.getVisibility() == VISIBLE;
+        boolean inPreview = recordedAudioPanel != null && recordedAudioPanel.getVisibility() == VISIBLE;
+        boolean hasAttach = (attachButton != null && attachButton.getVisibility() == VISIBLE) || inPreview;
         boolean hasSend = sendButtonContainer != null && sendButtonContainer.getVisibility() == VISIBLE;
+
+        if (inPreview && attachButton != null) {
+            attachButton.setVisibility(VISIBLE);
+            attachButton.setImageAlpha(0);
+            attachButton.setAlpha(1.0f);
+            attachButton.setScaleX(1.0f);
+            attachButton.setScaleY(1.0f);
+            if (recordDeleteImageView != null) {
+                recordDeleteImageView.bringToFront();
+                recordDeleteImageView.setVisibility(VISIBLE);
+            }
+        }
 
         FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) messageEditTextContainer.getLayoutParams();
         int left = hasAttach ? dp(64) : dp(12);
