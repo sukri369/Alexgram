@@ -2799,11 +2799,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         iBlur3FactoryFade = new BlurredBackgroundDrawableViewFactory(iBlur3SourceColor);
     }
 
-     public static class MainTabsActivityController {
-        public void setTabsVisible(boolean visible) {
-            NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.setTabsVisible, visible);
-        }
-    }
 
     @Override
     public boolean onFragmentCreate() {

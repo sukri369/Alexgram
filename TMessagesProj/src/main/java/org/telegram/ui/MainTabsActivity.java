@@ -535,7 +535,6 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
 
         bundle.putBoolean("hasMainTabs", true);
         dialogsActivity = new DialogsActivity(bundle);
-        dialogsActivity.setMainTabsActivityController(new MainTabsActivityControllerImpl());
         putFragmentAtPosition(POSITION_CHATS, dialogsActivity);
         return dialogsActivity;
     }
@@ -843,11 +842,6 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
 
     /* * */
 
-    public static class MainTabsActivityController {
-        public void setTabsVisible(boolean visible) {
-            NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.setTabsVisible, visible);
-        }
-    }
 
 
     /* Slide */
