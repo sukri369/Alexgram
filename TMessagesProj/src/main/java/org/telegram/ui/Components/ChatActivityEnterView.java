@@ -4052,14 +4052,14 @@ public class ChatActivityEnterView extends FrameLayout implements
                 delegate.needChangeVideoPreviewState(0, 0);
             }
         });
-        recordedAudioPanel.addView(videoTimelineView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.CENTER_VERTICAL | Gravity.LEFT, 56, 0, 8, 0));
+        recordedAudioPanel.addView(videoTimelineView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.CENTER_VERTICAL | Gravity.LEFT, iosStyle ? 8 : 56, 0, 8, 0));
 
         VideoTimelineView.TimeHintView videoTimeHintView = new VideoTimelineView.TimeHintView(getContext());
         videoTimelineView.setTimeHintView(videoTimeHintView);
         sizeNotifierLayout.addView(videoTimeHintView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, 0, 0, 0, 52));
 
         audioTimelineView = new RecordedAudioPlayerView(getContext(), resourcesProvider);
-        recordedAudioPanel.addView(audioTimelineView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 32, Gravity.CENTER_VERTICAL | Gravity.LEFT, DEFAULT_HEIGHT, 0, 4, 0));
+        recordedAudioPanel.addView(audioTimelineView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 32, Gravity.CENTER_VERTICAL | Gravity.LEFT, iosStyle ? 8 : DEFAULT_HEIGHT, 0, 4, 0));
 
         updateFieldRight(lastAttachVisible);
     }
@@ -7885,8 +7885,13 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
         if (recordedAudioPanel != null) {
             recordedAudioPanel.setVisibility(GONE);
         }
-        if (iosStyle && recordDeleteImageView != null) {
-            recordDeleteImageView.setVisibility(GONE);
+        if (iosStyle) {
+            if (recordDeleteImageView != null) {
+                recordDeleteImageView.setVisibility(GONE);
+            }
+            if (attachButton != null) {
+                attachButton.setImageAlpha(255);
+            }
         }
         isRecordingStateChanged();
     }
@@ -15180,10 +15185,10 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
                     float width = backgroundRect.width();
                     float height = backgroundRect.height();
                     if (Math.abs(width - height) < 1.0f) {
-                        cx = getWidth() / 2f;
-                        cy = getHeight() / 2f;
+                        cx = backgroundRect.centerX();
+                        cy = backgroundRect.centerY();
                     } else if (!center) {
-                        cx = getWidth() - dp(4) - (height / 2f);
+                        cx = backgroundRect.centerX();
                     }
                 }
                 x = Math.round(cx - drawable.getIntrinsicWidth() / 2f);
@@ -15782,6 +15787,10 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
             if (recordDeleteImageView != null) {
                 recordDeleteImageView.bringToFront();
                 recordDeleteImageView.setVisibility(VISIBLE);
+            }
+        } else {
+            if (iosStyle && recordDeleteImageView != null) {
+                recordDeleteImageView.setVisibility(GONE);
             }
         }
 
