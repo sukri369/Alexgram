@@ -809,7 +809,7 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
         final int hiddenY = normalY + dp(DialogsActivity.MAIN_TABS_HEIGHT + DialogsActivity.MAIN_TABS_MARGIN * 2);
 
         final float factor = animatorTabsVisible.getFloatValue();
-        NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.setTabsVisibleProgress, factor);
+        NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.setTabsVisibleProgress, factor);
         final float scale = lerp(0.85f, 1f, factor);
 
         tabsView.setTranslationY(lerp(hiddenY, normalY, factor));
