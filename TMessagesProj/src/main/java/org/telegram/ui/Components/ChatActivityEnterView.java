@@ -2782,7 +2782,7 @@ public class ChatActivityEnterView extends FrameLayout implements
                 }
             }
         });
-        messageEditTextContainer.addView(emojiButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, (iosStyle ? Gravity.RIGHT : Gravity.LEFT) | Gravity.BOTTOM, iosStyle ? 0 : 2, 0, iosStyle ? 8 : 0, 0));
+        messageEditTextContainer.addView(emojiButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, (iosStyle ? Gravity.RIGHT : Gravity.LEFT) | Gravity.BOTTOM, iosStyle ? 0 : 2, 0, iosStyle ? 0 : 0, 0));
         setEmojiButtonImage(false, false);
 
         if (isChat) {
@@ -2796,7 +2796,7 @@ public class ChatActivityEnterView extends FrameLayout implements
             attachLayout.setOrientation(LinearLayout.HORIZONTAL);
             attachLayout.setEnabled(false);
             attachLayout.setClipChildren(false);
-            messageEditTextContainer.addView(attachLayout, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.RIGHT, 0, 0, iosStyle ? 44 : DEFAULT_HEIGHT, 0));
+            messageEditTextContainer.addView(attachLayout, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.RIGHT, 0, 0, iosStyle ? 36 : DEFAULT_HEIGHT, 0));
 
             notifyButton = new ImageView(context);
             notifySilentDrawable = new CrossOutDrawable(context, R.drawable.input_notify_on, Theme.key_glass_defaultIcon);
@@ -10685,11 +10685,11 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
 
             if (editingMessageObject.needResendWhenEdit() && paidMessagesPrice > 0) {
                 doneButton.setStarsPrice(paidMessagesPrice, 1, true);
-                doneButton.setLayoutParams(LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, (iosStyle ? Gravity.LEFT : Gravity.RIGHT) | Gravity.BOTTOM, iosStyle ? 8 : 0, 0, iosStyle ? 0 : 0, 0));
+                doneButton.setLayoutParams(LayoutHelper.createFrame(iosStyle ? 48 : DEFAULT_HEIGHT, iosStyle ? 48 : DEFAULT_HEIGHT, (iosStyle ? Gravity.LEFT : Gravity.RIGHT) | Gravity.BOTTOM, iosStyle ? 8 : 0, 0, iosStyle ? 0 : 0, 0));
                 doneButton.requestLayout();
             } else {
                 doneButton.setStarsPrice(0, 1, true);
-                doneButton.setLayoutParams(LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, (iosStyle ? Gravity.LEFT : Gravity.RIGHT) | Gravity.BOTTOM, iosStyle ? 8 : 0, 0, iosStyle ? 0 : 0, 0));
+                doneButton.setLayoutParams(LayoutHelper.createFrame(iosStyle ? 48 : DEFAULT_HEIGHT, iosStyle ? 48 : DEFAULT_HEIGHT, (iosStyle ? Gravity.LEFT : Gravity.RIGHT) | Gravity.BOTTOM, iosStyle ? 8 : 0, 0, iosStyle ? 0 : 0, 0));
                 doneButton.requestLayout();
             }
 
@@ -10821,6 +10821,7 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
             audioVideoButtonContainer.setVisibility(GONE);
             attachLayout.setVisibility(GONE);
             if (attachButton != null) {
+                attachButton.setVisibility(GONE);
                 attachButton.setAlpha(attachButtonAlpha = 0.0f);
                 attachButton.setScaleX(0.5f);
                 attachButton.setScaleY(0.5f);
@@ -10839,6 +10840,12 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
             }
             currentLimit = -1;
             delegate.onMessageEditEnd(false);
+            if (attachButton != null) {
+                attachButton.setVisibility(VISIBLE);
+                attachButton.setAlpha(1.0f);
+                attachButton.setScaleX(1.0f);
+                attachButton.setScaleY(1.0f);
+            }
             sendButtonContainer.setVisibility(VISIBLE);
             cancelBotButton.setScaleX(0.1f);
             cancelBotButton.setScaleY(0.1f);
@@ -15137,11 +15144,8 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
 
             int x, y;
             if (isNewDesignSendButton) {
-                float cx = center ? getMeasuredWidth() / 2f : backgroundRect.right - backgroundRect.height() / 2f;
-                float cy = center ? getMeasuredHeight() / 2f : backgroundRect.top + backgroundRect.height() / 2f;
-                if (center) {
-                    cx += dpf2(1f);
-                }
+                float cx = center ? (getWidth() / 2f + dpf2(2f)) : backgroundRect.right - backgroundRect.height() / 2f;
+                float cy = center ? getHeight() / 2f : backgroundRect.top + backgroundRect.height() / 2f;
                 x = Math.round(cx - drawable.getIntrinsicWidth() / 2f);
                 y = Math.round(cy - drawable.getIntrinsicHeight() / 2f);
             } else {
@@ -15583,7 +15587,7 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
     public void setLiveComment(boolean isLiveComment, boolean isAdmin) {
         if (this.isLiveComment == isLiveComment) return;
         this.isLiveComment = isLiveComment;
-        attachButton.setVisibility(isLiveComment ? View.GONE : View.VISIBLE);
+        attachButton.setVisibility((isLiveComment || (iosStyle && editingMessageObject != null)) ? View.GONE : View.VISIBLE);
         if (isLiveComment) {
             AndroidUtilities.removeFromParent(notifyButton);
         }
