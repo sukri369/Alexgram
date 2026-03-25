@@ -2782,7 +2782,7 @@ public class ChatActivityEnterView extends FrameLayout implements
                 }
             }
         });
-        messageEditTextContainer.addView(emojiButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, (iosStyle ? Gravity.RIGHT : Gravity.LEFT) | Gravity.BOTTOM, iosStyle ? 0 : 2, 0, iosStyle ? 2 : 0, 0));
+        messageEditTextContainer.addView(emojiButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, (iosStyle ? Gravity.RIGHT : Gravity.LEFT) | Gravity.BOTTOM, iosStyle ? 0 : 2, 0, iosStyle ? (iosStyle ? 8 : 2) : 0, 0));
         setEmojiButtonImage(false, false);
 
         if (isChat) {
@@ -2796,7 +2796,7 @@ public class ChatActivityEnterView extends FrameLayout implements
             attachLayout.setOrientation(LinearLayout.HORIZONTAL);
             attachLayout.setEnabled(false);
             attachLayout.setClipChildren(false);
-            messageEditTextContainer.addView(attachLayout, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.RIGHT, 0, 0, DEFAULT_HEIGHT, 0));
+            messageEditTextContainer.addView(attachLayout, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.RIGHT, 0, 0, iosStyle ? 8 : DEFAULT_HEIGHT, 0));
 
             notifyButton = new ImageView(context);
             notifySilentDrawable = new CrossOutDrawable(context, R.drawable.input_notify_on, Theme.key_glass_defaultIcon);
@@ -2841,7 +2841,7 @@ public class ChatActivityEnterView extends FrameLayout implements
             attachButton.setImageResource(R.drawable.msg_input_attach2);
             attachButton.setBackground(Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector)));
             if (iosStyle) {
-                textFieldContainer.addView(attachButton, LayoutHelper.createFrame(48, 48, Gravity.BOTTOM | Gravity.LEFT, 4, 0, 0, 0));
+                textFieldContainer.addView(attachButton, LayoutHelper.createFrame(48, 48, Gravity.BOTTOM | Gravity.LEFT, 8, 0, 0, 0));
             } else {
                 messageEditTextContainer.addView(attachButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.RIGHT));
             }
@@ -2886,7 +2886,7 @@ public class ChatActivityEnterView extends FrameLayout implements
         };
         sendButtonContainer.setClipChildren(false);
         sendButtonContainer.setClipToPadding(false);
-        textFieldContainer.addView(sendButtonContainer, LayoutHelper.createFrame(48, 48, Gravity.BOTTOM | Gravity.RIGHT, 0, 0, 4, 0));
+        textFieldContainer.addView(sendButtonContainer, LayoutHelper.createFrame(48, 48, Gravity.BOTTOM | Gravity.RIGHT, 0, 0, iosStyle ? 8 : 4, 0));
 
         audioVideoButtonContainer = new FrameLayout(context) {
 
@@ -3909,7 +3909,7 @@ public class ChatActivityEnterView extends FrameLayout implements
         if (bounceable) {
             ScaleStateListAnimator.apply(doneButton);
         }
-        textFieldContainer.addView(doneButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, (iosStyle ? Gravity.LEFT : Gravity.RIGHT) | Gravity.BOTTOM, iosStyle ? 4 : 0, 0, iosStyle ? 0 : 0, 0));
+        textFieldContainer.addView(doneButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, (iosStyle ? Gravity.LEFT : Gravity.RIGHT) | Gravity.BOTTOM, iosStyle ? 8 : 0, 0, iosStyle ? 0 : 0, 0));
     }
 
     @SuppressLint("AppCompatCustomView")
@@ -10684,11 +10684,11 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
 
             if (editingMessageObject.needResendWhenEdit() && paidMessagesPrice > 0) {
                 doneButton.setStarsPrice(paidMessagesPrice, 1, true);
-                doneButton.setLayoutParams(LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, (iosStyle ? Gravity.LEFT : Gravity.RIGHT) | Gravity.BOTTOM, iosStyle ? 4 : 0, 0, iosStyle ? 0 : 0, 0));
+                doneButton.setLayoutParams(LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, (iosStyle ? Gravity.LEFT : Gravity.RIGHT) | Gravity.BOTTOM, iosStyle ? 8 : 0, 0, iosStyle ? 0 : 0, 0));
                 doneButton.requestLayout();
             } else {
                 doneButton.setStarsPrice(0, 1, true);
-                doneButton.setLayoutParams(LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, (iosStyle ? Gravity.LEFT : Gravity.RIGHT) | Gravity.BOTTOM, iosStyle ? 4 : 0, 0, iosStyle ? 0 : 0, 0));
+                doneButton.setLayoutParams(LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, (iosStyle ? Gravity.LEFT : Gravity.RIGHT) | Gravity.BOTTOM, iosStyle ? 8 : 0, 0, iosStyle ? 0 : 0, 0));
                 doneButton.requestLayout();
             }
 
@@ -14687,8 +14687,8 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
                     y += v.getTop() + v.getTranslationY();
                     v = (View) v.getParent();
                 }
-                int left = dp(12);
-                int right = dp(12);
+                int left = dp(4);
+                int right = dp(4);
                 int gap = dp(4);
                 iosTopBackground.setBounds(left, (int) y, getMeasuredWidth() - right, (int) (y + topView.getMeasuredHeight() - gap));
                 iosTopBackground.draw(canvas);
@@ -15712,8 +15712,8 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
         boolean hasSend = sendButtonContainer != null && sendButtonContainer.getVisibility() == VISIBLE;
 
         FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) messageEditTextContainer.getLayoutParams();
-        int left = hasAttach ? dp(56) : dp(12);
-        int right = hasSend ? dp(56) : dp(12);
+        int left = hasAttach ? dp(64) : dp(12);
+        int right = hasSend ? dp(64) : dp(12);
         if (lp.leftMargin != left || lp.rightMargin != right) {
             lp.leftMargin = left;
             lp.rightMargin = right;
