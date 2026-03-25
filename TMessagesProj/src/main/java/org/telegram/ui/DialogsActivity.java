@@ -6720,7 +6720,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
         if (filterTabsView != null) {
             if (NaConfig.INSTANCE.getFoldersAtBottom().Bool()) {
-                filterTabsView.setTranslationY(0);
+                float hideDistance = additionNavigationBarHeight + filterTabsView.getMeasuredHeight() + dp(7);
+                filterTabsView.setTranslationY(hideDistance * (1f - tabsVisibilityFactor));
             } else {
                 filterTabsView.setTranslationY(totalOffset - searchOffset);
             }
@@ -11339,6 +11340,14 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         } else if (id == NotificationCenter.setTabsVisibleProgress) {
             tabsVisibilityFactor = (Float) args[0];
             updateFloatingButtonOffset();
+            updateContextViewPosition();
+            if (viewPages != null) {
+                for (int a = 0; a < viewPages.length; a++) {
+                    if (viewPages[a] != null && viewPages[a].listView != null) {
+                        viewPages[a].listView.requestLayout();
+                    }
+                }
+            }
         } else if (id == NotificationCenter.needReloadRecentDialogsSearch) {
             if (searchViewPager != null && searchViewPager.dialogsSearchAdapter != null) {
                 searchViewPager.dialogsSearchAdapter.loadRecentSearch();
@@ -14615,7 +14624,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private int calculateListViewPaddingBottom() {
         int additionalBottom = 0;
         if (NaConfig.INSTANCE.getFoldersAtBottom().Bool() && filterTabsView != null && filterTabsView.getVisibility() == View.VISIBLE) {
-            additionalBottom = (int) (dp(36 + 14) * filterTabsView.getAlpha());
+            additionalBottom = (int) (dp(36 + 14) * filterTabsView.getAlpha() * tabsVisibilityFactor);
         }
         return getBottomTabsHeight() + additionalBottom;
     }
