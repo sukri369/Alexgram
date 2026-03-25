@@ -2796,7 +2796,7 @@ public class ChatActivityEnterView extends FrameLayout implements
             attachLayout.setOrientation(LinearLayout.HORIZONTAL);
             attachLayout.setEnabled(false);
             attachLayout.setClipChildren(false);
-            messageEditTextContainer.addView(attachLayout, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, DEFAULT_HEIGHT, (iosStyle ? Gravity.LEFT : Gravity.RIGHT) | Gravity.BOTTOM, iosStyle ? 8 : 0, 0, iosStyle ? 0 : DEFAULT_HEIGHT, 0));
+            messageEditTextContainer.addView(attachLayout, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.RIGHT, 0, 0, iosStyle ? (DEFAULT_HEIGHT + 8 + 2) : DEFAULT_HEIGHT, 0));
 
             notifyButton = new ImageView(context);
             notifySilentDrawable = new CrossOutDrawable(context, R.drawable.input_notify_on, Theme.key_glass_defaultIcon);
@@ -15136,8 +15136,10 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
 
             int x, y;
             if (isNewDesignSendButton) {
-                x = Math.round((center ? (backgroundRect.left + backgroundRect.right) / 2f : backgroundRect.right - backgroundRect.height() / 2f) - drawable.getIntrinsicWidth() / 2f);
-                y = Math.round(backgroundRect.top + backgroundRect.height() / 2f - drawable.getIntrinsicHeight() / 2f);
+                float cx = center ? getMeasuredWidth() / 2f : backgroundRect.right - backgroundRect.height() / 2f;
+                float cy = center ? getMeasuredHeight() / 2f : backgroundRect.top + backgroundRect.height() / 2f;
+                x = Math.round(cx - drawable.getIntrinsicWidth() / 2f);
+                y = Math.round(cy - drawable.getIntrinsicHeight() / 2f);
             } else {
                 x = getMeasuredWidth() - getMeasuredHeight() / 2 - drawable.getIntrinsicWidth() / 2;
                 y = (getMeasuredHeight() - drawable.getIntrinsicHeight()) / 2;
