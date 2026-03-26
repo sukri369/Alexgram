@@ -119,6 +119,7 @@ import org.telegram.ui.Components.LayoutHelper;
 import android.view.Gravity;
 import android.widget.LinearLayout; // Ensure LinearLayout is imported
 import tw.nekomimi.nekogram.helpers.HiddenChatsController;
+import tw.nekomimi.nekogram.ui.BookmarkManagerActivity;
 import tw.nekomimi.nekogram.ui.HiddenChatsPasscodeActivity;
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
@@ -2799,12 +2800,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         iBlur3FactoryFade = new BlurredBackgroundDrawableViewFactory(iBlur3SourceColor);
     }
 
-    private MainTabsActivityController mainTabsActivityController;
-
-    public void setMainTabsActivityController(MainTabsActivityController controller) {
-        mainTabsActivityController = controller;
-    }
-
 
     @Override
     public boolean onFragmentCreate() {
@@ -2896,6 +2891,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             getNotificationCenter().addObserver(this, NotificationCenter.userEmojiStatusUpdated);
             getNotificationCenter().addObserver(this, NotificationCenter.currentUserPremiumStatusChanged);
             getNotificationCenter().addObserver(this, NotificationCenter.mainUserInfoChanged);
+        getNotificationCenter().addObserver(this, NotificationCenter.setTabsVisibleProgress);
 
             NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.didSetPasscode);
         }
@@ -2942,11 +2938,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         }
 
         BirthdayController.getInstance(currentAccount).check();
-        additionNavigationBarHeight = hasMainTabs ? dp(MAIN_TABS_HEIGHT_WITH_MARGINS) : 0;
-        additionFloatingButtonOffset = hasMainTabs ? dp(DialogsActivity.MAIN_TABS_HEIGHT + DialogsActivity.MAIN_TABS_MARGIN) : 0;
+        additionNavigationBarHeight = hasMainTabs && !NaConfig.INSTANCE.getHideTabs().Bool() ? dp(MAIN_TABS_HEIGHT_WITH_MARGINS) : 0;
+        additionFloatingButtonOffset = hasMainTabs && !NaConfig.INSTANCE.getHideTabs().Bool() ? dp(DialogsActivity.MAIN_TABS_HEIGHT + DialogsActivity.MAIN_TABS_MARGIN) : 0;
 
         LastSeenHelper.preload();
-
+        getNotificationCenter().addObserver(this, NotificationCenter.setTabsVisibleProgress);
         return true;
     }
 
@@ -3069,6 +3065,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     @Override
     public void onFragmentDestroy() {
+        getNotificationCenter().removeObserver(this, NotificationCenter.setTabsVisibleProgress);
         super.onFragmentDestroy();
         if (searchString == null) {
             getNotificationCenter().removeObserver(this, NotificationCenter.dialogsNeedReload);
@@ -4705,6 +4702,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                                 }
                                 if (changed && scrollUpdated && (goingDown || scrollingManually)) {
                                     hideFloatingButton(goingDown);
+                                    if (NaConfig.INSTANCE.getHideTabsOnScroll().Bool()) {
+                                        NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.setTabsVisible, !goingDown);
+                                    }
                                 }
                                 prevPosition = firstVisiblePosition;
                                 prevTop = firstViewTop;
@@ -6721,7 +6721,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
         if (filterTabsView != null) {
             if (NaConfig.INSTANCE.getFoldersAtBottom().Bool()) {
-                filterTabsView.setTranslationY(0);
+                float hideDistance = additionNavigationBarHeight + filterTabsView.getMeasuredHeight() + dp(7);
+                filterTabsView.setTranslationY(hideDistance * (1f - tabsVisibilityFactor));
             } else {
                 filterTabsView.setTranslationY(totalOffset - searchOffset);
             }
@@ -8928,10 +8929,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private void updateFloatingButtonOffset() {
         float additionalBottom = 0;
         if (NaConfig.INSTANCE.getFoldersAtBottom().Bool() && filterTabsView != null && filterTabsView.getVisibility() == View.VISIBLE) {
-            additionalBottom = (dp(36 + 14) * filterTabsView.getAlpha());
+            additionalBottom = (dp(36 + 14) * filterTabsView.getAlpha() * tabsVisibilityFactor);
         }
 
-        final float top = -navigationBarHeight - additionFloatingButtonOffset - additionalFloatingTranslation - additionalBottom;
+        final float top = -navigationBarHeight - additionFloatingButtonOffset * tabsVisibilityFactor - additionalFloatingTranslation - additionalBottom;
         final float baseTranslationY = top
             - floatingButtonPanOffset;
 
@@ -11337,6 +11338,17 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             updateVisibleRows(MessagesController.UPDATE_MASK_SEND_STATE);
         } else if (id == NotificationCenter.didSetPasscode) {
             checkUi_itemPasscodeVisibility();
+        } else if (id == NotificationCenter.setTabsVisibleProgress) {
+            tabsVisibilityFactor = (Float) args[0];
+            updateFloatingButtonOffset();
+            updateContextViewPosition();
+            if (viewPages != null) {
+                for (int a = 0; a < viewPages.length; a++) {
+                    if (viewPages[a] != null && viewPages[a].listView != null) {
+                        viewPages[a].listView.requestLayout();
+                    }
+                }
+            }
         } else if (id == NotificationCenter.needReloadRecentDialogsSearch) {
             if (searchViewPager != null && searchViewPager.dialogsSearchAdapter != null) {
                 searchViewPager.dialogsSearchAdapter.loadRecentSearch();
@@ -14204,10 +14216,14 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     }
                 }
             }
-            if (getUserConfig().showCallsTab) {
+            if (getUserConfig().showCallsTab || NaConfig.INSTANCE.getHideTabs().Bool()) {
                 io.add(R.drawable.msg_settings_old, getString(R.string.Settings), () -> {
                     presentFragment(new SettingsActivity());
                 });
+            }
+
+            if (NaConfig.INSTANCE.getHideTabs().Bool()) {
+                io.add(R.drawable.msg_fave, getString(R.string.BookmarksManager), () -> presentFragment(new BookmarkManagerActivity()));
             }
 
             if (proxyMenuSubItem != null) {
@@ -14251,6 +14267,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private int imeInsetHeight;
     private int additionNavigationBarHeight;
     private int additionFloatingButtonOffset;
+    private float tabsVisibilityFactor = 1.0f;
 
     @NonNull
     private WindowInsetsCompat onApplyWindowInsets(@NonNull View v, @NonNull WindowInsetsCompat insets) {
@@ -14435,9 +14452,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     private void checkUi_mainTabsVisible() {
         final boolean mainTabsVisible = !searching && (blurredView == null || blurredView.getBackground() == null || blurredView.getAlpha() < 0.01f || blurredView.getVisibility() == View.GONE);
-        if (mainTabsActivityController != null) {
-            mainTabsActivityController.setTabsVisible(mainTabsVisible);
-        }
+        NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.setTabsVisible, mainTabsVisible);
     }
 
     private void checkUi_searchFieldVisibility() {
@@ -14614,9 +14629,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private int calculateListViewPaddingBottom() {
         int additionalBottom = 0;
         if (NaConfig.INSTANCE.getFoldersAtBottom().Bool() && filterTabsView != null && filterTabsView.getVisibility() == View.VISIBLE) {
-            additionalBottom = (int) (dp(36 + 14) * filterTabsView.getAlpha());
+            additionalBottom = (int) (dp(36 + 14) * filterTabsView.getAlpha() * tabsVisibilityFactor);
         }
-        return getBottomTabsHeight() + additionalBottom;
+        return navigationBarHeight + (int) (additionNavigationBarHeight * tabsVisibilityFactor) + additionalBottom;
     }
 
     @Override

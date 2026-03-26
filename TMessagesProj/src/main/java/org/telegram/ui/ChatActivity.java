@@ -7322,6 +7322,9 @@ public class ChatActivity extends BaseFragment implements
                 }
                 scrollUp = dy < 0;
                 int firstVisibleItem = chatLayoutManager.findFirstVisibleItemPosition();
+                if (dy != 0 && NaConfig.INSTANCE.getHideTabsOnScroll().Bool()) {
+                    NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.setTabsVisible, dy < 0);
+                }
                 if (dy != 0 && (scrollByTouch && recyclerView.getScrollState() == RecyclerView.SCROLL_STATE_SETTLING) || recyclerView.getScrollState() == RecyclerView.SCROLL_STATE_DRAGGING) {
                     if (forceNextPinnedMessageId != 0) {
                         if ((!scrollUp || forceScrollToFirst)) {

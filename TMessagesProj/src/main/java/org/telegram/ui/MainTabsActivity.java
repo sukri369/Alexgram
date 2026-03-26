@@ -114,6 +114,10 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
     private final BoolAnimator animatorTabsVisible = new BoolAnimator(ANIMATOR_ID_TABS_VISIBLE,
         this, CubicBezierInterpolator.EASE_OUT_QUINT, 380, true);
 
+    public void setTabsVisible(boolean visible) {
+        animatorTabsVisible.setValue(visible, true);
+    }
+
 
     private IUpdateLayout updateLayout;
     private boolean dropCallsFragmentAfterPageScroll;
@@ -531,7 +535,6 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
 
         bundle.putBoolean("hasMainTabs", true);
         dialogsActivity = new DialogsActivity(bundle);
-        dialogsActivity.setMainTabsActivityController(new MainTabsActivityControllerImpl());
         putFragmentAtPosition(POSITION_CHATS, dialogsActivity);
         return dialogsActivity;
     }
@@ -559,7 +562,6 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
             Bundle args = new Bundle();
             args.putBoolean("hasMainTabs", true);
             dialogsActivity = new DialogsActivity(args);
-            dialogsActivity.setMainTabsActivityController(new MainTabsActivityControllerImpl());
             return dialogsActivity;
         } else if (realPosition == POSITION_PROFILE) {
             Bundle args = new Bundle();
@@ -585,6 +587,7 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
             GlassTabView tab = tabs[a];
             tab.setSelected(indexToPosition(a) == position, animated);
         }
+        setTabsVisible(true);
     }
 
     public void setGestureSelectedOverride(float animatedPosition, boolean allow) {
@@ -649,7 +652,7 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
 
         ViewGroup.MarginLayoutParams lp;
         {
-            final int height = navigationBarHeight + updateLayoutHeight + dp(DialogsActivity.MAIN_TABS_HEIGHT_WITH_MARGINS);
+            final int height = navigationBarHeight + updateLayoutHeight + (NaConfig.INSTANCE.getHideTabs().Bool() ? 0 : dp(DialogsActivity.MAIN_TABS_HEIGHT_WITH_MARGINS));
             lp = (ViewGroup.MarginLayoutParams) fadeView.getLayoutParams();
             if (lp.height != height) {
                 lp.height = height;
@@ -709,6 +712,8 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
             }
         } else if (id == NotificationCenter.needSetDayNightTheme) {
             clearAllHiddenFragments();
+        } else if (id == NotificationCenter.setTabsVisible) {
+            setTabsVisible((Boolean) args[0]);
         } else if (id == NotificationCenter.callTabsVisibleToggled) {
             final boolean callTabsVisible = getUserConfig().showCallsTab;
             checkUi_callTabVisible(callTabsVisible, true);
@@ -747,6 +752,7 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.notificationsCountUpdated);
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.updateInterfaces);
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.callTabsVisibleToggled);
+        NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.setTabsVisible);
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.mainUserInfoChanged);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.appUpdateAvailable);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.appUpdateLoading);
@@ -763,6 +769,7 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.notificationsCountUpdated);
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.updateInterfaces);
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.callTabsVisibleToggled);
+        NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.setTabsVisible);
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.mainUserInfoChanged);
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.appUpdateAvailable);
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.appUpdateLoading);
@@ -796,12 +803,19 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
 
     private void checkUi_tabsPosition() {
         if (tabsView == null) return;
+        if (NaConfig.INSTANCE.getHideTabs().Bool()) {
+            tabsView.setVisibility(View.GONE);
+            return;
+        } else if (tabsView.getVisibility() == View.GONE) {
+            tabsView.setVisibility(View.VISIBLE);
+        }
         final boolean isUpdateLayoutVisible = updateLayoutWrapper.isUpdateLayoutVisible();
         final int updateLayoutHeight = isUpdateLayoutVisible ? dp(UpdateLayoutWrapper.HEIGHT) : 0;
         final int normalY = -(navigationBarHeight + updateLayoutHeight);
-        final int hiddenY = normalY + dp(40);
+        final int hiddenY = normalY + dp(DialogsActivity.MAIN_TABS_HEIGHT + DialogsActivity.MAIN_TABS_MARGIN * 2);
 
         final float factor = animatorTabsVisible.getFloatValue();
+        NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.setTabsVisibleProgress, factor);
         final float scale = lerp(0.85f, 1f, factor);
 
         tabsView.setTranslationY(lerp(hiddenY, normalY, factor));
@@ -834,12 +848,6 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
 
     /* * */
 
-    private class MainTabsActivityControllerImpl implements MainTabsActivityController {
-        @Override
-        public void setTabsVisible(boolean visible) {
-            animatorTabsVisible.setValue(visible, true);
-        }
-    }
 
 
     /* Slide */
