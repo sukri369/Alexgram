@@ -119,6 +119,7 @@ import org.telegram.ui.Components.LayoutHelper;
 import android.view.Gravity;
 import android.widget.LinearLayout; // Ensure LinearLayout is imported
 import tw.nekomimi.nekogram.helpers.HiddenChatsController;
+import tw.nekomimi.nekogram.ui.BookmarkManagerActivity;
 import tw.nekomimi.nekogram.ui.HiddenChatsPasscodeActivity;
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
