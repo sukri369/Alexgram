@@ -433,6 +433,14 @@ public class EmojiView extends FrameLayout implements NotificationCenter.Notific
 
         }
 
+        default boolean canAddCaptionToGif(TLRPC.Document document) {
+            return false;
+        }
+
+        default void onGifSelectedForAddCaption(View view, Object gif, String query, Object parent, boolean notify, int scheduleDate, int scheduleRepeatPeriod) {
+
+        }
+
         default void onTabOpened(int type) {
 
         }
@@ -648,6 +656,18 @@ public class EmojiView extends FrameLayout implements NotificationCenter.Notific
                 delegate.onGifSelected(null, gif, null, parent, notify, scheduleDate, scheduleRepeatPeriod);
             } else if (gifGridView.getAdapter() == gifSearchAdapter) {
                 delegate.onGifSelected(null, gif, null, parent, notify, scheduleDate, scheduleRepeatPeriod);
+            }
+        }
+
+        @Override
+        public boolean canAddCaption(TLRPC.Document document) {
+            return delegate.canAddCaptionToGif(document);
+        }
+
+        @Override
+        public void addCaptionToGif(Object gif, Object parent, boolean notify, int scheduleDate, int scheduleRepeatPeriod) {
+            if (gifGridView.getAdapter() == gifAdapter || gifGridView.getAdapter() == gifSearchAdapter) {
+                delegate.onGifSelectedForAddCaption(null, gif, null, parent, notify, scheduleDate, scheduleRepeatPeriod);
             }
         }
 
