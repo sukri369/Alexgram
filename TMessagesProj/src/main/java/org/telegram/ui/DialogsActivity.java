@@ -14215,10 +14215,14 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     }
                 }
             }
-            if (getUserConfig().showCallsTab) {
+            if (getUserConfig().showCallsTab || NaConfig.INSTANCE.getHideTabs().Bool()) {
                 io.add(R.drawable.msg_settings_old, getString(R.string.Settings), () -> {
                     presentFragment(new SettingsActivity());
                 });
+            }
+
+            if (NaConfig.INSTANCE.getHideTabs().Bool()) {
+                io.add(R.drawable.msg_fave, getString(R.string.BookmarksManager), () -> presentFragment(new BookmarkManagerActivity()));
             }
 
             if (proxyMenuSubItem != null) {
