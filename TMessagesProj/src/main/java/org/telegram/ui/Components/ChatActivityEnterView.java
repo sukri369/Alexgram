@@ -12386,11 +12386,11 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
 
             @Override
             public void onGifSelectedForAddCaption(View view, Object gif, String query, Object parent, boolean notify, int scheduleDate, int scheduleRepeatPeriod) {
-                BaseFragment fragment = parentFragment;
-                if (fragment == null && parentActivity instanceof BaseFragment) {
-                    fragment = (BaseFragment) parentActivity;
+                if (parentFragment != null) {
+                    PhotoViewer.getInstance().setParentActivity(parentFragment, resourcesProvider);
+                } else {
+                    PhotoViewer.getInstance().setParentActivity(parentActivity, resourcesProvider);
                 }
-                PhotoViewer.getInstance().setParentActivity(fragment, resourcesProvider);
                 File file = null;
                 if (gif instanceof TLRPC.Document) {
                     file = FileLoader.getInstance(currentAccount).getPathToAttach((TLRPC.Document) gif);
