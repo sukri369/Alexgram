@@ -256,6 +256,14 @@ public class ContentPreviewViewer {
         default boolean isStickerEditor() {
             return false;
         }
+
+        default boolean canAddCaption(TLRPC.Document document) {
+            return false;
+        }
+
+        default void addCaptionToGif(Object gif, Object parent, boolean notify, int scheduleDate, int scheduleRepeatPeriod) {
+
+        }
     }
 
     public final static int CONTENT_TYPE_NONE = -1;
@@ -700,6 +708,133 @@ public class ContentPreviewViewer {
 
                 try {
                     if (!NekoConfig.disableVibration.Bool()) containerView.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+                } catch (Exception ignored) {}
+            } else if (delegate != null) {
+                ArrayList<CharSequence> items = new ArrayList<>();
+                final ArrayList<Integer> actions = new ArrayList<>();
+                ArrayList<Integer> icons = new ArrayList<>();
+
+                if (delegate.needSend(currentContentType) && !delegate.isInScheduleMode()) {
+                    items.add(LocaleController.getString(R.string.SendGifPreview));
+                    icons.add(R.drawable.msg_send);
+                    actions.add(0);
+                }
+                if (delegate.needSend(currentContentType) && !delegate.isInScheduleMode()) {
+                    items.add(LocaleController.getString(R.string.SendWithoutSound));
+                    icons.add(R.drawable.input_notify_off);
+                    actions.add(4);
+                }
+                if (delegate.canSchedule()) {
+                    items.add(LocaleController.getString(R.string.Schedule));
+                    icons.add(R.drawable.msg_autodelete);
+                    actions.add(3);
+                }
+                if (currentDocument != null && delegate.canAddCaption(currentDocument)) {
+                    items.add(LocaleController.getString(R.string.AddACaption));
+                    icons.add(R.drawable.outline_caption_24);
+                    actions.add(11);
+                }
+
+                boolean canDelete;
+                if (currentDocument != null) {
+                    if (canDelete = MediaDataController.getInstance(currentAccount).hasRecentGif(currentDocument)) {
+                        items.add(LocaleController.formatString("Delete", R.string.Delete));
+                        icons.add(R.drawable.msg_delete);
+                        actions.add(1);
+                    } else {
+                        items.add(LocaleController.formatString("SaveToGIFs", R.string.SaveToGIFs));
+                        icons.add(R.drawable.msg_gif_add);
+                        actions.add(2);
+                    }
+                } else {
+                    canDelete = false;
+                }
+                if (items.isEmpty()) {
+                    return;
+                }
+                menuVisible = true;
+                containerView.invalidate();
+
+                int[] ic = new int[icons.size()];
+                for (int a = 0; a < icons.size(); a++) {
+                    ic[a] = icons.get(a);
+                }
+
+                View.OnClickListener onItemClickListener = v -> {
+                    if (parentActivity == null) {
+                        return;
+                    }
+                    int which = (int) v.getTag();
+                    if (actions.get(which) == 0) {
+                        delegate.sendGif(currentDocument != null ? currentDocument : inlineResult, parentObject, true, 0, 0);
+                    } else if (actions.get(which) == 4) {
+                        delegate.sendGif(currentDocument != null ? currentDocument : inlineResult, parentObject, false, 0, 0);
+                    } else if (actions.get(which) == 1) {
+                        MediaDataController.getInstance(currentAccount).removeRecentGif(currentDocument);
+                        delegate.gifAddedOrDeleted();
+                    } else if (actions.get(which) == 2) {
+                        MediaDataController.getInstance(currentAccount).addRecentGif(currentDocument, (int) (System.currentTimeMillis() / 1000), true);
+                        MessagesController.getInstance(currentAccount).saveGif("gif", currentDocument);
+                        delegate.gifAddedOrDeleted();
+                    } else if (actions.get(which) == 3) {
+                        TLRPC.Document document = currentDocument;
+                        TLRPC.BotInlineResult result = inlineResult;
+                        Object parent = parentObject;
+                        ContentPreviewViewerDelegate stickerPreviewViewerDelegate = delegate;
+                        AlertsCreator.createScheduleDatePickerDialog(parentActivity, stickerPreviewViewerDelegate.getDialogId(), (notify, scheduleDate, scheduleRepeatPeriod) -> stickerPreviewViewerDelegate.sendGif(document != null ? document : result, parent, notify, scheduleDate, scheduleRepeatPeriod), resourcesProvider);
+                    } else if (actions.get(which) == 11) {
+                        delegate.addCaptionToGif(currentDocument != null ? currentDocument : inlineResult, parentObject, true, 0, 0);
+                    }
+                    dismissPopupWindow();
+                };
+
+                for (int i = 0; i < items.size(); i++) {
+                    ActionBarMenuSubItem item = ActionBarMenuItem.addItem(previewMenu, icons.get(i), items.get(i), false, resourcesProvider);
+                    item.setTag(i);
+                    item.setOnClickListener(onItemClickListener);
+
+                    if (canDelete && i == items.size() - 1) {
+                        item.setColors(getThemedColor(Theme.key_text_RedBold), getThemedColor(Theme.key_text_RedRegular));
+                    }
+                }
+                popupWindow = new ActionBarPopupWindow(previewMenu, LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT) {
+                    @Override
+                    public void dismiss() {
+                        super.dismiss();
+                        popupWindow = null;
+                        menuVisible = false;
+                        if (closeOnDismiss) {
+                            close();
+                        }
+                    }
+                };
+                popupWindow.setPauseNotifications(true);
+                popupWindow.setDismissAnimationDuration(150);
+                popupWindow.setScaleOut(true);
+                popupWindow.setOutsideTouchable(true);
+                popupWindow.setClippingEnabled(true);
+                popupWindow.setAnimationStyle(R.style.PopupContextAnimation);
+                popupWindow.setFocusable(true);
+                previewMenu.measure(View.MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(1000), View.MeasureSpec.AT_MOST), View.MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(1000), View.MeasureSpec.AT_MOST));
+                popupWindow.setInputMethodMode(ActionBarPopupWindow.INPUT_METHOD_NOT_NEEDED);
+                popupWindow.getContentView().setFocusableInTouchMode(true);
+
+                int insets = 0;
+                int top;
+                if (lastInsets != null) {
+                    insets = lastInsets.getStableInsetBottom() + lastInsets.getStableInsetTop();
+                    top = lastInsets.getStableInsetTop();
+                } else {
+                    top = AndroidUtilities.statusBarHeight;
+                }
+                int size = Math.min(containerView.getWidth(), containerView.getHeight() - insets) - AndroidUtilities.dp(40f);
+
+                int y = (int) (moveY + Math.max(size / 2 + top + (stickerEmojiLayout != null ? AndroidUtilities.dp(40) : 0), (containerView.getHeight() - insets - keyboardHeight) / 2) + size / 2);
+                y += AndroidUtilities.dp(24) - moveY;
+                popupWindow.showAtLocation(containerView, 0, (int) ((containerView.getMeasuredWidth() - previewMenu.getMeasuredWidth()) / 2f), y);
+
+                try {
+                    containerView.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
                 } catch (Exception ignored) {}
             } else if (currentContentType == CONTENT_TYPE_EMOJI && delegate != null) {
                 ArrayList<CharSequence> items = new ArrayList<>();

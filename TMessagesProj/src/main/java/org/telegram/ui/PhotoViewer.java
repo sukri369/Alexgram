@@ -1086,6 +1086,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
     private View playButtonAccessibilityOverlay;
     private StickersAlert masksAlert;
     private int lastImageId = -1;
+    private boolean sendPhotoTypeIsGif;
 
     private OrientationEventListener orientationEventListener;
     private int prevOrientation = -10;
@@ -1101,6 +1102,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
     public final static int SELECT_TYPE_WALLPAPER = 3;
     public final static int SELECT_TYPE_QR = 10;
     public final static int SELECT_TYPE_STICKER = 11;
+    public final static int SELECT_TYPE_GIF = 12;
 
     OldVideoPlayerRewinder longVideoPlayerRewinder = new OldVideoPlayerRewinder() {
         @Override
@@ -14017,7 +14019,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         endReached[1] = mergeDialogId == 0;
         opennedFromMedia = false;
         openedFromProfile = false;
-        needCaptionLayout = false;
+        needCaptionLayout = sendPhotoType == SELECT_TYPE_GIF;
         containerView.setTag(1);
         playerAutoStarted = false;
         isCurrentVideo = false;
@@ -15106,15 +15108,15 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                             if (isDocumentsPicker) {
                                 AndroidUtilities.updateViewVisibilityAnimated(editCoverButton, false, 1f, animated);
                             } else {
-                                AndroidUtilities.updateViewVisibilityAnimated(muteButton, true, 1f, animated);
-                                AndroidUtilities.updateViewVisibilityAnimated(editCoverButton, parentChatActivity != null && (UserObject.isUserSelf(parentChatActivity.getCurrentUser()) || ChatObject.isChannelAndNotMegaGroup(parentChatActivity.getCurrentChat()) && (duration >= 20 || coverPhoto != null || coverPath != null)), 1f, animated);
+                                AndroidUtilities.updateViewVisibilityAnimated(muteButton, !sendPhotoTypeIsGif, 1f, animated);
+                                AndroidUtilities.updateViewVisibilityAnimated(editCoverButton, !sendPhotoTypeIsGif && parentChatActivity != null && (UserObject.isUserSelf(parentChatActivity.getCurrentUser()) || ChatObject.isChannelAndNotMegaGroup(parentChatActivity.getCurrentChat()) && (duration >= 20 || coverPhoto != null || coverPath != null)), 1f, animated);
                                 if (coverPhoto != null) {
                                     editCoverButton.setImage(coverPhoto, coverPhotoObject);
                                 } else {
                                     editCoverButton.setImage(coverPath);
                                 }
                             }
-                            compressItem.setVisibility(compressQuality == -2 ? View.VISIBLE : View.GONE);
+                            compressItem.setVisibility(!sendPhotoTypeIsGif && compressQuality == -2 ? View.VISIBLE : View.GONE);
                         } else {
                             showVideoTimeline(true, animated);
                             if (sendPhotoType != SELECT_TYPE_AVATAR && sendPhotoType != SELECT_TYPE_STICKER) {
@@ -15125,14 +15127,14 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                                 rotateItem.setTag(null);
                                 mirrorItem.setVisibility(View.GONE);
                                 mirrorItem.setTag(null);
-                                AndroidUtilities.updateViewVisibilityAnimated(muteButton, true, 1f, animated);
-                                AndroidUtilities.updateViewVisibilityAnimated(editCoverButton, true/*parentChatActivity != null && (UserObject.isUserSelf(parentChatActivity.getCurrentUser()) || ChatObject.isChannelAndNotMegaGroup(parentChatActivity.getCurrentChat()) && (duration >= 20 || coverPhoto != null || coverPath != null))*/, 1f, animated);
+                                AndroidUtilities.updateViewVisibilityAnimated(muteButton, !sendPhotoTypeIsGif, 1f, animated);
+                                AndroidUtilities.updateViewVisibilityAnimated(editCoverButton, !sendPhotoTypeIsGif, 1f, animated);
                                 if (coverPhoto != null) {
                                     editCoverButton.setImage(coverPhoto, coverPhotoObject);
                                 } else {
                                     editCoverButton.setImage(coverPath);
                                 }
-                                compressItem.setVisibility(View.VISIBLE);
+                                compressItem.setVisibility(sendPhotoTypeIsGif ? View.GONE : View.VISIBLE);
                             } else {
                                 videoAvatarTooltip.setVisibility(View.VISIBLE);
                                 cropItem.setVisibility(View.GONE);
@@ -17152,9 +17154,10 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
 
     public boolean openPhotoForSelect(final TLRPC.FileLocation fileLocation, final ImageLocation imageLocation, final ArrayList<Object> photos, final int index, int type, boolean documentsPicker, final PhotoViewerProvider provider, ChatActivity chatActivity) {
         isDocumentsPicker = documentsPicker;
+        sendPhotoTypeIsGif = type == SELECT_TYPE_GIF;
         if (pickerViewSendButton != null) {
             FrameLayout.LayoutParams layoutParams2 = (FrameLayout.LayoutParams) pickerViewSendButton.getLayoutParams();
-            if (type == 4 || type == 5) {
+            if (type == 4 || type == 5 || type == SELECT_TYPE_GIF) {
                 pickerViewSendButton.setResourceId(R.drawable.send_plane_24);
 //                pickerViewSendButton.setImageResource(R.drawable.send_plane_24);
                 layoutParams2.bottomMargin = dp(7.33f);
@@ -17216,6 +17219,9 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             return true;
         }
         sendPhotoType = type;
+        if (sendPhotoType == SELECT_TYPE_GIF) {
+            sendPhotoType = 0;
+        }
         if (sendPhotoType == SELECT_TYPE_STICKER) {
             navigationBar.setBackgroundColor(0xFF000000);
         }
@@ -21196,13 +21202,14 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         } else {
             showVideoTimeline(true, true);
             videoAvatarTooltip.setVisibility(View.GONE);
-            cropItem.setVisibility(View.VISIBLE);
-            cropItem.setTag(1);
-            tuneItem.setVisibility(View.VISIBLE);
-            tuneItem.setTag(1);
-            paintItem.setVisibility(View.VISIBLE);
-            paintItem.setTag(1);
-            AndroidUtilities.updateViewVisibilityAnimated(muteButton, true, 1f, true);
+            cropItem.setVisibility(sendPhotoTypeIsGif ? View.GONE : View.VISIBLE);
+            cropItem.setTag(sendPhotoTypeIsGif ? null : 1);
+            tuneItem.setVisibility(sendPhotoTypeIsGif ? View.GONE : View.VISIBLE);
+            tuneItem.setTag(sendPhotoTypeIsGif ? null : 1);
+            paintItem.setVisibility(sendPhotoTypeIsGif ? View.GONE : View.VISIBLE);
+            paintItem.setTag(sendPhotoTypeIsGif ? null : 1);
+            AndroidUtilities.updateViewVisibilityAnimated(muteButton, !sendPhotoTypeIsGif, 1f, true);
+            AndroidUtilities.updateViewVisibilityAnimated(editCoverButton, !sendPhotoTypeIsGif && parentChatActivity != null && (UserObject.isUserSelf(parentChatActivity.getCurrentUser()) || ChatObject.isChannelAndNotMegaGroup(parentChatActivity.getCurrentChat())), 1f, true);
         }
     }
 
