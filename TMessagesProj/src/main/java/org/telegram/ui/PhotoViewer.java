@@ -15657,7 +15657,15 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         }
         view.setTag(show ? 1 : null);
     }
+    public void openKeyboard() {
+        if (captionEdit != null && captionEdit.getVisibility() == View.VISIBLE) {
+            captionEdit.editText.getEditText().setForceCursorEnd(true);
+            captionEdit.editText.getEditText().requestFocus();
+            captionEdit.editText.openKeyboard();
+        }
+    }
 
+    private Object currentPhotoObject;
     private ObjectAnimator videoTimelineAnimator;
     private void showVideoTimeline(boolean show, boolean animated) {
         if (!animated) {

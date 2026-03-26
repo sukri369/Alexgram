@@ -138,6 +138,7 @@ import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.ContactsController;
 import org.telegram.messenger.DialogObject;
 import org.telegram.messenger.Emoji;
+import org.telegram.messenger.FileLoader;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LiteMode;
 import org.telegram.messenger.LocaleController;
@@ -12385,7 +12386,7 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
 
             @Override
             public void onGifSelectedForAddCaption(View view, Object gif, String query, Object parent, boolean notify, int scheduleDate, int scheduleRepeatPeriod) {
-                PhotoViewer.getInstance().setParentActivity(parentFragment != null ? parentFragment : (BaseFragment) context, resourcesProvider);
+                PhotoViewer.getInstance().setParentActivity(parentFragment != null ? parentFragment : (BaseFragment) parentActivity, resourcesProvider);
                 File file = null;
                 if (gif instanceof TLRPC.Document) {
                     file = FileLoader.getInstance(currentAccount).getPathToAttach((TLRPC.Document) gif);
@@ -12453,13 +12454,13 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
                 onGifSelected(view, gif, query, parent, notify, scheduleDate, scheduleRepeatPeriod, null, false);
             }
 
-            public void onGifSelected(View view, Object gif, String query, Object parent, boolean notify, int scheduleDate, int scheduleRepeatPeriod, MediaController.PhotoEntry entry, boolean invertMedia) {
+            public void onGifSelected(View view, Object gif, String query, Object parent, boolean notify, int scheduleDate, int scheduleRepeatPeriod, MediaController.PhotoEntry entry) {
                 if (replyingQuote != null && parentFragment != null && replyingQuote.outdated) {
                     parentFragment.showQuoteMessageUpdate();
                     return;
                 }
                 if (isInScheduleMode() && scheduleDate == 0) {
-                    AlertsCreator.createScheduleDatePickerDialog(parentActivity, parentFragment.getDialogId(), (n, s, r) -> onGifSelected(view, gif, query, parent, n, s, r, entry, invertMedia), resourcesProvider);
+                    AlertsCreator.createScheduleDatePickerDialog(parentActivity, parentFragment.getDialogId(), (n, s, r) -> onGifSelected(view, gif, query, parent, n, s, r, entry), resourcesProvider);
                 } else {
                     if (slowModeTimer > 0 && !isInScheduleMode()) {
                         if (delegate != null) {
@@ -12490,10 +12491,10 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
                                     if (caption.startsWith("@gif")) {
                                         caption = "";
                                     }
-                                    SendMessagesHelper.getInstance(currentAccount).sendSticker(document, query, dialog_id, replyingMessageObject, getThreadMessage(), storyItem, replyingQuote, null, notify, scheduleDate, scheduleRepeatPeriod, false, parent, parentFragment != null ? parentFragment.quickReplyShortcut : null, parentFragment != null ? parentFragment.getQuickReplyId() : 0, stars, getSendMonoForumPeerId(), getSendMessageSuggestionParams(), caption, entities, invertMedia);
+                                    SendMessagesHelper.getInstance(currentAccount).sendSticker(document, query, dialog_id, replyingMessageObject, getThreadMessage(), storyItem, replyingQuote, null, notify, scheduleDate, scheduleRepeatPeriod, false, parent, parentFragment != null ? parentFragment.quickReplyShortcut : null, parentFragment != null ? parentFragment.getQuickReplyId() : 0, stars, getSendMonoForumPeerId(), getSendMessageSuggestionParams(), caption, entities);
                                     messageEditText.setText("");
                                 } else {
-                                    SendMessagesHelper.getInstance(currentAccount).sendSticker(document, query, dialog_id, entry != null ? entry.caption : null, videoEditedInfo, replyingMessageObject, getThreadMessage(), storyItem, replyingQuote, null, notify, scheduleDate, scheduleRepeatPeriod, false, parent, parentFragment != null ? parentFragment.quickReplyShortcut : null, parentFragment != null ? parentFragment.getQuickReplyId() : 0, stars, getSendMonoForumPeerId(), getSendMessageSuggestionParams(), invertMedia);
+                                    SendMessagesHelper.getInstance(currentAccount).sendSticker(document, query, dialog_id, replyingMessageObject, getThreadMessage(), storyItem, replyingQuote, videoEditedInfo, notify, scheduleDate, scheduleRepeatPeriod, false, parent, parentFragment != null ? parentFragment.quickReplyShortcut : null, parentFragment != null ? parentFragment.getQuickReplyId() : 0, stars, getSendMonoForumPeerId(), getSendMessageSuggestionParams(), entry != null ? entry.caption : null, entry != null ? entry.entities : null);
                                 }
                                 MediaDataController.getInstance(currentAccount).addRecentGif(document, (int) (System.currentTimeMillis() / 1000), true);
                                 if (DialogObject.isEncryptedDialog(dialog_id)) {

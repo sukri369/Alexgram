@@ -730,7 +730,7 @@ public class ContentPreviewViewer {
                     actions.add(3);
                 }
                 if (currentDocument != null && delegate.canAddCaption(currentDocument)) {
-                    items.add(LocaleController.getString(R.string.AddACaption));
+                    items.add(LocaleController.getString(R.string.AddCaption));
                     icons.add(R.drawable.outline_caption_24);
                     actions.add(11);
                 }
