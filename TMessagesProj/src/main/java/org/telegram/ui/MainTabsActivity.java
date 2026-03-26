@@ -652,7 +652,7 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
 
         ViewGroup.MarginLayoutParams lp;
         {
-            final int height = navigationBarHeight + updateLayoutHeight + dp(DialogsActivity.MAIN_TABS_HEIGHT_WITH_MARGINS);
+            final int height = navigationBarHeight + updateLayoutHeight + (NaConfig.INSTANCE.getHideTabs().Bool() ? 0 : dp(DialogsActivity.MAIN_TABS_HEIGHT_WITH_MARGINS));
             lp = (ViewGroup.MarginLayoutParams) fadeView.getLayoutParams();
             if (lp.height != height) {
                 lp.height = height;
@@ -803,6 +803,12 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
 
     private void checkUi_tabsPosition() {
         if (tabsView == null) return;
+        if (NaConfig.INSTANCE.getHideTabs().Bool()) {
+            tabsView.setVisibility(View.GONE);
+            return;
+        } else if (tabsView.getVisibility() == View.GONE) {
+            tabsView.setVisibility(View.VISIBLE);
+        }
         final boolean isUpdateLayoutVisible = updateLayoutWrapper.isUpdateLayoutVisible();
         final int updateLayoutHeight = isUpdateLayoutVisible ? dp(UpdateLayoutWrapper.HEIGHT) : 0;
         final int normalY = -(navigationBarHeight + updateLayoutHeight);

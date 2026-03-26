@@ -9,6 +9,7 @@
     <string name="EnableSaveEditsHistory">Save Edits History</string>
     <string name="EditsHistoryMenuText">Edits History</string>
     <string name="HideTabsOnScroll">Hide navigation bar on scroll</string>
+    <string name="HideTabs">Hide navigation bar</string>
     <string name="DeleteKeepLocally">Keep locally</string>
     <string name="ClearMessageDatabase">Clear Message Database</string>
     <string name="ClearMessageDatabaseNotification">Message database cleared.</string>

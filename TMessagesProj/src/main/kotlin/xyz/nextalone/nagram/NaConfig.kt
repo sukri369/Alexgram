@@ -105,6 +105,12 @@ object NaConfig {
             ConfigItem.configTypeBool,
             false
         )
+    val hideTabs =
+        addConfig(
+            "HideTabs",
+            ConfigItem.configTypeBool,
+            false
+        )
     val musicGraph =
         addConfig(
             "MusicGraph",
