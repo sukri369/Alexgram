@@ -143,20 +143,6 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
     }, null));
     private final AbstractConfigCell dividerMedia = cellGroup.appendCell(new ConfigCellDivider());
 
-    // Ghost Mode
-    private final AbstractConfigCell headerGhost = cellGroup.appendCell(new ConfigCellHeader(getString(R.string.GhostMode)));
-    private final AbstractConfigCell ghostModeRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getGhostMode(), getString(R.string.EnableGhostMode)));
-    private final AbstractConfigCell ghostModeInDrawerRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getGhostModeInDrawer()));
-    private final AbstractConfigCell ghostModeStatusIndicatorRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getGhostModeStatusIndicator()));
-    private final AbstractConfigCell dontSendReadMessagePacketsRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getDontSendReadMessagePackets()));
-    private final AbstractConfigCell dontReadStoriesPacketsRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getDontReadStoriesPackets()));
-    private final AbstractConfigCell dontSendOnlinePacketsRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getDontSendOnlinePackets()));
-    private final AbstractConfigCell dontSendUploadProgressRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getDontSendUploadProgress()));
-    private final AbstractConfigCell sendOfflinePacketAfterOnlineRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getSendOfflinePacketAfterOnline()));
-    private final AbstractConfigCell markReadAfterSendRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getMarkReadAfterSend(), getString(R.string.MarkReadAfterSendNotice)));
-    private final AbstractConfigCell silentMessageByDefaultRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getSilentMessageByDefault(), getString(R.string.SendWithoutSoundRowNotice)));
-    private final AbstractConfigCell dividerGhost = cellGroup.appendCell(new ConfigCellDivider());
-
     // Ayu
     private final AbstractConfigCell headerAyuMoments = cellGroup.appendCell(new ConfigCellHeader(getString(R.string.AyuMoments)));
     private final AbstractConfigCell GhostModeRow = cellGroup.appendCell(new ConfigCellText("GhostMode", () -> presentFragment(new GhostModeActivity())));
