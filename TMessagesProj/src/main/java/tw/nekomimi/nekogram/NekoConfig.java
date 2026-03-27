@@ -79,7 +79,7 @@ public class NekoConfig {
     public static ConfigItem useCustomEmoji = addConfig("useCustomEmoji", configTypeBool, false);
     public static ConfigItem repeatConfirm = addConfig("repeatConfirm", configTypeBool, true);
     public static ConfigItem disableInstantCamera = addConfig("DisableInstantCamera", configTypeBool, true);
-    public static ConfigItem showSeconds = addConfig("showSeconds", configTypeBool, false);
+    public static ConfigItem showSeconds = addConfig("showSeconds", configTypeBool, true);
 
     // From NekoConfig
     public static ConfigItem useIPv6 = addConfig("IPv6", configTypeBool, false);
@@ -93,7 +93,7 @@ public class NekoConfig {
     public static ConfigItem forceBlurInChat = addConfig("forceBlurInChat", configTypeBool, false);
     public static ConfigItem chatBlueAlphaValue = addConfig("forceBlurInChatAlphaValue", configTypeInt, 127);
     public static ConfigItem showAddToSavedMessages = addConfig("showAddToSavedMessages", configTypeBool, true);
-    public static ConfigItem showReport = addConfig("showReport", configTypeBool, false);
+    public static ConfigItem showReport = addConfig("showReport", configTypeBool, true);
     public static ConfigItem showViewHistory = addConfig("showViewHistory", configTypeBool, true);
     public static ConfigItem showAdminActions = addConfig("showAdminActions", configTypeBool, true);
     public static ConfigItem showChangePermissions = addConfig("showChangePermissions", configTypeBool, true);
@@ -101,15 +101,15 @@ public class NekoConfig {
     public static ConfigItem showMessageDetails = addConfig("showMessageDetails", configTypeBool, true);
     public static ConfigItem showTranslate = addConfig("showTranslate", configTypeBool, true);
     public static ConfigItem showRepeat = addConfig("showRepeat", configTypeBool, true);
-    public static ConfigItem showShareMessages = addConfig("showShareMessages", configTypeBool, false);
-    public static ConfigItem showMessageHide = addConfig("showMessageHide", configTypeBool, false);
+    public static ConfigItem showShareMessages = addConfig("showShareMessages", configTypeBool, true);
+    public static ConfigItem showMessageHide = addConfig("showMessageHide", configTypeBool, true);
 
     public static ConfigItem actionBarDecoration = addConfig("ActionBarDecoration", configTypeInt, 0);
     public static ConfigItem stickerSize = addConfig("stickerSize", configTypeFloat, 14.0f);
-    public static ConfigItem unlimitedFavedStickers = addConfig("UnlimitedFavoredStickers", configTypeBool, false);
-    public static ConfigItem unlimitedPinnedDialogs = addConfig("UnlimitedPinnedDialogs", configTypeBool, false);
+    public static ConfigItem unlimitedFavedStickers = addConfig("UnlimitedFavoredStickers", configTypeBool, true);
+    public static ConfigItem unlimitedPinnedDialogs = addConfig("UnlimitedPinnedDialogs", configTypeBool, true);
     public static ConfigItem disablePhotoSideAction = addConfig("DisablePhotoViewerSideAction", configTypeBool, false);
-    public static ConfigItem openArchiveOnPull = addConfig("OpenArchiveOnPull", configTypeBool, false);
+    public static ConfigItem openArchiveOnPull = addConfig("OpenArchiveOnPull", configTypeBool, true);
     public static ConfigItem hideKeyboardOnChatScroll = addConfig("HideKeyboardOnChatScroll", configTypeBool, false);
     public static ConfigItem useSystemEmoji = addConfig("EmojiUseDefault", configTypeBool, false);
     public static ConfigItem rearVideoMessages = addConfig("RearVideoMessages", configTypeBool, false);
@@ -163,7 +163,7 @@ public class NekoConfig {
     public static ConfigItem disableSwipeToNext = addConfig("disableSwipeToNextChannel", configTypeBool, false);
     public static ConfigItem disableChoosingSticker = addConfig("disableChoosingSticker", configTypeBool, false);
     public static ConfigItem hideGroupSticker = addConfig("hideGroupSticker", configTypeBool, false);
-    public static ConfigItem rememberAllBackMessages = addConfig("rememberAllBackMessages", configTypeBool, false);
+    public static ConfigItem rememberAllBackMessages = addConfig("rememberAllBackMessages", configTypeBool, true);
     public static ConfigItem hideSendAsChannel = addConfig("hideSendAsChannel", configTypeBool, false);
     public static ConfigItem showSpoilersDirectly = addConfig("showSpoilersDirectly", configTypeBool, false);
 
@@ -173,8 +173,8 @@ public class NekoConfig {
     public static ConfigItem disableAutoDownloadingArchive = addConfig("ArchiveFiles", configTypeBool, true);
 
     public static ConfigItem customAudioBitrate = addConfig("customAudioBitrate", configTypeInt, 32);
-    public static ConfigItem enhancedFileLoader = addConfig("enhancedFileLoader", configTypeBool, false);
-    public static ConfigItem uploadBoost = addConfig("uploadBoost", configTypeBool, false);
+    public static ConfigItem enhancedFileLoader = addConfig("enhancedFileLoader", configTypeBool, true);
+    public static ConfigItem uploadBoost = addConfig("uploadBoost", configTypeBool, true);
     public static ConfigItem useOSMDroidMap = addConfig("useOSMDroidMap", configTypeBool, false);
     public static ConfigItem mapDriftingFixForGoogleMaps = addConfig("mapDriftingFixForGoogleMaps", configTypeBool, true);
 

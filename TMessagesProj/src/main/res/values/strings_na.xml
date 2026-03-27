@@ -123,4 +123,17 @@
     <string name="StarFallInChat">Star Fall</string>
     <string name="ExportChat">Export Chat</string>
     <string name="ImportChat">Import Chat</string>
+
+    <!-- NagramX Settings Labels -->
+    <string name="liquidGlassUI">Liquid UI</string>
+    <string name="iosStyleInputBar">iOS Style Input Bar</string>
+    <string name="MusicGraph">Music Visualizer</string>
+    <string name="HideContacts">Hide Contacts</string>
+    <string name="enableAIReply">AI Reply</string>
+    <string name="enableSummarizeChat">Summarize Chat</string>
+    <string name="EnableLiveVideoWallpaper">Live Video Wallpaper</string>
+    <string name="FoldersAtBottom">Folders At Bottom</string>
+    <string name="AyuMoments">Ayu Moments</string>
+    <string name="PillChatTitle">Pill Chat Title</string>
+    <string name="PillChatTitleDescription">Wrap chat title and status in a pill-shaped background</string>
 </resources>
