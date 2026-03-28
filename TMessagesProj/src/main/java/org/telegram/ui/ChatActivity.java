@@ -39636,13 +39636,6 @@ public class ChatActivity extends BaseFragment implements
         actionBar.invalidate();
     }
 
-    @Override
-    public boolean isLightStatusBar() {
-        if (isPillChatHeaderEnabled()) {
-            return !Theme.isCurrentThemeDark();
-        }
-        return super.isLightStatusBar();
-    }
 
 	private boolean isSupportedTags() {
 		return getUserConfig().getClientUserId() == getDialogId() && !getMessagesController().getSavedMessagesController().unsupported && getUserConfig().isPremium();
@@ -44688,6 +44681,9 @@ public class ChatActivity extends BaseFragment implements
                 color = Theme.getColor(Theme.key_actionBarActionModeDefault, null, true);
             }
             return ColorUtils.calculateLuminance(color) > 0.7f;
+        }
+        if (isPillChatHeaderEnabled()) {
+            return !Theme.isCurrentThemeDark();
         }
         if (actionBar == null) {
             return !Theme.isCurrentThemeDark();
