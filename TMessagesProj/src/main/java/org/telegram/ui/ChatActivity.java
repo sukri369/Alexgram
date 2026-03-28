@@ -39569,7 +39569,7 @@ public class ChatActivity extends BaseFragment implements
                 FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) backButton.getLayoutParams();
                 lp.width = lp.height = AndroidUtilities.dp(54);
                 lp.leftMargin = 0;
-                lp.topMargin = (Build.VERSION.SDK_INT >= 21 && occupyStatusBar ? AndroidUtilities.statusBarHeight : 0);
+                lp.topMargin = (Build.VERSION.SDK_INT >= 21 && actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0);
                 backButton.setLayoutParams(lp);
             }
             return;
@@ -39603,7 +39603,7 @@ public class ChatActivity extends BaseFragment implements
             lp.leftMargin = AndroidUtilities.dp(8);
             lp.gravity = Gravity.LEFT | Gravity.TOP;
             int actionBarH = ActionBar.getCurrentActionBarHeight();
-            int statusBarH = (Build.VERSION.SDK_INT >= 21 && occupyStatusBar ? AndroidUtilities.statusBarHeight : 0);
+            int statusBarH = (Build.VERSION.SDK_INT >= 21 && actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0);
             lp.topMargin = (actionBarH - lp.height) / 2 + statusBarH;
             backButton.setLayoutParams(lp);
         }
