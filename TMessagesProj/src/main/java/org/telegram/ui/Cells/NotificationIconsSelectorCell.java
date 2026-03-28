@@ -47,9 +47,11 @@ public class NotificationIconsSelectorCell extends RecyclerListView implements N
     private List<IconItem> availableIcons = new ArrayList<>();
     private LinearLayoutManager linearLayoutManager;
     private int currentAccount;
+    private BaseFragment fragment;
 
     public NotificationIconsSelectorCell(Context context, BaseFragment fragment, int currentAccount) {
         super(context);
+        this.fragment = fragment;
         this.currentAccount = currentAccount;
         setPadding(0, AndroidUtilities.dp(12), 0, AndroidUtilities.dp(12));
 
@@ -120,6 +122,7 @@ public class NotificationIconsSelectorCell extends RecyclerListView implements N
 
             NaConfig.INSTANCE.getNotificationIcon().setConfigInt(position);
             getAdapter().notifyDataSetChanged();
+            BulletinFactory.of(fragment).createSimpleBulletin(R.drawable.msg_info, LocaleController.getString("RestartRequired", R.string.RestartRequired)).show();
         });
         updateIconsVisibility();
     }
