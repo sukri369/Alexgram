@@ -79,7 +79,7 @@ public class NotificationIconsSelectorCell extends RecyclerListView implements N
                 IconHolderView holderView = (IconHolderView) holder.itemView;
                 IconItem item = availableIcons.get(position);
                 holderView.bind(item, position);
-                holderView.iconView.setBackground(Theme.createSimpleSelectorRoundRectDrawable(AndroidUtilities.dp(AppIconsSelectorCell.ICONS_ROUND_RADIUS), Color.TRANSPARENT, Theme.getColor(Theme.key_listSelector), Color.BLACK));
+                holderView.setOnClickListener(v -> selectIcon(position));
             }
 
             @Override
@@ -101,36 +101,38 @@ public class NotificationIconsSelectorCell extends RecyclerListView implements N
                 }
             }
         });
-        setOnItemClickListener((view, position) -> {
-            IconItem item = availableIcons.get(position);
-            if (item.premium && !UserConfig.hasPremiumOnAccounts()) {
-                fragment.showDialog(new PremiumFeatureBottomSheet(fragment, PremiumPreviewFragment.PREMIUM_FEATURE_APPLICATION_ICONS, true));
-                return;
-            }
-
-            if (NaConfig.INSTANCE.getNotificationIcon().Int() == position) {
-                return;
-            }
-
-            LinearSmoothScroller smoothScroller = new LinearSmoothScroller(context) {
-                @Override
-                public int calculateDtToFit(int viewStart, int viewEnd, int boxStart, int boxEnd, int snapPreference) {
-                    return boxStart - viewStart + AndroidUtilities.dp(16);
-                }
-
-                @Override
-                protected float calculateSpeedPerPixel(DisplayMetrics displayMetrics) {
-                    return super.calculateSpeedPerPixel(displayMetrics) * 3f;
-                }
-            };
-            smoothScroller.setTargetPosition(position);
-            linearLayoutManager.startSmoothScroll(smoothScroller);
-
-            NaConfig.INSTANCE.getNotificationIcon().setConfigInt(position);
-            getAdapter().notifyDataSetChanged();
-            BulletinFactory.of(fragment).createSimpleBulletin(R.drawable.msg_info, LocaleController.getString("RestartRequired", R.string.RestartRequired)).show();
-        });
+        setOnItemClickListener((view, position) -> selectIcon(position));
         updateIconsVisibility();
+    }
+
+    private void selectIcon(int position) {
+        IconItem item = availableIcons.get(position);
+        if (item.premium && !UserConfig.hasPremiumOnAccounts()) {
+            fragment.showDialog(new PremiumFeatureBottomSheet(fragment, PremiumPreviewFragment.PREMIUM_FEATURE_APPLICATION_ICONS, true));
+            return;
+        }
+
+        if (NaConfig.INSTANCE.getNotificationIcon().Int() == position) {
+            return;
+        }
+
+        LinearSmoothScroller smoothScroller = new LinearSmoothScroller(getContext()) {
+            @Override
+            public int calculateDtToFit(int viewStart, int viewEnd, int boxStart, int boxEnd, int snapPreference) {
+                return boxStart - viewStart + AndroidUtilities.dp(16);
+            }
+
+            @Override
+            protected float calculateSpeedPerPixel(DisplayMetrics displayMetrics) {
+                return super.calculateSpeedPerPixel(displayMetrics) * 3f;
+            }
+        };
+        smoothScroller.setTargetPosition(position);
+        linearLayoutManager.startSmoothScroll(smoothScroller);
+
+        NaConfig.INSTANCE.getNotificationIcon().setConfigInt(position);
+        getAdapter().notifyDataSetChanged();
+        BulletinFactory.of(fragment).createSimpleBulletin(R.drawable.msg_info, LocaleController.getString("RestartRequired", R.string.RestartRequired)).show();
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -225,7 +227,8 @@ public class NotificationIconsSelectorCell extends RecyclerListView implements N
 
             outlinePaint.setStyle(Paint.Style.STROKE);
             outlinePaint.setStrokeWidth(Math.max(2, AndroidUtilities.dp(0.5f)));
-            fillPaint.setColor(Color.WHITE);
+
+            fillPaint.setColor(Theme.getColor(Theme.key_windowBackgroundWhite));
         }
 
         @Override
@@ -260,13 +263,7 @@ public class NotificationIconsSelectorCell extends RecyclerListView implements N
         }
 
         public void bind(IconItem item, int position) {
-            if (position == 0) {
-                iconView.setImageResource(R.drawable.icon_background_sa);
-                iconView.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(16), AndroidUtilities.dp(16), AndroidUtilities.dp(16));
-            } else {
-                iconView.setImageResource(item.resId);
-                iconView.setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8));
-            }
+            iconView.setImageResource(item.resId);
             iconView.setForeground(item.foregroundResId);
             titleView.setText(LocaleController.getString(item.titleResId));
             setSelected(NaConfig.INSTANCE.getNotificationIcon().Int() == position, false);
