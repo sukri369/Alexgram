@@ -35,6 +35,7 @@ import org.telegram.ui.Components.Easings;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.Premium.PremiumFeatureBottomSheet;
 import org.telegram.ui.Components.RecyclerListView;
+import org.telegram.ui.Components.RecyclerListView.SelectionAdapter;
 import org.telegram.ui.LauncherIconController;
 import org.telegram.ui.PremiumPreviewFragment;
 
@@ -61,7 +62,11 @@ public class NotificationIconsSelectorCell extends RecyclerListView implements N
         setLayoutAnimation(null);
 
         setLayoutManager(linearLayoutManager = new LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false));
-        setAdapter(new Adapter() {
+        setAdapter(new SelectionAdapter() {
+            @Override
+            public boolean isEnabled(ViewHolder holder) {
+                return true;
+            }
 
             @NonNull
             @Override
@@ -208,10 +213,12 @@ public class NotificationIconsSelectorCell extends RecyclerListView implements N
 
             iconView = new AppIconsSelectorCell.AdaptiveIconImageView(context);
             iconView.setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8));
+            iconView.setClickable(false);
             addView(iconView, LayoutHelper.createLinear(58, 58, Gravity.CENTER_HORIZONTAL));
 
             titleView = new TextView(context);
             titleView.setSingleLine();
+            titleView.setClickable(false);
             titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
             titleView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
             addView(titleView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 0, 4, 0, 0));
@@ -253,7 +260,13 @@ public class NotificationIconsSelectorCell extends RecyclerListView implements N
         }
 
         public void bind(IconItem item, int position) {
-            iconView.setImageResource(item.resId);
+            if (position == 0) {
+                iconView.setImageResource(R.drawable.icon_background_sa);
+                iconView.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(16), AndroidUtilities.dp(16), AndroidUtilities.dp(16));
+            } else {
+                iconView.setImageResource(item.resId);
+                iconView.setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8));
+            }
             iconView.setForeground(item.foregroundResId);
             titleView.setText(LocaleController.getString(item.titleResId));
             setSelected(NaConfig.INSTANCE.getNotificationIcon().Int() == position, false);

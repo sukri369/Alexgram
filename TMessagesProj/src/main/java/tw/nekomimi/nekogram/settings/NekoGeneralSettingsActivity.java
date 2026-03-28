@@ -188,12 +188,7 @@ public class NekoGeneralSettingsActivity extends BaseNekoXSettingsActivity {
             getString(R.string.Snowflakes),
             getString(R.string.DecorationNone),
     }, null));
-    private final AbstractConfigCell notificationIconRow = cellGroup.appendCell(new ConfigCellSelectBox(null, NaConfig.INSTANCE.getNotificationIcon(), new String[]{
-            getString(R.string.MapPreviewProviderTelegram),
-            getString(R.string.NagramX),
-            getString(R.string.Nagram),
-            getString(R.string.NekoX)
-    }, null));
+
     private final AbstractConfigCell tabletModeRow = cellGroup.appendCell(new ConfigCellSelectBox(null, NekoConfig.tabletMode, new String[]{
             getString(R.string.TabletModeDefault),
             getString(R.string.Enable),
@@ -369,8 +364,7 @@ public class NekoGeneralSettingsActivity extends BaseNekoXSettingsActivity {
         cellGroup.callBackSettingsChanged = (key, newValue) -> {
             if (key.equals(NekoConfig.actionBarDecoration.getKey())) {
                 tooltip.showWithAction(0, UndoView.ACTION_NEED_RESTART, null, null);
-            } else if (key.equals(NaConfig.INSTANCE.getNotificationIcon().getKey())) {
-                tooltip.showWithAction(0, UndoView.ACTION_NEED_RESTART, null, null);
+
             } else if (key.equals(NekoConfig.tabletMode.getKey())) {
                 tooltip.showWithAction(0, UndoView.ACTION_NEED_RESTART, null, null);
             } else if (key.equals(NekoConfig.disableSystemAccount.getKey())) {
