@@ -39552,6 +39552,8 @@ public class ChatActivity extends BaseFragment implements
         }
         boolean enabled = isPillChatHeaderEnabled();
         actionBar.setForceTransparentBackground(enabled);
+
+        View backButton = actionBar.getBackButton();
         if (!enabled) {
             actionBar.setCastShadows(true);
             actionBar.setShadowAlpha(255);
@@ -39561,8 +39563,18 @@ public class ChatActivity extends BaseFragment implements
             actionBar.setItemsColor(color, true);
             actionBar.setItemsBackgroundColor(getThemedColor(Theme.key_actionBarDefaultSelector), false);
             actionBar.setItemsBackgroundColor(getThemedColor(Theme.key_actionBarDefaultSelector), true);
+
+            if (backButton != null) {
+                backButton.setBackground(Theme.createSelectorDrawable(getThemedColor(Theme.key_actionBarDefaultSelector)));
+                FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) backButton.getLayoutParams();
+                lp.width = lp.height = AndroidUtilities.dp(54);
+                lp.leftMargin = 0;
+                lp.topMargin = (Build.VERSION.SDK_INT >= 21 && occupyStatusBar ? AndroidUtilities.statusBarHeight : 0);
+                backButton.setLayoutParams(lp);
+            }
             return;
         }
+
         actionBar.setBackground(null);
         actionBar.setBackgroundColor(Color.TRANSPARENT);
         actionBar.setCastShadows(false);
@@ -39577,6 +39589,25 @@ public class ChatActivity extends BaseFragment implements
         actionBar.setItemsColor(pillForegroundColor, true);
         actionBar.setItemsBackgroundColor(pillSelectorColor, false);
         actionBar.setItemsBackgroundColor(pillSelectorColor, true);
+
+        if (backButton != null) {
+            GradientDrawable backPillDrawable = new GradientDrawable();
+            backPillDrawable.setShape(GradientDrawable.RECTANGLE);
+            backPillDrawable.setCornerRadius(AndroidUtilities.dp(20));
+            int pillBgColor = getThemedColor(Theme.key_actionBarDefault);
+            backPillDrawable.setColor((pillBgColor & 0x00FFFFFF) | (darkTheme ? 0xB2000000 : 0xCF000000));
+            backButton.setBackground(backPillDrawable);
+
+            FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) backButton.getLayoutParams();
+            lp.width = lp.height = AndroidUtilities.dp(38);
+            lp.leftMargin = AndroidUtilities.dp(8);
+            lp.gravity = Gravity.LEFT | Gravity.TOP;
+            int actionBarH = ActionBar.getCurrentActionBarHeight();
+            int statusBarH = (Build.VERSION.SDK_INT >= 21 && occupyStatusBar ? AndroidUtilities.statusBarHeight : 0);
+            lp.topMargin = (actionBarH - lp.height) / 2 + statusBarH;
+            backButton.setLayoutParams(lp);
+        }
+
         if (avatarContainer != null) {
             avatarContainer.setOccupyStatusBar(!inPreviewMode);
             avatarContainer.setTitleColors(pillForegroundColor, pillSubtitleColor);
