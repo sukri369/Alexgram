@@ -47,6 +47,10 @@
     <string name="CustomArtworkApi">Custom Artwork API</string>
     <string name="CustomEditedMessage">Custom Edited Mark</string>
     <string name="NotificationIcon">Notification Icon</string>
+    <string name="NotificationIconDefault">Default</string>
+    <string name="NotificationIconNagramX">Alexgram X</string>
+    <string name="NotificationIconNagram">Alexgram</string>
+    <string name="NotificationIconNeko">Neko</string>
     <string name="Official">Official</string>
     <string name="Nagram" translatable="false">Alexgram</string>
     <string name="HalloWeen">HalloWeen</string>
@@ -126,7 +130,7 @@
 
     <!-- Alexgram Settings Labels -->
     <string name="liquidGlassUI">Liquid UI</string>
-    <string name="IosStyleInputBar">iOS Style Input Bar</string>
+    <string name="IosStyleInputBar">IOS Style Input Bar</string>
     <string name="MusicGraph">Music Visualizer</string>
     <string name="HideContacts">Hide Contacts</string>
     <string name="enableAIReply">AI Reply</string>
@@ -136,4 +140,5 @@
     <string name="AyuMoments">Ayu Moments</string>
     <string name="PillChatTitle">Pill Chat Title</string>
     <string name="PillChatTitleDescription">Wrap chat title and status in a pill-shaped background</string>
+    <string name="RestartRequired">Restart required to apply changes</string>
 </resources>

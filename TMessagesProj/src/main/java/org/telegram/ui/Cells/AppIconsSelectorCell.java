@@ -49,7 +49,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class AppIconsSelectorCell extends RecyclerListView implements NotificationCenter.NotificationCenterDelegate {
-    public final static float ICONS_ROUND_RADIUS = 18;
+    public final static float ICONS_ROUND_RADIUS = 22;
 
     private List<LauncherIconController.LauncherIcon> availableIcons = new ArrayList<>();
     private LinearLayoutManager linearLayoutManager;
@@ -310,7 +310,11 @@ public class AppIconsSelectorCell extends RecyclerListView implements Notificati
         }
 
         public void setIsNekoXIcon(boolean value) {
-            this.isNekoXIcon = value;
+            if (this.isNekoXIcon != value) {
+                this.isNekoXIcon = value;
+                updatePath();
+                invalidate();
+            }
         }
 
         @Override
@@ -335,6 +339,7 @@ public class AppIconsSelectorCell extends RecyclerListView implements Notificati
         public void draw(Canvas canvas) {
             canvas.save();
             canvas.clipPath(path);
+            canvas.save();
             if (!this.isNekoXIcon)
                 canvas.scale(1f + backgroundOuterPadding / (float) getWidth(), 1f + backgroundOuterPadding / (float) getHeight(), getWidth() / 2f, getHeight() / 2f);
             super.draw(canvas);
@@ -344,6 +349,7 @@ public class AppIconsSelectorCell extends RecyclerListView implements Notificati
                 foreground.setBounds(-outerPadding, -outerPadding, getWidth() + outerPadding, getHeight() + outerPadding);
                 foreground.draw(canvas);
             }
+            canvas.restore();
         }
 
         private void updatePath() {
