@@ -10783,6 +10783,9 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
             if (!reactionsContainerLayout.skipEnterAnimation && alpha == 1) {
                 reactionsContainerLayout.skipEnterAnimation = true;
             }
+        }
+    }
+
     private void showVoiceChangerAlert() {
         if (getParentActivity() == null) {
             return;
