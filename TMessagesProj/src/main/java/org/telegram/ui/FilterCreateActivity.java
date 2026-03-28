@@ -629,10 +629,21 @@ public class FilterCreateActivity extends BaseFragment {
     }
 
     public boolean hasAnimatedEmojis(CharSequence cs) {
-        if (!(cs instanceof Spanned)) return false;
-        Spanned spanned = (Spanned) cs;
-        AnimatedEmojiSpan[] spans = spanned.getSpans(0, spanned.length(), AnimatedEmojiSpan.class);
-        return spans != null && spans.length > 0;
+        if (cs instanceof Spanned) {
+            Spanned spanned = (Spanned) cs;
+            AnimatedEmojiSpan[] spans = spanned.getSpans(0, spanned.length(), AnimatedEmojiSpan.class);
+            if (spans != null && spans.length > 0) {
+                return true;
+            }
+        }
+        if (filter != null && filter.entities != null) {
+            for (int a = 0; a < filter.entities.size(); a++) {
+                if (filter.entities.get(a) instanceof TLRPC.TL_messageEntityCustomEmoji) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public UndoView getUndoView() {
@@ -922,6 +933,7 @@ public class FilterCreateActivity extends BaseFragment {
         if (showBulletinOnResume != null) {
             showBulletinOnResume.run();
         }
+        AnimatedEmojiDrawable.toggleAnimations(currentAccount, newFilterAnimations);
     }
 
     @Override
@@ -946,6 +958,7 @@ public class FilterCreateActivity extends BaseFragment {
         }
         newFilterName = newName;
         if (folderTagsHeader != null) {
+            folderTagsHeader.previewView.setEmojiCacheType(newFilterAnimations ? AnimatedEmojiDrawable.CACHE_TYPE_MESSAGES : AnimatedEmojiDrawable.CACHE_TYPE_NOANIMATE_FOLDER);
             folderTagsHeader.setPreviewText(AnimatedEmojiSpan.cloneSpans(newFilterName, -1, folderTagsHeader.getPreviewTextPaint().getFontMetricsInt(), .5f), false);
         }
         newFilterEmoticon = newEmoticon;
@@ -1503,12 +1516,19 @@ public class FilterCreateActivity extends BaseFragment {
                                 nameChangedManually = !TextUtils.isEmpty(newName);
                                 newFilterName = AnimatedEmojiSpan.onlyEmojiSpans(newName);
                                 if (folderTagsHeader != null) {
+                                    folderTagsHeader.previewView.setEmojiCacheType(newFilterAnimations ? AnimatedEmojiDrawable.CACHE_TYPE_MESSAGES : AnimatedEmojiDrawable.CACHE_TYPE_NOANIMATE_FOLDER);
                                     folderTagsHeader.setPreviewText(AnimatedEmojiSpan.cloneSpans(newFilterName, -1, folderTagsHeader.getPreviewTextPaint().getFontMetricsInt(), .5f), true);
                                 }
                                 if (nameHeaderCell != null) {
                                     nameHeaderCell.rightTextView.setText(hasAnimatedEmojis(newFilterName) ? LocaleController.getString(newFilterAnimations ? R.string.FilterNameAnimationsDisable : R.string.FilterNameAnimationsEnable) : null);
                                 }
-                                actionBar.setTitle(AnimatedEmojiSpan.cloneSpans(newFilterName, -1, actionBar.getTitleFontMetricsInt()));
+                                actionBar.setTitle(AnimatedEmojiSpan.cloneSpans(newFilterName, newFilterAnimations ? AnimatedEmojiDrawable.CACHE_TYPE_MESSAGES : AnimatedEmojiDrawable.CACHE_TYPE_NOANIMATE_FOLDER, actionBar.getTitleFontMetricsInt()));
+                                if (actionBar.getTitleTextView() != null) {
+                                    actionBar.getTitleTextView().invalidate();
+                                }
+                                if (actionBar.getTitleTextView2() != null) {
+                                    actionBar.getTitleTextView2().invalidate();
+                                }
                             }
                             checkDoneButton(true);
                         }
