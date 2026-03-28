@@ -159,6 +159,12 @@ object NaConfig {
             ConfigItem.configTypeBool,
             true
         )
+    val voiceChangerEffect =
+        addConfig(
+            "VoiceChangerEffect",
+            ConfigItem.configTypeInt,
+            0
+        )
     val showNoQuoteForward =
         addConfig(
             "NoQuoteForward",
@@ -1677,6 +1683,16 @@ object NaConfig {
         synchronized(sync) {
             return configs.map { it.key }.toSet()
         }
+    }
+
+    @JvmStatic
+    fun getVoiceChangerEffectValue(): Int {
+        return voiceChangerEffect.Int()
+    }
+
+    @JvmStatic
+    fun setVoiceChangerEffectValue(value: Int) {
+        voiceChangerEffect.setConfigInt(value)
     }
 
     init {

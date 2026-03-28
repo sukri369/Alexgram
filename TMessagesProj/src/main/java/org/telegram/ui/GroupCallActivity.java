@@ -243,6 +243,7 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
     private static final int noise_item = 11;
     private static final int comments_enable_item = 12;
     private static final int comments_disable_item = 13;
+    private static final int voice_changer_item = 14;
     private static final int user_item_gap = 0;
 
     private static final int MUTE_BUTTON_STATE_UNMUTE = 0;
@@ -400,6 +401,7 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
     private final ActionBarMenuSubItem leaveItem;
     private final ActionBarMenuSubItem enableComments;
     private final ActionBarMenuSubItem disableComments;
+    private final ActionBarMenuSubItem voiceChangerItem;
     private final LinearLayout menuItemsContainer;
     private final View soundItemDivider;
     private WatchersView watchersView;
@@ -1997,10 +1999,8 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
                     toggleAdminSpeak();
                 } else if (id == share_invite_link_item) {
                     getLink(false);
-                } else if (id == comments_enable_item) {
-                    setCommentsEnabled(true);
-                } else if (id == comments_disable_item) {
-                    setCommentsEnabled(false);
+                } else if (id == voice_changer_item) {
+                    showVoiceChangerAlert();
                 } else if (id == leave_item) {
                     AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
 
@@ -4883,6 +4883,7 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
         soundItem.setItemHeight(56);
 
         noiseItem = otherItem.addSubItem(noise_item, R.drawable.msg_noise_on, null, getString(R.string.VoipNoiseCancellation), true, false);
+        voiceChangerItem = otherItem.addSubItem(voice_changer_item, R.drawable.msg_calls, getString(R.string.VoiceChanger));
         noiseItem.setItemHeight(56);
 
         soundItemDivider = otherItem.addDivider(ColorUtils.blendARGB(Theme.getColor(Theme.key_voipgroup_actionBar), Color.BLACK, 0.3f));
@@ -4913,6 +4914,7 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
         permissionItem.setColors(Theme.getColor(Theme.key_voipgroup_actionBarItems), Theme.getColor(Theme.key_voipgroup_actionBarItems));
         recordItem.setColors(Theme.getColor(Theme.key_voipgroup_actionBarItems), Theme.getColor(Theme.key_voipgroup_actionBarItems));
         screenItem.setColors(Theme.getColor(Theme.key_voipgroup_actionBarItems), Theme.getColor(Theme.key_voipgroup_actionBarItems));
+        voiceChangerItem.setColors(Theme.getColor(Theme.key_voipgroup_actionBarItems), Theme.getColor(Theme.key_voipgroup_actionBarItems));
 
         if (call != null) {
             initCreatedGroupCall();
@@ -10781,6 +10783,10 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
             if (!reactionsContainerLayout.skipEnterAnimation && alpha == 1) {
                 reactionsContainerLayout.skipEnterAnimation = true;
             }
+    private void showVoiceChangerAlert() {
+        if (getParentActivity() == null) {
+            return;
         }
+        showDialog(new xyz.nextalone.nagram.ui.VoiceChangerSelectAlert(getParentActivity()));
     }
 }
