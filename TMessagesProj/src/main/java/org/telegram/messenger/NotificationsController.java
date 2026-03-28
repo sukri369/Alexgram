@@ -6200,11 +6200,20 @@ public class NotificationsController extends BaseController {
 
     private int getNotificationIconResId() {
         int notificationIconConfigValue = NaConfig.INSTANCE.getNotificationIcon().Int();
-        if (notificationIconConfigValue >= 1) {
-            int launcherIconIndex = notificationIconConfigValue - 1;
-            if (launcherIconIndex < org.telegram.ui.LauncherIconController.LauncherIcon.values().length) {
-                return org.telegram.ui.LauncherIconController.LauncherIcon.values()[launcherIconIndex].background;
+        java.util.ArrayList<org.telegram.ui.LauncherIconController.LauncherIcon> allowedIcons = new java.util.ArrayList<>();
+        for (org.telegram.ui.LauncherIconController.LauncherIcon icon : org.telegram.ui.LauncherIconController.LauncherIcon.values()) {
+            if (icon == org.telegram.ui.LauncherIconController.LauncherIcon.TELEGRAM ||
+                icon == org.telegram.ui.LauncherIconController.LauncherIcon.VINTAGE ||
+                icon == org.telegram.ui.LauncherIconController.LauncherIcon.AQUA ||
+                icon == org.telegram.ui.LauncherIconController.LauncherIcon.PREMIUM ||
+                icon == org.telegram.ui.LauncherIconController.LauncherIcon.TURBO ||
+                icon == org.telegram.ui.LauncherIconController.LauncherIcon.NOX) {
+                continue;
             }
+            allowedIcons.add(icon);
+        }
+        if (notificationIconConfigValue >= 0 && notificationIconConfigValue < allowedIcons.size()) {
+            return allowedIcons.get(notificationIconConfigValue).background;
         }
         return R.drawable.notification;
     }

@@ -130,17 +130,26 @@ public class NotificationIconsSelectorCell extends RecyclerListView implements N
         smoothScroller.setTargetPosition(position);
         linearLayoutManager.startSmoothScroll(smoothScroller);
 
+        int oldPosition = NaConfig.INSTANCE.getNotificationIcon().Int();
         NaConfig.INSTANCE.getNotificationIcon().setConfigInt(position);
-        getAdapter().notifyDataSetChanged();
+        getAdapter().notifyItemChanged(oldPosition);
+        getAdapter().notifyItemChanged(position);
         BulletinFactory.of(fragment).createSimpleBulletin(R.drawable.msg_info, LocaleController.getString("RestartRequired", R.string.RestartRequired)).show();
     }
 
     @SuppressLint("NotifyDataSetChanged")
     private void updateIconsVisibility() {
         availableIcons.clear();
-        availableIcons.add(new IconItem(R.drawable.icon_background_sa, R.drawable.notification, R.string.NotificationIconDefault));
 
         for (LauncherIconController.LauncherIcon icon : LauncherIconController.LauncherIcon.values()) {
+            if (icon == LauncherIconController.LauncherIcon.TELEGRAM ||
+                icon == LauncherIconController.LauncherIcon.VINTAGE ||
+                icon == LauncherIconController.LauncherIcon.AQUA ||
+                icon == LauncherIconController.LauncherIcon.PREMIUM ||
+                icon == LauncherIconController.LauncherIcon.TURBO ||
+                icon == LauncherIconController.LauncherIcon.NOX) {
+                continue;
+            }
             availableIcons.add(new IconItem(icon));
         }
 
