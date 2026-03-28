@@ -39594,13 +39594,15 @@ public class ChatActivity extends BaseFragment implements
             GradientDrawable backPillDrawable = new GradientDrawable();
             backPillDrawable.setShape(GradientDrawable.OVAL);
             int pillBgColor = getThemedColor(Theme.key_actionBarDefault);
-            backPillDrawable.setColor((pillBgColor & 0x00FFFFFF) | 0xFF000000);
+            boolean darkButton = AndroidUtilities.computePerceivedBrightness(pillBgColor) < 0.721f;
+            backPillDrawable.setColor((pillBgColor & 0x00FFFFFF) | (darkButton ? 0xB2000000 : 0xCF000000));
+            backPillDrawable.setStroke(AndroidUtilities.dp(1), darkButton ? 0x20FFFFFF : 0x14000000);
             backButton.setBackground(backPillDrawable);
             backButton.setPadding(0, 0, 0, 0);
 
             FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) backButton.getLayoutParams();
-            lp.width = lp.height = AndroidUtilities.dp(30);
-            lp.leftMargin = AndroidUtilities.dp(16);
+            lp.width = lp.height = AndroidUtilities.dp(26);
+            lp.leftMargin = AndroidUtilities.dp(18);
             lp.gravity = Gravity.LEFT | Gravity.TOP;
             int actionBarH = ActionBar.getCurrentActionBarHeight();
             int statusBarH = (Build.VERSION.SDK_INT >= 21 && actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0);
