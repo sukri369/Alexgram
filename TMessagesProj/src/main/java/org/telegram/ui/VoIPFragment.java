@@ -185,6 +185,7 @@ public class VoIPFragment implements
     private ImageView backIcon;
     private ImageView addIcon;
     private ImageView voiceChangerIcon;
+    private View voiceChangerDot;
     private int speakerPhoneIconResId;
     private ImageView speakerPhoneIcon;
     private int selectedRating;
@@ -553,6 +554,7 @@ public class VoIPFragment implements
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.emojiLoaded);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.closeInCallActivity);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.nearEarEvent);
+        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.voiceChangerUpdated);
     }
 
     private void destroy() {
@@ -564,6 +566,7 @@ public class VoIPFragment implements
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.emojiLoaded);
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.closeInCallActivity);
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.nearEarEvent);
+        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.voiceChangerUpdated);
         if (pipSource != null) {
             pipSource.destroy();
             pipSource = null;
@@ -606,6 +609,8 @@ public class VoIPFragment implements
             if (isNearEar) {
                 callingUserPhotoViewMini.setMute(true, true);
             }
+        } else if (id == NotificationCenter.voiceChangerUpdated) {
+            updateVoiceChangerStatus();
         }
     }
 
@@ -1246,6 +1251,7 @@ public class VoIPFragment implements
                 });
             addPeopleSheet.show();
         });
+        FrameLayout voiceChangerContainer = new FrameLayout(context);
         voiceChangerIcon = new ImageView(context);
         voiceChangerIcon.setBackground(Theme.createSelectorDrawable(ColorUtils.setAlphaComponent(Color.WHITE, (int) (255 * 0.3f))));
         voiceChangerIcon.setImageResource(R.drawable.msg_calls);
@@ -1254,8 +1260,15 @@ public class VoIPFragment implements
             if (activity == null) return;
             new xyz.nextalone.nagram.ui.VoiceChangerSelectAlert(activity).show();
         });
-        frameLayout.addView(voiceChangerIcon, LayoutHelper.createFrame(56, 56, Gravity.TOP | Gravity.RIGHT, 0, 112, 0, 0));
+        voiceChangerContainer.addView(voiceChangerIcon, LayoutHelper.createFrame(56, 56, Gravity.CENTER));
+
+        voiceChangerDot = new View(context);
+        voiceChangerDot.setBackground(Theme.createCircleDrawable(dp(5), 0xff4caf50));
+        voiceChangerContainer.addView(voiceChangerDot, LayoutHelper.createFrame(10, 10, Gravity.TOP | Gravity.RIGHT, 0, 8, 8, 0));
+        
+        frameLayout.addView(voiceChangerContainer, LayoutHelper.createFrame(56, 56, Gravity.TOP | Gravity.RIGHT, 0, 112, 0, 0));
         ScaleStateListAnimator.apply(voiceChangerIcon);
+        updateVoiceChangerStatus();
 
         if (windowView.isLockOnScreen()) {
             backIcon.setVisibility(View.GONE);
@@ -3319,6 +3332,11 @@ public class VoIPFragment implements
             canvas.translate(avatarsDrawable.getMaxX() + dp(7), 0);
             text.draw(canvas, 0, height / 2.0f, 0xFFFFFFFF, 1.0f);
             canvas.restore();
+        }
+    }
+    private void updateVoiceChangerStatus() {
+        if (voiceChangerDot != null) {
+            voiceChangerDot.setVisibility(xyz.nextalone.nagram.NaConfig.INSTANCE.getVoiceChangerEffectValue() != 0 ? View.VISIBLE : View.GONE);
         }
     }
 }

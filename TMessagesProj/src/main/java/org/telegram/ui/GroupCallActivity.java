@@ -1185,6 +1185,7 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
         accountInstance.getNotificationCenter().removeObserver(this, NotificationCenter.conferenceEmojiUpdated);
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.webRtcMicAmplitudeEvent);
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.didEndCall);
+        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.voiceChangerUpdated);
         super.dismiss();
     }
 
@@ -1443,8 +1444,9 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
             }
             updateItems();
         } else if (id == NotificationCenter.conferenceEmojiUpdated) {
-            VoIPService voip = VoIPService.getSharedInstance();
-            encryptionDrawable.setEmojis(voip != null && voip.conference != null ? voip.conference.getEmojis() : null);
+            updateItems();
+        } else if (id == NotificationCenter.voiceChangerUpdated) {
+            updateItems();
         }
     }
 
@@ -1683,6 +1685,14 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
         }
         noiseItem.setIcon(SharedConfig.noiseSupression ? R.drawable.msg_noise_on : R.drawable.msg_noise_off);
         noiseItem.setSubtext(SharedConfig.noiseSupression ? getString(R.string.VoipNoiseCancellationEnabled) : getString(R.string.VoipNoiseCancellationDisabled));
+
+        if (recordItem != null) {
+            recordItem.setIcon(recordCallDrawable.isRecording() ? R.drawable.msg_calls_recording_on : R.drawable.msg_calls_recording_off);
+        }
+
+        if (voiceChangerItem != null) {
+            voiceChangerItem.setRightStatus(xyz.nextalone.nagram.NaConfig.INSTANCE.getVoiceChangerEffectValue() != 0);
+        }
 
         if (canManageCall()) {
             leaveItem.setVisibility(View.VISIBLE);
@@ -2452,6 +2462,7 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
         accountInstance.getNotificationCenter().addObserver(this, NotificationCenter.conferenceEmojiUpdated);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.webRtcMicAmplitudeEvent);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.didEndCall);
+        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.voiceChangerUpdated);
 
         shadowDrawable = context.getResources().getDrawable(R.drawable.sheet_shadow_round).mutate();
 

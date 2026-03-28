@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.LocaleController;
+import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.ui.ActionBar.BottomSheet;
 import org.telegram.ui.ActionBar.Theme;
@@ -82,6 +83,7 @@ public class VoiceChangerSelectAlert extends BottomSheet {
         listView.setVerticalScrollBarEnabled(false);
         listView.setOnItemClickListener((view, position) -> {
             NaConfig.setVoiceChangerEffectValue(effects[position]);
+            NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.voiceChangerUpdated);
             listView.getAdapter().notifyDataSetChanged();
             AndroidUtilities.runOnUIThread(this::dismiss, 150);
         });
