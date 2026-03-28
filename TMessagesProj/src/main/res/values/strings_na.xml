@@ -130,7 +130,7 @@
 
     <!-- Alexgram Settings Labels -->
     <string name="liquidGlassUI">Liquid UI</string>
-    <string name="IosStyleInputBar">iOS Style Input Bar</string>
+    <string name="IosStyleInputBar">IOS Style Input Bar</string>
     <string name="MusicGraph">Music Visualizer</string>
     <string name="HideContacts">Hide Contacts</string>
     <string name="enableAIReply">AI Reply</string>

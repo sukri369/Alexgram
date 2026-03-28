@@ -119,15 +119,7 @@ public class NotificationIconsSelectorCell extends RecyclerListView implements N
             linearLayoutManager.startSmoothScroll(smoothScroller);
 
             NaConfig.INSTANCE.getNotificationIcon().setConfigInt(position);
-            
-            for (int i = 0; i < getChildCount(); i++) {
-                View child = getChildAt(i);
-                if (child instanceof IconHolderView) {
-                    IconHolderView otherView = (IconHolderView) child;
-                    int p = getChildAdapterPosition(otherView);
-                    otherView.setSelected(p == position, true);
-                }
-            }
+            getAdapter().notifyDataSetChanged();
         });
         updateIconsVisibility();
     }
@@ -135,10 +127,7 @@ public class NotificationIconsSelectorCell extends RecyclerListView implements N
     @SuppressLint("NotifyDataSetChanged")
     private void updateIconsVisibility() {
         availableIcons.clear();
-        availableIcons.add(new IconItem(R.drawable.notification, R.string.NotificationIconDefault));
-        availableIcons.add(new IconItem(R.drawable.nagramx_notification, R.string.NotificationIconNagramX));
-        availableIcons.add(new IconItem(R.drawable.nagram_notification, R.string.NotificationIconNagram));
-        availableIcons.add(new IconItem(R.drawable.neko_notification, R.string.NotificationIconNeko));
+        availableIcons.add(new IconItem(R.drawable.icon_background_sa, R.drawable.notification, R.string.NotificationIconDefault));
 
         for (LauncherIconController.LauncherIcon icon : LauncherIconController.LauncherIcon.values()) {
             availableIcons.add(new IconItem(icon));
@@ -179,19 +168,21 @@ public class NotificationIconsSelectorCell extends RecyclerListView implements N
             updateIconsVisibility();
         }
     }
-
     private static class IconItem {
         int resId;
+        int foregroundResId;
         int titleResId;
         boolean premium;
 
-        IconItem(int resId, int titleResId) {
+        IconItem(int resId, int foregroundResId, int titleResId) {
             this.resId = resId;
+            this.foregroundResId = foregroundResId;
             this.titleResId = titleResId;
         }
 
         IconItem(LauncherIconController.LauncherIcon icon) {
             this.resId = icon.background;
+            this.foregroundResId = icon.foreground;
             this.titleResId = icon.title;
             this.premium = icon.premium;
         }
@@ -259,6 +250,7 @@ public class NotificationIconsSelectorCell extends RecyclerListView implements N
 
         public void bind(IconItem item, int position) {
             iconView.setImageResource(item.resId);
+            iconView.setForeground(item.foregroundResId);
             titleView.setText(LocaleController.getString(item.titleResId));
             setSelected(NaConfig.INSTANCE.getNotificationIcon().Int() == position, false);
         }
