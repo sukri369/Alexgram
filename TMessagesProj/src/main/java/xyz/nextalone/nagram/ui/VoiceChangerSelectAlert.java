@@ -1,7 +1,6 @@
 package xyz.nextalone.nagram.ui;
 
 import android.animation.AnimatorSet;
-import android.animation.ObjectAdapter;
 import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
