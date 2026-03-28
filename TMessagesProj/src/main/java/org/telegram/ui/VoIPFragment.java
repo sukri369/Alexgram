@@ -184,7 +184,7 @@ public class VoIPFragment implements
     private ConferenceParticipantsView participantsView;
     private ImageView backIcon;
     private ImageView addIcon;
-    private ImageView voiceChangerIcon;
+    private View voiceChangerIcon;
     private View voiceChangerDot;
     private int speakerPhoneIconResId;
     private ImageView speakerPhoneIcon;
@@ -1252,22 +1252,23 @@ public class VoIPFragment implements
             addPeopleSheet.show();
         });
         FrameLayout voiceChangerContainer = new FrameLayout(context);
-        voiceChangerIcon = new ImageView(context);
-        voiceChangerIcon.setBackground(Theme.createSelectorDrawable(ColorUtils.setAlphaComponent(Color.WHITE, (int) (255 * 0.3f))));
-        voiceChangerIcon.setImageResource(R.drawable.msg_calls);
-        voiceChangerIcon.setPadding(dp(16), dp(16), dp(16), dp(16));
-        voiceChangerIcon.setOnClickListener(v -> {
+        voiceChangerIcon = voiceChangerContainer;
+        ImageView voiceChangerImageView = new ImageView(context);
+        voiceChangerImageView.setBackground(Theme.createSelectorDrawable(ColorUtils.setAlphaComponent(Color.WHITE, (int) (255 * 0.3f))));
+        voiceChangerImageView.setImageResource(R.drawable.msg_calls);
+        voiceChangerImageView.setPadding(dp(16), dp(16), dp(16), dp(16));
+        voiceChangerImageView.setOnClickListener(v -> {
             if (activity == null) return;
             new xyz.nextalone.nagram.ui.VoiceChangerSelectAlert(activity).show();
         });
-        voiceChangerContainer.addView(voiceChangerIcon, LayoutHelper.createFrame(56, 56, Gravity.CENTER));
+        voiceChangerContainer.addView(voiceChangerImageView, LayoutHelper.createFrame(56, 56, Gravity.CENTER));
 
         voiceChangerDot = new View(context);
         voiceChangerDot.setBackground(Theme.createCircleDrawable(dp(5), 0xff4caf50));
         voiceChangerContainer.addView(voiceChangerDot, LayoutHelper.createFrame(10, 10, Gravity.TOP | Gravity.RIGHT, 0, 8, 8, 0));
         
         frameLayout.addView(voiceChangerContainer, LayoutHelper.createFrame(56, 56, Gravity.TOP | Gravity.RIGHT, 0, 112, 0, 0));
-        ScaleStateListAnimator.apply(voiceChangerIcon);
+        ScaleStateListAnimator.apply(voiceChangerImageView);
         updateVoiceChangerStatus();
 
         if (windowView.isLockOnScreen()) {

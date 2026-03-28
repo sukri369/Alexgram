@@ -165,6 +165,12 @@ object NaConfig {
             ConfigItem.configTypeInt,
             0
         )
+    val showVoiceChangerInChatMenu =
+        addConfig(
+            "VoiceChangerInChatMenu",
+            ConfigItem.configTypeBool,
+            true
+        )
     val showNoQuoteForward =
         addConfig(
             "NoQuoteForward",
