@@ -39594,15 +39594,14 @@ public class ChatActivity extends BaseFragment implements
             GradientDrawable backPillDrawable = new GradientDrawable();
             backPillDrawable.setShape(GradientDrawable.OVAL);
             int pillBgColor = getThemedColor(Theme.key_actionBarDefault);
-            boolean darkButton = AndroidUtilities.computePerceivedBrightness(pillBgColor) < 0.721f;
-            backPillDrawable.setColor((pillBgColor & 0x00FFFFFF) | (darkButton ? 0xB2000000 : 0xCF000000));
-            backPillDrawable.setStroke(AndroidUtilities.dp(1), darkButton ? 0x20FFFFFF : 0x14000000);
+            backPillDrawable.setColor(pillBgColor | 0xFF000000);
+            backPillDrawable.setStroke(AndroidUtilities.dp(1), darkTheme ? 0x20FFFFFF : 0x14000000);
             backButton.setBackground(backPillDrawable);
-            backButton.setPadding(0, 0, 0, 0);
+            backButton.setPadding(AndroidUtilities.dp(4), AndroidUtilities.dp(4), AndroidUtilities.dp(4), AndroidUtilities.dp(4));
 
             FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) backButton.getLayoutParams();
-            lp.width = lp.height = AndroidUtilities.dp(26);
-            lp.leftMargin = AndroidUtilities.dp(18);
+            lp.width = lp.height = AndroidUtilities.dp(32);
+            lp.leftMargin = AndroidUtilities.dp(16);
             lp.gravity = Gravity.LEFT | Gravity.TOP;
             int actionBarH = ActionBar.getCurrentActionBarHeight();
             int statusBarH = (Build.VERSION.SDK_INT >= 21 && actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0);
@@ -39635,6 +39634,14 @@ public class ChatActivity extends BaseFragment implements
             getParentActivity().getWindow().setStatusBarColor(Color.TRANSPARENT);
         }
         actionBar.invalidate();
+    }
+
+    @Override
+    public boolean isLightStatusBar() {
+        if (isPillChatHeaderEnabled()) {
+            return !Theme.isCurrentThemeDark();
+        }
+        return super.isLightStatusBar();
     }
 
 	private boolean isSupportedTags() {
