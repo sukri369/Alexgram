@@ -3264,8 +3264,8 @@ public class MessagesStorage extends BaseController {
                         if (!nameEqual || !entitiesEqual) {
                             boolean protectEntities = false;
                             if (nameEqual && !filter.entities.isEmpty() && newFilter.title.entities.isEmpty()) {
-                                for (int a = 0; a < filter.entities.size(); a++) {
-                                    if (filter.entities.get(a) instanceof TLRPC.TL_messageEntityCustomEmoji) {
+                                for (int i = 0; i < filter.entities.size(); i++) {
+                                    if (filter.entities.get(i) instanceof TLRPC.TL_messageEntityCustomEmoji) {
                                         protectEntities = true;
                                         break;
                                     }
