@@ -3259,18 +3259,39 @@ public class MessagesStorage extends BaseController {
                         filtersToDelete.remove(newFilter.id);
                         boolean changed = false;
                         boolean unreadChanged = false;
-                        if (!TextUtils.equals(filter.name, newFilter.title.text) || !MediaDataController.entitiesEqual(filter.entities, newFilter.title.entities)) {
-                            changed = true;
-                            filter.name = newFilter.title.text;
-                            filter.entities = newFilter.title.entities;
+                        boolean nameEqual = TextUtils.equals(filter.name, newFilter.title.text);
+                        boolean entitiesEqual = MediaDataController.entitiesEqual(filter.entities, newFilter.title.entities);
+                        if (!nameEqual || !entitiesEqual) {
+                            boolean protectEntities = false;
+                            if (nameEqual && !filter.entities.isEmpty() && newFilter.title.entities.isEmpty()) {
+                                for (int i = 0; i < filter.entities.size(); i++) {
+                                    if (filter.entities.get(i) instanceof TLRPC.TL_messageEntityCustomEmoji) {
+                                        protectEntities = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (!protectEntities) {
+                                changed = true;
+                                filter.name = newFilter.title.text;
+                                filter.entities = newFilter.title.entities;
+                            }
                         }
                         if (filter.title_noanimate != newFilter.title_noanimate) {
                             changed = true;
-                            filter.title_noanimate= newFilter.title_noanimate;
+                            filter.title_noanimate = newFilter.title_noanimate;
                         }
                         if (!TextUtils.equals(filter.emoticon, newFilter.emoticon)) {
-                            changed = true;
-                            filter.emoticon = newFilter.emoticon;
+                            boolean protectEmoticon = false;
+                            try {
+                                if (filter.emoticon != null && !TextUtils.isEmpty(filter.emoticon) && Character.isDigit(filter.emoticon.charAt(0)) && (newFilter.emoticon == null || TextUtils.isEmpty(newFilter.emoticon))) {
+                                    protectEmoticon = true;
+                                }
+                            } catch (Exception ignore) {}
+                            if (!protectEmoticon) {
+                                changed = true;
+                                filter.emoticon = newFilter.emoticon;
+                            }
                         }
                         final int color = (newFilter.flags & 134217728) != 0 ? newFilter.color : -1;
                         if (filter.color != color) {
