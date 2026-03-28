@@ -39592,15 +39592,15 @@ public class ChatActivity extends BaseFragment implements
 
         if (backButton != null) {
             GradientDrawable backPillDrawable = new GradientDrawable();
-            backPillDrawable.setShape(GradientDrawable.RECTANGLE);
-            backPillDrawable.setCornerRadius(AndroidUtilities.dp(16));
+            backPillDrawable.setShape(GradientDrawable.OVAL);
             int pillBgColor = getThemedColor(Theme.key_actionBarDefault);
-            backPillDrawable.setColor((pillBgColor & 0x00FFFFFF) | (darkTheme ? 0xE6000000 : 0xF2000000));
+            backPillDrawable.setColor((pillBgColor & 0x00FFFFFF) | 0xFF000000);
             backButton.setBackground(backPillDrawable);
+            backButton.setPadding(0, 0, 0, 0);
 
             FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) backButton.getLayoutParams();
-            lp.width = lp.height = AndroidUtilities.dp(32);
-            lp.leftMargin = AndroidUtilities.dp(12);
+            lp.width = lp.height = AndroidUtilities.dp(30);
+            lp.leftMargin = AndroidUtilities.dp(16);
             lp.gravity = Gravity.LEFT | Gravity.TOP;
             int actionBarH = ActionBar.getCurrentActionBarHeight();
             int statusBarH = (Build.VERSION.SDK_INT >= 21 && actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0);
@@ -44775,6 +44775,23 @@ public class ChatActivity extends BaseFragment implements
             msgText.setLineSpacing(AndroidUtilities.dp(2), 1f);
             bubble.addView(msgText, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER, 0, 0, 0, 10));
 
+            // Buttons Row
+            LinearLayout buttonsRow = new LinearLayout(ctx);
+            buttonsRow.setOrientation(LinearLayout.HORIZONTAL);
+
+            // Skip button
+            TextView skipBtn = new TextView(ctx);
+            skipBtn.setText("Skip");
+            skipBtn.setTextColor(0xFFFFFFFF);
+            skipBtn.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
+            skipBtn.setTypeface(AndroidUtilities.bold());
+            skipBtn.setGravity(Gravity.CENTER);
+            skipBtn.setPadding(AndroidUtilities.dp(20), AndroidUtilities.dp(8), AndroidUtilities.dp(20), AndroidUtilities.dp(8));
+            GradientDrawable skipBg = new GradientDrawable();
+            skipBg.setColor(0x20FFFFFF);
+            skipBg.setCornerRadius(AndroidUtilities.dp(20));
+            skipBtn.setBackground(skipBg);
+
             // Turn off button
             TextView turnOffBtn = new TextView(ctx);
             turnOffBtn.setText("Turn off");
@@ -44782,13 +44799,16 @@ public class ChatActivity extends BaseFragment implements
             turnOffBtn.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
             turnOffBtn.setTypeface(AndroidUtilities.bold());
             turnOffBtn.setGravity(Gravity.CENTER);
-            turnOffBtn.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(8), AndroidUtilities.dp(24), AndroidUtilities.dp(8));
+            turnOffBtn.setPadding(AndroidUtilities.dp(20), AndroidUtilities.dp(8), AndroidUtilities.dp(20), AndroidUtilities.dp(8));
             GradientDrawable btnBg = new GradientDrawable();
             btnBg.setColor(0xFFFFFFFF);
             btnBg.setCornerRadius(AndroidUtilities.dp(20));
             turnOffBtn.setBackground(btnBg);
 
-            bubble.addView(turnOffBtn, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER));
+            buttonsRow.addView(skipBtn, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f, 0, 0, 8, 0));
+            buttonsRow.addView(turnOffBtn, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.5f, 0, 0, 0, 0));
+
+            bubble.addView(buttonsRow, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER));
 
             // === Wrapper holding arrow + bubble ===
             LinearLayout wrapper = new LinearLayout(ctx);
@@ -44849,7 +44869,12 @@ public class ChatActivity extends BaseFragment implements
                         .start();
             };
 
-            // Turn off button click
+            // Buttons click handling
+            skipBtn.setOnClickListener(v -> {
+                AndroidUtilities.cancelRunOnUIThread(dismissRunnable[0]);
+                dismissRunnable[0].run();
+            });
+
             turnOffBtn.setOnClickListener(v -> {
                 AndroidUtilities.cancelRunOnUIThread(dismissRunnable[0]);
                 if (wrapper.getParent() != null) {
