@@ -27,6 +27,7 @@ import okhttp3.Response;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import xyz.nextalone.nagram.NaConfig;
+import xyz.nextalone.nagram.ui.VoiceChangerSelectAlert;
 import static org.telegram.messenger.AndroidUtilities.dp;
 import static org.telegram.messenger.AndroidUtilities.lerp;
 import static org.telegram.messenger.LocaleController.formatPluralStringComma;
@@ -479,6 +480,7 @@ public class ChatActivity extends BaseFragment implements
     private final static int nkbtn_bookmarks_manager = 2040;
     private final static int nkbtn_clearDeleted = 2100;
     private final static int nkbtn_viewDeleted = 2101;
+    private final static int nkbtn_voice_changer = 2102;
 
     public int shareAlertDebugMode = DEBUG_SHARE_ALERT_MODE_NORMAL;
     public boolean shareAlertDebugTopicsSlowMotion;
@@ -4958,6 +4960,10 @@ public class ChatActivity extends BaseFragment implements
             // Chat Privacy Blur
             headerItem.lazilyAddSubItem(chat_privacy_blur, R.drawable.magic_stick_solar, "Chat Blur");
             headerItem.lazilyAddSubItem(send_video_as_round, R.drawable.msg_video, "Send Video as Round");
+            
+            if (NaConfig.INSTANCE.getShowVoiceChangerInChatMenu().Bool()) {
+                headerItem.lazilyAddSubItem(nkbtn_voice_changer, R.drawable.msg_calls, "Voice Changer");
+            }
             
             if (currentUser != null && currentUser.self && getDialogId() != UserObject.VERIFY) {
                 headerItem.lazilyAddSubItem(add_shortcut, R.drawable.msg_home, LocaleController.getString(R.string.AddShortcut));
@@ -45060,6 +45066,8 @@ public class ChatActivity extends BaseFragment implements
             presentFragment(new ChannelAdminLogActivity(currentChat));
         } else if (id == shortcuts_statistics) {
             presentFragment(StatisticActivity.create(currentChat, false));
+        } else if (id == nkbtn_voice_changer) {
+            new VoiceChangerSelectAlert(getParentActivity()).show();
         }
     }
 

@@ -98,6 +98,7 @@ import org.telegram.ui.Adapters.FiltersView;
 import org.telegram.ui.CastSync;
 import org.telegram.ui.ChatActivity;
 import org.telegram.ui.Components.AudioPlayerAlert;
+import xyz.nextalone.nagram.utils.VoiceChanger;
 import org.telegram.ui.Components.EmbedBottomSheet;
 import org.telegram.ui.Components.PermissionRequest;
 import org.telegram.ui.Components.PhotoFilterView;
@@ -1077,6 +1078,7 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
                 buffer.rewind();
                 int len = audioRecorder.read(buffer, buffer.capacity());
                 if (len > 0) {
+                    VoiceChanger.process(buffer, len);
                     buffer.limit(len);
                     double sum = 0;
                     try {

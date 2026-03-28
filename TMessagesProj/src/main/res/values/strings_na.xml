@@ -141,4 +141,21 @@
     <string name="PillChatTitle">Pill Chat Title</string>
     <string name="PillChatTitleDescription">Wrap chat title and status in a pill-shaped background</string>
     <string name="RestartRequired">Restart required to apply changes</string>
+
+    <string name="VoiceChanger">Voice Changer</string>
+    <string name="VoiceChangerNormal">Normal</string>
+    <string name="VoiceChangerRobotic">Robotic</string>
+    <string name="VoiceChangerAlien">Alien</string>
+    <string name="VoiceChangerHoarseness">Hoarseness</string>
+    <string name="VoiceChangerModulation">Modulation</string>
+    <string name="VoiceChangerChild">Child</string>
+    <string name="VoiceChangerMouse">Mouse</string>
+    <string name="VoiceChangerMan">Man</string>
+    <string name="VoiceChangerWoman">Woman</string>
+    <string name="VoiceChangerMonster">Monster</string>
+    <string name="VoiceChangerEcho">Echo</string>
+    <string name="VoiceChangerNoise">Noise</string>
+    <string name="VoiceChangerHelium">Helium</string>
+    <string name="VoiceChangerHexafluoride">Hexafluoride</string>
+    <string name="VoiceChangerCave">Cave</string>
 </resources>
