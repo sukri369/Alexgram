@@ -39597,16 +39597,20 @@ public class ChatActivity extends BaseFragment implements
             backPillDrawable.setColor(pillBgColor | 0xFF000000);
             backPillDrawable.setStroke(AndroidUtilities.dp(1), darkTheme ? 0x20FFFFFF : 0x14000000);
             backButton.setBackground(backPillDrawable);
-            backButton.setPadding(AndroidUtilities.dp(4), AndroidUtilities.dp(4), AndroidUtilities.dp(4), AndroidUtilities.dp(4));
+            backButton.setPadding(0, 0, 0, 0);
 
             FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) backButton.getLayoutParams();
-            lp.width = lp.height = AndroidUtilities.dp(32);
-            lp.leftMargin = AndroidUtilities.dp(16);
+            lp.width = lp.height = AndroidUtilities.dp(26);
+            lp.leftMargin = AndroidUtilities.dp(20);
             lp.gravity = Gravity.LEFT | Gravity.TOP;
             int actionBarH = ActionBar.getCurrentActionBarHeight();
             int statusBarH = (Build.VERSION.SDK_INT >= 21 && actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0);
             lp.topMargin = (actionBarH - lp.height) / 2 + statusBarH;
+            backButton.setTranslationX(0); // Reset any previous translation
             backButton.setLayoutParams(lp);
+            if (backButton instanceof ImageView) {
+                ((ImageView) backButton).setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+            }
         }
 
         if (avatarContainer != null) {
