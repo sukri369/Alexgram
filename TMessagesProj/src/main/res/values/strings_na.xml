@@ -143,7 +143,7 @@
     <string name="RestartRequired">Restart required to apply changes</string>
 
     <string name="VoiceChanger">Voice Changer</string>
-    <string name="VoiceChangerNone">None</string>
+    <string name="VoiceChangerNormal">Normal</string>
     <string name="VoiceChangerRobotic">Robotic</string>
     <string name="VoiceChangerAlien">Alien</string>
     <string name="VoiceChangerHoarseness">Hoarseness</string>
