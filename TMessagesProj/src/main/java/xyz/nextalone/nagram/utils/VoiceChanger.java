@@ -41,7 +41,7 @@ public class VoiceChanger {
     }
 
     public static void process(ByteBuffer buffer) {
-        int effect = NaConfig.INSTANCE.getVoiceChangerEffect(); // We'll add this to NaConfig
+        int effect = NaConfig.getVoiceChangerEffectValue();
         if (effect == EFFECT_NONE) return;
 
         int limit = buffer.limit();
