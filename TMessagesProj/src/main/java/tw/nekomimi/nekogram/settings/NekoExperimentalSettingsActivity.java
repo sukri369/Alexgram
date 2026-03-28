@@ -119,8 +119,8 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
     private final AbstractConfigCell localPremiumRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.localPremium));
     private final AbstractConfigCell unlimitedPinnedDialogsRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.unlimitedPinnedDialogs, getString(R.string.UnlimitedPinnedDialogsAbout)));
     private final AbstractConfigCell unlimitedFavedStickersRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.unlimitedFavedStickers, getString(R.string.UnlimitedFavoredStickersAbout)));
-    private final AbstractConfigCell liquidGlassUIRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.liquidGlassUI, "Enable Liquid UI"));
-    private final AbstractConfigCell iosStyleInputBarRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getIosStyleInputBar()));
+    private final AbstractConfigCell liquidGlassUIRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.liquidGlassUI, "Enable glass effect for the UI", getString(R.string.liquidGlassUI)));
+    private final AbstractConfigCell iosStyleInputBarRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getIosStyleInputBar(), "Use an input bar design similar to iOS", getString(R.string.IosStyleInputBar)));
     private final AbstractConfigCell dividerGeneral = cellGroup.appendCell(new ConfigCellDivider());
 
     // Connections
@@ -130,8 +130,8 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
     private final AbstractConfigCell dividerConnection = cellGroup.appendCell(new ConfigCellDivider());
 
     private final AbstractConfigCell headerMedia = cellGroup.appendCell(new ConfigCellHeader(getString(R.string.MediaSettings)));
-    private final AbstractConfigCell musicGraphRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getMusicGraph(), "Show Music Visualizer"));
-    private final AbstractConfigCell hideContactsRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getHideContacts(), "Hide Contacts"));
+    private final AbstractConfigCell musicGraphRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getMusicGraph(), "Visualize audio playback", getString(R.string.MusicGraph)));
+    private final AbstractConfigCell hideContactsRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getHideContacts(), "Remove the contacts item from the side menu", getString(R.string.HideContacts)));
     private final AbstractConfigCell audioEnhanceRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getNoiseSuppressAndVoiceEnhance()));
     private final AbstractConfigCell sendMp4DocumentAsVideoRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getSendMp4DocumentAsVideo()));
     private final AbstractConfigCell enhancedVideoBitrateRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getEnhancedVideoBitrate()));
@@ -144,7 +144,7 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
     private final AbstractConfigCell dividerMedia = cellGroup.appendCell(new ConfigCellDivider());
 
     // Ayu
-    private final AbstractConfigCell headerAyuMoments = cellGroup.appendCell(new ConfigCellHeader("AyuMoments"));
+    private final AbstractConfigCell headerAyuMoments = cellGroup.appendCell(new ConfigCellHeader(getString(R.string.AyuMoments)));
     private final AbstractConfigCell GhostModeRow = cellGroup.appendCell(new ConfigCellText("GhostMode", () -> presentFragment(new GhostModeActivity())));
     private final AbstractConfigCell regexFiltersEnabledRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getRegexFiltersEnabled(), getString(R.string.RegexFiltersNotice)));
     private final AbstractConfigCell saveLastSeenRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getSaveLocalLastSeen()));
@@ -235,7 +235,7 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
     // Removed AI Assistance Setup Guide row as requested
 
     // AI Reply Section
-    private final AbstractConfigCell headerAIReply = cellGroup.appendCell(new ConfigCellHeader("AI Reply"));
+    private final AbstractConfigCell headerAIReply = cellGroup.appendCell(new ConfigCellHeader(getString(R.string.enableAIReply)));
     // Info/help row for Model URL/API Key (use ConfigCellText for compatibility)
     private final AbstractConfigCell aiInfoRow = cellGroup.appendCell(new ConfigCellText("Model URL & API Key Info", "Enter your provider's endpoint and secret key. Tap for help.", () -> {
         AndroidUtilities.runOnUIThread(() -> {
@@ -269,8 +269,8 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
                 .show();
         });
     }));
-    private final AbstractConfigCell enableAIReplyRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getEnableAIReply(), "Enable AI Reply"));
-    private final AbstractConfigCell enableSummarizeChatRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getEnableSummarizeChat(), "Summarize Chat"));
+    private final AbstractConfigCell enableAIReplyRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getEnableAIReply(), "Suggest replies using AI", getString(R.string.enableAIReply)));
+    private final AbstractConfigCell enableSummarizeChatRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getEnableSummarizeChat(), "Generate chat summaries using AI", getString(R.string.enableSummarizeChat)));
     private final AbstractConfigCell aiModelUrlRow = cellGroup.appendCell(new ConfigCellTextInput("Model URL 1", NaConfig.INSTANCE.getAiModelUrl(), "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash", null));
     private final AbstractConfigCell aiApiKeyRow = cellGroup.appendCell(new ConfigCellTextInput("API Key 1", NaConfig.INSTANCE.getAiApiKey(), "Api Key", null));
     // Add universal Test API 1 button

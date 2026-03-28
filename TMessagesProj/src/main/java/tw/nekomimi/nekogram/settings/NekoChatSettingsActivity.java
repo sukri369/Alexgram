@@ -135,12 +135,12 @@ public class NekoChatSettingsActivity extends BaseNekoXSettingsActivity implemen
             getString(R.string.Official),
             "Nekogram",
     }, null));
-    private final AbstractConfigCell pillChatTitleRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getPillChatTitle(), "Pill Chat Title"));
+    private final AbstractConfigCell pillChatTitleRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getPillChatTitle(), getString(R.string.PillChatTitleDescription), getString(R.string.PillChatTitle)));
     private final AbstractConfigCell dividerChats = cellGroup.appendCell(new ConfigCellDivider());
 
     // Live Video Wallpaper
-    private final AbstractConfigCell headerLiveVideoWallpaper = cellGroup.appendCell(new ConfigCellHeader("Live Video Wallpaper"));
-    private final AbstractConfigCell liveVideoWallpaperToggleRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getEnableLiveVideoWallpaper(), "Enable Live Video Wallpaper"));
+    private final AbstractConfigCell headerLiveVideoWallpaper = cellGroup.appendCell(new ConfigCellHeader(getString(R.string.EnableLiveVideoWallpaper)));
+    private final AbstractConfigCell liveVideoWallpaperToggleRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getEnableLiveVideoWallpaper(), "Use a video as your chat background", getString(R.string.EnableLiveVideoWallpaper)));
     private final AbstractConfigCell liveVideoWallpaperPathRow = cellGroup.appendCell(new ConfigCellCustom("LiveVideoWallpaperPath", CellGroup.ITEM_TYPE_TEXT_SETTINGS_CELL, true));
     private final AbstractConfigCell liveVideoBlurIntensityRow = cellGroup.appendCell(new ConfigCellCustom("LiveVideoBlurIntensity", ConfigCellCustom.CUSTOM_ITEM_BlurIntensity, true));
     private final AbstractConfigCell dividerLiveVideoWallpaper = cellGroup.appendCell(new ConfigCellDivider());

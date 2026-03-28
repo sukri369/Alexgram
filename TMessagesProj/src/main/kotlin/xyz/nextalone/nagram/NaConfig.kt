@@ -103,7 +103,7 @@ object NaConfig {
         addConfig(
             "HideTabsOnScroll",
             ConfigItem.configTypeBool,
-            false
+            true
         )
     val hideTabs =
         addConfig(
@@ -157,19 +157,19 @@ object NaConfig {
         addConfig(
             "NoiseSuppressAndVoiceEnhance",
             ConfigItem.configTypeBool,
-            false
+            true
         )
     val showNoQuoteForward =
         addConfig(
             "NoQuoteForward",
             ConfigItem.configTypeBool,
-            false
+            true
         )
     val showRepeatAsCopy =
         addConfig(
             "RepeatAsCopy",
             ConfigItem.configTypeBool,
-            false
+            true
         )
     val doubleTapAction =
         addConfig(
@@ -187,7 +187,7 @@ object NaConfig {
         addConfig(
             "CopyPhoto",
             ConfigItem.configTypeBool,
-            false
+            true
         )
     val showReactions =
         addConfig(
@@ -211,7 +211,7 @@ object NaConfig {
         addConfig(
             "ShowMessageID",
             ConfigItem.configTypeBool,
-            false
+            true
         )
     val showRPCError =
         addConfig(
@@ -271,13 +271,13 @@ object NaConfig {
         addConfig(
             "SetReminder",
             ConfigItem.configTypeBool,
-            false
+            true
         )
     val showOnlineStatus =
         addConfig(
             "ShowOnlineStatus",
             ConfigItem.configTypeBool,
-            false
+            true
         )
     val starFallInChat =
         addConfig(
@@ -332,28 +332,28 @@ object NaConfig {
             "DeleteBanUsers",
             defaultDeleteMenu,
             3,
-            false
+            true
         )
     val defaultDeleteMenReportSpam =
         addConfig(
             "DeleteReportSpam",
             defaultDeleteMenu,
             2,
-            false
+            true
         )
     val defaultDeleteMenuDeleteAll =
         addConfig(
             "DeleteAll",
             defaultDeleteMenu,
             1,
-            false
+            true
         )
     val defaultDeleteMenuDoActionsInCommonGroups =
         addConfig(
             "DoActionsInCommonGroups",
             defaultDeleteMenu,
             0,
-            false
+            true
         )
     val disableStories =
         addConfig(
@@ -425,7 +425,7 @@ object NaConfig {
         addConfig(
             "ShowQuickReplyInBotCommands",
             ConfigItem.configTypeBool,
-            false
+            true
         )
     val pushServiceType =
         addConfig(
@@ -563,7 +563,7 @@ object NaConfig {
         addConfig(
             "Reply",
             ConfigItem.configTypeBool,
-            false
+            true
         )
     val ActionBarButtonEdit =
         addConfig(
@@ -607,13 +607,13 @@ object NaConfig {
         addConfig(
             "EnableSaveEditsHistory",
             ConfigItem.configTypeBool,
-            false
+            true
         )
     val saveLocalLastSeen =
         addConfig(
             "SaveLocalLastSeen",
             ConfigItem.configTypeBool,
-            false
+            true
         )
     val messageSavingSaveMedia =
         addConfig(
@@ -673,7 +673,7 @@ object NaConfig {
         addConfig(
             "HidePremiumSection",
             ConfigItem.configTypeBool,
-            true
+            false
         )
     val hideHelpSection =
         addConfig(
@@ -1093,7 +1093,7 @@ object NaConfig {
         addConfig(
             "ColoredAdminTitle",
             ConfigItem.configTypeBool,
-            false
+            true
         )
     val hideReactions =
         addConfig(
@@ -1183,13 +1183,13 @@ object NaConfig {
         addConfig(
             "CopyPhotoAsSticker",
             ConfigItem.configTypeBool,
-            false
+            true
         )
     val showAddToStickers =
         addConfig(
             "AddToStickers",
             ConfigItem.configTypeBool,
-            false
+            true
         )
     val showAddToFavorites =
         addConfig(
@@ -1393,7 +1393,7 @@ object NaConfig {
         addConfig(
             "HideStoriesFromHeader",
             ConfigItem.configTypeBool,
-            true
+            false
         )
     val disableAvatarBlur =
         addConfig(
@@ -1423,7 +1423,7 @@ object NaConfig {
         addConfig(
             "ShowAddToBookmark",
             ConfigItem.configTypeBool,
-            false
+            true
         )
     val sortByUnread =
         addConfig(
@@ -1441,7 +1441,7 @@ object NaConfig {
         addConfig(
             "MessageMenuCopyFrame",
             ConfigItem.configTypeBool,
-            false
+            true
         )
     val deleteChatForBothSides =
         addConfig(

@@ -139,7 +139,7 @@ public class NekoGeneralSettingsActivity extends BaseNekoXSettingsActivity {
             getString(R.string.TabTitleTypeIcon),
             getString(R.string.TabTitleTypeMix)
     }, null));
-    private final AbstractConfigCell foldersAtBottomRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getFoldersAtBottom(), "Bottom Folders"));
+    private final AbstractConfigCell foldersAtBottomRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getFoldersAtBottom(), "Display chat folders at the bottom of the screen", getString(R.string.FoldersAtBottom)));
     private final AbstractConfigCell dividerFolder = cellGroup.appendCell(new ConfigCellDivider());
 
     // Dialogs
