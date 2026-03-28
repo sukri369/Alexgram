@@ -139,12 +139,12 @@ public class VoiceChangerSelectAlert extends BottomSheet {
             int circleColor;
             if (selected) {
                 circleColor = Theme.getColor(Theme.key_featuredStickers_addButton);
-                circleView.setBackground(AndroidUtilities.createCircleDrawable(AndroidUtilities.dp(36), AndroidUtilities.getOffsetColor(circleColor, 0xffffffff, 0.1f, 1.0f)));
+                circleView.setBackground(Theme.createCircleDrawable(AndroidUtilities.dp(36), circleColor));
                 textView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
                 textView.setTextColor(circleColor);
             } else {
                 circleColor = Theme.getColor(Theme.key_dialogBackgroundGray);
-                circleView.setBackground(AndroidUtilities.createCircleDrawable(AndroidUtilities.dp(36), circleColor));
+                circleView.setBackground(Theme.createCircleDrawable(AndroidUtilities.dp(36), circleColor));
                 textView.setTypeface(Typeface.DEFAULT);
                 textView.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
             }
