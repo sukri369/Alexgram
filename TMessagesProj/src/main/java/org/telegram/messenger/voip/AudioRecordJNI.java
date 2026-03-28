@@ -196,7 +196,7 @@ public class AudioRecordJNI {
 						audioRecord.stop();
 						break;
 					}
-					VoiceChanger.process(buffer);
+					VoiceChanger.process(buffer, buffer.position());
 					nativeCallback(buffer);
 				} catch (Exception e) {
 					VLog.e(e);

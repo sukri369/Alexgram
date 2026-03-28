@@ -42,14 +42,18 @@ public class VoiceChanger {
     }
 
     public static void process(ByteBuffer buffer) {
-        int effect = NaConfig.getVoiceChangerEffectValue();
-        if (effect == EFFECT_NONE) return;
-
         int position = buffer.position();
-        int limit = buffer.limit();
-        int count = position > 0 ? position : limit; // Use position if data was just read
+        VoiceChanger.process(buffer, buffer.position());
+    }
 
-        if (count == 0) return;
+    public static void process(ByteBuffer buffer, int count) {
+        int effect = NaConfig.getVoiceChangerEffectValue();
+        if (effect == EFFECT_NONE) {
+            currentEffect = EFFECT_NONE;
+            return;
+        }
+
+        if (count <= 0) return;
 
         buffer.order(ByteOrder.LITTLE_ENDIAN);
         buffer.rewind();
@@ -110,7 +114,9 @@ public class VoiceChanger {
 
         buffer.rewind();
         buffer.asShortBuffer().put(pcm);
-        buffer.position(count); // Restore position
+        if (buffer.limit() >= count) {
+            buffer.position(count); // Restore position
+        }
     }
 
     private static void applyRobotic(short[] pcm) {
