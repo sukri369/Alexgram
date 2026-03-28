@@ -10787,9 +10787,9 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
     }
 
     private void showVoiceChangerAlert() {
-        if (getParentActivity() == null) {
+        if (parentActivity == null) {
             return;
         }
-        showDialog(new xyz.nextalone.nagram.ui.VoiceChangerSelectAlert(getParentActivity()));
+        new xyz.nextalone.nagram.ui.VoiceChangerSelectAlert(parentActivity).show();
     }
 }
