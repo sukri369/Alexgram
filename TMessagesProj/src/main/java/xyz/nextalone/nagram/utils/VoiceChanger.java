@@ -4,7 +4,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Random;
 import xyz.nextalone.nagram.NaConfig;
-import org.telegram.messenger.voip.VLog;
+import org.telegram.messenger.FileLog;
 
 public class VoiceChanger {
 
@@ -58,7 +58,7 @@ public class VoiceChanger {
         buffer.asShortBuffer().get(pcm);
 
         if (currentEffect != effect) {
-            VLog.d("VoiceChanger: changing effect from " + currentEffect + " to " + effect);
+            FileLog.d("VoiceChanger: changing effect from " + currentEffect + " to " + effect);
             currentEffect = effect;
         }
 

@@ -32,9 +32,9 @@ val String.code2Locale: Locale by receiveLazy<String, Locale> {
         val args = replace('-', '_').split('_')
 
         if (args.size == 1) {
-            Locale(args[0])
+            Locale.Builder().setLanguage(args[0]).build()
         } else {
-            Locale(args[0], args[1])
+            Locale.Builder().setLanguage(args[0]).setRegion(args[1]).build()
         }
     }
     ret
