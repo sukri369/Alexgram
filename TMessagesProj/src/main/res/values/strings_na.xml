@@ -124,9 +124,9 @@
     <string name="ExportChat">Export Chat</string>
     <string name="ImportChat">Import Chat</string>
 
-    <!-- NagramX Settings Labels -->
+    <!-- Alexgram Settings Labels -->
     <string name="liquidGlassUI">Liquid UI</string>
-    <string name="iosStyleInputBar">iOS Style Input Bar</string>
+    <string name="IosStyleInputBar">iOS Style Input Bar</string>
     <string name="MusicGraph">Music Visualizer</string>
     <string name="HideContacts">Hide Contacts</string>
     <string name="enableAIReply">AI Reply</string>

@@ -120,7 +120,7 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
     private final AbstractConfigCell unlimitedPinnedDialogsRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.unlimitedPinnedDialogs, getString(R.string.UnlimitedPinnedDialogsAbout)));
     private final AbstractConfigCell unlimitedFavedStickersRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.unlimitedFavedStickers, getString(R.string.UnlimitedFavoredStickersAbout)));
     private final AbstractConfigCell liquidGlassUIRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.liquidGlassUI, "Enable glass effect for the UI", getString(R.string.liquidGlassUI)));
-    private final AbstractConfigCell iosStyleInputBarRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getIosStyleInputBar(), "Use an input bar design similar to iOS"));
+    private final AbstractConfigCell iosStyleInputBarRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getIosStyleInputBar(), "Use an input bar design similar to iOS", getString(R.string.IosStyleInputBar)));
     private final AbstractConfigCell dividerGeneral = cellGroup.appendCell(new ConfigCellDivider());
 
     // Connections
