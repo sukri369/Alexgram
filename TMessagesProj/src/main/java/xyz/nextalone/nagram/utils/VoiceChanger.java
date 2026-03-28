@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Random;
 import xyz.nextalone.nagram.NaConfig;
+import org.telegram.messenger.voip.VLog;
 
 public class VoiceChanger {
 
@@ -44,12 +45,22 @@ public class VoiceChanger {
         int effect = NaConfig.getVoiceChangerEffectValue();
         if (effect == EFFECT_NONE) return;
 
+        int position = buffer.position();
         int limit = buffer.limit();
+        int count = position > 0 ? position : limit; // Use position if data was just read
+
+        if (count == 0) return;
+
         buffer.order(ByteOrder.LITTLE_ENDIAN);
         buffer.rewind();
 
-        short[] pcm = new short[limit / 2];
+        short[] pcm = new short[count / 2];
         buffer.asShortBuffer().get(pcm);
+
+        if (currentEffect != effect) {
+            VLog.d("VoiceChanger: changing effect from " + currentEffect + " to " + effect);
+            currentEffect = effect;
+        }
 
         switch (effect) {
             case EFFECT_ROBOTIC:
@@ -99,6 +110,7 @@ public class VoiceChanger {
 
         buffer.rewind();
         buffer.asShortBuffer().put(pcm);
+        buffer.position(count); // Restore position
     }
 
     private static void applyRobotic(short[] pcm) {
@@ -132,15 +144,21 @@ public class VoiceChanger {
     }
 
     private static void applyPitchShift(short[] pcm, float factor) {
-        // Simple time-domain resampling for pitch shift
-        // Not high quality but low latency/CPU.
+        // Linear interpolation resampling for better quality
         short[] original = pcm.clone();
-        for (int i = 0; i < pcm.length; i++) {
-            int srcIdx = (int) (i * factor);
-            if (srcIdx < original.length) {
-                pcm[i] = original[srcIdx];
-            } else {
+        int len = pcm.length;
+        for (int i = 0; i < len; i++) {
+            float srcIdx = i * factor;
+            int floor = (int) srcIdx;
+            if (floor >= len) {
                 pcm[i] = 0;
+            } else {
+                float frac = srcIdx - floor;
+                if (floor + 1 < len) {
+                    pcm[i] = (short) (original[floor] * (1.0f - frac) + original[floor + 1] * frac);
+                } else {
+                    pcm[i] = original[floor];
+                }
             }
         }
     }
