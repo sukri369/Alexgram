@@ -47,6 +47,10 @@
     <string name="CustomArtworkApi">Custom Artwork API</string>
     <string name="CustomEditedMessage">Custom Edited Mark</string>
     <string name="NotificationIcon">Notification Icon</string>
+    <string name="NotificationIconDefault">Default</string>
+    <string name="NotificationIconNagramX">Alexgram X</string>
+    <string name="NotificationIconNagram">Alexgram</string>
+    <string name="NotificationIconNeko">Neko</string>
     <string name="Official">Official</string>
     <string name="Nagram" translatable="false">Alexgram</string>
     <string name="HalloWeen">HalloWeen</string>

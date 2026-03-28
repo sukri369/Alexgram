@@ -83,6 +83,7 @@ import org.telegram.ui.Cells.BrightnessControlCell;
 import org.telegram.ui.Cells.ChatListCell;
 import org.telegram.ui.Cells.ChatMessageCell;
 import org.telegram.ui.Cells.HeaderCell;
+import org.telegram.ui.Cells.NotificationIconsSelectorCell;
 import org.telegram.ui.Cells.NotificationsCheckCell;
 import org.telegram.ui.Cells.RadioButtonCell;
 import org.telegram.ui.Cells.RadioColorCell;
@@ -237,6 +238,10 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
     @Keep
     private int appIconSelectorRow;
     private int appIconShadowRow;
+
+    private int notificationIconHeaderRow;
+    private int notificationIconSelectorRow;
+    private int notificationIconShadowRow;
 
     private int rowCount;
 
@@ -611,6 +616,11 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
         appIconHeaderRow = -1;
         appIconSelectorRow = -1;
         appIconShadowRow = -1;
+
+        notificationIconHeaderRow = -1;
+        notificationIconSelectorRow = -1;
+        notificationIconShadowRow = -1;
+
         lastShadowRow = -1;
 
         defaultThemes.clear();
@@ -676,6 +686,10 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
             appIconHeaderRow = rowCount++;
             appIconSelectorRow = rowCount++;
             appIconShadowRow = rowCount++;
+
+            notificationIconHeaderRow = rowCount++;
+            notificationIconSelectorRow = rowCount++;
+            notificationIconShadowRow = rowCount++;
 
             swipeGestureHeaderRow = rowCount++;
             swipeGestureRow = rowCount++;
@@ -2064,6 +2078,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
         private final static int TYPE_SAVE_TO_GALLERY = 19;
         private final static int TYPE_APP_ICON = 20;
         private final static int TYPE_CHOOSE_COLOR = 21;
+        private final static int TYPE_NOTIFICATION_ICON = 22;
 
         private Context mContext;
         private boolean first = true;
@@ -2460,6 +2475,9 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                 case TYPE_APP_ICON:
                     view = new AppIconsSelectorCell(mContext, ThemeActivity.this, currentAccount);
                     break;
+                case TYPE_NOTIFICATION_ICON:
+                    view = new NotificationIconsSelectorCell(mContext, ThemeActivity.this, currentAccount);
+                    break;
                 case TYPE_CHOOSE_COLOR:
                     view = new PeerColorActivity.ChangeNameColorCell(currentAccount, 0, mContext, getResourceProvider());
                     break;
@@ -2558,6 +2576,8 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                     HeaderCell headerCell = (HeaderCell) holder.itemView;
                     if (position == scheduleHeaderRow) {
                         headerCell.setText(getString("AutoNightSchedule", R.string.AutoNightSchedule));
+                    } else if (position == notificationIconHeaderRow) {
+                        headerCell.setText(getString("NotificationIcon", R.string.NotificationIcon));
                     } else if (position == automaticHeaderRow) {
                         headerCell.setText(getString("AutoNightBrightness", R.string.AutoNightBrightness));
                     } else if (position == preferedHeaderRow) {
@@ -2738,7 +2758,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                 return TYPE_TEXT_INFO_PRIVACY;
             } else if (position == themeInfoRow || position == nightTypeInfoRow || position == scheduleFromToInfoRow ||
                     position == settings2Row || position == newThemeInfoRow || position == chatListInfoRow || position == bubbleRadiusInfoRow ||
-                    position == saveToGallerySectionRow || position == appIconShadowRow || position == lastShadowRow || position == stickersSectionRow ||
+                    position == saveToGallerySectionRow || position == appIconShadowRow || position == notificationIconShadowRow || position == lastShadowRow || position == stickersSectionRow ||
                     position == mediaSoundSectionRow || position == otherSectionRow) {
                 return TYPE_SHADOW;
             } else if (position == nightDisabledRow || position == nightScheduledRow || position == nightAutomaticRow || position == nightSystemDefaultRow) {
@@ -2746,7 +2766,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
             } else if (position == scheduleHeaderRow || position == automaticHeaderRow || position == preferedHeaderRow ||
                     position == settingsRow || position == themeHeaderRow || position == textSizeHeaderRow ||
                     position == chatListHeaderRow || position == bubbleRadiusHeaderRow || position == swipeGestureHeaderRow ||
-                    position == selectThemeHeaderRow || position == appIconHeaderRow || position == mediaSoundHeaderRow ||
+                    position == selectThemeHeaderRow || position == appIconHeaderRow || position == notificationIconHeaderRow || position == mediaSoundHeaderRow ||
                     position == otherHeaderRow) {
                 return TYPE_HEADER;
             } else if (position == automaticBrightnessRow) {
@@ -2780,6 +2800,8 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                 return TYPE_SAVE_TO_GALLERY;
             } else if (position == appIconSelectorRow) {
                 return TYPE_APP_ICON;
+            } else if (position == notificationIconSelectorRow) {
+                return TYPE_NOTIFICATION_ICON;
             } else if (position == changeUserColor) {
                 return TYPE_CHOOSE_COLOR;
             }
@@ -2797,7 +2819,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
     public ArrayList<ThemeDescription> getThemeDescriptions() {
         ArrayList<ThemeDescription> themeDescriptions = new ArrayList<>();
 
-        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_CELLBACKGROUNDCOLOR, new Class[]{TextSettingsCell.class, TextCheckCell.class, HeaderCell.class, BrightnessControlCell.class, ThemeTypeCell.class, TextSizeCell.class, BubbleRadiusCell.class, ChatListCell.class, NotificationsCheckCell.class, ThemesHorizontalListCell.class, TintRecyclerListView.class, TextCell.class, PeerColorActivity.ChangeNameColorCell.class, SwipeGestureSettingsView.class, DefaultThemesPreviewCell.class, AppIconsSelectorCell.class}, null, null, null, Theme.key_windowBackgroundWhite));
+        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_CELLBACKGROUNDCOLOR, new Class[]{TextSettingsCell.class, TextCheckCell.class, HeaderCell.class, BrightnessControlCell.class, ThemeTypeCell.class, TextSizeCell.class, BubbleRadiusCell.class, ChatListCell.class, NotificationsCheckCell.class, ThemesHorizontalListCell.class, TintRecyclerListView.class, TextCell.class, PeerColorActivity.ChangeNameColorCell.class, SwipeGestureSettingsView.class, DefaultThemesPreviewCell.class, AppIconsSelectorCell.class, NotificationIconsSelectorCell.class}, null, null, null, Theme.key_windowBackgroundWhite));
         themeDescriptions.add(new ThemeDescription(fragmentView, ThemeDescription.FLAG_BACKGROUND, null, null, null, null, Theme.key_windowBackgroundGray));
 
 //        themeDescriptions.add(new ThemeDescription(actionBar, ThemeDescription.FLAG_BACKGROUND, null, null, null, null, Theme.key_actionBarDefault));

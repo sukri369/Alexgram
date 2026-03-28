@@ -6200,6 +6200,12 @@ public class NotificationsController extends BaseController {
 
     private int getNotificationIconResId() {
         int notificationIconConfigValue = NaConfig.INSTANCE.getNotificationIcon().Int();
+        if (notificationIconConfigValue >= 4) {
+            int launcherIconIndex = notificationIconConfigValue - 4;
+            if (launcherIconIndex < org.telegram.ui.LauncherIconController.LauncherIcon.values().length) {
+                return org.telegram.ui.LauncherIconController.LauncherIcon.values()[launcherIconIndex].background;
+            }
+        }
         switch (notificationIconConfigValue) {
             case 0:
                 return R.drawable.notification;
