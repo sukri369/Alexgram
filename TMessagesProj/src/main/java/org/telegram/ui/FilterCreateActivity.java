@@ -211,6 +211,7 @@ public class FilterCreateActivity extends BaseFragment {
         newFilterName = new SpannableStringBuilder(filter.name);
         newFilterName = Emoji.replaceEmoji(newFilterName, paint.getFontMetricsInt(), false);
         newFilterName = MessageObject.replaceAnimatedEmoji(newFilterName, filter.entities, paint.getFontMetricsInt());
+        newFilterName = AnimatedEmojiSpan.cloneSpans(newFilterName, AnimatedEmojiDrawable.CACHE_TYPE_TOGGLEABLE_EDIT, paint.getFontMetricsInt());
         newFilterEmoticon = filter.emoticon;
         newFilterAnimations = !filter.title_noanimate;
         AnimatedEmojiDrawable.toggleAnimations(currentAccount, newFilterAnimations);
@@ -289,10 +290,12 @@ public class FilterCreateActivity extends BaseFragment {
 
             if (actionBar != null) {
                 if (actionBar.getTitleTextView() != null) {
-                    actionBar.getTitleTextView().setEmojiCacheType(newFilterAnimations ? AnimatedEmojiDrawable.CACHE_TYPE_MESSAGES : AnimatedEmojiDrawable.CACHE_TYPE_NOANIMATE_FOLDER);
+                    actionBar.getTitleTextView().setEmojiCacheType(AnimatedEmojiDrawable.CACHE_TYPE_TOGGLEABLE_EDIT);
+                    actionBar.getTitleTextView().setText(AnimatedEmojiSpan.cloneSpans(newFilterName, AnimatedEmojiDrawable.CACHE_TYPE_TOGGLEABLE_EDIT, actionBar.getTitleTextView().getPaint().getFontMetricsInt()));
                 }
                 if (actionBar.getTitleTextView2() != null) {
-                    actionBar.getTitleTextView2().setEmojiCacheType(newFilterAnimations ? AnimatedEmojiDrawable.CACHE_TYPE_MESSAGES : AnimatedEmojiDrawable.CACHE_TYPE_NOANIMATE_FOLDER);
+                    actionBar.getTitleTextView2().setEmojiCacheType(AnimatedEmojiDrawable.CACHE_TYPE_TOGGLEABLE_EDIT);
+                    actionBar.getTitleTextView2().setText(AnimatedEmojiSpan.cloneSpans(newFilterName, AnimatedEmojiDrawable.CACHE_TYPE_TOGGLEABLE_EDIT, actionBar.getTitleTextView2().getPaint().getFontMetricsInt()));
                 }
             }
         }));
@@ -958,8 +961,8 @@ public class FilterCreateActivity extends BaseFragment {
         }
         newFilterName = newName;
         if (folderTagsHeader != null) {
-            folderTagsHeader.previewView.setEmojiCacheType(newFilterAnimations ? AnimatedEmojiDrawable.CACHE_TYPE_MESSAGES : AnimatedEmojiDrawable.CACHE_TYPE_NOANIMATE_FOLDER);
-            folderTagsHeader.setPreviewText(AnimatedEmojiSpan.cloneSpans(newFilterName, -1, folderTagsHeader.getPreviewTextPaint().getFontMetricsInt(), .5f), false);
+            folderTagsHeader.previewView.setEmojiCacheType(AnimatedEmojiDrawable.CACHE_TYPE_TOGGLEABLE_EDIT);
+            folderTagsHeader.setPreviewText(AnimatedEmojiSpan.cloneSpans(newFilterName, AnimatedEmojiDrawable.CACHE_TYPE_TOGGLEABLE_EDIT, folderTagsHeader.getPreviewTextPaint().getFontMetricsInt(), .5f), false);
         }
         newFilterEmoticon = newEmoticon;
         RecyclerView.ViewHolder holder = listView.findViewHolderForAdapterPosition(nameRow);
@@ -1514,10 +1517,10 @@ public class FilterCreateActivity extends BaseFragment {
                             CharSequence newName = s;
                             if (!TextUtils.equals(newName, newFilterName)) {
                                 nameChangedManually = !TextUtils.isEmpty(newName);
-                                newFilterName = AnimatedEmojiSpan.onlyEmojiSpans(newName);
+                                newFilterName = AnimatedEmojiSpan.cloneSpans(newName, AnimatedEmojiDrawable.CACHE_TYPE_TOGGLEABLE_EDIT);
                                 if (folderTagsHeader != null) {
-                                    folderTagsHeader.previewView.setEmojiCacheType(newFilterAnimations ? AnimatedEmojiDrawable.CACHE_TYPE_MESSAGES : AnimatedEmojiDrawable.CACHE_TYPE_NOANIMATE_FOLDER);
-                                    folderTagsHeader.setPreviewText(AnimatedEmojiSpan.cloneSpans(newFilterName, -1, folderTagsHeader.getPreviewTextPaint().getFontMetricsInt(), .5f), true);
+                                    folderTagsHeader.previewView.setEmojiCacheType(AnimatedEmojiDrawable.CACHE_TYPE_TOGGLEABLE_EDIT);
+                                    folderTagsHeader.setPreviewText(AnimatedEmojiSpan.cloneSpans(newFilterName, AnimatedEmojiDrawable.CACHE_TYPE_TOGGLEABLE_EDIT, folderTagsHeader.getPreviewTextPaint().getFontMetricsInt(), .5f), true);
                                 }
                                 if (nameHeaderCell != null) {
                                     nameHeaderCell.rightTextView.setText(hasAnimatedEmojis(newFilterName) ? LocaleController.getString(newFilterAnimations ? R.string.FilterNameAnimationsDisable : R.string.FilterNameAnimationsEnable) : null);
@@ -1583,7 +1586,8 @@ public class FilterCreateActivity extends BaseFragment {
             if (viewType == 2) {
 
             } else if (viewType == VIEW_TYPE_HEADER_COLOR_PREVIEW) {
-                ((HeaderCellColorPreview) holder.itemView).setPreviewText(AnimatedEmojiSpan.cloneSpans(newFilterName, -1, folderTagsHeader.getPreviewTextPaint().getFontMetricsInt(), .5f), true);
+                ((HeaderCellColorPreview) holder.itemView).previewView.setEmojiCacheType(AnimatedEmojiDrawable.CACHE_TYPE_TOGGLEABLE_EDIT);
+                ((HeaderCellColorPreview) holder.itemView).setPreviewText(AnimatedEmojiSpan.cloneSpans(newFilterName, AnimatedEmojiDrawable.CACHE_TYPE_TOGGLEABLE_EDIT, folderTagsHeader.getPreviewTextPaint().getFontMetricsInt(), .5f), true);
             }
         }
 
