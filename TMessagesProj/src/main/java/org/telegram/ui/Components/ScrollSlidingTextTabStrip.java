@@ -708,7 +708,7 @@ public class ScrollSlidingTextTabStrip extends HorizontalScrollView implements T
                 checkBoundsAndClipping();
             }
             canvas.translate(getScrollX(), 0);
-            this.open.set(isOpen);
+            backgroundDrawable.setShadowAlpha(this.open.set(isOpen));
             backgroundDrawable.draw(canvas);
             canvas.clipPath(clipPath);
             canvas.translate(-getScrollX(), 0);
