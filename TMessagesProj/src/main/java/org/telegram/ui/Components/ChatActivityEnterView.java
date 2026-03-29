@@ -4483,7 +4483,7 @@ public class ChatActivityEnterView extends FrameLayout implements
         });
         messageEditTextContainer.addView(botCommandsMenuButton, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, 32, Gravity.BOTTOM | Gravity.LEFT, 8, 6, 8, 6));
         AndroidUtilities.updateViewVisibilityAnimated(botCommandsMenuButton, false, 1f, false);
-        botCommandsMenuButton.setExpanded(true, false);
+        botCommandsMenuButton.setExpanded(!iosStyle, false);
     }
 
     private void createBotWebViewButton() {
@@ -11778,7 +11778,7 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
         if (botCommandsMenuButton != null) {
             boolean wasWebView = botCommandsMenuButton.isWebView;
             botCommandsMenuButton.setWebView(botMenuButtonType == BotMenuButtonType.WEB_VIEW);
-            boolean textChanged = botCommandsMenuButton.setMenuText(botMenuButtonType == BotMenuButtonType.COMMANDS ? getString(R.string.BotsMenuTitle) : botMenuWebViewTitle);
+            boolean textChanged = botCommandsMenuButton.setMenuText(iosStyle ? "" : (botMenuButtonType == BotMenuButtonType.COMMANDS ? getString(R.string.BotsMenuTitle) : botMenuWebViewTitle));
             AndroidUtilities.updateViewVisibilityAnimated(botCommandsMenuButton, canShowBotsMenu, 0.5f, animated);
             changed = changed || textChanged || wasWebView != botCommandsMenuButton.isWebView;
         }
