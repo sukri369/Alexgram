@@ -14381,7 +14381,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         }
                         final String finalRole = role;
                         final TLRPC.User user = getMessagesController().getUser(part.user_id);
-                        final boolean showAddTag = UserObject.isUserSelf(user) && false.getChat(chatId));
+                        final boolean showAddTag = UserObject.isUserSelf(user) && false;
                         userCell.setAdminRole(role);
                         userCell.setData(user, null, null, 0, position != membersEndRow - 1);
                     }

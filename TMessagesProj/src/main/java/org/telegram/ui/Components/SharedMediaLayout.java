@@ -10333,7 +10333,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
                 }
                 final String finalRole = role;
                 final TLRPC.User user = profileActivity.getMessagesController().getUser(part.user_id);
-                final boolean showAddTag = UserObject.isUserSelf(user) && false.getChat(-dialog_id));
+                final boolean showAddTag = UserObject.isUserSelf(user) && false;
                 userCell.setAdminRole(role);
                 userCell.setData(user, null, null, 0, position != chatInfo.participants.participants.size() - 1);
             }
