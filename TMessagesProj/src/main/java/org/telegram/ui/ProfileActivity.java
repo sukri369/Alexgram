@@ -274,7 +274,7 @@ import org.telegram.ui.Components.SharedMediaLayout;
 import org.telegram.ui.Components.SizeNotifierFrameLayout;
 import org.telegram.ui.Components.StarRatingView;
 import org.telegram.ui.Components.StickerEmptyView;
-import org.telegram.ui.Components.TagEditCell;
+// import org.telegram.ui.Components.TagEditCell;
 import org.telegram.ui.Components.TimerDrawable;
 import org.telegram.ui.Components.TranslateAlert2;
 import org.telegram.ui.Components.TypefaceSpan;
@@ -354,7 +354,7 @@ import tw.nekomimi.nekogram.filters.RegexFiltersSettingActivity;
 import tw.nekomimi.nekogram.filters.ShadowBanListActivity;
 import tw.nekomimi.nekogram.helpers.ChatsHelper;
 import tw.nekomimi.nekogram.helpers.LocalNameHelper;
-import tw.nekomimi.nekogram.helpers.MainTabsHelper;
+// import tw.nekomimi.nekogram.helpers.MainTabsHelper;
 import tw.nekomimi.nekogram.helpers.MessageHelper;
 import tw.nekomimi.nekogram.helpers.ProfileDateHelper;
 import tw.nekomimi.nekogram.helpers.SettingsHelper;
@@ -2345,8 +2345,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
         setActionsMode();
 
-        additionNavigationBarHeight = hasMainTabs ? dp(MainTabsHelper.getMainTabsHeightWithMargins()) : 0;
-        additionFloatingButtonOffset = hasMainTabs ? dp(MainTabsHelper.getMainTabsHeight() + MainTabsHelper.getMainTabsMargin()) : 0;
+        additionNavigationBarHeight = hasMainTabs ? dp(60) : 0; // Fallback since MainTabsHelper is missing
+        additionFloatingButtonOffset = hasMainTabs ? dp(60) : 0; // Fallback since MainTabsHelper is missing
 
         return true;
     }
@@ -2582,8 +2582,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     public View createView(Context context) {
         Theme.createProfileResources(context);
         Theme.createChatResources(context, false);
-        additionNavigationBarHeight = hasMainTabs ? dp(MainTabsHelper.getMainTabsHeightWithMargins()) : 0;
-        additionFloatingButtonOffset = hasMainTabs ? dp(MainTabsHelper.getMainTabsHeight() + MainTabsHelper.getMainTabsMargin()) : 0;
+        additionNavigationBarHeight = hasMainTabs ? dp(60) : 0; // Fallback
+        additionFloatingButtonOffset = hasMainTabs ? dp(60) : 0; // Fallback
 
         BaseFragment lastFragment = parentLayout.getLastFragment();
         if (lastFragment instanceof ChatActivity && ((ChatActivity) lastFragment).themeDelegate != null && ((ChatActivity) lastFragment).themeDelegate.getCurrentTheme() != null && !((ChatActivity) lastFragment).themeDelegate.isGiftTheme()) {
@@ -7360,7 +7360,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     })
                     .addGapIf(!self && (canEditAdmin || canEditTag || canRestrict || allowKick))
                     .addIf(canEditTag, !isAdmin && TextUtils.isEmpty(rank) ? R.drawable.menu_tag_plus : R.drawable.menu_tag_edit, getString(isAdmin ? R.string.EditAdminTag : TextUtils.isEmpty(rank) ? R.string.AddMemberTag : R.string.EditMemberTag), () -> {
-                        TagEditCell.showSheet(getContext(), currentAccount, getDialogId(), user, rank, isAdmin, isOwner, resourcesProvider);
+                        // TagEditCell.showSheet(getContext(), currentAccount, getDialogId(), user, rank, isAdmin, isOwner, resourcesProvider);
                     })
                     .addIf(canEditAdmin, R.drawable.msg_admins, editingAdmin ? LocaleController.getString(R.string.EditAdminRights) : LocaleController.getString(R.string.SetAsAdmin), () -> openRightsEdit.run(0))
                     .addIf(canRestrict, R.drawable.msg_permissions, LocaleController.getString(R.string.ChangePermissions), () -> {
@@ -14385,7 +14385,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         final TLRPC.User user = getMessagesController().getUser(part.user_id);
                         final boolean showAddTag = UserObject.isUserSelf(user) && ChatObject.canManageMyTag(getMessagesController().getChat(chatId));
                         userCell.setAdminRole(role, isAdmin, isOwner, showAddTag, v -> {
-                            TagEditCell.showInfoSheet(getContext(), currentAccount, getDialogId(), user, finalRole, isAdmin, isOwner, canEditAdmin, resourceProvider);
+                            // TagEditCell.showInfoSheet(getContext(), currentAccount, getDialogId(), user, finalRole, isAdmin, isOwner, canEditAdmin, resourceProvider);
                         });
                         userCell.setData(user, null, null, 0, position != membersEndRow - 1);
                     }
@@ -17235,8 +17235,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         }
 
         final int additionalList = dp(48);
-        final int mainTabBottom = fragmentView.getMeasuredHeight() - navigationBarHeight - dp(MainTabsHelper.getMainTabsMargin());
-        final int mainTabTop = mainTabBottom - dp(MainTabsHelper.getMainTabsHeight());
+        final int mainTabBottom = fragmentView.getMeasuredHeight() - navigationBarHeight - dp(12); // Fallback
+        final int mainTabTop = mainTabBottom - dp(48); // Fallback
 
         iBlur3PositionActionBar.set(0, -additionalList, fragmentView.getMeasuredWidth(), actionBar.getMeasuredHeight() + additionalList);
         iBlur3PositionMainTabs.set(0, mainTabTop, fragmentView.getMeasuredWidth(), mainTabBottom);
