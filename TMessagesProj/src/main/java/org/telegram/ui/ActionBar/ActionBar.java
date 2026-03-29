@@ -1459,7 +1459,7 @@ public class ActionBar extends FrameLayout implements Theme.Colorable {
             if (NaConfig.INSTANCE.getPillChatTitle().Bool()) {
                 FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) backButtonImageView.getLayoutParams();
                 int actionBarHeight = getMeasuredHeight() - additionalTop;
-                int y = additionalTop + (actionBarHeight - backButtonImageView.getMeasuredHeight()) / 2 + lp.topMargin;
+                int y = additionalTop + (actionBarHeight - backButtonImageView.getMeasuredHeight()) / 2;
                 backButtonImageView.layout(lp.leftMargin, y, lp.leftMargin + backButtonImageView.getMeasuredWidth(), y + backButtonImageView.getMeasuredHeight());
             } else {
                 backButtonImageView.layout(0, additionalTop, backButtonImageView.getMeasuredWidth(), additionalTop + backButtonImageView.getMeasuredHeight());
