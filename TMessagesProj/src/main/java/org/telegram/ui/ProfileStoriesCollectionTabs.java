@@ -31,6 +31,7 @@ import java.util.ArrayList;
 
 @SuppressLint("ViewConstructor")
 public class ProfileStoriesCollectionTabs extends BlurredFrameLayout implements NotificationCenter.NotificationCenterDelegate {
+
     private final ViewPagerFixed viewPager;
     public final ViewPagerFixed.TabsView tabsView;
     private final StoriesController.StoriesCollections collections;
