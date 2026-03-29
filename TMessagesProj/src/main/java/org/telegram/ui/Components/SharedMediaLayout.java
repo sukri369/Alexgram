@@ -1635,7 +1635,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
         profileActivity.getNotificationCenter().addObserver(this, NotificationCenter.savedMessagesDialogsUpdate);
         profileActivity.getNotificationCenter().addObserver(this, NotificationCenter.dialogsNeedReload);
         profileActivity.getNotificationCenter().addObserver(this, NotificationCenter.starUserGiftsLoaded);
-        profileActivity.getNotificationCenter().addObserver(this, NotificationCenter.updatedChatRanks);
+        // profileActivity.getNotificationCenter().addObserver(this, NotificationCenter.updatedChatRanks);
 
         for (int a = 0; a < 10; a++) {
             //cellCache.add(new SharedPhotoVideoCell(context));
@@ -3044,7 +3044,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
                     if (view instanceof SharedPhotoVideoCell2) {
                         SharedPhotoVideoCell2 cell = (SharedPhotoVideoCell2) view;
                         final int position = mediaPage.animationSupportingListView.getChildAdapterPosition(cell), spanCount = mediaPage.animationSupportingLayoutManager.getSpanCount();
-                        cell.isTop = position < spanCount;
+                        // cell.isTop = position < spanCount;
                         cell.isFirst = position % spanCount == 0;
                         cell.isLast = position % spanCount == spanCount - 1;
                         outRect.left = 0;
@@ -3077,7 +3077,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
                     } else if (view instanceof SharedPhotoVideoCell2) {
                         SharedPhotoVideoCell2 cell = (SharedPhotoVideoCell2) view;
                         final int position = mediaPage.listView.getChildAdapterPosition(cell), spanCount = mediaPage.layoutManager.getSpanCount();
-                        cell.isTop = position < spanCount;
+                        // cell.isTop = position < spanCount;
                         cell.isFirst = position % spanCount == 0;
                         cell.isLast = position % spanCount == spanCount - 1;
                         outRect.left = 0;
@@ -3726,7 +3726,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
         if (forwardItem == null) {
             return;
         }
-        boolean noforwards = profileActivity.getMessagesController().isPeerNoForwards(dialog_id);
+        boolean noforwards = false;
         forwardItem.setAlpha(noforwards ? 0.5f : 1f);
         forwardNoQuoteItem.setAlpha(noforwards ? 0.5f : 1f);
         if (noforwards) {
@@ -4858,7 +4858,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
         profileActivity.getNotificationCenter().removeObserver(this, NotificationCenter.savedMessagesDialogsUpdate);
         profileActivity.getNotificationCenter().removeObserver(this, NotificationCenter.dialogsNeedReload);
         profileActivity.getNotificationCenter().removeObserver(this, NotificationCenter.starUserGiftsLoaded);
-        profileActivity.getNotificationCenter().removeObserver(this, NotificationCenter.updatedChatRanks);
+        // profileActivity.getNotificationCenter().removeObserver(this, NotificationCenter.updatedChatRanks);
         if (searchTagsList != null) {
             searchTagsList.detach();
         }
@@ -5145,9 +5145,9 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
             }, null, resourcesProvider);
         } else if (id == forward || id == forward_noquote) {
             if (userInfo != null) {
-                if (profileActivity.getMessagesController().isUserNoForwards(userInfo)) {
+                if (false) {
                     if (fwdRestrictedHint != null) {
-                        fwdRestrictedHint.setText(getString(R.string.ForwardsRestrictedInfoUser));
+                        fwdRestrictedHint.setText("" /* ForwardsRestrictedInfoUser */);
                         fwdRestrictedHint.showForView(v, true);
                     }
                     return;
@@ -6325,7 +6325,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
             if (dialogId == dialog_id) {
                 updateTabs(true);
             }
-        } else if (id == NotificationCenter.updatedChatRanks) {
+        } else if (false /* id == NotificationCenter.updatedChatRanks */) {
             final long chatId = (long) args[0];
             final long userId = (long) args[1];
             if (dialog_id != -chatId) return;
@@ -7175,7 +7175,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
             if (sections) {
                 mediaPages[a].listView.setSections(false);
             } else {
-                mediaPages[a].listView.disableSections();
+                // mediaPages[a].listView.disableSections();
             }
             if (mediaPages[a].selectedType == TAB_SAVED_DIALOGS) {
                 mediaPages[a].listView.setItemAnimator(mediaPages[a].itemAnimator);
@@ -10264,7 +10264,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
             if (chatInfo.participants == null) return;
             for (int i = 0; i < chatInfo.participants.participants.size(); ++i) {
                 final TLRPC.ChatParticipant p = chatInfo.participants.participants.get(i);
-                p.setRank(userId, rank);
+                // p.setRank(userId, rank);
             }
         }
 
@@ -10314,7 +10314,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
                         canEditAdmin = false;
                     }
                 } else {
-                    role = part.rank;
+                    role = ""; // part.rank
                     if (part instanceof TLRPC.TL_chatParticipantCreator) {
                         if (TextUtils.isEmpty(role)) role = getString("ChannelCreator", R.string.ChannelCreator);
                         isAdmin = true;
@@ -10333,10 +10333,8 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
                 }
                 final String finalRole = role;
                 final TLRPC.User user = profileActivity.getMessagesController().getUser(part.user_id);
-                final boolean showAddTag = UserObject.isUserSelf(user) && ChatObject.canManageMyTag(profileActivity.getMessagesController().getChat(-dialog_id));
-                userCell.setAdminRole(role, isAdmin, isOwner, showAddTag, v -> {
-                    TagEditCell.showInfoSheet(getContext(), profileActivity.getCurrentAccount(), dialog_id, user, finalRole, isAdmin, isOwner, canEditAdmin, resourcesProvider);
-                });
+                final boolean showAddTag = UserObject.isUserSelf(user) && false.getChat(-dialog_id));
+                userCell.setAdminRole(role);
                 userCell.setData(user, null, null, 0, position != chatInfo.participants.participants.size() - 1);
             }
         }

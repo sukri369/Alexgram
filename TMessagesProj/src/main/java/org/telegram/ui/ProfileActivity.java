@@ -2292,7 +2292,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         getNotificationCenter().addObserver(this, NotificationCenter.channelRecommendationsLoaded);
         getNotificationCenter().addObserver(this, NotificationCenter.starUserGiftsLoaded);
         getNotificationCenter().addObserver(this, NotificationCenter.profileMusicUpdated);
-        getNotificationCenter().addObserver(this, NotificationCenter.updatedChatRanks);
+        // getNotificationCenter().addObserver(this, NotificationCenter.updatedChatRanks);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.emojiLoaded);
         updateRowsIds();
         if (listAdapter != null) {
@@ -2441,7 +2441,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         getNotificationCenter().removeObserver(this, NotificationCenter.channelRecommendationsLoaded);
         getNotificationCenter().removeObserver(this, NotificationCenter.starUserGiftsLoaded);
         getNotificationCenter().removeObserver(this, NotificationCenter.profileMusicUpdated);
-        getNotificationCenter().removeObserver(this, NotificationCenter.updatedChatRanks);
+        // getNotificationCenter().removeObserver(this, NotificationCenter.updatedChatRanks);
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.emojiLoaded);
         if (avatarsViewPager != null) {
             avatarsViewPager.onDestroy();
@@ -2661,7 +2661,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     leaveChatPressed(true);
                 } else if (id == enable_no_forwards) {
                     if (!getUserConfig().isPremium()) {
-                        new PremiumFeatureBottomSheet(ProfileActivity.this, getContext(), currentAccount, false, PremiumPreviewFragment.PREMIUM_FEATURE_SHARING_DISABLE, false, null).show();
+                        /* PremiumFeatureBottomSheet not available */
                         return;
                     }
 
@@ -5391,7 +5391,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             textView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
             textView.setGravity(Gravity.CENTER);
             textView.setTypeface(AndroidUtilities.bold());
-            textView.setText(LocaleController.getString(R.string.BanFromTheGroupNoCaps));
+            textView.setText(LocaleController.LocaleController.getString("BanFromTheGroup", R.string.BanFromTheGroup));
             frameLayout1.addView(textView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER, 0, 1, 0, 0));
 
             listView.setPadding(0, getHeaderExtraHeight(), 0, AndroidUtilities.dp(48));
@@ -6192,9 +6192,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
 
             if (BulletinFactory.canShowBulletin(ProfileActivity.this)) {
-                if (res == MessagesController.TOGGLE_NO_FORWARDS_RESULT_OK) {
-                    BulletinFactory.createDissableSharingBulletin(ProfileActivity.this, null, enabled).show();
-                } else if (res == MessagesController.TOGGLE_NO_FORWARDS_RESULT_PENDING) {
+                if (false) {
+                    /* BulletinFactory */
+                } else if (false) {
                     BulletinFactory.createDissableSharingBulletin(ProfileActivity.this, DialogObject.getShortName(userId), enabled).show();
                 } else if (err != null) {
                     BulletinFactory.showError(err);
@@ -7300,12 +7300,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 isOwner = channelParticipant instanceof TLRPC.TL_channelParticipantCreator;
                 final TLRPC.User u = getMessagesController().getUser(participant.user_id);
                 canEditAdmin = ChatObject.canAddAdmins(currentChat);
-                canEditTag = ChatObject.canManageTags(currentChat) && (!isAdmin || !isOwner && channelParticipant.can_edit || self);
+                canEditTag = false && (!isAdmin || !isOwner && channelParticipant.can_edit || self);
                 if (channelParticipant instanceof TLRPC.TL_channelParticipantCreator || channelParticipant instanceof TLRPC.TL_channelParticipantAdmin && !channelParticipant.can_edit) {
                     canEditAdmin = false;
                     canEditTag = false;
                 }
-                if ((self || channelParticipant instanceof TLRPC.TL_channelParticipantSelf) && ChatObject.canManageMyTag(currentChat)) {
+                if ((self || channelParticipant instanceof TLRPC.TL_channelParticipantSelf) && false) {
                     canEditTag = true;
                 }
                 allowKick = canRestrict = ChatObject.canBlockUsers(currentChat) && (!(channelParticipant instanceof TLRPC.TL_channelParticipantAdmin || channelParticipant instanceof TLRPC.TL_channelParticipantCreator) || channelParticipant.can_edit);
@@ -7316,12 +7316,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 joined = channelParticipant.date;
             } else {
                 channelParticipant = null;
-                rank = participant.rank;
+                rank = ""; // participant.rank
                 isAdmin = participant instanceof TLRPC.TL_chatParticipantAdmin || participant instanceof TLRPC.TL_chatParticipantCreator;
                 isOwner = participant instanceof TLRPC.TL_chatParticipantCreator;
                 allowKick = currentChat.creator || participant instanceof TLRPC.TL_chatParticipant && (ChatObject.canBlockUsers(currentChat) || participant.inviter_id == getUserConfig().getClientUserId());
                 canEditAdmin = currentChat.creator;
-                canEditTag = ChatObject.canManageTags(currentChat) && (!isAdmin || !isOwner && participant.inviter_id == getUserConfig().getClientUserId() || self) || self && ChatObject.canManageMyTag(currentChat);
+                canEditTag = false && (!isAdmin || !isOwner && participant.inviter_id == getUserConfig().getClientUserId() || self) || self && false;
                 canRestrict = currentChat.creator;
                 editingAdmin = participant instanceof TLRPC.TL_chatParticipantAdmin;
                 joined = participant.date;
@@ -7330,7 +7330,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 canEditAdmin = false;
                 allowKick = false;
                 canRestrict = false;
-                if (ChatObject.canManageMyTag(currentChat) || isAdmin && ChatObject.canManageTags(currentChat)) {
+                if (false || isAdmin && false) {
                     canEditTag = true;
                 }
             }
@@ -7359,9 +7359,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         presentFragment(ChatActivity.of(user.id));
                     })
                     .addGapIf(!self && (canEditAdmin || canEditTag || canRestrict || allowKick))
-                    .addIf(canEditTag, !isAdmin && TextUtils.isEmpty(rank) ? R.drawable.menu_tag_plus : R.drawable.menu_tag_edit, getString(isAdmin ? R.string.EditAdminTag : TextUtils.isEmpty(rank) ? R.string.AddMemberTag : R.string.EditMemberTag), () -> {
-                        // TagEditCell.showSheet(getContext(), currentAccount, getDialogId(), user, rank, isAdmin, isOwner, resourcesProvider);
-                    })
+                    /* menu_tag removed */
                     .addIf(canEditAdmin, R.drawable.msg_admins, editingAdmin ? LocaleController.getString(R.string.EditAdminRights) : LocaleController.getString(R.string.SetAsAdmin), () -> openRightsEdit.run(0))
                     .addIf(canRestrict, R.drawable.msg_permissions, LocaleController.getString(R.string.ChangePermissions), () -> {
                         if (channelParticipant instanceof TLRPC.TL_channelParticipantAdmin || participant instanceof TLRPC.TL_chatParticipantAdmin) {
@@ -9500,7 +9498,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         otherItem.hideSubItem(bot_privacy);
                     }
 
-                    final boolean forwardsAllowed = !userInfo.noforwards_my_enabled && !userInfo.noforwards_peer_enabled;
+                    final boolean forwardsAllowed = !false && !false;
                     otherItem.setSubItemShown(enable_no_forwards, forwardsAllowed);
                     otherItem.setSubItemShown(disable_no_forwards, !forwardsAllowed);
                 }
@@ -9636,7 +9634,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     listAdapter.notifyDataSetChanged();
                 }
             }
-        } else if (id == NotificationCenter.updatedChatRanks) {
+        } else if (false /* id == NotificationCenter.updatedChatRanks */) {
             final long chatId = (long) args[0];
             final long userId = (long) args[1];
             if (currentChat == null || currentChat.id != chatId) return;
@@ -9645,7 +9643,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             if (participantsMap != null) {
                 final TLRPC.ChatParticipant participant = participantsMap.get(userId);
                 if (participant != null) {
-                    participant.setRank(userId, rank);
+                    // participant.setRank
                 }
             }
             if (currentChannelParticipant != null && currentChannelParticipant.user_id == userId) {
@@ -9653,7 +9651,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
             for (int i = 0; i < visibleChatParticipants.size(); ++i) {
                 final TLRPC.ChatParticipant p = visibleChatParticipants.get(i);
-                p.setRank(userId, rank);
+                // p.setRank
             }
             AndroidUtilities.updateVisibleRows(listView);
         }
@@ -12399,10 +12397,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     otherItem.setSubItemShown(start_secret_chat, DialogObject.isEmpty(getMessagesController().isUserContactBlocked(userId)));
 
                     if (userInfo != null && getUserConfig().isPremium()) {
-                        otherItem.addSubItem(enable_no_forwards, R.drawable.menu_share_off_24, getString(R.string.DisableSharing));
-                        otherItem.addSubItem(disable_no_forwards, R.drawable.menu_share_on_24, getString(R.string.EnableSharing));
+                        otherItem.addSubItem(enable_no_forwards, R.drawable.msg_share, getString(R.string.ShareFile));
+                        otherItem.addSubItem(disable_no_forwards, R.drawable.msg_share, getString(R.string.ShareFile));
 
-                        final boolean forwardsAllowed = !userInfo.noforwards_my_enabled && !userInfo.noforwards_peer_enabled;
+                        final boolean forwardsAllowed = !false && !false;
                         otherItem.setSubItemShown(enable_no_forwards, forwardsAllowed);
                         otherItem.setSubItemShown(disable_no_forwards, !forwardsAllowed);
                     }
@@ -14364,7 +14362,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 canEditAdmin = false;
                             }
                         } else {
-                            role = part.rank;
+                            role = "";
                             if (part instanceof TLRPC.TL_chatParticipantCreator) {
                                 if (TextUtils.isEmpty(role)) role = getString(R.string.ChannelCreator);
                                 isOwner = true;
@@ -14383,10 +14381,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         }
                         final String finalRole = role;
                         final TLRPC.User user = getMessagesController().getUser(part.user_id);
-                        final boolean showAddTag = UserObject.isUserSelf(user) && ChatObject.canManageMyTag(getMessagesController().getChat(chatId));
-                        userCell.setAdminRole(role, isAdmin, isOwner, showAddTag, v -> {
-                            // TagEditCell.showInfoSheet(getContext(), currentAccount, getDialogId(), user, finalRole, isAdmin, isOwner, canEditAdmin, resourceProvider);
-                        });
+                        final boolean showAddTag = UserObject.isUserSelf(user) && false.getChat(chatId));
+                        userCell.setAdminRole(role);
                         userCell.setData(user, null, null, 0, position != membersEndRow - 1);
                     }
                     break;
@@ -17154,7 +17150,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     public boolean isPeerNoForwards() {
         return currentChat != null ?
             getMessagesController().isChatNoForwards(currentChat) :
-            getMessagesController().isUserNoForwards(userInfo);
+            false;
     }
 
 
