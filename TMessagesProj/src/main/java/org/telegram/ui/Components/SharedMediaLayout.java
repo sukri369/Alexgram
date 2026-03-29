@@ -3044,7 +3044,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
                     if (view instanceof SharedPhotoVideoCell2) {
                         SharedPhotoVideoCell2 cell = (SharedPhotoVideoCell2) view;
                         final int position = mediaPage.animationSupportingListView.getChildAdapterPosition(cell), spanCount = mediaPage.animationSupportingLayoutManager.getSpanCount();
-                        // cell.isTop = position < spanCount;
+                        cell.isTop = position < spanCount;
                         cell.isFirst = position % spanCount == 0;
                         cell.isLast = position % spanCount == spanCount - 1;
                         outRect.left = 0;
@@ -3077,7 +3077,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
                     } else if (view instanceof SharedPhotoVideoCell2) {
                         SharedPhotoVideoCell2 cell = (SharedPhotoVideoCell2) view;
                         final int position = mediaPage.listView.getChildAdapterPosition(cell), spanCount = mediaPage.layoutManager.getSpanCount();
-                        // cell.isTop = position < spanCount;
+                        cell.isTop = position < spanCount;
                         cell.isFirst = position % spanCount == 0;
                         cell.isLast = position % spanCount == spanCount - 1;
                         outRect.left = 0;
@@ -3567,16 +3567,18 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
                 setVisibleHeight(lastVisibleHeight);
             });
 
-            // NagramX: use solid pill bg — blur factory needs setSourceRootView() (missing in NagramX)
-            {
+            if (iBlur3FactoryLiquidGlass != null) {
+                BlurredBackgroundDrawable filterTabsViewBackground = iBlur3FactoryLiquidGlass.create(scrollSlidingTextTabStrip, BlurredBackgroundProviderImpl.topPanel(resourcesProvider));
+                filterTabsViewBackground.setRadius(dp(18));
+                filterTabsViewBackground.setPadding(dp(6.666f));
                 scrollSlidingTextTabStrip.setPadding(0, dp(7), 0, dp(7));
                 scrollSlidingTextTabStrip.setClipToPadding(false);
-                GradientDrawable pillBg = new GradientDrawable();
-                pillBg.setCornerRadius(dp(18));
-                pillBg.setColor(Theme.multAlpha(getThemedColor(Theme.key_windowBackgroundGray), 0.9f));
-                scrollSlidingTextTabStrip.setBackground(pillBg);
+                scrollSlidingTextTabStrip.setBackground(null);
+                scrollSlidingTextTabStrip.setBlurredBackground(filterTabsViewBackground);
                 scrollSlidingTextTabStrip.setOpen(false);
-                addView(scrollSlidingTextTabStrip, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, 50, Gravity.CENTER_HORIZONTAL | Gravity.TOP, 0, 0, 0, 0));
+                addView(scrollSlidingTextTabStrip, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, 50, Gravity.CENTER_HORIZONTAL | Gravity.TOP, -2, 0, -2, 0));
+            } else {
+                addView(scrollSlidingTextTabStrip, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 48, Gravity.LEFT | Gravity.TOP));
             }
             searchTagsList = new SearchTagsList(getContext(), profileActivity, null, profileActivity.getCurrentAccount(), includeSavedDialogs() ? 0 : dialog_id, resourcesProvider, false) {
                 @Override
