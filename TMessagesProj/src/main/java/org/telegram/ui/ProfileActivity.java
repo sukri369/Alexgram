@@ -2665,7 +2665,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         return;
                     }
 
-                    AlertsCreator.showDisableSharingInfo(context, resourcesProvider, () -> toggleNoForwards(true));
+                    // AlertsCreator.showDisableSharingInfo(context, resourcesProvider, () -> toggleNoForwards(true));
                 } else if (id == disable_no_forwards) {
                     toggleNoForwards(false);
                 } else if (id == event_log) {
@@ -5391,7 +5391,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             textView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
             textView.setGravity(Gravity.CENTER);
             textView.setTypeface(AndroidUtilities.bold());
-            textView.setText(LocaleController.LocaleController.getString("BanFromTheGroup", R.string.BanFromTheGroup));
+            textView.setText(LocaleController.getString("BanFromTheGroup", R.string.BanFromTheGroup));
             frameLayout1.addView(textView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER, 0, 1, 0, 0));
 
             listView.setPadding(0, getHeaderExtraHeight(), 0, AndroidUtilities.dp(48));
@@ -6186,24 +6186,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     }
 
     private void toggleNoForwards(boolean enabled) {
-        getMessagesController().toggleChatNoForwards(userId, 0, enabled, (res, err) -> {
-            if (finishFragmentIfPreviousIsChatActivity()) {
-                return;
-            }
-
-            if (BulletinFactory.canShowBulletin(ProfileActivity.this)) {
-                if (false) {
-                    /* BulletinFactory */
-                } else if (false) {
-                    BulletinFactory.createDissableSharingBulletin(ProfileActivity.this, DialogObject.getShortName(userId), enabled).show();
-                } else if (err != null) {
-                    BulletinFactory.showError(err);
-                }
-            }
-            if (flagSecure != null) {
-                flagSecure.invalidate();
-            }
-        });
+        // Not supported in NagramX base yet
     }
 
     public void startTabsReorder() {
