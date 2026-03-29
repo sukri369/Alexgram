@@ -3552,7 +3552,15 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
                 scrollSlidingTextTabStrip.setOpen(false);
                 addView(scrollSlidingTextTabStrip, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, 50, Gravity.CENTER_HORIZONTAL | Gravity.TOP, -2, 0, -2, 0));
             } else {
-                addView(scrollSlidingTextTabStrip, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 48, Gravity.LEFT | Gravity.TOP));
+                // Pill style with solid background fallback — centered compact layout
+                scrollSlidingTextTabStrip.setPadding(0, dp(7), 0, dp(7));
+                scrollSlidingTextTabStrip.setClipToPadding(false);
+                GradientDrawable pillBg = new GradientDrawable();
+                pillBg.setCornerRadius(dp(18));
+                pillBg.setColor(Theme.multAlpha(getThemedColor(Theme.key_windowBackgroundWhite), 0.85f));
+                scrollSlidingTextTabStrip.setBackground(pillBg);
+                scrollSlidingTextTabStrip.setOpen(false);
+                addView(scrollSlidingTextTabStrip, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, 50, Gravity.CENTER_HORIZONTAL | Gravity.TOP, -2, 0, -2, 0));
             }
             searchTagsList = new SearchTagsList(getContext(), profileActivity, null, profileActivity.getCurrentAccount(), includeSavedDialogs() ? 0 : dialog_id, resourcesProvider, false) {
                 @Override
