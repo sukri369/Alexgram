@@ -212,6 +212,7 @@ public class TLRPC {
         public boolean send_polls;
         public boolean change_info;
         public boolean invite_users;
+        public boolean edit_rank;
         public boolean pin_messages;
         public boolean manage_topics;
         public boolean send_photos;
@@ -221,7 +222,6 @@ public class TLRPC {
         public boolean send_voices;
         public boolean send_docs;
         public boolean send_plain;
-        public boolean edit_rank;
         public int until_date;
 
         public static TL_chatBannedRights TLdeserialize(InputSerializedData stream, int constructor, boolean exception) {
@@ -256,6 +256,7 @@ public class TLRPC {
             send_polls = (flags & 256) != 0;
             change_info = (flags & 1024) != 0;
             invite_users = (flags & 32768) != 0;
+            edit_rank = (flags & 65536) != 0;
             pin_messages = (flags & 131072) != 0;
             manage_topics = (flags & 262144) != 0;
             send_photos = (flags & 524288) != 0;
@@ -305,6 +306,7 @@ public class TLRPC {
             flags = send_polls ? (flags | 256) : (flags &~ 256);
             flags = change_info ? (flags | 1024) : (flags &~ 1024);
             flags = invite_users ? (flags | 32768) : (flags &~ 32768);
+            flags = edit_rank ? (flags | 65536) : (flags &~ 65536);
             flags = pin_messages ? (flags | 131072) : (flags &~ 131072);
             flags = manage_topics ? (flags | 262144) : (flags &~ 262144);
             flags = send_photos ? (flags | 524288) : (flags &~ 524288);
