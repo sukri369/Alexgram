@@ -137,6 +137,7 @@ public class ChatRightsEditActivity extends BaseFragment implements Notification
     private int banUsersRow;
     private int addUsersRow;
     private int pinMessagesRow;
+    private int editTagsRow;
     private int manageTopicsRow;
     private int rightsShadowRow;
     private int removeAdminRow;
@@ -940,6 +941,8 @@ public class ChatRightsEditActivity extends BaseFragment implements Notification
                     } else {
                         value = bannedRights.pin_messages = !bannedRights.pin_messages;
                     }
+                } else if (position == editTagsRow) {
+                    value = adminRights.edit_rank = !adminRights.edit_rank;
                 } else if (currentType == TYPE_BANNED && bannedRights != null) {
                     boolean disabled = !checkCell.isChecked();
                     if (position == sendMessagesRow) {
@@ -1190,6 +1193,7 @@ public class ChatRightsEditActivity extends BaseFragment implements Notification
         banUsersRow = -1;
         addUsersRow = -1;
         pinMessagesRow = -1;
+        editTagsRow = -1;
         rightsShadowRow = -1;
         removeAdminRow = -1;
         removeAdminShadowRow = -1;
@@ -1261,6 +1265,9 @@ public class ChatRightsEditActivity extends BaseFragment implements Notification
                 banUsersRow = rowCount++;
                 addUsersRow = rowCount++;
                 pinMessagesRow = rowCount++;
+                if (ChatObject.canManageTags(currentChat)) {
+                    editTagsRow = rowCount++;
+                }
                 if (ChatObject.isChannel(currentChat)) {
                     channelStoriesRow = rowCount++;
                     if (channelStoriesExpanded) {
@@ -1694,6 +1701,8 @@ public class ChatRightsEditActivity extends BaseFragment implements Notification
                         return myAdminRights.invite_users;
                     } else if (position == pinMessagesRow) {
                         return myAdminRights.pin_messages && (defaultBannedRights == null || defaultBannedRights.pin_messages);
+                    } else if (position == editTagsRow) {
+                        return currentChat != null && currentChat.creator || myAdminRights.add_admins;
                     } else if (position == manageTopicsRow) {
                         return myAdminRights.manage_topics;
                     } else if (position == channelPostStoriesRow) {
@@ -2059,6 +2068,9 @@ public class ChatRightsEditActivity extends BaseFragment implements Notification
                             checkCell.setTextAndCheck(LocaleController.getString(R.string.UserRestrictionsPinMessages), !bannedRights.pin_messages && !defaultBannedRights.pin_messages, true);
                             checkCell.setIcon(defaultBannedRights.pin_messages ? R.drawable.permission_locked : 0);
                         }
+                    } else if (position == editTagsRow) {
+                        checkCell.setTextAndCheck(LocaleController.getString(R.string.EditAdminEditTags), asAdminValue && adminRights.edit_rank, editTagsRow != -1);
+                        checkCell.setIcon((currentChat != null && currentChat.creator) || myAdminRights.add_admins ? 0 : R.drawable.permission_locked);
                     } else if (position == sendMessagesRow) {
                         checkCell.setTextAndCheck(LocaleController.getString(R.string.UserRestrictionsSend), !bannedRights.send_plain && !defaultBannedRights.send_plain, true);
                         checkCell.setIcon(defaultBannedRights.send_plain ? R.drawable.permission_locked : 0);

@@ -14347,7 +14347,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 canEditAdmin = false;
                             }
                         } else {
-                            role = "";
+                            role = part instanceof TLRPC.TL_chatParticipantCreator || part instanceof TLRPC.TL_chatParticipantAdmin ? "" : (part.rank != null ? part.rank : "");
                             if (part instanceof TLRPC.TL_chatParticipantCreator) {
                                 if (TextUtils.isEmpty(role)) role = getString(R.string.ChannelCreator);
                                 isOwner = true;
