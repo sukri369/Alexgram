@@ -942,7 +942,11 @@ public class ChatRightsEditActivity extends BaseFragment implements Notification
                         value = bannedRights.pin_messages = !bannedRights.pin_messages;
                     }
                 } else if (position == editTagsRow) {
-                    value = adminRights.manage_ranks = !adminRights.manage_ranks;
+                    if (currentType == TYPE_ADMIN || currentType == TYPE_ADD_BOT) {
+                        value = adminRights.manage_ranks = !adminRights.manage_ranks;
+                    } else {
+                        value = bannedRights.edit_rank = !bannedRights.edit_rank;
+                    }
                 } else if (currentType == TYPE_BANNED && bannedRights != null) {
                     boolean disabled = !checkCell.isChecked();
                     if (position == sendMessagesRow) {
@@ -1304,6 +1308,9 @@ public class ChatRightsEditActivity extends BaseFragment implements Notification
             addUsersRow = rowCount++;
             pinMessagesRow = rowCount++;
             changeInfoRow = rowCount++;
+            if (ChatObject.canManageTags(currentChat)) {
+                editTagsRow = rowCount++;
+            }
             if (isForum) {
                 manageTopicsRow = rowCount++;
             }
@@ -2069,8 +2076,13 @@ public class ChatRightsEditActivity extends BaseFragment implements Notification
                             checkCell.setIcon(defaultBannedRights.pin_messages ? R.drawable.permission_locked : 0);
                         }
                     } else if (position == editTagsRow) {
-                        checkCell.setTextAndCheck(LocaleController.getString(R.string.EditAdminEditTags), asAdminValue && adminRights.manage_ranks, editTagsRow != -1);
-                        checkCell.setIcon((currentChat != null && currentChat.creator) || myAdminRights.add_admins ? 0 : R.drawable.permission_locked);
+                        if (currentType == TYPE_ADMIN || currentType == TYPE_ADD_BOT) {
+                            checkCell.setTextAndCheck(LocaleController.getString(R.string.EditAdminEditTags), asAdminValue && adminRights.manage_ranks, true);
+                            checkCell.setIcon((currentChat != null && currentChat.creator) || myAdminRights.add_admins ? 0 : R.drawable.permission_locked);
+                        } else if (currentType == TYPE_BANNED) {
+                            checkCell.setTextAndCheck(LocaleController.getString(R.string.UserRestrictionsEditTags), !bannedRights.edit_rank && !defaultBannedRights.edit_rank, true);
+                            checkCell.setIcon(defaultBannedRights.edit_rank ? R.drawable.permission_locked : 0);
+                        }
                     } else if (position == sendMessagesRow) {
                         checkCell.setTextAndCheck(LocaleController.getString(R.string.UserRestrictionsSend), !bannedRights.send_plain && !defaultBannedRights.send_plain, true);
                         checkCell.setIcon(defaultBannedRights.send_plain ? R.drawable.permission_locked : 0);

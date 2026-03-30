@@ -17968,7 +17968,17 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
 //        } else {
 //            drawTopic = false;
 //        }
-        if (!hasPsaHint && (needAuthorName || viaBot)) {
+        String adminLabel = null;
+        if (!hasPsaHint && delegate != null && (currentUser != null || currentChat != null) && !currentMessageObject.isAnyKindOfSticker() && currentMessageObject.type != MessageObject.TYPE_ROUND_VIDEO) {
+            String delegateRank = delegate.getAdminRank(currentUser != null ? currentUser.id : currentChat.id);
+            if (delegateRank != null) {
+                adminLabel = delegateRank;
+            }
+        }
+        if (adminLabel == null && messageObject.messageOwner != null && messageObject.messageOwner.from_rank != null) {
+            adminLabel = messageObject.messageOwner.from_rank;
+        }
+        if (!hasPsaHint && (needAuthorName || viaBot || adminLabel != null)) {
             drawNameLayout = true;
             drawNameAvatar = !messageObject.isOutOwner() && (isForum || isMonoForum) && isSideMenuEnabled && (currentPosition == null || (currentPosition.flags & MessageObject.POSITION_FLAG_TOP) != 0) && !(messageObject.type == MessageObject.TYPE_ROUND_VIDEO || messageObject.type == MessageObject.TYPE_STICKER || messageObject.type == MessageObject.TYPE_ANIMATED_STICKER);
             nameWidth = getMaxNameWidth();
@@ -17983,12 +17993,11 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             }
             int adminWidth = 0;
             SpannableStringBuilder adminString = null;
-            String adminLabel;
             if (isMegagroup && currentChat != null && messageObject.messageOwner.post_author != null && currentChat.id == -currentMessageObject.getFromChatId()) {
                 adminString = new SpannableStringBuilder(messageObject.messageOwner.post_author.replace("\n", ""));
             } else if (isMegagroup && currentChat != null && currentMessageObject.isForwardedChannelPost()) {
                 adminString = new SpannableStringBuilder(getString(R.string.DiscussChannel));
-            } else if ((currentUser != null || currentChat != null) && !currentMessageObject.isOutOwner() && !currentMessageObject.isAnyKindOfSticker() && currentMessageObject.type != MessageObject.TYPE_ROUND_VIDEO && delegate != null && (adminLabel = delegate.getAdminRank(currentUser != null ? currentUser.id : currentChat.id)) != null) {
+            } else if (adminLabel != null) {
                 if (adminLabel.length() == 0) {
                     adminLabel = getString(R.string.ChatAdmin);
                 }
@@ -17996,7 +18005,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 if (NaConfig.INSTANCE.getColoredAdminTitle().Bool()) {
                     adminString.replace(0, adminString.length(), TimeStringHelper.getColoredAdminString(Theme.chat_namePaint, adminString));
                 }
-            } else if (!currentMessageObject.isOutOwner() && !currentMessageObject.isAnyKindOfSticker() && currentMessageObject.type != MessageObject.TYPE_ROUND_VIDEO
+            } else if (!currentMessageObject.isAnyKindOfSticker() && currentMessageObject.type != MessageObject.TYPE_ROUND_VIDEO
                     && currentMessageObject.messageOwner != null && !android.text.TextUtils.isEmpty(currentMessageObject.messageOwner.from_rank)) {
                 adminLabel = currentMessageObject.messageOwner.from_rank;
                 adminString = new SpannableStringBuilder(adminLabel);
@@ -18040,8 +18049,13 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             currentNameBotVerificationId = 0;
             if (messageObject.customName != null) {
                 currentNameString = messageObject.customName;
+            }
+            if (viaBot) {
+                currentNameString = viaString;
+                currentNameStatus = null;
+                currentNameBotVerificationId = 0;
             } else if (needAuthorName) {
-                currentNameString = getAuthorName();
+                currentNameString = currentMessageObject.isOutOwner() && adminLabel != null ? "" : getAuthorName();
                 currentNameStatus = getAuthorStatus();
                 currentNameBotVerificationId = getAuthorBotVerificationId();
             } else {
@@ -18788,7 +18802,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         }
         return (
             isPinnedChat && currentMessageObject.type == MessageObject.TYPE_TEXT ||
-            !pinnedTop && drawName && isChat && (!currentMessageObject.isOutOwner() || currentMessageObject.isSupergroup() && currentMessageObject.isFromGroup() || currentMessageObject.isRepostPreview) ||
+            !pinnedTop && drawName && isChat && (!currentMessageObject.isOutOwner() || currentMessageObject.isFromGroup() || currentMessageObject.isRepostPreview || (currentMessageObject.isOutOwner() && (currentMessageObject.messageOwner != null && !android.text.TextUtils.isEmpty(currentMessageObject.messageOwner.from_rank) || delegate != null && delegate.getAdminRank(UserConfig.getInstance(currentAccount).getClientUserId()) != null))) ||
             currentMessageObject.isImportedForward() && currentMessageObject.messageOwner.fwd_from.from_id == null
         );
     }

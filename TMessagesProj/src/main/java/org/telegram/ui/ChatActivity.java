@@ -42291,7 +42291,7 @@ public class ChatActivity extends BaseFragment implements
                 return null;
             }
 
-            if (ChatObject.isChannel(currentChat) && currentChat.megagroup) {
+            if (currentChat != null) {
                 String rank = getMessagesController().getAdminRank(currentChat.id, uid);
                 if (rank != null) {
                     return rank;

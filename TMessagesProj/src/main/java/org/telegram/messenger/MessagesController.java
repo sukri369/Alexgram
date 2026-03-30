@@ -7409,18 +7409,40 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     public String getAdminRank(long chatId, long uid) {
-        if (chatId == uid) {
-            return "";
+        if (chatId == uid) return "";
+        final LongSparseArray<TLRPC.ChannelParticipant> array = channelAdmins.get(chatId);
+        if (array != null) {
+            final TLRPC.ChannelParticipant participant = array.get(uid);
+            if (participant != null) {
+                if (participant.rank != null)
+                    return participant.rank;
+                if (participant instanceof TLRPC.TL_channelParticipantCreator)
+                    return LocaleController.getString(R.string.ChatTagOwner);
+                if (participant instanceof TLRPC.TL_channelParticipantAdmin)
+                    return LocaleController.getString(R.string.ChatTagAdmin);
+            }
         }
-        LongSparseArray<TLRPC.ChannelParticipant> array = channelAdmins.get(chatId);
-        if (array == null) {
-            return null;
+        final TLRPC.ChatFull chatFull = getChatFull(chatId);
+        if (chatFull != null && chatFull.participants != null) {
+            for (int i = 0; i < chatFull.participants.participants.size(); ++i) {
+                final TLRPC.ChatParticipant p = chatFull.participants.participants.get(i);
+                if (p.user_id == uid) {
+                    if (p.rank != null) return p.rank;
+                    if (p instanceof TLRPC.TL_chatChannelParticipant) {
+                        final TLRPC.TL_chatChannelParticipant pp = (TLRPC.TL_chatChannelParticipant) p;
+                        if (pp.channelParticipant != null) {
+                            return pp.channelParticipant.rank;
+                        }
+                    }
+                    if (p instanceof TLRPC.TL_chatParticipantCreator)
+                        return LocaleController.getString(R.string.ChatTagOwner);
+                    if (p instanceof TLRPC.TL_chatParticipantAdmin)
+                        return LocaleController.getString(R.string.ChatTagAdmin);
+                    return null;
+                }
+            }
         }
-        TLRPC.ChannelParticipant participant = array.get(uid);
-        if (participant == null) {
-            return null;
-        }
-        return participant.rank != null ? participant.rank : "";
+        return null;
     }
 
     public boolean isChannelAdminsLoaded(long chatId) {
