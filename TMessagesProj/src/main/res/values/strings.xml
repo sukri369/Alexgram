@@ -7516,6 +7516,9 @@
     <string name="MemberTagButtonEdit">Edit Tag</string>
     <string name="MemberTagButtonAdd">Add Tag</string>
     <string name="MemberTagSelfInfo">Share your role, title or how you\'re known in this group. Your tag is visible to all members.</string>
+    <string name="AddMemberTag">Add Member Tag</string>
+    <string name="EditMemberTag">Edit Member Tag</string>
+    <string name="EditAdminTag">Edit Admin Tag</string>
     <string name="MemberTagTheirInfo">Add a short tag next to %s\'s name.</string>
     <string name="TagAdded">Tag Added</string>
     <string name="TagEdited">Tag Edited</string>
