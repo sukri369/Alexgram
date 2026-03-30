@@ -39663,12 +39663,7 @@ public class ChatActivity extends BaseFragment implements
             if (uid == 0 || currentChat == null) {
                 return false;
             }
-            final LongSparseArray<TLRPC.ChannelParticipant> array = getMessagesController().channelAdmins.get(currentChat.id);
-            if (array != null) {
-                final TLRPC.ChannelParticipant participant = array.get(uid);
-                return participant instanceof TLRPC.TL_channelParticipantAdmin || participant instanceof TLRPC.TL_channelParticipantCreator;
-            }
-            return false;
+            return getMessagesController().isAdmin(currentChat.id, uid);
         }
 
         @Override
@@ -39676,12 +39671,7 @@ public class ChatActivity extends BaseFragment implements
             if (uid == 0 || currentChat == null) {
                 return false;
             }
-            final LongSparseArray<TLRPC.ChannelParticipant> array = getMessagesController().channelAdmins.get(currentChat.id);
-            if (array != null) {
-                final TLRPC.ChannelParticipant participant = array.get(uid);
-                return participant instanceof TLRPC.TL_channelParticipantCreator;
-            }
-            return false;
+            return getMessagesController().isOwner(currentChat.id, uid);
         }
 
         @Override

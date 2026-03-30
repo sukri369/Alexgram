@@ -300,7 +300,7 @@ public class UserCell extends FrameLayout implements NotificationCenter.Notifica
             color = Theme.getColor(Theme.key_chat_inAdminText, resourcesProvider);
         }
         adminTextView.setTextColor(color);
-        if (isAdmin || isOwner) {
+        if (!android.text.TextUtils.isEmpty(role)) {
             adminTextView.setText(role);
             adminTextView.setPadding(dp(6), dp(0.66f), dp(6), dp(1));
             adminTextView.setTranslationX(dp(6));

@@ -18035,7 +18035,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             if (adminString != null) {
                 StaticLayout staticLayout = new StaticLayout(adminString, Theme.chat_adminPaint, dp(300), Layout.Alignment.ALIGN_NORMAL, 0f, 0f, false);
                 adminWidth = (int) staticLayout.getLineWidth(0);
-                if (isAdmin || isOwner) adminWidth += dp(12);
+                if (adminString != null) adminWidth += dp(12);
                 nameWidth -= adminWidth;
             } else if (NekoConfig.labelChannelUser.Bool() && isMegagroup && currentChat != null && currentMessageObject.isSenderChannel()) {
                 SpannableStringBuilder channelLabelStringBuilder = TimeStringHelper.getChannelLabelSpan();
@@ -18135,7 +18135,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 }
                 if (adminString != null) {
                     adminLayout = new StaticLayout(adminString, Theme.chat_adminPaint, Math.max(dp(1), adminWidth + dp(2)), Layout.Alignment.ALIGN_NORMAL, 1.0f, 0.0f, false);
-                    adminLayoutIsAdmin = isAdmin || isOwner;
+                    adminLayoutIsAdmin = true;
                     adminLayoutIsOwner = isOwner;
                     if (!drawNameAvatar) {
                         nameWidth += adminLayout.getLineWidth(0) + (adminLayoutIsAdmin ? dp(12) : 0) + dp(8);

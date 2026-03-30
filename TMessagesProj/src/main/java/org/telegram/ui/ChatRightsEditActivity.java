@@ -1269,7 +1269,7 @@ public class ChatRightsEditActivity extends BaseFragment implements Notification
                 banUsersRow = rowCount++;
                 addUsersRow = rowCount++;
                 pinMessagesRow = rowCount++;
-                if (ChatObject.canManageTags(currentChat)) {
+                if (ChatObject.isChannel(currentChat)) {
                     editTagsRow = rowCount++;
                 }
                 if (ChatObject.isChannel(currentChat)) {
@@ -2076,7 +2076,7 @@ public class ChatRightsEditActivity extends BaseFragment implements Notification
                         }
                     } else if (position == editTagsRow) {
                         if (currentType == TYPE_ADMIN || currentType == TYPE_ADD_BOT) {
-                            checkCell.setTextAndCheck(LocaleController.getString(R.string.EditAdminEditTags), asAdminValue && adminRights.manage_ranks || !defaultBannedRights.edit_rank, true);
+                            checkCell.setTextAndCheck(LocaleController.getString(R.string.EditAdminEditTags), asAdminValue && adminRights.manage_ranks, true);
                             if (currentType == TYPE_ADD_BOT) {
                                 checkCell.setIcon(myAdminRights.manage_ranks || isCreator ? 0 : R.drawable.permission_locked);
                             }
