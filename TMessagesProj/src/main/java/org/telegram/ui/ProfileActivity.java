@@ -7283,12 +7283,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 isOwner = channelParticipant instanceof TLRPC.TL_channelParticipantCreator;
                 final TLRPC.User u = getMessagesController().getUser(participant.user_id);
                 canEditAdmin = ChatObject.canAddAdmins(currentChat);
-                canEditTag = false && (!isAdmin || !isOwner && channelParticipant.can_edit || self);
+                canEditTag = ChatObject.canManageTags(currentChat) && (!isAdmin || !isOwner && channelParticipant.can_edit || self);
                 if (channelParticipant instanceof TLRPC.TL_channelParticipantCreator || channelParticipant instanceof TLRPC.TL_channelParticipantAdmin && !channelParticipant.can_edit) {
                     canEditAdmin = false;
                     canEditTag = false;
                 }
-                if ((self || channelParticipant instanceof TLRPC.TL_channelParticipantSelf) && false) {
+                if ((self || channelParticipant instanceof TLRPC.TL_channelParticipantSelf) && ChatObject.canManageMyTag(currentChat)) {
                     canEditTag = true;
                 }
                 allowKick = canRestrict = ChatObject.canBlockUsers(currentChat) && (!(channelParticipant instanceof TLRPC.TL_channelParticipantAdmin || channelParticipant instanceof TLRPC.TL_channelParticipantCreator) || channelParticipant.can_edit);
@@ -7299,12 +7299,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 joined = channelParticipant.date;
             } else {
                 channelParticipant = null;
-                rank = ""; // participant.rank
+                rank = participant.rank;
                 isAdmin = participant instanceof TLRPC.TL_chatParticipantAdmin || participant instanceof TLRPC.TL_chatParticipantCreator;
                 isOwner = participant instanceof TLRPC.TL_chatParticipantCreator;
                 allowKick = currentChat.creator || participant instanceof TLRPC.TL_chatParticipant && (ChatObject.canBlockUsers(currentChat) || participant.inviter_id == getUserConfig().getClientUserId());
                 canEditAdmin = currentChat.creator;
-                canEditTag = false && (!isAdmin || !isOwner && participant.inviter_id == getUserConfig().getClientUserId() || self) || self && false;
+                canEditTag = ChatObject.canManageTags(currentChat) && (!isAdmin || !isOwner && participant.inviter_id == getUserConfig().getClientUserId() || self) || self && ChatObject.canManageMyTag(currentChat);
                 canRestrict = currentChat.creator;
                 editingAdmin = participant instanceof TLRPC.TL_chatParticipantAdmin;
                 joined = participant.date;
@@ -7313,7 +7313,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 canEditAdmin = false;
                 allowKick = false;
                 canRestrict = false;
-                if (false || isAdmin && false) {
+                if (ChatObject.canManageMyTag(currentChat) || isAdmin && ChatObject.canManageTags(currentChat)) {
                     canEditTag = true;
                 }
             }
@@ -7342,7 +7342,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         presentFragment(ChatActivity.of(user.id));
                     })
                     .addGapIf(!self && (canEditAdmin || canEditTag || canRestrict || allowKick))
-                    /* menu_tag removed */
+                    .addIf(canEditTag, !isAdmin && android.text.TextUtils.isEmpty(rank) ? R.drawable.menu_tag_plus : R.drawable.menu_tag_edit, getString(isAdmin ? R.string.EditAdminTag : android.text.TextUtils.isEmpty(rank) ? R.string.AddMemberTag : R.string.EditMemberTag), () -> {
+                        org.telegram.ui.Components.TagEditCell.showSheet(getContext(), currentAccount, getDialogId(), user, rank, isAdmin, isOwner, resourcesProvider);
+                    })
                     .addIf(canEditAdmin, R.drawable.msg_admins, editingAdmin ? LocaleController.getString(R.string.EditAdminRights) : LocaleController.getString(R.string.SetAsAdmin), () -> openRightsEdit.run(0))
                     .addIf(canRestrict, R.drawable.msg_permissions, LocaleController.getString(R.string.ChangePermissions), () -> {
                         if (channelParticipant instanceof TLRPC.TL_channelParticipantAdmin || participant instanceof TLRPC.TL_chatParticipantAdmin) {

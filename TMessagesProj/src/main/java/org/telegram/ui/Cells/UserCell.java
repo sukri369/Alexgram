@@ -741,7 +741,15 @@ public class UserCell extends FrameLayout implements NotificationCenter.Notifica
 
         nameTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText, resourcesProvider));
         if (adminTextView != null) {
-            adminTextView.setTextColor(Theme.getColor(Theme.key_profile_creatorIcon, resourcesProvider));
+            final int adminColor;
+            if (isOwner) {
+                adminColor = Theme.getColor(Theme.key_chat_tagCreator, resourcesProvider);
+            } else if (isAdmin) {
+                adminColor = Theme.getColor(Theme.key_chat_tagAdmin, resourcesProvider);
+            } else {
+                adminColor = Theme.getColor(Theme.key_chat_inAdminText, resourcesProvider);
+            }
+            adminTextView.setTextColor(adminColor);
         }
 
         if (mutualView != null) {

@@ -17996,6 +17996,13 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 if (NaConfig.INSTANCE.getColoredAdminTitle().Bool()) {
                     adminString.replace(0, adminString.length(), TimeStringHelper.getColoredAdminString(Theme.chat_namePaint, adminString));
                 }
+            } else if (!currentMessageObject.isOutOwner() && !currentMessageObject.isAnyKindOfSticker() && currentMessageObject.type != MessageObject.TYPE_ROUND_VIDEO
+                    && currentMessageObject.messageOwner != null && !android.text.TextUtils.isEmpty(currentMessageObject.messageOwner.from_rank)) {
+                adminLabel = currentMessageObject.messageOwner.from_rank;
+                adminString = new SpannableStringBuilder(adminLabel);
+                if (NaConfig.INSTANCE.getColoredAdminTitle().Bool()) {
+                    adminString.replace(0, adminString.length(), TimeStringHelper.getColoredAdminString(Theme.chat_namePaint, adminString));
+                }
             }
 
             int boosts = currentMessageObject.messageOwner.from_boosts_applied;

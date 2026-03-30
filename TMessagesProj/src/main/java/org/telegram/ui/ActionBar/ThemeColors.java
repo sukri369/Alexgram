@@ -536,6 +536,8 @@ public class ThemeColors {
         defaultColors[key_chat_outQuote] = 0xff6AB860;
 
         defaultColors[key_profile_creatorIcon] = 0xff3a95d5;
+        defaultColors[key_chat_tagAdmin] = 0xff3986d5;
+        defaultColors[key_chat_tagCreator] = 0xffe08718;
         defaultColors[key_profile_actionIcon] = 0xff81868a;
         defaultColors[key_profile_actionBackground] = 0xffffffff;
         defaultColors[key_profile_actionPressedBackground] = 0x121a1d21;
@@ -1439,6 +1441,8 @@ public class ThemeColors {
         colorKeysMap.put(key_passport_authorizeBackgroundSelected, "passport_authorizeBackgroundSelected");
         colorKeysMap.put(key_passport_authorizeText, "passport_authorizeText");
         colorKeysMap.put(key_profile_creatorIcon, "profile_creatorIcon");
+        colorKeysMap.put(key_chat_tagAdmin, "chat_tagAdmin");
+        colorKeysMap.put(key_chat_tagCreator, "chat_tagCreator");
         colorKeysMap.put(key_profile_title, "profile_title");
         colorKeysMap.put(key_profile_actionIcon, "profile_actionIcon");
         colorKeysMap.put(key_profile_actionBackground, "profile_actionBackground");
