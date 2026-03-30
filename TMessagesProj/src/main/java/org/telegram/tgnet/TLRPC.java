@@ -39129,6 +39129,7 @@ public class TLRPC {
                 case 0x34c3bb53:
                     result = new TL_channelParticipantAdmin();
                     break;
+                case 0xcb397619:
                 case TL_channelParticipant.constructor:
                     result = new TL_channelParticipant();
                     break;
@@ -39183,7 +39184,7 @@ public class TLRPC {
     }
 
     public static class TL_channelParticipant extends ChannelParticipant {
-        public static final int constructor = 0xcb397619;
+        public static final int constructor = 0x1BD54456;
 
         public void readParams(InputSerializedData stream, boolean exception) {
             flags = stream.readInt32(exception);
@@ -39192,6 +39193,9 @@ public class TLRPC {
             date = stream.readInt32(exception);
             if ((flags & 1) != 0) {
                 subscription_until_date = stream.readInt32(exception);
+            }
+            if ((flags & 2) != 0) {
+                rank = stream.readString(exception);
             }
         }
 

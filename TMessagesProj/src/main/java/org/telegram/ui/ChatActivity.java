@@ -39659,6 +39659,32 @@ public class ChatActivity extends BaseFragment implements
         }
 
         @Override
+        public boolean isAdmin(long uid) {
+            if (uid == 0 || currentChat == null) {
+                return false;
+            }
+            final LongSparseArray<TLRPC.ChannelParticipant> array = getMessagesController().channelAdmins.get(currentChat.id);
+            if (array != null) {
+                final TLRPC.ChannelParticipant participant = array.get(uid);
+                return participant instanceof TLRPC.TL_channelParticipantAdmin || participant instanceof TLRPC.TL_channelParticipantCreator;
+            }
+            return false;
+        }
+
+        @Override
+        public boolean isOwner(long uid) {
+            if (uid == 0 || currentChat == null) {
+                return false;
+            }
+            final LongSparseArray<TLRPC.ChannelParticipant> array = getMessagesController().channelAdmins.get(currentChat.id);
+            if (array != null) {
+                final TLRPC.ChannelParticipant participant = array.get(uid);
+                return participant instanceof TLRPC.TL_channelParticipantCreator;
+            }
+            return false;
+        }
+
+        @Override
         public void didPressHint(ChatMessageCell cell, int type) {
             if (type == 0) {
                 TLRPC.TL_messageMediaPoll media = (TLRPC.TL_messageMediaPoll) cell.getMessageObject().messageOwner.media;

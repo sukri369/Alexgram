@@ -546,6 +546,14 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         default void didPressHiddenForward(ChatMessageCell cell) {
         }
 
+        default boolean isAdmin(long uid) {
+            return false;
+        }
+
+        default boolean isOwner(long uid) {
+            return false;
+        }
+
         default void didPressViaBotNotInline(ChatMessageCell cell, long botId) {
         }
 
@@ -17996,26 +18004,13 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             int adminWidth = 0;
             boolean isAdmin = false, isOwner = false;
             SpannableStringBuilder adminString = null;
-            if (isMegagroup && currentChat != null && messageObject.messageOwner.post_author != null && currentChat.id == -currentMessageObject.getFromChatId()) {
-                adminString = new SpannableStringBuilder(messageObject.messageOwner.post_author.replace("\n", ""));
-            } else if (isMegagroup && currentChat != null && currentMessageObject.isForwardedChannelPost()) {
-                adminString = new SpannableStringBuilder(getString(R.string.DiscussChannel));
-            } else if (adminLabel != null) {
-                if (delegate != null) {
-                    // Try to infer isOwner/isAdmin from chat object conceptually, or default to true for rank styling
-                    isAdmin = true;
-                    isOwner = false;
-                }
+            if (adminLabel != null) {
+                long uid = currentUser != null ? currentUser.id : currentChat.id;
+                isAdmin = delegate.isAdmin(uid);
+                isOwner = delegate.isOwner(uid);
                 if (adminLabel.length() == 0) {
                     adminLabel = getString(isOwner ? R.string.ChatTagOwner : R.string.ChatTagAdmin);
                 }
-                adminString = new SpannableStringBuilder(adminLabel);
-                if (NaConfig.INSTANCE.getColoredAdminTitle().Bool()) {
-                    adminString.replace(0, adminString.length(), TimeStringHelper.getColoredAdminString(Theme.chat_namePaint, adminString));
-                }
-            } else if (!currentMessageObject.isAnyKindOfSticker() && currentMessageObject.type != MessageObject.TYPE_ROUND_VIDEO
-                    && currentMessageObject.messageOwner != null && !android.text.TextUtils.isEmpty(currentMessageObject.messageOwner.from_rank)) {
-                adminLabel = currentMessageObject.messageOwner.from_rank;
                 adminString = new SpannableStringBuilder(adminLabel);
                 if (NaConfig.INSTANCE.getColoredAdminTitle().Bool()) {
                     adminString.replace(0, adminString.length(), TimeStringHelper.getColoredAdminString(Theme.chat_namePaint, adminString));
