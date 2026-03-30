@@ -7212,7 +7212,7 @@ public class MessagesController extends BaseController implements NotificationCe
     public void updateRank(long chatId, long uid, String rank) {
         if (android.text.TextUtils.isEmpty(rank)) rank = null;
         final TLRPC.Chat chat = getChat(chatId);
-        final android.util.LongSparseArray<TLRPC.ChannelParticipant> array = channelAdmins.get(chatId);
+        final LongSparseArray<TLRPC.ChannelParticipant> array = channelAdmins.get(chatId);
         if (array != null) {
             final TLRPC.ChannelParticipant participant = array.get(uid);
             if (participant != null) {

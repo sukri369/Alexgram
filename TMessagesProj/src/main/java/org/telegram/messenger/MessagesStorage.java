@@ -1568,7 +1568,8 @@ public class MessagesStorage extends BaseController {
                     if (message != null) {
                         message.readAttachPath(data, org.telegram.messenger.UserConfig.getInstance(currentAccount).clientUserId);
                     }
-                    if (message != null && org.telegram.tgnet.TLRPC.DialogObject.getPeerDialogId(message.from_id) == userId) {
+                    if (message != null && DialogObject.getPeerDialogId(message.from_id) == userId) {
+                        message.flags2 |= org.telegram.tgnet.TLObject.FLAG_12;
                         message.from_rank = rank;
                         messagesToUpdate.add(new android.util.Pair<>(messageId, message));
                     }
@@ -1599,6 +1600,13 @@ public class MessagesStorage extends BaseController {
             } finally {
                 if (cursor != null) cursor.dispose();
                 if (state != null) state.dispose();
+            }
+            final boolean updated = messagesToUpdate.size() > 0;
+            if (updated) {
+                AndroidUtilities.runOnUIThread(() -> {
+                    NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.updateInterfaces, 0);
+                    NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.updatedChatRanks, -dialogId, userId, rank);
+                });
             }
         });
     }

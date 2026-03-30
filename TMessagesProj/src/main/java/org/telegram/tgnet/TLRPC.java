@@ -221,6 +221,7 @@ public class TLRPC {
         public boolean send_voices;
         public boolean send_docs;
         public boolean send_plain;
+        public boolean edit_rank;
         public int until_date;
 
         public static TL_chatBannedRights TLdeserialize(InputSerializedData stream, int constructor, boolean exception) {
@@ -4100,6 +4101,7 @@ public class TLRPC {
         public boolean edit_stories;
         public boolean delete_stories;
         public boolean manage_direct_messages;
+        public boolean manage_ranks;
 
         public static TL_chatAdminRights TLdeserialize(InputSerializedData stream, int constructor, boolean exception) {
             final TL_chatAdminRights result = TL_chatAdminRights.constructor != constructor ? null : new TL_chatAdminRights();
@@ -62099,6 +62101,7 @@ public class TLRPC {
         public String summary_from_language;
         public int send_state = 0; //custom
         public int fwd_msg_id = 0; //custom
+        public String from_rank; //custom
         public String attachPath = ""; //custom
         public ArrayList<String> attachPaths; //custom
         public HashMap<String, String> params; //custom
@@ -76727,6 +76730,27 @@ public class TLRPC {
         public void serializeToStream(OutputSerializedData stream) {
             stream.writeInt32(constructor);
             channel.serializeToStream(stream);
+        }
+    }
+
+    public static class TL_messages_editChatParticipantRank extends TLMethod<Updates> {
+        public static final int constructor = 0xa00f32b0;
+
+        public InputPeer peer;
+        public InputPeer participant;
+        public String rank;
+
+        @Override
+        public Updates deserializeResponseT(InputSerializedData stream, int constructor, boolean exception) {
+            return Updates.TLdeserialize(stream, constructor, exception);
+        }
+
+        @Override
+        public void serializeToStream(OutputSerializedData stream) {
+            stream.writeInt32(constructor);
+            peer.serializeToStream(stream);
+            participant.serializeToStream(stream);
+            stream.writeString(rank);
         }
     }
 }
