@@ -7494,9 +7494,6 @@ public class MessagesController extends BaseController implements NotificationCe
         return null;
     }
 
-    public boolean isChannelAdminsLoaded(long chatId) {
-        return channelAdmins.get(chatId) != null;
-    }
 
     public void loadChannelAdmins(long chatId, boolean cache) {
         int loadTime = loadingChannelAdmins.get(chatId);

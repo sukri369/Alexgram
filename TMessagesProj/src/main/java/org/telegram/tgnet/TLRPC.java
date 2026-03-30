@@ -39204,8 +39204,8 @@ public class TLRPC {
             stream.writeInt32(flags);
             stream.writeInt64(peer.user_id);
             stream.writeInt32(date);
-            if ((flags & 1) != 0) {
-                stream.writeInt32(subscription_until_date);
+            if ((flags & 2) != 0) {
+                stream.writeString(rank);
             }
         }
     }
