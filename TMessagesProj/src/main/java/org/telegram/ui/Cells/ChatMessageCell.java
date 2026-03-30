@@ -18051,7 +18051,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 currentNameString = messageObject.customName;
             }
             if (viaBot) {
-                currentNameString = viaString;
+                currentNameString = viaString != null ? viaString.toString() : null;
                 currentNameStatus = null;
                 currentNameBotVerificationId = 0;
             } else if (needAuthorName) {
