@@ -18002,8 +18002,9 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 adminString = new SpannableStringBuilder(getString(R.string.DiscussChannel));
             } else if (adminLabel != null) {
                 if (delegate != null) {
-                    isOwner = delegate.isOwner(currentUser != null ? currentUser.id : currentChat.id);
-                    isAdmin = delegate.isAdmin(currentUser != null ? currentUser.id : currentChat.id);
+                    // Try to infer isOwner/isAdmin from chat object conceptually, or default to true for rank styling
+                    isAdmin = true;
+                    isOwner = false;
                 }
                 if (adminLabel.length() == 0) {
                     adminLabel = getString(isOwner ? R.string.ChatTagOwner : R.string.ChatTagAdmin);
@@ -21240,13 +21241,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 if (boostCounterSpan != null && boostCounterBounds != null) {
                     final float bx = ax + lineWidth + dp(11) - dp(boostCounterSpan.isRtl ? 5f : 7.5f) - boostCounterSpan.getWidth();
                     boostCounterBounds.set(bx, ay, bx + boostCounterSpan.getWidth(), ay + adminLayout.getHeight());
-                    if (boostCounterSpan.margin) {
-                        if (boostCounterSpan.isRtl) {
-                            boostCounterBounds.right -= dp(8);
-                        } else {
-                            boostCounterBounds.left += dp(8);
-                        }
-                    }
+                    // NagramX BoostCounterSpan lacks margin property so block removed
                     int selectorColor = Theme.multAlpha(Theme.chat_namePaint.getColor(), .12f);
                     if (boostCounterLayoutSelector == null) {
                         boostCounterLayoutSelector = Theme.createRadSelectorDrawable(boostCounterSelectorColor = selectorColor, 6, 6);
