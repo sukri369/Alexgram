@@ -1307,10 +1307,8 @@ public class ChatRightsEditActivity extends BaseFragment implements Notification
 
             addUsersRow = rowCount++;
             pinMessagesRow = rowCount++;
+            editTagsRow = rowCount++;
             changeInfoRow = rowCount++;
-            if (ChatObject.canManageTags(currentChat)) {
-                editTagsRow = rowCount++;
-            }
             if (isForum) {
                 manageTopicsRow = rowCount++;
             }
