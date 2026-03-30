@@ -731,7 +731,7 @@
     <string name="EditAdminAddUsers">Add Users</string>
     <string name="EditAdminAddUsersViaLink">Invite Users via Link</string>
     <string name="EditAdminPinMessages">Pin Messages</string>
-    <string name="EditAdminEditTags">Edit Own Tag</string>
+    <!-- Removed duplicate EditAdminEditTags -->
     <string name="EditAdminPromotedBy">Promoted by %1$s</string>
     <string name="EditAdminCantEdit">You cannot edit the rights of this admin.</string>
     <string name="EditCantEditPermissions">You cannot edit this permission.</string>
