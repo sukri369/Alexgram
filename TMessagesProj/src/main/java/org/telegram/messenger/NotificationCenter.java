@@ -385,6 +385,7 @@ public class NotificationCenter {
     public static final int setTabsVisible = totalEvents++;
     public static final int setTabsVisibleProgress = totalEvents++;
     public static final int voiceChangerUpdated = totalEvents++;
+    public static final int updatedChatRanks = totalEvents++;
 
     private final SparseArray<ArrayList<NotificationCenterDelegate>> observers = new SparseArray<>();
     private final SparseArray<ArrayList<NotificationCenterDelegate>> removeAfterBroadcast = new SparseArray<>();

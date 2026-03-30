@@ -159,6 +159,7 @@ import org.telegram.ui.Stories.recorder.ButtonWithCounterView;
 import org.telegram.ui.Stories.recorder.StoryRecorder;
 import org.telegram.ui.ThemeActivity;
 import org.telegram.ui.TopicsFragment;
+import org.telegram.ui.Components.TagEditCell;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -1635,7 +1636,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
         profileActivity.getNotificationCenter().addObserver(this, NotificationCenter.savedMessagesDialogsUpdate);
         profileActivity.getNotificationCenter().addObserver(this, NotificationCenter.dialogsNeedReload);
         profileActivity.getNotificationCenter().addObserver(this, NotificationCenter.starUserGiftsLoaded);
-        // profileActivity.getNotificationCenter().addObserver(this, NotificationCenter.updatedChatRanks);
+        profileActivity.getNotificationCenter().addObserver(this, NotificationCenter.updatedChatRanks);
 
         for (int a = 0; a < 10; a++) {
             //cellCache.add(new SharedPhotoVideoCell(context));
@@ -4860,7 +4861,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
         profileActivity.getNotificationCenter().removeObserver(this, NotificationCenter.savedMessagesDialogsUpdate);
         profileActivity.getNotificationCenter().removeObserver(this, NotificationCenter.dialogsNeedReload);
         profileActivity.getNotificationCenter().removeObserver(this, NotificationCenter.starUserGiftsLoaded);
-        // profileActivity.getNotificationCenter().removeObserver(this, NotificationCenter.updatedChatRanks);
+        profileActivity.getNotificationCenter().removeObserver(this, NotificationCenter.updatedChatRanks);
         if (searchTagsList != null) {
             searchTagsList.detach();
         }
@@ -6327,7 +6328,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
             if (dialogId == dialog_id) {
                 updateTabs(true);
             }
-        } else if (false /* id == NotificationCenter.updatedChatRanks */) {
+        } else if (id == NotificationCenter.updatedChatRanks) {
             final long chatId = (long) args[0];
             final long userId = (long) args[1];
             if (dialog_id != -chatId) return;
@@ -10335,8 +10336,10 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
                 }
                 final String finalRole = role;
                 final TLRPC.User user = profileActivity.getMessagesController().getUser(part.user_id);
-                final boolean showAddTag = UserObject.isUserSelf(user) && false;
-                userCell.setAdminRole(role);
+                final boolean showAddTag = UserObject.isUserSelf(user) && ChatObject.canManageMyTag(profileActivity.getMessagesController().getChat(-dialog_id));
+                userCell.setAdminRole(role, isAdmin, isOwner, showAddTag, v -> {
+                    TagEditCell.showInfoSheet(getContext(), profileActivity.getCurrentAccount(), dialog_id, user, finalRole, isAdmin, isOwner, canEditAdmin, resourcesProvider);
+                });
                 userCell.setData(user, null, null, 0, position != chatInfo.participants.participants.size() - 1);
             }
         }

@@ -40865,6 +40865,7 @@ public class TLRPC {
         public long user_id;
         public long inviter_id;
         public int date;
+        public String rank;
 
         public static ChatParticipant TLdeserialize(InputSerializedData stream, int constructor, boolean exception) {
             ChatParticipant result = null;
@@ -40889,6 +40890,18 @@ public class TLRPC {
                     break;
             }
             return TLdeserialize(ChatParticipant.class, result, stream, constructor, exception);
+        }
+
+        public void setRank(long userId, String rank) {
+            if (this.user_id == userId) {
+                this.rank = android.text.TextUtils.isEmpty(rank) ? null : rank;
+                if (this instanceof TL_chatChannelParticipant) {
+                    final TL_chatChannelParticipant p = (TL_chatChannelParticipant) this;
+                    if (p.channelParticipant != null) {
+                        p.channelParticipant.rank = rank;
+                    }
+                }
+            }
         }
     }
 

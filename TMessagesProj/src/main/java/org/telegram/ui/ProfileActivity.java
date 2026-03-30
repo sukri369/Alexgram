@@ -274,7 +274,7 @@ import org.telegram.ui.Components.SharedMediaLayout;
 import org.telegram.ui.Components.SizeNotifierFrameLayout;
 import org.telegram.ui.Components.StarRatingView;
 import org.telegram.ui.Components.StickerEmptyView;
-// import org.telegram.ui.Components.TagEditCell;
+import org.telegram.ui.Components.TagEditCell;
 import org.telegram.ui.Components.TimerDrawable;
 import org.telegram.ui.Components.TranslateAlert2;
 import org.telegram.ui.Components.TypefaceSpan;
@@ -2292,7 +2292,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         getNotificationCenter().addObserver(this, NotificationCenter.channelRecommendationsLoaded);
         getNotificationCenter().addObserver(this, NotificationCenter.starUserGiftsLoaded);
         getNotificationCenter().addObserver(this, NotificationCenter.profileMusicUpdated);
-        // getNotificationCenter().addObserver(this, NotificationCenter.updatedChatRanks);
+        getNotificationCenter().addObserver(this, NotificationCenter.updatedChatRanks);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.emojiLoaded);
         updateRowsIds();
         if (listAdapter != null) {
@@ -2441,7 +2441,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         getNotificationCenter().removeObserver(this, NotificationCenter.channelRecommendationsLoaded);
         getNotificationCenter().removeObserver(this, NotificationCenter.starUserGiftsLoaded);
         getNotificationCenter().removeObserver(this, NotificationCenter.profileMusicUpdated);
-        // getNotificationCenter().removeObserver(this, NotificationCenter.updatedChatRanks);
+        getNotificationCenter().removeObserver(this, NotificationCenter.updatedChatRanks);
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.emojiLoaded);
         if (avatarsViewPager != null) {
             avatarsViewPager.onDestroy();
@@ -9617,7 +9617,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     listAdapter.notifyDataSetChanged();
                 }
             }
-        } else if (false /* id == NotificationCenter.updatedChatRanks */) {
+        } else if (id == NotificationCenter.updatedChatRanks) {
             final long chatId = (long) args[0];
             final long userId = (long) args[1];
             if (currentChat == null || currentChat.id != chatId) return;
@@ -9626,7 +9626,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             if (participantsMap != null) {
                 final TLRPC.ChatParticipant participant = participantsMap.get(userId);
                 if (participant != null) {
-                    // participant.setRank
+                    participant.setRank(userId, rank);
                 }
             }
             if (currentChannelParticipant != null && currentChannelParticipant.user_id == userId) {
@@ -9634,7 +9634,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
             for (int i = 0; i < visibleChatParticipants.size(); ++i) {
                 final TLRPC.ChatParticipant p = visibleChatParticipants.get(i);
-                // p.setRank
+                p.setRank(userId, rank);
             }
             AndroidUtilities.updateVisibleRows(listView);
         }
@@ -14364,8 +14364,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         }
                         final String finalRole = role;
                         final TLRPC.User user = getMessagesController().getUser(part.user_id);
-                        final boolean showAddTag = UserObject.isUserSelf(user) && false;
-                        userCell.setAdminRole(role);
+                        final boolean showAddTag = UserObject.isUserSelf(user) && ChatObject.canManageMyTag(getMessagesController().getChat(chatId));
+                        userCell.setAdminRole(role, isAdmin, isOwner, showAddTag, v -> {
+                            TagEditCell.showInfoSheet(getContext(), currentAccount, getDialogId(), user, finalRole, isAdmin, isOwner, canEditAdmin, resourceProvider);
+                        });
                         userCell.setData(user, null, null, 0, position != membersEndRow - 1);
                     }
                     break;

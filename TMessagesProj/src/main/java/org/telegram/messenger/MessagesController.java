@@ -7209,6 +7209,38 @@ public class MessagesController extends BaseController implements NotificationCe
         return fullChats.get(chatId);
     }
 
+    public void updateRank(long chatId, long uid, String rank) {
+        if (android.text.TextUtils.isEmpty(rank)) rank = null;
+        final TLRPC.Chat chat = getChat(chatId);
+        final android.util.LongSparseArray<TLRPC.ChannelParticipant> array = channelAdmins.get(chatId);
+        if (array != null) {
+            final TLRPC.ChannelParticipant participant = array.get(uid);
+            if (participant != null) {
+                participant.rank = rank;
+            }
+        }
+        final TLRPC.ChatFull chatFull = getChatFull(chatId);
+        if (chatFull != null && chatFull.participants != null) {
+            for (int i = 0; i < chatFull.participants.participants.size(); ++i) {
+                final TLRPC.ChatParticipant p = chatFull.participants.participants.get(i);
+                p.setRank(uid, rank);
+                if (p.user_id == uid) {
+                    if (p instanceof TLRPC.TL_chatChannelParticipant) {
+                        final TLRPC.TL_chatChannelParticipant pp = (TLRPC.TL_chatChannelParticipant) p;
+                        if (pp.channelParticipant != null) {
+                            pp.channelParticipant.rank = rank;
+                        }
+                    } else {
+                        p.rank = rank;
+                    }
+                }
+            }
+        }
+        NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.updateInterfaces, 0);
+        NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.updatedChatRanks, chatId, uid, rank);
+        MessagesStorage.getInstance(currentAccount).updateRanksInLastMessages(-chatId, uid, rank);
+    }
+
     public void putGroupCall(long chatId, ChatObject.Call call) {
         groupCalls.put(call.call.id, call);
         groupCallsByChatId.put(chatId, call);
