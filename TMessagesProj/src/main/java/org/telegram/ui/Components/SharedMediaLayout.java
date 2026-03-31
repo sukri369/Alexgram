@@ -7336,6 +7336,9 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
         }
         mediaPages[a].fastScrollEnabled = fastScrollVisible;
         updateFastScrollVisibility(mediaPages[a], false);
+
+        mediaPages[a].setLayoutParams(layoutParams);
+
         mediaPages[a].layoutManager.setSpanCount(spanCount);
         // Invalidate span index caches so stale GIF staggered indices don't corrupt the media grid
         mediaPages[a].layoutManager.getSpanSizeLookup().invalidateSpanIndexCache();

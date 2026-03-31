@@ -166,6 +166,10 @@ public class ExtendedGridLayoutManager extends GridLayoutManager {
             calculatedWidth = getWidth();
             lastSpanCount = getSpanCount();
             prepareLayout(getWidth());
+            if (getSpanSizeLookup() != null) {
+                getSpanSizeLookup().invalidateSpanIndexCache();
+                getSpanSizeLookup().invalidateSpanGroupIndexCache();
+            }
         }
     }
 

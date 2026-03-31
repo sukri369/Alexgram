@@ -9040,10 +9040,18 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 continue;
             }
             FrameLayout.LayoutParams nameParams = (FrameLayout.LayoutParams) nameTextView[a].getLayoutParams();
-            // Use the same capped formula as the main needLayout method to avoid negative translationX
-            float nameX = viewWidth / 2f - (nameParams.leftMargin + Math.min(nameTextView[a].getExactWidth(), a == 1 ? nameParams.width : viewWidth) * nameScale * 0.5f);
+            float exactNameWidth = nameTextView[a].getExactWidth();
+            if (exactNameWidth == 0) {
+                exactNameWidth = nameTextView[a].getPaint().measureText(nameTextView[a].getText() != null ? nameTextView[a].getText().toString() : "");
+            }
+            float nameX = viewWidth / 2f - (nameParams.leftMargin + Math.min(exactNameWidth, viewWidth) * nameScale * 0.5f);
+            
             FrameLayout.LayoutParams onlineParams = (FrameLayout.LayoutParams) onlineTextView[a].getLayoutParams();
-            float onlineX = viewWidth / 2f - (onlineParams.leftMargin + Math.min(onlineTextView[a].getExactWidth(), a == 1 ? onlineParams.width : viewWidth) * 0.5f);
+            float exactOnlineWidth = onlineTextView[a].getExactWidth();
+            if (exactOnlineWidth == 0) {
+                exactOnlineWidth = onlineTextView[a].getPaint().measureText(onlineTextView[a].getText() != null ? onlineTextView[a].getText().toString() : "");
+            }
+            float onlineX = viewWidth / 2f - (onlineParams.leftMargin + Math.min(exactOnlineWidth, viewWidth) * 0.5f);
 
             if (a == 1) {
                 this.nameX = nameX;
