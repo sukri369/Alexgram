@@ -1151,13 +1151,15 @@ public class ChatUsersActivity extends BaseFragment implements NotificationCente
                     }
                     req.banned_rights = currentChat.default_banned_rights;
                     req.banned_rights.edit_rank = !textCell.isChecked();
-                    getConnectionsManager().sendRequestTyped(req, AndroidUtilities::runOnUIThread, (res, err) -> {
-                        if (res != null) {
-                            getMessagesController().processUpdates(res, false);
-                        } else if (err != null) {
-                            textCell.setChecked(wasChecked);
-                            BulletinFactory.of(ChatUsersActivity.this).showForError(err);
-                        }
+                    getConnectionsManager().sendRequest(req, (response, error) -> {
+                        AndroidUtilities.runOnUIThread(() -> {
+                            if (response != null) {
+                                getMessagesController().processUpdates((TLRPC.Updates) response, false);
+                            } else if (error != null) {
+                                textCell.setChecked(wasChecked);
+                                BulletinFactory.of(ChatUsersActivity.this).showForError(error);
+                            }
+                        });
                     });
                 } else if (position == removedUsersRow) {
                     Bundle args = new Bundle();
