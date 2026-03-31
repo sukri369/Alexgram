@@ -7414,6 +7414,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     @Override
     public boolean onBackPressed(boolean invoked) {
+        if (searchViewPager != null && searchViewPager.getVisibility() == View.VISIBLE) {
+            if (searchViewPager.onBackPressed()) {
+                return false;
+            }
+        }
         if (hasShownSheet()) {
             if (invoked) closeSheet();
             return false;

@@ -25,9 +25,14 @@ import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
 import android.view.animation.OvershootInterpolator;
+import android.webkit.WebChromeClient;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -1398,6 +1403,9 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
+        if (webSearchContainer != null) {
+            webSearchContainer.destroy();
+        }
         attached = false;
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.channelRecommendationsLoaded);
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.dialogDeleted);
@@ -1666,6 +1674,13 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
         }
     }
 
+    public boolean onBackPressed() {
+        if (webSearchContainer != null && viewPager != null && viewPager.getCurrentItem() == viewPagerAdapter.items.size() - 1) {
+            return webSearchContainer.onBackPressed();
+        }
+        return false;
+    }
+
     private void handleSaveFiles() {
         ArrayList<MessageObject> messageObjects = new ArrayList<>(selectedFiles.values());
         hideActionMode();
@@ -1684,29 +1699,39 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
         private final DialogsActivity host;
         private String currentQuery = "";
 
-        // Top "engine pill" row
+        // UI States
+        private final FrameLayout promptLayout;
+        private final FrameLayout resultsLayout;
+
+        // Prompt UI elements
         private final SearchEngineBottomSheet.EngineBadgeView badgeView;
         private final TextView engineNameView;
         private final LinearLayout enginePillLayout;
-
-        // Search-now button
         private final LinearLayout searchButton;
         private final TextView searchButtonText;
-
-        // Hint label
         private final TextView hintLabel;
+
+        // Results UI elements
+        private WebView webView;
+        private View progressBar;
 
         public WebSearchContainer(Context context, DialogsActivity host) {
             super(context);
             this.host = host;
             setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
 
-            // ── Engine pill row ──────────────────────────────────────────────
+            // ── Prompt Layout (Engine Picker + Empty state) ──
+            promptLayout = new FrameLayout(context);
+            addView(promptLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+
+            LinearLayout inner = new LinearLayout(context);
+            inner.setOrientation(LinearLayout.VERTICAL);
+            inner.setGravity(android.view.Gravity.CENTER_HORIZONTAL);
+
             enginePillLayout = new LinearLayout(context);
             enginePillLayout.setOrientation(LinearLayout.HORIZONTAL);
             enginePillLayout.setGravity(android.view.Gravity.CENTER_VERTICAL);
             enginePillLayout.setPadding(AndroidUtilities.dp(16), 0, AndroidUtilities.dp(16), 0);
-
             android.graphics.drawable.GradientDrawable pillBg = new android.graphics.drawable.GradientDrawable();
             pillBg.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
             pillBg.setCornerRadius(AndroidUtilities.dp(20));
@@ -1725,43 +1750,28 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
             engineNameView.setText(SearchEngineBottomSheet.getEngineName(selected));
             enginePillLayout.addView(engineNameView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, android.view.Gravity.CENTER_VERTICAL));
 
-            // Arrow icon inside pill
             ImageView arrowView = new ImageView(context);
             arrowView.setImageResource(R.drawable.arrow_more);
             arrowView.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText), PorterDuff.Mode.SRC_IN));
-            arrowView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
             enginePillLayout.addView(arrowView, LayoutHelper.createLinear(20, 20, android.view.Gravity.CENTER_VERTICAL, 4, 0, 0, 0));
 
-            // Pill click → bottom sheet
             enginePillLayout.setOnClickListener(v -> {
-                SearchEngineBottomSheet sheet = new SearchEngineBottomSheet(context, index -> {
+                new SearchEngineBottomSheet(context, index -> {
                     badgeView.setEngine(index);
                     engineNameView.setText(SearchEngineBottomSheet.getEngineName(index));
-                    android.graphics.drawable.GradientDrawable bg = new android.graphics.drawable.GradientDrawable();
-                    bg.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
-                    bg.setCornerRadius(AndroidUtilities.dp(20));
-                    bg.setColor(Theme.getColor(Theme.key_windowBackgroundGray));
-                    enginePillLayout.setBackground(bg);
-                });
-                sheet.show();
+                }).show();
             });
 
-            // ── Hint label ───────────────────────────────────────────────────
             hintLabel = new TextView(context);
             hintLabel.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
             hintLabel.setTextSize(15);
             hintLabel.setGravity(android.view.Gravity.CENTER);
-            hintLabel.setText("Type something in the search bar to search the web");
-            hintLabel.setPadding(AndroidUtilities.dp(24), 0, AndroidUtilities.dp(24), 0);
+            hintLabel.setText("Type in the search bar above to search the web");
 
-            // ── Search button ────────────────────────────────────────────────
             searchButton = new LinearLayout(context);
-            searchButton.setOrientation(LinearLayout.HORIZONTAL);
             searchButton.setGravity(android.view.Gravity.CENTER);
-            searchButton.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(14), AndroidUtilities.dp(24), AndroidUtilities.dp(14));
-
+            searchButton.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(12), AndroidUtilities.dp(24), AndroidUtilities.dp(12));
             android.graphics.drawable.GradientDrawable btnBg = new android.graphics.drawable.GradientDrawable();
-            btnBg.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
             btnBg.setCornerRadius(AndroidUtilities.dp(24));
             btnBg.setColor(Theme.getColor(Theme.key_featuredStickers_addButton));
             searchButton.setBackground(btnBg);
@@ -1770,27 +1780,109 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
             ImageView searchIcon = new ImageView(context);
             searchIcon.setImageResource(R.drawable.ic_ab_search);
             searchIcon.setColorFilter(new PorterDuffColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN));
-            searchButton.addView(searchIcon, LayoutHelper.createLinear(20, 20, android.view.Gravity.CENTER_VERTICAL, 0, 0, 8, 0));
+            searchButton.addView(searchIcon, LayoutHelper.createLinear(20, 20, 0, 0, 8, 0));
 
             searchButtonText = new TextView(context);
             searchButtonText.setTextColor(Color.WHITE);
             searchButtonText.setTextSize(16);
             searchButtonText.setTypeface(AndroidUtilities.bold());
-            searchButtonText.setText("Search");
             searchButton.addView(searchButtonText, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
 
-            searchButton.setOnClickListener(v -> openInBrowser());
+            searchButton.setOnClickListener(v -> performSearch());
 
-            // ── Layout assembly (center everything) ─────────────────────────
-            LinearLayout inner = new LinearLayout(context);
-            inner.setOrientation(LinearLayout.VERTICAL);
-            inner.setGravity(android.view.Gravity.CENTER_HORIZONTAL);
-
-            inner.addView(enginePillLayout, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, 48, android.view.Gravity.CENTER_HORIZONTAL, 0, 0, 0, 24));
+            inner.addView(enginePillLayout, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, 48, 0, 0, 0, 24));
             inner.addView(hintLabel, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 24));
-            inner.addView(searchButton, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, android.view.Gravity.CENTER_HORIZONTAL));
+            inner.addView(searchButton, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
+            promptLayout.addView(inner, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, android.view.Gravity.CENTER));
 
-            addView(inner, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, android.view.Gravity.CENTER));
+            // ── WebView container ──
+            resultsLayout = new FrameLayout(context);
+            resultsLayout.setVisibility(View.GONE);
+            addView(resultsLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+
+            progressBar = new View(context) {
+                private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+                private float progress;
+
+                @Override
+                protected void onDraw(Canvas canvas) {
+                    if (progress <= 0 || progress >= 1.0f) return;
+                    paint.setColor(Theme.getColor(Theme.key_featuredStickers_addButton));
+                    canvas.drawRect(0, 0, getWidth() * progress, getHeight(), paint);
+                }
+
+                public void setProgress(float p) {
+                    this.progress = p;
+                    invalidate();
+                }
+            };
+            resultsLayout.addView(progressBar, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 3, android.view.Gravity.TOP));
+        }
+
+        @SuppressLint("SetJavaScriptEnabled")
+        private void ensureWebView() {
+            if (webView != null) return;
+            webView = new WebView(getContext());
+            WebSettings settings = webView.getSettings();
+            settings.setJavaScriptEnabled(true);
+            settings.setDomStorageEnabled(true);
+            settings.setDatabaseEnabled(true);
+            settings.setLoadWithOverviewMode(true);
+            settings.setUseWideViewPort(true);
+            if (Build.VERSION.SDK_INT >= 21) {
+                settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+            }
+
+            // Dark mode integration
+            if (Theme.isDark() && Build.VERSION.SDK_INT >= 29) {
+                settings.setForceDark(WebSettings.FORCE_DARK_ON);
+            }
+
+            webView.setWebViewClient(new WebViewClient() {
+                @Override
+                public void onPageStarted(WebView view, String url, android.graphics.Bitmap favicon) {
+                    progressBar.setVisibility(View.VISIBLE);
+                }
+
+                @Override
+                public void onPageFinished(WebView view, String url) {
+                    progressBar.setVisibility(View.GONE);
+                }
+            });
+
+            webView.setWebChromeClient(new WebChromeClient() {
+                @Override
+                public void onProgressChanged(WebView view, int newProgress) {
+                    if (progressBar instanceof View) {
+                        try {
+                            java.lang.reflect.Method setProgress = progressBar.getClass().getMethod("setProgress", float.class);
+                            setProgress.invoke(progressBar, newProgress / 100.0f);
+                        } catch (Exception ignored) {}
+                    }
+                    if (newProgress == 100) {
+                        progressBar.setVisibility(View.GONE);
+                    }
+                }
+            });
+
+            resultsLayout.addView(webView, 0, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        }
+
+        public void destroy() {
+            if (webView != null) {
+                try {
+                    ViewParent parent = webView.getParent();
+                    if (parent != null) {
+                        ((android.view.ViewGroup) parent).removeView(webView);
+                    }
+                    webView.stopLoading();
+                    webView.loadUrl("about:blank");
+                    webView.destroy();
+                    webView = null;
+                } catch (Exception e) {
+                    org.telegram.messenger.FileLog.e(e);
+                }
+            }
         }
 
         public void setQuery(String query) {
@@ -1803,30 +1895,50 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
             } else {
                 hintLabel.setVisibility(View.VISIBLE);
                 searchButton.setVisibility(View.GONE);
+                if (resultsLayout.getVisibility() == View.VISIBLE) {
+                    showPrompt();
+                }
             }
+        }
+
+        private void performSearch() {
+            if (TextUtils.isEmpty(currentQuery)) return;
+            ensureWebView();
+            promptLayout.setVisibility(View.GONE);
+            resultsLayout.setVisibility(View.VISIBLE);
+
+            int engineIndex = NaConfig.INSTANCE.getSelectedSearchEngine().Int();
+            String baseUrl = SearchEngineBottomSheet.getEngineUrl(engineIndex);
+            String url;
+            try {
+                url = baseUrl + URLEncoder.encode(currentQuery, "UTF-8");
+            } catch (Exception e) {
+                url = baseUrl + currentQuery.replace(" ", "+");
+            }
+            webView.loadUrl(url);
+            AndroidUtilities.hideKeyboard(host.getParentActivity().getCurrentFocus());
+        }
+
+        private void showPrompt() {
+            resultsLayout.setVisibility(View.GONE);
+            promptLayout.setVisibility(View.VISIBLE);
+            if (webView != null) webView.loadUrl("about:blank");
+        }
+
+        public boolean onBackPressed() {
+            if (resultsLayout.getVisibility() == View.VISIBLE) {
+                if (webView != null && webView.canGoBack()) {
+                    webView.goBack();
+                } else {
+                    showPrompt();
+                }
+                return true;
+            }
+            return false;
         }
 
         public void setPaddingTop(int top) {
             setPadding(0, top, 0, 0);
-        }
-
-        private void openInBrowser() {
-            if (TextUtils.isEmpty(currentQuery)) return;
-            int engineIndex = NaConfig.INSTANCE.getSelectedSearchEngine().Int();
-            String baseUrl = SearchEngineBottomSheet.getEngineUrl(engineIndex);
-            String encoded;
-            try {
-                encoded = URLEncoder.encode(currentQuery, "UTF-8");
-            } catch (UnsupportedEncodingException e) {
-                encoded = currentQuery.replace(" ", "+");
-            }
-            String url = baseUrl + encoded;
-            try {
-                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                getContext().startActivity(intent);
-            } catch (Exception ignored) {
-            }
         }
     }
 }
