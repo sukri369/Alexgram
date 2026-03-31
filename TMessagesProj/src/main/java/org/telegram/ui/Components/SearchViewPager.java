@@ -25,6 +25,7 @@ import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewParent;
 import android.view.animation.OvershootInterpolator;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
@@ -1676,7 +1677,7 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
     }
 
     public boolean onBackPressed() {
-        if (webSearchContainer != null && viewPager != null && viewPager.getCurrentItem() == viewPagerAdapter.items.size() - 1) {
+        if (webSearchContainer != null && getCurrentItem() == viewPagerAdapter.items.size() - 1) {
             return webSearchContainer.onBackPressed();
         }
         return false;
@@ -1835,7 +1836,7 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
             }
 
             // Dark mode integration
-            if (Theme.isDark() && Build.VERSION.SDK_INT >= 29) {
+            if (Theme.isCurrentThemeDark() && Build.VERSION.SDK_INT >= 29) {
                 settings.setForceDark(WebSettings.FORCE_DARK_ON);
             }
 
