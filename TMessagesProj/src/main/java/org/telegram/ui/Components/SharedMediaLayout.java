@@ -7053,7 +7053,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
                 mediaPages[a].listView.getPaddingRight(),
                 (mediaPages[a].listView.hintPaddingBottom = getPagePaddingBottom(isStoriesView()))
             );
-
+            layoutParams.leftMargin = layoutParams.rightMargin = 0;
             if (mediaPages[a].selectedType == TAB_PHOTOVIDEO) {
                 if (currentAdapter != photoVideoAdapter) {
                     recycleAdapter(currentAdapter);
@@ -7107,6 +7107,8 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
                     recycleAdapter(currentAdapter);
                     mediaPages[a].listView.setAdapter(gifAdapter);
                 }
+                layoutParams.leftMargin = layoutParams.rightMargin = 0;
+                spanCount = 100;
             } else if (mediaPages[a].selectedType == TAB_COMMON_GROUPS) {
                 sections = true;
                 if (currentAdapter != commonGroupsAdapter) {

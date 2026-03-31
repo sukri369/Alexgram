@@ -3221,11 +3221,15 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
                     int paddingTop;
                     int paddingBottom;
+                    int viewWidth = getMeasuredWidth();
+                    if (viewWidth == 0) {
+                        viewWidth = AndroidUtilities.displaySize.x;
+                    }
                     if (isInLandscapeMode) {
                         paddingTop = getHeaderExtraHeight() + actionBarHeight;
                         paddingBottom = 0;
                     } else {
-                        paddingTop = getMeasuredWidth() + getActionsExtraHeight();
+                        paddingTop = viewWidth + getActionsExtraHeight();
                         paddingBottom = Math.max(0, getMeasuredHeight() - (listContentHeight + getHeaderExtraHeight() + actionBarHeight));
                     }
                     if (banFromGroup != 0) {
@@ -9027,18 +9031,33 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         needLayoutText(1f);
 
         float nameScale = 1.0f + 0.12f;
+        int viewWidth = lastMeasuredContentWidth;
+        if (viewWidth == 0) {
+            viewWidth = AndroidUtilities.displaySize.x;
+        }
         for (int a = 0; a < nameTextView.length; a++) {
             if (nameTextView[a] == null) {
                 continue;
             }
             FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) nameTextView[a].getLayoutParams();
-            float nameX = lastMeasuredContentWidth / 2f - (params.leftMargin + nameTextView[a].getExactWidth() * nameScale * 0.5f);
+            float nameX = viewWidth / 2f - (params.leftMargin + nameTextView[a].getExactWidth() * nameScale * 0.5f);
             params = (FrameLayout.LayoutParams) onlineTextView[a].getLayoutParams();
-            float onlineX = lastMeasuredContentWidth / 2f - (params.leftMargin + onlineTextView[a].getExactWidth() * 0.5f);
+            float onlineX = viewWidth / 2f - (params.leftMargin + onlineTextView[a].getExactWidth() * 0.5f);
 
             if (a == 1) {
                 this.nameX = nameX;
                 this.onlineX = onlineX;
+            }
+            nameTextView[a].setScaleX(nameScale);
+            nameTextView[a].setScaleY(nameScale);
+            nameTextView[a].setTranslationX(nameX);
+            nameTextView[a].setTranslationY(nameY);
+            onlineTextView[a].setTranslationX(getOnlineTextViewTranslationXWithOffsets(onlineX));
+            onlineTextView[a].setTranslationY(getOnlineTextViewTranslationYWithOffsets(onlineY));
+            if (a == 1) {
+                mediaCounterTextView.setTranslationX(onlineX);
+                mediaCounterTextView.setTranslationY(onlineY);
+                updateTextLayoutBasedOnTranslation();
             }
         }
 

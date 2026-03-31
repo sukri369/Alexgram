@@ -159,9 +159,12 @@ public class ExtendedGridLayoutManager extends GridLayoutManager {
         return new Size(100, 100);
     }
 
+    private int lastSpanCount;
+
     private void checkLayout() {
-        if (itemSpans.size() != getFlowItemCount() || calculatedWidth != getWidth()) {
+        if (itemSpans.size() != getFlowItemCount() || calculatedWidth != getWidth() || lastSpanCount != getSpanCount()) {
             calculatedWidth = getWidth();
+            lastSpanCount = getSpanCount();
             prepareLayout(getWidth());
         }
     }
