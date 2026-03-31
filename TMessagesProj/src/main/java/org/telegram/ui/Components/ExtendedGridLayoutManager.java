@@ -161,6 +161,12 @@ public class ExtendedGridLayoutManager extends GridLayoutManager {
 
     private int lastSpanCount;
 
+    @Override
+    public void onLayoutChildren(RecyclerView.Recycler recycler, RecyclerView.State state) {
+        checkLayout();
+        super.onLayoutChildren(recycler, state);
+    }
+
     private void checkLayout() {
         if (itemSpans.size() != getFlowItemCount() || calculatedWidth != getWidth() || lastSpanCount != getSpanCount()) {
             calculatedWidth = getWidth();

@@ -8945,6 +8945,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 }
 
                 int viewportWidth = listView.getMeasuredWidth();
+                if (viewportWidth == 0) {
+                    viewportWidth = lastMeasuredContentWidth > 0 ? lastMeasuredContentWidth : AndroidUtilities.displaySize.x;
+                }
                 for (int a = 0; a < nameTextView.length; a++) {
                     if (nameTextView[a] == null) {
                         continue;
@@ -9027,48 +9030,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         fixAvatarImageInCenter();
 
         refreshNameAndOnlineY();
-
         needLayoutText(1f);
-
-        float nameScale = 1.0f + 0.12f;
-        int viewWidth = lastMeasuredContentWidth;
-        if (viewWidth == 0) {
-            viewWidth = AndroidUtilities.displaySize.x;
-        }
-        for (int a = 0; a < nameTextView.length; a++) {
-            if (nameTextView[a] == null) {
-                continue;
-            }
-            FrameLayout.LayoutParams nameParams = (FrameLayout.LayoutParams) nameTextView[a].getLayoutParams();
-            float exactNameWidth = nameTextView[a].getExactWidth();
-            if (exactNameWidth == 0) {
-                exactNameWidth = nameTextView[a].getPaint().measureText(nameTextView[a].getText() != null ? nameTextView[a].getText().toString() : "");
-            }
-            float nameX = viewWidth / 2f - (nameParams.leftMargin + Math.min(exactNameWidth, viewWidth) * nameScale * 0.5f);
-            
-            FrameLayout.LayoutParams onlineParams = (FrameLayout.LayoutParams) onlineTextView[a].getLayoutParams();
-            float exactOnlineWidth = onlineTextView[a].getExactWidth();
-            if (exactOnlineWidth == 0) {
-                exactOnlineWidth = onlineTextView[a].getPaint().measureText(onlineTextView[a].getText() != null ? onlineTextView[a].getText().toString() : "");
-            }
-            float onlineX = viewWidth / 2f - (onlineParams.leftMargin + Math.min(exactOnlineWidth, viewWidth) * 0.5f);
-
-            if (a == 1) {
-                this.nameX = nameX;
-                this.onlineX = onlineX;
-            }
-            nameTextView[a].setScaleX(nameScale);
-            nameTextView[a].setScaleY(nameScale);
-            nameTextView[a].setTranslationX(nameX);
-            nameTextView[a].setTranslationY(nameY);
-            onlineTextView[a].setTranslationX(getOnlineTextViewTranslationXWithOffsets(onlineX));
-            onlineTextView[a].setTranslationY(getOnlineTextViewTranslationYWithOffsets(onlineY));
-            if (a == 1) {
-                mediaCounterTextView.setTranslationX(onlineX);
-                mediaCounterTextView.setTranslationY(onlineY);
-                updateTextLayoutBasedOnTranslation();
-            }
-        }
 
         if (playProfileAnimation != 2)
             storyView.setAlpha(1f);
