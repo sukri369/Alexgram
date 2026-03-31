@@ -27,6 +27,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewParent;
 import android.view.MotionEvent;
+import android.view.ViewConfiguration;
 import android.view.animation.OvershootInterpolator;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
@@ -1797,15 +1798,74 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
             floatingBadge.setEngine(selected);
             floatingBadge.setPadding(AndroidUtilities.dp(4), AndroidUtilities.dp(4), AndroidUtilities.dp(4), AndroidUtilities.dp(4));
             floatingBadge.setBackground(Theme.createSimpleSelectorRoundRectDrawable(AndroidUtilities.dp(20), Theme.getColor(Theme.key_windowBackgroundGray), Theme.getColor(Theme.key_listSelector)));
-            floatingBadge.setOnClickListener(v -> {
-                new SearchEngineBottomSheet(context, index -> {
-                    badgeView.setEngine(index);
-                    floatingBadge.setEngine(index);
-                    engineNameView.setText(SearchEngineBottomSheet.getEngineName(index));
-                    if (!TextUtils.isEmpty(currentQuery)) {
-                        performSearch(true);
+            
+            final ViewConfiguration config = ViewConfiguration.get(context);
+            final int touchSlop = config.getScaledTouchSlop();
+            
+            floatingBadge.setOnTouchListener(new View.OnTouchListener() {
+                private float startX, startY;
+                private float startTranslationX, startTranslationY;
+                private boolean isDragging;
+
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    switch (event.getAction()) {
+                        case MotionEvent.ACTION_DOWN:
+                            startX = event.getRawX();
+                            startY = event.getRawY();
+                            startTranslationX = v.getTranslationX();
+                            startTranslationY = v.getTranslationY();
+                            isDragging = false;
+                            v.animate().scaleX(1.1f).scaleY(1.1f).setDuration(120).start();
+                            return true;
+
+                        case MotionEvent.ACTION_MOVE:
+                            float deltaX = event.getRawX() - startX;
+                            float deltaY = event.getRawY() - startY;
+                            if (!isDragging && (Math.abs(deltaX) > touchSlop || Math.abs(deltaY) > touchSlop)) {
+                                isDragging = true;
+                            }
+                            if (isDragging) {
+                                float newTx = startTranslationX + deltaX;
+                                float newTy = startTranslationY + deltaY;
+                                
+                                // Boundary constraints
+                                float minX = -v.getLeft() + AndroidUtilities.dp(8);
+                                float maxX = resultsLayout.getWidth() - v.getRight() - AndroidUtilities.dp(8);
+                                float minY = -v.getTop() + AndroidUtilities.dp(8);
+                                float maxY = resultsLayout.getHeight() - v.getBottom() - AndroidUtilities.dp(8);
+                                
+                                v.setTranslationX(Math.max(minX, Math.min(newTx, maxX)));
+                                v.setTranslationY(Math.max(minY, Math.min(newTy, maxY)));
+                            }
+                            return true;
+
+                        case MotionEvent.ACTION_UP:
+                        case MotionEvent.ACTION_CANCEL:
+                            v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(120).start();
+                            if (!isDragging) {
+                                new SearchEngineBottomSheet(context, index -> {
+                                    badgeView.setEngine(index);
+                                    floatingBadge.setEngine(index);
+                                    engineNameView.setText(SearchEngineBottomSheet.getEngineName(index));
+                                    if (!TextUtils.isEmpty(currentQuery)) {
+                                        performSearch(true);
+                                    }
+                                }).show();
+                            } else {
+                                // Snap to nearest edge logic
+                                float currentTx = v.getTranslationX();
+                                float centerX = resultsLayout.getWidth() / 2f - (v.getLeft() + v.getRight()) / 2f;
+                                float targetTx = (currentTx < centerX) ? (-v.getLeft() + AndroidUtilities.dp(8)) : (resultsLayout.getWidth() - v.getRight() - AndroidUtilities.dp(8));
+                                v.animate().translationX(targetTx)
+                                    .setDuration(250)
+                                    .setInterpolator(new OvershootInterpolator(0.8f))
+                                    .start();
+                            }
+                            return true;
                     }
-                }).show();
+                    return false;
+                }
             });
             resultsLayout.addView(floatingBadge, LayoutHelper.createFrame(40, 40, android.view.Gravity.TOP | android.view.Gravity.RIGHT, 0, 8, 8, 0));
         }
