@@ -2256,6 +2256,7 @@ public class ChatObject {
         currentBannedRights += bannedRights.send_audios ? 1 : 0;
         currentBannedRights += bannedRights.send_docs ? 1 : 0;
         currentBannedRights += bannedRights.send_plain ? 1 : 0;
+        currentBannedRights += bannedRights.edit_rank ? 1 : 0;
         currentBannedRights += bannedRights.until_date;
         return currentBannedRights;
     }

@@ -636,6 +636,8 @@
     <string name="ChannelAntiSpamInfo2">You can manage anti-spam settings in %s</string>
     <string name="ChannelHideMembers">Hide Members</string>
     <string name="ChannelHideMembersInfo">Switch on to hide the list of members in this group. Admins will remain visible.</string>
+    <string name="ChannelMemberTags">Allow Member Tags</string>
+    <string name="ChannelMemberTagsInfo">Turn this on to let members of the group to add short tags next to their names.</string>
     <string name="ChannelAntiSpamFalsePositiveReported">Telegram moderators will review your report. Thank you!</string>
     <string name="ChannelMembersInfo">Only channel administrators can see this list.</string>
     <string name="ChannelLinkInfo">Anyone on Telegram will be able to join your channel by following this link.</string>
