@@ -1677,7 +1677,7 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
     }
 
     public boolean onBackPressed() {
-        if (webSearchContainer != null && getCurrentItem() == viewPagerAdapter.items.size() - 1) {
+        if (webSearchContainer != null && getCurrentPosition() == viewPagerAdapter.items.size() - 1) {
             return webSearchContainer.onBackPressed();
         }
         return false;
