@@ -2251,6 +2251,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
                                 if (NekoConfig.openArchiveOnPull.Bool()) {
                                     AndroidUtilities.runOnUIThread(() -> {
+                                        parentPage.archivePullViewState = ARCHIVE_ITEM_STATE_HIDDEN;
+                                        parentPage.layoutManager.scrollToPositionWithOffset(1, 0);
                                         // Open the folder.
                                         // Delay was taken from PullForegroundDrawable::startOutAnimation().
                                         Bundle args = new Bundle();
