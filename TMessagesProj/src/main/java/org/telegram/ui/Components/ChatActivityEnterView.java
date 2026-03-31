@@ -6994,6 +6994,12 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
     }
 
     public void onDestroy() {
+        iosAttachBackground = null;
+        iosTextBackground = null;
+        iosTopBackground = null;
+        iosSendBackground = null;
+        iosColorProvider = null;
+        iosBackgroundFactory = null;
         if (audioTimelineView != null) {
             audioTimelineView.destroy();
         }
@@ -14875,7 +14881,9 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
         } else {
             canvas.save();
             canvas.clipRect(0, dp(2), getMeasuredWidth(), getMeasuredHeight());
-            canvas.translate(0, -emojiView.getStickersExpandOffset());
+            if (emojiView != null) {
+                canvas.translate(0, -emojiView.getStickersExpandOffset());
+            }
             super.dispatchDraw(canvas);
             canvas.restore();
         }
