@@ -1810,7 +1810,6 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
                 invalidate();
             }
         }
-        }
 
         @SuppressLint("SetJavaScriptEnabled")
         private void ensureWebView() {
