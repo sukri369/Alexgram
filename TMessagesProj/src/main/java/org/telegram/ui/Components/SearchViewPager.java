@@ -43,6 +43,7 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
@@ -1717,6 +1718,7 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
 
         // Results UI elements
         private WebView webView;
+        private SwipeRefreshLayout swipeRefreshLayout;
         private View progressBar;
 
         private final Runnable searchRunnable = this::performSearch;
@@ -1768,7 +1770,7 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
                     badgeView.setEngine(index);
                     engineNameView.setText(SearchEngineBottomSheet.getEngineName(index));
                     if (!TextUtils.isEmpty(currentQuery)) {
-                        performSearch();
+                        performSearch(true);
                     }
                 }).show();
             });
@@ -1801,7 +1803,7 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
                     floatingBadge.setEngine(index);
                     engineNameView.setText(SearchEngineBottomSheet.getEngineName(index));
                     if (!TextUtils.isEmpty(currentQuery)) {
-                        performSearch();
+                        performSearch(true);
                     }
                 }).show();
             });
@@ -1832,7 +1834,25 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
         @SuppressLint("SetJavaScriptEnabled")
         private void ensureWebView() {
             if (webView != null) return;
-            webView = new WebView(getContext());
+
+            swipeRefreshLayout = new SwipeRefreshLayout(getContext());
+            swipeRefreshLayout.setColorSchemeColors(Theme.getColor(Theme.key_featuredStickers_addButton));
+            swipeRefreshLayout.setProgressBackgroundColorSchemeColor(Theme.getColor(Theme.key_windowBackgroundWhite));
+            swipeRefreshLayout.setOnRefreshListener(() -> {
+                if (webView != null) {
+                    webView.reload();
+                }
+            });
+
+            webView = new WebView(getContext()) {
+                @Override
+                protected void onScrollChanged(int l, int t, int oldl, int oldt) {
+                    super.onScrollChanged(l, t, oldl, oldt);
+                    if (swipeRefreshLayout != null) {
+                        swipeRefreshLayout.setEnabled(t == 0);
+                    }
+                }
+            };
             WebSettings settings = webView.getSettings();
             settings.setJavaScriptEnabled(true);
             settings.setDomStorageEnabled(true);
@@ -1851,12 +1871,13 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
             webView.setWebViewClient(new WebViewClient() {
                 @Override
                 public void onPageStarted(WebView view, String url, android.graphics.Bitmap favicon) {
-                    progressBar.setVisibility(View.VISIBLE);
+                    if (progressBar != null) progressBar.setVisibility(View.VISIBLE);
                 }
 
                 @Override
                 public void onPageFinished(WebView view, String url) {
-                    progressBar.setVisibility(View.GONE);
+                    if (progressBar != null) progressBar.setVisibility(View.GONE);
+                    if (swipeRefreshLayout != null) swipeRefreshLayout.setRefreshing(false);
                 }
             });
 
@@ -1867,12 +1888,14 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
                         ((WebProgressBar) progressBar).setProgress(newProgress / 100.0f);
                     }
                     if (newProgress == 100) {
-                        progressBar.setVisibility(View.GONE);
+                        if (progressBar != null) progressBar.setVisibility(View.GONE);
+                        if (swipeRefreshLayout != null) swipeRefreshLayout.setRefreshing(false);
                     }
                 }
             });
 
-            resultsLayout.addView(webView, 0, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+            swipeRefreshLayout.addView(webView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+            resultsLayout.addView(swipeRefreshLayout, 0, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
             
             webView.setOnTouchListener((v, event) -> {
                 if (event.getAction() == MotionEvent.ACTION_MOVE) {
@@ -1904,7 +1927,11 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
         }
 
         private void performSearch() {
-            if (TextUtils.isEmpty(currentQuery) || TextUtils.equals(currentQuery, lastPerformedQuery)) return;
+            performSearch(false);
+        }
+
+        private void performSearch(boolean force) {
+            if (TextUtils.isEmpty(currentQuery) || (!force && TextUtils.equals(currentQuery, lastPerformedQuery))) return;
             lastPerformedQuery = currentQuery;
             
             ensureWebView();
