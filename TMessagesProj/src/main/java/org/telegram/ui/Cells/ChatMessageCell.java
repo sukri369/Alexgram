@@ -18809,12 +18809,12 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         }
         return (
             isPinnedChat && currentMessageObject.type == MessageObject.TYPE_TEXT ||
+            (currentMessageObject.messageOwner != null && !android.text.TextUtils.isEmpty(currentMessageObject.messageOwner.from_rank)) || 
+            (delegate != null && delegate.getAdminRank(UserConfig.getInstance(currentAccount).getClientUserId()) != null) ||
             !pinnedTop && drawName && isChat && (
                 !currentMessageObject.isOutOwner() || 
                 currentMessageObject.isFromGroup() || 
-                currentMessageObject.isRepostPreview || 
-                (currentMessageObject.messageOwner != null && !android.text.TextUtils.isEmpty(currentMessageObject.messageOwner.from_rank)) || 
-                (delegate != null && delegate.getAdminRank(UserConfig.getInstance(currentAccount).getClientUserId()) != null)
+                currentMessageObject.isRepostPreview
             ) ||
             currentMessageObject.isImportedForward() && currentMessageObject.messageOwner.fwd_from.from_id == null
         );
