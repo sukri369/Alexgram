@@ -3225,7 +3225,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         paddingTop = getHeaderExtraHeight() + actionBarHeight;
                         paddingBottom = 0;
                     } else {
-                        paddingTop = listView.getMeasuredWidth() + getActionsExtraHeight();
+                        paddingTop = getMeasuredWidth() + getActionsExtraHeight();
                         paddingBottom = Math.max(0, getMeasuredHeight() - (listContentHeight + getHeaderExtraHeight() + actionBarHeight));
                     }
                     if (banFromGroup != 0) {
@@ -3252,7 +3252,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         paddingTop = getHeaderExtraHeight();
                         paddingBottom = 0;
                     } else {
-                        paddingTop = listView.getMeasuredWidth() + getActionsExtraHeight();
+                        paddingTop = getMeasuredWidth() + getActionsExtraHeight();
                         paddingBottom = Math.max(0, getMeasuredHeight() - (listContentHeight + getHeaderExtraHeight() + actionBarHeight));
                     }
                     if (banFromGroup != 0) {
@@ -9032,9 +9032,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 continue;
             }
             FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) nameTextView[a].getLayoutParams();
-            float nameX = listView.getMeasuredWidth() / 2f - (params.leftMargin + nameTextView[a].getExactWidth() * nameScale * 0.5f);
+            float nameX = lastMeasuredContentWidth / 2f - (params.leftMargin + nameTextView[a].getExactWidth() * nameScale * 0.5f);
             params = (FrameLayout.LayoutParams) onlineTextView[a].getLayoutParams();
-            float onlineX = listView.getMeasuredWidth() / 2f - (params.leftMargin + onlineTextView[a].getExactWidth() * 0.5f);
+            float onlineX = lastMeasuredContentWidth / 2f - (params.leftMargin + onlineTextView[a].getExactWidth() * 0.5f);
 
             if (a == 1) {
                 this.nameX = nameX;
