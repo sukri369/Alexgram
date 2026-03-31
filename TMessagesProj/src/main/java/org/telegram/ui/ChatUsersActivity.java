@@ -1369,13 +1369,14 @@ public class ChatUsersActivity extends BaseFragment implements NotificationCente
                     }
                 } else {
                     boolean canEdit = false;
+                    boolean isSelf = peerId == getUserConfig().getClientUserId();
                     if (type == TYPE_ADMIN) {
-                        canEdit = peerId != getUserConfig().getClientUserId() && (currentChat.creator || canEditAdmin);
-                    } else if (type == TYPE_BANNED || type == TYPE_KICKED) {
-                        canEdit = ChatObject.canBlockUsers(currentChat);
+                        canEdit = isSelf || currentChat.creator || canEditAdmin;
+                    } else if (type == TYPE_BANNED || type == TYPE_KICKED || type == TYPE_USERS) {
+                        canEdit = ChatObject.canBlockUsers(currentChat) || (isSelf && currentChat != null && currentChat.default_banned_rights != null && !currentChat.default_banned_rights.edit_rank);
                     }
-                    if (type == TYPE_BANNED || type != TYPE_ADMIN && isChannel || type == TYPE_USERS && selectType == SELECT_TYPE_MEMBERS) {
-                        if (peerId == getUserConfig().getClientUserId()) {
+                    if ((type == TYPE_BANNED || type != TYPE_ADMIN && isChannel || type == TYPE_USERS && selectType == SELECT_TYPE_MEMBERS) && !canEdit) {
+                        if (isSelf) {
                             return;
                         }
                         Bundle args = new Bundle();
@@ -3453,6 +3454,10 @@ public class ChatUsersActivity extends BaseFragment implements NotificationCente
                     } else {
                         return;
                     }
+                    String rank = null;
+                    if (item instanceof TLRPC.ChannelParticipant) {
+                        rank = ((TLRPC.ChannelParticipant) item).rank;
+                    }
                     TLObject object;
                     if (peerId > 0) {
                         object = getMessagesController().getUser(peerId);
@@ -3471,6 +3476,7 @@ public class ChatUsersActivity extends BaseFragment implements NotificationCente
                                 }
                             }
                             userCell.setData(object, null, role, position != lastRow - 1);
+                            userCell.setAdminRank(rank, false, false);
                         } else if (type == TYPE_ADMIN) {
                             String role = null;
                             if (creator) {
@@ -3486,6 +3492,7 @@ public class ChatUsersActivity extends BaseFragment implements NotificationCente
                                 }
                             }
                             userCell.setData(object, null, role, position != lastRow - 1);
+                            userCell.setAdminRank(rank, admin, creator);
                         } else if (type == TYPE_USERS) {
                             CharSequence status;
                             if (showJoined && joined != 0) {
@@ -3494,6 +3501,7 @@ public class ChatUsersActivity extends BaseFragment implements NotificationCente
                                 status = null;
                             }
                             userCell.setData(object, null, status, position != lastRow - 1);
+                            userCell.setAdminRank(rank, false, false);
                         }
                     }
                     break;

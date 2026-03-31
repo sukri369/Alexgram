@@ -18059,7 +18059,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 currentNameStatus = null;
                 currentNameBotVerificationId = 0;
             } else if (needAuthorName) {
-                currentNameString = currentMessageObject.isOutOwner() && adminLabel != null ? "" : getAuthorName();
+                currentNameString = getAuthorName();
                 currentNameStatus = getAuthorStatus();
                 currentNameBotVerificationId = getAuthorBotVerificationId();
             } else {
@@ -18809,7 +18809,13 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         }
         return (
             isPinnedChat && currentMessageObject.type == MessageObject.TYPE_TEXT ||
-            !pinnedTop && drawName && isChat && (!currentMessageObject.isOutOwner() || currentMessageObject.isFromGroup() || currentMessageObject.isRepostPreview || (currentMessageObject.isOutOwner() && (currentMessageObject.messageOwner != null && !android.text.TextUtils.isEmpty(currentMessageObject.messageOwner.from_rank) || delegate != null && delegate.getAdminRank(UserConfig.getInstance(currentAccount).getClientUserId()) != null))) ||
+            !pinnedTop && drawName && isChat && (
+                !currentMessageObject.isOutOwner() || 
+                currentMessageObject.isFromGroup() || 
+                currentMessageObject.isRepostPreview || 
+                (currentMessageObject.messageOwner != null && !android.text.TextUtils.isEmpty(currentMessageObject.messageOwner.from_rank)) || 
+                (delegate != null && delegate.getAdminRank(UserConfig.getInstance(currentAccount).getClientUserId()) != null)
+            ) ||
             currentMessageObject.isImportedForward() && currentMessageObject.messageOwner.fwd_from.from_id == null
         );
     }
@@ -21205,6 +21211,8 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                         color = getThemedColor(Theme.key_chat_tagCreator);
                     } else if (adminLayoutIsAdmin) {
                         color = getThemedColor(Theme.key_chat_tagAdmin);
+                    } else if (adminLayout != null) {
+                        color = getThemedColor(isDrawSelectionBackground() ? Theme.key_chat_inAdminSelectedText : Theme.key_chat_inAdminText);
                     } else {
                         color = getThemedColor(isDrawSelectionBackground() ? Theme.key_chat_inAdminSelectedText : Theme.key_chat_inAdminText);
                     }
@@ -21253,7 +21261,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 if (transitionParams.animateSign) {
                     Theme.chat_adminPaint.setAlpha((int) (Color.alpha(color) * transitionParams.animateChangeProgress));
                 }
-                if (adminLayoutIsAdmin) {
+                if (adminLayout != null) {
                     AndroidUtilities.rectTmp.set(-dp(6), -dp(1), ax2 - ax, dp(15));
                     if (boostCounterSpan != null) {
                         if (boostCounterSpan.isRtl) {
