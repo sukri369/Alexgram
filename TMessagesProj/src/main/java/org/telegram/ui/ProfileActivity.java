@@ -9039,10 +9039,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             if (nameTextView[a] == null) {
                 continue;
             }
-            FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) nameTextView[a].getLayoutParams();
-            float nameX = viewWidth / 2f - (params.leftMargin + nameTextView[a].getExactWidth() * nameScale * 0.5f);
-            params = (FrameLayout.LayoutParams) onlineTextView[a].getLayoutParams();
-            float onlineX = viewWidth / 2f - (params.leftMargin + onlineTextView[a].getExactWidth() * 0.5f);
+            FrameLayout.LayoutParams nameParams = (FrameLayout.LayoutParams) nameTextView[a].getLayoutParams();
+            // Use the same capped formula as the main needLayout method to avoid negative translationX
+            float nameX = viewWidth / 2f - (nameParams.leftMargin + Math.min(nameTextView[a].getExactWidth(), a == 1 ? nameParams.width : viewWidth) * nameScale * 0.5f);
+            FrameLayout.LayoutParams onlineParams = (FrameLayout.LayoutParams) onlineTextView[a].getLayoutParams();
+            float onlineX = viewWidth / 2f - (onlineParams.leftMargin + Math.min(onlineTextView[a].getExactWidth(), a == 1 ? onlineParams.width : viewWidth) * 0.5f);
 
             if (a == 1) {
                 this.nameX = nameX;
