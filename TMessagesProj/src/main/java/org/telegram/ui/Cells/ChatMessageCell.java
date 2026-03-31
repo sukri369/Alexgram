@@ -18138,9 +18138,9 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                     adminLayoutIsAdmin = true;
                     adminLayoutIsOwner = isOwner;
                     if (!drawNameAvatar) {
-                        nameWidth += adminLayout.getLineWidth(0) + (adminLayoutIsAdmin ? dp(12) : 0) + dp(8);
+                        nameWidth += adminLayout.getLineWidth(0) + dp(12) + dp(8);
                     } else {
-                        nameWidth = (int) Math.max(nameWidth, dp(32.33f) + adminLayout.getLineWidth(0) + (adminLayoutIsAdmin ? dp(12) : 0) + dp(8));
+                        nameWidth = (int) Math.max(nameWidth, dp(32.33f) + adminLayout.getLineWidth(0) + dp(12) + dp(8));
                     }
                     boostCounterBounds = new RectF();
                 } else {
@@ -21220,7 +21220,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 Theme.chat_adminPaint.setColor(color);
                 canvas.save();
                 final float lineWidth = adminLayout.getLineWidth(0);
-                final float adminLayoutWidth = lineWidth + (adminLayoutIsAdmin ? dp(6) : 0);
+                final float adminLayoutWidth = lineWidth + dp(12);
                 final float adminRight = end - dp(11) - bookmarkShift;
                 float ax = adminRight - adminLayoutWidth;
                 float ax2 = adminRight;

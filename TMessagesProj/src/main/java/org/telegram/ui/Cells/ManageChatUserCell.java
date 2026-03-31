@@ -430,10 +430,11 @@ public class ManageChatUserCell extends FrameLayout {
             float x = statusTextView.getX();
             float y = statusTextView.getY();
             if (LocaleController.isRTL) {
-                x = getMeasuredWidth() - statusTextView.getX() - width - AndroidUtilities.dp(8);
-                AndroidUtilities.rectTmp.set(getMeasuredWidth() - statusTextView.getX() - width - AndroidUtilities.dp(8), y, getMeasuredWidth() - statusTextView.getX(), y + AndroidUtilities.dp(16));
+                float right = x + width + AndroidUtilities.dp(6);
+                float left = x - AndroidUtilities.dp(6);
+                AndroidUtilities.rectTmp.set(left, y, right, y + AndroidUtilities.dp(16));
             } else {
-                AndroidUtilities.rectTmp.set(x - AndroidUtilities.dp(4), y, x + width + AndroidUtilities.dp(4), y + AndroidUtilities.dp(16));
+                AndroidUtilities.rectTmp.set(x - AndroidUtilities.dp(6), y, x + width + AndroidUtilities.dp(6), y + AndroidUtilities.dp(16));
             }
             canvas.drawRoundRect(AndroidUtilities.rectTmp, AndroidUtilities.dp(8), AndroidUtilities.dp(8), Theme.chat_adminPaint);
             Theme.chat_adminPaint.setAlpha(wasAlpha);
