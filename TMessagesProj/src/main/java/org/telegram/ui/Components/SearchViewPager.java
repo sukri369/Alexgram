@@ -5,6 +5,7 @@ import static org.telegram.ui.PremiumPreviewFragment.applyNewSpan;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
