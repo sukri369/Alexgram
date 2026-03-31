@@ -1504,6 +1504,18 @@ object NaConfig {
             ConfigItem.configTypeString,
             ""
         )
+    val searchEngineInSearchBar =
+        addConfig(
+            "SearchEngineInSearchBar",
+            ConfigItem.configTypeBool,
+            true
+        )
+    val selectedSearchEngine =
+        addConfig(
+            "SelectedSearchEngine",
+            ConfigItem.configTypeInt,
+            0
+        )
 
     val preferredTranslateTargetLangList = ArrayList<String>()
     fun updatePreferredTranslateTargetLangList() {
