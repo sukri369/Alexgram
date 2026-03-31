@@ -26,6 +26,7 @@ import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewParent;
+import android.view.MotionEvent;
 import android.view.animation.OvershootInterpolator;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
@@ -1788,6 +1789,23 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
 
             progressBar = new WebProgressBar(context);
             resultsLayout.addView(progressBar, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 3, android.view.Gravity.TOP));
+
+            // Floating engine switcher for Results state (Themed Badge)
+            SearchEngineBottomSheet.EngineBadgeView floatingBadge = new SearchEngineBottomSheet.EngineBadgeView(context);
+            floatingBadge.setEngine(selected);
+            floatingBadge.setPadding(AndroidUtilities.dp(4), AndroidUtilities.dp(4), AndroidUtilities.dp(4), AndroidUtilities.dp(4));
+            floatingBadge.setBackground(Theme.createSimpleSelectorRoundRectDrawable(AndroidUtilities.dp(20), Theme.getColor(Theme.key_windowBackgroundGray), Theme.getColor(Theme.key_listSelector)));
+            floatingBadge.setOnClickListener(v -> {
+                new SearchEngineBottomSheet(context, index -> {
+                    badgeView.setEngine(index);
+                    floatingBadge.setEngine(index);
+                    engineNameView.setText(SearchEngineBottomSheet.getEngineName(index));
+                    if (!TextUtils.isEmpty(currentQuery)) {
+                        performSearch();
+                    }
+                }).show();
+            });
+            resultsLayout.addView(floatingBadge, LayoutHelper.createFrame(40, 40, android.view.Gravity.TOP | android.view.Gravity.RIGHT, 0, 8, 8, 0));
         }
 
         private class WebProgressBar extends View {
@@ -1855,6 +1873,13 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
             });
 
             resultsLayout.addView(webView, 0, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+            
+            webView.setOnTouchListener((v, event) -> {
+                if (event.getAction() == MotionEvent.ACTION_MOVE) {
+                    AndroidUtilities.hideKeyboard(host.getParentActivity().getCurrentFocus());
+                }
+                return false;
+            });
         }
 
         public void setQuery(String query) {
