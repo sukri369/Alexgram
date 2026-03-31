@@ -17979,13 +17979,13 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
 //            drawTopic = false;
 //        }
         String adminLabel = null;
-        if (!hasPsaHint && delegate != null && (currentUser != null || currentChat != null) && !currentMessageObject.isAnyKindOfSticker() && currentMessageObject.type != MessageObject.TYPE_ROUND_VIDEO) {
+        if (!hasPsaHint && delegate != null && (currentUser != null || currentChat != null) && !currentMessageObject.isAnyKindOfSticker() && currentMessageObject.type != MessageObject.TYPE_ROUND_VIDEO && (!ChatObject.isChannel(currentChat) || currentChat != null && currentChat.megagroup)) {
             String delegateRank = delegate.getAdminRank(currentUser != null ? currentUser.id : currentChat.id);
             if (delegateRank != null) {
                 adminLabel = delegateRank;
             }
         }
-        if (adminLabel == null && messageObject.messageOwner != null && messageObject.messageOwner.from_rank != null) {
+        if (adminLabel == null && messageObject.messageOwner != null && messageObject.messageOwner.from_rank != null && (!ChatObject.isChannel(currentChat) || currentChat != null && currentChat.megagroup)) {
             adminLabel = messageObject.messageOwner.from_rank;
         }
         if (!hasPsaHint && (needAuthorName || viaBot || adminLabel != null)) {
