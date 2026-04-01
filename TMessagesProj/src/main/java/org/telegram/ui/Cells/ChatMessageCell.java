@@ -17988,7 +17988,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         if (adminLabel == null && messageObject.messageOwner != null && messageObject.messageOwner.from_rank != null && (!ChatObject.isChannel(currentChat) || currentChat != null && currentChat.megagroup)) {
             adminLabel = messageObject.messageOwner.from_rank;
         }
-        if (!hasPsaHint && (needAuthorName || viaBot || adminLabel != null)) {
+        if (!hasPsaHint && (needAuthorName || viaBot)) {
             drawNameLayout = true;
             drawNameAvatar = !messageObject.isOutOwner() && (isForum || isMonoForum) && isSideMenuEnabled && (currentPosition == null || (currentPosition.flags & MessageObject.POSITION_FLAG_TOP) != 0) && !(messageObject.type == MessageObject.TYPE_ROUND_VIDEO || messageObject.type == MessageObject.TYPE_STICKER || messageObject.type == MessageObject.TYPE_ANIMATED_STICKER);
             nameWidth = getMaxNameWidth();
@@ -18809,12 +18809,14 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         }
         return (
             isPinnedChat && currentMessageObject.type == MessageObject.TYPE_TEXT ||
-            (currentMessageObject.messageOwner != null && !android.text.TextUtils.isEmpty(currentMessageObject.messageOwner.from_rank)) || 
-            (delegate != null && delegate.getAdminRank(UserConfig.getInstance(currentAccount).getClientUserId()) != null) ||
-            !pinnedTop && drawName && isChat && (
-                !currentMessageObject.isOutOwner() || 
-                currentMessageObject.isFromGroup() || 
-                currentMessageObject.isRepostPreview
+            !pinnedTop && (
+                (currentMessageObject.messageOwner != null && !android.text.TextUtils.isEmpty(currentMessageObject.messageOwner.from_rank)) ||
+                (delegate != null && delegate.getAdminRank(UserConfig.getInstance(currentAccount).getClientUserId()) != null) ||
+                drawName && isChat && (
+                    !currentMessageObject.isOutOwner() ||
+                    currentMessageObject.isFromGroup() ||
+                    currentMessageObject.isRepostPreview
+                )
             ) ||
             currentMessageObject.isImportedForward() && currentMessageObject.messageOwner.fwd_from.from_id == null
         );
