@@ -1,13 +1,17 @@
 package org.telegram.ui;
 
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.RectF;
+import android.graphics.drawable.Drawable;
+import android.os.Build;
+import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.TextView;
 
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -16,32 +20,24 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
-import org.telegram.messenger.FileLoader;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
+import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.Utilities;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
-import org.telegram.ui.Cells.HeaderCell;
-import org.telegram.ui.Cells.ShadowSectionCell;
 import org.telegram.ui.Components.BulletinFactory;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
-import org.telegram.ui.Components.ThemeSmallPreviewView;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.Scanner;
-import java.util.List;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -99,8 +95,10 @@ public class OnlineThemesActivity extends BaseFragment {
         FrameLayout frameLayout = (FrameLayout) fragmentView;
 
         listView = new RecyclerListView(context);
-        listView.setLayoutManager(new GridLayoutManager(context, 3));
+        GridLayoutManager layoutManager = new GridLayoutManager(context, 3);
+        listView.setLayoutManager(layoutManager);
         listView.setAdapter(listAdapter = new ListAdapter(context));
+        listView.setPadding(AndroidUtilities.dp(10), AndroidUtilities.dp(10), AndroidUtilities.dp(10), AndroidUtilities.dp(10));
         listView.setVerticalScrollBarEnabled(false);
         frameLayout.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
@@ -184,6 +182,69 @@ public class OnlineThemesActivity extends BaseFragment {
         });
     }
 
+    private class ThemePreviewCell extends FrameLayout {
+        private TextView nameTextView;
+        private ThemeItem themeItem;
+        private Drawable inDrawable;
+        private Drawable outDrawable;
+        private RectF rect = new RectF();
+        private Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+
+        public ThemePreviewCell(Context context) {
+            super(context);
+            setWillNotDraw(false);
+            
+            inDrawable = context.getResources().getDrawable(R.drawable.minibubble_in).mutate();
+            outDrawable = context.getResources().getDrawable(R.drawable.minibubble_out).mutate();
+            
+            nameTextView = new TextView(context);
+            nameTextView.setTextSize(13);
+            nameTextView.setLines(1);
+            nameTextView.setSingleLine(true);
+            nameTextView.setEllipsize(TextUtils.TruncateAt.END);
+            nameTextView.setGravity(Gravity.CENTER_HORIZONTAL);
+            nameTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+            addView(nameTextView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL, 5, 0, 5, 5));
+        }
+
+        @Override
+        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+            int width = MeasureSpec.getSize(widthMeasureSpec);
+            int height = (int) (width * 1.35f);
+            super.onMeasure(MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY));
+        }
+
+        public void setThemeItem(ThemeItem item) {
+            themeItem = item;
+            nameTextView.setText(item.name);
+            invalidate();
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            if (themeItem == null) return;
+            
+            int x = AndroidUtilities.dp(10);
+            int y = AndroidUtilities.dp(10);
+            int w = getMeasuredWidth() - AndroidUtilities.dp(20);
+            int h = getMeasuredHeight() - AndroidUtilities.dp(40);
+            
+            rect.set(x, y, x + w, y + h);
+            
+            paint.setColor(themeItem.previewBg);
+            canvas.drawRoundRect(rect, AndroidUtilities.dp(8), AndroidUtilities.dp(8), paint);
+            
+            // Bubbles
+            Theme.setDrawableColor(inDrawable, themeItem.previewIn);
+            inDrawable.setBounds(x + AndroidUtilities.dp(6), y + AndroidUtilities.dp(12), x + AndroidUtilities.dp(6 + 40), y + AndroidUtilities.dp(12 + 15));
+            inDrawable.draw(canvas);
+            
+            Theme.setDrawableColor(outDrawable, themeItem.previewOut);
+            outDrawable.setBounds(x + w - AndroidUtilities.dp(6 + 40), y + AndroidUtilities.dp(35), x + w - AndroidUtilities.dp(6), y + AndroidUtilities.dp(35 + 15));
+            outDrawable.draw(canvas);
+        }
+    }
+
     private class ListAdapter extends RecyclerListView.SelectionAdapter {
         private Context mContext;
 
@@ -203,38 +264,21 @@ public class OnlineThemesActivity extends BaseFragment {
 
         @Override
         public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            View view = new ThemeSmallPreviewView(mContext, null, null, ThemeSmallPreviewView.TYPE_GRID);
-            view.setLayoutParams(new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, AndroidUtilities.dp(120)));
-            return new RecyclerListView.Holder(view);
+            ThemePreviewCell cell = new ThemePreviewCell(mContext);
+            return new RecyclerListView.Holder(cell);
         }
 
         @Override
         public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-            ThemeSmallPreviewView view = (ThemeSmallPreviewView) holder.itemView;
-            ThemeItem item = themes.get(position);
-            
-            // We need a ChatThemeItem to use ThemeSmallPreviewView easily, 
-            // but we can also manually set colors if we modify ThemeSmallPreviewView or use a mock.
-            // For now, let's create a minimal ThemeInfo for the preview.
-            Theme.ThemeInfo info = new Theme.ThemeInfo();
-            info.name = item.name;
-            info.previewBackgroundColor = item.previewBg;
-            info.previewInColor = item.previewIn;
-            info.previewOutColor = item.previewOut;
-            
-            // To make ThemeSmallPreviewView work without a full ChatThemeItem, 
-            // we might need to adjust it. But let's see if we can just set colors.
-            // In Telegram's ThemeSmallPreviewView, it uses ThemeInfo or ChatThemeItem.
-            view.setThemeInfo(info);
-            view.setItemName(item.name);
+            ThemePreviewCell view = (ThemePreviewCell) holder.itemView;
+            view.setThemeItem(themes.get(position));
         }
     }
     
     @Override
     public ArrayList<ThemeDescription> getThemeDescriptions() {
         ArrayList<ThemeDescription> themeDescriptions = new ArrayList<>();
-        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_CELLBACKGROUNDCOLOR, new Class[]{ThemeSmallPreviewView.class}, null, null, null, Theme.key_windowBackgroundWhite));
-        themeDescriptions.add(new ThemeDescription(fragmentView, ThemeDescription.FLAG_BACKGROUND, null, null, null, null, Theme.key_windowBackgroundGray));
+        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_BACKGROUND, null, null, null, null, Theme.key_windowBackgroundGray));
         return themeDescriptions;
     }
 }

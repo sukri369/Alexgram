@@ -2720,7 +2720,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                         cell.imageLeft = 20;
                     } else if (position == onlineThemesRow) {
                         cell.setColors(Theme.key_dialogIcon, Theme.key_windowBackgroundWhiteBlackText);
-                        cell.setTextAndIcon("Online Themes", R.drawable.msg2_chats, true);
+                        cell.setTextAndIcon("Online Themes", R.drawable.msg2_chats_add, true);
                         cell.setSubtitle("Browse and download themes from GitHub");
                         cell.offsetFromImage = 64;
                         cell.heightDp = 60;

@@ -2216,13 +2216,13 @@ public class Theme {
         public TLRPC.InputFile uploadedThumb;
         public TLRPC.InputFile uploadedFile;
 
-        private int previewBackgroundColor;
+        public int previewBackgroundColor;
         public int previewBackgroundGradientColor1;
         public int previewBackgroundGradientColor2;
         public int previewBackgroundGradientColor3;
         public int previewWallpaperOffset;
-        private int previewInColor;
-        private int previewOutColor;
+        public int previewInColor;
+        public int previewOutColor;
         public boolean firstAccentIsDefault;
         public boolean previewParsed;
         public boolean themeLoaded = true;
@@ -2252,7 +2252,7 @@ public class Theme {
         private final static int LIGHT = 0;
         private final static int UNKNOWN = -1;
 
-        ThemeInfo() {
+        public ThemeInfo() {
 
         }
 
