@@ -1189,7 +1189,7 @@ object NaConfig {
         addConfig(
             "IconReplacements",
             ConfigItem.configTypeInt,
-            0
+            1
         )
     val showCopyAsSticker =
         addConfig(
@@ -1503,6 +1503,18 @@ object NaConfig {
             "aiApiKey2",
             ConfigItem.configTypeString,
             ""
+        )
+    val searchEngineInSearchBar =
+        addConfig(
+            "SearchEngineInSearchBar",
+            ConfigItem.configTypeBool,
+            true
+        )
+    val selectedSearchEngine =
+        addConfig(
+            "SelectedSearchEngine",
+            ConfigItem.configTypeInt,
+            0
         )
 
     val preferredTranslateTargetLangList = ArrayList<String>()

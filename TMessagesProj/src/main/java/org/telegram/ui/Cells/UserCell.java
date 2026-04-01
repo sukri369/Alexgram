@@ -278,13 +278,49 @@ public class UserCell extends FrameLayout implements NotificationCenter.Notifica
         addButton.setVisibility(value ? VISIBLE : GONE);
     }
 
+    private boolean isAdmin, isOwner;
     public void setAdminRole(String role) {
+        setAdminRole(role, false, false, false, null);
+    }
+
+    public void setAdminRole(String role, boolean isAdmin, boolean isOwner, boolean canAddTag, View.OnClickListener onClick) {
         if (adminTextView == null) {
             return;
         }
-        adminTextView.setVisibility(role != null ? VISIBLE : GONE);
-        adminTextView.setText(role);
-        if (role != null) {
+        this.isAdmin = isAdmin;
+        this.isOwner = isOwner;
+        final int color;
+        if (isOwner) {
+            color = Theme.getColor(Theme.key_chat_tagCreator, resourcesProvider);
+        } else if (isAdmin) {
+            color = Theme.getColor(Theme.key_chat_tagAdmin, resourcesProvider);
+        } else if (canAddTag && android.text.TextUtils.isEmpty(role)) {
+            color = Theme.getColor(Theme.key_featuredStickers_addButton, resourcesProvider);
+        } else {
+            color = Theme.getColor(Theme.key_chat_inAdminText, resourcesProvider);
+        }
+        adminTextView.setTextColor(color);
+        if (!android.text.TextUtils.isEmpty(role)) {
+            adminTextView.setText(role);
+            adminTextView.setPadding(dp(6), dp(0.66f), dp(6), dp(1));
+            adminTextView.setTranslationX(dp(6));
+            adminTextView.setBackground(Theme.createRoundRectDrawable(dp(32), Theme.multAlpha(color, .12f)));
+            adminTextView.setOnClickListener(onClick);
+        } else if (canAddTag && android.text.TextUtils.isEmpty(role)) {
+            adminTextView.setText(org.telegram.messenger.LocaleController.getString(org.telegram.messenger.R.string.AddTag));
+            adminTextView.setPadding(dp(6), dp(0.66f), dp(6), dp(1));
+            adminTextView.setTranslationX(dp(6));
+            adminTextView.setBackground(Theme.createRadSelectorDrawable(Theme.multAlpha(color, .12f), dp(32), dp(32)));
+            adminTextView.setOnClickListener(onClick);
+        } else {
+            adminTextView.setText(role);
+            adminTextView.setPadding(0, 0, 0, 0);
+            adminTextView.setTranslationX(0);
+            adminTextView.setBackground(null);
+            adminTextView.setOnClickListener(onClick);
+        }
+        adminTextView.setVisibility(role != null || canAddTag ? VISIBLE : GONE);
+        if (role != null || canAddTag) {
             CharSequence text = adminTextView.getText();
             int size = (int) Math.ceil(adminTextView.getPaint().measureText(text, 0, text.length()));
             setRightPadding(size, true, false);
@@ -705,7 +741,15 @@ public class UserCell extends FrameLayout implements NotificationCenter.Notifica
 
         nameTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText, resourcesProvider));
         if (adminTextView != null) {
-            adminTextView.setTextColor(Theme.getColor(Theme.key_profile_creatorIcon, resourcesProvider));
+            final int adminColor;
+            if (isOwner) {
+                adminColor = Theme.getColor(Theme.key_chat_tagCreator, resourcesProvider);
+            } else if (isAdmin) {
+                adminColor = Theme.getColor(Theme.key_chat_tagAdmin, resourcesProvider);
+            } else {
+                adminColor = Theme.getColor(Theme.key_chat_inAdminText, resourcesProvider);
+            }
+            adminTextView.setTextColor(adminColor);
         }
 
         if (mutualView != null) {

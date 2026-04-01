@@ -180,6 +180,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
     private int nightThemeRow;
     @Keep
     private int browserRow;
+    private int onlineThemesRow;
     private int nightDisabledRow;
     private int nightScheduledRow;
     private int nightAutomaticRow;
@@ -697,6 +698,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
 
             nightThemeRow = rowCount++;
             browserRow = rowCount++;
+            onlineThemesRow = rowCount++;
             liteModeRow = rowCount++;
             stickersRow = rowCount++;
             stickersSectionRow = rowCount++;
@@ -1500,6 +1502,8 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                 editTheme();
             } else if (position == stickersRow) {
                 presentFragment(new StickersActivity(MediaDataController.TYPE_IMAGE, null));
+            } else if (position == onlineThemesRow) {
+                presentFragment(new OnlineThemesActivity());
             } else if (position == liteModeRow) {
                 presentFragment(new LiteModeSettingsActivity());
             }
@@ -2714,6 +2718,13 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                         cell.offsetFromImage = 64;
                         cell.heightDp = 60;
                         cell.imageLeft = 20;
+                    } else if (position == onlineThemesRow) {
+                        cell.setColors(Theme.key_dialogIcon, Theme.key_windowBackgroundWhiteBlackText);
+                        cell.setTextAndIcon("Online Themes", R.drawable.msg2_chats_add, true);
+                        cell.setSubtitle("Browse and download themes from GitHub");
+                        cell.offsetFromImage = 64;
+                        cell.heightDp = 60;
+                        cell.imageLeft = 20;
                     }
                     break;
                 }
@@ -2788,7 +2799,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
             } else if (position == bubbleRadiusRow) {
                 return TYPE_BUBBLE_RADIUS;
             } else if (position == backgroundRow || position == editThemeRow || position == createNewThemeRow ||
-                        position == liteModeRow || position == stickersRow) {
+                        position == liteModeRow || position == stickersRow || position == onlineThemesRow) {
                 return TYPE_TEXT_PREFERENCE;
             } else if (position == swipeGestureRow) {
                 return TYPE_SWIPE_GESTURE;

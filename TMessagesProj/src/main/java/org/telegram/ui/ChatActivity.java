@@ -520,7 +520,7 @@ public class ChatActivity extends BaseFragment implements
     private boolean showCloseChatDialogLater;
     private FrameLayout progressView;
     private View progressView2;
-    private FrameLayout bottomOverlay;
+    private RestrictedOverlay bottomOverlay;
     private BlurredBackgroundWithFadeDrawable fadeDrawable;
     private ChatInputViewsContainer chatInputViewsContainer;
 
@@ -8907,13 +8907,7 @@ public class ChatActivity extends BaseFragment implements
         }
         searchContainer = null;
 
-        bottomOverlay = new FrameLayout(context) {
-            @Override
-            public void setVisibility(int visibility) {
-                super.setVisibility(visibility);
-                bottomViewsVisibilityController.setViewVisible(BOTTOM_OVERLAY_TEXT_CONTAINER, visibility == VISIBLE, getMeasuredWidth() > 0);
-            }
-        };
+        bottomOverlay = new RestrictedOverlay(context);
         bottomOverlay.setWillNotDraw(false);
         bottomOverlay.setVisibility(View.INVISIBLE);
         bottomOverlay.setFocusable(true);
@@ -39659,6 +39653,22 @@ public class ChatActivity extends BaseFragment implements
         }
 
         @Override
+        public boolean isAdmin(long uid) {
+            if (uid == 0 || currentChat == null) {
+                return false;
+            }
+            return getMessagesController().isAdmin(currentChat.id, uid);
+        }
+
+        @Override
+        public boolean isOwner(long uid) {
+            if (uid == 0 || currentChat == null) {
+                return false;
+            }
+            return getMessagesController().isOwner(currentChat.id, uid);
+        }
+
+        @Override
         public void didPressHint(ChatMessageCell cell, int type) {
             if (type == 0) {
                 TLRPC.TL_messageMediaPoll media = (TLRPC.TL_messageMediaPoll) cell.getMessageObject().messageOwner.media;
@@ -42291,7 +42301,7 @@ public class ChatActivity extends BaseFragment implements
                 return null;
             }
 
-            if (ChatObject.isChannel(currentChat) && currentChat.megagroup) {
+            if (currentChat != null) {
                 String rank = getMessagesController().getAdminRank(currentChat.id, uid);
                 if (rank != null) {
                     return rank;
@@ -42833,6 +42843,9 @@ public class ChatActivity extends BaseFragment implements
             }
             if (sideControlsButtonsLayout != null) {
                 sideControlsButtonsLayout.updateColors();
+            }
+            if (bottomOverlay != null) {
+                ((RestrictedOverlay) bottomOverlay).updateColors();
             }
             if (bottomChannelButtonsLayout != null) {
                 bottomChannelButtonsLayout.updateColors();
@@ -49403,5 +49416,39 @@ public class ChatActivity extends BaseFragment implements
 
         abstract void drawChatBackgroundElements(Canvas canvas, @Nullable RectF position);
         abstract void drawChatForegroundElements(Canvas canvas, @Nullable RectF position);
+    }
+
+    private class RestrictedOverlay extends FrameLayout {
+        private BlurredBackgroundDrawable iosBackground;
+
+        public RestrictedOverlay(Context context) {
+            super(context);
+            setWillNotDraw(false);
+        }
+
+        public void updateColors() {
+            if (iosBackground != null) {
+                iosBackground.updateColors();
+            }
+        }
+
+        @Override
+        public void setVisibility(int visibility) {
+            super.setVisibility(visibility);
+            bottomViewsVisibilityController.setViewVisible(BOTTOM_OVERLAY_TEXT_CONTAINER, visibility == VISIBLE, getMeasuredWidth() > 0);
+            if (iosBackground == null && visibility == VISIBLE && xyz.nextalone.nagram.NaConfig.INSTANCE.getIosStyleInputBar().Bool() && glassBackgroundDrawableFactory != null) {
+                iosBackground = glassBackgroundDrawableFactory.create(this, new BlurredBackgroundColorProviderThemed(resourceProvider, Theme.key_chat_messagePanelBackground));
+                iosBackground.setRadius(dp(22));
+            }
+        }
+
+        @Override
+        protected void dispatchDraw(Canvas canvas) {
+            if (iosBackground != null && xyz.nextalone.nagram.NaConfig.INSTANCE.getIosStyleInputBar().Bool()) {
+                iosBackground.setBounds(0, 0, getMeasuredWidth(), getMeasuredHeight());
+                iosBackground.draw(canvas);
+            }
+            super.dispatchDraw(canvas);
+        }
     }
 }

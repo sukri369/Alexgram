@@ -9,9 +9,9 @@ import org.telegram.messenger.FileLog;
 public class VoiceChanger {
 
     private static final int SAMPLE_RATE = 48000;
-    private static int currentEffect = 0; // 0 is None
+    private static int currentEffect = 0;
 
-    // Effect IDs matching strings_na.xml order (approx)
+    // Effect IDs matching NaConfig
     public static final int EFFECT_NONE = 0;
     public static final int EFFECT_ROBOTIC = 1;
     public static final int EFFECT_ALIEN = 2;
@@ -28,43 +28,60 @@ public class VoiceChanger {
     public static final int EFFECT_HEXAFLUORIDE = 13;
     public static final int EFFECT_CAVE = 14;
 
-    private static short[] echoBuffer = new short[SAMPLE_RATE / 2]; // 0.5s buffer
+    // Persistent state
+    private static double modPhase = 0;
+    private static double lfoPhase = 0;
+    
+    private static float pitchSrcIdx = 0;
+    private static final int PITCH_BUFFER_SIZE = 32768;
+    private static short[] pitchBuffer = new short[PITCH_BUFFER_SIZE];
+    private static int pitchBufferPtr = 0;
+    
+    private static short[] echoBuffer = new short[SAMPLE_RATE]; // 1s buffer
     private static int echoPtr = 0;
-    private static double phase = 0;
     private static Random random = new Random();
 
+    // Filters state
+    private static float filter_lp = 0;
+    private static float filter_hp = 0;
+
     public static void setEffect(int effect) {
-        currentEffect = effect;
+        if (currentEffect != effect) {
+            clearState();
+            currentEffect = effect;
+        }
     }
 
-    public static int getCurrentEffect() {
-        return currentEffect;
-    }
-
-    public static void process(ByteBuffer buffer) {
-        int position = buffer.position();
-        VoiceChanger.process(buffer, buffer.position());
+    private static void clearState() {
+        modPhase = 0;
+        lfoPhase = 0;
+        pitchSrcIdx = 0;
+        pitchBufferPtr = 0;
+        for (int i = 0; i < PITCH_BUFFER_SIZE; i++) pitchBuffer[i] = 0;
+        echoPtr = 0;
+        for (int i = 0; i < echoBuffer.length; i++) echoBuffer[i] = 0;
+        filter_lp = 0;
+        filter_hp = 0;
     }
 
     public static void process(ByteBuffer buffer, int count) {
         int effect = NaConfig.getVoiceChangerEffectValue();
         if (effect == EFFECT_NONE) {
+            if (currentEffect != EFFECT_NONE) clearState();
             currentEffect = EFFECT_NONE;
             return;
         }
 
         if (count <= 0) return;
+        if (currentEffect != effect) {
+            setEffect(effect);
+        }
 
         buffer.order(ByteOrder.LITTLE_ENDIAN);
         buffer.rewind();
 
         short[] pcm = new short[count / 2];
         buffer.asShortBuffer().get(pcm);
-
-        if (currentEffect != effect) {
-            FileLog.d("VoiceChanger: changing effect from " + currentEffect + " to " + effect);
-            currentEffect = effect;
-        }
 
         switch (effect) {
             case EFFECT_ROBOTIC:
@@ -80,116 +97,198 @@ public class VoiceChanger {
                 applyModulation(pcm);
                 break;
             case EFFECT_CHILD:
-                applyPitchShift(pcm, 1.5f);
+                applyPerfectChild(pcm);
                 break;
             case EFFECT_MOUSE:
-                applyPitchShift(pcm, 2.0f);
+                applyPerfectMouse(pcm);
                 break;
             case EFFECT_MAN:
-                applyPitchShift(pcm, 0.7f);
+                applyPerfectMan(pcm);
                 break;
             case EFFECT_WOMAN:
-                applyPitchShift(pcm, 1.2f);
+                applyPerfectWoman(pcm);
                 break;
             case EFFECT_MONSTER:
-                applyPitchShift(pcm, 0.5f);
-                applyDistortion(pcm);
+                applyPerfectMonster(pcm);
                 break;
             case EFFECT_ECHO:
-                applyEcho(pcm, 0.5f, 0.3f);
+                applyEcho(pcm, 0.35f, 0.45f);
                 break;
             case EFFECT_NOISE:
-                applyNoise(pcm, 0.1f);
+                applyNoise(pcm, 0.08f);
                 break;
             case EFFECT_HELIUM:
-                applyPitchShift(pcm, 1.8f);
+                applyPitchShift(pcm, 1.85f);
+                applyHighPass(pcm, 0.6f);
                 break;
             case EFFECT_HEXAFLUORIDE:
-                applyPitchShift(pcm, 0.6f);
+                applyPitchShift(pcm, 0.55f);
+                applyLowPass(pcm, 0.5f);
                 break;
             case EFFECT_CAVE:
-                applyEcho(pcm, 0.7f, 0.6f);
+                applyEcho(pcm, 0.65f, 0.55f);
+                applyLowPass(pcm, 0.8f);
                 break;
         }
 
         buffer.rewind();
         buffer.asShortBuffer().put(pcm);
-        if (buffer.limit() >= count) {
-            buffer.position(count); // Restore position
+        buffer.position(Math.min(count, buffer.capacity()));
+    }
+
+    // --- Complex Effects ---
+
+    private static void applyPerfectChild(short[] pcm) {
+        applyPitchShift(pcm, 1.45f);
+        applyHighPass(pcm, 0.45f); // Simulate smaller throat
+        applyDistortion(pcm, 1.1f); // Add a bit of brightness
+    }
+
+    private static void applyPerfectMouse(short[] pcm) {
+        applyPitchShift(pcm, 2.1f);
+        applyHighPass(pcm, 0.7f);
+    }
+
+    private static void applyPerfectMan(short[] pcm) {
+        applyPitchShift(pcm, 0.78f);
+        applyLowPass(pcm, 0.4f); // Simulates larger chest/throat
+        // Add subtle sub-octave to make it deeper
+        short[] copy = pcm.clone();
+        applyPitchShift(copy, 0.5f);
+        for (int i = 0; i < pcm.length; i++) {
+            pcm[i] = (short) clamp(pcm[i] * 0.8f + copy[i] * 0.4f);
         }
+    }
+
+    private static void applyPerfectWoman(short[] pcm) {
+        applyPitchShift(pcm, 1.22f);
+        applyHighPass(pcm, 0.3f);
+    }
+
+    private static void applyPerfectMonster(short[] pcm) {
+        applyPitchShift(pcm, 0.55f);
+        applyLowPass(pcm, 0.3f);
+        applyDistortion(pcm, 2.5f);
+        applyEcho(pcm, 0.15f, 0.3f);
     }
 
     private static void applyRobotic(short[] pcm) {
         for (int i = 0; i < pcm.length; i++) {
-            double sine = Math.sin(2 * Math.PI * 50 * i / SAMPLE_RATE);
-            pcm[i] = (short) (pcm[i] * sine);
-            if (i % 100 < 50) pcm[i] = (short) (pcm[i] * 0.5);
+            // Ring modulation with 50Hz carrier
+            double carrier = Math.sin(modPhase);
+            pcm[i] = (short) clamp(pcm[i] * carrier);
+            
+            // LFO for pulse-width modulation vibe
+            if (Math.sin(lfoPhase) > 0) pcm[i] = (short) clamp(pcm[i] * 0.5);
+            
+            modPhase += 2 * Math.PI * 65.0 / SAMPLE_RATE;
+            lfoPhase += 2 * Math.PI * 4.0 / SAMPLE_RATE;
         }
+        applyLowPass(pcm, 0.9f); // Cleaning up harsh harmonics
     }
 
     private static void applyAlien(short[] pcm) {
         for (int i = 0; i < pcm.length; i++) {
-            phase += 2 * Math.PI * 100 / SAMPLE_RATE;
-            double mod = Math.sin(phase) * Math.cos(phase * 0.5);
-            pcm[i] = (short) (pcm[i] * mod);
+            // Frequency modulation based alienation
+            double freq = 120.0 + 80.0 * Math.sin(lfoPhase);
+            pcm[i] = (short) clamp(pcm[i] * Math.sin(modPhase));
+            
+            modPhase += 2 * Math.PI * freq / SAMPLE_RATE;
+            lfoPhase += 2 * Math.PI * 2.0 / SAMPLE_RATE;
         }
     }
 
     private static void applyHoarseness(short[] pcm) {
         for (int i = 0; i < pcm.length; i++) {
-            if (random.nextFloat() > 0.8) {
-                pcm[i] = (short) (pcm[i] + (random.nextInt(2000) - 1000));
+            if (random.nextFloat() > 0.7) {
+                pcm[i] = (short) clamp(pcm[i] + (random.nextInt(3000) - 1500));
             }
         }
     }
 
     private static void applyModulation(short[] pcm) {
         for (int i = 0; i < pcm.length; i++) {
-            pcm[i] = (short) (pcm[i] * Math.sin(2 * Math.PI * 440 * i / SAMPLE_RATE));
+            pcm[i] = (short) clamp(pcm[i] * Math.sin(modPhase));
+            modPhase += 2 * Math.PI * 440.0 / SAMPLE_RATE;
         }
     }
+
+    // --- Core Algorithms ---
 
     private static void applyPitchShift(short[] pcm, float factor) {
-        // Linear interpolation resampling for better quality
-        short[] original = pcm.clone();
-        int len = pcm.length;
-        for (int i = 0; i < len; i++) {
-            float srcIdx = i * factor;
-            int floor = (int) srcIdx;
-            if (floor >= len) {
-                pcm[i] = 0;
-            } else {
-                float frac = srcIdx - floor;
-                if (floor + 1 < len) {
-                    pcm[i] = (short) (original[floor] * (1.0f - frac) + original[floor + 1] * frac);
-                } else {
-                    pcm[i] = original[floor];
-                }
-            }
+        for (short s : pcm) {
+            pitchBuffer[pitchBufferPtr] = s;
+            pitchBufferPtr = (pitchBufferPtr + 1) % PITCH_BUFFER_SIZE;
+        }
+
+        int pcmLen = pcm.length;
+        for (int i = 0; i < pcmLen; i++) {
+            int floor = (int) pitchSrcIdx;
+            int next = (floor + 1) % PITCH_BUFFER_SIZE;
+            float frac = pitchSrcIdx - floor;
+            
+            short s1 = pitchBuffer[floor];
+            short s2 = pitchBuffer[next];
+            pcm[i] = (short) clamp(s1 * (1.0f - frac) + s2 * frac);
+            
+            pitchSrcIdx = (pitchSrcIdx + factor) % PITCH_BUFFER_SIZE;
+        }
+
+        float distance = (pitchBufferPtr - pitchSrcIdx + PITCH_BUFFER_SIZE) % PITCH_BUFFER_SIZE;
+        if (distance > PITCH_BUFFER_SIZE * 0.85f || distance < pcmLen) {
+            pitchSrcIdx = (pitchBufferPtr - pcmLen * 2.5f + PITCH_BUFFER_SIZE) % PITCH_BUFFER_SIZE;
         }
     }
 
-    private static void applyDistortion(short[] pcm) {
+    private static void applyDistortion(short[] pcm, float gain) {
         for (int i = 0; i < pcm.length; i++) {
-            if (pcm[i] > 10000) pcm[i] = 10000;
-            if (pcm[i] < -10000) pcm[i] = -10000;
-            pcm[i] *= 2;
+            float val = pcm[i] * gain;
+            if (val > 28000) val = 28000;
+            if (val < -28000) val = -28000;
+            pcm[i] = (short) clamp(val);
+        }
+    }
+
+    private static void applyLowPass(short[] pcm, float factor) {
+        float alpha = 1.0f - factor;
+        for (int i = 0; i < pcm.length; i++) {
+            filter_lp = filter_lp + alpha * (pcm[i] - filter_lp);
+            pcm[i] = (short) clamp(filter_lp);
+        }
+    }
+
+    private static void applyHighPass(short[] pcm, float factor) {
+        float alpha = factor;
+        for (int i = 0; i < pcm.length; i++) {
+            filter_hp = alpha * (filter_hp + pcm[i] - (i > 0 ? pcm[i-1] : pcm[i]));
+            pcm[i] = (short) clamp(filter_hp);
         }
     }
 
     private static void applyEcho(short[] pcm, float delayPercent, float decay) {
         int delaySamples = (int) (echoBuffer.length * delayPercent);
         for (int i = 0; i < pcm.length; i++) {
-            short delayedSample = echoBuffer[(echoPtr + i + delaySamples) % echoBuffer.length];
-            pcm[i] = (short) (pcm[i] + delayedSample * decay);
-            echoBuffer[(echoPtr + i) % echoBuffer.length] = pcm[i];
+            int delayedIdx = (echoPtr - delaySamples + echoBuffer.length) % echoBuffer.length;
+            short delayedSample = echoBuffer[delayedIdx];
+            
+            int mixed = (int)(pcm[i] + delayedSample * decay);
+            pcm[i] = (short) clamp(mixed);
+            
+            echoBuffer[echoPtr] = pcm[i];
+            echoPtr = (echoPtr + 1) % echoBuffer.length;
         }
-        echoPtr = (echoPtr + pcm.length) % echoBuffer.length;
     }
 
     private static void applyNoise(short[] pcm, float level) {
         for (int i = 0; i < pcm.length; i++) {
-            pcm[i] = (short) (pcm[i] + (random.nextFloat() - 0.5f) * 65535 * level);
+            int noise = (int)((random.nextFloat() - 0.5f) * 65535 * level);
+            pcm[i] = (short) clamp(pcm[i] + noise);
         }
+    }
+
+    private static int clamp(double val) {
+        if (val > 32767) return 32767;
+        if (val < -32768) return -32768;
+        return (int) val;
     }
 }

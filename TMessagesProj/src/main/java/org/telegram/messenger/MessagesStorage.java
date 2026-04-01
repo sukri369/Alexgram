@@ -1554,7 +1554,64 @@ public class MessagesStorage extends BaseController {
         });
     }
 
-    public void saveTopics(long dialogId, List<TLRPC.TL_forumTopic> topics, boolean replace, boolean useQueue, int date) {
+    public void updateRanksInLastMessages(long dialogId, long userId, String rank) {
+        storageQueue.postRunnable(() -> {
+            final java.util.ArrayList<android.util.Pair<Integer, TLRPC.Message>> messagesToUpdate = new java.util.ArrayList<>();
+            org.telegram.SQLite.SQLiteCursor cursor = null;
+            org.telegram.SQLite.SQLitePreparedStatement state = null;
+            try {
+                cursor = database.queryFinalized(String.format(java.util.Locale.US, "SELECT mid, data FROM messages_v2 WHERE uid = %s ORDER BY date DESC LIMIT 20", dialogId));
+                while (cursor.next()) {
+                    final int messageId = cursor.intValue(0);
+                    final org.telegram.tgnet.NativeByteBuffer data = cursor.byteBufferValue(1);
+                    final TLRPC.Message message = TLRPC.Message.TLdeserialize(data, data.readInt32(false), false);
+                    if (message != null) {
+                        message.readAttachPath(data, org.telegram.messenger.UserConfig.getInstance(currentAccount).clientUserId);
+                    }
+                    if (message != null && DialogObject.getPeerDialogId(message.from_id) == userId) {
+                        message.flags2 |= org.telegram.tgnet.TLObject.FLAG_12;
+                        message.from_rank = rank;
+                        messagesToUpdate.add(new android.util.Pair<>(messageId, message));
+                    }
+                    if (data != null) data.reuse();
+                }
+                if (cursor != null) {
+                    cursor.dispose();
+                    cursor = null;
+                }
+                for (int i = 0; i < messagesToUpdate.size(); ++i) {
+                    final int messageId = messagesToUpdate.get(i).first;
+                    final TLRPC.Message message = messagesToUpdate.get(i).second;
+                    state = database.executeFast("UPDATE messages_v2 SET data = ? WHERE mid = ? AND uid = ?");
+                    state.requery();
+                    org.telegram.tgnet.NativeByteBuffer data = new org.telegram.tgnet.NativeByteBuffer(message.getObjectSize());
+                    org.telegram.messenger.MessageObject.normalizeFlags(message);
+                    message.serializeToStream(data);
+                    state.bindByteBuffer(1, data);
+                    state.bindInteger(2, messageId);
+                    state.bindLong(3, dialogId);
+                    state.step();
+                    state.dispose();
+                    state = null;
+                    data.reuse();
+                }
+            } catch (Exception e) {
+                org.telegram.messenger.FileLog.e(e);
+            } finally {
+                if (cursor != null) cursor.dispose();
+                if (state != null) state.dispose();
+            }
+            final boolean updated = messagesToUpdate.size() > 0;
+            if (updated) {
+                AndroidUtilities.runOnUIThread(() -> {
+                    NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.updateInterfaces, 0);
+                    NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.updatedChatRanks, -dialogId, userId, rank);
+                });
+            }
+        });
+    }
+
+    public void saveTopics(long dialogId, java.util.List<TLRPC.TL_forumTopic> topics, boolean replace, boolean useQueue, int date) {
         if (useQueue) {
             storageQueue.postRunnable(() -> {
                 saveTopicsInternal(dialogId, topics, replace, true, date);

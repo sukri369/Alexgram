@@ -225,6 +225,12 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
     private final boolean isSideMenued;
 
     private boolean firstLocationsLoaded;
+
+    private static Visualizer globalVisualizer;
+    private static int globalAudioSessionId = -1;
+    private static final ArrayList<MusicVisualizerView> visualizerViews = new ArrayList<>();
+    private static byte[] globalVisualizerBytes;
+
     private int lastLocationSharingCount = -1;
     private Runnable checkLocationRunnable = new Runnable() {
         @Override
@@ -2999,85 +3005,89 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
     }
 
     private class MusicVisualizerView extends View {
-        private Visualizer visualizer;
-        private byte[] mBytes;
         private Paint mPaint;
         private final int numBars = 75; // More bars for detailed look
         private float[] amplitudes = new float[numBars];
-        
+
         public MusicVisualizerView(Context context) {
             super(context);
-            mBytes = null;
             mPaint = new Paint();
             mPaint.setAntiAlias(true);
             mPaint.setStyle(Paint.Style.FILL);
         }
 
         public void setColor(int color) {
-           // Ignored in favor of full colorful mode
-           invalidate();
+            // Ignored in favor of full colorful mode
+            invalidate();
         }
-        
-        @Override
-        protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-            super.onSizeChanged(w, h, oldw, oldh);
-        }
-
-        private int currentAudioSessionId = -1;
 
         public void start(int audioSessionId) {
-            if (audioSessionId == 0) return;
-            
-            // Always recreate visualizer to ensure fresh state.
-            // When navigating between fragments, the existing Visualizer hardware instance 
-            // often dies or gets stuck, even if the audioSessionId hasn't changed.
-            if (visualizer != null) {
-                try {
-                    visualizer.setEnabled(false);
-                    visualizer.release();
-                } catch (Exception e) {}
-                visualizer = null;
-            }
-            
-            currentAudioSessionId = audioSessionId;
-            try {
-                // Sometimes creation fails if too many visualizers. Release any potential leaks?
-                // But we don't have access to global list.
-                
-                visualizer = new Visualizer(audioSessionId);
-                visualizer.setCaptureSize(Visualizer.getCaptureSizeRange()[1]);
-                visualizer.setDataCaptureListener(new Visualizer.OnDataCaptureListener() {
-                    @Override
-                    public void onWaveFormDataCapture(Visualizer visualizer, byte[] bytes, int samplingRate) {
-                    }
+            if (audioSessionId <= 0 || !NaConfig.INSTANCE.getMusicGraph().Bool()) return;
 
-                    @Override
-                    public void onFftDataCapture(Visualizer visualizer, byte[] bytes, int samplingRate) {
-                        mBytes = bytes;
-                        invalidate();
-                    }
-                }, Visualizer.getMaxCaptureRate() / 2, false, true);
-                visualizer.setEnabled(true);
-            } catch (Exception e) {
-                android.util.Log.e("MusicVisualizer", "Error enabling visualizer", e);
-                // Try one more time with delay? Or maybe with session 0 (mix)?
+            synchronized (visualizerViews) {
+                if (!visualizerViews.contains(this)) {
+                    visualizerViews.add(this);
+                }
+
+                if (globalVisualizer != null && globalAudioSessionId == audioSessionId) {
+                    return;
+                }
+
+                releaseGlobalVisualizer(false);
+
+                globalAudioSessionId = audioSessionId;
+                try {
+                    globalVisualizer = new Visualizer(audioSessionId);
+                    globalVisualizer.setCaptureSize(Visualizer.getCaptureSizeRange()[1]);
+                    globalVisualizer.setDataCaptureListener(new Visualizer.OnDataCaptureListener() {
+                        @Override
+                        public void onWaveFormDataCapture(Visualizer visualizer, byte[] bytes, int samplingRate) {
+                        }
+
+                        @Override
+                        public void onFftDataCapture(Visualizer visualizer, byte[] bytes, int samplingRate) {
+                            globalVisualizerBytes = bytes;
+                            synchronized (visualizerViews) {
+                                for (int i = 0; i < visualizerViews.size(); i++) {
+                                    visualizerViews.get(i).postInvalidate();
+                                }
+                            }
+                        }
+                    }, Visualizer.getMaxCaptureRate() / 2, false, true);
+                    globalVisualizer.setEnabled(true);
+                } catch (Exception e) {
+                    android.util.Log.e("MusicVisualizer", "Error enabling visualizer", e);
+                }
             }
         }
 
         public void stop() {
-             if (visualizer != null) {
-                try {
-                    visualizer.setEnabled(false);
-                } catch (Exception e) {}
-                try {
-                    visualizer.release();
-                } catch (Exception e) {}
-                visualizer = null;
+            synchronized (visualizerViews) {
+                visualizerViews.remove(this);
+                if (visualizerViews.isEmpty()) {
+                    AndroidUtilities.runOnUIThread(() -> releaseGlobalVisualizer(true), 1000);
+                }
             }
-            // Do not reset currentAudioSessionId so we know what we were listening to
-            // currentAudioSessionId = -1; 
-            mBytes = null; 
             invalidate();
+        }
+
+        private void releaseGlobalVisualizer(boolean delayed) {
+            synchronized (visualizerViews) {
+                if (delayed && !visualizerViews.isEmpty()) {
+                    return;
+                }
+                if (globalVisualizer != null) {
+                    try {
+                        globalVisualizer.setEnabled(false);
+                        globalVisualizer.release();
+                    } catch (Exception e) {
+                        // ignore
+                    }
+                    globalVisualizer = null;
+                    globalAudioSessionId = -1;
+                    globalVisualizerBytes = null;
+                }
+            }
         }
 
         @Override
@@ -3107,13 +3117,14 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
         @Override
         protected void onDraw(Canvas canvas) {
             super.onDraw(canvas);
+            byte[] mBytes = globalVisualizerBytes;
             if (mBytes == null) {
                 return;
             }
 
             int width = getWidth();
             int height = getHeight();
-            
+
             // Recalculate bar width
             float barTotalWidth = (float) width / numBars;
             float space = barTotalWidth * 0.15f; // reduced spacing
@@ -3122,9 +3133,10 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
 
             // Define vibrant colors for full spectrum
             // Using HSL allows us to easily cycle through the rainbow
-            
+
             for (int i = 0; i < numBars; i++) {
                 int m = mBytes.length / 2;
+
                 float barProgress = numBars > 1 ? i / (float) (numBars - 1) : 0f;
                 float fftProgress = i * 1.0f / numBars;
 

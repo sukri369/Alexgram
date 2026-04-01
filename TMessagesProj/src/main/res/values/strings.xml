@@ -636,6 +636,8 @@
     <string name="ChannelAntiSpamInfo2">You can manage anti-spam settings in %s</string>
     <string name="ChannelHideMembers">Hide Members</string>
     <string name="ChannelHideMembersInfo">Switch on to hide the list of members in this group. Admins will remain visible.</string>
+    <string name="ChannelMemberTags">Allow Member Tags</string>
+    <string name="ChannelMemberTagsInfo">Turn this on to let members of the group to add short tags next to their names.</string>
     <string name="ChannelAntiSpamFalsePositiveReported">Telegram moderators will review your report. Thank you!</string>
     <string name="ChannelMembersInfo">Only channel administrators can see this list.</string>
     <string name="ChannelLinkInfo">Anyone on Telegram will be able to join your channel by following this link.</string>
@@ -731,6 +733,7 @@
     <string name="EditAdminAddUsers">Add Users</string>
     <string name="EditAdminAddUsersViaLink">Invite Users via Link</string>
     <string name="EditAdminPinMessages">Pin Messages</string>
+    <!-- Removed duplicate EditAdminEditTags -->
     <string name="EditAdminPromotedBy">Promoted by %1$s</string>
     <string name="EditAdminCantEdit">You cannot edit the rights of this admin.</string>
     <string name="EditCantEditPermissions">You cannot edit this permission.</string>
@@ -7508,6 +7511,33 @@
     <string name="SavedTagLabelPlaceholder">Name</string>
     <string name="AddTagsToYourSavedMessages1">Add Tags</string>
     <string name="AddTagsToYourSavedMessages2">to your Saved Messages</string>
+    <string name="AddTag">Add Tag</string>
+    <string name="MemberTagHintAdd">Add Member Tag</string>
+    <string name="MemberTagHintEdit">Edit Member Tag</string>
+    <string name="MemberTagTitle">Member Tag</string>
+    <string name="MemberTagButtonRemove">Remove Tag</string>
+    <string name="MemberTagButtonEdit">Edit Tag</string>
+    <string name="MemberTagButtonAdd">Add Tag</string>
+    <string name="MemberTagSelfInfo">Share your role, title or how you\'re known in this group. Your tag is visible to all members.</string>
+    <string name="AddMemberTag">Add Member Tag</string>
+    <string name="EditMemberTag">Edit Member Tag</string>
+    <string name="EditAdminTag">Edit Admin Tag</string>
+    <string name="MemberTagTheirInfo">Add a short tag next to %s\'s name.</string>
+    <string name="TagAdded">Tag Added</string>
+    <string name="TagEdited">Tag Edited</string>
+    <string name="TagInfoOwnerTitle">Owner Tag</string>
+    <string name="TagInfoAdminTitle">Admin Tag</string>
+    <string name="TagInfoMemberTitle">Member Tag</string>
+    <string name="ChatTagOwner">Owner</string>
+    <string name="ChatTagAdmin">Admin</string>
+    <string name="TagInfoOwnerText">This purple tag un1 is **%1$s\'s** owner tag.\n**%1$s** is the owner of **%2$s**.</string>
+    <string name="TagInfoAdminText">This green tag un1 is **%1$s\'s** admin tag.\n**%1$s** is an administrator of **%2$s**.</string>
+    <string name="TagInfoMemberText">This grey tag un1 is **%1$s\'s** member tag.\n**%1$s** is a member of **%2$s**.</string>
+    <string name="CantEditTagAdmins">Only admins can set member tags in this group.</string>
+    <string name="TagInfoButtonAddMyTag">Add My Tag</string>
+    <string name="TagInfoButtonEditMyTag">Edit My Tag</string>
+    <string name="TagInfoButtonAddTag">Add Tag</string>
+    <string name="TagInfoButtonEditTag">Edit Tag</string>
     <string name="SavedTagLabelTagText">You can label your emoji tag with a text name.</string>
     <string name="SavedTagFilterByTag">Filter by Tag</string>
     <string name="SavedTagSearchHint">Search messages or tags</string>
@@ -10403,4 +10433,6 @@
     <string name="ChannelSubscribers2">Channel subscribers</string>
     <string name="MembersSearch">Search people</string>
     <string name="ChangeFont">Change font</string>
+    <string name="EditAdminEditTags">Edit Own Tags</string>
+    <string name="UserRestrictionsEditTags">Edit Own Tags</string>
 </resources>

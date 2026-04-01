@@ -212,6 +212,7 @@ public class TLRPC {
         public boolean send_polls;
         public boolean change_info;
         public boolean invite_users;
+        public boolean edit_rank;
         public boolean pin_messages;
         public boolean manage_topics;
         public boolean send_photos;
@@ -255,6 +256,7 @@ public class TLRPC {
             send_polls = (flags & 256) != 0;
             change_info = (flags & 1024) != 0;
             invite_users = (flags & 32768) != 0;
+            edit_rank = (flags & 65536) != 0;
             pin_messages = (flags & 131072) != 0;
             manage_topics = (flags & 262144) != 0;
             send_photos = (flags & 524288) != 0;
@@ -304,6 +306,7 @@ public class TLRPC {
             flags = send_polls ? (flags | 256) : (flags &~ 256);
             flags = change_info ? (flags | 1024) : (flags &~ 1024);
             flags = invite_users ? (flags | 32768) : (flags &~ 32768);
+            flags = edit_rank ? (flags | 65536) : (flags &~ 65536);
             flags = pin_messages ? (flags | 131072) : (flags &~ 131072);
             flags = manage_topics ? (flags | 262144) : (flags &~ 262144);
             flags = send_photos ? (flags | 524288) : (flags &~ 524288);
@@ -4100,6 +4103,7 @@ public class TLRPC {
         public boolean edit_stories;
         public boolean delete_stories;
         public boolean manage_direct_messages;
+        public boolean manage_ranks;
 
         public static TL_chatAdminRights TLdeserialize(InputSerializedData stream, int constructor, boolean exception) {
             final TL_chatAdminRights result = TL_chatAdminRights.constructor != constructor ? null : new TL_chatAdminRights();
@@ -39125,6 +39129,7 @@ public class TLRPC {
                 case 0x34c3bb53:
                     result = new TL_channelParticipantAdmin();
                     break;
+                case 0xcb397619:
                 case TL_channelParticipant.constructor:
                     result = new TL_channelParticipant();
                     break;
@@ -39179,7 +39184,7 @@ public class TLRPC {
     }
 
     public static class TL_channelParticipant extends ChannelParticipant {
-        public static final int constructor = 0xcb397619;
+        public static final int constructor = 0x1BD54456;
 
         public void readParams(InputSerializedData stream, boolean exception) {
             flags = stream.readInt32(exception);
@@ -39189,6 +39194,9 @@ public class TLRPC {
             if ((flags & 1) != 0) {
                 subscription_until_date = stream.readInt32(exception);
             }
+            if ((flags & 2) != 0) {
+                rank = stream.readString(exception);
+            }
         }
 
         public void serializeToStream(OutputSerializedData stream) {
@@ -39196,8 +39204,8 @@ public class TLRPC {
             stream.writeInt32(flags);
             stream.writeInt64(peer.user_id);
             stream.writeInt32(date);
-            if ((flags & 1) != 0) {
-                stream.writeInt32(subscription_until_date);
+            if ((flags & 2) != 0) {
+                stream.writeString(rank);
             }
         }
     }
@@ -40865,6 +40873,7 @@ public class TLRPC {
         public long user_id;
         public long inviter_id;
         public int date;
+        public String rank;
 
         public static ChatParticipant TLdeserialize(InputSerializedData stream, int constructor, boolean exception) {
             ChatParticipant result = null;
@@ -40889,6 +40898,18 @@ public class TLRPC {
                     break;
             }
             return TLdeserialize(ChatParticipant.class, result, stream, constructor, exception);
+        }
+
+        public void setRank(long userId, String rank) {
+            if (this.user_id == userId) {
+                this.rank = android.text.TextUtils.isEmpty(rank) ? null : rank;
+                if (this instanceof TL_chatChannelParticipant) {
+                    final TL_chatChannelParticipant p = (TL_chatChannelParticipant) this;
+                    if (p.channelParticipant != null) {
+                        p.channelParticipant.rank = rank;
+                    }
+                }
+            }
         }
     }
 
@@ -62086,6 +62107,7 @@ public class TLRPC {
         public String summary_from_language;
         public int send_state = 0; //custom
         public int fwd_msg_id = 0; //custom
+        public String from_rank; //custom
         public String attachPath = ""; //custom
         public ArrayList<String> attachPaths; //custom
         public HashMap<String, String> params; //custom
@@ -76714,6 +76736,27 @@ public class TLRPC {
         public void serializeToStream(OutputSerializedData stream) {
             stream.writeInt32(constructor);
             channel.serializeToStream(stream);
+        }
+    }
+
+    public static class TL_messages_editChatParticipantRank extends TLMethod<Updates> {
+        public static final int constructor = 0xa00f32b0;
+
+        public InputPeer peer;
+        public InputPeer participant;
+        public String rank;
+
+        @Override
+        public Updates deserializeResponseT(InputSerializedData stream, int constructor, boolean exception) {
+            return Updates.TLdeserialize(stream, constructor, exception);
+        }
+
+        @Override
+        public void serializeToStream(OutputSerializedData stream) {
+            stream.writeInt32(constructor);
+            peer.serializeToStream(stream);
+            participant.serializeToStream(stream);
+            stream.writeString(rank);
         }
     }
 }

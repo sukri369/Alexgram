@@ -546,6 +546,14 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         default void didPressHiddenForward(ChatMessageCell cell) {
         }
 
+        default boolean isAdmin(long uid) {
+            return false;
+        }
+
+        default boolean isOwner(long uid) {
+            return false;
+        }
+
         default void didPressViaBotNotInline(ChatMessageCell cell, long botId) {
         }
 
@@ -1522,6 +1530,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
     private StaticLayout nameLayout;
     private int nameLayoutWidth;
     private StaticLayout adminLayout;
+    private boolean adminLayoutIsAdmin, adminLayoutIsOwner;
     private Drawable bookmarkDrawable; // nax
     private int bookmarkDrawableColor; // nax
     private boolean cachedIsBookmarked; // nax
@@ -6241,6 +6250,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             replyNameLayout = null;
             drawSummaryReply = false;
             adminLayout = null;
+            adminLayoutIsAdmin = adminLayoutIsOwner = false;
             boostCounterBounds = null;
             boostCounterSpan = null;
             checkOnlyButtonPressed = false;
@@ -17968,6 +17978,16 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
 //        } else {
 //            drawTopic = false;
 //        }
+        String adminLabel = null;
+        if (!hasPsaHint && delegate != null && (currentUser != null || currentChat != null) && !currentMessageObject.isAnyKindOfSticker() && currentMessageObject.type != MessageObject.TYPE_ROUND_VIDEO && (!ChatObject.isChannel(currentChat) || currentChat != null && currentChat.megagroup)) {
+            String delegateRank = delegate.getAdminRank(currentUser != null ? currentUser.id : currentChat.id);
+            if (delegateRank != null) {
+                adminLabel = delegateRank;
+            }
+        }
+        if (adminLabel == null && messageObject.messageOwner != null && messageObject.messageOwner.from_rank != null && (!ChatObject.isChannel(currentChat) || currentChat != null && currentChat.megagroup)) {
+            adminLabel = messageObject.messageOwner.from_rank;
+        }
         if (!hasPsaHint && (needAuthorName || viaBot)) {
             drawNameLayout = true;
             drawNameAvatar = !messageObject.isOutOwner() && (isForum || isMonoForum) && isSideMenuEnabled && (currentPosition == null || (currentPosition.flags & MessageObject.POSITION_FLAG_TOP) != 0) && !(messageObject.type == MessageObject.TYPE_ROUND_VIDEO || messageObject.type == MessageObject.TYPE_STICKER || messageObject.type == MessageObject.TYPE_ANIMATED_STICKER);
@@ -17982,15 +18002,14 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 nameWidth -= topicButton.width + dp(8);
             }
             int adminWidth = 0;
+            boolean isAdmin = false, isOwner = false;
             SpannableStringBuilder adminString = null;
-            String adminLabel;
-            if (isMegagroup && currentChat != null && messageObject.messageOwner.post_author != null && currentChat.id == -currentMessageObject.getFromChatId()) {
-                adminString = new SpannableStringBuilder(messageObject.messageOwner.post_author.replace("\n", ""));
-            } else if (isMegagroup && currentChat != null && currentMessageObject.isForwardedChannelPost()) {
-                adminString = new SpannableStringBuilder(getString(R.string.DiscussChannel));
-            } else if ((currentUser != null || currentChat != null) && !currentMessageObject.isOutOwner() && !currentMessageObject.isAnyKindOfSticker() && currentMessageObject.type != MessageObject.TYPE_ROUND_VIDEO && delegate != null && (adminLabel = delegate.getAdminRank(currentUser != null ? currentUser.id : currentChat.id)) != null) {
+            if (adminLabel != null) {
+                long uid = currentUser != null ? currentUser.id : currentChat.id;
+                isAdmin = delegate.isAdmin(uid);
+                isOwner = delegate.isOwner(uid);
                 if (adminLabel.length() == 0) {
-                    adminLabel = getString(R.string.ChatAdmin);
+                    adminLabel = getString(isOwner ? R.string.ChatTagOwner : R.string.ChatTagAdmin);
                 }
                 adminString = new SpannableStringBuilder(adminLabel);
                 if (NaConfig.INSTANCE.getColoredAdminTitle().Bool()) {
@@ -18016,6 +18035,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             if (adminString != null) {
                 StaticLayout staticLayout = new StaticLayout(adminString, Theme.chat_adminPaint, dp(300), Layout.Alignment.ALIGN_NORMAL, 0f, 0f, false);
                 adminWidth = (int) staticLayout.getLineWidth(0);
+                if (adminString != null) adminWidth += dp(12);
                 nameWidth -= adminWidth;
             } else if (NekoConfig.labelChannelUser.Bool() && isMegagroup && currentChat != null && currentMessageObject.isSenderChannel()) {
                 SpannableStringBuilder channelLabelStringBuilder = TimeStringHelper.getChannelLabelSpan();
@@ -18033,6 +18053,11 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             currentNameBotVerificationId = 0;
             if (messageObject.customName != null) {
                 currentNameString = messageObject.customName;
+            }
+            if (viaBot) {
+                currentNameString = viaString != null ? viaString.toString() : null;
+                currentNameStatus = null;
+                currentNameBotVerificationId = 0;
             } else if (needAuthorName) {
                 currentNameString = getAuthorName();
                 currentNameStatus = getAuthorStatus();
@@ -18110,14 +18135,17 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 }
                 if (adminString != null) {
                     adminLayout = new StaticLayout(adminString, Theme.chat_adminPaint, Math.max(dp(1), adminWidth + dp(2)), Layout.Alignment.ALIGN_NORMAL, 1.0f, 0.0f, false);
+                    adminLayoutIsAdmin = true;
+                    adminLayoutIsOwner = isOwner;
                     if (!drawNameAvatar) {
-                        nameWidth += adminLayout.getLineWidth(0) + dp(8);
+                        nameWidth += adminLayout.getLineWidth(0) + dp(12) + dp(8);
                     } else {
-                        nameWidth = (int) Math.max(nameWidth, dp(32.33f) + adminLayout.getLineWidth(0) + dp(8));
+                        nameWidth = (int) Math.max(nameWidth, dp(32.33f) + adminLayout.getLineWidth(0) + dp(12) + dp(8));
                     }
                     boostCounterBounds = new RectF();
                 } else {
                     adminLayout = null;
+                    adminLayoutIsAdmin = adminLayoutIsOwner = false;
                     boostCounterBounds = null;
                 }
             } catch (Exception e) {
@@ -18781,7 +18809,15 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         }
         return (
             isPinnedChat && currentMessageObject.type == MessageObject.TYPE_TEXT ||
-            !pinnedTop && drawName && isChat && (!currentMessageObject.isOutOwner() || currentMessageObject.isSupergroup() && currentMessageObject.isFromGroup() || currentMessageObject.isRepostPreview) ||
+            !pinnedTop && (
+                (currentMessageObject.messageOwner != null && !android.text.TextUtils.isEmpty(currentMessageObject.messageOwner.from_rank)) ||
+                (delegate != null && delegate.getAdminRank(UserConfig.getInstance(currentAccount).getClientUserId()) != null) ||
+                drawName && isChat && (
+                    !currentMessageObject.isOutOwner() ||
+                    currentMessageObject.isFromGroup() ||
+                    currentMessageObject.isRepostPreview
+                )
+            ) ||
             currentMessageObject.isImportedForward() && currentMessageObject.messageOwner.fwd_from.from_id == null
         );
     }
@@ -21173,13 +21209,26 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 } else if (currentMessageObject.isOutOwner()) {
                     color = getThemedColor(isDrawSelectionBackground() ? Theme.key_chat_outAdminSelectedText : Theme.key_chat_outAdminText);
                 } else {
-                    color = getThemedColor(isDrawSelectionBackground() ? Theme.key_chat_inAdminSelectedText : Theme.key_chat_inAdminText);
+                    if (adminLayoutIsOwner) {
+                        color = getThemedColor(Theme.key_chat_tagCreator);
+                    } else if (adminLayoutIsAdmin) {
+                        color = getThemedColor(Theme.key_chat_tagAdmin);
+                    } else if (adminLayout != null) {
+                        color = getThemedColor(isDrawSelectionBackground() ? Theme.key_chat_inAdminSelectedText : Theme.key_chat_inAdminText);
+                    } else {
+                        color = getThemedColor(isDrawSelectionBackground() ? Theme.key_chat_inAdminSelectedText : Theme.key_chat_inAdminText);
+                    }
                 }
                 Theme.chat_adminPaint.setColor(color);
                 canvas.save();
-                float ax = end - dp(11) - adminLayout.getLineWidth(0) - bookmarkShift;
+                final float lineWidth = adminLayout.getLineWidth(0);
+                final float adminLayoutWidth = lineWidth + dp(12);
+                final float adminRight = end - dp(11) - bookmarkShift;
+                float ax = adminRight - adminLayoutWidth;
+                float ax2 = adminRight;
                 float ay = nameY + dp(0.5f);
                 ax = lerp(ax, nx, avatarAlpha);
+                ax2 = lerp(ax2, nx + adminLayoutWidth, avatarAlpha);
                 ay += dp(14) * avatarAlpha;
                 if (currentNameBotVerificationId != 0) {
                     ax -= dp(20) * avatarAlpha;
@@ -21195,8 +21244,9 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                     bookmarkDrawn = true;
                 }
                 if (boostCounterSpan != null && boostCounterBounds != null) {
-                    final float bx = ax + adminLayout.getLineWidth(0) + dp(11) - dp(boostCounterSpan.isRtl ? 5f : 7.5f) - boostCounterSpan.getWidth();
+                    final float bx = ax + lineWidth + dp(11) - dp(boostCounterSpan.isRtl ? 5f : 7.5f) - boostCounterSpan.getWidth();
                     boostCounterBounds.set(bx, ay, bx + boostCounterSpan.getWidth(), ay + adminLayout.getHeight());
+                    // NagramX BoostCounterSpan lacks margin property so block removed
                     int selectorColor = Theme.multAlpha(Theme.chat_namePaint.getColor(), .12f);
                     if (boostCounterLayoutSelector == null) {
                         boostCounterLayoutSelector = Theme.createRadSelectorDrawable(boostCounterSelectorColor = selectorColor, 6, 6);
@@ -21212,6 +21262,20 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 canvas.translate(ax, ay);
                 if (transitionParams.animateSign) {
                     Theme.chat_adminPaint.setAlpha((int) (Color.alpha(color) * transitionParams.animateChangeProgress));
+                }
+                if (adminLayout != null) {
+                    AndroidUtilities.rectTmp.set(-dp(6), -dp(1), ax2 - ax, dp(15));
+                    if (boostCounterSpan != null) {
+                        if (boostCounterSpan.isRtl) {
+                            AndroidUtilities.rectTmp.left += boostCounterSpan.getWidth();
+                        } else {
+                            AndroidUtilities.rectTmp.right -= boostCounterSpan.getWidth();
+                        }
+                    }
+                    final int wasAlpha = Theme.chat_adminPaint.getAlpha();
+                    Theme.chat_adminPaint.setAlpha((int) (wasAlpha * 0.12f));
+                    canvas.drawRoundRect(AndroidUtilities.rectTmp, dp(8), dp(8), Theme.chat_adminPaint);
+                    Theme.chat_adminPaint.setAlpha(wasAlpha);
                 }
                 adminLayout.draw(canvas);
                 canvas.restore();

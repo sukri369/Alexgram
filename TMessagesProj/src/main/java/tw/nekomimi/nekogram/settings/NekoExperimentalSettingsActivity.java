@@ -121,6 +121,7 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
     private final AbstractConfigCell unlimitedFavedStickersRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.unlimitedFavedStickers, getString(R.string.UnlimitedFavoredStickersAbout)));
     private final AbstractConfigCell liquidGlassUIRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.liquidGlassUI, "Enable glass effect for the UI", getString(R.string.liquidGlassUI)));
     private final AbstractConfigCell iosStyleInputBarRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getIosStyleInputBar(), "Use an input bar design similar to iOS", getString(R.string.IosStyleInputBar)));
+    private final AbstractConfigCell searchEngineInSearchBarRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getSearchEngineInSearchBar(), "Add a Search tab to the search bar to search the web with your chosen engine", "Search Engines in Search Bar"));
     private final AbstractConfigCell dividerGeneral = cellGroup.appendCell(new ConfigCellDivider());
 
     // Connections
@@ -670,6 +671,8 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
             } else if (key.equals(NaConfig.INSTANCE.getHideStoriesFromHeader().getKey())) {
                 tooltip.showWithAction(0, UndoView.ACTION_NEED_RESTART, null, null);
             } else if (key.equals(NaConfig.INSTANCE.getHideTabs().getKey())) {
+                tooltip.showWithAction(0, UndoView.ACTION_NEED_RESTART, null, null);
+            } else if (key.equals(NaConfig.INSTANCE.getSearchEngineInSearchBar().getKey())) {
                 tooltip.showWithAction(0, UndoView.ACTION_NEED_RESTART, null, null);
             }
         };
