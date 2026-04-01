@@ -4828,6 +4828,16 @@ public class Theme {
             themesDict.put("Monet AMOLED", themeInfo);
         }
 
+        themeInfo = new ThemeInfo();
+        themeInfo.name = "Moon Dream";
+        themeInfo.assetName = "moon_dream.attheme";
+        themeInfo.previewBackgroundColor = 0xff32625f;
+        themeInfo.previewInColor = 0xb9d2d95f;
+        themeInfo.previewOutColor = 0xb8253119;
+        themeInfo.sortIndex = 9;
+        themes.add(themeInfo);
+        themesDict.put("Moon Dream", themeInfo);
+
         String themesString = themeConfig.getString("themes2", null);
 
         int remoteVersion = themeConfig.getInt("remote_version", 0);
