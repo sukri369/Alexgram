@@ -51,6 +51,8 @@ import com.google.android.exoplayer2.analytics.AnalyticsListener;
 import com.google.android.exoplayer2.audio.AudioAttributes;
 import com.google.android.exoplayer2.audio.AudioCapabilities;
 import com.google.android.exoplayer2.audio.AudioProcessor;
+import com.google.android.exoplayer2.audio.AudioProcessor.AudioFormat;
+import com.google.android.exoplayer2.audio.AudioProcessor.UnhandledAudioFormatException;
 import com.google.android.exoplayer2.audio.AudioSink;
 import com.google.android.exoplayer2.audio.DefaultAudioSink;
 import com.google.android.exoplayer2.audio.TeeAudioProcessor;
@@ -264,11 +266,7 @@ public class VideoPlayer implements Player.Listener, VideoListener, AnalyticsLis
         }
         if (player == null) {
             DefaultRenderersFactory factory;
-            if (audioVisualizerDelegate != null) {
-                factory = new AudioVisualizerRenderersFactory(ApplicationLoader.applicationContext);
-            } else {
-                factory = new DefaultRenderersFactory(ApplicationLoader.applicationContext);
-            }
+            factory = new AudioVisualizerRenderersFactory(ApplicationLoader.applicationContext);
             factory.setExtensionRendererMode(getPlayerExtensionRendererMode());
             ExoPlayer.Builder builder = new ExoPlayer.Builder(ApplicationLoader.applicationContext).setRenderersFactory(factory)
                     .setTrackSelector(trackSelector)
@@ -297,7 +295,7 @@ public class VideoPlayer implements Player.Listener, VideoListener, AnalyticsLis
         if (mixedAudio) {
             if (audioPlayer == null) {
                 audioPlayer = new ExoPlayer.Builder(ApplicationLoader.applicationContext)
-                        .setRenderersFactory(new DefaultRenderersFactory(ApplicationLoader.applicationContext).setExtensionRendererMode(getPlayerExtensionRendererMode()))
+                        .setRenderersFactory(new AudioVisualizerRenderersFactory(ApplicationLoader.applicationContext).setExtensionRendererMode(getPlayerExtensionRendererMode()))
                         .setTrackSelector(trackSelector)
                         .setLoadControl(loadControl).buildSimpleExoPlayer();
                 audioPlayer.addListener(new Player.Listener() {
@@ -1852,7 +1850,10 @@ public class VideoPlayer implements Player.Listener, VideoListener, AnalyticsLis
                     .setAudioCapabilities(AudioCapabilities.getCapabilities(context))
                     .setEnableFloatOutput(enableFloatOutput)
                     .setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams)
-                    .setAudioProcessors(new AudioProcessor[] {new TeeAudioProcessor(new VisualizerBufferSink())})
+                    .setAudioProcessors(new AudioProcessor[] {
+                            new SpatialAudioProcessor(),
+                            new TeeAudioProcessor(new VisualizerBufferSink())
+                    })
                     .setOffloadMode(
                             enableOffload
                                     ? DefaultAudioSink.OFFLOAD_MODE_ENABLED_GAPLESS_REQUIRED
@@ -1970,6 +1971,124 @@ public class VideoPlayer implements Player.Listener, VideoListener, AnalyticsLis
 
                 audioUpdateHandler.postDelayed(() -> audioVisualizerDelegate.onVisualizerUpdate(true, true, partsAmplitude), 130);
             }
+        }
+    }
+
+    private class SpatialAudioProcessor implements AudioProcessor {
+        private AudioFormat inputAudioFormat = AudioFormat.NOT_SET;
+        private boolean active;
+        private ByteBuffer outputBuffer = EMPTY_BUFFER;
+        private boolean inputEnded;
+
+        private float panAngle = 0f;
+        private static final float PAN_SPEED = 0.00002f;
+
+        private short[] delayBufferL = new short[1024];
+        private short[] delayBufferR = new short[1024];
+        private int delayPtr = 0;
+
+        @Override
+        public AudioFormat configure(AudioFormat inputAudioFormat) throws UnhandledAudioFormatException {
+            if (inputAudioFormat.encoding != C.ENCODING_PCM_16BIT) {
+                throw new UnhandledAudioFormatException(inputAudioFormat);
+            }
+            this.inputAudioFormat = inputAudioFormat;
+            active = NaConfig.INSTANCE.getPlayAudio3D().Bool();
+            if (active && inputAudioFormat.channelCount == 1) {
+                return new AudioFormat(inputAudioFormat.sampleRate, 2, C.ENCODING_PCM_16BIT);
+            }
+            return inputAudioFormat;
+        }
+
+        @Override
+        public boolean isActive() {
+            return active;
+        }
+
+        @Override
+        public void queueInput(ByteBuffer inputBuffer) {
+            int remaining = inputBuffer.remaining();
+            if (remaining == 0) return;
+
+            int outputSize = inputAudioFormat.channelCount == 1 ? remaining * 2 : remaining;
+            if (outputBuffer.capacity() < outputSize) {
+                outputBuffer = ByteBuffer.allocateDirect(outputSize).order(ByteOrder.nativeOrder());
+            } else {
+                outputBuffer.clear();
+            }
+
+            while (inputBuffer.hasRemaining()) {
+                short left, right;
+                if (inputAudioFormat.channelCount == 1) {
+                    short mono = inputBuffer.getShort();
+                    left = mono;
+                    right = mono;
+                } else {
+                    left = inputBuffer.getShort();
+                    right = inputBuffer.getShort();
+                }
+
+                double cos = Math.cos(panAngle);
+                
+                // Professional Panning (Constant Power)
+                float leftGain = (float) Math.sqrt(0.5 * (1.0 + cos));
+                float rightGain = (float) Math.sqrt(0.5 * (1.0 - cos));
+
+                // ITD (Interaural Time Difference) simulation
+                int delaySamples = (int) (cos * 20); // ~0.45ms max delay
+
+                delayBufferL[delayPtr] = left;
+                delayBufferR[delayPtr] = right;
+
+                short outL, outR;
+                if (delaySamples > 0) {
+                    int idxR = (delayPtr - delaySamples + delayBufferR.length) % delayBufferR.length;
+                    outL = (short) (left * leftGain);
+                    outR = (short) (delayBufferR[idxR] * rightGain);
+                } else {
+                    int idxL = (delayPtr + delaySamples + delayBufferL.length) % delayBufferL.length;
+                    outL = (short) (delayBufferL[idxL] * leftGain);
+                    outR = (short) (right * rightGain);
+                }
+
+                outputBuffer.putShort(outL);
+                outputBuffer.putShort(outR);
+
+                delayPtr = (delayPtr + 1) % delayBufferL.length;
+                panAngle += PAN_SPEED;
+                if (panAngle > 2 * Math.PI) panAngle -= (float) (2 * Math.PI);
+            }
+            outputBuffer.flip();
+        }
+
+        @Override
+        public void queueEndOfStream() {
+            inputEnded = true;
+        }
+
+        @Override
+        public ByteBuffer getOutput() {
+            ByteBuffer outputBuffer = this.outputBuffer;
+            this.outputBuffer = EMPTY_BUFFER;
+            return outputBuffer;
+        }
+
+        @Override
+        public boolean isEnded() {
+            return inputEnded && outputBuffer == EMPTY_BUFFER;
+        }
+
+        @Override
+        public void flush() {
+            outputBuffer = EMPTY_BUFFER;
+            inputEnded = false;
+        }
+
+        @Override
+        public void reset() {
+            flush();
+            inputAudioFormat = AudioFormat.NOT_SET;
+            active = false;
         }
     }
 

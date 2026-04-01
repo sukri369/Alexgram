@@ -117,6 +117,12 @@ object NaConfig {
             ConfigItem.configTypeBool,
             false
         )
+    val playAudio3D =
+        addConfig(
+            "PlayAudio3D",
+            ConfigItem.configTypeBool,
+            false
+        )
     val hideContacts =
         addConfig(
             "HideContacts",
