@@ -142,9 +142,8 @@ public class OnlineThemesActivity extends BaseFragment {
                         Request request = new Request.Builder().url(item.url).build();
                         try (Response response = client.newCall(request).execute()) {
                             if (response.isSuccessful() && response.body() != null) {
-                                File themesDir = new File(ApplicationLoader.applicationContext.getFilesDir(), "themes");
-                                if (!themesDir.exists()) themesDir.mkdirs();
-                                File themeFile = new File(themesDir, item.name + ".attheme");
+                                String cachePath = ApplicationLoader.applicationContext.getCacheDir().getAbsolutePath() + "/" + item.name + ".attheme";
+                                File themeFile = new File(cachePath);
                                 
                                 try (FileOutputStream out = new FileOutputStream(themeFile)) {
                                     out.write(response.body().bytes());
@@ -152,24 +151,27 @@ public class OnlineThemesActivity extends BaseFragment {
                                 
                                 AndroidUtilities.runOnUIThread(() -> {
                                     progressDialog.dismiss();
-                                    Theme.ThemeInfo info = new Theme.ThemeInfo();
-                                    info.name = item.name;
-                                    info.pathToFile = themeFile.getAbsolutePath();
-                                    info.previewBackgroundColor = item.previewBg;
-                                    info.previewInColor = item.previewIn;
-                                    info.previewOutColor = item.previewOut;
                                     
-                                    // Apply the theme
-                                    NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.needSetDayNightTheme, info, false, null, -1);
+                                    // Use Official Telegram/Nagram method for permanent installation and persistence
+                                    Theme.ThemeInfo themeInfo = Theme.applyThemeFile(themeFile, item.name, null, false);
                                     
-                                    BulletinFactory.of(OnlineThemesActivity.this).createSimpleBulletin(R.raw.done, "Theme applied!").show();
-                                    
-                                    // Update visual selection
-                                    for (ThemeItem t : themes) {
-                                        t.isSelected = (t == item);
+                                    if (themeInfo != null) {
+                                        // Update preview colors manually as they are not in the .attheme file head
+                                        themeInfo.previewBackgroundColor = item.previewBg;
+                                        themeInfo.previewInColor = item.previewIn;
+                                        themeInfo.previewOutColor = item.previewOut;
+                                        
+                                        BulletinFactory.of(OnlineThemesActivity.this).createSimpleBulletin(R.raw.done, "Theme applied!").show();
+                                        
+                                        // Update visual selection
+                                        for (ThemeItem t : themes) {
+                                            t.isSelected = (t == item);
+                                        }
+                                        sortThemes();
+                                        listAdapter.notifyDataSetChanged();
+                                    } else {
+                                        BulletinFactory.of(OnlineThemesActivity.this).createSimpleBulletin(R.raw.error, "Failed to apply theme").show();
                                     }
-                                    sortThemes();
-                                    listAdapter.notifyDataSetChanged();
                                 });
                             }
                         }
@@ -202,7 +204,7 @@ public class OnlineThemesActivity extends BaseFragment {
                         for (int i = 0; i < array.length(); i++) {
                             ThemeItem item = new ThemeItem(array.getJSONObject(i));
                             if (currentTheme != null && currentTheme.pathToFile != null) {
-                                if (currentTheme.pathToFile.endsWith(item.name + ".attheme")) {
+                                if (currentTheme.pathToFile.endsWith(item.name + ".attheme") || currentTheme.name.equals(item.name)) {
                                     item.isSelected = true;
                                 }
                             }
