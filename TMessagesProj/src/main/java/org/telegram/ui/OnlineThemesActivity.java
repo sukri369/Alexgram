@@ -38,6 +38,7 @@ import org.telegram.ui.Components.RecyclerListView;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -56,6 +57,7 @@ public class OnlineThemesActivity extends BaseFragment {
         public int previewBg;
         public int previewIn;
         public int previewOut;
+        public boolean isSelected;
 
         public ThemeItem(JSONObject json) {
             try {
@@ -137,6 +139,13 @@ public class OnlineThemesActivity extends BaseFragment {
                                     NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.needSetDayNightTheme, info, false, null, -1);
                                     
                                     BulletinFactory.of(OnlineThemesActivity.this).createSimpleBulletin(R.raw.done, "Theme applied!").show();
+                                    
+                                    // Update visual selection
+                                    for (ThemeItem t : themes) {
+                                        t.isSelected = (t == item);
+                                    }
+                                    sortThemes();
+                                    listAdapter.notifyDataSetChanged();
                                 });
                             }
                         }
@@ -164,12 +173,22 @@ public class OnlineThemesActivity extends BaseFragment {
                         String content = response.body().string();
                         JSONArray array = new JSONArray(content);
                         ArrayList<ThemeItem> newThemes = new ArrayList<>();
+                        Theme.ThemeInfo currentTheme = Theme.getCurrentTheme();
+                        
                         for (int i = 0; i < array.length(); i++) {
-                            newThemes.add(new ThemeItem(array.getJSONObject(i)));
+                            ThemeItem item = new ThemeItem(array.getJSONObject(i));
+                            if (currentTheme != null && currentTheme.pathToFile != null) {
+                                if (currentTheme.pathToFile.endsWith(item.name + ".attheme")) {
+                                    item.isSelected = true;
+                                }
+                            }
+                            newThemes.add(item);
                         }
+                        
                         AndroidUtilities.runOnUIThread(() -> {
                             themes.clear();
                             themes.addAll(newThemes);
+                            sortThemes();
                             if (listAdapter != null) {
                                 listAdapter.notifyDataSetChanged();
                             }
@@ -182,6 +201,14 @@ public class OnlineThemesActivity extends BaseFragment {
         });
     }
 
+    private void sortThemes() {
+        Collections.sort(themes, (t1, t2) -> {
+            if (t1.isSelected && !t2.isSelected) return -1;
+            if (!t1.isSelected && t2.isSelected) return 1;
+            return t1.name.compareToIgnoreCase(t2.name);
+        });
+    }
+
     private class ThemePreviewCell extends FrameLayout {
         private TextView nameTextView;
         private ThemeItem themeItem;
@@ -189,6 +216,7 @@ public class OnlineThemesActivity extends BaseFragment {
         private Drawable outDrawable;
         private RectF rect = new RectF();
         private Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private Paint selectionPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
         public ThemePreviewCell(Context context) {
             super(context);
@@ -196,6 +224,10 @@ public class OnlineThemesActivity extends BaseFragment {
             
             inDrawable = context.getResources().getDrawable(R.drawable.minibubble_in).mutate();
             outDrawable = context.getResources().getDrawable(R.drawable.minibubble_out).mutate();
+            
+            selectionPaint.setStyle(Paint.Style.STROKE);
+            selectionPaint.setStrokeWidth(AndroidUtilities.dp(3));
+            selectionPaint.setColor(Theme.getColor(Theme.key_checkboxCheck));
             
             nameTextView = new TextView(context);
             nameTextView.setTextSize(13);
@@ -217,6 +249,7 @@ public class OnlineThemesActivity extends BaseFragment {
         public void setThemeItem(ThemeItem item) {
             themeItem = item;
             nameTextView.setText(item.name);
+            nameTextView.setTypeface(item.isSelected ? AndroidUtilities.getTypeface("fonts/rmedium.ttf") : null);
             invalidate();
         }
 
@@ -231,8 +264,15 @@ public class OnlineThemesActivity extends BaseFragment {
             
             rect.set(x, y, x + w, y + h);
             
+            // Draw background
             paint.setColor(themeItem.previewBg);
             canvas.drawRoundRect(rect, AndroidUtilities.dp(8), AndroidUtilities.dp(8), paint);
+            
+            // Draw selection border
+            if (themeItem.isSelected) {
+                selectionPaint.setColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlueHeader));
+                canvas.drawRoundRect(rect, AndroidUtilities.dp(8), AndroidUtilities.dp(8), selectionPaint);
+            }
             
             // Bubbles
             Theme.setDrawableColor(inDrawable, themeItem.previewIn);
