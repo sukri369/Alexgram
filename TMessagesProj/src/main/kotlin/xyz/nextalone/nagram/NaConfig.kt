@@ -1189,7 +1189,7 @@ object NaConfig {
         addConfig(
             "IconReplacements",
             ConfigItem.configTypeInt,
-            0
+            1
         )
     val showCopyAsSticker =
         addConfig(
