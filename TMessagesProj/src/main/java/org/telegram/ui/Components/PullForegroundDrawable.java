@@ -718,6 +718,7 @@ public class PullForegroundDrawable {
             this.pullProgress = pullProgress;
             if (cell != null) {
                 cell.invalidate();
+                cell.requestLayout();
             }
         }
     }

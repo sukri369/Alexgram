@@ -964,6 +964,10 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
     }
 
     private int computeHeight() {
+        boolean isArchive = currentDialogFolderId != 0 || (isTopic && forumTopic != null && forumTopic.id == 1);
+        if (isArchive && (archivedChatsDrawable == null || (archivedChatsDrawable.getPullProgress() == 0 && parentFragment != null && parentFragment.hasHiddenArchive()) || !drawArchive)) {
+            return 0;
+        }
         int height;
         if (isForumCell() && !isTransitionSupport && !collapsed) {
             height = dp(useForceThreeLines || SharedConfig.useThreeLinesLayout ? 86 : 91);
@@ -975,6 +979,9 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
             }
         } else {
             height = getCollapsedHeight();
+        }
+        if (isArchive && archivedChatsDrawable != null && parentFragment != null && parentFragment.hasHiddenArchive()) {
+            height = (int) (height * archivedChatsDrawable.getPullProgress());
         }
         return height;
     }
