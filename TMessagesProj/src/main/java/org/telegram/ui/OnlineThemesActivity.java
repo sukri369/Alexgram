@@ -1,12 +1,13 @@
 package org.telegram.ui;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
-import android.os.Build;
-import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,7 +25,6 @@ import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
-import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.Utilities;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.AlertDialog;
@@ -33,6 +33,7 @@ import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
 import org.telegram.ui.Components.BulletinFactory;
 import org.telegram.ui.Components.LayoutHelper;
+import org.telegram.ui.Components.RadialProgressView;
 import org.telegram.ui.Components.RecyclerListView;
 
 import java.io.File;
@@ -48,6 +49,7 @@ public class OnlineThemesActivity extends BaseFragment {
 
     private ListAdapter listAdapter;
     private RecyclerListView listView;
+    private FrameLayout loadingView;
     private ArrayList<ThemeItem> themes = new ArrayList<>();
     private String jsonUrl = "https://raw.githubusercontent.com/alexandeer1/Alexgram-Theme/main/themes.json";
 
@@ -96,13 +98,34 @@ public class OnlineThemesActivity extends BaseFragment {
         fragmentView.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundGray));
         FrameLayout frameLayout = (FrameLayout) fragmentView;
 
+        // List View
         listView = new RecyclerListView(context);
+        listView.setVisibility(View.GONE);
+        listView.setAlpha(0);
         GridLayoutManager layoutManager = new GridLayoutManager(context, 3);
         listView.setLayoutManager(layoutManager);
         listView.setAdapter(listAdapter = new ListAdapter(context));
         listView.setPadding(AndroidUtilities.dp(10), AndroidUtilities.dp(10), AndroidUtilities.dp(10), AndroidUtilities.dp(10));
         listView.setVerticalScrollBarEnabled(false);
         frameLayout.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+
+        // Loading View
+        loadingView = new FrameLayout(context);
+        loadingView.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundGray));
+        
+        RadialProgressView progressView = new RadialProgressView(context);
+        progressView.setSize(AndroidUtilities.dp(48));
+        progressView.setProgressColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlueHeader));
+        loadingView.addView(progressView, LayoutHelper.createFrame(48, 48, Gravity.CENTER, 0, 0, 0, 40));
+        
+        TextView loadingText = new TextView(context);
+        loadingText.setText("Wait.. Theme is loading..");
+        loadingText.setTextSize(16);
+        loadingText.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+        loadingText.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText2));
+        loadingView.addView(loadingText, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER, 0, 40, 0, 0));
+        
+        frameLayout.addView(loadingView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
         listView.setOnItemClickListener((view, position) -> {
             if (position < themes.size()) {
@@ -189,9 +212,7 @@ public class OnlineThemesActivity extends BaseFragment {
                             themes.clear();
                             themes.addAll(newThemes);
                             sortThemes();
-                            if (listAdapter != null) {
-                                listAdapter.notifyDataSetChanged();
-                            }
+                            showContent();
                         });
                     }
                 }
@@ -199,6 +220,23 @@ public class OnlineThemesActivity extends BaseFragment {
                 FileLog.e(e);
             }
         });
+    }
+    
+    private void showContent() {
+        if (loadingView != null && loadingView.getVisibility() == View.VISIBLE) {
+            loadingView.animate().alpha(0).setDuration(200).setListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    loadingView.setVisibility(View.GONE);
+                }
+            }).start();
+            
+            listView.setVisibility(View.VISIBLE);
+            listView.animate().alpha(1).setDuration(200).start();
+        }
+        if (listAdapter != null) {
+            listAdapter.notifyDataSetChanged();
+        }
     }
 
     private void sortThemes() {
@@ -319,6 +357,7 @@ public class OnlineThemesActivity extends BaseFragment {
     public ArrayList<ThemeDescription> getThemeDescriptions() {
         ArrayList<ThemeDescription> themeDescriptions = new ArrayList<>();
         themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_BACKGROUND, null, null, null, null, Theme.key_windowBackgroundGray));
+        themeDescriptions.add(new ThemeDescription(loadingView, ThemeDescription.FLAG_BACKGROUND, null, null, null, null, Theme.key_windowBackgroundGray));
         return themeDescriptions;
     }
 }
