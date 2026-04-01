@@ -179,7 +179,7 @@ public class VoiceChanger {
             pcm[i] = (short) clamp(pcm[i] * carrier);
             
             // LFO for pulse-width modulation vibe
-            if (Math.sin(lfoPhase) > 0) pcm[i] = (short)(pcm[i] * 0.5);
+            if (Math.sin(lfoPhase) > 0) pcm[i] = (short) clamp(pcm[i] * 0.5);
             
             modPhase += 2 * Math.PI * 65.0 / SAMPLE_RATE;
             lfoPhase += 2 * Math.PI * 4.0 / SAMPLE_RATE;
@@ -229,7 +229,7 @@ public class VoiceChanger {
             
             short s1 = pitchBuffer[floor];
             short s2 = pitchBuffer[next];
-            pcm[i] = (short) (s1 * (1.0f - frac) + s2 * frac);
+            pcm[i] = (short) clamp(s1 * (1.0f - frac) + s2 * frac);
             
             pitchSrcIdx = (pitchSrcIdx + factor) % PITCH_BUFFER_SIZE;
         }
@@ -245,7 +245,7 @@ public class VoiceChanger {
             float val = pcm[i] * gain;
             if (val > 28000) val = 28000;
             if (val < -28000) val = -28000;
-            pcm[i] = (short) val;
+            pcm[i] = (short) clamp(val);
         }
     }
 
@@ -253,7 +253,7 @@ public class VoiceChanger {
         float alpha = 1.0f - factor;
         for (int i = 0; i < pcm.length; i++) {
             filter_lp = filter_lp + alpha * (pcm[i] - filter_lp);
-            pcm[i] = (short) filter_lp;
+            pcm[i] = (short) clamp(filter_lp);
         }
     }
 
@@ -261,7 +261,7 @@ public class VoiceChanger {
         float alpha = factor;
         for (int i = 0; i < pcm.length; i++) {
             filter_hp = alpha * (filter_hp + pcm[i] - (i > 0 ? pcm[i-1] : pcm[i]));
-            pcm[i] = (short) filter_hp;
+            pcm[i] = (short) clamp(filter_hp);
         }
     }
 
@@ -286,7 +286,7 @@ public class VoiceChanger {
         }
     }
 
-    private static int clamp(float val) {
+    private static int clamp(double val) {
         if (val > 32767) return 32767;
         if (val < -32768) return -32768;
         return (int) val;
