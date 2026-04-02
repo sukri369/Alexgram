@@ -232,16 +232,7 @@ public class ChatExportImport {
                     html.append("<div class=\"message ").append(isOut ? "out" : "in").append("\">\n");
 
                     // Sender Name
-                    String senderName = "Unknown";
-                    long senderId = msg.getSenderId();
-                    if (senderId > 0) {
-                        TLRPC.User user = MessagesController.getInstance(UserConfig.selectedAccount).getUser(senderId);
-                        if (user != null) senderName = org.telegram.messenger.UserObject.getUserName(user);
-                    } else {
-                        TLRPC.Chat chat = MessagesController.getInstance(UserConfig.selectedAccount).getChat(-senderId);
-                        if (chat != null) senderName = chat.title;
-                    }
-
+                    String senderName = getSenderName(msg);
                     if (!isOut) {
                         html.append("<span class=\"sender\">").append(senderName).append("</span>\n");
                     }
@@ -252,7 +243,7 @@ public class ChatExportImport {
                         MessageObject replyMsg = msgMap.get(replyId);
                         if (replyMsg != null) {
                             html.append("<div class=\"reply\">\n");
-                            html.append("<div class=\"reply-sender\">").append(replyMsg.getSenderName()).append("</div>\n");
+                            html.append("<div class=\"reply-sender\">").append(getSenderName(replyMsg)).append("</div>\n");
                             html.append("<div class=\"reply-text\">").append(replyMsg.messageText).append("</div>\n");
                             html.append("</div>\n");
                         }
@@ -272,7 +263,7 @@ public class ChatExportImport {
                                 html.append("<video controls src=\"").append(relativePath).append("\"></video>");
                             } else if (msg.isPhoto()) {
                                 html.append("<img src=\"").append(relativePath).append("\">");
-                            } else if (msg.isVoice() || msg.isAudio()) {
+                            } else if (msg.isVoice() || msg.isMusic()) {
                                 html.append("<audio controls src=\"").append(relativePath).append("\"></audio>");
                             } else {
                                 html.append("<a class=\"file-box\" href=\"").append(relativePath).append("\" download>");
@@ -329,6 +320,19 @@ public class ChatExportImport {
                 });
             }
         });
+    }
+
+    private static String getSenderName(MessageObject msg) {
+        String senderName = "Unknown";
+        long senderId = msg.getSenderId();
+        if (senderId > 0) {
+            TLRPC.User user = MessagesController.getInstance(UserConfig.selectedAccount).getUser(senderId);
+            if (user != null) senderName = org.telegram.messenger.UserObject.getUserName(user);
+        } else {
+            TLRPC.Chat chat = MessagesController.getInstance(UserConfig.selectedAccount).getChat(-senderId);
+            if (chat != null) senderName = chat.title;
+        }
+        return senderName;
     }
 
     private static void copyFile(File source, File dest) throws Exception {
