@@ -448,28 +448,35 @@ public class SeekBar {
         if (width <= 0) return;
 
         float centerY = rect.centerY();
-        float baseHeight = rect.height();
-        float waveMaxHeight = AndroidUtilities.dp(14);
-        float time = SystemClock.elapsedRealtime() / 300.0f;
+        float waveMaxHeight = AndroidUtilities.dp(7);
+        float time = SystemClock.elapsedRealtime() / 400.0f;
 
         waveformPath.reset();
-        float step = AndroidUtilities.dp(1f);
+        float step = AndroidUtilities.dp(2f);
         for (float x = rect.left; x <= rect.right; x += step) {
             float relativeX = x - thumbWidth / 2f;
-            float h = baseHeight + waveMaxHeight * (float) Math.sin(relativeX * 0.15f + time);
+            float y = centerY + waveMaxHeight * (float) Math.sin(relativeX * 0.08f + time);
             if (x == rect.left) {
-                waveformPath.moveTo(x, centerY - h / 2f);
+                waveformPath.moveTo(x, y);
             } else {
-                waveformPath.lineTo(x, centerY - h / 2f);
+                waveformPath.lineTo(x, y);
             }
         }
-        for (float x = rect.right; x >= rect.left; x -= step) {
-            float relativeX = x - thumbWidth / 2f;
-            float h = baseHeight + waveMaxHeight * (float) Math.sin(relativeX * 0.15f + time);
-            waveformPath.lineTo(x, centerY + h / 2f);
-        }
-        waveformPath.close();
+
+        Paint.Style oldStyle = paint.getStyle();
+        Paint.Cap oldCap = paint.getStrokeCap();
+        float oldWidth = paint.getStrokeWidth();
+
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeCap(Paint.Cap.ROUND);
+        paint.setStrokeWidth(rect.height());
+
         canvas.drawPath(waveformPath, paint);
+
+        paint.setStyle(oldStyle);
+        paint.setStrokeCap(oldCap);
+        paint.setStrokeWidth(oldWidth);
+
         if (parentView != null) {
             parentView.invalidate();
         }
