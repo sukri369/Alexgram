@@ -449,16 +449,14 @@ public class SeekBar {
 
         float centerY = rect.centerY();
         float baseHeight = rect.height();
-        float waveMaxHeight = AndroidUtilities.dp(12);
-        float time = SystemClock.elapsedRealtime() / 500.0f;
+        float waveMaxHeight = AndroidUtilities.dp(14);
+        float time = SystemClock.elapsedRealtime() / 300.0f;
 
         waveformPath.reset();
-        float step = AndroidUtilities.dp(1.5f);
+        float step = AndroidUtilities.dp(1f);
         for (float x = rect.left; x <= rect.right; x += step) {
             float relativeX = x - thumbWidth / 2f;
-            float h1 = (float) Math.sin(relativeX * 0.04f + time);
-            float h2 = (float) Math.sin(relativeX * 0.07f - time * 0.8f);
-            float h = baseHeight + waveMaxHeight * (0.6f * Math.abs(h1) + 0.4f * Math.abs(h2));
+            float h = baseHeight + waveMaxHeight * (float) Math.sin(relativeX * 0.15f + time);
             if (x == rect.left) {
                 waveformPath.moveTo(x, centerY - h / 2f);
             } else {
@@ -467,9 +465,7 @@ public class SeekBar {
         }
         for (float x = rect.right; x >= rect.left; x -= step) {
             float relativeX = x - thumbWidth / 2f;
-            float h1 = (float) Math.sin(relativeX * 0.04f + time);
-            float h2 = (float) Math.sin(relativeX * 0.07f - time * 0.8f);
-            float h = baseHeight + waveMaxHeight * (0.6f * Math.abs(h1) + 0.4f * Math.abs(h2));
+            float h = baseHeight + waveMaxHeight * (float) Math.sin(relativeX * 0.15f + time);
             waveformPath.lineTo(x, centerY + h / 2f);
         }
         waveformPath.close();
