@@ -58,7 +58,7 @@ public class ChatExportImport {
         builder.setTitle("Chat Export Options", true);
         
         CharSequence[] items = new CharSequence[]{"Export as JSON", "Export as HTML with Media"};
-        int[] icons = new int[]{org.telegram.messenger.R.drawable.msg_document, org.telegram.messenger.R.drawable.msg_media};
+        int[] icons = new int[]{org.telegram.messenger.R.drawable.msg_filehq_solar, org.telegram.messenger.R.drawable.msg_media_solar};
         
         builder.setItems(items, icons, (dialog, which) -> {
             if (which == 0) {
@@ -74,7 +74,7 @@ public class ChatExportImport {
     private static void performExportJson(Context context, ArrayList<MessageObject> messages, String title) {
         final org.telegram.ui.ActionBar.AlertDialog progressDialog = new org.telegram.ui.ActionBar.AlertDialog(context, 3);
         progressDialog.setMessage("Preparing JSON export...");
-        progressDialog.setCanCanceled(false);
+        progressDialog.setCancelable(false);
         progressDialog.show();
 
         Utilities.globalQueue.postRunnable(() -> {
@@ -141,7 +141,7 @@ public class ChatExportImport {
     private static void performExportHtml(final Context context, final ArrayList<MessageObject> messages, final String title) {
         final org.telegram.ui.ActionBar.AlertDialog progressDialog = new org.telegram.ui.ActionBar.AlertDialog(context, 3);
         progressDialog.setMessage("Preparing chat export...");
-        progressDialog.setCanCanceled(false);
+        progressDialog.setCancelable(false);
         progressDialog.show();
 
         Utilities.globalQueue.postRunnable(() -> {
