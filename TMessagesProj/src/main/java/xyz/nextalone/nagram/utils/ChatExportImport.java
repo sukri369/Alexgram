@@ -21,6 +21,8 @@ import org.telegram.messenger.ImageLoader;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
+import org.telegram.messenger.NotificationCenter;
+import org.telegram.messenger.NotificationCenter.NotificationCenterDelegate;
 import org.telegram.messenger.SendMessagesHelper;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.Utilities;
@@ -152,7 +154,7 @@ public class ChatExportImport {
         final ArrayList<MessageObject> fullHistory = new ArrayList<>();
         final HashMap<Integer, MessageObject> uniqueMessages = new HashMap<>();
 
-        final NotificationCenter.NotificationCenterDelegate delegate = new NotificationCenter.NotificationCenterDelegate() {
+        final NotificationCenterDelegate delegate = new NotificationCenterDelegate() {
             @Override
             public void didReceivedNotification(int id, int account, Object... args) {
                 if (id == NotificationCenter.messagesDidLoad) {
@@ -181,7 +183,7 @@ public class ChatExportImport {
                             int lastId = loaded.get(loaded.size() - 1).getId();
                             AndroidUtilities.runOnUIThread(() -> {
                                 progressDialog.setMessage("Loading full chat... (" + fullHistory.size() + " messages)");
-                                MessagesController.getInstance(currentAccount).loadMessages(dialogId, 0, false, 100, lastId, 0, false, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, true, 0, false);
+                                MessagesController.getInstance(currentAccount).loadMessages(dialogId, 0L, false, 100, lastId, 0, false, 0, 0, 0, 0, 0, 0L, 0, 0, 0, 0, true, 0, false);
                             });
                         }
                     }
@@ -190,7 +192,7 @@ public class ChatExportImport {
         };
 
         NotificationCenter.getInstance(currentAccount).addObserver(delegate, NotificationCenter.messagesDidLoad);
-        MessagesController.getInstance(currentAccount).loadMessages(dialogId, 0, false, 100, 0, 0, false, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, true, 0, false);
+        MessagesController.getInstance(currentAccount).loadMessages(dialogId, 0L, false, 100, 0, 0, false, 0, 0, 0, 0, 0, 0L, 0, 0, 0, 0, true, 0, false);
     }
 
     private static void performActualExport(final Context context, final ArrayList<MessageObject> messages, final String title, final org.telegram.ui.ActionBar.AlertDialog progressDialog) {
