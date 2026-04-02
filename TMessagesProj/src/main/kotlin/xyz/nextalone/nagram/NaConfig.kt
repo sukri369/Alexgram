@@ -617,7 +617,7 @@ object NaConfig {
         addConfig(
             "WaveformSeekBar",
             ConfigItem.configTypeBool,
-            false
+            true
         )
 
     // NagramX

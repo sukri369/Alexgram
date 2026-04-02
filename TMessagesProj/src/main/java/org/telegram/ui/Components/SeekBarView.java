@@ -771,7 +771,7 @@ public class SeekBarView extends FrameLayout {
     }
 
     private void drawProgressBar(Canvas canvas, RectF rect, Paint paint) {
-        if (NaConfig.INSTANCE.getWaveformSeekBar().Boolean() && paint == outerPaint1) {
+        if (NaConfig.INSTANCE.getWaveformSeekBar().Bool() && paint == outerPaint1) {
             drawWaveform(canvas, rect, paint);
             return;
         }

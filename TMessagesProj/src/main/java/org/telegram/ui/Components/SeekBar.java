@@ -208,7 +208,7 @@ public class SeekBar {
         }
         rect.set(thumbWidth / 2, height / 2 - lineHeight / 2, thumbWidth / 2 + (pressed ? draggingThumbX : thumbX), height / 2 + lineHeight / 2);
         paint.setColor(progressColor);
-        if (NaConfig.INSTANCE.getWaveformSeekBar().Boolean()) {
+        if (NaConfig.INSTANCE.getWaveformSeekBar().Bool()) {
             drawWaveform(canvas, rect, paint);
         } else {
             drawProgressBar(canvas, rect, paint);
