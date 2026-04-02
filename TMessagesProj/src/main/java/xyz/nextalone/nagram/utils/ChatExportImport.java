@@ -131,7 +131,7 @@ public class ChatExportImport {
             } catch (Exception e) {
                 FileLog.e(e);
                 AndroidUtilities.runOnUIThread(() -> {
-                    if (progressDialog.isShowing()) progressDialog.dismiss();
+                    progressDialog.dismiss();
                     Toast.makeText(context, "Export failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
             }
@@ -139,11 +139,61 @@ public class ChatExportImport {
     }
 
     private static void performExportHtml(final Context context, final ArrayList<MessageObject> messages, final String title) {
+        if (messages == null || messages.isEmpty()) return;
+
+        final long dialogId = messages.get(0).getDialogId();
+        final int currentAccount = UserConfig.selectedAccount;
+        
         final org.telegram.ui.ActionBar.AlertDialog progressDialog = new org.telegram.ui.ActionBar.AlertDialog(context, 3);
-        progressDialog.setMessage("Preparing chat export...");
+        progressDialog.setMessage("Initializing full export...");
         progressDialog.setCancelable(false);
         progressDialog.show();
 
+        final ArrayList<MessageObject> fullHistory = new ArrayList<>();
+        final HashMap<Integer, MessageObject> uniqueMessages = new HashMap<>();
+
+        final NotificationCenter.NotificationCenterDelegate delegate = new NotificationCenter.NotificationCenterDelegate() {
+            @Override
+            public void didReceivedNotification(int id, int account, Object... args) {
+                if (id == NotificationCenter.messagesDidLoad) {
+                    long did = (Long) args[0];
+                    if (did == dialogId) {
+                        ArrayList<MessageObject> loaded = (ArrayList<MessageObject>) args[2];
+                        boolean isEnd = (loaded == null || loaded.size() < 100);
+
+                        if (loaded != null) {
+                            for (MessageObject msg : loaded) {
+                                if (!uniqueMessages.containsKey(msg.getId())) {
+                                    uniqueMessages.put(msg.getId(), msg);
+                                    fullHistory.add(msg);
+                                }
+                            }
+                        }
+
+                        if (isEnd) {
+                            NotificationCenter.getInstance(currentAccount).removeObserver(this, id);
+                            AndroidUtilities.runOnUIThread(() -> {
+                                Collections.sort(fullHistory, (o1, o2) -> Integer.compare(o1.getId(), o2.getId()));
+                                progressDialog.setMessage("Generating export for " + fullHistory.size() + " messages...");
+                                performActualExport(context, fullHistory, title, progressDialog);
+                            });
+                        } else {
+                            int lastId = loaded.get(loaded.size() - 1).getId();
+                            AndroidUtilities.runOnUIThread(() -> {
+                                progressDialog.setMessage("Loading full chat... (" + fullHistory.size() + " messages)");
+                                MessagesController.getInstance(currentAccount).loadMessages(dialogId, 0, false, 100, lastId, 0, false, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, true, 0, false);
+                            });
+                        }
+                    }
+                }
+            }
+        };
+
+        NotificationCenter.getInstance(currentAccount).addObserver(delegate, NotificationCenter.messagesDidLoad);
+        MessagesController.getInstance(currentAccount).loadMessages(dialogId, 0, false, 100, 0, 0, false, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, true, 0, false);
+    }
+
+    private static void performActualExport(final Context context, final ArrayList<MessageObject> messages, final String title, final org.telegram.ui.ActionBar.AlertDialog progressDialog) {
         Utilities.globalQueue.postRunnable(() -> {
             try {
                 File downloadsDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "AlexgramExports");
@@ -188,6 +238,12 @@ public class ChatExportImport {
                 html.append(".file-name { font-weight: 600; font-size: 14px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; color: #3390ec; }\n");
                 html.append(".file-size { font-size: 12px; color: #888; margin-top: 2px; }\n");
                 html.append(".date-divider { align-self: center; background: rgba(0,0,0,0.08); color: #555; padding: 4px 15px; border-radius: 20px; font-size: 13px; font-weight: 600; margin: 15px 0; text-transform: uppercase; z-index: 5; }\n");
+                html.append(".modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); align-items: center; justify-content: center; backdrop-filter: blur(8px); animation: fadeIn 0.3s; }\n");
+                html.append(".modal-content { max-width: 90%; max-height: 90%; display: flex; align-items: center; justify-content: center; position: relative; }\n");
+                html.append(".modal-content img, .modal-content video { max-width: 100%; max-height: 100%; border-radius: 12px; box-shadow: 0 0 50px rgba(0,0,0,0.5); object-fit: contain; }\n");
+                html.append(".modal-close { position: absolute; top: -50px; right: 0; color: #fff; font-size: 40px; cursor: pointer; transition: 0.3s; font-family: Arial; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; user-select: none; }\n");
+                html.append(".modal-close:hover { transform: scale(1.1); color: #ccc; }\n");
+                html.append("@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }\n");
                 html.append("::-webkit-scrollbar { width: 8px; }\n");
                 html.append("::-webkit-scrollbar-track { background: transparent; }\n");
                 html.append("::-webkit-scrollbar-thumb { background: #bbb; border-radius: 10px; }\n");
@@ -318,11 +374,14 @@ public class ChatExportImport {
                             String relativePath = "media/" + subDir + "/" + fName;
 
                             html.append("<div class=\"media\">");
-                            if (msg.isVideo() || msg.isRoundVideo()) {
-                                html.append("<video controls src=\"").append(relativePath).append("\"></video>");
+                            boolean isVideo = msg.isVideo() || msg.isRoundVideo();
+                            if (!isVideo && msg.getDocument() != null && msg.getDocument().file_name != null && msg.getDocument().file_name.toLowerCase().endsWith(".webm")) {
+                                isVideo = true;
+                            }
+                            if (isVideo) {
+                                html.append("<video src=\"").append(relativePath).append("\" onclick=\"openMedia('").append(relativePath).append("', 'video')\"></video>");
                             } else if (msg.isPhoto() || msg.isSticker() || msg.isAnimatedSticker()) {
-                                // For stickers, we still use <img> if possible (webp) or just show them
-                                html.append("<img src=\"").append(relativePath).append("\">");
+                                html.append("<img src=\"").append(relativePath).append("\" onclick=\"openMedia('").append(relativePath).append("', 'img')\">");
                             } else if (msg.isVoice() || msg.isMusic()) {
                                 html.append("<audio controls src=\"").append(relativePath).append("\"></audio>");
                             } else {
@@ -346,7 +405,44 @@ public class ChatExportImport {
                     html.append("</div>\n");
                 }
 
-                html.append("</div>\n</div>\n</body>\n</html>");
+                html.append("</div>\n</div>\n");
+
+                // Media Modal HTML
+                html.append("<div id=\"media-modal\" class=\"modal\">\n");
+                html.append("<div class=\"modal-content\">\n");
+                html.append("<div class=\"modal-close\" onclick=\"closeMedia()\">&times;</div>\n");
+                html.append("<img id=\"modal-img\" style=\"display:none\">\n");
+                html.append("<video id=\"modal-video\" controls style=\"display:none\"></video>\n");
+                html.append("</div>\n</div>\n");
+
+                // Media Modal JS
+                html.append("<script>\n");
+                html.append("function openMedia(src, type) {\n");
+                html.append("    const modal = document.getElementById('media-modal');\n");
+                html.append("    const img = document.getElementById('modal-img');\n");
+                html.append("    const video = document.getElementById('modal-video');\n");
+                html.append("    img.style.display = 'none';\n");
+                html.append("    video.style.display = 'none';\n");
+                html.append("    if (type === 'img') {\n");
+                html.append("        img.src = src;\n");
+                html.append("        img.style.display = 'block';\n");
+                html.append("    } else {\n");
+                html.append("        video.src = src;\n");
+                html.append("        video.style.display = 'block';\n");
+                html.append("        video.play();\n");
+                html.append("    }\n");
+                html.append("    modal.style.display = 'flex';\n");
+                html.append("}\n");
+                html.append("function closeMedia() {\n");
+                html.append("    const modal = document.getElementById('media-modal');\n");
+                html.append("    const video = document.getElementById('modal-video');\n");
+                html.append("    modal.style.display = 'none';\n");
+                html.append("    video.pause();\n");
+                html.append("}\n");
+                html.append("window.onclick = function(event) { if (event.target == document.getElementById('media-modal')) closeMedia(); }\n");
+                html.append("</script>\n");
+
+                html.append("</body>\n</html>");
 
                 File indexFile = new File(exportDir, "index.html");
                 FileOutputStream fos = new FileOutputStream(indexFile);
