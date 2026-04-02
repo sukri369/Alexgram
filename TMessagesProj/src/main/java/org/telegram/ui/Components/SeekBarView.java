@@ -511,11 +511,21 @@ public class SeekBarView extends FrameLayout {
         float left = selectorWidth / 2f, right = getMeasuredWidth() - selectorWidth / 2;
         float top = centerY - AndroidUtilities.dp(lineWidthDp) / 2f, bottom = centerY + AndroidUtilities.dp(lineWidthDp) / 2f;
 
-        rect.set(left, top, right, bottom);
+        float thumbXLeft = left + (twoSided ? 0 : thumbX);
+        if (NaConfig.INSTANCE.getWaveformSeekBar().Bool()) {
+            rect.set(thumbXLeft, top, right, bottom);
+        } else {
+            rect.set(left, top, right, bottom);
+        }
         drawProgressBar(canvas, rect, innerPaint1);
         if (bufferedProgress > 0) {
             innerPaint1.setColor(getThemedColor(Theme.key_player_progressCachedBackground));
-            rect.set(left, top, selectorWidth / 2f + bufferedProgress * (getMeasuredWidth() - selectorWidth), bottom);
+            float bufferedX = selectorWidth / 2f + bufferedProgress * (getMeasuredWidth() - selectorWidth);
+            if (NaConfig.INSTANCE.getWaveformSeekBar().Bool()) {
+                rect.set(Math.max(left, thumbXLeft), top, Math.max(left, bufferedX), bottom);
+            } else {
+                rect.set(left, top, bufferedX, bottom);
+            }
             drawProgressBar(canvas, rect, innerPaint1);
         }
         if (twoSided) {
@@ -859,19 +869,27 @@ public class SeekBarView extends FrameLayout {
         }
     }
 
+    private float animationTime = 0;
+    private long lastAnimationUpdateTime = 0;
+
     private void drawWaveform(Canvas canvas, RectF rect, Paint paint) {
         float width = rect.width();
         if (width <= 0) return;
         
         float centerY = rect.centerY();
         float waveMaxHeight = AndroidUtilities.dp(7);
-        float time = SystemClock.elapsedRealtime() / 400.0f;
+        
+        long now = SystemClock.elapsedRealtime();
+        if (lastAnimationUpdateTime != 0 && !org.telegram.messenger.MediaController.getInstance().isMessagePaused()) {
+            animationTime += (now - lastAnimationUpdateTime) / 400.0f;
+        }
+        lastAnimationUpdateTime = now;
         
         path.reset();
         float step = AndroidUtilities.dp(2f);
         for (float x = rect.left; x <= rect.right; x += step) {
             float relativeX = x - selectorWidth / 2f;
-            float y = centerY + waveMaxHeight * (float) Math.sin(relativeX * 0.08f + time);
+            float y = centerY + waveMaxHeight * (float) Math.sin(relativeX * 0.08f + animationTime);
             if (x == rect.left) {
                 path.moveTo(x, y);
             } else {

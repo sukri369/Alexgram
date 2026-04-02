@@ -198,15 +198,27 @@ public class SeekBar {
         if (alpha < 1) {
             canvas.saveLayerAlpha(0, 0, width, height, (int) (255 * alpha), Canvas.ALL_SAVE_FLAG);
         }
-        rect.set(thumbWidth / 2, height / 2 - lineHeight / 2, width - thumbWidth / 2, height / 2 + lineHeight / 2);
+
+        float currentThumbX = (pressed ? draggingThumbX : thumbX);
+        float thumbXLeft = thumbWidth / 2f + currentThumbX;
+        if (NaConfig.INSTANCE.getWaveformSeekBar().Bool()) {
+            rect.set(thumbXLeft, height / 2 - lineHeight / 2, width - thumbWidth / 2, height / 2 + lineHeight / 2);
+        } else {
+            rect.set(thumbWidth / 2, height / 2 - lineHeight / 2, width - thumbWidth / 2, height / 2 + lineHeight / 2);
+        }
         paint.setColor(selected ? backgroundSelectedColor : backgroundColor);
         drawProgressBar(canvas, rect, paint);
         if (bufferedProgress > 0) {
             paint.setColor(selected ? backgroundSelectedColor : cacheColor);
-            rect.set(thumbWidth / 2, height / 2 - lineHeight / 2, thumbWidth / 2 + bufferedProgress * (width - thumbWidth), height / 2 + lineHeight / 2);
+            float bufferedX = thumbWidth / 2f + bufferedProgress * (width - thumbWidth);
+            if (NaConfig.INSTANCE.getWaveformSeekBar().Bool()) {
+                rect.set(Math.max(thumbWidth / 2f, thumbXLeft), height / 2 - lineHeight / 2, Math.max(thumbWidth / 2f, bufferedX), height / 2 + lineHeight / 2);
+            } else {
+                rect.set(thumbWidth / 2, height / 2 - lineHeight / 2, bufferedX, height / 2 + lineHeight / 2);
+            }
             drawProgressBar(canvas, rect, paint);
         }
-        rect.set(thumbWidth / 2, height / 2 - lineHeight / 2, thumbWidth / 2 + (pressed ? draggingThumbX : thumbX), height / 2 + lineHeight / 2);
+        rect.set(thumbWidth / 2, height / 2 - lineHeight / 2, thumbXLeft, height / 2 + lineHeight / 2);
         paint.setColor(progressColor);
         if (NaConfig.INSTANCE.getWaveformSeekBar().Bool()) {
             drawWaveform(canvas, rect, paint);
@@ -443,19 +455,27 @@ public class SeekBar {
         }
     }
 
+    private float animationTime = 0;
+    private long lastAnimationUpdateTime = 0;
+
     private void drawWaveform(Canvas canvas, RectF rect, Paint paint) {
         float width = rect.width();
         if (width <= 0) return;
 
         float centerY = rect.centerY();
         float waveMaxHeight = AndroidUtilities.dp(7);
-        float time = SystemClock.elapsedRealtime() / 400.0f;
+        
+        long now = SystemClock.elapsedRealtime();
+        if (lastAnimationUpdateTime != 0 && !org.telegram.messenger.MediaController.getInstance().isMessagePaused()) {
+            animationTime += (now - lastAnimationUpdateTime) / 400.0f;
+        }
+        lastAnimationUpdateTime = now;
 
         waveformPath.reset();
         float step = AndroidUtilities.dp(2f);
         for (float x = rect.left; x <= rect.right; x += step) {
             float relativeX = x - thumbWidth / 2f;
-            float y = centerY + waveMaxHeight * (float) Math.sin(relativeX * 0.08f + time);
+            float y = centerY + waveMaxHeight * (float) Math.sin(relativeX * 0.08f + animationTime);
             if (x == rect.left) {
                 waveformPath.moveTo(x, y);
             } else {
@@ -474,6 +494,8 @@ public class SeekBar {
         canvas.drawPath(waveformPath, paint);
 
         paint.setStyle(oldStyle);
+        paint.setStrokeCap(oldCap);
+        paint.setStrokeWidth(oldWidth);
         paint.setStrokeCap(oldCap);
         paint.setStrokeWidth(oldWidth);
 
