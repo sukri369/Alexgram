@@ -36,7 +36,7 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
@@ -53,23 +53,33 @@ public class ChatExportImport {
             return;
         }
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle("Export Chat");
-        String[] options = {"Export as JSON (Legacy)", "Export as HTML (God Level with Media)"};
-        builder.setItems(options, (dialog, which) -> {
+        org.telegram.ui.ActionBar.BottomSheet.Builder builder = new org.telegram.ui.ActionBar.BottomSheet.Builder(context);
+        builder.setTitle("Chat Export Options", true);
+        
+        CharSequence[] items = new CharSequence[]{"Export as JSON", "Export as HTML with Media"};
+        int[] icons = new int[]{org.telegram.messenger.R.drawable.msg_document, org.telegram.messenger.R.drawable.msg_media};
+        
+        builder.setItems(items, icons, (dialog, which) -> {
             if (which == 0) {
                 performExportJson(context, messages, title);
             } else {
                 performExportHtml(context, messages, title);
             }
         });
+        
         builder.show();
     }
 
     private static void performExportJson(Context context, ArrayList<MessageObject> messages, String title) {
-        try {
-            JSONArray jsonArray = new JSONArray();
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+        final org.telegram.ui.ActionBar.AlertDialog progressDialog = new org.telegram.ui.ActionBar.AlertDialog(context, 3);
+        progressDialog.setMessage("Preparing JSON export...");
+        progressDialog.setCanCanceled(false);
+        progressDialog.show();
+
+        Utilities.globalQueue.postRunnable(() -> {
+            try {
+                JSONArray jsonArray = new JSONArray();
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
 
             for (MessageObject msg : messages) {
                 if (msg == null) continue;
@@ -101,28 +111,36 @@ public class ChatExportImport {
             String fileName = "ChatExport_" + title.replaceAll("[^a-zA-Z0-9]", "_") + "_" + System.currentTimeMillis() + ".json";
             File file = new File(dir, fileName);
 
-            FileOutputStream fos = new FileOutputStream(file);
-            fos.write(jsonArray.toString(4).getBytes());
-            fos.close();
+                FileOutputStream fos = new FileOutputStream(file);
+                fos.write(jsonArray.toString(4).getBytes());
+                fos.close();
 
-            Toast.makeText(context, "Exported to " + file.getAbsolutePath(), Toast.LENGTH_LONG).show();
+                final File finalFile = file;
+                AndroidUtilities.runOnUIThread(() -> {
+                    if (progressDialog.isShowing()) progressDialog.dismiss();
+                    Toast.makeText(context, "Exported to " + finalFile.getAbsolutePath(), Toast.LENGTH_LONG).show();
 
-            Intent shareIntent = new Intent(Intent.ACTION_SEND);
-            shareIntent.setType("application/json");
-            shareIntent.putExtra(Intent.EXTRA_STREAM, androidx.core.content.FileProvider.getUriForFile(context, context.getPackageName() + ".provider", file));
-            shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            context.startActivity(Intent.createChooser(shareIntent, "Share Export"));
+                    Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                    shareIntent.setType("application/json");
+                    shareIntent.putExtra(Intent.EXTRA_STREAM, androidx.core.content.FileProvider.getUriForFile(context, context.getPackageName() + ".provider", finalFile));
+                    shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    context.startActivity(Intent.createChooser(shareIntent, "Share Export"));
+                });
 
-        } catch (Exception e) {
-            FileLog.e(e);
-            Toast.makeText(context, "Export failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        }
+            } catch (Exception e) {
+                FileLog.e(e);
+                AndroidUtilities.runOnUIThread(() -> {
+                    if (progressDialog.isShowing()) progressDialog.dismiss();
+                    Toast.makeText(context, "Export failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+            }
+        });
     }
 
     private static void performExportHtml(final Context context, final ArrayList<MessageObject> messages, final String title) {
-        final ProgressDialog progressDialog = new ProgressDialog(context);
+        final org.telegram.ui.ActionBar.AlertDialog progressDialog = new org.telegram.ui.ActionBar.AlertDialog(context, 3);
         progressDialog.setMessage("Preparing chat export...");
-        progressDialog.setCancelable(false);
+        progressDialog.setCanCanceled(false);
         progressDialog.show();
 
         Utilities.globalQueue.postRunnable(() -> {
@@ -142,9 +160,11 @@ public class ChatExportImport {
                 html.append("<style>\n");
                 html.append("body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #e7ebf0; margin: 0; padding: 20px; display: flex; justify-content: center; height: 100vh; box-sizing: border-box; }\n");
                 html.append(".chat-container { width: 100%; max-width: 900px; background: #fff; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); overflow: hidden; display: flex; flex-direction: column; height: 100%; position: relative; }\n");
-                html.append(".header { background: #517da2; color: #fff; padding: 12px 25px; display: flex; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.1); flex-shrink: 0; z-index: 10; }\n");
-                html.append(".header img { width: 45px; height: 45px; border-radius: 50%; margin-right: 15px; object-fit: cover; background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.5); }\n");
-                html.append(".chat-title { font-size: 19px; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }\n");
+                html.append(".header { background: #517da2; color: #fff; padding: 15px 25px; display: flex; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.1); flex-shrink: 0; z-index: 10; }\n");
+                html.append(".header img { width: 50px; height: 50px; border-radius: 50%; margin-right: 18px; object-fit: cover; background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.5); }\n");
+                html.append(".header-info { display: flex; flex-direction: column; }\n");
+                html.append(".chat-title { font-size: 20px; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }\n");
+                html.append(".export-info { font-size: 11px; opacity: 0.8; margin-top: 2px; }\n");
                 html.append(".messages { padding: 20px; overflow-y: auto; flex-grow: 1; background: #f0f2f5; display: flex; flex-direction: column; gap: 8px; background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSI4MCI+PGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iMiIgZmlsbD0icmdiYSgwLDAsMCwwLjA1KSIvPjwvc3ZnPg=='); }\n");
                 html.append(".message { max-width: 75%; padding: 8px 12px; border-radius: 12px; position: relative; font-size: 15px; line-height: 1.5; color: #222; word-wrap: break-word; box-shadow: 0 1px 4px rgba(0,0,0,0.1); transition: transform 0.2s; }\n");
                 html.append(".message:hover { transform: scale(1.005); }\n");
@@ -166,6 +186,7 @@ public class ChatExportImport {
                 html.append(".file-info { flex-grow: 1; overflow: hidden; }\n");
                 html.append(".file-name { font-weight: 600; font-size: 14px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; color: #3390ec; }\n");
                 html.append(".file-size { font-size: 12px; color: #888; margin-top: 2px; }\n");
+                html.append(".date-divider { align-self: center; background: rgba(0,0,0,0.08); color: #555; padding: 4px 15px; border-radius: 20px; font-size: 13px; font-weight: 600; margin: 15px 0; text-transform: uppercase; z-index: 5; }\n");
                 html.append("::-webkit-scrollbar { width: 8px; }\n");
                 html.append("::-webkit-scrollbar-track { background: transparent; }\n");
                 html.append("::-webkit-scrollbar-thumb { background: #bbb; border-radius: 10px; }\n");
@@ -185,6 +206,7 @@ public class ChatExportImport {
                 html.append("  .reply-text { color: #aaa; }\n");
                 html.append("  .file-box { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); }\n");
                 html.append("  .file-name { color: #64b5f6; }\n");
+                html.append("  .date-divider { background: rgba(255,255,255,0.1); color: #aaa; }\n");
                 html.append("  ::-webkit-scrollbar-thumb { background: #444; }\n");
                 html.append("}\n");
                 html.append("</style>\n");
@@ -201,7 +223,9 @@ public class ChatExportImport {
                         File avatarFile = FileLoader.getInstance(UserConfig.selectedAccount).getPathToAttach(user.photo.photo_small, true);
                         if (avatarFile.exists()) {
                             avatarFileName = "avatar_" + user.id + ".jpg";
-                            copyFile(avatarFile, new File(mediaDir, avatarFileName));
+                            File photosDir = new File(mediaDir, "photos");
+                            if (!photosDir.exists()) photosDir.mkdirs();
+                            copyFile(avatarFile, new File(photosDir, avatarFileName));
                         }
                     }
                 } else {
@@ -210,24 +234,48 @@ public class ChatExportImport {
                         File avatarFile = FileLoader.getInstance(UserConfig.selectedAccount).getPathToAttach(chat.photo.photo_small, true);
                         if (avatarFile.exists()) {
                             avatarFileName = "avatar_chat_" + chat.id + ".jpg";
-                            copyFile(avatarFile, new File(mediaDir, avatarFileName));
+                            File photosDir = new File(mediaDir, "photos");
+                            if (!photosDir.exists()) photosDir.mkdirs();
+                            copyFile(avatarFile, new File(photosDir, avatarFileName));
                         }
                     }
                 }
 
                 if (avatarFileName != null) {
-                    html.append("<img src=\"media/").append(avatarFileName).append("\">");
+                    html.append("<img src=\"media/photos/").append(avatarFileName).append("\">");
                 }
+                html.append("<div class=\"header-info\">");
                 html.append("<div class=\"chat-title\">").append(title).append("</div>");
+                html.append("<div class=\"export-info\">").append(messages.size()).append(" messages | Exported on ").append(new SimpleDateFormat("MMM d, yyyy HH:mm", Locale.getDefault()).format(new Date())).append("</div>");
+                html.append("</div>");
                 html.append("</div>\n");
                 html.append("<div class=\"messages\">\n");
 
+                // Sort messages by date to ensure chronological order
+                Collections.sort(messages, (m1, m2) -> {
+                    if (m1.messageOwner.date != m2.messageOwner.date) {
+                        return Integer.compare(m1.messageOwner.date, m2.messageOwner.date);
+                    }
+                    return Integer.compare(m1.getId(), m2.getId());
+                });
+
                 SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+                SimpleDateFormat dateFormat = new SimpleDateFormat("MMMM d, yyyy", Locale.getDefault());
+                String lastDate = "";
+
                 HashMap<Integer, MessageObject> msgMap = new HashMap<>();
                 for (MessageObject msg : messages) msgMap.put(msg.getId(), msg);
 
                 for (MessageObject msg : messages) {
                     if (msg == null) continue;
+
+                    // Date Divider
+                    String currentDate = dateFormat.format(new Date(msg.messageOwner.date * 1000L));
+                    if (!currentDate.equals(lastDate)) {
+                        html.append("<div class=\"date-divider\">").append(currentDate).append("</div>\n");
+                        lastDate = currentDate;
+                    }
+
                     boolean isOut = msg.isOut();
                     html.append("<div class=\"message ").append(isOut ? "out" : "in").append("\">\n");
 
@@ -254,14 +302,25 @@ public class ChatExportImport {
                     if (mediaPath != null) {
                         File f = new File(mediaPath);
                         if (f.exists()) {
+                            String subDir = "files";
+                            if (msg.isPhoto()) subDir = "photos";
+                            else if (msg.isVideo() || msg.isRoundVideo()) subDir = "videos";
+                            else if (msg.isVoice()) subDir = "voice";
+                            else if (msg.isMusic()) subDir = "audio";
+                            else if (msg.isSticker() || msg.isAnimatedSticker()) subDir = "stickers";
+
+                            File targetSubDir = new File(mediaDir, subDir);
+                            if (!targetSubDir.exists()) targetSubDir.mkdirs();
+
                             String fName = "file_" + msg.getId() + "_" + f.getName();
-                            copyFile(f, new File(mediaDir, fName));
-                            String relativePath = "media/" + fName;
+                            copyFile(f, new File(targetSubDir, fName));
+                            String relativePath = "media/" + subDir + "/" + fName;
 
                             html.append("<div class=\"media\">");
                             if (msg.isVideo() || msg.isRoundVideo()) {
                                 html.append("<video controls src=\"").append(relativePath).append("\"></video>");
-                            } else if (msg.isPhoto()) {
+                            } else if (msg.isPhoto() || msg.isSticker() || msg.isAnimatedSticker()) {
+                                // For stickers, we still use <img> if possible (webp) or just show them
                                 html.append("<img src=\"").append(relativePath).append("\">");
                             } else if (msg.isVoice() || msg.isMusic()) {
                                 html.append("<audio controls src=\"").append(relativePath).append("\"></audio>");
