@@ -771,6 +771,10 @@ public class SeekBarView extends FrameLayout {
     }
 
     private void drawProgressBar(Canvas canvas, RectF rect, Paint paint) {
+        if (NaConfig.INSTANCE.getWaveformSeekBar().Boolean() && paint == outerPaint1) {
+            drawWaveform(canvas, rect, paint);
+            return;
+        }
         float radius = AndroidUtilities.dp(isModern ? 10 : 2);
         //float radius = AndroidUtilities.dp(2);
         if (timestamps == null || timestamps.isEmpty()) {
@@ -853,6 +857,40 @@ public class SeekBarView extends FrameLayout {
             }
             canvas.drawPath(tmpPath, paint);
         }
+    }
+
+    private void drawWaveform(Canvas canvas, RectF rect, Paint paint) {
+        float width = rect.width();
+        if (width <= 0) return;
+        
+        float centerY = rect.centerY();
+        float baseHeight = rect.height();
+        float waveMaxHeight = AndroidUtilities.dp(12);
+        float time = SystemClock.elapsedRealtime() / 500.0f;
+        
+        path.reset();
+        float step = AndroidUtilities.dp(1.5f);
+        for (float x = rect.left; x <= rect.right; x += step) {
+            float relativeX = x - selectorWidth / 2f;
+            float h1 = (float) Math.sin(relativeX * 0.04f + time);
+            float h2 = (float) Math.sin(relativeX * 0.07f - time * 0.8f);
+            float h = baseHeight + waveMaxHeight * (0.6f * Math.abs(h1) + 0.4f * Math.abs(h2));
+            if (x == rect.left) {
+                path.moveTo(x, centerY - h / 2f);
+            } else {
+                path.lineTo(x, centerY - h / 2f);
+            }
+        }
+        for (float x = rect.right; x >= rect.left; x -= step) {
+            float relativeX = x - selectorWidth / 2f;
+            float h1 = (float) Math.sin(relativeX * 0.04f + time);
+            float h2 = (float) Math.sin(relativeX * 0.07f - time * 0.8f);
+            float h = baseHeight + waveMaxHeight * (0.6f * Math.abs(h1) + 0.4f * Math.abs(h2));
+            path.lineTo(x, centerY + h / 2f);
+        }
+        path.close();
+        canvas.drawPath(path, paint);
+        invalidate();
     }
 
     private int timestampIndex = -1;

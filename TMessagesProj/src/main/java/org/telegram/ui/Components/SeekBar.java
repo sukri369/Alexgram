@@ -27,6 +27,7 @@ import org.telegram.messenger.Emoji;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.Utilities;
+import xyz.nextalone.nagram.NaConfig;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -73,6 +74,7 @@ public class SeekBar {
     private long lastUpdateTime;
     private View parentView;
     private float alpha = 1f;
+    private Path waveformPath = new Path();
 
     public SeekBar(View parent) {
         if (paint == null) {
@@ -206,7 +208,11 @@ public class SeekBar {
         }
         rect.set(thumbWidth / 2, height / 2 - lineHeight / 2, thumbWidth / 2 + (pressed ? draggingThumbX : thumbX), height / 2 + lineHeight / 2);
         paint.setColor(progressColor);
-        drawProgressBar(canvas, rect, paint);
+        if (NaConfig.INSTANCE.getWaveformSeekBar().Boolean()) {
+            drawWaveform(canvas, rect, paint);
+        } else {
+            drawProgressBar(canvas, rect, paint);
+        }
         paint.setColor(circleColor);
 
         int newRad = AndroidUtilities.dp(pressed ? 8 : 6);
@@ -434,6 +440,42 @@ public class SeekBar {
                 }
             }
             canvas.drawPath(tmpPath, paint);
+        }
+    }
+
+    private void drawWaveform(Canvas canvas, RectF rect, Paint paint) {
+        float width = rect.width();
+        if (width <= 0) return;
+
+        float centerY = rect.centerY();
+        float baseHeight = rect.height();
+        float waveMaxHeight = AndroidUtilities.dp(12);
+        float time = SystemClock.elapsedRealtime() / 500.0f;
+
+        waveformPath.reset();
+        float step = AndroidUtilities.dp(1.5f);
+        for (float x = rect.left; x <= rect.right; x += step) {
+            float relativeX = x - thumbWidth / 2f;
+            float h1 = (float) Math.sin(relativeX * 0.04f + time);
+            float h2 = (float) Math.sin(relativeX * 0.07f - time * 0.8f);
+            float h = baseHeight + waveMaxHeight * (0.6f * Math.abs(h1) + 0.4f * Math.abs(h2));
+            if (x == rect.left) {
+                waveformPath.moveTo(x, centerY - h / 2f);
+            } else {
+                waveformPath.lineTo(x, centerY - h / 2f);
+            }
+        }
+        for (float x = rect.right; x >= rect.left; x -= step) {
+            float relativeX = x - thumbWidth / 2f;
+            float h1 = (float) Math.sin(relativeX * 0.04f + time);
+            float h2 = (float) Math.sin(relativeX * 0.07f - time * 0.8f);
+            float h = baseHeight + waveMaxHeight * (0.6f * Math.abs(h1) + 0.4f * Math.abs(h2));
+            waveformPath.lineTo(x, centerY + h / 2f);
+        }
+        waveformPath.close();
+        canvas.drawPath(waveformPath, paint);
+        if (parentView != null) {
+            parentView.invalidate();
         }
     }
 

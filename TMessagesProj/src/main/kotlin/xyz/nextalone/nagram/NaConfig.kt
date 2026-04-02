@@ -613,6 +613,12 @@ object NaConfig {
             ConfigItem.configTypeInt,
             1
         )
+    val waveformSeekBar =
+        addConfig(
+            "WaveformSeekBar",
+            ConfigItem.configTypeBool,
+            false
+        )
 
     // NagramX
     val enableSaveDeletedMessages =
