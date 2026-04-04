@@ -7071,6 +7071,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         super.onConfigurationChanged(newConfig);
         pipActivityHandler.onConfigurationChanged(newConfig);
         checkLayout();
+        invalidateTabletMode();
         PipRoundVideoView pipRoundVideoView = PipRoundVideoView.getInstance();
         if (pipRoundVideoView != null) {
             pipRoundVideoView.onConfigurationChanged();

@@ -3066,7 +3066,17 @@ public class AndroidUtilities {
         if (NekoConfig.tabletMode.Int() != NekoConfig.TABLET_AUTO) {
             return NekoConfig.tabletMode.Int() == NekoConfig.TABLET_ENABLE;
         }
-        return ApplicationLoader.applicationContext != null && ApplicationLoader.applicationContext.getResources().getBoolean(R.bool.isTablet);
+        if (ApplicationLoader.applicationContext == null) {
+            return false;
+        }
+        boolean isTablet = ApplicationLoader.applicationContext.getResources().getBoolean(R.bool.isTablet);
+        if (!isTablet && displaySize.x > 0 && displaySize.y > 0) {
+            float minSide = Math.min(displaySize.x, displaySize.y) / density;
+            if (minSide >= 600) {
+                isTablet = true;
+            }
+        }
+        return isTablet;
     }
 
     public static boolean isTabletInternal() {
