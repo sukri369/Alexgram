@@ -2865,6 +2865,7 @@ public class AndroidUtilities {
     }
 
     public static void checkDisplaySize(Context context, Configuration newConfiguration) {
+        resetTabletFlag();
         try {
             float oldDensity = density;
             density = context.getResources().getDisplayMetrics().density;
@@ -3069,7 +3070,8 @@ public class AndroidUtilities {
         if (ApplicationLoader.applicationContext == null) {
             return false;
         }
-        boolean isTablet = ApplicationLoader.applicationContext.getResources().getBoolean(R.bool.isTablet);
+        Configuration configuration = ApplicationLoader.applicationContext.getResources().getConfiguration();
+        boolean isTablet = configuration.smallestScreenWidthDp >= 600;
         if (!isTablet && displaySize.x > 0 && displaySize.y > 0) {
             float minSide = Math.min(displaySize.x, displaySize.y) / density;
             if (minSide >= 600) {
@@ -3124,14 +3126,12 @@ public class AndroidUtilities {
     public static int getMinTabletSide() {
         int smallSide = Math.min(displaySize.x, displaySize.y);
         int maxSide = Math.max(displaySize.x, displaySize.y);
-        if (ApplicationLoader.applicationContext != null && ApplicationLoader.applicationContext.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
-            return smallSide;
-        }
-        int leftSide = maxSide * 35 / 100;
+        int width = (ApplicationLoader.applicationContext != null && ApplicationLoader.applicationContext.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) ? smallSide : maxSide;
+        int leftSide = width * 35 / 100;
         if (leftSide < dp(320)) {
             leftSide = dp(320);
         }
-        return maxSide - leftSide;
+        return Math.min(width - dp(80), width - leftSide);
     }
 
     public static int getPhotoSize() {
