@@ -10773,9 +10773,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     numberRow = rowCount++;
                 }
                 setUsernameRow = rowCount++;
-                if (0 != 0) {
-                    idDcRow = rowCount++;
-                }
+                idDcRow = rowCount++;
                 bioRow = rowCount++;
 
                 settingsSectionRow = rowCount++;
@@ -10879,9 +10877,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (user != null && username != null) {
                     usernameRow = rowCount++;
                 }
-                if (0 != 0) {
-                    idDcRow = rowCount++;
-                }
+                idDcRow = rowCount++;
                 if (userInfo != null) {
                     if (userInfo.birthday != null) {
                         birthdayRow = rowCount++;
@@ -11052,9 +11048,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     emptyRow = rowCount++;
                 }
             }
-            if (0 != 0) {
-                idDcRow = rowCount++;
-            }
+            idDcRow = rowCount++;
             if (actionsView == null) {
                 if (infoHeaderRow != -1) {
                     notificationsDividerRow = rowCount++;

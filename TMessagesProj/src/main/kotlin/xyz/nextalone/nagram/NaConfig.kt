@@ -117,6 +117,12 @@ object NaConfig {
             ConfigItem.configTypeBool,
             false
         )
+    val playAudio3D =
+        addConfig(
+            "PlayAudio3D",
+            ConfigItem.configTypeBool,
+            false
+        )
     val hideContacts =
         addConfig(
             "HideContacts",
@@ -606,6 +612,12 @@ object NaConfig {
             "VideoPlayerDecoder",
             ConfigItem.configTypeInt,
             1
+        )
+    val waveformSeekBar =
+        addConfig(
+            "WaveformSeekBar",
+            ConfigItem.configTypeBool,
+            true
         )
 
     // NagramX
