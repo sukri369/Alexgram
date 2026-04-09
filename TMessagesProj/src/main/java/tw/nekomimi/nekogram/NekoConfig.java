@@ -74,12 +74,11 @@ public class NekoConfig {
     public static final ArrayList<DatacenterInfo> datacenterInfos = new ArrayList<>(5);
 
     // Configs
-    public static ConfigItem configMigrated = addConfig("ConfigMigrated", configTypeBool, false);
     public static ConfigItem unreadBadgeOnBackButton = addConfig("unreadBadgeOnBackButton", configTypeBool, false);
     public static ConfigItem useCustomEmoji = addConfig("useCustomEmoji", configTypeBool, false);
     public static ConfigItem repeatConfirm = addConfig("repeatConfirm", configTypeBool, true);
     public static ConfigItem disableInstantCamera = addConfig("DisableInstantCamera", configTypeBool, true);
-    public static ConfigItem showSeconds = addConfig("showSeconds", configTypeBool, true);
+    public static ConfigItem showSeconds = addConfig("showSeconds", configTypeBool, false);
 
     // From NekoConfig
     public static ConfigItem useIPv6 = addConfig("IPv6", configTypeBool, false);
@@ -93,7 +92,7 @@ public class NekoConfig {
     public static ConfigItem forceBlurInChat = addConfig("forceBlurInChat", configTypeBool, false);
     public static ConfigItem chatBlueAlphaValue = addConfig("forceBlurInChatAlphaValue", configTypeInt, 127);
     public static ConfigItem showAddToSavedMessages = addConfig("showAddToSavedMessages", configTypeBool, true);
-    public static ConfigItem showReport = addConfig("showReport", configTypeBool, true);
+    public static ConfigItem showReport = addConfig("showReport", configTypeBool, false);
     public static ConfigItem showViewHistory = addConfig("showViewHistory", configTypeBool, true);
     public static ConfigItem showAdminActions = addConfig("showAdminActions", configTypeBool, true);
     public static ConfigItem showChangePermissions = addConfig("showChangePermissions", configTypeBool, true);
@@ -101,14 +100,13 @@ public class NekoConfig {
     public static ConfigItem showMessageDetails = addConfig("showMessageDetails", configTypeBool, true);
     public static ConfigItem showTranslate = addConfig("showTranslate", configTypeBool, true);
     public static ConfigItem showRepeat = addConfig("showRepeat", configTypeBool, true);
-    public static ConfigItem showShareMessages = addConfig("showShareMessages", configTypeBool, true);
-    public static ConfigItem showMessageHide = addConfig("showMessageHide", configTypeBool, true);
+    public static ConfigItem showShareMessages = addConfig("showShareMessages", configTypeBool, false);
+    public static ConfigItem showMessageHide = addConfig("showMessageHide", configTypeBool, false);
 
     public static ConfigItem actionBarDecoration = addConfig("ActionBarDecoration", configTypeInt, 0);
     public static ConfigItem stickerSize = addConfig("stickerSize", configTypeFloat, 14.0f);
-    public static ConfigItem unlimitedFavedStickers = addConfig("UnlimitedFavoredStickers", configTypeBool, true);
-    public static ConfigItem unlimitedPinnedDialogs = addConfig("UnlimitedPinnedDialogs", configTypeBool, true);
-    public static ConfigItem disablePhotoSideAction = addConfig("DisablePhotoViewerSideAction", configTypeBool, false);
+    public static ConfigItem unlimitedFavedStickers = addConfig("UnlimitedFavoredStickers", configTypeBool, false);
+    public static ConfigItem unlimitedPinnedDialogs = addConfig("UnlimitedPinnedDialogs", configTypeBool, false);
     public static ConfigItem openArchiveOnPull = addConfig("OpenArchiveOnPull", configTypeBool, false);
     public static ConfigItem hideKeyboardOnChatScroll = addConfig("HideKeyboardOnChatScroll", configTypeBool, false);
     public static ConfigItem useSystemEmoji = addConfig("EmojiUseDefault", configTypeBool, false);
@@ -126,7 +124,7 @@ public class NekoConfig {
     public static ConfigItem showIdAndDc = addConfig("ShowIdAndDc", configTypeBool, true);
 
     public static ConfigItem cachePath = addConfig("cache_path", configTypeString, "");
-    public static ConfigItem customSavePath = addConfig("customSavePath", configTypeString, "Alexgram");
+    public static ConfigItem customSavePath = addConfig("customSavePath", configTypeString, "Nagram");
 
     public static ConfigItem translationProvider = addConfig("translationProvider", configTypeInt, 1);
     public static ConfigItem translateToLang = addConfig("TransToLang", configTypeString, ""); // "" -> translate to current language (MessageTrans.kt & Translator.kt)
@@ -149,8 +147,6 @@ public class NekoConfig {
     public static ConfigItem autoPauseVideo = addConfig("AutoPauseVideo", configTypeBool, false);
     public static ConfigItem disableProximityEvents = addConfig("DisableProximityEvents", configTypeBool, false);
 
-    public static ConfigItem liquidGlassUI = addConfig("liquidGlassUI", configTypeBool, true);
-
     public static ConfigItem ignoreContentRestrictions = addConfig("ignoreContentRestrictions", configTypeBool, true);
     public static ConfigItem useChatAttachMediaMenu = addConfig("UseChatAttachEnterMenu", configTypeBool, true);
     public static ConfigItem disableLinkPreviewByDefault = addConfig("DisableLinkPreviewByDefault", configTypeBool, false);
@@ -163,18 +159,16 @@ public class NekoConfig {
     public static ConfigItem disableSwipeToNext = addConfig("disableSwipeToNextChannel", configTypeBool, false);
     public static ConfigItem disableChoosingSticker = addConfig("disableChoosingSticker", configTypeBool, false);
     public static ConfigItem hideGroupSticker = addConfig("hideGroupSticker", configTypeBool, false);
-    public static ConfigItem rememberAllBackMessages = addConfig("rememberAllBackMessages", configTypeBool, true);
+    public static ConfigItem rememberAllBackMessages = addConfig("rememberAllBackMessages", configTypeBool, false);
     public static ConfigItem hideSendAsChannel = addConfig("hideSendAsChannel", configTypeBool, false);
     public static ConfigItem showSpoilersDirectly = addConfig("showSpoilersDirectly", configTypeBool, false);
-
-    public static ConfigItem labelChannelUser = addConfig("labelChannelUser", configTypeBool, true);
 
     public static ConfigItem disableAutoDownloadingWin32Executable = addConfig("Win32ExecutableFiles", configTypeBool, true);
     public static ConfigItem disableAutoDownloadingArchive = addConfig("ArchiveFiles", configTypeBool, true);
 
     public static ConfigItem customAudioBitrate = addConfig("customAudioBitrate", configTypeInt, 32);
-    public static ConfigItem enhancedFileLoader = addConfig("enhancedFileLoader", configTypeBool, true);
-    public static ConfigItem uploadBoost = addConfig("uploadBoost", configTypeBool, true);
+    public static ConfigItem enhancedFileLoader = addConfig("enhancedFileLoader", configTypeBool, false);
+    public static ConfigItem uploadBoost = addConfig("uploadBoost", configTypeBool, false);
     public static ConfigItem useOSMDroidMap = addConfig("useOSMDroidMap", configTypeBool, false);
     public static ConfigItem mapDriftingFixForGoogleMaps = addConfig("mapDriftingFixForGoogleMaps", configTypeBool, true);
 
@@ -184,10 +178,6 @@ public class NekoConfig {
     public static ConfigItem displayPersianCalendarByLatin = addConfig("DisplayPersianCalendarByLatin", configTypeBool, false);
 
     public static ConfigItem minimizedStickerCreator = addConfig("minimizedStickerCreator", configTypeBool, false);
-
-    // Live Video Header
-    public static ConfigItem videoHeaderEnabled = addConfig("videoHeaderEnabled", configTypeBool, false);
-    public static ConfigItem videoHeaderPath = addConfig("videoHeaderPath", configTypeString, "");
 
     // --- Ghost Mode ---
     public static ConfigItem sendReadMessagePackets = addConfig("sendReadMessagePackets", configTypeBool, true);
@@ -213,7 +203,6 @@ public class NekoConfig {
 
     public static void init() {
         loadConfig(false);
-        checkMigration();
     }
 
     public static ConfigItem addConfig(String k, int t, Object d) {
@@ -304,22 +293,6 @@ public class NekoConfig {
         return !useOSMDroidMap.Bool() && mapDriftingFixForGoogleMaps.Bool();
     }
 
-    public static void checkMigration() {
-        if (ApplicationLoader.applicationContext == null) {
-            return;
-        }
-        if (!configMigrated.Bool()) {
-            configMigrated.setConfigBool(true);
-
-            if (getPreferences().contains("DisableChatAction")) {
-                sendUploadProgress.setConfigBool(!getPreferences().getBoolean("DisableChatAction", true));
-            }
-            if (getPreferences().contains("DisableSendReadStories")) {
-                sendReadStoriesPackets.setConfigBool(!getPreferences().getBoolean("DisableSendReadStories", true));
-            }
-        }
-    }
-
     // --- Ghost Mode ---
     public static boolean isGhostModeActive() {
         for (Pair<ConfigItem, ConfigItem> pair : ghostToggleItems) {
@@ -373,90 +346,5 @@ public class NekoConfig {
             }
             return keys;
         }
-    }
-
-    public static boolean isDeveloper(long id) {
-        return id == 7960928753L;
-    }
-
-    public static void showDeveloperDialog(Context context) {
-        org.telegram.ui.ActionBar.AlertDialog.Builder builder = new org.telegram.ui.ActionBar.AlertDialog.Builder(context);
-        android.widget.TextView title = new android.widget.TextView(context);
-        title.setText("Developer of Alexgram");
-        title.setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 20);
-        title.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
-        title.setGravity(android.view.Gravity.CENTER);
-        title.setPadding(30, 30, 30, 30);
-        title.setTextColor(org.telegram.ui.ActionBar.Theme.getColor(org.telegram.ui.ActionBar.Theme.key_dialogTextBlack));
-        
-        android.widget.TextView message = new android.widget.TextView(context);
-        message.setText("With Best Fonts\nGOD LEVEL");
-        message.setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 16);
-        message.setTypeface(android.graphics.Typeface.MONOSPACE, android.graphics.Typeface.BOLD);
-        message.setGravity(android.view.Gravity.CENTER);
-        message.setPadding(30, 0, 30, 30);
-        message.setTextColor(org.telegram.ui.ActionBar.Theme.getColor(org.telegram.ui.ActionBar.Theme.key_dialogTextBlack));
-
-        android.widget.LinearLayout layout = new android.widget.LinearLayout(context);
-        layout.setOrientation(android.widget.LinearLayout.VERTICAL);
-        layout.addView(title);
-        layout.addView(message);
-        builder.setView(layout);
-        
-        builder.setPositiveButton("OK", null);
-        builder.show();
-    }
-
-    public static void showSettingsAnimation(Context context, Runnable onComplete) {
-        final android.app.Dialog dialog = new android.app.Dialog(context, android.R.style.Theme_Translucent_NoTitleBar_Fullscreen);
-        dialog.setCancelable(false);
-        android.widget.FrameLayout frameLayout = new android.widget.FrameLayout(context);
-        frameLayout.setBackgroundColor(org.telegram.ui.ActionBar.Theme.getColor(org.telegram.ui.ActionBar.Theme.key_windowBackgroundWhite));
-        
-        android.widget.ImageView iconA = new android.widget.ImageView(context);
-        iconA.setImageResource(org.telegram.messenger.R.mipmap.ic_launcher_nagram_blue); // Using default launcher icon for A
-        android.widget.ImageView iconT = new android.widget.ImageView(context);
-        iconT.setImageResource(org.telegram.messenger.R.drawable.telegram_logo); // Using telegram logo
-        
-        android.widget.TextView text = new android.widget.TextView(context);
-        text.setText("Welcome to\nNagram Settings");
-        text.setTextSize(24);
-        text.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
-        text.setGravity(android.view.Gravity.CENTER);
-        text.setTextColor(org.telegram.ui.ActionBar.Theme.getColor(org.telegram.ui.ActionBar.Theme.key_windowBackgroundWhiteBlackText));
-        
-        android.widget.FrameLayout.LayoutParams params = new android.widget.FrameLayout.LayoutParams(
-            android.view.ViewGroup.LayoutParams.WRAP_CONTENT, 
-            android.view.ViewGroup.LayoutParams.WRAP_CONTENT, 
-            android.view.Gravity.CENTER
-        );
-
-        frameLayout.addView(iconA, params);
-        frameLayout.addView(iconT, params);
-        frameLayout.addView(text, params);
-        
-        iconA.setAlpha(0f);
-        iconT.setAlpha(0f);
-        text.setAlpha(0f);
-        
-        dialog.setContentView(frameLayout, new android.view.ViewGroup.LayoutParams(
-            android.view.ViewGroup.LayoutParams.MATCH_PARENT, 
-            android.view.ViewGroup.LayoutParams.MATCH_PARENT
-        ));
-        dialog.show();
-
-        // Animation Sequence
-        iconA.animate().alpha(1f).scaleX(1.5f).scaleY(1.5f).setDuration(500).withEndAction(() -> {
-            iconA.animate().alpha(0f).setStartDelay(500).setDuration(300).start();
-            iconT.animate().alpha(1f).scaleX(1.5f).scaleY(1.5f).setStartDelay(500).setDuration(500).withEndAction(() -> {
-                iconT.animate().alpha(0f).setStartDelay(500).setDuration(300).start();
-                text.animate().alpha(1f).scaleX(1.1f).scaleY(1.1f).setStartDelay(500).setDuration(500).withEndAction(() -> {
-                    text.animate().alpha(0f).setStartDelay(800).setDuration(300).withEndAction(() -> {
-                        try { dialog.dismiss(); } catch (Exception e) {}
-                        if (onComplete != null) onComplete.run();
-                    }).start();
-                }).start();
-            }).start();
-        }).start();
     }
 }

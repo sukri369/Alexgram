@@ -126,7 +126,7 @@ public class TagEditCell extends LinearLayout {
         editText.setEnabled(true);
         editText.setSingleLine(true);
         editText.setImeOptions(EditorInfo.IME_ACTION_DONE);
-        // setTextRight not available in this build; right-padding handled by child views
+        editTextCell.setTextRight(50 + 56 + 8);
         clearImageView = new ImageView(context);
         clearImageView.setImageResource(R.drawable.menu_delete_old);
         clearImageView.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText, resourcesProvider), PorterDuff.Mode.SRC_IN));
@@ -178,6 +178,14 @@ public class TagEditCell extends LinearLayout {
                 return false;
             }
             @Override
+            public boolean isAdmin(long uid) {
+                return isAdmin;
+            }
+            @Override
+            public boolean isOwner(long uid) {
+                return isOwner;
+            }
+            @Override
             public String getAdminRank(long uid) {
                 String rank = editText.getText().toString().trim();
                 if (rank.length() > 16) {
@@ -185,7 +193,7 @@ public class TagEditCell extends LinearLayout {
                 }
                 if (!isAdmin && TextUtils.isEmpty(rank))
                     return null;
-                return isOwner ? (TextUtils.isEmpty(rank) ? "owner" : rank) : rank;
+                return rank;
             }
         });
     }
@@ -338,6 +346,7 @@ public class TagEditCell extends LinearLayout {
                     if (!TextUtils.isEmpty(req.rank) && lastFragment != null) {
                         BulletinFactory.of(lastFragment)
                             .createSimpleBulletin(R.raw.contact_check, getString(adding ? R.string.TagAdded : R.string.TagEdited), req.rank)
+                            .wrapContent()
                             .show();
                     }
                 } else if (err != null) {
@@ -429,6 +438,14 @@ public class TagEditCell extends LinearLayout {
             messageCell.setDelegate(new ChatMessageCell.ChatMessageCellDelegate() {
                 @Override
                 public boolean canPerformActions() { return false; }
+                @Override
+                public boolean isAdmin(long uid) {
+                    return forceAdmin;
+                }
+                @Override
+                public boolean isOwner(long uid) {
+                    return forceAdmin && owner;
+                }
                 @Override
                 public String getAdminRank(long uid) { return getString(forceAdmin ? owner ? R.string.TagInfoOwnerTitle : R.string.TagInfoAdminTitle : R.string.TagInfoMemberTitle); }
             });

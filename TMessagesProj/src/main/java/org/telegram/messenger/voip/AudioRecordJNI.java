@@ -23,8 +23,6 @@ import org.telegram.messenger.FileLog;
 import java.nio.ByteBuffer;
 import java.util.regex.Pattern;
 
-import xyz.nextalone.nagram.utils.VoiceChanger;
-
 public class AudioRecordJNI {
 
 	private AudioRecord audioRecord;
@@ -196,7 +194,6 @@ public class AudioRecordJNI {
 						audioRecord.stop();
 						break;
 					}
-					VoiceChanger.process(buffer, buffer.position());
 					nativeCallback(buffer);
 				} catch (Exception e) {
 					VLog.e(e);

@@ -28,9 +28,6 @@ import androidx.annotation.RequiresApi;
 import androidx.core.graphics.ColorUtils;
 import androidx.core.math.MathUtils;
 
-import com.google.common.collect.MapMaker;
-
-import org.telegram.messenger.BuildConfig;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.blur3.Blur3HashImpl;
 import org.telegram.ui.Components.blur3.drawable.color.BlurredBackgroundColorProvider;
@@ -44,8 +41,8 @@ import org.telegram.ui.Components.blur3.utils.NinePatchBuilder;
 
 import java.lang.ref.WeakReference;
 import java.util.Arrays;
-import java.util.Map;
 
+import xyz.nextalone.nagram.NaConfig;
 
 public abstract class BlurredBackgroundDrawable extends Drawable {
     public BlurredBackgroundDrawable() {
@@ -88,6 +85,17 @@ public abstract class BlurredBackgroundDrawable extends Drawable {
             onBoundPropsChanged();
         }
         return this;
+    }
+
+    public BlurredBackgroundDrawable setHasPadding(boolean hasPadding) {
+        boundProps.hasPadding = hasPadding;
+        return this;
+    }
+
+    @Override
+    public boolean getPadding(@NonNull Rect padding) {
+        padding.set(boundProps.padding, boundProps.padding, boundProps.padding, boundProps.padding);
+        return boundProps.hasPadding;
     }
 
     public BlurredBackgroundDrawable setRadius(float radius) {
@@ -211,6 +219,7 @@ public abstract class BlurredBackgroundDrawable extends Drawable {
         public final float[] radii = new float[8];
         public final float[] shaderRadii = new float[8];
         public int padding;
+        public boolean hasPadding;
         public int liquidThickness;
         public float liquidIntensity = 0.75f;
         public float liquidIndex = 1.5f;
@@ -320,6 +329,11 @@ public abstract class BlurredBackgroundDrawable extends Drawable {
         return viewOutlineProvider;
     }
 
+    @Override
+    public void getOutline(@NonNull Outline outline) {
+        BlurredBackgroundDrawable.getOutline(outline, boundProps.boundsWithPadding, boundProps.radii);
+    }
+
     private static Path tmpPath = new Path();
     protected static void getOutline(Outline outline, Rect rect, float[] radii) {
         final boolean radiiAreSame = radiiAreSame(radii);
@@ -381,6 +395,7 @@ public abstract class BlurredBackgroundDrawable extends Drawable {
         float[] radii, float strokeWidth, boolean isTop,
         Paint paint
     ) {
+        if (!NaConfig.INSTANCE.getStrokeOnViews().Bool()) return;
 
         final boolean radiiAreSame = isTop ?
             radii[0] == radii[1] && radii[1] == radii[2] && radii[2] == radii[3]:
@@ -428,6 +443,7 @@ public abstract class BlurredBackgroundDrawable extends Drawable {
 
     public static void drawStroke(Canvas canvas, float left, float top, float right, float bottom,
                                      float radii, float strokeWidth, boolean isTop, Paint paint) {
+        if (!NaConfig.INSTANCE.getStrokeOnViews().Bool()) return;
         final float strokeHalf = strokeWidth / 2f;
         canvas.save();
         if (isTop) {
@@ -657,6 +673,7 @@ public abstract class BlurredBackgroundDrawable extends Drawable {
     }
 
     private void drawStrokeInternalIfNeeded(Canvas canvas) {
+        if (!NaConfig.INSTANCE.getStrokeOnViews().Bool()) return;
         final int strokeColorTop = Theme.multAlpha(this.strokeColorTop, alpha / 255f);
         final int strokeColorBottom = Theme.multAlpha(this.strokeColorBottom, alpha / 255f);
 
@@ -713,6 +730,7 @@ public abstract class BlurredBackgroundDrawable extends Drawable {
     private final Rect ninePatchDrawablePadding = new Rect();
     private NinePatchDrawable ninePatchDrawable;
     private long ninePatchDrawableHash;
+    private Bitmap[] ninePatchRef;
 
     private NinePatchDrawable checkNinePatchDrawable(int fillColor) {
         ninePatchHashBuilder.start();
@@ -729,9 +747,9 @@ public abstract class BlurredBackgroundDrawable extends Drawable {
 
             // ninePatchDrawable = ninePatchDrawablesPool.get(hash);
             //if (ninePatchDrawable == null) {
-                ninePatchDrawable = NinePatchBuilder.createNinePatch(
+                ninePatchDrawable = NinePatchBuilder.createNinePatch(ninePatchRef,
                         fillColor, boundProps.radii, shadowLayerRadius,
-                        shadowColor, shadowLayerDx, shadowLayerDy);
+                        shadowColor, shadowLayerDx, shadowLayerDy, NinePatchBuilder.NO_COLOR);
                 //ninePatchDrawablesPool.put(hash, ninePatchDrawable);
             //}
             ninePatchDrawable.getPadding(ninePatchDrawablePadding);

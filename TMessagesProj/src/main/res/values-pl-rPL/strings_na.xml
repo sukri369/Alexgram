@@ -19,7 +19,6 @@
     <string name="ShowMessageID">Pokaż identyfikator wiadomości</string>
     <string name="ShowRPCError">Pokaż błędy RPC</string>
     <string name="ShowPremiumStickersAnimation">Pokaż animację naklejek premium</string>
-    <string name="AlwaysSaveChatOffset">Zawsze zapisuj przesunięcie czatu</string>
     <string name="AppIconColorful">Kolorowy</string>
     <string name="AppIconDarkGreen">Ciemna zieleń</string>
     <string name="AppIconNeon">Neonowy</string>
@@ -31,13 +30,11 @@
     <string name="ToTheMessage">Idź do</string>
     <string name="ZalgoFilter">Filtruj symbole „Zalgo”</string>
     <string name="ZalgoFilterNotice">Wszystkie symbole „Z̷͍͌ā̸̜l̸̞̂g̷̝͘o̶̩̓” w pseudonimach i wiadomościach zostaną usunięte.</string>
-    <string name="labelChannelUser">Oznacz użytkowników kanału</string>
     <string name="AlwaysShowDownloadIcon">Zawsze pokazuj ikonę pobierania</string>
     <string name="HideTitle">Ukryj tytuł</string>
     <string name="IgnoreUnreadCount">Ukryj licznik nieprzeczytanych</string>
     <string name="SendWithoutMarkdown">Wyślij bez przeceny</string>
     <string name="SendAsEmoji">Wyślij jako emoji</string>
-    <string name="CustomArtworkApi">Niestandardowe API grafiki</string>
     <string name="CustomEditedMessage">Niestandardowy edytowany znak</string>
     <string name="NotificationIcon">Ikona powiadomienia</string>
     <string name="Official">Oficjalny</string>

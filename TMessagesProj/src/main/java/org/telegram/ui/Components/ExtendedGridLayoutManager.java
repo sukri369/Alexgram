@@ -159,23 +159,10 @@ public class ExtendedGridLayoutManager extends GridLayoutManager {
         return new Size(100, 100);
     }
 
-    private int lastSpanCount;
-
-    @Override
-    public void onLayoutChildren(RecyclerView.Recycler recycler, RecyclerView.State state) {
-        checkLayout();
-        super.onLayoutChildren(recycler, state);
-    }
-
     private void checkLayout() {
-        if (itemSpans.size() != getFlowItemCount() || calculatedWidth != getWidth() || lastSpanCount != getSpanCount()) {
+        if (itemSpans.size() != getFlowItemCount() || calculatedWidth != getWidth()) {
             calculatedWidth = getWidth();
-            lastSpanCount = getSpanCount();
             prepareLayout(getWidth());
-            if (getSpanSizeLookup() != null) {
-                getSpanSizeLookup().invalidateSpanIndexCache();
-                getSpanSizeLookup().invalidateSpanGroupIndexCache();
-            }
         }
     }
 

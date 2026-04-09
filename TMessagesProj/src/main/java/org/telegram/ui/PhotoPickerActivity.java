@@ -259,7 +259,7 @@ public class PhotoPickerActivity extends BaseFragment implements NotificationCen
                         imageView.setImage(photoEntry.thumbPath, null, Theme.chat_attachEmptyDrawable);
                     } else if (photoEntry.path != null) {
                         imageView.setOrientation(photoEntry.orientation, photoEntry.invert, true);
-                        if (photoEntry.isVideo) {
+                        if (photoEntry.isVideo && !photoEntry.isLivePhoto) {
                             imageView.setImage("vthumb://" + photoEntry.imageId + ":" + photoEntry.path, null, Theme.chat_attachEmptyDrawable);
                         } else {
                             imageView.setImage("thumb://" + photoEntry.imageId + ":" + photoEntry.path, null, Theme.chat_attachEmptyDrawable);
@@ -860,7 +860,7 @@ public class PhotoPickerActivity extends BaseFragment implements NotificationCen
                 int type;
                 if (selectPhotoType == PhotoAlbumPickerActivity.SELECT_TYPE_AVATAR || selectPhotoType == PhotoAlbumPickerActivity.SELECT_TYPE_AVATAR_VIDEO) {
                     type = PhotoViewer.SELECT_TYPE_AVATAR;
-                } else if (selectPhotoType == PhotoAlbumPickerActivity.SELECT_TYPE_WALLPAPER || selectPhotoType == PhotoAlbumPickerActivity.SELECT_TYPE_HEADER_BACKGROUND) {
+                } else if (selectPhotoType == PhotoAlbumPickerActivity.SELECT_TYPE_WALLPAPER) {
                     type = PhotoViewer.SELECT_TYPE_WALLPAPER;
                 } else if (selectPhotoType == PhotoAlbumPickerActivity.SELECT_TYPE_QR) {
                     type = PhotoViewer.SELECT_TYPE_QR;
@@ -1849,7 +1849,7 @@ public class PhotoPickerActivity extends BaseFragment implements NotificationCen
         applyCaption();
         sendPressed = true;
         delegate.actionButtonPressed(false, notify, scheduleDate, scheduleRepeatPeriod);
-        if (selectPhotoType != PhotoAlbumPickerActivity.SELECT_TYPE_WALLPAPER && selectPhotoType != PhotoAlbumPickerActivity.SELECT_TYPE_HEADER_BACKGROUND && (delegate == null || delegate.canFinishFragment())) {
+        if (selectPhotoType != PhotoAlbumPickerActivity.SELECT_TYPE_WALLPAPER && (delegate == null || delegate.canFinishFragment())) {
             finishFragment();
         }
     }
@@ -1996,7 +1996,7 @@ public class PhotoPickerActivity extends BaseFragment implements NotificationCen
 
                     if (selectedAlbum != null) {
                         MediaController.PhotoEntry photoEntry = selectedAlbum.photos.get(position);
-                        cell.setPhotoEntry(photoEntry, selectedPhotosOrder.size() > 1, true, false);
+                        cell.setPhotoEntry(photoEntry, selectedPhotosOrder.size() > 1, true, false, false);
                         cell.setChecked(allowIndices ? selectedPhotosOrder.indexOf(photoEntry.imageId) : -1, selectedPhotos.containsKey(photoEntry.imageId), false);
                         showing = PhotoViewer.isShowingImage(photoEntry.path);
                     } else {

@@ -34,7 +34,7 @@
     <string name="LlmUseContextInAutoTranslateNotice">Pode aumentar o uso de tokens e a latência.</string>
     <string name="LlmTemperature">Temperatura</string>
     <string name="LlmModelsLoadFailed">Falha ao carregar a lista de modelos.</string>
-    <string name="LlmTest">Testar</string>
+    <string name="LlmTest">Teste</string>
     <string name="LlmTestResultHttpStatusCode">Código HTTP</string>
     <string name="LlmTestResultDuration">Duração</string>
     <string name="LlmTestResultResponse">Resposta</string>
@@ -66,6 +66,7 @@
     <string name="RegexFiltersUserHeader">Filtros de usuário</string>
     <string name="RegexFiltersUserFilterHint">Inserir ID do usuário</string>
     <string name="RegexFiltersGlobalHeader">Filtros globais</string>
+    <string name="RegexFiltersTextSelectionAddtoShared">Adicionar aos filtros compartilhados</string>
     <string name="ShadowBan">Bloqueio oculto</string>
     <string name="UnshadowBan">Remover bloqueio oculto</string>
     <string name="ShadowBanAdded">Adicionado aos **filtros de usuário**.</string>
@@ -80,16 +81,12 @@
     <string name="MessageSavingSaveMediaInPublicGroups">... em grupos públicos</string>
     <string name="MessageSavingSaveMediaInPrivateGroups">... em grupos privados</string>
     <string name="TelegramUIAutoTranslate">Traduzir Chats Inteiros</string>
-    <string name="TranslatorMode">Comportamento da tradução manual</string>
-    <string name="TranslatorModeAppend">Anexar</string>
-    <string name="TranslatorModeInline">Substituir</string>
-    <string name="TranslatorModePopup">Pop-up</string>
     <string name="Translated">traduzido</string>
     <string name="ProviderRealMicrosoftTranslator">Microsoft Tradutor</string>
     <string name="TranslatorSettings">Tradutor</string>
     <string name="SettingsOnly">Apenas nas configurações</string>
     <string name="ChatsOnly">Apenas no chat</string>
-    <string name="InstantViewTranslation">Visualização instantânea</string>
+    <string name="InstantViewTranslation">Leitura rápida</string>
     <string name="SaveDeletedMessageForBot">Salvar no chat do bot</string>
     <string name="HideArchive">Remover \"Chats Arquivados\" da lista de chats</string>
     <string name="ConfirmAllLinks">Perguntar antes de abrir links inline</string>
@@ -108,7 +105,7 @@
     <string name="SpringAnimation">Animação de mola</string>
     <string name="SpringAnimationCrossfade">Barra de ação animada</string>
     <string name="Other">Outros</string>
-    <string name="RestartApp">Reiniciar aplicativo</string>
+    <string name="RestartApp">Reiniciar app</string>
     <string name="ResetSettings">Redefinir configurações</string>
     <string name="ResetSettingsAlert">Tem certeza de que deseja redefinir todas as N-Configurações?</string>
     <string name="DontAutoPlayNextVoice">Não reproduzir a próxima mensagem de voz automaticamente</string>
@@ -118,7 +115,6 @@
     <string name="ChatMenu">Menu do chat</string>
     <string name="MediaViewerMenu">Menu do visualizador de mídia</string>
     <string name="MenuAndButtons">Menu e botões</string>
-    <string name="ColoredAdminTitle">Título de administrador colorido</string>
     <string name="SettingsNax">Configurações</string>
     <string name="AccountSettingsNax">Configurações da conta</string>
     <string name="HideReactions">Ocultar reações</string>
@@ -133,7 +129,7 @@
     <string name="DisableGhostMode">Desativar fantasma</string>
     <string name="GhostModeEnabled">Modo fantasma ativado</string>
     <string name="GhostModeDisabled">Modo fantasma desativado</string>
-    <string name="GhostModeInDrawer">Mostrar no menu lateral</string>
+    <string name="GhostModeInDrawer">Atalho</string>
     <string name="GhostModeStatusIndicator">Indicador do modo fantasma</string>
     <string name="DontSendReadMessagePackets">Não ler mensagens</string>
     <string name="DontReadStoriesPackets">Não visualizar stories</string>
@@ -186,6 +182,8 @@
     <string name="DebugMenuDoNotForceForumTabs">Não forçar abas do fórum</string>
     <string name="DebugMenuCleanAppUpdate">Limpar atualizações do aplicativo</string>
     <string name="DebugMenuMakeMemoryDump">Fazer despejo de memória</string>
+    <string name="DebugMenuShowFrameMetrics">Mostrar métricas de quadros</string>
+    <string name="DebugMenuHideFrameMetrics">Ocultar métricas de quadros</string>
     <string name="TranslateMessageLLM">Traduzir com IA</string>
     <string name="EditLocalNameOverride">Editando substituição de nome local.</string>
     <string name="ResetChatNameOverrides">Redefinir Substituições de Nomes do Chat</string>
@@ -204,9 +202,8 @@
     <string name="CreateCode">Criar Código</string>
     <string name="CreateCodeLanguage">Linguagem</string>
     <string name="NoCaptionForward">Encaminhar sem legenda</string>
-    <string name="PreferCommonGroupsTab">Preferir a aba Grupos</string>
+    <string name="PreferCommonGroupsTab">Preferir aba Grupos</string>
     <string name="PreferCommonGroupsTabNotice">Seleciona automaticamente a aba \"Grupos\" em vez de \"Presentes\" sempre que possível.</string>
-    <string name="SendHighQualityPhoto">Enviar foto em alta qualidade</string>
     <string name="GroupedMessageMenu">Menu de mensagens agrupado</string>
     <string name="GroupedMessageMenuNotice">O agrupamento move as ações principais para a parte inferior do menu.</string>
     <string name="CopySticker">Copiar Sticker</string>
@@ -215,9 +212,6 @@
     <string name="AutoCheckUpdateSwitch">Canal de atualização</string>
     <string name="AutoCheckUpdateRelease">Estável</string>
     <string name="AutoCheckUpdateBeta">Beta</string>
-    <string name="AutoInsertGIFCaption">Legendar GIFs automaticamente</string>
-    <string name="AutoInsertGIFCaptionNotice">Usar automaticamente o texto do campo de entrada como legenda do GIF.</string>
-    <string name="UserAvatarsInMessagePreview">Avatares de usuários na prévia de mensagem</string>
     <string name="YourVersionIsLatestNax">Sua versão está atualizada.</string>
     <string name="PremiumElements">Elementos Premium</string>
     <string name="PremiumItemBoosts">Contador de impulsos</string>
@@ -229,7 +223,6 @@
     <string name="PremiumItemVideoAvatar">Avatares animados</string>
     <string name="PremiumItemCustomWallpaper">Papéis de parede personalizados</string>
     <string name="TranslationTargetApp">Seguir aplicativo</string>
-    <string name="DisableAvatarTapToSwitch">Desativar alternância de avatares ao tocar</string>
     <string name="SwitchStyle">Estilo de interruptor</string>
     <string name="SliderStyle">Estilo de controle deslizante</string>
     <string name="StyleModern">Moderno</string>
@@ -275,7 +268,7 @@
     <string name="FixLinkPreview">Corrigir prévia de link</string>
     <string name="NoQuoteForwardShort">Sem autor</string>
     <string name="ViewDeleted">Ver excluídos</string>
-    <string name="PasskeyLogin">Chaves de acesso</string>
+    <string name="PasskeyLogin">Chave de acesso</string>
     <string name="PasskeyInfo2">Funciona apenas com gerenciadores de senhas que permitem gerenciar apps privilegiados, como o **Bitwarden** e o **KeePassDX**.</string>
     <string name="PasskeyUnsupportedTitle">Gerenciador de senhas não suportado</string>
     <string name="PasskeyUnsupportedMessage">Tente outros gerenciadores de senhas, como o **Bitwarden** ou o **KeePassDX**.</string>
@@ -297,8 +290,6 @@
     <string name="CameraInVideoMessagesRear">Câmera traseira</string>
     <string name="CameraInVideoMessagesAsk">Perguntar</string>
     <string name="CameraSettings">Câmera</string>
-    <string name="SyncContactToPhone">Sincronizar com o celular</string>
-    <string name="AddViaQRCode">Adicionar via Código QR</string>
     <string name="ContactNotes">Notas</string>
     <string name="PhoneNotOnTelegramInvite">Este número de telefone não está no Telegram. **Convidar &gt;**</string>
     <string name="PhoneAlreadyInContacts">Este número de telefone já está nos seus contatos. **Ver &gt;**</string>
@@ -309,7 +300,7 @@
     <string name="SaveLocalLastSeen">Salvar data do visto por último</string>
     <string name="CopyVideoFrame">Copiar quadro</string>
     <string name="SetLocalName">Definir nome local</string>
-    <string name="DeleteChatForBothSides">Usar \"Apagar também para\" por padrão</string>
+    <string name="DeleteChatForBothSides">Marcar \"Apagar também para\" por padrão</string>
     <string name="BackAnimationStyle">Animação de navegação</string>
     <string name="BackAnimationClassic">Clássica</string>
     <string name="BackAnimationSpring">Mola</string>
@@ -319,4 +310,14 @@
     <string name="UnifiedPushLastReceivedNotification">A última notificação recebida via UnifiedPush foi há %1$d segundos.\n\nVocê recebeu %2$d notificações desde que o Nagram X foi iniciado.</string>
     <string name="UnifiedPushCurrentEndpoint">O endpoint atual do UnifiedPush é: %1$s</string>
     <string name="PlayOnce">Reproduzir uma vez</string>
+    <string name="StorageSettings">Armazenamento</string>
+    <string name="MainTabsSettingsHeader">Abas principais</string>
+    <string name="MainTabsHideTitles">Ocultar títulos</string>
+    <string name="MainTabsHideContacts">Ocultar aba Contatos</string>
+    <string name="PasscodeShowMessagePreviewWhenLocked">Mostrar prévia das mensagens</string>
+    <string name="PasscodeShowMessagePreviewWhenLockedAbout">Mostrar o conteúdo das notificações mesmo com o bloqueio por senha ativo.</string>
+    <string name="StickerSavedHint">Sticker salvo na galeria.</string>
+    <string name="StickerCopied">Sticker copiado para a área de transferência.</string>
+    <string name="StrokeOnViews">Efeitos de brilho</string>
+    <string name="HideBottomNavigationBar">Ocultar barra de navegação inferior</string>
 </resources>

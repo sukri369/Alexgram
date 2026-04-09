@@ -3,13 +3,9 @@
     <string name="NagramX" translatable="false">Alexgram</string>
     <string name="XChannel">Alexgram Channel</string>
     <string name="EnableSaveDeletedMessages">Save Deleted Messages</string>
-    <string name="RunInBackground">Run in Background</string>
-    <string name="RunInBackgroundInfo">Keeps Alexgram alive after you close it so deleted-message saving and other background features can continue running.</string>
     <string name="DeletedMessage">deleted</string>
     <string name="EnableSaveEditsHistory">Save Edits History</string>
     <string name="EditsHistoryMenuText">Edits History</string>
-    <string name="HideTabsOnScroll">Hide navigation bar on scroll</string>
-    <string name="HideTabs">Hide navigation bar</string>
     <string name="DeleteKeepLocally">Keep locally</string>
     <string name="ClearMessageDatabase">Clear Message Database</string>
     <string name="ClearMessageDatabaseNotification">Message database cleared.</string>
@@ -25,9 +21,9 @@
     <string name="LlmApiKeyNotice">Enter one or more API keys, separated by commas (e.g., key1,key2). Multiple keys will be used in rotation.</string>
     <string name="LlmApiUrlDefault" translatable="false">https://generativelanguage.googleapis.com/v1beta/openai</string>
     <string name="LlmModelNameDefault" translatable="false">gemini-flash-latest</string>
-    <string name="LlmProviderOpenAIModel" translatable="false">gpt-5-nano</string>
+    <string name="LlmProviderOpenAIModel" translatable="false">gpt-5.4-nano</string>
     <string name="LlmProviderGeminiModel" translatable="false">gemini-flash-lite-latest</string>
-    <string name="LlmProviderGroqModel" translatable="false">meta-llama/llama-4-maverick-17b-128e-instruct</string>
+    <string name="LlmProviderGroqModel" translatable="false">openai/gpt-oss-120b</string>
     <string name="LlmProviderDeepSeekModel" translatable="false">deepseek-chat</string>
     <string name="LlmProviderXAIModel" translatable="false">grok-4-1-fast-non-reasoning</string>
     <string name="LlmProviderCerebrasModel" translatable="false">gpt-oss-120b</string>
@@ -83,6 +79,7 @@
     <string name="RegexFiltersUserHeader">User Filters</string>
     <string name="RegexFiltersUserFilterHint">Enter User ID</string>
     <string name="RegexFiltersGlobalHeader">Global Filters</string>
+    <string name="RegexFiltersTextSelectionAddtoShared">Add to shared filters</string>
     <string name="ShadowBan">Shadow Ban</string>
     <string name="UnshadowBan">Unshadow Ban</string>
     <string name="ShadowBanAdded">Added to **user filters**.</string>
@@ -97,10 +94,6 @@
     <string name="MessageSavingSaveMediaInPublicGroups">… in Public Groups</string>
     <string name="MessageSavingSaveMediaInPrivateGroups">… in Private Groups</string>
     <string name="TelegramUIAutoTranslate">Translate Entire Chats</string>
-    <string name="TranslatorMode">Manual Translation Behavior</string>
-    <string name="TranslatorModeAppend">Append</string>
-    <string name="TranslatorModeInline">Replace</string>
-    <string name="TranslatorModePopup">Pop-up</string>
     <string name="Translated">translated</string>
     <string name="ProviderRealMicrosoftTranslator">Microsoft Translator</string>
     <string name="TranslatorSettings">Translator</string>
@@ -126,7 +119,7 @@
     <string name="SpringAnimationCrossfade">Animated Action Bar</string>
     <string name="Other">Other</string>
     <string name="RestartApp">Restart App</string>
-    <string name="ResetSettings">Reset Settings</string>
+    <string name="ResetSettings">Reset A-Settings</string>
     <string name="ResetSettingsAlert">Are you sure you want to reset all A-Settings?</string>
     <string name="DontAutoPlayNextVoice">Don\'t Auto Play Next Voice Message</string>
     <string name="SaveToChatSubfolder">Save Attachments by Chat Name</string>
@@ -135,7 +128,6 @@
     <string name="ChatMenu">Chat Menu</string>
     <string name="MediaViewerMenu">Media Viewer Menu</string>
     <string name="MenuAndButtons">Menu and Buttons</string>
-    <string name="ColoredAdminTitle">Colored Admin Title</string>
     <string name="SettingsNax">Settings</string>
     <string name="AccountSettingsNax">Account Settings</string>
     <string name="HideReactions">Hide Reactions</string>
@@ -150,7 +142,7 @@
     <string name="DisableGhostMode">Disable Ghost</string>
     <string name="GhostModeEnabled">Ghost mode turned on</string>
     <string name="GhostModeDisabled">Ghost mode turned off</string>
-    <string name="GhostModeInDrawer">Main Tab Shortcut</string>
+    <string name="GhostModeInDrawer">Shortcuts</string>
     <string name="GhostModeStatusIndicator">Ghost Mode Indicator</string>
     <string name="DontSendReadMessagePackets">Don\'t Read Messages</string>
     <string name="DontReadStoriesPackets">Don\'t Read Stories</string>
@@ -203,6 +195,8 @@
     <string name="DebugMenuDoNotForceForumTabs">Do Not Force Forum Tabs</string>
     <string name="DebugMenuCleanAppUpdate">Clean App Update</string>
     <string name="DebugMenuMakeMemoryDump">Make Memory Dump</string>
+    <string name="DebugMenuShowFrameMetrics">Show Frame Metrics</string>
+    <string name="DebugMenuHideFrameMetrics">Hide Frame Metrics</string>
     <string name="TranslateMessageLLM">Translate with AI</string>
     <string name="EditLocalNameOverride">Editing local name override.</string>
     <string name="ResetChatNameOverrides">Reset Chat Name Overrides</string>
@@ -223,7 +217,6 @@
     <string name="NoCaptionForward">NoCaption forward</string>
     <string name="PreferCommonGroupsTab">Prefer Groups Tab</string>
     <string name="PreferCommonGroupsTabNotice">Auto-select \"Groups\" tab instead of \"Gifts\" when possible.</string>
-    <string name="SendHighQualityPhoto">Send High Quality Photo</string>
     <string name="GroupedMessageMenu">Group Message Menu</string>
     <string name="GroupedMessageMenuNotice">Grouping moves the main actions to the bottom of the message menu.</string>
     <string name="CopySticker">Copy Sticker</string>
@@ -232,9 +225,6 @@
     <string name="AutoCheckUpdateSwitch">Update Channel</string>
     <string name="AutoCheckUpdateRelease">Release</string>
     <string name="AutoCheckUpdateBeta">Beta</string>
-    <string name="AutoInsertGIFCaption">Auto-Caption GIFs</string>
-    <string name="AutoInsertGIFCaptionNotice">Automatically uses the text in the current input field as the GIF\'s caption.</string>
-    <string name="UserAvatarsInMessagePreview">User Avatars in Message Preview</string>
     <string name="YourVersionIsLatestNax">Your version is up to date.</string>
     <string name="PremiumElements">Premium Elements</string>
     <string name="PremiumItemBoosts">Boost Counter</string>
@@ -246,7 +236,6 @@
     <string name="PremiumItemVideoAvatar">Animated Avatars</string>
     <string name="PremiumItemCustomWallpaper">Custom Wallpapers</string>
     <string name="TranslationTargetApp">Follow App</string>
-    <string name="DisableAvatarTapToSwitch">Disable Cycling Avatars by Tapping</string>
     <string name="SwitchStyle">Switch Style</string>
     <string name="SliderStyle">Slider Style</string>
     <string name="StyleModern">Modern</string>
@@ -315,8 +304,6 @@
     <string name="CameraInVideoMessagesRear">Rear Camera</string>
     <string name="CameraInVideoMessagesAsk">Ask</string>
     <string name="CameraSettings">Camera</string>
-    <string name="SyncContactToPhone">Sync Contact to Phone</string>
-    <string name="AddViaQRCode">Add via QR Code</string>
     <string name="ContactNotes">Notes</string>
     <string name="PhoneNotOnTelegramInvite">This phone number is not on Telegram. **Invite >**</string>
     <string name="PhoneAlreadyInContacts">This phone number is already in your contacts. **View >**</string>
@@ -337,4 +324,22 @@
     <string name="UnifiedPushLastReceivedNotification">The last received notification with UnifiedPush was %1$d seconds ago.\n\nYou received %2$d notifications since Alexgram was started.</string>
     <string name="UnifiedPushCurrentEndpoint">The current UnifiedPush endpoint is: %1$s</string>
     <string name="PlayOnce">Play once</string>
+    <string name="StorageSettings">Storage</string>
+    <string name="MainTabsSettingsHeader">Main Tabs</string>
+    <string name="MainTabsHideTitles">Hide Titles</string>
+    <string name="MainTabsHideContacts">Hide Contacts Tab</string>
+    <string name="PasscodeShowMessagePreviewWhenLocked">Show Message Previews</string>
+    <string name="PasscodeShowMessagePreviewWhenLockedAbout">Shows notification content even when passcode lock is active.</string>
+    <string name="StickerSavedHint">Sticker saved to gallery.</string>
+    <string name="StickerCopied">Sticker copied to clipboard.</string>
+    <string name="StrokeOnViews">Glare effects</string>
+    <string name="HideBottomNavigationBar">Hide Bottom Navigation Bar</string>
+    <string name="TranslatorMode">With Original Text</string>
+    <string name="TranslatorWithOriginalTextOff">Off</string>
+    <string name="TranslatorWithOriginalTextManualOnly">Manual Only</string>
+    <string name="TranslatorWithOriginalTextOn">On</string>
+    <string name="CenterActionBarTitleOn">On</string>
+    <string name="CenterActionBarTitleOff">Off</string>
+    <string name="TabletModeOn">On</string>
+    <string name="TabletModeOff">Off</string>
 </resources>

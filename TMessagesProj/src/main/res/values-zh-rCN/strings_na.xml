@@ -19,7 +19,6 @@
     <string name="ShowMessageID">显示消息 ID</string>
     <string name="ShowRPCError">显示 RPC 错误</string>
     <string name="ShowPremiumStickersAnimation">显示 Premium 贴纸动画</string>
-    <string name="AlwaysSaveChatOffset">总是保存聊天记录的偏移量</string>
     <string name="AppIconColorful">缤纷</string>
     <string name="AppIconDarkGreen">深翠</string>
     <string name="AppIconNeon">霓虹</string>
@@ -31,13 +30,11 @@
     <string name="ToTheMessage">前往消息</string>
     <string name="ZalgoFilter">过滤 \"Zalgo\" 符号</string>
     <string name="ZalgoFilterNotice">昵称和消息中的 \"Z̷͍͌ā̸̜l̸̞̂g̷̝͘o̶̩̓\" 符号将被过滤。</string>
-    <string name="labelChannelUser">标记频道身份发言用户</string>
     <string name="AlwaysShowDownloadIcon">始终显示下载图标</string>
     <string name="HideTitle">隐藏标题和头像</string>
     <string name="IgnoreUnreadCount">忽略未读计数</string>
     <string name="SendWithoutMarkdown">发送时禁用 Markdown</string>
     <string name="SendAsEmoji">以 Emoji 发送</string>
-    <string name="CustomArtworkApi">自定义音乐封面 API</string>
     <string name="CustomEditedMessage">自定义已编辑消息标记</string>
     <string name="NotificationIcon">通知图标样式</string>
     <string name="Official">官方</string>

@@ -17,21 +17,13 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.LinearGradient;
-import android.graphics.Matrix;
-import android.graphics.Paint;
-import android.graphics.Path;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
-import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
-import android.graphics.RectF;
-import android.graphics.Shader;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.text.TextPaint;
 import android.text.TextUtils;
 import android.view.Gravity;
@@ -40,6 +32,14 @@ import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.FrameLayout;
+import android.graphics.LinearGradient;
+import android.graphics.Matrix;
+import android.graphics.Paint;
+import android.graphics.Path;
+import android.graphics.PorterDuffXfermode;
+import android.graphics.RectF;
+import android.graphics.Shader;
+import android.os.SystemClock;
 import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
@@ -111,6 +111,209 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
 
     private int lastWidth = -1;
     private int largerWidth = -1;
+
+    private final Paint pillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint pillStrokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final RectF pillRect = new RectF();
+    private final Rect pillBlurRect = new Rect();
+    private final Rect headerBlurRect = new Rect();
+    private final Path pillClipPath = new Path();
+    private final Paint pillHighlightPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private boolean pillTitleOverflowing;
+    private boolean pillSubtitleOverflowing;
+    private long pillOnboardingHighlightStart;
+    private boolean pillOnboardingHighlightRunning;
+    private LinearGradient fadeGradient;
+    private Paint fadeGradientPaint;
+    private Matrix fadeMatrix;
+
+    private final Runnable pillOnboardingHighlightRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (!pillOnboardingHighlightRunning) {
+                return;
+            }
+            long elapsed = SystemClock.elapsedRealtime() - pillOnboardingHighlightStart;
+            if (elapsed >= 1850) {
+                pillOnboardingHighlightRunning = false;
+                invalidate();
+                return;
+            }
+            invalidate();
+            AndroidUtilities.runOnUIThread(this, 16);
+        }
+    };
+
+    private boolean isPillChatTitleEnabled() {
+        if (parentFragment == null || !parentFragment.isPillChatHeaderEnabled()) {
+            return false;
+        }
+        ActionBar actionBar = parentFragment.getActionBar();
+        if (actionBar != null && actionBar.isSearchFieldVisible()) {
+            return false;
+        }
+        return true;
+    }
+
+    public void playPillTitleOnboardingHighlight() {
+        if (!isPillChatTitleEnabled()) {
+            return;
+        }
+        pillOnboardingHighlightRunning = true;
+        pillOnboardingHighlightStart = SystemClock.elapsedRealtime();
+        invalidate();
+        AndroidUtilities.runOnUIThread(pillOnboardingHighlightRunnable, 16);
+    }
+
+    public RectF getPillRect() {
+        return pillRect;
+    }
+
+    private int getPillHorizontalPadding() {
+        return dp(20);
+    }
+
+    private int getPillVerticalPadding() {
+        return dp(6);
+    }
+
+    private int getPillMinimumWidth() {
+        return dp(100);
+    }
+
+    private int getPillMinimumContentWidth() {
+        return dp(72);
+    }
+
+    private int getPillMaxWidth(int containerWidth) {
+        return Math.max(getPillMinimumWidth(), containerWidth - getPillCenteredSideSafeInset() * 2);
+    }
+
+    private int getPillMaxContentWidth(int containerWidth) {
+        return Math.max(getPillMinimumContentWidth(), getPillMaxWidth(containerWidth) - getPillHorizontalPadding() * 2);
+    }
+
+    private float getPillTitleContentWidth() {
+        float width = Math.min(titleTextView.getTextWidth(), titleTextView.getMeasuredWidth());
+        Drawable leftDrawable = titleTextView.getLeftDrawable();
+        Drawable rightDrawable = titleTextView.getRightDrawable();
+        Drawable rightDrawable2 = titleTextView.getRightDrawable2();
+        if (leftDrawable != null) {
+            width += Math.max(0, leftDrawable.getIntrinsicWidth()) + dp(4);
+        }
+        if (rightDrawable != null) {
+            width += Math.max(0, rightDrawable.getIntrinsicWidth()) + dp(4);
+        }
+        if (rightDrawable2 != null) {
+            width += Math.max(0, rightDrawable2.getIntrinsicWidth()) + dp(4);
+        }
+        return Math.min(width, titleTextView.getMeasuredWidth());
+    }
+
+    private boolean useDarkPillSurface() {
+        return titleTextView != null && AndroidUtilities.computePerceivedBrightness(titleTextView.getTextColor()) > 0.7f;
+    }
+
+    private float getViewContentWidth(View view) {
+        if (view instanceof SimpleTextView) {
+            SimpleTextView stv = (SimpleTextView) view;
+            float w = stv.getTextWidth();
+            CharSequence text = stv.getText();
+            if (!TextUtils.isEmpty(text)) {
+                w = Math.max(w, stv.getPaint().measureText(text, 0, text.length()));
+            }
+            Drawable ld = stv.getLeftDrawable();
+            Drawable rd = stv.getRightDrawable();
+            Drawable rd2 = stv.getRightDrawable2();
+            if (ld != null) w += ld.getIntrinsicWidth() + dp(4);
+            if (rd != null) w += rd.getIntrinsicWidth() + dp(4);
+            if (rd2 != null) w += rd2.getIntrinsicWidth() + dp(4);
+            return w;
+        } else if (view instanceof AnimatedTextView) {
+            AnimatedTextView atv = (AnimatedTextView) view;
+            float w = 0;
+            CharSequence text = atv.getText();
+            if (!TextUtils.isEmpty(text)) {
+                w = atv.getPaint().measureText(text, 0, text.length());
+            }
+            if (atv.getDrawable() != null) {
+                w = Math.max(w, atv.getDrawable().getCurrentWidth());
+            }
+            return w;
+        }
+        return view.getMeasuredWidth();
+    }
+
+    private float getRawViewContentWidth(View view) {
+        if (view instanceof SimpleTextView) {
+            SimpleTextView stv = (SimpleTextView) view;
+            float w = 0;
+            CharSequence text = stv.getText();
+            if (!TextUtils.isEmpty(text)) {
+                w = stv.getPaint().measureText(text, 0, text.length());
+            }
+            Drawable ld = stv.getLeftDrawable();
+            Drawable rd = stv.getRightDrawable();
+            Drawable rd2 = stv.getRightDrawable2();
+            if (ld != null) w += ld.getIntrinsicWidth() + dp(4);
+            if (rd != null) w += rd.getIntrinsicWidth() + dp(4);
+            if (rd2 != null) w += rd2.getIntrinsicWidth() + dp(4);
+            return w;
+        } else if (view instanceof AnimatedTextView) {
+            AnimatedTextView atv = (AnimatedTextView) view;
+            float w = 0;
+            CharSequence text = atv.getText();
+            if (!TextUtils.isEmpty(text)) {
+                w = atv.getPaint().measureText(text, 0, text.length());
+            }
+            if (atv.getDrawable() != null) {
+                w = Math.max(w, atv.getDrawable().getCurrentWidth());
+            }
+            return w;
+        }
+        return view.getMeasuredWidth();
+    }
+
+    private int getPillCenteredSideSafeInset() {
+        int baseInset = dp(isPreviewMode() ? 70 : 56);
+        int avatarInset = avatarImageView != null && avatarImageView.getVisibility() == VISIBLE
+                ? leftPadding + dp(50)
+                : 0;
+        return Math.max(baseInset, avatarInset);
+    }
+
+    private int getPillCenteredSafeLeft() {
+        return getPillCenteredSideSafeInset();
+    }
+
+    private int getPillCenteredSafeRight() {
+        return getWidth() - getPillCenteredSideSafeInset();
+    }
+
+    private int getPillCenteredTextLeft(int viewWidth) {
+        int safeLeft = getPillCenteredSafeLeft();
+        int safeRight = getPillCenteredSafeRight();
+        int centeredLeft = Math.round((safeLeft + safeRight - viewWidth) / 2f);
+        int minLeft = safeLeft;
+        int maxLeft = Math.max(minLeft, safeRight - viewWidth);
+        return Math.min(maxLeft, Math.max(minLeft, centeredLeft));
+    }
+
+    private int getPillContentLeft(int contentWidth) {
+        int safeLeft = getPillCenteredSafeLeft();
+        int safeRight = getPillCenteredSafeRight();
+        int centeredLeft = Math.round((safeLeft + safeRight - contentWidth) / 2f);
+        int minLeft = safeLeft;
+        int maxLeft = Math.max(minLeft, safeRight - contentWidth);
+        return Math.min(maxLeft, Math.max(minLeft, centeredLeft));
+    }
+
+    private int clampInsidePillContent(int candidateLeft, int viewWidth, int contentWidth) {
+        int contentLeft = getPillContentLeft(contentWidth);
+        int minLeft = contentLeft;
+        int maxLeft = Math.max(minLeft, contentLeft + contentWidth - viewWidth);
+        return Math.min(maxLeft, Math.max(minLeft, candidateLeft));
+    }
 
 
     private AnimatorSet titleAnimation;
@@ -374,13 +577,13 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         titleTextView.setEllipsizeByGradient(true);
         titleTextView.setTextColor(getThemedColor(Theme.key_actionBarDefaultTitle));
         titleTextView.setTextSize(18);
-        titleTextView.setGravity(isCentered() && !isPillChatTitleEnabled() ? Gravity.CENTER_HORIZONTAL : Gravity.LEFT);
+        titleTextView.setGravity(isCentered() ? Gravity.CENTER_HORIZONTAL : Gravity.LEFT);
         titleTextView.setTypeface(AndroidUtilities.bold());
         titleTextView.setLeftDrawableTopPadding(-dp(1.3f));
         // titleTextView.setCanHideRightDrawable(false);
         // titleTextView.setRightDrawableOutside(true);
         titleTextView.setRightDrawableOutside(!isCentered());
-        titleTextView.setScrollNonFitText(isCentered() && !isPillChatTitleEnabled());
+        titleTextView.setScrollNonFitText(isCentered());
         titleTextView.setPadding(0, dp(6), 0, dp(12));
         addView(titleTextView);
 
@@ -391,7 +594,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             animatedSubtitleTextView.setTextColor(getThemedColor(Theme.key_actionBarDefaultSubtitle));
             animatedSubtitleTextView.setTag(Theme.key_actionBarDefaultSubtitle);
             animatedSubtitleTextView.setTextSize(dp(14));
-            animatedSubtitleTextView.setGravity(isCentered() && !isPillChatTitleEnabled() ? Gravity.CENTER_HORIZONTAL : Gravity.LEFT);
+            animatedSubtitleTextView.setGravity(isCentered() ? Gravity.CENTER_HORIZONTAL : Gravity.LEFT);
             animatedSubtitleTextView.setPadding(0, 0, isCentered() ? 0 : dp(10), 0);
             animatedSubtitleTextView.setTranslationY(-dp(1));
             addView(animatedSubtitleTextView);
@@ -401,7 +604,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             subtitleTextView.setTextColor(getThemedColor(Theme.key_actionBarDefaultSubtitle));
             subtitleTextView.setTag(Theme.key_actionBarDefaultSubtitle);
             subtitleTextView.setTextSize(14);
-            subtitleTextView.setGravity(isCentered() && !isPillChatTitleEnabled() ? Gravity.CENTER_HORIZONTAL : Gravity.LEFT);
+            subtitleTextView.setGravity(isCentered() ? Gravity.CENTER_HORIZONTAL : Gravity.LEFT);
             subtitleTextView.setPadding(0, 0, isCentered() ? 0 : dp(10), 0);
             addView(subtitleTextView);
         }
@@ -435,6 +638,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             starBgItem.setImageResource(R.drawable.star_small_outline);
             starBgItem.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_actionBarDefault), PorterDuff.Mode.SRC_IN));
             starBgItem.setAlpha(0.0f);
+            starBgItem.setVisibility(View.INVISIBLE);
             starBgItem.setScaleY(0.0f);
             starBgItem.setScaleX(0.0f);
             addView(starBgItem);
@@ -442,6 +646,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             starFgItem = new ImageView(context);
             starFgItem.setImageResource(R.drawable.star_small_inner);
             starFgItem.setAlpha(0.0f);
+            starFgItem.setVisibility(View.INVISIBLE);
             starFgItem.setScaleY(0.0f);
             starFgItem.setScaleX(0.0f);
             addView(starFgItem);
@@ -511,209 +716,6 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         bounce.setPressed(pressed);
     }
 
-    private final Paint pillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Paint pillStrokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final RectF pillRect = new RectF();
-    private final Rect pillBlurRect = new Rect();
-    private final Rect headerBlurRect = new Rect();
-    private final Path pillClipPath = new Path();
-    private final Paint pillHighlightPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private boolean pillTitleOverflowing;
-    private boolean pillSubtitleOverflowing;
-    private long pillOnboardingHighlightStart;
-    private boolean pillOnboardingHighlightRunning;
-    private LinearGradient fadeGradient;
-    private Paint fadeGradientPaint;
-    private Matrix fadeMatrix;
-
-    private final Runnable pillOnboardingHighlightRunnable = new Runnable() {
-        @Override
-        public void run() {
-            if (!pillOnboardingHighlightRunning) {
-                return;
-            }
-            long elapsed = SystemClock.elapsedRealtime() - pillOnboardingHighlightStart;
-            if (elapsed >= 1850) {
-                pillOnboardingHighlightRunning = false;
-                invalidate();
-                return;
-            }
-            invalidate();
-            AndroidUtilities.runOnUIThread(this, 16);
-        }
-    };
-
-    private boolean isPillChatTitleEnabled() {
-        if (parentFragment == null || !parentFragment.isPillChatHeaderEnabled()) {
-            return false;
-        }
-        ActionBar actionBar = parentFragment.getActionBar();
-        if (actionBar != null && actionBar.isSearchFieldVisible()) {
-            return false;
-        }
-        return true;
-    }
-
-    public void playPillTitleOnboardingHighlight() {
-        if (!isPillChatTitleEnabled()) {
-            return;
-        }
-        pillOnboardingHighlightRunning = true;
-        pillOnboardingHighlightStart = SystemClock.elapsedRealtime();
-        invalidate();
-        AndroidUtilities.runOnUIThread(pillOnboardingHighlightRunnable, 16);
-    }
-
-    public RectF getPillRect() {
-        return pillRect;
-    }
-
-    private int getPillHorizontalPadding() {
-        return dp(20);
-    }
-
-    private int getPillVerticalPadding() {
-        return dp(6);
-    }
-
-    private int getPillMinimumWidth() {
-        return dp(100);
-    }
-
-    private int getPillMinimumContentWidth() {
-        return dp(72);
-    }
-
-    private int getPillMaxWidth(int containerWidth) {
-        return Math.max(getPillMinimumWidth(), containerWidth - getPillCenteredSideSafeInset() * 2);
-    }
-
-    private int getPillMaxContentWidth(int containerWidth) {
-        return Math.max(getPillMinimumContentWidth(), getPillMaxWidth(containerWidth) - getPillHorizontalPadding() * 2);
-    }
-
-    private float getPillTitleContentWidth() {
-        float width = Math.min(titleTextView.getTextWidth(), titleTextView.getMeasuredWidth());
-        Drawable leftDrawable = titleTextView.getLeftDrawable();
-        Drawable rightDrawable = titleTextView.getRightDrawable();
-        Drawable rightDrawable2 = titleTextView.getRightDrawable2();
-        if (leftDrawable != null) {
-            width += Math.max(0, leftDrawable.getIntrinsicWidth()) + dp(4);
-        }
-        if (rightDrawable != null) {
-            width += Math.max(0, rightDrawable.getIntrinsicWidth()) + dp(4);
-        }
-        if (rightDrawable2 != null) {
-            width += Math.max(0, rightDrawable2.getIntrinsicWidth()) + dp(4);
-        }
-        return Math.min(width, titleTextView.getMeasuredWidth());
-    }
-
-    private boolean useDarkPillSurface() {
-        return titleTextView != null && AndroidUtilities.computePerceivedBrightness(titleTextView.getTextColor()) > 0.7f;
-    }
-
-    private float getViewContentWidth(View view) {
-        if (view instanceof SimpleTextView) {
-            SimpleTextView stv = (SimpleTextView) view;
-            float w = stv.getTextWidth();
-            CharSequence text = stv.getText();
-            if (!TextUtils.isEmpty(text)) {
-                w = Math.max(w, stv.getPaint().measureText(text, 0, text.length()));
-            }
-            Drawable ld = stv.getLeftDrawable();
-            Drawable rd = stv.getRightDrawable();
-            Drawable rd2 = stv.getRightDrawable2();
-            if (ld != null) w += ld.getIntrinsicWidth() + dp(4);
-            if (rd != null) w += rd.getIntrinsicWidth() + dp(4);
-            if (rd2 != null) w += rd2.getIntrinsicWidth() + dp(4);
-            return w;
-        } else if (view instanceof AnimatedTextView) {
-            AnimatedTextView atv = (AnimatedTextView) view;
-            float w = 0;
-            CharSequence text = atv.getText();
-            if (!TextUtils.isEmpty(text)) {
-                w = atv.getPaint().measureText(text, 0, text.length());
-            }
-            if (atv.getDrawable() != null) {
-                w = Math.max(w, atv.getDrawable().getCurrentWidth());
-            }
-            return w;
-        }
-        return view.getMeasuredWidth();
-    }
-
-    private float getRawViewContentWidth(View view) {
-        if (view instanceof SimpleTextView) {
-            SimpleTextView stv = (SimpleTextView) view;
-            float w = 0;
-            CharSequence text = stv.getText();
-            if (!TextUtils.isEmpty(text)) {
-                w = stv.getPaint().measureText(text, 0, text.length());
-            }
-            Drawable ld = stv.getLeftDrawable();
-            Drawable rd = stv.getRightDrawable();
-            Drawable rd2 = stv.getRightDrawable2();
-            if (ld != null) w += ld.getIntrinsicWidth() + dp(4);
-            if (rd != null) w += rd.getIntrinsicWidth() + dp(4);
-            if (rd2 != null) w += rd2.getIntrinsicWidth() + dp(4);
-            return w;
-        } else if (view instanceof AnimatedTextView) {
-            AnimatedTextView atv = (AnimatedTextView) view;
-            float w = 0;
-            CharSequence text = atv.getText();
-            if (!TextUtils.isEmpty(text)) {
-                w = atv.getPaint().measureText(text, 0, text.length());
-            }
-            if (atv.getDrawable() != null) {
-                w = Math.max(w, atv.getDrawable().getCurrentWidth());
-            }
-            return w;
-        }
-        return view.getMeasuredWidth();
-    }
-
-    private int getPillCenteredSideSafeInset() {
-        int baseInset = dp(isPreviewMode() ? 70 : 56);
-        int avatarInset = avatarImageView != null && avatarImageView.getVisibility() == VISIBLE
-                ? leftPadding + dp(50)
-                : 0;
-        return Math.max(baseInset, avatarInset);
-    }
-
-    private int getPillCenteredSafeLeft() {
-        return getPillCenteredSideSafeInset();
-    }
-
-    private int getPillCenteredSafeRight() {
-        return getWidth() - getPillCenteredSideSafeInset();
-    }
-
-    private int getPillCenteredTextLeft(int viewWidth) {
-        int safeLeft = getPillCenteredSafeLeft();
-        int safeRight = getPillCenteredSafeRight();
-        int centeredLeft = Math.round((safeLeft + safeRight - viewWidth) / 2f);
-        int minLeft = safeLeft;
-        int maxLeft = Math.max(minLeft, safeRight - viewWidth);
-        return Math.min(maxLeft, Math.max(minLeft, centeredLeft));
-    }
-
-    private int getPillContentLeft(int contentWidth) {
-        int safeLeft = getPillCenteredSafeLeft();
-        int safeRight = getPillCenteredSafeRight();
-        int centeredLeft = Math.round((safeLeft + safeRight - contentWidth) / 2f);
-        int minLeft = safeLeft;
-        int maxLeft = Math.max(minLeft, safeRight - contentWidth);
-        return Math.min(maxLeft, Math.max(minLeft, centeredLeft));
-    }
-
-    private int clampInsidePillContent(int candidateLeft, int viewWidth, int contentWidth) {
-        int contentLeft = getPillContentLeft(contentWidth);
-        int minLeft = contentLeft;
-        int maxLeft = Math.max(minLeft, contentLeft + contentWidth - viewWidth);
-        return Math.min(maxLeft, Math.max(minLeft, candidateLeft));
-    }
-
     @Override
     protected void dispatchDraw(Canvas canvas) {
         canvas.save();
@@ -723,7 +725,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         if (isPillChatTitleEnabled() && titleTextView != null) {
             int actionBarHeight = ActionBar.getCurrentActionBarHeight();
             int statusBarH = (Build.VERSION.SDK_INT >= 21 && occupyStatusBar ? AndroidUtilities.statusBarHeight : 0);
-            
+
             // Adjust viewTop to be lower if it's too high up into status bar
             int viewTop = (actionBarHeight - dp(42)) / 2 + statusBarH;
             if (statusBarH > 0 && viewTop < statusBarH + dp(8)) {
@@ -793,11 +795,11 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                     int pWidth = p.getWidth();
                     int xOffset = (int) getX();
                     int statusBarHeight = occupyStatusBar ? AndroidUtilities.statusBarHeight : 0;
-                    
+
                     // Draw BASE HEADER GLASS with GRADIENT MERGE
                     int fadeStart = (int) pillRect.centerY() - AndroidUtilities.dp(16);
                     int fadeHeight = AndroidUtilities.dp(32);
-                    
+
                     // 1. Static part (Top to fade start)
                     headerBlurRect.set(-xOffset, -statusBarHeight, pWidth - xOffset, fadeStart);
                     if (!headerBlurRect.isEmpty()) {
@@ -806,19 +808,19 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                         final int glassSourceAlpha = 245; // Even more blur depth
                         parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true, glassBlurAlpha, glassSourceAlpha);
                     }
-                    
+
                     // 2. Smooth Gradient Fade (replacing discrete strips)
                     headerBlurRect.set(-xOffset, fadeStart, pWidth - xOffset, fadeStart + fadeHeight);
                     if (!headerBlurRect.isEmpty()) {
                         canvas.saveLayer(headerBlurRect.left, headerBlurRect.top, headerBlurRect.right, headerBlurRect.bottom, null);
-                        
+
                         // Draw full blur density
                         final int baseBlurAlpha = 45;
                         final int baseSourceAlpha = 245;
                         if (parentFragment != null && parentFragment.getContentView() != null) {
                             parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true, baseBlurAlpha, baseSourceAlpha);
                         }
-                        
+
                         // Apply smooth alpha mask
                         if (fadeGradientPaint == null) {
                             fadeGradientPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -832,7 +834,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                         fadeMatrix.postTranslate(0, fadeStart);
                         fadeGradient.setLocalMatrix(fadeMatrix);
                         fadeGradientPaint.setShader(fadeGradient);
-                        
+
                         canvas.drawRect(headerBlurRect, fadeGradientPaint);
                         canvas.restore();
                     }
@@ -1483,15 +1485,29 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         if (starBgItem == null || starFgItem == null) return;
         this.stars = stars;
         if (!animated) {
+            starBgItem.setVisibility(stars ? VISIBLE : INVISIBLE);
             starBgItem.setAlpha(stars ? 1f : 0f);
             starBgItem.setScaleX(stars ? 1.1f : 0f);
             starBgItem.setScaleY(stars ? 1.1f : 0f);
+            starFgItem.setVisibility(stars ? VISIBLE : INVISIBLE);
             starFgItem.setAlpha(stars ? 1f : 0f);
             starFgItem.setScaleX(stars ? 1f : 0f);
             starFgItem.setScaleY(stars ? 1f : 0f);
         } else {
-            starBgItem.animate().alpha(stars ? 1f : 0f).scaleX(stars ? 1.1f : 0f).scaleY(stars ? 1.1f : 0f).start();
-            starFgItem.animate().alpha(stars ? 1f : 0f).scaleX(stars ? 1f : 0f).scaleY(stars ? 1f : 0f).start();
+            if (stars) {
+                starBgItem.setVisibility(VISIBLE);
+                starFgItem.setVisibility(VISIBLE);
+            }
+            starBgItem.animate().alpha(stars ? 1f : 0f).scaleX(stars ? 1.1f : 0f).scaleY(stars ? 1.1f : 0f).withEndAction(() -> {
+                if (!stars) {
+                    starBgItem.setVisibility(INVISIBLE);
+                }
+            }).start();
+            starFgItem.animate().alpha(stars ? 1f : 0f).scaleX(stars ? 1f : 0f).scaleY(stars ? 1f : 0f).withEndAction(() -> {
+                if (!stars) {
+                    starFgItem.setVisibility(INVISIBLE);
+                }
+            }).start();
         }
     }
 
@@ -1536,7 +1552,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         }
 
         titleTextView.setText(value);
-        titleTextView.setScrollNonFitText(!isPillChatTitleEnabled() && (scrollable || isCentered()));
+        titleTextView.setScrollNonFitText(scrollable || isCentered());
 
         if (scam || fake) {
             if (!(titleTextView.getRightDrawable() instanceof ScamDrawable)) {
@@ -1586,9 +1602,6 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             titleTextView.setRightDrawable(null);
             rightDrawableContentDescription = null;
         }
-
-        requestLayout();
-        invalidate();
     }
 
     private Drawable emojiStatusDefaultDrawable;
@@ -1606,9 +1619,6 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         } else {
             lastSubtitle = value;
         }
-
-        requestLayout();
-        invalidate();
     }
 
     public ImageView getTimeItem() {
@@ -1634,8 +1644,6 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
     }
 
     public void onDestroy() {
-        pillOnboardingHighlightRunning = false;
-        AndroidUtilities.cancelRunOnUIThread(pillOnboardingHighlightRunnable);
         if (sharedMediaPreloader != null) {
             sharedMediaPreloader.onDestroy(parentFragment);
         }
@@ -1706,10 +1714,10 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         subtitleIsThinkingBot = false;
         CharSequence printString = MessagesController.getInstance(currentAccount).getPrintingString(parentFragment.getDialogId(), parentFragment.getThreadId(), false);
         if (printString == null && UserObject.isBotForum(user)) {
-            if (BotForumHelper.getInstance(currentAccount).isThinking(user.id, (int) parentFragment.getTopicId())) {
-                printString = "thinking";
-                subtitleIsThinkingBot = true;
-            }
+            //if (BotForumHelper.getInstance(currentAccount).isThinking(user.id, (int) parentFragment.getTopicId())) {
+            //    printString = "thinking";
+            //    subtitleIsThinkingBot = true;
+            //}
         }
 
         if (printString != null) {
@@ -1885,7 +1893,6 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         } else {
             lastSubtitle = newSubtitle;
         }
-        requestLayout();
     }
 
     public static CharSequence getChatSubtitle(TLRPC.Chat chat, TLRPC.ChatFull info, int onlineCount) {
@@ -2106,7 +2113,6 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         super.onAttachedToWindow();
         if (parentFragment != null) {
             NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.didUpdateConnectionState);
-            NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.updateInterfaces);
             NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.emojiLoaded);
             if (parentFragment.getChatMode() == ChatActivity.MODE_SAVED) {
                 NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.savedMessagesDialogsUpdate);
@@ -2127,7 +2133,6 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         super.onDetachedFromWindow();
         if (parentFragment != null) {
             NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.didUpdateConnectionState);
-            NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.updateInterfaces);
             NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.emojiLoaded);
             if (parentFragment.getChatMode() == ChatActivity.MODE_SAVED) {
                 NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.savedMessagesDialogsUpdate);
@@ -2156,18 +2161,9 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             if (getSubtitleTextView() != null) {
                 getSubtitleTextView().invalidate();
             }
-            requestLayout();
             invalidate();
         } else if (id == NotificationCenter.savedMessagesDialogsUpdate) {
             updateSubtitle(true);
-            requestLayout();
-        } else if (id == NotificationCenter.updateInterfaces) {
-            int mask = (int) args[0];
-            if ((mask & (MessagesController.UPDATE_MASK_NAME | MessagesController.UPDATE_MASK_STATUS | MessagesController.UPDATE_MASK_AVATAR | MessagesController.UPDATE_MASK_CHAT_NAME)) != 0) {
-                checkAndUpdateAvatar();
-                updateSubtitle(true);
-                requestLayout();
-            }
         }
     }
 

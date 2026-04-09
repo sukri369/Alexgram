@@ -61,10 +61,6 @@ public class ManageChatUserCell extends FrameLayout {
     private final int currentAccount = UserConfig.selectedAccount;
     private final StoriesUtilities.AvatarStoryParams storyAvatarParams = new StoriesUtilities.AvatarStoryParams(false);
 
-    private String adminRank;
-    private boolean adminRankIsAdmin;
-    private boolean adminRankIsOwner;
-
     public interface ManageChatUserCellDelegate {
         boolean onOptionsButtonCheck(ManageChatUserCell cell, boolean click);
     }
@@ -210,28 +206,6 @@ public class ManageChatUserCell extends FrameLayout {
 
     public void setIsAdmin(boolean value) {
         isAdmin = value;
-    }
-
-    public void setAdminRank(String rank, boolean isAdmin, boolean isOwner) {
-        adminRank = rank;
-        adminRankIsAdmin = isAdmin;
-        adminRankIsOwner = isOwner;
-        if (adminRank != null) {
-            statusTextView.setText(adminRank);
-            int color;
-            if (adminRankIsOwner) {
-                color = Theme.getColor(Theme.key_chat_tagCreator, resourcesProvider);
-            } else if (adminRankIsAdmin) {
-                color = Theme.getColor(Theme.key_chat_tagAdmin, resourcesProvider);
-            } else {
-                color = Theme.getColor(Theme.key_chat_inAdminText, resourcesProvider);
-            }
-            statusTextView.setTextColor(color);
-            statusTextView.setTranslationX(LocaleController.isRTL ? -AndroidUtilities.dp(4) : AndroidUtilities.dp(4));
-        } else {
-            statusTextView.setTranslationX(0);
-        }
-        invalidate();
     }
 
     public boolean hasAvatarSet() {
@@ -413,31 +387,6 @@ public class ManageChatUserCell extends FrameLayout {
                 Theme.dividerExtraPaint.setColor(Theme.getColor(dividerColor, resourcesProvider));
             }
             canvas.drawLine(LocaleController.isRTL ? 0 : AndroidUtilities.dp(68), getMeasuredHeight() - 1, getMeasuredWidth() - (LocaleController.isRTL ? AndroidUtilities.dp(68) : 0), getMeasuredHeight() - 1, dividerColor >= 0 ? Theme.dividerExtraPaint : Theme.dividerPaint);
-        }
-        if (adminRank != null) {
-            int color;
-            if (adminRankIsOwner) {
-                color = Theme.getColor(Theme.key_chat_tagCreator, resourcesProvider);
-            } else if (adminRankIsAdmin) {
-                color = Theme.getColor(Theme.key_chat_tagAdmin, resourcesProvider);
-            } else {
-                color = Theme.getColor(Theme.key_chat_inAdminText, resourcesProvider);
-            }
-            Theme.chat_adminPaint.setColor(color);
-            int wasAlpha = Theme.chat_adminPaint.getAlpha();
-            Theme.chat_adminPaint.setAlpha((int) (wasAlpha * 0.12f));
-            float width = statusTextView.getPaint().measureText(adminRank);
-            float x = statusTextView.getX();
-            float y = statusTextView.getY();
-            if (LocaleController.isRTL) {
-                float right = x + width + AndroidUtilities.dp(6);
-                float left = x - AndroidUtilities.dp(6);
-                AndroidUtilities.rectTmp.set(left, y, right, y + AndroidUtilities.dp(16));
-            } else {
-                AndroidUtilities.rectTmp.set(x - AndroidUtilities.dp(6), y, x + width + AndroidUtilities.dp(6), y + AndroidUtilities.dp(16));
-            }
-            canvas.drawRoundRect(AndroidUtilities.rectTmp, AndroidUtilities.dp(8), AndroidUtilities.dp(8), Theme.chat_adminPaint);
-            Theme.chat_adminPaint.setAlpha(wasAlpha);
         }
     }
 }

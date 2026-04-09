@@ -49,7 +49,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class AppIconsSelectorCell extends RecyclerListView implements NotificationCenter.NotificationCenterDelegate {
-    public final static float ICONS_ROUND_RADIUS = 22;
+    public final static float ICONS_ROUND_RADIUS = 18;
 
     private List<LauncherIconController.LauncherIcon> availableIcons = new ArrayList<>();
     private LinearLayoutManager linearLayoutManager;
@@ -310,11 +310,7 @@ public class AppIconsSelectorCell extends RecyclerListView implements Notificati
         }
 
         public void setIsNekoXIcon(boolean value) {
-            if (this.isNekoXIcon != value) {
-                this.isNekoXIcon = value;
-                updatePath();
-                invalidate();
-            }
+            this.isNekoXIcon = value;
         }
 
         @Override
@@ -339,7 +335,6 @@ public class AppIconsSelectorCell extends RecyclerListView implements Notificati
         public void draw(Canvas canvas) {
             canvas.save();
             canvas.clipPath(path);
-            canvas.save();
             if (!this.isNekoXIcon)
                 canvas.scale(1f + backgroundOuterPadding / (float) getWidth(), 1f + backgroundOuterPadding / (float) getHeight(), getWidth() / 2f, getHeight() / 2f);
             super.draw(canvas);
@@ -349,17 +344,11 @@ public class AppIconsSelectorCell extends RecyclerListView implements Notificati
                 foreground.setBounds(-outerPadding, -outerPadding, getWidth() + outerPadding, getHeight() + outerPadding);
                 foreground.draw(canvas);
             }
-            canvas.restore();
         }
 
         private void updatePath() {
             path.rewind();
-            if (isNekoXIcon) {
-                path.addCircle(getWidth() / 2f, getHeight() / 2f, Math.min(getWidth() - getPaddingLeft() - getPaddingRight(), getHeight() - getPaddingTop() - getPaddingBottom()) / 2f, Path.Direction.CW);
-            } else {
-                float radius = AndroidUtilities.dp(ICONS_ROUND_RADIUS);
-                path.addRoundRect(new android.graphics.RectF(getPaddingLeft(), getPaddingTop(), getWidth() - getPaddingRight(), getHeight() - getPaddingBottom()), radius, radius, Path.Direction.CW);
-            }
+            path.addCircle(getWidth() / 2f, getHeight() / 2f, Math.min(getWidth() - getPaddingLeft() - getPaddingRight(), getHeight() - getPaddingTop() - getPaddingBottom()) / 2f, Path.Direction.CW);
         }
     }
 }

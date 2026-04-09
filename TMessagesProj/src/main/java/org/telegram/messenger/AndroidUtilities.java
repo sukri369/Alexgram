@@ -40,12 +40,16 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ColorMatrix;
+import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Point;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Typeface;
+import android.graphics.Xfermode;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
@@ -57,6 +61,7 @@ import android.os.Environment;
 import android.os.PowerManager;
 import android.os.SystemClock;
 import android.os.Vibrator;
+import android.provider.CalendarContract;
 import android.provider.CallLog;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
@@ -95,6 +100,7 @@ import android.view.TextureView;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.view.ViewPropertyAnimator;
 import android.view.ViewTreeObserver;
 import android.view.Window;
@@ -118,6 +124,7 @@ import android.widget.ListView;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RawRes;
@@ -145,9 +152,11 @@ import com.google.android.gms.tasks.Task;
 import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.messenger.browser.Browser;
 import org.telegram.messenger.utils.CustomHtml;
+import org.telegram.messenger.utils.DebugRecordingCanvas;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
+import org.telegram.tgnet.tl.TL_stars;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.BottomSheet;
@@ -175,6 +184,7 @@ import org.telegram.ui.Components.TypefaceSpan;
 import org.telegram.ui.Components.URLSpanReplacement;
 import org.telegram.ui.Components.UndoView;
 import org.telegram.ui.Components.spoilers.SpoilersTextView;
+import org.telegram.ui.DebugRecordingCanvasReplayFragment;
 import org.telegram.ui.LaunchActivity;
 import org.telegram.ui.Stories.PeerStoriesView;
 import org.telegram.ui.Stories.StoryMediaAreasView;
@@ -237,133 +247,6 @@ import tw.nekomimi.nekogram.helpers.TypefaceHelper;
 import xyz.nextalone.nagram.NaConfig;
 
 public class AndroidUtilities {
-
-    /**
-     * Requests the user to disable battery optimizations for the app (needed for background services).
-     */
-    public static void requestIgnoreBatteryOptimizations(Activity activity) {
-        if (activity == null) return;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            PowerManager pm = (PowerManager) activity.getSystemService(Context.POWER_SERVICE);
-            String packageName = activity.getPackageName();
-            if (!pm.isIgnoringBatteryOptimizations(packageName)) {
-                try {
-                    Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
-                    intent.setData(Uri.parse("package:" + packageName));
-                    activity.startActivity(intent);
-                } catch (Exception e) {
-                    FileLog.e(e);
-                }
-            }
-        }
-    }
-
-    /**
-     * Requests notification permission on Android 13+ (SDK 33+).
-     */
-    public static void requestNotificationPermission(Activity activity) {
-        if (activity == null) return;
-        if (Build.VERSION.SDK_INT >= 33) {
-            if (activity.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                try {
-                    activity.requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 1001);
-                } catch (Exception e) {
-                    FileLog.e(e);
-                }
-            }
-        }
-    }
-
-    /**
-     * Shows a guide for enabling auto-start/background run on OEMs like Xiaomi, Oppo, Vivo, etc.
-     */
-    public static void showAutoStartPermissionGuide(Activity activity) {
-        if (activity == null) return;
-        Intent intent = getAutoStartIntent();
-        try {
-            if (intent != null) {
-                activity.startActivity(intent);
-            } else {
-                showAutoStartManualDialog(activity);
-            }
-        } catch (Exception e) {
-            showAutoStartManualDialog(activity);
-        }
-    }
-
-    public static Intent getAutoStartIntent() {
-        String manufacturer = Build.MANUFACTURER.toLowerCase();
-        Intent intent = null;
-        try {
-            if (manufacturer.contains("xiaomi") || manufacturer.contains("redmi")) {
-                intent = new Intent();
-                intent.setComponent(new android.content.ComponentName("com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity"));
-            } else if (manufacturer.contains("oppo") || manufacturer.contains("realme")) {
-                intent = new Intent();
-                intent.setComponent(new android.content.ComponentName("com.coloros.safecenter", "com.coloros.safecenter.permission.startup.StartupAppListActivity"));
-            } else if (manufacturer.contains("vivo")) {
-                intent = new Intent();
-                intent.setComponent(new android.content.ComponentName("com.iqoo.secure", "com.iqoo.secure.ui.phoneoptimize.AddWhiteListActivity"));
-            } else if (manufacturer.contains("letv")) {
-                intent = new Intent();
-                intent.setComponent(new android.content.ComponentName("com.letv.android.letvsafe", "com.letv.android.letvsafe.AutobootManageActivity"));
-            } else if (manufacturer.contains("honor") || manufacturer.contains("huawei")) {
-                intent = new Intent();
-                intent.setComponent(new android.content.ComponentName("com.huawei.systemmanager", "com.huawei.systemmanager.startupmgr.ui.StartupNormalAppListActivity"));
-            } else if (manufacturer.contains("samsung")) {
-                intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                intent.setData(Uri.parse("package:" + ApplicationLoader.applicationContext.getPackageName()));
-            } else if (manufacturer.contains("asus")) {
-                intent = new Intent();
-                intent.setComponent(new android.content.ComponentName("com.asus.mobilemanager", "com.asus.mobilemanager.entry.FunctionActivity"));
-            } else if (manufacturer.contains("oneplus")) {
-                intent = new Intent();
-                intent.setComponent(new android.content.ComponentName("com.oneplus.security", "com.oneplus.security.chainlaunch.view.ChainLaunchAppListActivity"));
-            }
-        } catch (Exception ignore) {}
-        return intent;
-    }
-
-
-    private static void showAutoStartManualDialog(Activity activity) {
-        try {
-            new AlertDialog.Builder(activity)
-                .setTitle("Enable Auto-Start/Background Run")
-                .setMessage("To ensure background features work reliably, please enable auto-start or background run for this app in your device settings.")
-                .setPositiveButton("OK", null)
-                .show();
-        } catch (Exception e) {
-            FileLog.e(e);
-        }
-    }
-
-        /**
-         * Saves a Bitmap to the Alexgram directory in the Pictures folder and registers it with the gallery.
-         * @param bitmap The Bitmap to save.
-         * @param fileName The name of the file (without extension).
-         * @return The File object of the saved image, or null if failed.
-         */
-        public static File saveBitmapToGallery(Bitmap bitmap, String fileName) {
-            if (bitmap == null || fileName == null) return null;
-            File dir = getAlbumDir(false);
-            if (dir == null) return null;
-            File imageFile = new File(dir, fileName + ".jpg");
-            FileOutputStream out = null;
-            try {
-                out = new FileOutputStream(imageFile);
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 95, out);
-                out.flush();
-                addMediaToGallery(imageFile);
-                return imageFile;
-            } catch (Exception e) {
-                FileLog.e(e);
-            } finally {
-                if (out != null) {
-                    try { out.close(); } catch (Exception ignore) {}
-                }
-            }
-            return null;
-        }
     public final static int LIGHT_STATUS_BAR_OVERLAY = 0x0f000000, DARK_STATUS_BAR_OVERLAY = 0x33000000;
 
     public final static int REPLACING_TAG_TYPE_LINK = 0;
@@ -656,7 +539,7 @@ public class AndroidUtilities {
         int i = s.indexOf(query);
         while (i >= 0) {
             try {
-                spannableStringBuilder.setSpan(new ForegroundColorSpanThemable(Theme.key_windowBackgroundWhiteBlueText4, resourcesProvider), i, Math.min(i + query.length(), str.length()), 0);
+                spannableStringBuilder.setSpan(new ForegroundColorSpanThemable(Theme.getActiveTheme().isMonetLight() ? Theme.key_chats_actionBackground : Theme.key_windowBackgroundWhiteBlueText4, resourcesProvider), i, Math.min(i + query.length(), str.length()), 0);
             } catch (Exception e) {
                 FileLog.e(e);
             }
@@ -898,6 +781,7 @@ public class AndroidUtilities {
                     @Override
                     public void updateDrawState(@NonNull TextPaint ds) {
                         ds.setUnderlineText(false);
+                        ds.setTypeface(AndroidUtilities.bold());
                         ds.setColor(color);
                     }
                 }, index, index + len, 0);
@@ -913,7 +797,11 @@ public class AndroidUtilities {
         return replaceArrows(text, link, translateX, translateY, 1.0f);
     }
     public static CharSequence replaceArrows(CharSequence text, boolean link, float translateX, float translateY, float scale) {
-        ColoredImageSpan span = new ColoredImageSpan(R.drawable.msg_mini_forumarrow, DynamicDrawableSpan.ALIGN_BOTTOM);
+        return replaceArrows(text, link, translateX, translateY, scale, R.drawable.msg_mini_forumarrow);
+    }
+
+    public static CharSequence replaceArrows(CharSequence text, boolean link, float translateX, float translateY, float scale, @DrawableRes int icon) {
+        ColoredImageSpan span = new ColoredImageSpan(icon, DynamicDrawableSpan.ALIGN_BOTTOM);
         span.setScale(scale * .88f, scale * .88f);
         span.translate(-translateX, translateY);
         span.spaceScaleX = .8f;
@@ -929,7 +817,7 @@ public class AndroidUtilities {
         rightArrow.setSpan(span, 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         text = AndroidUtilities.replaceMultipleCharSequence(">", text, rightArrow);
 
-        span = new ColoredImageSpan(R.drawable.msg_mini_forumarrow, DynamicDrawableSpan.ALIGN_BOTTOM);
+        span = new ColoredImageSpan(icon, DynamicDrawableSpan.ALIGN_BOTTOM);
         span.setScale(scale * .88f, scale * .88f);
         span.translate(translateX, translateY);
         span.rotate(180f);
@@ -2865,7 +2753,6 @@ public class AndroidUtilities {
     }
 
     public static void checkDisplaySize(Context context, Configuration newConfiguration) {
-        resetTabletFlag();
         try {
             float oldDensity = density;
             density = context.getResources().getDisplayMetrics().density;
@@ -3067,18 +2954,7 @@ public class AndroidUtilities {
         if (NekoConfig.tabletMode.Int() != NekoConfig.TABLET_AUTO) {
             return NekoConfig.tabletMode.Int() == NekoConfig.TABLET_ENABLE;
         }
-        if (ApplicationLoader.applicationContext == null) {
-            return false;
-        }
-        Configuration configuration = ApplicationLoader.applicationContext.getResources().getConfiguration();
-        boolean isTablet = configuration.smallestScreenWidthDp >= 600;
-        if (!isTablet && displaySize.x > 0 && displaySize.y > 0) {
-            float minSide = Math.min(displaySize.x, displaySize.y) / density;
-            if (minSide >= 600) {
-                isTablet = true;
-            }
-        }
-        return isTablet;
+        return ApplicationLoader.applicationContext != null && ApplicationLoader.applicationContext.getResources().getBoolean(R.bool.isTablet);
     }
 
     public static boolean isTabletInternal() {
@@ -3093,7 +2969,7 @@ public class AndroidUtilities {
 
     public static void resetTabletFlag() {
         if (wasTablet == null) {
-            wasTablet = isTabletForce();
+            wasTablet = isTabletInternal();
         }
         isTablet = null;
         SharedConfig.updateTabletConfig();
@@ -3124,14 +3000,22 @@ public class AndroidUtilities {
     }
 
     public static int getMinTabletSide() {
-        int smallSide = Math.min(displaySize.x, displaySize.y);
-        int maxSide = Math.max(displaySize.x, displaySize.y);
-        int width = (ApplicationLoader.applicationContext != null && ApplicationLoader.applicationContext.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) ? smallSide : maxSide;
-        int leftSide = width * 35 / 100;
-        if (leftSide < dp(320)) {
-            leftSide = dp(320);
+        if (!isSmallTablet()) {
+            int smallSide = Math.min(displaySize.x, displaySize.y);
+            int leftSide = smallSide * 35 / 100;
+            if (leftSide < dp(320)) {
+                leftSide = dp(320);
+            }
+            return smallSide - leftSide;
+        } else {
+            int smallSide = Math.min(displaySize.x, displaySize.y);
+            int maxSide = Math.max(displaySize.x, displaySize.y);
+            int leftSide = maxSide * 35 / 100;
+            if (leftSide < dp(320)) {
+                leftSide = dp(320);
+            }
+            return Math.min(smallSide, maxSide - leftSide);
         }
-        return Math.min(width - dp(80), width - leftSide);
     }
 
     public static int getPhotoSize() {
@@ -3783,7 +3667,7 @@ public class AndroidUtilities {
         }
         File storageDir = null;
         if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
-            storageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "Alexgram");
+            storageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "Nagram");
             if (!storageDir.mkdirs()) {
                 if (!storageDir.exists()) {
                     if (BuildVars.LOGS_ENABLED) {
@@ -6839,10 +6723,44 @@ public class AndroidUtilities {
 
         final String t = "[" + tag + "]";
         StackTraceElement[] elements = Thread.currentThread().getStackTrace();
-        for (int a = 3, N = Math.min(elements.length, 8); a < N; a++) {
+        for (int a = 3, N = Math.min(elements.length, 14); a < N; a++) {
             FileLog.d(t + " " + elements[a]);
         }
         FileLog.d(t);
+    }
+
+    public static void printLayoutRequestedChain(View view) {
+        if (view == null) {
+            FileLog.d("LayoutCheck view == null");
+            return;
+        }
+
+        int level = 0;
+        View current = view;
+
+        while (current != null) {
+            ViewParent parent = current.getParent();
+
+            FileLog.d(
+                "LayoutCheck level=" + level +
+                ", view=" + current.getClass().getSimpleName() +
+                "@" + Integer.toHexString(System.identityHashCode(current)) +
+                ", isLayoutRequested=" + current.isLayoutRequested()
+            );
+            if (!(parent instanceof View)) {
+                if (parent != null) {
+                    FileLog.d(
+                        "LayoutCheck level=" + (level + 1) +
+                        ", parent=" + parent.getClass().getSimpleName() +
+                        " (not a View)"
+                    );
+                }
+                break;
+            }
+            current = (View) parent;
+            level++;
+        }
+        FileLog.d("LayoutCheck");
     }
 
     public static void logFlagSecure() {
@@ -6996,4 +6914,121 @@ public class AndroidUtilities {
     public static long pack(int a, int b) { return ((long) a << 32) | (b & 0xFFFFFFFFL); }
     public static int unpackA(long packed) { return (int) (packed >> 32); }
     public static int unpackB(long packed) { return (int) packed; }
+
+    public static boolean isContextSafe(Context context) {
+        if (context == null) return false;
+        if (context instanceof Activity) {
+            final Activity activity = (Activity) context;
+            if (activity.isFinishing()) return false;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                if (activity.isDestroyed()) return false;
+            }
+            return true;
+        }
+        if (context instanceof ContextWrapper) {
+            final Context baseContext = ((ContextWrapper) context).getBaseContext();
+            return isContextSafe(baseContext);
+        }
+        return true;
+    }
+
+    public static Bitmap applyColorMatrix(Bitmap bitmap, ColorMatrix matrix) {
+        final Paint paint = new Paint();
+        paint.setColorFilter(new ColorMatrixColorFilter(matrix));
+        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC));
+
+        final Bitmap result = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
+        final Canvas canvas = new Canvas(result);
+        canvas.drawBitmap(bitmap, 0, 0, paint);
+        return result;
+    }
+
+    public static int applyColorMatrix(int argb, ColorMatrix matrix) {
+        float[] m = matrix.getArray();
+
+        int A = Color.alpha(argb);
+        int R = Color.red(argb);
+        int G = Color.green(argb);
+        int B = Color.blue(argb);
+
+        float r = m[0]  * R + m[1]  * G + m[2]  * B + m[3]  * A + m[4];
+        float g = m[5]  * R + m[6]  * G + m[7]  * B + m[8]  * A + m[9];
+        float b = m[10] * R + m[11] * G + m[12] * B + m[13] * A + m[14];
+        float a = m[15] * R + m[16] * G + m[17] * B + m[18] * A + m[19];
+
+        int R2 = MathUtils.clamp(Math.round(r), 0, 255);
+        int G2 = MathUtils.clamp(Math.round(g), 0, 255);
+        int B2 = MathUtils.clamp(Math.round(b), 0, 255);
+        int A2 = MathUtils.clamp(Math.round(a), 0, 255);
+
+        return Color.argb(A2, R2, G2, B2);
+    }
+
+    public static void createCalendarEvent(Activity activity, long timestampMillis,
+                                           String title, String description, boolean allDay) {
+        final long beginMillis, endMillis;
+        if (allDay) {
+            // normalize timestamp and set 1 day duration
+
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTimeInMillis(timestampMillis);
+            calendar.set(Calendar.HOUR_OF_DAY, 0);
+            calendar.set(Calendar.MINUTE, 0);
+            calendar.set(Calendar.SECOND, 0);
+            calendar.set(Calendar.MILLISECOND, 0);
+
+            beginMillis = calendar.getTimeInMillis();
+            endMillis = beginMillis + TimeUnit.DAYS.toMillis(1);
+        } else {
+            // set 10 minutes duration by default
+
+            beginMillis = timestampMillis;
+            endMillis = beginMillis + TimeUnit.MINUTES.toMillis(10);
+        }
+
+        final Intent intent = new Intent(Intent.ACTION_INSERT)
+            .setData(CalendarContract.Events.CONTENT_URI)
+            .putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, beginMillis)
+            .putExtra(CalendarContract.EXTRA_EVENT_END_TIME, endMillis)
+            .putExtra(CalendarContract.Events.ALL_DAY, allDay);
+
+        if (!TextUtils.isEmpty(title)) {
+            intent.putExtra(CalendarContract.Events.TITLE, title);
+        }
+
+        if (!TextUtils.isEmpty(description)) {
+            intent.putExtra(CalendarContract.Events.DESCRIPTION, description);
+        }
+
+        try {
+            activity.startActivity(intent);
+        } catch (Throwable e) {
+            FileLog.e(e);
+        }
+    }
+
+    public static void dumpCanvas(View v) {
+        if (!BuildConfig.DEBUG) {
+            return;
+        }
+
+        final Bitmap b = Bitmap.createBitmap(v.getWidth(), v.getHeight(), Bitmap.Config.ARGB_8888);
+        final DebugRecordingCanvas c = new DebugRecordingCanvas(b);
+        v.draw(c);
+        c.logCommands();
+
+        LaunchActivity.instance.presentFragment(new DebugRecordingCanvasReplayFragment(c));
+    }
+
+    public static <A, B> B find(ArrayList<A> array, Class<B> clazz) {
+        if (array == null) {
+            return null;
+        }
+        for (A obj : array) {
+            if (clazz.isInstance(obj)) {
+                return clazz.cast(obj);
+            }
+        }
+        return null;
+    }
 }

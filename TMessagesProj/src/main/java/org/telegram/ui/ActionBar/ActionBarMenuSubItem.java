@@ -445,31 +445,4 @@ public class ActionBarMenuSubItem extends FrameLayout {
     public ImageView getRightIcon() {
         return rightIcon;
     }
-
-    public void setRightStatus(boolean enabled) {
-        if (rightIcon == null) {
-            rightIcon = new ImageView(getContext());
-            rightIcon.setScaleType(ImageView.ScaleType.CENTER);
-            if (LocaleController.isRTL) {
-                rightIcon.setScaleX(-1);
-            }
-            addView(rightIcon, LayoutHelper.createFrame(24, LayoutHelper.MATCH_PARENT, Gravity.CENTER_VERTICAL | (LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT)));
-        }
-        
-        FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) textView.getLayoutParams();
-        if (LocaleController.isRTL) {
-            layoutParams.leftMargin = dp(32);
-        } else {
-            layoutParams.rightMargin = dp(32);
-        }
-        textView.setLayoutParams(layoutParams);
-
-        if (enabled) {
-            rightIcon.setVisibility(View.VISIBLE);
-            Drawable dot = Theme.createCircleDrawable(dp(5), 0xff4caf50);
-            rightIcon.setImageDrawable(dot);
-        } else {
-            rightIcon.setVisibility(View.GONE);
-        }
-    }
 }

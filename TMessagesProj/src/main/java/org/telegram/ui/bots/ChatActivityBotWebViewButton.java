@@ -19,7 +19,6 @@ import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RadialProgressView;
 import org.telegram.ui.Components.SimpleFloatPropertyCompat;
 import org.telegram.ui.web.BotWebViewContainer;
-import xyz.nextalone.nagram.NaConfig;
 
 public class ChatActivityBotWebViewButton extends FrameLayout {
     public final static SimpleFloatPropertyCompat<ChatActivityBotWebViewButton> PROGRESS_PROPERTY = new SimpleFloatPropertyCompat<>("progress", obj -> obj.progress, ChatActivityBotWebViewButton::setProgress)
@@ -71,7 +70,7 @@ public class ChatActivityBotWebViewButton extends FrameLayout {
     public void setupButtonParams(boolean isActive, String text, int color, int textColor, boolean isProgressVisible) {
         setClickable(isActive);
         rippleView.setVisibility(isActive ? VISIBLE : GONE);
-        textView.setText(NaConfig.INSTANCE.getIosStyleInputBar().Bool() ? "" : text);
+        textView.setText(text);
         textView.setTextColor(textColor);
         buttonColor = color;
         backgroundColor = ColorUtils.blendARGB(Theme.getColor(Theme.key_chat_messagePanelVoiceBackground), buttonColor, progress);
@@ -120,7 +119,7 @@ public class ChatActivityBotWebViewButton extends FrameLayout {
     public void draw(Canvas canvas) {
         canvas.save();
         float menuY = (getHeight() - AndroidUtilities.dp(32)) / 2f;
-        float offset = (NaConfig.INSTANCE.getIosStyleInputBar().Bool() ? 0 : Math.max(getWidth() - menuButtonWidth - AndroidUtilities.dp(4), getHeight())) * progress;
+        float offset = Math.max(getWidth() - menuButtonWidth - AndroidUtilities.dp(4), getHeight()) * progress;
         float rad = AndroidUtilities.dp(16) + offset;
         AndroidUtilities.rectTmp.set(AndroidUtilities.dp(14) - offset, menuY + AndroidUtilities.dp(4) - offset, AndroidUtilities.dp(6) + menuButtonWidth + offset, getHeight() - AndroidUtilities.dp(12) + offset);
 

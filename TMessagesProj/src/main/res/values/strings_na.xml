@@ -9,7 +9,7 @@
     <string name="SendReactions">Send Reactions</string>
     <string name="ShowReactions">Show Reactions</string>
     <string name="CustomTitle">Custom Title</string>
-    <string name="CustomTitleHint">Leave blank to use Alexgram</string>
+    <string name="CustomTitleHint">Leave blank to use Nagram X</string>
     <string name="CreateMono">Create Monospace</string>
     <string name="CreateMonoLanguage">Code Language</string>
     <string name="CopyPhoto">Copy Photo</string>
@@ -19,40 +19,27 @@
     <string name="ShowMessageID">Show Message ID</string>
     <string name="ShowRPCError">Toast RPC Errors</string>
     <string name="ShowPremiumStickersAnimation">Show Premium Stickers Animation</string>
-    <string name="AlwaysSaveChatOffset">Always Save Chat Offset</string>
     <string name="AppIconGoogle" translatable="false">Google</string>
     <string name="AppIconColorful">Colorful</string>
     <string name="AppIconDarkGreen">Dark Green</string>
-    <string name="AppIconNeon">Alexgram Neon</string>
+    <string name="AppIconNeon">Neon</string>
     <string name="AppIconNiello">Niello</string>
-    <string name="AppIconBlue">Alexgram Blue</string>
-    <string name="AppIconColored">Alexgram Colored</string>
-    <string name="AppIconDark">Alexgram Dark</string>
-    <string name="AppIconGreen">Alexgram Green</string>
-    <string name="AppIconPink">Alexgram Pink</string>
-    <string name="AppIconRoseBlue">Alexgram RoseBlue</string>
-    <string name="AppIconWhite">Alexgram White</string>
+    <string name="AppIconBlue">Blue</string>
     <string name="AppIconDarkBlue">Dark Blue</string>
     <string name="AppIconBlurBlue">Blur Blue</string>
     <string name="InputMessageId">Enter Message ID</string>
     <string name="ToTheMessage">Go To</string>
     <string name="ZalgoFilter">Filter \"Zalgo\" Symbols</string>
     <string name="ZalgoFilterNotice">All \"Z̷͍͌ā̸̜l̸̞̂g̷̝͘o̶̩̓\" symbols in nicknames or messages will be removed.</string>
-    <string name="labelChannelUser">Label Channel Users</string>
     <string name="AlwaysShowDownloadIcon">Always Show Download Icon</string>
     <string name="HideTitle">Hide Title</string>
     <string name="IgnoreUnreadCount">Hide Unread Counter</string>
     <string name="SendWithoutMarkdown">Send without markdown</string>
     <string name="SendAsEmoji">Send as emoji</string>
-    <string name="CustomArtworkApi">Custom Artwork API</string>
     <string name="CustomEditedMessage">Custom Edited Mark</string>
     <string name="NotificationIcon">Notification Icon</string>
-    <string name="NotificationIconDefault">Default</string>
-    <string name="NotificationIconNagramX">Alexgram X</string>
-    <string name="NotificationIconNagram">Alexgram</string>
-    <string name="NotificationIconNeko">Neko</string>
     <string name="Official">Official</string>
-    <string name="Nagram" translatable="false">Alexgram</string>
+    <string name="Nagram" translatable="false">Nagram</string>
     <string name="HalloWeen">HalloWeen</string>
     <string name="ShowOnlineStatus">Show Online Status</string>
     <string name="ShowOnlineStatusNotice">Show the online status of other people next to their profile photo in groups.</string>
@@ -64,7 +51,7 @@
     <string name="CheckAllForum">Add forum</string>
     <string name="DecorationNone">None</string>
     <string name="ChatDecoration">Chat Decoration</string>
-    <string name="NeedChangeNekoSettings">You need to change A-Settings</string>
+    <string name="NeedChangeNekoSettings">You need to change N-Settings</string>
     <string name="DoNotUnarchiveBySwipe">Disable Swipe to Unarchive</string>
     <string name="DefaultDeleteMenu">Default Delete Menu</string>
     <string name="DisableStories">Disable Stories</string>
@@ -124,38 +111,4 @@
     <string name="VideoPlayerDecoderPreferSW">Prefer SW</string>
     <string name="VideoPlayerDecoderHardware">HW Only</string>
     <string name="VideoPlayerDecoderPreferHW">Prefer HW</string>
-    <string name="StarFallInChat">Star Fall</string>
-    <string name="ExportChat">Export Chat</string>
-    <string name="ImportChat">Import Chat</string>
-
-    <!-- Alexgram Settings Labels -->
-    <string name="liquidGlassUI">Liquid UI</string>
-    <string name="IosStyleInputBar">IOS Style Input Bar</string>
-    <string name="MusicGraph">Music Visualizer</string>
-    <string name="HideContacts">Hide Contacts</string>
-    <string name="enableAIReply">AI Reply</string>
-    <string name="enableSummarizeChat">Summarize Chat</string>
-    <string name="EnableLiveVideoWallpaper">Live Video Wallpaper</string>
-    <string name="FoldersAtBottom">Folders At Bottom</string>
-    <string name="AyuMoments">Ayu Moments</string>
-    <string name="PillChatTitle">Pill Chat Title</string>
-    <string name="PillChatTitleDescription">Wrap chat title and status in a pill-shaped background</string>
-    <string name="RestartRequired">Restart required to apply changes</string>
-
-    <string name="VoiceChanger">Voice Changer</string>
-    <string name="VoiceChangerNormal">Normal</string>
-    <string name="VoiceChangerRobotic">Robotic</string>
-    <string name="VoiceChangerAlien">Alien</string>
-    <string name="VoiceChangerHoarseness">Hoarseness</string>
-    <string name="VoiceChangerModulation">Modulation</string>
-    <string name="VoiceChangerChild">Child</string>
-    <string name="VoiceChangerMouse">Mouse</string>
-    <string name="VoiceChangerMan">Man</string>
-    <string name="VoiceChangerWoman">Woman</string>
-    <string name="VoiceChangerMonster">Monster</string>
-    <string name="VoiceChangerEcho">Echo</string>
-    <string name="VoiceChangerNoise">Noise</string>
-    <string name="VoiceChangerHelium">Helium</string>
-    <string name="VoiceChangerHexafluoride">Hexafluoride</string>
-    <string name="VoiceChangerCave">Cave</string>
 </resources>

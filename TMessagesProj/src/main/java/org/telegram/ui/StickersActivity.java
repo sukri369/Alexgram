@@ -210,6 +210,7 @@ public class StickersActivity extends BaseFragment implements NotificationCenter
     }
 
     private File stickersFile;
+    private boolean stickersFileProcessed;
 
     public StickersActivity(File stickersFile) {
         this(MediaDataController.TYPE_IMAGE, null);
@@ -482,7 +483,7 @@ public class StickersActivity extends BaseFragment implements NotificationCenter
         }
 
         if (featured.size() > 3) {
-            featured.removeAll(featured.subList(3, featured.size()));
+            featured = new ArrayList<>(featured.subList(0, 3));
             truncatedFeaturedStickers = true;
         }
         if (currentType == TYPE_EMOJIPACKS && !featured.isEmpty()) {
@@ -821,6 +822,10 @@ public class StickersActivity extends BaseFragment implements NotificationCenter
         if (listView != null) {
             listView.adapter.update(true);
         }
+        if (stickersFile != null && !stickersFileProcessed) {
+            stickersFileProcessed = true;
+            processStickersFile(stickersFile, true);
+        }
     }
 
     public void clearSelected() {
@@ -984,13 +989,43 @@ public class StickersActivity extends BaseFragment implements NotificationCenter
                 }
             });
             shareAlert.show();
-        } else if (which == MENU_ARCHIVE || which == MENU_DELETE) {
+        } else if (which == MENU_EXPORT || which == MENU_ARCHIVE || which == MENU_DELETE) {
             ArrayList<TLRPC.StickerSet> stickerSetList = new ArrayList<>(selectedSets.size());
             for (int i = 0, size = sets.size(); i < size; i++) {
                 final TLRPC.TL_messages_stickerSet stickerSet = sets.get(i);
                 if (selectedSets.contains(stickerSet.set.id)) {
                     stickerSetList.add(stickerSet.set);
                 }
+            }
+
+            if (which == MENU_EXPORT) {
+                AlertDialog pro = new AlertDialog(getParentActivity(), 3);
+                pro.setCanCancel(false);
+                pro.show();
+
+                Utilities.globalQueue.postRunnable(() -> {
+                    JsonObject exportObj = StickersUtil.exportStickers(stickerSetList);
+                    File cacheFile = new File(AndroidUtilities.getCacheDir(), new Date().toLocaleString() + ".nekox-stickers.json");
+
+                    StringWriter stringWriter = new StringWriter();
+                    JsonWriter jsonWriter = new JsonWriter(stringWriter);
+                    jsonWriter.setLenient(true);
+                    jsonWriter.setIndent("    ");
+
+                    try {
+                        Streams.write(exportObj, jsonWriter);
+                    } catch (IOException ignored) {
+                    }
+
+                    FileUtil.writeUtf8String(stringWriter.toString(), cacheFile);
+
+                    AndroidUtilities.runOnUIThread(() -> {
+                        pro.dismiss();
+                        ShareUtil.shareFile(getParentActivity(), cacheFile);
+                    });
+                });
+                clearSelected();
+                return;
             }
 
             final int count = stickerSetList.size();
@@ -1258,7 +1293,12 @@ public class StickersActivity extends BaseFragment implements NotificationCenter
                     MediaDataController.getInstance(currentAccount).checkStickers(currentType);
                     listView.adapter.update(true);
                 });
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                FileLog.e(e);
+                AndroidUtilities.runOnUIThread(() -> {
+                    pro.dismiss();
+                    showError("Not a valid sticker backup file.", exitOnFail);
+                });
             }
         });
     }

@@ -75,9 +75,11 @@ import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.Utilities;
+import org.telegram.messenger.utils.ViewOutlineProviderImpl;
 import org.telegram.ui.Components.AnimatedFloat;
 import org.telegram.ui.Components.BackButtonMenu;
 import org.telegram.ui.EmptyBaseFragment;
+import org.telegram.ui.GradientHeaderActivity;
 import org.telegram.ui.MainTabsActivity;
 import org.telegram.ui.bots.BotWebViewSheet;
 import org.telegram.ui.Components.Bulletin;
@@ -87,7 +89,6 @@ import org.telegram.ui.Components.FloatingDebug.FloatingDebugController;
 import org.telegram.ui.Components.FloatingDebug.FloatingDebugProvider;
 import org.telegram.ui.Components.GroupCallPip;
 import org.telegram.ui.Components.LayoutHelper;
-import org.telegram.ui.ChatActivity;
 import org.telegram.ui.LaunchActivity;
 import org.telegram.ui.Stories.StoryViewer;
 
@@ -233,19 +234,6 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
             canvas.drawRect(0, getHeight() - height, getWidth(), getHeight(), navbarPaint);
         }
 
-        private boolean shouldIgnoreActionBarOffset(View child) {
-            if (child.getTag(0xFF112233) != null || child.getFitsSystemWindows() || child instanceof BaseFragment.AttachedSheetWindow) {
-                return true;
-            }
-            for (int i = fragmentsStack.size() - 1; i >= 0; --i) {
-                BaseFragment fragment = fragmentsStack.get(i);
-                if (fragment != null && fragment.fragmentView == child && fragment instanceof ChatActivity) {
-                    return ((ChatActivity) fragment).isPillChatHeaderLayoutEnabled();
-                }
-            }
-            return false;
-        }
-
         @Override
         public boolean hasOverlappingRendering() {
             if (Build.VERSION.SDK_INT >= 28) {
@@ -288,7 +276,7 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
             for (int a = 0; a < count; a++) {
                 View child = getChildAt(a);
                 if (!(child instanceof ActionBar)) {
-                    if (shouldIgnoreActionBarOffset(child)) {
+                    if (child.getTag(0xFF112233) != null || child.getFitsSystemWindows() || child instanceof BaseFragment.AttachedSheetWindow) {
                         int addHeight = isSupportEdgeToEdge ? navigationBarInsetHeight : 0;
                         measureChildWithMargins(child, widthMeasureSpec, 0, heightMeasureSpec, bottomTabsHeight + addHeight);
                     } else {
@@ -315,7 +303,7 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                 View child = getChildAt(a);
                 if (!(child instanceof ActionBar)) {
                     FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) child.getLayoutParams();
-                    if (shouldIgnoreActionBarOffset(child)) {
+                    if (child.getTag(0xFF112233) != null || child.getFitsSystemWindows() || child instanceof BaseFragment.AttachedSheetWindow) {
                         child.layout(
                             layoutParams.leftMargin,
                             layoutParams.topMargin,
@@ -2218,16 +2206,13 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
         containerView.setTranslationY(0);
 
         if (preview) {
-            fragmentView.setOutlineProvider(new ViewOutlineProvider() {
-                @Override
-                public void getOutline(View view, Outline outline) {
-                    outline.setRoundRect(0,
-                        isSupportEdgeToEdge ? 0 : AndroidUtilities.statusBarHeight,
-                        view.getMeasuredWidth(), view.getMeasuredHeight(), dp(6));
-                }
-            });
+            fragmentView.setOutlineProvider(ViewOutlineProviderImpl.boundsWithPaddingRoundRect(0, dp(menu == null ? 24 : 12)));
             fragmentView.setClipToOutline(true);
             fragmentView.setElevation(dp(4));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                 fragmentView.setOutlineSpotShadowColor(0xB0000000);
+                 fragmentView.setOutlineAmbientShadowColor(0xB0000000);
+            }
             if (previewBackgroundDrawable == null) {
                 previewBackgroundDrawable = new ColorDrawable(0x2e000000);
             }
@@ -3763,11 +3748,11 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
     private MenuDrawable menuDrawable;
 
     private void invalidateActionBars() {
-        BaseFragment foregroundFragment = getLastFragmentIncludeMainTabs();
+        BaseFragment foregroundFragment = getLastFragment();
         if (foregroundFragment != null && foregroundFragment.getActionBar() != null) {
             foregroundFragment.getActionBar().invalidate();
         }
-        BaseFragment backgroundFragment = getBackgroundFragmentIncludeMainTabs();
+        BaseFragment backgroundFragment = getBackgroundFragment();
         if (backgroundFragment != null && backgroundFragment.getActionBar() != null) {
             backgroundFragment.getActionBar().invalidate();
         }
@@ -3778,8 +3763,8 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
             return false;
         }
         boolean crossfadeNoFragments = SharedConfig.animationsEnabled() && !isInPreviewMode() && (isSwipeInProgress() || isTransitionAnimationInProgress()) && currentAnimation == null;
-        BaseFragment foregroundFragment = getLastFragmentIncludeMainTabs();
-        BaseFragment backgroundFragment = getBackgroundFragmentIncludeMainTabs();
+        BaseFragment foregroundFragment = getLastFragment();
+        BaseFragment backgroundFragment = getBackgroundFragment();
         return crossfadeNoFragments &&
                 foregroundFragment != null && foregroundFragment.isActionBarCrossfadeEnabled() &&
                 backgroundFragment != null && backgroundFragment.isActionBarCrossfadeEnabled();
@@ -3794,8 +3779,8 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                 return;
             }
 
-            BaseFragment foregroundFragment = getLastFragmentIncludeMainTabs();
-            BaseFragment backgroundFragment = getBackgroundFragmentIncludeMainTabs();
+            BaseFragment foregroundFragment = getLastFragment();
+            BaseFragment backgroundFragment = getBackgroundFragment();
 
             if (foregroundFragment == null || backgroundFragment == null) {
                 return;
@@ -3813,12 +3798,10 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
             Float backDrawableForcedProgress = null;
             BackButtonState bgBackButtonState = backgroundFragment.getBackButtonState();
             BackButtonState fgBackButtonState = foregroundFragment.getBackButtonState();
-            Drawable bgBackButtonDrawable = bgActionBar.getBackButton() != null && bgActionBar.getBackButton().getVisibility() == View.VISIBLE ? bgActionBar.getBackButton().getDrawable() : null;
-            Drawable fgBackButtonDrawable = fgActionBar.getBackButton() != null && fgActionBar.getBackButton().getVisibility() == View.VISIBLE ? fgActionBar.getBackButton().getDrawable() : null;
-            boolean bgCanDrawMenu = bgBackButtonState == BackButtonState.MENU && bgBackButtonDrawable instanceof MenuDrawable;
-            boolean fgCanDrawMenu = fgBackButtonState == BackButtonState.MENU && fgBackButtonDrawable instanceof MenuDrawable;
-            boolean bgCanDrawBack = bgBackButtonState == BackButtonState.BACK && (bgBackButtonDrawable instanceof BackDrawable || bgBackButtonDrawable instanceof MenuDrawable);
-            boolean fgCanDrawBack = fgBackButtonState == BackButtonState.BACK && (fgBackButtonDrawable instanceof BackDrawable || fgBackButtonDrawable instanceof MenuDrawable);
+            boolean bgCanDrawMenu = bgBackButtonState == BackButtonState.MENU;
+            boolean fgCanDrawMenu = fgBackButtonState == BackButtonState.MENU;
+            boolean bgCanDrawBack = bgBackButtonState == BackButtonState.BACK;
+            boolean fgCanDrawBack = fgBackButtonState == BackButtonState.BACK ;
 
             if (!AndroidUtilities.isTablet()) {
                 if (bgCanDrawMenu && fgCanDrawBack) {
@@ -3877,8 +3860,8 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
     private int getTop(int widthOffset, float width) {
         int top = 0;
         if (isActionBarInCrossfade()) {
-            BaseFragment backgroundFragment = getBackgroundFragmentIncludeMainTabs();
-            BaseFragment foregroundFragment = getLastFragmentIncludeMainTabs();
+            BaseFragment backgroundFragment = getBackgroundFragment();
+            BaseFragment foregroundFragment = getLastFragment();
             ActionBar bgActionBar = backgroundFragment != null ? backgroundFragment.getActionBar() : null;
             ActionBar fgActionBar = foregroundFragment != null ? foregroundFragment.getActionBar() : null;
             if (bgActionBar != null && fgActionBar != null) {

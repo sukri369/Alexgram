@@ -9,19 +9,15 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
-import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
-import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.style.ForegroundColorSpan;
 import android.view.Gravity;
@@ -30,36 +26,22 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ScrollView;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
-import com.radolyn.ayugram.messages.AyuSavePreferences;
-import com.radolyn.ayugram.utils.AyuGhostPreferences;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
-import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
-
-import tw.nekomimi.nekogram.helpers.HiddenChatsController;
 import org.telegram.messenger.SendMessagesHelper;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.ActionBarMenu;
 import org.telegram.ui.ActionBar.AlertDialog;
-import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.BasePermissionsActivity;
 import org.telegram.ui.Cells.SettingsSearchCell;
-import org.telegram.ui.AIAssistanceSettingsActivity;
+import org.telegram.ui.Cells.TextCell;
 import org.telegram.ui.Components.EditTextBoldCursor;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
@@ -71,92 +53,69 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
-import java.util.function.Function;
 
-import kotlin.text.StringsKt;
-import org.telegram.messenger.FileLoader;
-import org.telegram.messenger.FileLog;
-import org.telegram.messenger.MediaController;
-import org.telegram.messenger.MessageObject;
-import org.telegram.messenger.NotificationCenter;
-import org.telegram.messenger.SharedConfig;
-import org.telegram.messenger.UserConfig;
-import org.telegram.tgnet.TLRPC;
-import org.telegram.ui.Components.BulletinFactory;
-import org.telegram.ui.PhotoAlbumPickerActivity;
-import tw.nekomimi.nekogram.DialogConfig;
 import tw.nekomimi.nekogram.NekoConfig;
 import tw.nekomimi.nekogram.helpers.AppRestartHelper;
 import tw.nekomimi.nekogram.helpers.CloudSettingsHelper;
-import tw.nekomimi.nekogram.helpers.LocalNameHelper;
+import tw.nekomimi.nekogram.helpers.PasscodeHelper;
+import tw.nekomimi.nekogram.helpers.SettingsBackupHelper;
 import tw.nekomimi.nekogram.helpers.SettingsHelper;
 import tw.nekomimi.nekogram.helpers.SettingsSearchResult;
-import tw.nekomimi.nekogram.ui.HiddenChatsPasscodeActivity;
 import tw.nekomimi.nekogram.utils.AlertUtil;
-import tw.nekomimi.nekogram.utils.FileUtil;
-import tw.nekomimi.nekogram.utils.GsonUtil;
-import tw.nekomimi.nekogram.utils.ShareUtil;
-import xyz.nextalone.nagram.NaConfig;
-import xyz.nextalone.nagram.helper.BookmarksHelper;
-import xyz.nextalone.nagram.helper.LocalPeerColorHelper;
-import xyz.nextalone.nagram.helper.LocalPremiumStatusHelper;
 
-public class NekoSettingsActivity extends BaseFragment {
-    private MessageObject convertingVideo;
-    private NotificationCenter.NotificationCenterDelegate videoConvertDelegate;
+public class NekoSettingsActivity extends BaseNekoSettingsActivity {
 
     private static final int MENU_SEARCH = 1;
     private static final int MENU_SYNC = 2;
-    private static final int PERMISSION_REQ_MUSIC_GRAPH = 120;
-    private org.telegram.ui.Components.Switch musicGraphSwitch;
 
-    // Adaptive colors (set in createView based on theme)
-    private int cardBg, cardBorder, textTitle, textSub, sectionLabel, accentColor, dividerColor;
-    private boolean isDark;
+    private int generalRow;
+    private int translatorRow;
+    private int chatRow;
+    private int passcodeRow;
+    private int experimentRow;
+    private int categoriesEndRow;
+
+    private int importSettingsRow;
+    private int exportSettingsRow;
+    private int resetSettingsRow;
+    private int appRestartRow;
+    private int nSettingsEndRow;
+
+
+    private int aboutRow;
 
     @Override
-    public boolean onFragmentCreate() {
-        super.onFragmentCreate();
-        return true;
-    }
+    protected void updateRows() {
+        super.updateRows();
 
-    private void setupColors() {
-        isDark = Theme.getActiveTheme().isDark();
-        if (isDark) {
-            cardBg = 0x30FFFFFF;       // frosted glass dark
-            cardBorder = 0x22FFFFFF;
-            textTitle = 0xFFFFFFFF;
-            textSub = 0xFF8899AA;
-            sectionLabel = 0xCC8899AA;
-            accentColor = 0xFF4FC3F7;
-            dividerColor = 0x15FFFFFF;
+        generalRow = addRow();
+        translatorRow = addRow();
+        chatRow = addRow();
+        if (!PasscodeHelper.isSettingsHidden()) {
+            passcodeRow = addRow();
         } else {
-            cardBg = 0x60FFFFFF;       // frosted glass light
-            cardBorder = 0x30000000;
-            textTitle = 0xFF1A1A2E;
-            textSub = 0xFF5C6B7F;
-            sectionLabel = 0xCC5C6B7F;
-            accentColor = 0xFF1976D2;
-            dividerColor = 0x18000000;
+            passcodeRow = -1;
         }
+        experimentRow = addRow();
+        categoriesEndRow = addRow();
+
+        importSettingsRow = addRow();
+        exportSettingsRow = addRow();
+        resetSettingsRow = addRow();
+        appRestartRow = addRow();
+        nSettingsEndRow = addRow();
+
+        aboutRow = addRow();
     }
 
     @Override
     public View createView(Context context) {
-        setupColors();
-
-        actionBar.setBackButtonImage(R.drawable.ic_ab_back);
-        actionBar.setAllowOverlayTitle(true);
-        actionBar.setTitle("A-Settings");
+        View view = super.createView(context);
 
         ActionBarMenu menu = actionBar.createMenu();
-        menu.addItem(MENU_SEARCH, R.drawable.ic_ab_search);
-        menu.addItem(MENU_SYNC, R.drawable.cloud_sync);
+        menu.addItem(MENU_SEARCH, R.drawable.outline_header_search, resourcesProvider);
+        menu.addItem(MENU_SYNC, R.drawable.cloud_sync, resourcesProvider);
 
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
@@ -171,545 +130,12 @@ public class NekoSettingsActivity extends BaseFragment {
             }
         });
 
-        // Transparent action bar
-        actionBar.setAddToContainer(false); // Fix: Prevent adding to default container (which causes the black bar)
-        actionBar.setBackgroundColor(Color.TRANSPARENT);
-        int abColor = isDark ? Color.WHITE : 0xFF1A1A2E;
-        actionBar.setItemsColor(abColor, false);
-        actionBar.setTitleColor(abColor);
-
-        FrameLayout parentFrame = new FrameLayout(context);
-
-        // 1. Full-screen animated background
-        AlexgramSettingsHeaderView bgView = new AlexgramSettingsHeaderView(context);
-        parentFrame.addView(bgView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
-
-        // 2. ScrollView on top
-        ScrollView scrollView = new ScrollView(context);
-        scrollView.setVerticalScrollBarEnabled(false);
-        scrollView.setOverScrollMode(View.OVER_SCROLL_NEVER);
-        // Clip to padding so scrolling content cleanly disappears behind the transparent ActionBar!
-        scrollView.setClipToPadding(true);
-        scrollView.setPadding(0, AndroidUtilities.dp(56) + AndroidUtilities.statusBarHeight, 0, 0);
-        parentFrame.addView(scrollView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
-
-        // 3. Add ActionBar ON TOP of everything
-        parentFrame.addView(actionBar, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
-
-        LinearLayout contentLayout = new LinearLayout(context);
-        contentLayout.setOrientation(LinearLayout.VERTICAL);
-        contentLayout.setPadding(AndroidUtilities.dp(16), 0, AndroidUtilities.dp(16), AndroidUtilities.dp(32));
-        scrollView.addView(contentLayout, new ScrollView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-
-        // 4. Logo badge (smaller)
-        LinearLayout logoBadge = new LinearLayout(context);
-        logoBadge.setOrientation(LinearLayout.VERTICAL);
-        logoBadge.setGravity(Gravity.CENTER);
-        logoBadge.setPadding(0, AndroidUtilities.dp(12), 0, AndroidUtilities.dp(20));
-
-        // App icon circle
-        FrameLayout iconCircle = new FrameLayout(context);
-        GradientDrawable circBg = new GradientDrawable();
-        circBg.setShape(GradientDrawable.OVAL);
-        circBg.setColor(isDark ? 0x30FFFFFF : 0x40FFFFFF);
-        circBg.setStroke(AndroidUtilities.dp(1), isDark ? 0x40FFFFFF : 0x2A000000);
-        iconCircle.setBackground(circBg);
-        
-        // Force children inside the circle to be clipped, solving the square icon bug
-        if (android.os.Build.VERSION.SDK_INT >= 21) {
-            iconCircle.setClipToOutline(true);
-        }
-
-        ImageView appIcon = new ImageView(context);
-        appIcon.setImageResource(isDark ? R.drawable.ic_launcher_alexgram_neon : R.drawable.ic_launcher_alexgram_blue);
-        // Use CENTER_CROP so the image goes to edges and is smoothly cut off by clipToOutline
-        appIcon.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        iconCircle.addView(appIcon, LayoutHelper.createFrame(56, 56, Gravity.CENTER)); // Enlarge the icon slightly within the mask
-
-        logoBadge.addView(iconCircle, LayoutHelper.createLinear(56, 56, Gravity.CENTER));
-
-        // App name
-        TextView appName = new TextView(context);
-        appName.setText("Alexgram");
-        appName.setTextColor(textTitle);
-        appName.setTextSize(20);
-        appName.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
-        appName.setGravity(Gravity.CENTER);
-        appName.setPadding(0, AndroidUtilities.dp(8), 0, 0);
-        logoBadge.addView(appName, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER));
-
-        // Version under name
-        TextView verSmall = new TextView(context);
-        try {
-            android.content.pm.PackageInfo pInfo = ApplicationLoader.applicationContext.getPackageManager().getPackageInfo(ApplicationLoader.applicationContext.getPackageName(), 0);
-            verSmall.setText("v" + pInfo.versionName);
-        } catch (Exception e) {
-            verSmall.setText("");
-        }
-        verSmall.setTextColor(textSub);
-        verSmall.setTextSize(12);
-        verSmall.setGravity(Gravity.CENTER);
-        verSmall.setPadding(0, AndroidUtilities.dp(2), 0, 0);
-        logoBadge.addView(verSmall, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER));
-
-        contentLayout.addView(logoBadge, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 8));
-
-        // ===== QUICK SETTINGS =====
-        addGlassSection(contentLayout, context, "QUICK SETTINGS");
-        LinearLayout qsCard = createGlassCard(context);
-
-        qsCard.addView(createSwitchItem(context, "Hide Contacts", "Hide contacts tab", R.drawable.msg_contact, 0xFF00897B,
-                NaConfig.INSTANCE.getHideContacts().Bool(), isChecked -> {
-                    NaConfig.INSTANCE.getHideContacts().setConfigBool(isChecked);
-                    AlertUtil.showConfirm(getParentActivity(), "Restart required", R.drawable.msg_retry, "Restart", true, () -> {
-                        AppRestartHelper.triggerRebirth(getParentActivity(), new Intent(getParentActivity(), LaunchActivity.class));
-                    });
-                }));
-        qsCard.addView(createGlassDivider(context));
-
-        qsCard.addView(createSwitchItem(context, "Live Video Header", "Enable video background in main header", R.drawable.msg_video, 0xFF9C27B0,
-                NekoConfig.videoHeaderEnabled.Bool(), isChecked -> {
-                    // REQUIREMENT: Live Video Header works ONLY when Hide Stories is ON.
-                    if (isChecked && !NaConfig.INSTANCE.getHideStoriesFromHeader().Bool()) {
-                         // User wants to ENABLE video header, but Stories are VISIBLE (HideFromHeader is False).
-                         // We must show confirmation to HIDE stories.
-                         new AlertDialog.Builder(getParentActivity())
-                            .setTitle("Requires Hidden Stories")
-                            .setMessage("Live Video Header requires Stories to be hidden from the header.\n\nDo you want to enable 'Hide from Header' now?")
-                            .setPositiveButton("Enable & Hide Stories", (d, w) -> {
-                                NaConfig.INSTANCE.getHideStoriesFromHeader().setConfigBool(true); // Hide stories
-                                NekoConfig.videoHeaderEnabled.setConfigBool(true); // Enable video header
-                                
-                                AlertUtil.showConfirm(getParentActivity(), "Restart required", R.drawable.msg_retry, "Restart", true, () -> {
-                                    AppRestartHelper.triggerRebirth(getParentActivity(), new Intent(getParentActivity(), LaunchActivity.class));
-                                });
-                            })
-                            .setNegativeButton("Cancel", (d, w) -> {
-                                d.dismiss();
-                                getParentActivity().recreate(); // Reset switch state
-                            })
-                            .show();
-                    } else {
-                        NekoConfig.videoHeaderEnabled.setConfigBool(isChecked);
-                        AlertUtil.showConfirm(getParentActivity(), "Restart required", R.drawable.msg_retry, "Restart", true, () -> {
-                            AppRestartHelper.triggerRebirth(getParentActivity(), new Intent(getParentActivity(), LaunchActivity.class));
-                        });
-                    }
-                }));
-        qsCard.addView(createGlassDivider(context));
-
-        qsCard.addView(createSettingItem(context, "Custom Video Background", "Select & crop video background", R.drawable.msg_gallery_solar, 0xFF00BCD4, v -> {
-            PhotoAlbumPickerActivity fragment = new PhotoAlbumPickerActivity(PhotoAlbumPickerActivity.SELECT_TYPE_HEADER_BACKGROUND, false, false, null);
-            fragment.setDelegate(new PhotoAlbumPickerActivity.PhotoAlbumPickerActivityDelegate() {
-                @Override
-                public void didSelectPhotos(ArrayList<SendMessagesHelper.SendingMediaInfo> photos, boolean notify, int scheduleDate) {
-                    if (!photos.isEmpty()) {
-                        SendMessagesHelper.SendingMediaInfo info = photos.get(0);
-                        if (info.isVideo || info.videoEditedInfo != null) {
-                            TLRPC.TL_message message = new TLRPC.TL_message();
-                            message.id = 0;
-                            message.message = "";
-                            message.media = new TLRPC.TL_messageMediaEmpty();
-                            message.action = new TLRPC.TL_messageActionEmpty();
-                            message.dialog_id = 0;
-                            MessageObject avatarObject = new MessageObject(UserConfig.selectedAccount, message, false, false);
-                            avatarObject.messageOwner.attachPath = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_CACHE), SharedConfig.getLastLocalId() + "_bgvideo.mp4").getAbsolutePath();
-                            avatarObject.videoEditedInfo = info.videoEditedInfo;
-                            avatarObject.emojiMarkup = info.emojiMarkup;
-                            if (avatarObject.videoEditedInfo != null) {
-                                avatarObject.videoEditedInfo.shouldLimitFps = false;
-                            }
-                            convertingVideo = avatarObject;
-                            if (videoConvertDelegate == null) {
-                                videoConvertDelegate = (id, account, args) -> {
-                                    if (id == NotificationCenter.fileNewChunkAvailable) {
-                                        MessageObject messageObject = (MessageObject) args[0];
-                                        if (convertingVideo != null && messageObject == convertingVideo) {
-                                            String finalPath = (String) args[1];
-                                            long finalSize = (Long) args[3];
-                                            if (finalSize != 0) {
-                                                NotificationCenter.getInstance(currentAccount).removeObserver(videoConvertDelegate, NotificationCenter.fileNewChunkAvailable);
-                                                NotificationCenter.getInstance(currentAccount).removeObserver(videoConvertDelegate, NotificationCenter.filePreparingFailed);
-                                                String persistentPath = copyHeaderMediaToPersistentStorage(finalPath, true);
-                                                NekoConfig.videoHeaderPath.setConfigString(persistentPath);
-                                                NekoConfig.videoHeaderEnabled.setConfigBool(true);
-                                                convertingVideo = null;
-                                                AndroidUtilities.runOnUIThread(() -> {
-                                                    if (getVisibleDialog() != null) {
-                                                        getVisibleDialog().dismiss();
-                                                    }
-                                                    BulletinFactory.of(NekoSettingsActivity.this).createSimpleBulletin(R.raw.done, "Video header set!").show();
-                                                    AndroidUtilities.runOnUIThread(() -> AppRestartHelper.triggerRebirth(getParentActivity(), new Intent(getParentActivity(), LaunchActivity.class)), 1500);
-                                                });
-                                            }
-                                        }
-                                    } else if (id == NotificationCenter.filePreparingFailed) {
-                                        MessageObject messageObject = (MessageObject) args[0];
-                                        if (convertingVideo != null && messageObject == convertingVideo) {
-                                            NotificationCenter.getInstance(currentAccount).removeObserver(videoConvertDelegate, NotificationCenter.fileNewChunkAvailable);
-                                            NotificationCenter.getInstance(currentAccount).removeObserver(videoConvertDelegate, NotificationCenter.filePreparingFailed);
-                                            convertingVideo = null;
-                                            AndroidUtilities.runOnUIThread(() -> {
-                                                if (getVisibleDialog() != null) {
-                                                    getVisibleDialog().dismiss();
-                                                }
-                                                BulletinFactory.of(NekoSettingsActivity.this).createSimpleBulletin(R.raw.error, "Failed to prepare video").show();
-                                            });
-                                        }
-                                    }
-                                };
-                            }
-                            NotificationCenter.getInstance(currentAccount).addObserver(videoConvertDelegate, NotificationCenter.fileNewChunkAvailable);
-                            NotificationCenter.getInstance(currentAccount).addObserver(videoConvertDelegate, NotificationCenter.filePreparingFailed);
-                            MediaController.getInstance().scheduleVideoConvert(avatarObject, true, true, false);
-                            AlertDialog progressDialog = new AlertDialog(getParentActivity(), 3);
-                            progressDialog.setCanCancel(false);
-                            showDialog(progressDialog);
-                        } else if (info.path != null) {
-                            String persistentPath = copyHeaderMediaToPersistentStorage(info.path, false);
-                            NekoConfig.videoHeaderPath.setConfigString(persistentPath);
-                            NekoConfig.videoHeaderEnabled.setConfigBool(true);
-                            BulletinFactory.of(NekoSettingsActivity.this).createSimpleBulletin(R.raw.done, "Video header set!").show();
-                            AndroidUtilities.runOnUIThread(() -> AppRestartHelper.triggerRebirth(getParentActivity(), new Intent(getParentActivity(), LaunchActivity.class)), 1500);
-                        }
-                    }
-                }
-                @Override
-                public void startPhotoSelectActivity() {
-                    try {
-                        android.content.Intent photoPickerIntent = new android.content.Intent(android.content.Intent.ACTION_GET_CONTENT);
-                        photoPickerIntent.setType("video/*");
-                        startActivityForResult(photoPickerIntent, 14);
-                    } catch (Exception e) {
-                        org.telegram.messenger.FileLog.e(e);
-                    }
-                }
-            });
-            presentFragment(fragment);
-        }));
-        qsCard.addView(createGlassDivider(context));
-
-        qsCard.addView(createSwitchItem(context, "Ghost Mode", "Read silently", R.drawable.msg_secret, 0xFF546E7A,
-                NekoConfig.isGhostModeActive(), isChecked -> {
-                    NekoConfig.setGhostMode(isChecked);
-                }));
-        qsCard.addView(createGlassDivider(context));
-
-        View musicGraphRow = createSwitchItem(context, "Music Graph", "Visualizer in player", R.drawable.msg_filled_data_music_solar, 0xFFE53935,
-                NaConfig.INSTANCE.getMusicGraph().Bool() && (Build.VERSION.SDK_INT < 23 || context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED), isChecked -> {
-                    if (isChecked) {
-                        if (Build.VERSION.SDK_INT >= 23 && getParentActivity().checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-                            getParentActivity().requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, PERMISSION_REQ_MUSIC_GRAPH);
-                            if (musicGraphSwitch != null) {
-                                musicGraphSwitch.setChecked(false, true);
-                            }
-                            return;
-                        }
-                    }
-                    NaConfig.INSTANCE.getMusicGraph().setConfigBool(isChecked);
-                    AlertUtil.showConfirm(getParentActivity(), "Restart required", R.drawable.msg_retry, "Restart", true, () -> {
-                        AppRestartHelper.triggerRebirth(getParentActivity(), new Intent(getParentActivity(), LaunchActivity.class));
-                    });
-                });
-        if (musicGraphRow instanceof ViewGroup) {
-            ViewGroup vg = (ViewGroup) musicGraphRow;
-            for (int i = 0; i < vg.getChildCount(); i++) {
-                View child = vg.getChildAt(i);
-                if (child instanceof org.telegram.ui.Components.Switch) {
-                    musicGraphSwitch = (org.telegram.ui.Components.Switch) child;
-                    break;
-                }
-            }
-        }
-        qsCard.addView(musicGraphRow);
-        qsCard.addView(createGlassDivider(context));
-
-        qsCard.addView(createSwitchItem(context, "Save Deleted", "Save deleted messages", R.drawable.msg_delete, 0xFFAD1457,
-                NaConfig.INSTANCE.getEnableSaveDeletedMessages().Bool(), isChecked -> {
-                    NaConfig.INSTANCE.getEnableSaveDeletedMessages().setConfigBool(isChecked);
-                }));
-
-        contentLayout.addView(qsCard, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 20));
-
-        // ===== PRIVACY =====
-        addGlassSection(contentLayout, context, "PRIVACY");
-        LinearLayout privacyCard = createGlassCard(context);
-
-        privacyCard.addView(createSettingItem(context, "Hidden Chats", "Secure vault for private chats", R.drawable.msg_folders_private_solar, 0xFFE91E63, v -> {
-            if (HiddenChatsController.getInstance().hasPasscode()) {
-                showHiddenChatsPasscodeDialog(context);
-            } else {
-                showHiddenChatsSetupDialog(context);
-            }
-        }));
-
-        contentLayout.addView(privacyCard, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 20));
-
-        // ===== CORE SETTINGS =====
-        addGlassSection(contentLayout, context, "CORE SETTINGS");
-        LinearLayout coreCard = createGlassCard(context);
-
-        coreCard.addView(createSettingItem(context, "General", "Appearance, Language, Behavior", R.drawable.msg_theme, 0xFF1E88E5, v -> {
-            presentFragment(new NekoGeneralSettingsActivity());
-        }));
-        coreCard.addView(createGlassDivider(context));
-
-        coreCard.addView(createSettingItem(context, "Translator", "Messages, Languages, Engine", R.drawable.ic_translate, 0xFF7B1FA2, v -> {
-            presentFragment(new NekoTranslatorSettingsActivity());
-        }));
-        coreCard.addView(createGlassDivider(context));
-
-        coreCard.addView(createSettingItem(context, "Chats", "UI, Privacy, Media", R.drawable.msg_discussion, 0xFF43A047, v -> {
-            presentFragment(new NekoChatSettingsActivity());
-        }));
-        coreCard.addView(createGlassDivider(context));
-
-        coreCard.addView(createSettingItem(context, "AI Assistance", "Alexgram assistant behavior & animations", R.drawable.settings_chat, 0xFF8E44AD, v -> {
-            presentFragment(new AIAssistanceSettingsActivity());
-        }));
-        coreCard.addView(createGlassDivider(context));
-
-        coreCard.addView(createSettingItem(context, "Passcode", "Security & Fingerprint", R.drawable.msg_permissions, 0xFFE53935, v -> {
-            presentFragment(new NekoPasscodeSettingsActivity());
-        }));
-
-        contentLayout.addView(coreCard, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 20));
-
-        // ===== ADVANCED =====
-        addGlassSection(contentLayout, context, "ADVANCED");
-        LinearLayout advCard = createGlassCard(context);
-
-        advCard.addView(createSettingItem(context, "Cloud Settings", "Sync, backup, and restore", R.drawable.cloud_sync, 0xFF0288D1, v -> {
-            CloudSettingsHelper.getInstance().showDialog(NekoSettingsActivity.this);
-        }));
-        advCard.addView(createGlassDivider(context));
-
-        advCard.addView(createSettingItem(context, "Experimental", "Beta Tools & Features", R.drawable.msg_fave, 0xFF7B1FA2, v -> {
-            presentFragment(new NekoExperimentalSettingsActivity());
-        }));
-
-        contentLayout.addView(advCard, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 20));
-
-        // ===== ACTIONS =====
-        addGlassSection(contentLayout, context, "ACTIONS");
-        LinearLayout actRow = new LinearLayout(context);
-        actRow.setOrientation(LinearLayout.HORIZONTAL);
-
-        actRow.addView(createGlassButton(context, "Export", R.drawable.msg_shareout, textSub, v -> {
-            backupSettings();
-        }), LayoutHelper.createLinear(0, 72, 1f, 0, 0, 6, 0));
-
-        actRow.addView(createGlassButton(context, "Reset", R.drawable.msg_reset, 0xFFEF5350, v -> {
-            AlertUtil.showConfirm(getParentActivity(),
-                    LocaleController.getString(R.string.ResetSettingsAlert),
-                    R.drawable.msg_reset,
-                    LocaleController.getString(R.string.Reset),
-                    true,
-                    () -> {
-                        ApplicationLoader.applicationContext.getSharedPreferences("nekocloud", Activity.MODE_PRIVATE).edit().clear().commit();
-                        ApplicationLoader.applicationContext.getSharedPreferences("nekox_config", Activity.MODE_PRIVATE).edit().clear().commit();
-                        NekoConfig.getPreferences().edit().clear().commit();
-                        AppRestartHelper.triggerRebirth(getParentActivity(), new Intent(getParentActivity(), LaunchActivity.class));
-                    });
-        }), LayoutHelper.createLinear(0, 72, 1f, 6, 0, 6, 0));
-
-        actRow.addView(createGlassButton(context, "Restart", R.drawable.msg_retry, 0xFF42A5F5, v -> {
-            AppRestartHelper.triggerRebirth(getParentActivity(), new Intent(getParentActivity(), LaunchActivity.class));
-        }), LayoutHelper.createLinear(0, 72, 1f, 6, 0, 6, 0));
-
-        actRow.addView(createGlassButton(context, "About", R.drawable.msg_info, textSub, v -> {
-            presentFragment(new NekoAboutActivity());
-        }), LayoutHelper.createLinear(0, 72, 1f, 6, 0, 0, 0));
-
-        contentLayout.addView(actRow, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 28));
-
-        // Version footer
-        TextView versionText = new TextView(context);
-        try {
-            android.content.pm.PackageInfo pInfo = ApplicationLoader.applicationContext.getPackageManager().getPackageInfo(ApplicationLoader.applicationContext.getPackageName(), 0);
-            versionText.setText("Alexgram v" + pInfo.versionName + " (" + pInfo.versionCode + ")");
-        } catch (Exception e) {
-            versionText.setText("Alexgram");
-        }
-        versionText.setTextSize(12);
-        versionText.setTextColor(isDark ? 0x80FFFFFF : 0x80000000);
-        versionText.setGravity(Gravity.CENTER);
-        contentLayout.addView(versionText, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 8, 0, 16));
-
-
-        fragmentView = parentFrame;
-        return fragmentView;
-    }
-
-    // ========== Glass UI Helpers ==========
-
-    private void addGlassSection(LinearLayout parent, Context ctx, String title) {
-        TextView tv = new TextView(ctx);
-        tv.setText(title);
-        tv.setTextSize(11);
-        tv.setTextColor(sectionLabel);
-        tv.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
-        tv.setLetterSpacing(0.1f);
-        parent.addView(tv, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 4, 0, 0, 8));
-    }
-
-    private LinearLayout createGlassCard(Context ctx) {
-        LinearLayout card = new LinearLayout(ctx);
-        card.setOrientation(LinearLayout.VERTICAL);
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(cardBg);
-        bg.setCornerRadius(AndroidUtilities.dp(16));
-        bg.setStroke(AndroidUtilities.dp(1), cardBorder);
-        card.setBackground(bg);
-        card.setClipChildren(true);
-        return card;
-    }
-
-    private View createGlassDivider(Context ctx) {
-        View v = new View(ctx);
-        v.setBackgroundColor(dividerColor);
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 1);
-        lp.leftMargin = AndroidUtilities.dp(56);
-        v.setLayoutParams(lp);
-        return v;
-    }
-
-    private View createSettingItem(Context ctx, String title, String subtitle, int iconRes, int iconColor, View.OnClickListener onClick) {
-        LinearLayout row = new LinearLayout(ctx);
-        row.setOrientation(LinearLayout.HORIZONTAL);
-        row.setGravity(Gravity.CENTER_VERTICAL);
-        row.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(13), AndroidUtilities.dp(14), AndroidUtilities.dp(13));
-        row.setClickable(true);
-        row.setBackground(Theme.getSelectorDrawable(false));
-        row.setOnClickListener(onClick);
-
-        // Icon
-        ImageView iconView = new ImageView(ctx);
-        iconView.setImageResource(iconRes);
-        iconView.setColorFilter(Color.WHITE);
-        iconView.setScaleType(ImageView.ScaleType.CENTER);
-        GradientDrawable iconBg = new GradientDrawable();
-        iconBg.setShape(GradientDrawable.RECTANGLE);
-        iconBg.setCornerRadius(AndroidUtilities.dp(10));
-        iconBg.setColor(iconColor);
-        iconView.setBackground(iconBg);
-        row.addView(iconView, LayoutHelper.createLinear(32, 32));
-
-        // Texts
-        LinearLayout texts = new LinearLayout(ctx);
-        texts.setOrientation(LinearLayout.VERTICAL);
-
-        TextView titleView = new TextView(ctx);
-        titleView.setText(title);
-        titleView.setTextColor(textTitle);
-        titleView.setTextSize(15);
-        titleView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
-        texts.addView(titleView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
-
-        TextView subView = new TextView(ctx);
-        subView.setText(subtitle);
-        subView.setTextColor(textSub);
-        subView.setTextSize(12);
-        texts.addView(subView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 1, 0, 0));
-
-        row.addView(texts, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f, 12, 0, 0, 0));
-
-        // Arrow
-        ImageView arrow = new ImageView(ctx);
-        arrow.setImageResource(R.drawable.arrow_more_solar);
-        arrow.setColorFilter(isDark ? 0x60FFFFFF : 0x40000000);
-        row.addView(arrow, LayoutHelper.createLinear(18, 18));
-
-        return row;
-    }
-
-    interface OnSettingSwitchListener {
-        void onSwitch(boolean isChecked);
-    }
-
-    private View createSwitchItem(Context ctx, String title, String subtitle, int iconRes, int iconColor, boolean checked, OnSettingSwitchListener onChange) {
-        LinearLayout row = new LinearLayout(ctx);
-        row.setOrientation(LinearLayout.HORIZONTAL);
-        row.setGravity(Gravity.CENTER_VERTICAL);
-        row.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(13), AndroidUtilities.dp(14), AndroidUtilities.dp(13));
-        row.setBackground(Theme.getSelectorDrawable(false));
-
-        ImageView iconView = new ImageView(ctx);
-        iconView.setImageResource(iconRes);
-        iconView.setColorFilter(Color.WHITE);
-        iconView.setScaleType(ImageView.ScaleType.CENTER);
-        GradientDrawable iconBg = new GradientDrawable();
-        iconBg.setShape(GradientDrawable.RECTANGLE);
-        iconBg.setCornerRadius(AndroidUtilities.dp(10));
-        iconBg.setColor(iconColor);
-        iconView.setBackground(iconBg);
-        row.addView(iconView, LayoutHelper.createLinear(32, 32));
-
-        LinearLayout texts = new LinearLayout(ctx);
-        texts.setOrientation(LinearLayout.VERTICAL);
-
-        TextView titleView = new TextView(ctx);
-        titleView.setText(title);
-        titleView.setTextColor(textTitle);
-        titleView.setTextSize(15);
-        titleView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
-        texts.addView(titleView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
-
-        TextView subView = new TextView(ctx);
-        subView.setText(subtitle);
-        subView.setTextColor(textSub);
-        subView.setTextSize(12);
-        texts.addView(subView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 1, 0, 0));
-
-        row.addView(texts, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f, 12, 0, 0, 0));
-
-        org.telegram.ui.Components.Switch sw = new org.telegram.ui.Components.Switch(ctx);
-        sw.setChecked(checked, false);
-        sw.setColors(Theme.key_switchTrack, Theme.key_switchTrackChecked, Theme.key_windowBackgroundWhite, Theme.key_windowBackgroundWhite);
-        row.addView(sw, LayoutHelper.createLinear(44, 24));
-
-        row.setOnClickListener(v -> {
-            boolean isChecked = !sw.isChecked();
-            sw.setChecked(isChecked, true);
-            onChange.onSwitch(isChecked);
-        });
-
-        return row;
-    }
-
-    private View createGlassButton(Context ctx, String text, int iconRes, int tint, View.OnClickListener onClick) {
-        LinearLayout box = new LinearLayout(ctx);
-        box.setOrientation(LinearLayout.VERTICAL);
-        box.setGravity(Gravity.CENTER);
-
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(cardBg);
-        bg.setCornerRadius(AndroidUtilities.dp(14));
-        bg.setStroke(AndroidUtilities.dp(1), cardBorder);
-        box.setBackground(bg);
-        box.setClickable(true);
-        box.setOnClickListener(onClick);
-
-        ImageView icon = new ImageView(ctx);
-        icon.setImageResource(iconRes);
-        icon.setColorFilter(tint);
-        box.addView(icon, LayoutHelper.createLinear(20, 20));
-
-        TextView tv = new TextView(ctx);
-        tv.setText(text);
-        tv.setTextColor(textSub);
-        tv.setTextSize(11);
-        tv.setGravity(Gravity.CENTER);
-        tv.setPadding(0, AndroidUtilities.dp(5), 0, 0);
-        box.addView(tv, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
-
-        return box;
+        return view;
     }
 
     /**
      * @noinspection SizeReplaceableByIsEmpty
      */
-    @SuppressLint("NotifyDataSetChanged")
     private void showSettingsSearchDialog() {
         try {
             Activity parent = getParentActivity();
@@ -733,12 +159,12 @@ public class NekoSettingsActivity extends BaseFragment {
             containerLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
 
             FrameLayout searchFrame = new FrameLayout(parent);
-            LinearLayout.LayoutParams searchLP = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, searchHeight + dp(12));
-            searchLP.leftMargin = dp(10);
-            searchLP.rightMargin = dp(10);
-            searchLP.topMargin = dp(6);
-            searchLP.bottomMargin = dp(2);
-            searchFrame.setLayoutParams(searchLP);
+            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, searchHeight + dp(12));
+            layoutParams.leftMargin = dp(10);
+            layoutParams.rightMargin = dp(10);
+            layoutParams.topMargin = dp(6);
+            layoutParams.bottomMargin = dp(2);
+            searchFrame.setLayoutParams(layoutParams);
             searchFrame.setClipToPadding(true);
             searchFrame.setClipChildren(true);
 
@@ -857,6 +283,7 @@ public class NekoSettingsActivity extends BaseFragment {
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
                 }
 
+                @SuppressLint("NotifyDataSetChanged")
                 @Override
                 public void afterTextChanged(Editable s) {
                     String q = s.toString().toLowerCase().trim();
@@ -896,147 +323,113 @@ public class NekoSettingsActivity extends BaseFragment {
         }
     }
 
-
-    private void backupSettings() {
-        Context context = getParentActivity();
-        if (context == null) return;
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle(LocaleController.getString(R.string.BackupSettings));
-
-        LinearLayout linearLayout = new LinearLayout(context);
-        linearLayout.setOrientation(LinearLayout.VERTICAL);
-
-        org.telegram.ui.Cells.CheckBoxCell checkBoxCell = new org.telegram.ui.Cells.CheckBoxCell(context, org.telegram.ui.Cells.CheckBoxCell.TYPE_CHECK_BOX_DEFAULT, resourceProvider);
-        checkBoxCell.setBackground(Theme.getSelectorDrawable(false));
-        checkBoxCell.setText(LocaleController.getString(R.string.ExportSettingsIncludeApiKeys), "", true, false);
-        checkBoxCell.setPadding(LocaleController.isRTL ? AndroidUtilities.dp(16) : AndroidUtilities.dp(8), 0, LocaleController.isRTL ? AndroidUtilities.dp(8) : AndroidUtilities.dp(16), 0);
-        checkBoxCell.setChecked(true, false);
-        checkBoxCell.setOnClickListener(v -> {
-            org.telegram.ui.Cells.CheckBoxCell cell = (org.telegram.ui.Cells.CheckBoxCell) v;
-            cell.setChecked(!cell.isChecked(), true);
-        });
-        linearLayout.addView(checkBoxCell, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 48));
-
-        builder.setView(linearLayout);
-        builder.setPositiveButton(LocaleController.getString(R.string.ExportTheme), (dialog, which) -> {
-            boolean includeApiKeys = checkBoxCell.isChecked();
-            try {
-                File cacheFile = new File(AndroidUtilities.getCacheDir(), new Date().toLocaleString() + ".nekox-settings.json");
-                FileUtil.writeUtf8String(backupSettingsJson(false, 4, includeApiKeys), cacheFile);
-                ShareUtil.shareFile(getParentActivity(), cacheFile);
-            } catch (JSONException e) {
-                AlertUtil.showSimpleAlert(getParentActivity(), e);
-            }
-        });
-        builder.setNegativeButton(LocaleController.getString(R.string.Cancel), null);
-        builder.show();
+    @Override
+    protected String getActionBarTitle() {
+        return getString(R.string.NekoSettings);
     }
 
-    public static String backupSettingsJson(boolean isCloud, int indentSpaces) throws JSONException {
-        return backupSettingsJson(isCloud, indentSpaces, true);
-    }
-
-    public static String backupSettingsJson(boolean isCloud, int indentSpaces, boolean includeApiKeys) throws JSONException {
-        JSONObject configJson = new JSONObject();
-
-        ArrayList<String> userconfig = new ArrayList<>();
-        userconfig.add("saveIncomingPhotos");
-        userconfig.add("passcodeHash");
-        userconfig.add("passcodeType");
-        userconfig.add("passcodeHash");
-        userconfig.add("autoLockIn");
-        userconfig.add("useFingerprint");
-        spToJSON("userconfing", configJson, userconfig::contains, isCloud);
-
-        ArrayList<String> mainconfig = new ArrayList<>();
-        mainconfig.add("saveToGallery");
-        mainconfig.add("autoplayGifs");
-        mainconfig.add("autoplayVideo");
-        mainconfig.add("mapPreviewType");
-        mainconfig.add("raiseToSpeak");
-        mainconfig.add("customTabs");
-        mainconfig.add("directShare");
-        mainconfig.add("shuffleMusic");
-        mainconfig.add("playOrderReversed");
-        mainconfig.add("inappCamera");
-        mainconfig.add("repeatMode");
-        mainconfig.add("fontSize");
-        mainconfig.add("bubbleRadius");
-        mainconfig.add("ivFontSize");
-        mainconfig.add("allowBigEmoji");
-        mainconfig.add("streamMedia");
-        mainconfig.add("saveStreamMedia");
-        mainconfig.add("smoothKeyboard");
-        mainconfig.add("pauseMusicOnRecord");
-        mainconfig.add("streamAllVideo");
-        mainconfig.add("streamMkv");
-        mainconfig.add("suggestStickers");
-        mainconfig.add("sortContactsByName");
-        mainconfig.add("sortFilesByName");
-        mainconfig.add("noSoundHintShowed");
-        mainconfig.add("directShareHash");
-        mainconfig.add("useThreeLinesLayout");
-        mainconfig.add("archiveHidden");
-        mainconfig.add("distanceSystemType");
-        mainconfig.add("loopStickers");
-        mainconfig.add("keepMedia");
-        mainconfig.add("noStatusBar");
-        mainconfig.add("lastKeepMediaCheckTime");
-        mainconfig.add("searchMessagesAsListHintShows");
-        mainconfig.add("searchMessagesAsListUsed");
-        mainconfig.add("stickersReorderingHintUsed");
-        mainconfig.add("textSelectionHintShows");
-        mainconfig.add("scheduledOrNoSoundHintShows");
-        mainconfig.add("lockRecordAudioVideoHint");
-        mainconfig.add("disableVoiceAudioEffects");
-        mainconfig.add("chatSwipeAction");
-
-        if (!isCloud) mainconfig.add("theme");
-        mainconfig.add("selectedAutoNightType");
-        mainconfig.add("autoNightScheduleByLocation");
-        mainconfig.add("autoNightBrighnessThreshold");
-        mainconfig.add("autoNightDayStartTime");
-        mainconfig.add("autoNightDayEndTime");
-        mainconfig.add("autoNightSunriseTime");
-        mainconfig.add("autoNightCityName");
-        mainconfig.add("autoNightSunsetTime");
-        mainconfig.add("autoNightLocationLatitude3");
-        mainconfig.add("autoNightLocationLongitude3");
-        mainconfig.add("autoNightLastSunCheckDay");
-        mainconfig.add("lang_code");
-        mainconfig.add("web_restricted_domains2");
-
-        spToJSON("mainconfig", configJson, mainconfig::contains);
-        if (!isCloud) spToJSON("themeconfig", configJson, null);
-        spToJSON("nkmrcfg", configJson, null, includeApiKeys);
-
-        return configJson.toString(indentSpaces);
-    }
-
-    private static void spToJSON(String sp, JSONObject object, Function<String, Boolean> filter) throws JSONException {
-        spToJSON(sp, object, filter, true);
-    }
-
-    private static void spToJSON(String sp, JSONObject object, Function<String, Boolean> filter, boolean includeApiKeys) throws JSONException {
-        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences(sp, Activity.MODE_PRIVATE);
-        JSONObject jsonConfig = new JSONObject();
-        for (Map.Entry<String, ?> entry : preferences.getAll().entrySet()) {
-            String key = entry.getKey();
-            if (!includeApiKeys && (key.endsWith("Key") || key.contains("Token") || key.contains("AccountID"))) {
-                continue;
+    @SuppressLint("ApplySharedPref")
+    @Override
+    protected void onItemClick(View view, int position, float x, float y) {
+        if (position == chatRow) {
+            presentFragment(new NekoChatSettingsActivity());
+        } else if (position == generalRow) {
+            presentFragment(new NekoGeneralSettingsActivity());
+        } else if (position == passcodeRow) {
+            presentFragment(new NekoPasscodeSettingsActivity());
+        } else if (position == experimentRow) {
+            presentFragment(new NekoExperimentalSettingsActivity());
+        } else if (position == translatorRow) {
+            presentFragment(new NekoTranslatorSettingsActivity());
+        } else if (position == aboutRow) {
+            presentFragment(new NekoAboutActivity());
+        } else if (position == importSettingsRow) {
+            if (Build.VERSION.SDK_INT >= 33) {
+                openFilePicker();
+            } else {
+                DocumentSelectActivity activity = getDocumentSelectActivity(getParentActivity());
+                if (activity != null) {
+                    presentFragment(activity);
+                }
             }
-            if (filter != null && !filter.apply(key)) {
-                continue;
-            }
-            if (entry.getValue() instanceof Long) {
-                key = key + "_long";
-            } else if (entry.getValue() instanceof Float) {
-                key = key + "_float";
-            }
-            jsonConfig.put(key, entry.getValue());
+        } else if (position == resetSettingsRow) {
+            AlertUtil.showConfirm(getParentActivity(),
+                    getString(R.string.ResetSettingsAlert),
+                    R.drawable.msg_reset,
+                    getString(R.string.Reset),
+                    true,
+                    () -> {
+                        ApplicationLoader.applicationContext.getSharedPreferences("nekocloud", Activity.MODE_PRIVATE).edit().clear().commit();
+                        ApplicationLoader.applicationContext.getSharedPreferences("nekox_config", Activity.MODE_PRIVATE).edit().clear().commit();
+                        NekoConfig.getPreferences().edit().clear().commit();
+                        AppRestartHelper.triggerRebirth(getParentActivity(), new Intent(getParentActivity(), LaunchActivity.class));
+                    });
+        } else if (position == exportSettingsRow) {
+            SettingsBackupHelper.backupSettings(getParentActivity(), resourceProvider);
+        } else if (position == appRestartRow) {
+            AppRestartHelper.triggerRebirth(getParentActivity(), new Intent(getParentActivity(), LaunchActivity.class));
         }
-        object.put(sp, jsonConfig);
+    }
+
+    @Override
+    protected BaseListAdapter createAdapter(Context context) {
+        return new ListAdapter(context);
+    }
+
+    private class ListAdapter extends BaseListAdapter {
+
+        public ListAdapter(Context context) {
+            super(context);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position, boolean partial) {
+            int viewType = holder.getItemViewType();
+            switch (viewType) {
+                case TYPE_SHADOW: {
+                    holder.itemView.setBackground(Theme.getThemedDrawable(mContext, R.drawable.greydivider, Theme.key_windowBackgroundGrayShadow));
+                    break;
+                }
+                case TYPE_TEXT: {
+                    TextCell textCell = (TextCell) holder.itemView;
+                    if (position == chatRow) {
+                        textCell.setTextAndIcon(getString(R.string.Chat), R.drawable.msg_discussion, true);
+                    } else if (position == generalRow) {
+                        textCell.setTextAndIcon(getString(R.string.General), R.drawable.msg_theme, true);
+                    } else if (position == translatorRow) {
+                        textCell.setTextAndIcon(getString(R.string.TranslatorSettings), R.drawable.ic_translate, true);
+                    } else if (position == passcodeRow) {
+                        textCell.setTextAndIcon(getString(R.string.PasscodeNeko), R.drawable.msg_permissions, true);
+                    } else if (position == experimentRow) {
+                        textCell.setTextAndIcon(getString(R.string.Experimental), R.drawable.msg_fave, true);
+                    } else if (position == importSettingsRow) {
+                        textCell.setTextAndIcon(getString(R.string.ImportSettings), R.drawable.msg_photo_settings_solar, true);
+                    } else if (position == exportSettingsRow) {
+                        textCell.setTextAndIcon(getString(R.string.BackupSettings), R.drawable.msg_instant_link_solar, true);
+                    } else if (position == resetSettingsRow) {
+                        textCell.setTextAndIcon(getString(R.string.ResetSettings), R.drawable.msg_reset_solar, true);
+                    } else if (position == appRestartRow) {
+                        textCell.setTextAndIcon(getString(R.string.RestartApp), R.drawable.msg_retry_solar, true);
+                    } else if (position == aboutRow) {
+                        textCell.setTextAndIcon(getString(R.string.About), R.drawable.msg_info, true);
+                    }
+                    break;
+                }
+
+            }
+        }
+
+        @Override
+        public int getItemViewType(int position) {
+            if (position == categoriesEndRow || position == nSettingsEndRow) {
+                return TYPE_SHADOW;
+            } else if (position == chatRow || position == generalRow || position == passcodeRow || position == experimentRow || position == translatorRow ||
+                    position == importSettingsRow || position == exportSettingsRow || position == resetSettingsRow || position == appRestartRow ||
+                    position == aboutRow) {
+                return TYPE_TEXT;
+            }
+            return TYPE_SHADOW;
+        }
     }
 
     private DocumentSelectActivity getDocumentSelectActivity(Activity parent) {
@@ -1054,7 +447,7 @@ public class NekoSettingsActivity extends BaseFragment {
             @Override
             public void didSelectFiles(DocumentSelectActivity activity, ArrayList<String> files, String caption, boolean notify, int scheduleDate) {
                 activity.finishFragment();
-                importSettings(parent, new File(files.get(0)));
+                SettingsBackupHelper.importSettings(parent, new File(files.get(0)));
             }
 
             @Override
@@ -1066,105 +459,6 @@ public class NekoSettingsActivity extends BaseFragment {
             }
         });
         return fragment;
-    }
-
-    public static void importSettings(Context context, File settingsFile) {
-        AlertUtil.showConfirm(context,
-                LocaleController.getString(R.string.ImportSettingsAlert),
-                R.drawable.msg_photo_settings_solar,
-                LocaleController.getString(R.string.Import),
-                true,
-                () -> importSettingsConfirmed(context, settingsFile));
-    }
-
-    public static void importSettingsConfirmed(Context context, File settingsFile) {
-        try {
-            JsonObject configJson = GsonUtil.toJsonObject(FileUtil.readUtf8String(settingsFile));
-            importSettings(configJson);
-
-            AlertDialog restart = new AlertDialog(context, 0);
-            restart.setTitle(LocaleController.getString(R.string.NagramX));
-            restart.setMessage(LocaleController.getString(R.string.RestartAppToTakeEffect));
-            restart.setPositiveButton(LocaleController.getString(R.string.OK), (__, ___) -> AppRestartHelper.triggerRebirth(context, new Intent(context, LaunchActivity.class)));
-            restart.show();
-        } catch (Exception e) {
-            AlertUtil.showSimpleAlert(context, e);
-        }
-    }
-
-    @SuppressLint("ApplySharedPref")
-    public static void importSettings(JsonObject configJson) throws JSONException {
-        Set<String> allowedKeys = new HashSet<>();
-        try {
-            allowedKeys.addAll(NekoConfig.getAllKeys());
-            allowedKeys.addAll(NaConfig.INSTANCE.getAllKeys());
-        } catch (Throwable ignore) {
-        }
-        String[] preservePrefixes = {
-                AyuGhostPreferences.ghostReadExclusionPrefix,
-                AyuGhostPreferences.ghostTypingExclusionPrefix,
-                AyuSavePreferences.saveExclusionPrefix,
-                LocalNameHelper.chatNameOverridePrefix,
-                LocalNameHelper.userNameOverridePrefix,
-                DialogConfig.customForumTabPrefix,
-                LocalPeerColorHelper.KEY_PREFIX,
-                LocalPremiumStatusHelper.KEY_PREFIX,
-                BookmarksHelper.KEY_PREFIX
-        };
-
-        for (Map.Entry<String, JsonElement> element : configJson.entrySet()) {
-            String spName = element.getKey();
-            SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences(spName, Activity.MODE_PRIVATE);
-            SharedPreferences.Editor editor = preferences.edit();
-            for (Map.Entry<String, JsonElement> config : ((JsonObject) element.getValue()).entrySet()) {
-                String key = config.getKey();
-                JsonPrimitive value = (JsonPrimitive) config.getValue();
-                if ("nkmrcfg".equals(spName)) {
-                    boolean shouldSkip = true;
-                    for (String prefix : preservePrefixes) {
-                        if (key.startsWith(prefix)) {
-                            shouldSkip = false;
-                            break;
-                        }
-                    }
-                    if (shouldSkip) {
-                        String actualKey = key;
-                        if (key.endsWith("_long")) {
-                            actualKey = StringsKt.substringBeforeLast(key, "_long", key);
-                        } else if (key.endsWith("_float")) {
-                            actualKey = StringsKt.substringBeforeLast(key, "_float", key);
-                        }
-                        shouldSkip = !allowedKeys.contains(actualKey);
-                    }
-                    if (shouldSkip) {
-                        continue;
-                    }
-                }
-                if (value.isBoolean()) {
-                    editor.putBoolean(key, value.getAsBoolean());
-                } else if (value.isNumber()) {
-                    boolean isLong = false;
-                    boolean isFloat = false;
-                    if (key.endsWith("_long")) {
-                        key = StringsKt.substringBeforeLast(key, "_long", key);
-                        isLong = true;
-                    } else if (key.endsWith("_float")) {
-                        key = StringsKt.substringBeforeLast(key, "_float", key);
-                        isFloat = true;
-                    }
-                    if (isLong) {
-                        editor.putLong(key, value.getAsLong());
-                    } else if (isFloat) {
-                        editor.putFloat(key, value.getAsFloat());
-                    } else {
-                        editor.putInt(key, value.getAsInt());
-                    }
-                } else {
-                    editor.putString(key, value.getAsString());
-                }
-            }
-            editor.commit();
-        }
     }
 
     private void openFilePicker() {
@@ -1198,95 +492,12 @@ public class NekoSettingsActivity extends BaseFragment {
                         inputStream.close();
                         outputStream.flush();
                         outputStream.close();
-                        importSettings(getParentActivity(), file);
+                        SettingsBackupHelper.importSettings(getParentActivity(), file);
                     }
                 } catch (Exception ignore) {
                 }
             }
             super.onActivityResultFragment(requestCode, resultCode, data);
         }
-    }
-
-    @Override
-    public void onRequestPermissionsResultFragment(int requestCode, String[] permissions, int[] grantResults) {
-        if (requestCode == PERMISSION_REQ_MUSIC_GRAPH) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                if (musicGraphSwitch != null) {
-                    musicGraphSwitch.setChecked(true, true);
-                    NaConfig.INSTANCE.getMusicGraph().setConfigBool(true);
-                    AlertUtil.showConfirm(getParentActivity(), "Restart required", R.drawable.msg_retry, "Restart", true, () -> {
-                        AppRestartHelper.triggerRebirth(getParentActivity(), new Intent(getParentActivity(), LaunchActivity.class));
-                    });
-                }
-            } else {
-                if (getParentActivity() != null && !getParentActivity().shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO)) {
-                    new AlertDialog.Builder(getParentActivity())
-                            .setTitle("Permission Required")
-                            .setMessage("Go to settings-Apps-Alexgram give permission to allow microphone")
-                            .setPositiveButton("Settings", (dialog, which) -> {
-                                try {
-                                    Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                                    intent.setData(Uri.parse("package:" + ApplicationLoader.applicationContext.getPackageName()));
-                                    getParentActivity().startActivity(intent);
-                                } catch (Exception ignore) {
-                                }
-                            })
-                            .setNegativeButton("Cancel", null)
-                            .show();
-                }
-                if (musicGraphSwitch != null) {
-                    musicGraphSwitch.setChecked(false, true);
-                }
-            }
-        }
-    }
-
-    private void showHiddenChatsSetupDialog(Context context) {
-        presentFragment(new HiddenChatsPasscodeActivity(HiddenChatsPasscodeActivity.MODE_SETUP_PASSCODE));
-    }
-
-    private void showHiddenChatsPasscodeDialog(Context context) {
-        presentFragment(new HiddenChatsPasscodeActivity(HiddenChatsPasscodeActivity.MODE_UNLOCK_SETTINGS));
-    }
-
-    private String copyHeaderMediaToPersistentStorage(String sourcePath, boolean preferVideoExt) {
-        if (TextUtils.isEmpty(sourcePath)) {
-            return sourcePath;
-        }
-        try {
-            File source = new File(sourcePath);
-            if (!source.exists() || !source.isFile()) {
-                return sourcePath;
-            }
-            File directory = new File(ApplicationLoader.applicationContext.getFilesDir(), "live_header_media");
-            if (!directory.exists() && !directory.mkdirs()) {
-                return sourcePath;
-            }
-
-            String extension = getFileExtensionWithDot(source.getName());
-            if (TextUtils.isEmpty(extension)) {
-                extension = preferVideoExt ? ".mp4" : ".jpg";
-            }
-
-            File destination = new File(directory, "live_header" + extension);
-            if (!source.getAbsolutePath().equals(destination.getAbsolutePath())) {
-                AndroidUtilities.copyFile(source, destination);
-            }
-            return destination.getAbsolutePath();
-        } catch (Exception e) {
-            FileLog.e(e);
-            return sourcePath;
-        }
-    }
-
-    private String getFileExtensionWithDot(String fileName) {
-        if (TextUtils.isEmpty(fileName)) {
-            return "";
-        }
-        int dot = fileName.lastIndexOf('.');
-        if (dot < 0 || dot == fileName.length() - 1) {
-            return "";
-        }
-        return fileName.substring(dot);
     }
 }

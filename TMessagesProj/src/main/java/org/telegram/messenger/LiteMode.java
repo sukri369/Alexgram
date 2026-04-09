@@ -50,16 +50,18 @@ public class LiteMode {
     public static final int FLAG_PARTICLES = 1 << 17;
 
     public static int PRESET_LOW = (
-        FLAGS_ANIMATED_STICKERS |
-        FLAGS_ANIMATED_EMOJI |
-        FLAG_AUTOPLAY_VIDEOS |
+        FLAG_ANIMATED_EMOJI_CHAT_PREMIUM |
+        FLAG_ANIMATED_EMOJI_KEYBOARD_PREMIUM |
+        FLAG_ANIMATED_EMOJI_REACTIONS_PREMIUM |
         FLAG_AUTOPLAY_GIFS |
         FLAG_CHAT_THANOS |
         FLAG_PARTICLES
     ); // 198684
     public static int PRESET_MEDIUM = (
         FLAGS_ANIMATED_STICKERS |
-        FLAGS_ANIMATED_EMOJI |
+        FLAG_ANIMATED_EMOJI_KEYBOARD_PREMIUM |
+        FLAG_ANIMATED_EMOJI_REACTIONS_PREMIUM |
+        FLAG_ANIMATED_EMOJI_CHAT |
         FLAG_CHAT_FORUM_TWOCOLUMN |
         FLAG_CALLS_ANIMATIONS |
         FLAG_AUTOPLAY_VIDEOS |
@@ -147,11 +149,6 @@ public class LiteMode {
     public static boolean isEnabled(int flag) {
         if (flag == FLAG_CHAT_FORUM_TWOCOLUMN && AndroidUtilities.isTablet()) {
             // always enabled for tablets
-            return true;
-        }
-        // When Liquid Glass UI setting is on, activate Telegram's native glass + blur pipeline
-        if ((flag == FLAG_LIQUID_GLASS || flag == FLAG_CHAT_BLUR) &&
-                tw.nekomimi.nekogram.NekoConfig.liquidGlassUI.Bool()) {
             return true;
         }
         return (getValue() & preprocessFlag(flag)) > 0;

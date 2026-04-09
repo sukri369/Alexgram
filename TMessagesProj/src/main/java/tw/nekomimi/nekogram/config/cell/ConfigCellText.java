@@ -45,15 +45,7 @@ public class ConfigCellText extends AbstractConfigCell implements WithKey, WithO
     public void onBindViewHolder(RecyclerView.ViewHolder holder) {
         TextSettingsCell cell = (TextSettingsCell) holder.itemView;
         this.cell = cell;
-        String title = key;
-        if (key != null) {
-            String temp = getString(key);
-            if (temp != null) {
-                title = temp;
-            }
-        } else {
-            title = "";
-        }
+        String title = getString(key);
         cell.setTextAndValue(title, value, cellGroup.needSetDivider(this));
         cell.setEnabled(enabled);
     }

@@ -103,9 +103,7 @@ public class SimpleTextView extends View implements Drawable.Callback {
 
     private boolean leftDrawableOutside, rightDrawableOutside;
     private boolean rightDrawableInside;
-    private boolean ellipsizeByGradient, ellipsizeByGradientLeft;
-    private boolean ellipsizeByGradientBothSides;
-    private boolean ellipsizeMiddle;
+    private boolean ellipsizeByGradient, ellipsizeByGradientLeft, ellipsizeByGradientBothSides, ellipsizeMiddle;
     private Boolean forceEllipsizeByGradientLeft;
     private int ellipsizeByGradientWidthDp = 16;
     private int paddingRight;
@@ -244,10 +242,13 @@ public class SimpleTextView extends View implements Drawable.Callback {
             return;
         }
         ellipsizeByGradient = value;
-        if (!value) {
-            ellipsizeByGradientBothSides = false;
-        }
         this.forceEllipsizeByGradientLeft = forceLeft;
+        updateFadePaints();
+    }
+
+    public void setEllipsizeByGradient(int value, Boolean forceLeft) {
+        setEllipsizeByGradient(true, forceLeft);
+        ellipsizeByGradientWidthDp = value;
         updateFadePaints();
     }
 
@@ -258,12 +259,6 @@ public class SimpleTextView extends View implements Drawable.Callback {
         ellipsizeByGradientBothSides = value;
         updateFadePaints();
         invalidate();
-    }
-
-    public void setEllipsizeByGradient(int value, Boolean forceLeft) {
-        setEllipsizeByGradient(true, forceLeft);
-        ellipsizeByGradientWidthDp = value;
-        updateFadePaints();
     }
 
     public void setEllipsizeMiddle(boolean value) {
@@ -446,7 +441,7 @@ public class SimpleTextView extends View implements Drawable.Callback {
                     }
                 }
                 if (canHideRightDrawable && rightDrawableWidth != 0 && !rightDrawableOutside) {
-                    CharSequence string = TextUtils.ellipsize(text, textPaint, width, getTruncateAtMode());
+                    CharSequence string = TextUtils.ellipsize(text, textPaint, width, TextUtils.TruncateAt.END);
                     if (!text.equals(string)) {
                         rightDrawableHidden = true;
                         width += rightDrawableWidth;
@@ -456,10 +451,10 @@ public class SimpleTextView extends View implements Drawable.Callback {
                 if (buildFullLayout) {
                     CharSequence string = text;
                     if (!ellipsizeByGradient) {
-                        string = TextUtils.ellipsize(string, textPaint, width, getTruncateAtMode());
+                        string = TextUtils.ellipsize(string, textPaint, width, TextUtils.TruncateAt.END);
                     }
                     if (!ellipsizeByGradient && !string.equals(text)) {
-                        fullLayout = StaticLayoutEx.createStaticLayout(text, textPaint, width, getAlignment(), 1.0f, 0.0f, false, getTruncateAtMode(), width, fullTextMaxLines, false);
+                        fullLayout = StaticLayoutEx.createStaticLayout(text, textPaint, width, getAlignment(), 1.0f, 0.0f, false, TextUtils.TruncateAt.END, width, fullTextMaxLines, false);
                         if (fullLayout != null) {
                             int end = fullLayout.getLineEnd(0);
                             int start = fullLayout.getLineStart(1);
@@ -478,7 +473,7 @@ public class SimpleTextView extends View implements Drawable.Callback {
                                 part = "\u200F" + part;
                             }
                             partLayout = new StaticLayout(part, 0, part.length(), textPaint, scrollNonFitText ? dp(2000) : width + dp(8), getAlignment(), 1.0f, 0.0f, false);
-                            fullLayout = StaticLayoutEx.createStaticLayout(full, textPaint, width + dp(8) + fullLayoutAdditionalWidth, getAlignment(), 1.0f, 0.0f, false, getTruncateAtMode(), width + fullLayoutAdditionalWidth, fullTextMaxLines, false);
+                            fullLayout = StaticLayoutEx.createStaticLayout(full, textPaint, width + dp(8) + fullLayoutAdditionalWidth, getAlignment(), 1.0f, 0.0f, false, TextUtils.TruncateAt.END, width + fullLayoutAdditionalWidth, fullTextMaxLines, false);
                         }
                     } else {
                         layout = new StaticLayout(string, 0, string.length(), textPaint, scrollNonFitText || ellipsizeByGradient ? dp(2000) : width + dp(8), getAlignment(), 1.0f, 0.0f, false);
@@ -487,13 +482,13 @@ public class SimpleTextView extends View implements Drawable.Callback {
                         firstLineLayout = null;
                     }
                 } else if (maxLines > 1) {
-                    layout = StaticLayoutEx.createStaticLayout(text, textPaint, width, getAlignment(), 1.0f, 0.0f, false, getTruncateAtMode(), width, maxLines, false);
+                    layout = StaticLayoutEx.createStaticLayout(text, textPaint, width, getAlignment(), 1.0f, 0.0f, false, TextUtils.TruncateAt.END, width, maxLines, false);
                 } else {
                     CharSequence string;
                     if (scrollNonFitText || ellipsizeByGradient) {
                         string = text;
                     } else {
-                        string = TextUtils.ellipsize(text, textPaint, width, getTruncateAtMode());
+                        string = TextUtils.ellipsize(text, textPaint, width, TextUtils.TruncateAt.END);
                     }
                     /*if (layout != null && TextUtils.equals(layout.getText(), string)) {
                         calcOffset(width);
@@ -846,7 +841,7 @@ public class SimpleTextView extends View implements Drawable.Callback {
                 }
             }
             if (canHideRightDrawable && rightDrawableWidth != 0 && !rightDrawableOutside) {
-                CharSequence string = TextUtils.ellipsize(text, textPaint, width, getTruncateAtMode());
+                CharSequence string = TextUtils.ellipsize(text, textPaint, width, TextUtils.TruncateAt.END);
                 if (!text.equals(string)) {
                     rightDrawableHidden = true;
                     width += rightDrawableWidth;
@@ -1113,21 +1108,10 @@ public class SimpleTextView extends View implements Drawable.Callback {
             } else if (ellipsizeByGradient && textDoesNotFit && fadeEllpsizePaint != null) {
                 canvas.save();
                 updateFadePaints();
-                if (ellipsizeByGradientBothSides && fadeEllpsizePaintBack != null) {
-                    int rightFadeX = getMaxTextWidth() - paddingRight - fadeEllpsizePaintWidth - dp(rightDrawable != null && !(rightDrawable instanceof AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable) && rightDrawableOutside ? +2 : 0);
-                    canvas.translate(rightFadeX, 0);
-                    canvas.drawRect(0, 0, fadeEllpsizePaintWidth, getMeasuredHeight(), fadeEllpsizePaint);
-                    canvas.restore();
-
-                    canvas.save();
-                    canvas.translate(textOffsetX, 0);
-                    canvas.drawRect(0, 0, fadeEllpsizePaintWidth, getMeasuredHeight(), fadeEllpsizePaintBack);
-                } else {
-                    if (!ellipsizeByGradientLeft) {
-                        canvas.translate(getMaxTextWidth() - paddingRight - fadeEllpsizePaintWidth - dp(rightDrawable != null && !(rightDrawable instanceof AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable) && rightDrawableOutside ? +2 : 0), 0);
-                    }
-                    canvas.drawRect(textOffsetX, 0, fadeEllpsizePaintWidth, getMeasuredHeight(), fadeEllpsizePaint);
+                if (!ellipsizeByGradientLeft) {
+                    canvas.translate(getMaxTextWidth() - paddingRight - fadeEllpsizePaintWidth - dp(rightDrawable != null && !(rightDrawable instanceof AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable) && rightDrawableOutside ? +2 : 0), 0);
                 }
+                canvas.drawRect(textOffsetX, 0, fadeEllpsizePaintWidth, getMeasuredHeight(), fadeEllpsizePaint);
                 canvas.restore();
             }
             updateScrollAnimation();

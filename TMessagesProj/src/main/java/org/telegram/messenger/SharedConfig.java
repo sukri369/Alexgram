@@ -340,6 +340,8 @@ public class SharedConfig {
     public static int dayNightThemeSwitchHintCount;
     public static int callEncryptionHintDisplayedCount;
     public static boolean shadowsInSections;
+    public static boolean debugViewMetrics;
+    public static boolean photoHighQualityDefault;
 
     public static TLRPC.TL_help_appUpdate pendingAppUpdate;
     public static int pendingAppUpdateBuildVersion;
@@ -364,8 +366,6 @@ public class SharedConfig {
     public static int fastScrollHintCount = 3;
     public static boolean dontAskManageStorage;
     public static boolean multipleReactionsPromoShowed;
-
-    public static boolean translateChats = true;
 
     public static boolean isFloatingDebugActive;
     public static LiteMode liteMode;
@@ -713,6 +713,8 @@ public class SharedConfig {
             callEncryptionHintDisplayedCount = preferences.getInt("callEncryptionHintDisplayedCount", 0);
             debugVideoQualities = preferences.getBoolean("debugVideoQualities", false);
             shadowsInSections = preferences.getBoolean("shadowsInSections", false);
+            debugViewMetrics = preferences.getBoolean("debugViewMetrics", false);
+            photoHighQualityDefault = preferences.getBoolean("photoHighQualityDefault", false);
 
             loadDebugConfig(preferences);
 
@@ -1908,7 +1910,7 @@ public class SharedConfig {
     }
 
     public static boolean chatBlurEnabled() {
-        return (canBlurChat() && (LiteMode.isEnabled(LiteMode.FLAG_CHAT_BLUR) || NaConfig.INSTANCE.getPillChatTitle().Bool())) || NekoConfig.forceBlurInChat.Bool();
+        return (canBlurChat() && LiteMode.isEnabled(LiteMode.FLAG_CHAT_BLUR)) || NekoConfig.forceBlurInChat.Bool();
     }
 
     public static class BackgroundActivityPrefs {

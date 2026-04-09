@@ -49,7 +49,6 @@
     <string name="TranslateApiUnsupported">The translation provider you selected don\'t support your language.</string>
     <string name="ProviderLingocloud">LingoCloud Translate</string>
     <string name="UndoTranslate">Hide Translation</string>
-    <string name="DisablePhotoViewerSideAction">Disable Side-Tap to Switch Photos</string>
     <string name="BotToken">Token</string>
     <string name="UnlimitedPinnedDialogs">Unlimited Pinned Dialogs</string>
     <string name="UnlimitedPinnedDialogsAbout">Pin unlimited dialogs by turn their sync off.</string>
@@ -275,4 +274,6 @@
     <string name="EmojiUseDefault">Use system emoji</string>
     <string name="Chat">Chats</string>
     <string name="Appearance">Appearance</string>
-</resources>
+    <string name="PillChatTitle">Pill Chat Title</string>
+    <string name="PillChatTitleDescription">Shows centered chat title with translucent background (iOS Style)</string>
+</resources>

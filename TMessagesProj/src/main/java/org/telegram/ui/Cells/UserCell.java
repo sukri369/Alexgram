@@ -17,6 +17,8 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
+import android.icu.number.Scale;
+import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.MotionEvent;
@@ -48,7 +50,6 @@ import org.telegram.ui.Components.AnimatedEmojiDrawable;
 import org.telegram.ui.Components.AvatarDrawable;
 import org.telegram.ui.Components.BackupImageView;
 import org.telegram.ui.Components.Bulletin;
-import org.telegram.ui.Components.CheckBox;
 import org.telegram.ui.Components.CheckBox2;
 import org.telegram.ui.Components.CheckBoxSquare;
 import org.telegram.ui.Components.LayoutHelper;
@@ -147,7 +148,7 @@ public class UserCell extends FrameLayout implements NotificationCenter.Notifica
             addButton.setTextColor(Theme.getColor(Theme.key_featuredStickers_buttonText, resourcesProvider));
             addButton.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
             addButton.setTypeface(AndroidUtilities.bold());
-            addButton.setBackgroundDrawable(Theme.AdaptiveRipple.filledRectByKey(Theme.key_featuredStickers_addButton, 4));
+            addButton.setBackground(Theme.AdaptiveRipple.filledRectByKey(Theme.key_featuredStickers_addButton, 4));
             addButton.setText(getString(R.string.Add));
             addButton.setPadding(dp(17), 0, dp(17), 0);
             addView(addButton, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, 28, Gravity.TOP | (LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT), LocaleController.isRTL ? 14 : 0, 15, LocaleController.isRTL ? 0 : 14, 0));
@@ -227,6 +228,7 @@ public class UserCell extends FrameLayout implements NotificationCenter.Notifica
 
         if (admin) {
             adminTextView = new TextView(context);
+            ScaleStateListAnimator.apply(adminTextView, .05f, 1.2f);
             adminTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
             adminTextView.setTextColor(Theme.getColor(Theme.key_profile_creatorIcon, resourcesProvider));
             addView(adminTextView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, (LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT) | Gravity.TOP, LocaleController.isRTL ? 23 : 0, 10, LocaleController.isRTL ? 0 : 23, 0));
@@ -279,10 +281,6 @@ public class UserCell extends FrameLayout implements NotificationCenter.Notifica
     }
 
     private boolean isAdmin, isOwner;
-    public void setAdminRole(String role) {
-        setAdminRole(role, false, false, false, null);
-    }
-
     public void setAdminRole(String role, boolean isAdmin, boolean isOwner, boolean canAddTag, View.OnClickListener onClick) {
         if (adminTextView == null) {
             return;
@@ -294,20 +292,20 @@ public class UserCell extends FrameLayout implements NotificationCenter.Notifica
             color = Theme.getColor(Theme.key_chat_tagCreator, resourcesProvider);
         } else if (isAdmin) {
             color = Theme.getColor(Theme.key_chat_tagAdmin, resourcesProvider);
-        } else if (canAddTag && android.text.TextUtils.isEmpty(role)) {
+        } else if (canAddTag && TextUtils.isEmpty(role)) {
             color = Theme.getColor(Theme.key_featuredStickers_addButton, resourcesProvider);
         } else {
             color = Theme.getColor(Theme.key_chat_inAdminText, resourcesProvider);
         }
         adminTextView.setTextColor(color);
-        if (!android.text.TextUtils.isEmpty(role)) {
+        if (isAdmin || isOwner) {
             adminTextView.setText(role);
             adminTextView.setPadding(dp(6), dp(0.66f), dp(6), dp(1));
             adminTextView.setTranslationX(dp(6));
             adminTextView.setBackground(Theme.createRoundRectDrawable(dp(32), Theme.multAlpha(color, .12f)));
             adminTextView.setOnClickListener(onClick);
-        } else if (canAddTag && android.text.TextUtils.isEmpty(role)) {
-            adminTextView.setText(org.telegram.messenger.LocaleController.getString(org.telegram.messenger.R.string.AddTag));
+        } else if (canAddTag && TextUtils.isEmpty(role)) {
+            adminTextView.setText(getString(R.string.AddTag));
             adminTextView.setPadding(dp(6), dp(0.66f), dp(6), dp(1));
             adminTextView.setTranslationX(dp(6));
             adminTextView.setBackground(Theme.createRadSelectorDrawable(Theme.multAlpha(color, .12f), dp(32), dp(32)));
@@ -364,9 +362,7 @@ public class UserCell extends FrameLayout implements NotificationCenter.Notifica
             if (name != null && nameTextView != null) {
                 name = Emoji.replaceEmoji(name, nameTextView.getPaint().getFontMetricsInt(), false);
             }
-        } catch (
-                Exception ignore) {
-        }
+        } catch (Exception ignore) {}
         currentName = name;
         storiable = !(object instanceof String);
         currentObject = object;
@@ -740,18 +736,6 @@ public class UserCell extends FrameLayout implements NotificationCenter.Notifica
         avatarImageView.setRoundRadius(currentChat != null && currentChat.forum ? dp(14) : dp(24));
 
         nameTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText, resourcesProvider));
-        if (adminTextView != null) {
-            final int adminColor;
-            if (isOwner) {
-                adminColor = Theme.getColor(Theme.key_chat_tagCreator, resourcesProvider);
-            } else if (isAdmin) {
-                adminColor = Theme.getColor(Theme.key_chat_tagAdmin, resourcesProvider);
-            } else {
-                adminColor = Theme.getColor(Theme.key_chat_inAdminText, resourcesProvider);
-            }
-            adminTextView.setTextColor(adminColor);
-        }
-
         if (mutualView != null) {
             mutualView.setVisibility(currentUser != null && currentUser.mutual_contact ? VISIBLE : GONE);
         }

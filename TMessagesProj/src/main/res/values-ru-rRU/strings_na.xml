@@ -19,7 +19,6 @@
     <string name="ShowMessageID">Показывать ID сообщения</string>
     <string name="ShowRPCError">Показывать ошибки RPC</string>
     <string name="ShowPremiumStickersAnimation">Показывать анимацию Premium-стикеров</string>
-    <string name="AlwaysSaveChatOffset">Всегда сохранять смещение чатов</string>
     <string name="AppIconColorful">Красочная</string>
     <string name="AppIconDarkGreen">Тёмно-зелёная</string>
     <string name="AppIconNeon">Неон</string>
@@ -31,13 +30,11 @@
     <string name="ToTheMessage">К сообщению</string>
     <string name="ZalgoFilter">Фильтровать символы «Zalgo»</string>
     <string name="ZalgoFilterNotice">Все символы «Z̷͍͌ā̸̜l̸̞̂g̷̝͘o̶̩̓» в никнеймах и сообщениях будут удалены.</string>
-    <string name="labelChannelUser">Помечать пользователей каналов</string>
     <string name="AlwaysShowDownloadIcon">Всегда показывать значок «Загрузки»</string>
     <string name="HideTitle">Скрыть заголовок</string>
     <string name="IgnoreUnreadCount">Скрыть количество непрочитанных</string>
     <string name="SendWithoutMarkdown">Отправить без разметки</string>
     <string name="SendAsEmoji">Отправить как эмодзи</string>
-    <string name="CustomArtworkApi">API пользовательских музыкальных обложек</string>
     <string name="CustomEditedMessage">Подпись для изменённых сообщений</string>
     <string name="NotificationIcon">Иконка уведомления</string>
     <string name="Official">Официальная</string>
@@ -96,7 +93,7 @@
     <string name="SearchHashtagDefaultPageChannel">Страница поиска по хэштегам в каналах по умолчанию</string>
     <string name="SearchHashtagDefaultPageChat">Страница поиска по хэштегам в чатах по умолчанию</string>
     <string name="EnablePanguOnSending">Включить Pangu при отправке</string>
-    <string name="PanguInfo">Для удобства чтения текстового интервала, автоматически вставляйте пробелы между CJK (китайский, японский, корейский), английским языком, цифрами и символами.</string>
+    <string name="PanguInfo">Автоматическая расстановка пробелов для удобочитаемости: добавление пробелов между символами CJK (китайскими, японскими, корейскими), латинскими буквами, цифрами и специальными знаками.</string>
     <string name="SendWithPangu">Отправить с Pangu</string>
     <string name="SendWithoutPangu">Отправить без Pangu</string>
     <string name="DefaultHlsVideoQuality">Качество видео HLS по умолчанию</string>

@@ -19,7 +19,6 @@
     <string name="ShowMessageID">Tampilkan ID Pesan</string>
     <string name="ShowRPCError">Beritahu Kesalahan RPC</string>
     <string name="ShowPremiumStickersAnimation">Tampilkan Animasi Stiker Premium</string>
-    <string name="AlwaysSaveChatOffset">Selalu Simpan Perbedaan Obrolan</string>
     <string name="AppIconColorful">Berwarna</string>
     <string name="AppIconDarkGreen">Hijau Gelap</string>
     <string name="AppIconNeon">Neon</string>
@@ -31,13 +30,11 @@
     <string name="ToTheMessage">Pergi Ke</string>
     <string name="ZalgoFilter">Saring Simbol \"Zalgo\"</string>
     <string name="ZalgoFilterNotice">Semua simbol \"Z̷͍͌ā̸̜l̸̞̂g̷̝͘o̶̩̓\" pada nama panggilan atau pesan akan dihapus.</string>
-    <string name="labelChannelUser">Label Pengguna Saluran</string>
     <string name="AlwaysShowDownloadIcon">Selalu Tampilkan Ikon Unduhan</string>
     <string name="HideTitle">Sembunyikan Judul</string>
     <string name="IgnoreUnreadCount">Sembunyikan Penghitung Belum Dibaca</string>
     <string name="SendWithoutMarkdown">Kirim tanpa markdown</string>
     <string name="SendAsEmoji">Kirim sebagai emoji</string>
-    <string name="CustomArtworkApi">API Artwork Khusus</string>
     <string name="CustomEditedMessage">Tanda Disunting Khusus</string>
     <string name="NotificationIcon">Ikon Pemberitahuan</string>
     <string name="Official">Resmi</string>

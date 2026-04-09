@@ -47,21 +47,24 @@ import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
 
 import org.jetbrains.annotations.NotNull;
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.BuildVars;
 import org.telegram.messenger.CodeHighlighting;
 import org.telegram.messenger.Emoji;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MediaDataController;
 import org.telegram.messenger.R;
+import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.utils.CopyUtilities;
+import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.AlertDialogDecor;
+import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
+import org.telegram.ui.LaunchActivity;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.HashMap;
 
 import tw.nekomimi.nekogram.helpers.ChatsHelper;
 import tw.nekomimi.nekogram.llm.LlmConfig;
@@ -71,31 +74,10 @@ import tw.nekomimi.nekogram.utils.AlertUtil;
 public class EditTextCaption extends EditTextBoldCursor {
 
     private static final int ACCESSIBILITY_ACTION_SHARE = 0x10000000;
-        private static final int FONT_STYLE_BOLD_SERIF = 0;
-        private static final int FONT_STYLE_FANCY_SCRIPT = 1;
-        private static final int FONT_STYLE_DOUBLE_STRUCK = 2;
-        private static final int FONT_STYLE_SMALL_CAPS = 3;
-        private static final int FONT_STYLE_MONOSPACE = 4;
-        private static final int FONT_STYLE_BUBBLE = 5;
-        private static final int FONT_STYLE_SQUARE = 6;
-        private static final int FONT_STYLE_UPSIDE_DOWN = 7;
-
-        private static final String[] SCRIPT_UPPER = {
-            "\uD835\uDC9C", "\u212C", "\uD835\uDC9E", "\uD835\uDC9F", "\u2130", "\u2131", "\uD835\uDCA2", "\u210B", "\u2110", "\uD835\uDCA5", "\uD835\uDCA6", "\u2112", "\u2133", "\uD835\uDCA9", "\uD835\uDCAA", "\uD835\uDCAB", "\uD835\uDCAC", "\u211B", "\uD835\uDCAE", "\uD835\uDCAF", "\uD835\uDCB0", "\uD835\uDCB1", "\uD835\uDCB2", "\uD835\uDCB3", "\uD835\uDCB4", "\uD835\uDCB5"
-        };
-        private static final String[] SCRIPT_LOWER = {
-            "\uD835\uDCB6", "\uD835\uDCB7", "\uD835\uDCB8", "\uD835\uDCB9", "\u212F", "\uD835\uDCBB", "\u210A", "\uD835\uDCBD", "\uD835\uDCBE", "\uD835\uDCBF", "\uD835\uDCC0", "\uD835\uDCC1", "\uD835\uDCC2", "\uD835\uDCC3", "\u2134", "\uD835\uDCC5", "\uD835\uDCC6", "\uD835\uDCC7", "\uD835\uDCC8", "\uD835\uDCC9", "\uD835\uDCCA", "\uD835\uDCCB", "\uD835\uDCCC", "\uD835\uDCCD", "\uD835\uDCCE", "\uD835\uDCCF"
-        };
-        private static final String[] DOUBLE_STRUCK_UPPER = {
-            "\uD835\uDD38", "\uD835\uDD39", "\u2102", "\uD835\uDD3B", "\uD835\uDD3C", "\uD835\uDD3D", "\uD835\uDD3E", "\u210D", "\uD835\uDD40", "\uD835\uDD41", "\uD835\uDD42", "\uD835\uDD43", "\uD835\uDD44", "\u2115", "\uD835\uDD46", "\u2119", "\u211A", "\u211D", "\uD835\uDD4A", "\uD835\uDD4B", "\uD835\uDD4C", "\uD835\uDD4D", "\uD835\uDD4E", "\uD835\uDD4F", "\uD835\uDD50", "\u2124"
-        };
-        private static final String[] SMALL_CAPS = {
-            "\u1D00", "\u0299", "\u1D04", "\u1D05", "\u1D07", "\uA730", "\u0262", "\u029C", "\u026A", "\u1D0A", "\u1D0B", "\u029F", "\u1D0D", "\u0274", "\u1D0F", "\u1D18", "\u01EB", "\u0280", "\uA731", "\u1D1B", "\u1D1C", "\u1D20", "\u1D21", "x", "\u028F", "\u1D22"
-        };
-        private static final Map<Integer, String> UPSIDE_DOWN_MAP = createUpsideDownMap();
 
     private String caption;
     private StaticLayout captionLayout;
+    private Text rightText;
     private int userNameLength;
     private int xOffset;
     private int yOffset;
@@ -404,268 +386,6 @@ public class EditTextCaption extends EditTextBoldCursor {
         });
     }
 
-    public void makeSelectedChangeFont() {
-        Editable editable = getText();
-        if (editable == null || TextUtils.isEmpty(editable)) {
-            return;
-        }
-
-        final int start;
-        final int end;
-        if (selectionStart >= 0 && selectionEnd >= 0) {
-            start = Math.min(selectionStart, selectionEnd);
-            end = Math.max(selectionStart, selectionEnd);
-            selectionStart = selectionEnd = -1;
-        } else {
-            start = Math.min(getSelectionStart(), getSelectionEnd());
-            end = Math.max(getSelectionStart(), getSelectionEnd());
-        }
-        if (start < 0 || end < 0 || start == end || end > editable.length()) {
-            return;
-        }
-
-        CharSequence[] options = new CharSequence[]{
-                "Bold Serif Font  (\uD835\uDC07\uD835\uDC1E\uD835\uDC25\uD835\uDC25\uD835\uDC28)",
-                "Fancy Script Font  (\uD835\uDCE7\uD835\uDCEE\uD835\uDCF5\uD835\uDCF5\uD835\uDCF8)",
-                "Double Struck Font  (\u210D\uD835\uDD56\uD835\uDD5D\uD835\uDD5D\uD835\uDD60)",
-                "Small Caps Font  (\u029C\u1D07\u029F\u029F\u1D0F)",
-                "Monospace Hacker Font  (\uD835\uDE77\uD835\uDE8E\uD835\uDE95\uD835\uDE95\uD835\uDE98)",
-                "Bubble Circle Font  (\u24BD\u24D4\u24DB\u24DB\u24DE)",
-                "Square Font  (\uD83C\uDD77\uD83C\uDD74\uD83C\uDD7B\uD83C\uDD7B\uD83C\uDD7E)",
-                "Upside Down Font  (oll\u01DD\u0265)"
-        };
-
-        AlertDialog.Builder builder;
-        if (adaptiveCreateLinkDialog) {
-            builder = new AlertDialogDecor.Builder(getContext(), resourcesProvider);
-        } else {
-            builder = new AlertDialog.Builder(getContext(), resourcesProvider);
-        }
-        builder.setTitle(LocaleController.getString(R.string.ChangeFont));
-        builder.setItems(options, (dialog, which) -> {
-            Editable current = getText();
-            if (current == null || start < 0 || end > current.length() || start >= end) {
-                return;
-            }
-            String source = current.subSequence(start, end).toString();
-            String styled = applyFontStyle(source, which);
-            if (!TextUtils.isEmpty(styled) && !TextUtils.equals(source, styled)) {
-                replaceTextInternal(start, end, styled);
-            }
-        });
-        builder.setNegativeButton(LocaleController.getString(R.string.Cancel), null);
-
-        if (adaptiveCreateLinkDialog) {
-            creationLinkDialog = builder.create();
-            creationLinkDialog.setOnDismissListener(dialog -> {
-                creationLinkDialog = null;
-                requestFocus();
-            });
-            creationLinkDialog.showDelayed(250);
-        } else {
-            builder.show();
-        }
-    }
-
-    private interface CodePointMapper {
-        String map(int codePoint);
-    }
-
-    private String applyFontStyle(String text, int style) {
-        switch (style) {
-            case FONT_STYLE_BOLD_SERIF:
-                return transformText(text, false, this::mapBoldSerif);
-            case FONT_STYLE_FANCY_SCRIPT:
-                return transformText(text, false, this::mapFancyScript);
-            case FONT_STYLE_DOUBLE_STRUCK:
-                return transformText(text, false, this::mapDoubleStruck);
-            case FONT_STYLE_SMALL_CAPS:
-                return transformText(text, false, this::mapSmallCaps);
-            case FONT_STYLE_MONOSPACE:
-                return transformText(text, false, this::mapMonospace);
-            case FONT_STYLE_BUBBLE:
-                return transformText(text, false, this::mapBubbleCircle);
-            case FONT_STYLE_SQUARE:
-                return transformText(text, false, this::mapSquare);
-            case FONT_STYLE_UPSIDE_DOWN:
-                return transformText(text, true, this::mapUpsideDown);
-            default:
-                return text;
-        }
-    }
-
-    private String transformText(String text, boolean reverse, CodePointMapper mapper) {
-        if (TextUtils.isEmpty(text)) {
-            return text;
-        }
-        int length = text.length();
-        int[] codePoints = new int[text.codePointCount(0, length)];
-        int index = 0;
-        for (int i = 0; i < length; ) {
-            int cp = text.codePointAt(i);
-            codePoints[index++] = cp;
-            i += Character.charCount(cp);
-        }
-
-        StringBuilder out = new StringBuilder();
-        if (reverse) {
-            for (int i = codePoints.length - 1; i >= 0; i--) {
-                appendMapped(out, mapper, codePoints[i]);
-            }
-        } else {
-            for (int codePoint : codePoints) {
-                appendMapped(out, mapper, codePoint);
-            }
-        }
-        return out.toString();
-    }
-
-    private void appendMapped(StringBuilder out, CodePointMapper mapper, int codePoint) {
-        String mapped = mapper.map(codePoint);
-        if (mapped != null) {
-            out.append(mapped);
-        } else {
-            out.appendCodePoint(codePoint);
-        }
-    }
-
-    private String mapBoldSerif(int codePoint) {
-        if (codePoint >= 'A' && codePoint <= 'Z') {
-            return codePointToString(0x1D400 + (codePoint - 'A'));
-        }
-        if (codePoint >= 'a' && codePoint <= 'z') {
-            return codePointToString(0x1D41A + (codePoint - 'a'));
-        }
-        if (codePoint >= '0' && codePoint <= '9') {
-            return codePointToString(0x1D7CE + (codePoint - '0'));
-        }
-        return null;
-    }
-
-    private String mapFancyScript(int codePoint) {
-        if (codePoint >= 'A' && codePoint <= 'Z') {
-            return SCRIPT_UPPER[codePoint - 'A'];
-        }
-        if (codePoint >= 'a' && codePoint <= 'z') {
-            return SCRIPT_LOWER[codePoint - 'a'];
-        }
-        return null;
-    }
-
-    private String mapDoubleStruck(int codePoint) {
-        if (codePoint >= 'A' && codePoint <= 'Z') {
-            return DOUBLE_STRUCK_UPPER[codePoint - 'A'];
-        }
-        if (codePoint >= 'a' && codePoint <= 'z') {
-            return codePointToString(0x1D552 + (codePoint - 'a'));
-        }
-        if (codePoint >= '0' && codePoint <= '9') {
-            return codePointToString(0x1D7D8 + (codePoint - '0'));
-        }
-        return null;
-    }
-
-    private String mapSmallCaps(int codePoint) {
-        int lower = Character.toLowerCase(codePoint);
-        if (lower >= 'a' && lower <= 'z') {
-            return SMALL_CAPS[lower - 'a'];
-        }
-        return null;
-    }
-
-    private String mapMonospace(int codePoint) {
-        if (codePoint >= 'A' && codePoint <= 'Z') {
-            return codePointToString(0x1D670 + (codePoint - 'A'));
-        }
-        if (codePoint >= 'a' && codePoint <= 'z') {
-            return codePointToString(0x1D68A + (codePoint - 'a'));
-        }
-        if (codePoint >= '0' && codePoint <= '9') {
-            return codePointToString(0x1D7F6 + (codePoint - '0'));
-        }
-        return null;
-    }
-
-    private String mapBubbleCircle(int codePoint) {
-        if (codePoint >= 'A' && codePoint <= 'Z') {
-            return codePointToString(0x24B6 + (codePoint - 'A'));
-        }
-        if (codePoint >= 'a' && codePoint <= 'z') {
-            return codePointToString(0x24D0 + (codePoint - 'a'));
-        }
-        if (codePoint == '0') {
-            return codePointToString(0x24EA);
-        }
-        if (codePoint >= '1' && codePoint <= '9') {
-            return codePointToString(0x2460 + (codePoint - '1'));
-        }
-        return null;
-    }
-
-    private String mapSquare(int codePoint) {
-        int upper = Character.toUpperCase(codePoint);
-        if (upper >= 'A' && upper <= 'Z') {
-            return codePointToString(0x1F130 + (upper - 'A'));
-        }
-        return null;
-    }
-
-    private String mapUpsideDown(int codePoint) {
-        String mapped = UPSIDE_DOWN_MAP.get(codePoint);
-        if (mapped != null) {
-            return mapped;
-        }
-        int lower = Character.toLowerCase(codePoint);
-        return UPSIDE_DOWN_MAP.get(lower);
-    }
-
-    private static String codePointToString(int codePoint) {
-        return new String(Character.toChars(codePoint));
-    }
-
-    private static Map<Integer, String> createUpsideDownMap() {
-        Map<Integer, String> map = new HashMap<>();
-        map.put((int) 'a', "\u0250");
-        map.put((int) 'b', "q");
-        map.put((int) 'c', "\u0254");
-        map.put((int) 'd', "p");
-        map.put((int) 'e', "\u01DD");
-        map.put((int) 'f', "\u025F");
-        map.put((int) 'g', "\u0183");
-        map.put((int) 'h', "\u0265");
-        map.put((int) 'i', "\u1D09");
-        map.put((int) 'j', "\u027E");
-        map.put((int) 'k', "\u029E");
-        map.put((int) 'l', "\u05DF");
-        map.put((int) 'm', "\u026F");
-        map.put((int) 'n', "u");
-        map.put((int) 'o', "o");
-        map.put((int) 'p', "d");
-        map.put((int) 'q', "b");
-        map.put((int) 'r', "\u0279");
-        map.put((int) 's', "s");
-        map.put((int) 't', "\u0287");
-        map.put((int) 'u', "n");
-        map.put((int) 'v', "\u028C");
-        map.put((int) 'w', "\u028D");
-        map.put((int) 'x', "x");
-        map.put((int) 'y', "\u028E");
-        map.put((int) 'z', "z");
-        map.put((int) '?', "\u00BF");
-        map.put((int) '!', "\u00A1");
-        map.put((int) '.', "\u02D9");
-        map.put((int) ',', "'");
-        map.put((int) '\'', ",");
-        map.put((int) '"', ",,");
-        map.put((int) '(', ")");
-        map.put((int) ')', "(");
-        map.put((int) '[', "]");
-        map.put((int) ']', "[");
-        map.put((int) '{', "}");
-        map.put((int) '}', "{");
-        return map;
-    }
-
     public void makeSelectedMention() {
         AlertDialog.Builder builder;
         if (adaptiveCreateLinkDialog) {
@@ -793,6 +513,67 @@ public class EditTextCaption extends EditTextBoldCursor {
         }
         invalidateQuotes(true);
         invalidateSpoilers();
+    }
+
+    public void makeSelectedDate() {
+        int start, end;
+        if (selectionStart >= 0 && selectionEnd >= 0) {
+            start = selectionStart;
+            end = selectionEnd;
+            selectionStart = selectionEnd = -1;
+        } else {
+            start = getSelectionStart();
+            end = getSelectionEnd();
+        }
+
+        AlertsCreator.createFormattedDatePickerDialog(getContext(), (scheduleDate, flags) -> {
+            Editable editable = getText();
+
+            TextStyleSpan.TextStyleRun run = new TextStyleSpan.TextStyleRun();
+            run.flags |= TextStyleSpan.FLAG_STYLE_URL;
+            run.start = start;
+            run.end = end;
+
+            TLRPC.TL_messageEntityFormattedDate entity = new TLRPC.TL_messageEntityFormattedDate();
+            entity.date = scheduleDate;
+            entity.flags = flags;
+            entity.applyFlags();
+
+            try {
+                editable.setSpan(new FormattedDateSpan(editable.subSequence(start, end).toString(), run, entity), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            } catch (Exception ignore) {
+
+            }
+            if (delegate != null) {
+                delegate.onSpansChanged();
+            }
+        }, () -> {}, resourcesProvider);
+    }
+
+    public void translateSelected() {
+        int start, end;
+        if (selectionStart >= 0 && selectionEnd >= 0) {
+            start = selectionStart;
+            end = selectionEnd;
+            selectionStart = selectionEnd = -1;
+        } else {
+            start = getSelectionStart();
+            end = getSelectionEnd();
+        }
+
+        final CharSequence text = getText().subSequence(start, end);
+
+        final BaseFragment lastFragment = LaunchActivity.getSafeLastFragment();
+
+        new TranslateAlert3(getContext(), lastFragment != null ? lastFragment.getResourceProvider() : null)
+            .setText(text)
+            .setOnUse(translatedText -> {
+                getText().replace(start, end, translatedText);
+                setSelection(start, start + translatedText.length());
+            })
+            .show();
+
+        setSelection(start, end);
     }
 
     public void makeSelectedUrl() {
@@ -1155,11 +936,14 @@ public class EditTextCaption extends EditTextBoldCursor {
             // NekoX
             makeSelectedTranslate();
             return true;
-        } else if (itemId == R.id.menu_change_font) {
-            makeSelectedChangeFont();
-            return true;
         } else if (itemId == R.id.menu_quote) {
             makeSelectedQuote();
+            return true;
+        } else if (itemId == R.id.menu_date) {
+            makeSelectedDate();
+            return true;
+        } else if (itemId == R.id.menu_translate) {
+            translateSelected();
             return true;
         }
         return false;
@@ -1255,7 +1039,18 @@ public class EditTextCaption extends EditTextBoldCursor {
         } catch (Exception e) {
             FileLog.e(e);
         }
+        if (rightText != null && length() != 0) {
+            final Layout layout = getLayout();
+            if (layout != null && layout.getLineCount() > 0) {
+                final float right = layout.getLineRight(0);
+                rightText.draw(canvas, right, getHeight() / 2f + dp(1), hintColor, 1.0f);
+            }
+        }
         canvas.restore();
+    }
+
+    public void setRightText(CharSequence text) {
+        this.rightText = new Text(text, 16, getTypeface());
     }
 
     @Override
@@ -1283,8 +1078,8 @@ public class EditTextCaption extends EditTextBoldCursor {
             infoCompat.addAction(new AccessibilityNodeInfoCompat.AccessibilityActionCompat(R.id.menu_underline, LocaleController.getString(R.string.Underline)));
             infoCompat.addAction(new AccessibilityNodeInfoCompat.AccessibilityActionCompat(R.id.menu_mention, LocaleController.getString(R.string.CreateMention)));
             infoCompat.addAction(new AccessibilityNodeInfoCompat.AccessibilityActionCompat(R.id.menu_link, LocaleController.getString(R.string.CreateLink)));
-            infoCompat.addAction(new AccessibilityNodeInfoCompat.AccessibilityActionCompat(R.id.menu_change_font, LocaleController.getString(R.string.ChangeFont)));
             infoCompat.addAction(new AccessibilityNodeInfoCompat.AccessibilityActionCompat(R.id.menu_regular, LocaleController.getString(R.string.Regular)));
+            infoCompat.addAction(new AccessibilityNodeInfoCompat.AccessibilityActionCompat(R.id.menu_date, LocaleController.getString(R.string.FormattedDate)));
         }
     }
 

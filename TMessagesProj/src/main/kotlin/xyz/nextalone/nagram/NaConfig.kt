@@ -99,41 +99,11 @@ object NaConfig {
             ConfigItem.configTypeBool,
             true
         )
-    val hideTabsOnScroll =
+    val showTextCreateDate =
         addConfig(
-            "HideTabsOnScroll",
+            "TextCreateDate",
             ConfigItem.configTypeBool,
             true
-        )
-    val hideTabs =
-        addConfig(
-            "HideTabs",
-            ConfigItem.configTypeBool,
-            false
-        )
-    val musicGraph =
-        addConfig(
-            "MusicGraph",
-            ConfigItem.configTypeBool,
-            false
-        )
-    val playAudio3D =
-        addConfig(
-            "PlayAudio3D",
-            ConfigItem.configTypeBool,
-            false
-        )
-    val hideContacts =
-        addConfig(
-            "HideContacts",
-            ConfigItem.configTypeBool,
-            false
-        )
-    val foldersAtBottom =
-        addConfig(
-            "FoldersAtBottom",
-            ConfigItem.configTypeBool,
-            false
         )
     val showTextRegular =
         addConfig(
@@ -151,7 +121,7 @@ object NaConfig {
         addConfig(
             "TextStyleOrder",
             ConfigItem.configTypeString,
-            "translate,bold,italic,mono,code,strike,underline,quote,spoiler,link,mention,regular"
+            "translate,bold,italic,mono,code,strike,underline,quote,spoiler,link,mention,date,regular"
         )
     val combineMessage =
         addConfig(
@@ -163,31 +133,19 @@ object NaConfig {
         addConfig(
             "NoiseSuppressAndVoiceEnhance",
             ConfigItem.configTypeBool,
-            true
-        )
-    val voiceChangerEffect =
-        addConfig(
-            "VoiceChangerEffect",
-            ConfigItem.configTypeInt,
-            0
-        )
-    val showVoiceChangerInChatMenu =
-        addConfig(
-            "VoiceChangerInChatMenu",
-            ConfigItem.configTypeBool,
-            true
+            false
         )
     val showNoQuoteForward =
         addConfig(
             "NoQuoteForward",
             ConfigItem.configTypeBool,
-            true
+            false
         )
     val showRepeatAsCopy =
         addConfig(
             "RepeatAsCopy",
             ConfigItem.configTypeBool,
-            true
+            false
         )
     val doubleTapAction =
         addConfig(
@@ -205,7 +163,7 @@ object NaConfig {
         addConfig(
             "CopyPhoto",
             ConfigItem.configTypeBool,
-            true
+            false
         )
     val showReactions =
         addConfig(
@@ -217,7 +175,7 @@ object NaConfig {
         addConfig(
             "CustomTitle",
             ConfigItem.configTypeString,
-            "Alexgram"
+            "Nagram X"
         )
     val dateOfForwardedMsg =
         addConfig(
@@ -229,25 +187,13 @@ object NaConfig {
         addConfig(
             "ShowMessageID",
             ConfigItem.configTypeBool,
-            true
+            false
         )
     val showRPCError =
         addConfig(
             "ShowRPCError",
             ConfigItem.configTypeBool,
             false
-        )
-    val alwaysSaveChatOffset =
-        addConfig(
-            "AlwaysSaveChatOffset",
-            ConfigItem.configTypeBool,
-            false
-        )
-    val autoInsertGIFCaption =
-        addConfig(
-            "AutoInsertGIFCaption",
-            ConfigItem.configTypeBool,
-            true
         )
     val zalgoFilter =
         addConfig(
@@ -260,12 +206,6 @@ object NaConfig {
             "AlwaysShowDownloadIcon",
             ConfigItem.configTypeBool,
             false
-        )
-    val customArtworkApi =
-        addConfig(
-            "CustomArtworkApi",
-            ConfigItem.configTypeString,
-            ""
         )
     val customEditedMessage =
         addConfig(
@@ -283,23 +223,17 @@ object NaConfig {
         addConfig(
             "NotificationIcon",
             ConfigItem.configTypeInt,
-            0
+            1
         )
     val showSetReminder =
         addConfig(
             "SetReminder",
             ConfigItem.configTypeBool,
-            true
+            false
         )
     val showOnlineStatus =
         addConfig(
             "ShowOnlineStatus",
-            ConfigItem.configTypeBool,
-            true
-        )
-    val starFallInChat =
-        addConfig(
-            "StarFallInChat",
             ConfigItem.configTypeBool,
             false
         )
@@ -350,28 +284,28 @@ object NaConfig {
             "DeleteBanUsers",
             defaultDeleteMenu,
             3,
-            true
+            false
         )
     val defaultDeleteMenReportSpam =
         addConfig(
             "DeleteReportSpam",
             defaultDeleteMenu,
             2,
-            true
+            false
         )
     val defaultDeleteMenuDeleteAll =
         addConfig(
             "DeleteAll",
             defaultDeleteMenu,
             1,
-            true
+            false
         )
     val defaultDeleteMenuDoActionsInCommonGroups =
         addConfig(
             "DoActionsInCommonGroups",
             defaultDeleteMenu,
             0,
-            true
+            false
         )
     val disableStories =
         addConfig(
@@ -390,12 +324,6 @@ object NaConfig {
             "PillChatTitleOnboardingShown",
             ConfigItem.configTypeBool,
             false
-        )
-    val iosStyleInputBar =
-        addConfig(
-            "IosStyleInputBar",
-            ConfigItem.configTypeBool,
-            true
         )
     val useLocalQuoteColorData =
         addConfig(
@@ -443,7 +371,7 @@ object NaConfig {
         addConfig(
             "ShowQuickReplyInBotCommands",
             ConfigItem.configTypeBool,
-            true
+            false
         )
     val pushServiceType =
         addConfig(
@@ -484,12 +412,6 @@ object NaConfig {
     val regexFiltersEnabled =
         addConfig(
             "RegexFilters",
-            ConfigItem.configTypeBool,
-            false
-        )
-    val runInBackground =
-        addConfig(
-            "RunInBackground",
             ConfigItem.configTypeBool,
             false
         )
@@ -581,7 +503,7 @@ object NaConfig {
         addConfig(
             "Reply",
             ConfigItem.configTypeBool,
-            true
+            false
         )
     val ActionBarButtonEdit =
         addConfig(
@@ -613,12 +535,6 @@ object NaConfig {
             ConfigItem.configTypeInt,
             1
         )
-    val waveformSeekBar =
-        addConfig(
-            "WaveformSeekBar",
-            ConfigItem.configTypeBool,
-            true
-        )
 
     // NagramX
     val enableSaveDeletedMessages =
@@ -631,13 +547,13 @@ object NaConfig {
         addConfig(
             "EnableSaveEditsHistory",
             ConfigItem.configTypeBool,
-            true
+            false
         )
     val saveLocalLastSeen =
         addConfig(
             "SaveLocalLastSeen",
             ConfigItem.configTypeBool,
-            true
+            false
         )
     val messageSavingSaveMedia =
         addConfig(
@@ -758,30 +674,6 @@ object NaConfig {
             "LlmProviderGeminiKey",
             ConfigItem.configTypeString,
             ""
-        )
-    val liveVideoWallpaperPath =
-        addConfig(
-            "LiveVideoWallpaperPath",
-            ConfigItem.configTypeString,
-            ""
-        )
-    val enableLiveVideoWallpaper =
-        addConfig(
-            "EnableLiveVideoWallpaper",
-            ConfigItem.configTypeBool,
-            false
-        )
-    val liveVideoBlurIntensity =
-        addConfig(
-            "LiveVideoBlurIntensity",
-            ConfigItem.configTypeInt,
-            0
-        )
-    val liveVideoShowWarning =
-        addConfig(
-            "LiveVideoShowWarning",
-            ConfigItem.configTypeBool,
-            true
         )
     val llmProviderGeminiModel =
         addConfig(
@@ -949,7 +841,13 @@ object NaConfig {
         addConfig(
             "TranslatorMode",
             ConfigItem.configTypeInt,
-            1 // 0: append; 1: replace
+            0 // 0: off; 1: manual only; 2: all
+        )
+    val translatorModeWithOriginalMigrated =
+        addConfig(
+            "TranslatorModeWithOriginalMigrated",
+            ConfigItem.configTypeBool,
+            false
         )
     val centerActionBarTitleType =
         addConfig(
@@ -1113,12 +1011,6 @@ object NaConfig {
             ConfigItem.configTypeBool,
             true
         )
-    val coloredAdminTitle =
-        addConfig(
-            "ColoredAdminTitle",
-            ConfigItem.configTypeBool,
-            true
-        )
     val hideReactions =
         addConfig(
             "HideReactions",
@@ -1201,19 +1093,19 @@ object NaConfig {
         addConfig(
             "IconReplacements",
             ConfigItem.configTypeInt,
-            1
+            0
         )
     val showCopyAsSticker =
         addConfig(
             "CopyPhotoAsSticker",
             ConfigItem.configTypeBool,
-            true
+            false
         )
     val showAddToStickers =
         addConfig(
             "AddToStickers",
             ConfigItem.configTypeBool,
-            true
+            false
         )
     val showAddToFavorites =
         addConfig(
@@ -1237,7 +1129,7 @@ object NaConfig {
         addConfig(
             "EventLog",
             ConfigItem.configTypeBool,
-            false
+            true
         )
     val shortcutsStatistics =
         addConfig(
@@ -1281,12 +1173,6 @@ object NaConfig {
             ConfigItem.configTypeBool,
             true
         )
-    val sendHighQualityPhoto =
-        addConfig(
-            "SendHighQualityPhoto",
-            ConfigItem.configTypeBool,
-            true
-        )
     val groupedMessageMenu =
         addConfig(
             "GroupedMessageMenu",
@@ -1297,19 +1183,7 @@ object NaConfig {
         addConfig(
             "AutoUpdateChannel",
             ConfigItem.configTypeInt,
-            0 // 0: off; 1: release; 2: beta
-        )
-    val userAvatarsInMessagePreview =
-        addConfig(
-            "UserAvatarsInMessagePreview",
-            ConfigItem.configTypeBool,
-            false
-        )
-    val disableAvatarTapToSwitch =
-        addConfig(
-            "DisableAvatarTapToSwitch",
-            ConfigItem.configTypeBool,
-            false
+            1 // 0: off; 1: release; 2: beta
         )
     val premiumItemEmojiStatus =
         addConfig(
@@ -1417,7 +1291,7 @@ object NaConfig {
         addConfig(
             "HideStoriesFromHeader",
             ConfigItem.configTypeBool,
-            false
+            true
         )
     val disableAvatarBlur =
         addConfig(
@@ -1447,7 +1321,7 @@ object NaConfig {
         addConfig(
             "ShowAddToBookmark",
             ConfigItem.configTypeBool,
-            true
+            false
         )
     val sortByUnread =
         addConfig(
@@ -1465,7 +1339,7 @@ object NaConfig {
         addConfig(
             "MessageMenuCopyFrame",
             ConfigItem.configTypeBool,
-            true
+            false
         )
     val deleteChatForBothSides =
         addConfig(
@@ -1479,54 +1353,35 @@ object NaConfig {
             ConfigItem.configTypeInt,
             0 // 0: Classic, 1: Spring, 2: Predictive Back
         )
-
-    val enableAIReply =
+    val mainTabsHideTitles =
         addConfig(
-            "enableAIReply",
+            "MainTabsHideTitles",
             ConfigItem.configTypeBool,
             false
         )
-    val enableSummarizeChat =
+    val mainTabsHideContacts =
         addConfig(
-            "enableSummarizeChat",
+            "MainTabsHideContacts",
             ConfigItem.configTypeBool,
             false
         )
-    val aiModelUrl =
+    val showNotificationPreviewWhenLocked =
         addConfig(
-            "aiModelUrl",
-            ConfigItem.configTypeString,
-            ""
+            "ShowNotificationPreviewWhenLocked",
+            ConfigItem.configTypeBool,
+            false
         )
-    val aiApiKey =
+    val strokeOnViews =
         addConfig(
-            "aiApiKey",
-            ConfigItem.configTypeString,
-            ""
-        )
-    val aiModelUrl2 =
-        addConfig(
-            "aiModelUrl2",
-            ConfigItem.configTypeString,
-            ""
-        )
-    val aiApiKey2 =
-        addConfig(
-            "aiApiKey2",
-            ConfigItem.configTypeString,
-            ""
-        )
-    val searchEngineInSearchBar =
-        addConfig(
-            "SearchEngineInSearchBar",
+            "StrokeOnViews",
             ConfigItem.configTypeBool,
             true
         )
-    val selectedSearchEngine =
+    val hideBottomNavigationBar =
         addConfig(
-            "SelectedSearchEngine",
-            ConfigItem.configTypeInt,
-            0
+            "HideBottomNavigationBar",
+            ConfigItem.configTypeBool,
+            false
         )
 
     val preferredTranslateTargetLangList = ArrayList<String>()
@@ -1564,8 +1419,20 @@ object NaConfig {
         if (ApplicationLoader.applicationContext == null) {
             return
         }
-        if (translatorMode.Int() > 1) {
-            translatorMode.setConfigInt(1)
+        if (!translatorModeWithOriginalMigrated.Bool()) {
+            if (getPreferences().contains(translatorMode.key)) {
+                translatorMode.setConfigInt(
+                    when (translatorMode.Int()) {
+                        0 -> 1
+                        1 -> 0
+                        else -> 0
+                    }
+                )
+            }
+            translatorModeWithOriginalMigrated.setConfigBool(true)
+        }
+        if (translatorMode.Int() !in 0..2) {
+            translatorMode.setConfigInt(0)
         }
         if (!getPreferences().contains(idDcType.key) && !getPreferences().getBoolean(
                 "ShowIdAndDc", true
@@ -1713,16 +1580,6 @@ object NaConfig {
         synchronized(sync) {
             return configs.map { it.key }.toSet()
         }
-    }
-
-    @JvmStatic
-    fun getVoiceChangerEffectValue(): Int {
-        return voiceChangerEffect.Int()
-    }
-
-    @JvmStatic
-    fun setVoiceChangerEffectValue(value: Int) {
-        voiceChangerEffect.setConfigInt(value)
     }
 
     init {
