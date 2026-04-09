@@ -1629,6 +1629,10 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         return titleTextView;
     }
 
+    public CharSequence getTitle() {
+        return titleTextView.getText();
+    }
+
     public View getSubtitleTextView() {
         if (subtitleTextView != null) {
             return subtitleTextView;

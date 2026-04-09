@@ -1266,5 +1266,27 @@ public class MessageHelper extends BaseController {
         }
         return translated.text.contains(TRANSLATION_SEPARATOR);
     }
+
+    public static boolean shouldKeepOriginalForDisplay(int translatorMode, boolean manualTranslated, boolean autoTranslated) {
+        return translatorMode == 2 || (translatorMode == 1 && manualTranslated);
+    }
+
+    public boolean shouldKeepLocalMessageOnRestrictedEdit(TLRPC.Message oldMessage, TLRPC.Message message) {
+        return false;
+    }
+
+    public void saveStickerToGallery(Context context, MessageObject messageObject, Utilities.Callback<Uri> callback) {
+        saveStickerToGallery(context, messageObject);
+        if (callback != null) {
+            callback.run(null);
+        }
+    }
+
+    public void saveStickerToGallery(Context context, TLRPC.Document document, Utilities.Callback<Uri> callback) {
+        saveStickerToGallery(context, document);
+        if (callback != null) {
+            callback.run(null);
+        }
+    }
 }
 
