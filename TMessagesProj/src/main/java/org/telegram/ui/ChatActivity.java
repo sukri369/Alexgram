@@ -21038,11 +21038,12 @@ public class ChatActivity extends BaseFragment implements
                     }
                 }
                 if (videoPath != null) {
+                    long duration = 0;
                     try {
                         android.media.MediaMetadataRetriever retriever = new android.media.MediaMetadataRetriever();
                         retriever.setDataSource(videoPath);
                         String durationStr = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION);
-                        long duration = Long.parseLong(durationStr);
+                        duration = Long.parseLong(durationStr);
                         retriever.release();
                         if (duration > 60000) {
                             BulletinFactory.of(this).createErrorBulletin(LocaleController.getString(R.string.VideoNoteDurationError)).show();
@@ -21051,7 +21052,12 @@ public class ChatActivity extends BaseFragment implements
                     } catch (Exception e) {
                         FileLog.e(e);
                     }
-                    getSendMessagesHelper().sendMessage(null, videoPath, null, null, null, null, dialog_id, null, null, null, null, null, true, 0, null, null, null, true, 0, null, null, 0, false, null);
+                    VideoEditedInfo videoEditedInfo = new VideoEditedInfo();
+                    videoEditedInfo.roundVideo = true;
+                    videoEditedInfo.startTime = 0;
+                    videoEditedInfo.endTime = duration;
+                    videoEditedInfo.originalDuration = duration;
+                    SendMessagesHelper.prepareSendingVideo(getAccountInstance(), videoPath, videoEditedInfo, null, null, dialog_id, replyingMessageObject, getThreadMessage(), null, replyingQuote, null, 0, null, true, 0, 0, false, false, "", quickReplyShortcut, getQuickReplyId(), 0, 0, getSendMonoForumPeerId(), getSendMessageSuggestionParams(), false);
                 } else {
                     showAttachmentError();
                 }
