@@ -21048,27 +21048,27 @@ public class ChatActivity extends BaseFragment implements
                     }
                     VideoEditedInfo videoEditedInfo = new VideoEditedInfo();
                     videoEditedInfo.roundVideo = true;
-                    videoEditedInfo.startTime = 0;
-                    videoEditedInfo.endTime = duration;
-                    videoEditedInfo.originalDuration = duration;
+                    videoEditedInfo.startTime = -1;
+                    videoEditedInfo.endTime = -1;
+                    videoEditedInfo.originalDuration = duration * 1000; // microseconds
                     videoEditedInfo.originalWidth = width;
                     videoEditedInfo.originalHeight = height;
                     videoEditedInfo.resultWidth = 448;
                     videoEditedInfo.resultHeight = 448;
                     videoEditedInfo.bitrate = 1500000;
                     if (width != 0 && height != 0) {
+                        // Square-crop from center: cropPw/cropPh = fraction of the output dimension
+                        // cropPx/cropPy = center offset (0 == centered), cropScale = 1
+                        int minSide = Math.min(width, height);
                         videoEditedInfo.cropState = new org.telegram.messenger.MediaController.CropState();
-                        if (width > height) {
-                            videoEditedInfo.cropState.cropPx = (width - height) / 2.0f / width;
-                            videoEditedInfo.cropState.cropPy = 0;
-                            videoEditedInfo.cropState.cropPw = (float) height / width;
-                            videoEditedInfo.cropState.cropPh = 1.0f;
-                        } else {
-                            videoEditedInfo.cropState.cropPx = 0;
-                            videoEditedInfo.cropState.cropPy = (height - width) / 2.0f / height;
-                            videoEditedInfo.cropState.cropPw = 1.0f;
-                            videoEditedInfo.cropState.cropPh = (float) width / height;
-                        }
+                        videoEditedInfo.cropState.cropPw = (float) minSide / width;
+                        videoEditedInfo.cropState.cropPh = (float) minSide / height;
+                        videoEditedInfo.cropState.cropPx = 0;
+                        videoEditedInfo.cropState.cropPy = 0;
+                        videoEditedInfo.cropState.cropScale = 1;
+                        videoEditedInfo.cropState.cropRotate = 0;
+                        videoEditedInfo.cropState.transformWidth = width;
+                        videoEditedInfo.cropState.transformHeight = height;
                     }
                     SendMessagesHelper.prepareSendingVideo(getAccountInstance(), videoPath, videoEditedInfo, null, null, dialog_id, replyingMessageObject, getThreadMessage(), null, replyingQuote, null, 0, null, true, 0, 0, false, false, "", quickReplyShortcut, getQuickReplyId(), 0, 0, getSendMonoForumPeerId(), getSendMessageSuggestionParams(), false);
                 } else {

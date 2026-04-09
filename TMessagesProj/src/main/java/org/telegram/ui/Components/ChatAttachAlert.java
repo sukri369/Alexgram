@@ -2714,16 +2714,7 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
             if (view instanceof AttachButton) {
                 final Activity activity = lastFragment.getParentActivity();
                 int num = view.getTag() instanceof Integer ? (Integer) view.getTag() : -1;
-                if (num == 1846) {
-                    try {
-                        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                        intent.setType("video/*");
-                        lastFragment.startActivityForResult(intent, 71);
-                        dismiss();
-                    } catch (Exception e) {
-                        org.telegram.messenger.FileLog.e(e);
-                    }
-                } else if (num == 1) {
+                if (num == 1) {
                     if (!photosEnabled && !videosEnabled && checkCanRemoveRestrictionsByBoosts()) {
                         return;
                     }
@@ -6302,7 +6293,6 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
         private int locationButton;
         private int stickerButton;
         private int emojiButton;
-        private int sendRoundButton;
         private int buttonsCount;
 
         public ButtonsAdapter(Context context) {
@@ -6369,9 +6359,6 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
                     } else if (position == stickerButton) {
                         attachButton.setTextAndIcon(LAYOUT_TYPE_STICKERS, getString(R.string.ChatSticker), GlassTabView.TabAnimation.STICKER);
                         attachButton.setTag(LAYOUT_TYPE_STICKERS);
-                    } else if (position == sendRoundButton) {
-                        attachButton.setTextAndIcon(1846, LocaleController.getString(R.string.SendVideoAsRound), GlassTabView.TabAnimation.GALLERY);
-                        attachButton.setTag(1846);
                     } else if (position == emojiButton) {
                         attachButton.setTextAndIcon(LAYOUT_TYPE_EMOJI, getString(R.string.ChatEmoji), GlassTabView.TabAnimation.EMOJI);
                         attachButton.setTag(LAYOUT_TYPE_EMOJI);
@@ -6429,7 +6416,6 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
             locationButton = -1;
             stickerButton = -1;
             emojiButton = -1;
-            sendRoundButton = -1;
             attachBotsStartRow = -1;
             attachBotsEndRow = -1;
 
@@ -6512,9 +6498,6 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
                     quickRepliesButton = buttonsCount++;
                 }
                 musicButton = buttonsCount++;
-                if (NaConfig.INSTANCE.getSendVideoAsRound().Bool() && baseFragment instanceof ChatActivity && ((ChatActivity) baseFragment).getChatMode() == 0 && !paidUser) {
-                    sendRoundButton = buttonsCount++;
-                }
             }
             super.notifyDataSetChanged();
         }
