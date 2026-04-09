@@ -4079,14 +4079,6 @@ public class ChatActivity extends BaseFragment implements
                         getMessagesController().getTopicsController().toggleViewForumAsMessages(-dialog_id, false);
                         TopicsFragment.prepareToSwitchAnimation(ChatActivity.this);
                     }
-                } else if (id == send_video_as_round) {
-                    try {
-                        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                        intent.setType("video/*");
-                        startActivityForResult(intent, 71);
-                    } catch (Exception e) {
-                        org.telegram.messenger.FileLog.e(e);
-                    }
                 } else if (id == copy) {
                     SpannableStringBuilder str = new SpannableStringBuilder();
                     long previousUid = 0;
@@ -4888,9 +4880,6 @@ public class ChatActivity extends BaseFragment implements
 
             if (searchItem != null) {
                 headerItem.lazilyAddSubItem(search, R.drawable.msg_search, LocaleController.getString(R.string.Search));
-                if (NaConfig.INSTANCE.getSendVideoAsRound().Bool()) {
-                    headerItem.lazilyAddSubItem(send_video_as_round, R.drawable.video, LocaleController.getString(R.string.SendVideoAsRound));
-                }
             }
             boolean allowShowPinned;
             if (currentChat != null) {
@@ -21039,11 +21028,16 @@ public class ChatActivity extends BaseFragment implements
                 }
                 if (videoPath != null) {
                     long duration = 0;
+                    int width = 0, height = 0;
                     try {
                         android.media.MediaMetadataRetriever retriever = new android.media.MediaMetadataRetriever();
                         retriever.setDataSource(videoPath);
                         String durationStr = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION);
                         duration = Long.parseLong(durationStr);
+                        String widthStr = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH);
+                        String heightStr = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT);
+                        width = Integer.parseInt(widthStr);
+                        height = Integer.parseInt(heightStr);
                         retriever.release();
                         if (duration > 60000) {
                             BulletinFactory.of(this).createErrorBulletin(LocaleController.getString(R.string.VideoNoteDurationError)).show();
@@ -21057,6 +21051,25 @@ public class ChatActivity extends BaseFragment implements
                     videoEditedInfo.startTime = 0;
                     videoEditedInfo.endTime = duration;
                     videoEditedInfo.originalDuration = duration;
+                    videoEditedInfo.originalWidth = width;
+                    videoEditedInfo.originalHeight = height;
+                    videoEditedInfo.resultWidth = 448;
+                    videoEditedInfo.resultHeight = 448;
+                    videoEditedInfo.bitrate = 1500000;
+                    if (width != 0 && height != 0) {
+                        videoEditedInfo.cropState = new org.telegram.messenger.MediaController.CropState();
+                        if (width > height) {
+                            videoEditedInfo.cropState.cropPx = (width - height) / 2.0f / width;
+                            videoEditedInfo.cropState.cropPy = 0;
+                            videoEditedInfo.cropState.cropPw = (float) height / width;
+                            videoEditedInfo.cropState.cropPh = 1.0f;
+                        } else {
+                            videoEditedInfo.cropState.cropPx = 0;
+                            videoEditedInfo.cropState.cropPy = (height - width) / 2.0f / height;
+                            videoEditedInfo.cropState.cropPw = 1.0f;
+                            videoEditedInfo.cropState.cropPh = (float) width / height;
+                        }
+                    }
                     SendMessagesHelper.prepareSendingVideo(getAccountInstance(), videoPath, videoEditedInfo, null, null, dialog_id, replyingMessageObject, getThreadMessage(), null, replyingQuote, null, 0, null, true, 0, 0, false, false, "", quickReplyShortcut, getQuickReplyId(), 0, 0, getSendMonoForumPeerId(), getSendMessageSuggestionParams(), false);
                 } else {
                     showAttachmentError();
