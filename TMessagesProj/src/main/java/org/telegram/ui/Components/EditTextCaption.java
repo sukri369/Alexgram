@@ -1126,13 +1126,15 @@ public class EditTextCaption extends EditTextBoldCursor {
 
             @Override
             public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+                boolean result = callback.onPrepareActionMode(mode, menu);
                 if (hasSelection()) {
                     if (menu.findItem(R.id.menu_change_font) == null) {
-                        MenuItem menuItem = menu.add(0, R.id.menu_change_font, 0, LocaleController.getString(R.string.ChangeFont));
+                        MenuItem menuItem = menu.add(Menu.NONE, R.id.menu_change_font, 100, LocaleController.getString(R.string.ChangeFont));
+                        menuItem.setIcon(R.drawable.msg_edit);
                         menuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
                     }
                 }
-                return callback.onPrepareActionMode(mode, menu);
+                return result;
             }
 
             @Override

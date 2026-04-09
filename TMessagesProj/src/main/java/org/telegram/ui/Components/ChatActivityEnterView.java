@@ -5007,6 +5007,20 @@ public class ChatActivityEnterView extends FrameLayout implements
             cell.setMinimumWidth(AndroidUtilities.dp(196));
             menuPopupLayout.addView(cell, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 48, LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT, 0, 48 * a++, 0, 0));
 
+            // Change font
+            cell = new ActionBarMenuSubItem(getContext(), false, false);
+            cell.setTextAndIcon(LocaleController.getString(R.string.ChangeFont), R.drawable.msg_edit);
+            cell.setOnClickListener(v -> {
+                if (menuPopupWindow != null && menuPopupWindow.isShowing()) {
+                    menuPopupWindow.dismiss();
+                }
+                if (messageEditText != null) {
+                    messageEditText.makeSelectedChangeFont();
+                }
+            });
+            cell.setMinimumWidth(AndroidUtilities.dp(196));
+            menuPopupLayout.addView(cell, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 48, LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT, 0, 48 * a++, 0, 0));
+
             // Attach
             if (attachButton != null) {
                 cell = new ActionBarMenuSubItem(getContext(), false, true);
