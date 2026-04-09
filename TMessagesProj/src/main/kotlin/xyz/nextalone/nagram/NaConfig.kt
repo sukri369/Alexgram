@@ -145,7 +145,7 @@ object NaConfig {
         addConfig(
             "SendVideoAsRound",
             ConfigItem.configTypeBool,
-            false
+            true
         )
     val showNoQuoteForward =
         addConfig(
