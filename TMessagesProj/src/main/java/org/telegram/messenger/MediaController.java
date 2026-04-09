@@ -164,6 +164,13 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
         return false;
     }
 
+    public int getAudioSessionId() {
+        if (audioPlayer != null) {
+            return audioPlayer.getAudioSessionId();
+        }
+        return 0;
+    }
+
     public VideoConvertMessage getCurrentForegroundConverMessage() {
         return currentForegroundConvertingVideo;
     }
