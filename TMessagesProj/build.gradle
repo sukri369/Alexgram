@@ -1,5 +1,7 @@
 import java.nio.file.Paths
 import org.gradle.internal.os.OperatingSystem
+import java.util.Base64
+import java.io.ByteArrayInputStream
 
 plugins {
     id 'com.android.application'
@@ -131,10 +133,12 @@ android {
 
     signingConfigs {
         release {
-            storeFile project.file('release.keystore')
-            storePassword keystorePwd
-            keyAlias alias
-            keyPassword pwd
+            if (keystorePwd != null) {
+                storeFile project.file('release.keystore')
+                storePassword keystorePwd
+                keyAlias alias
+                keyPassword pwd
+            }
         }
     }
 
@@ -154,7 +158,9 @@ android {
             multiDexEnabled = true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             matchingFallbacks = ['release', 'staging', 'debug']
-            signingConfig = signingConfigs.release
+            if (keystorePwd != null) {
+                signingConfig = signingConfigs.release
+            }
         }
 
         release {
@@ -165,7 +171,9 @@ android {
             multiDexEnabled = true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             matchingFallbacks = ['release', 'staging', 'debug']
-            signingConfig = signingConfigs.release
+            if (keystorePwd != null) {
+                signingConfig = signingConfigs.release
+            }
         }
     }
 
