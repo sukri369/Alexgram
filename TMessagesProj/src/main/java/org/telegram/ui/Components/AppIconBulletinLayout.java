@@ -39,7 +39,7 @@ public class AppIconBulletinLayout extends Bulletin.ButtonLayout {
         imageView.setOuterPadding(AndroidUtilities.dp(8));
         imageView.setBackgroundOuterPadding(AndroidUtilities.dp(24));
         imageView.setForeground(icon.foreground);
-        imageView.setIsNekoXIcon(icon.isNekoX());
+        imageView.setIsSingleIcon(icon.foreground == 0);
         textView.setText(AndroidUtilities.replaceTags(LocaleController.formatString(R.string.AppIconChangedTo, LocaleController.getString(icon.title))));
     }
 }
