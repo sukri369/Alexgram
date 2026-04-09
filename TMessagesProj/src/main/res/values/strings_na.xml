@@ -116,4 +116,6 @@
     <string name="ImportChat">Import Chat</string>
     <string name="MusicGraph">Music Graph</string>
     <string name="MusicGraphInfo">Display a colorful music visualizer while playing audio.</string>
+    <string name="SendVideoAsRound">Send Video as Round</string>
+    <string name="VideoNoteDurationError">Round video cannot be longer than 60 seconds.</string>
 </resources>

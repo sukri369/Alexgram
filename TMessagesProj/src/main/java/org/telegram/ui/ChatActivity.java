@@ -242,6 +242,7 @@ import org.telegram.ui.ActionBar.theme.ThemeKey;
 import org.telegram.ui.Adapters.FiltersView;
 import org.telegram.ui.Adapters.MessagesSearchAdapter;
 import org.telegram.ui.Business.BusinessBotButton;
+import org.telegram.ui.Components.BulletinFactory;
 import org.telegram.ui.Business.BusinessLinksActivity;
 import org.telegram.ui.Business.BusinessLinksController;
 import org.telegram.ui.Business.BusinessLinksEmptyView;
@@ -396,7 +397,6 @@ import tw.nekomimi.nekogram.ui.components.GroupedIconsView;
 import tw.nekomimi.nekogram.utils.AlertUtil;
 import tw.nekomimi.nekogram.utils.AndroidUtil;
 import tw.nekomimi.nekogram.utils.ProxyUtil;
-import xyz.nextalone.nagram.NaConfig;
 import xyz.nextalone.nagram.ToggleResult;
 import xyz.nextalone.nagram.helper.BookmarksHelper;
 import xyz.nextalone.nagram.helper.DoubleTap;
@@ -469,6 +469,7 @@ public class ChatActivity extends BaseFragment implements
     private final static int nkbtn_report = 2041;
     private final static int nkbtn_clearDeleted = 2100;
     private final static int nkbtn_viewDeleted = 2101;
+    private final static int send_video_as_round = 1846;
 
     public int shareAlertDebugMode = DEBUG_SHARE_ALERT_MODE_NORMAL;
     public boolean shareAlertDebugTopicsSlowMotion;
@@ -4077,6 +4078,14 @@ public class ChatActivity extends BaseFragment implements
                         getMessagesController().getTopicsController().toggleViewForumAsMessages(-dialog_id, false);
                         TopicsFragment.prepareToSwitchAnimation(ChatActivity.this);
                     }
+                } else if (id == send_video_as_round) {
+                    try {
+                        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                        intent.setType("video/*");
+                        startActivityForResult(intent, 71);
+                    } catch (Exception e) {
+                        org.telegram.messenger.FileLog.e(e);
+                    }
                 } else if (id == copy) {
                     SpannableStringBuilder str = new SpannableStringBuilder();
                     long previousUid = 0;
@@ -4878,6 +4887,9 @@ public class ChatActivity extends BaseFragment implements
 
             if (searchItem != null) {
                 headerItem.lazilyAddSubItem(search, R.drawable.msg_search, LocaleController.getString(R.string.Search));
+                if (NaConfig.INSTANCE.getSendVideoAsRound().Bool()) {
+                    headerItem.lazilyAddSubItem(send_video_as_round, R.drawable.video, LocaleController.getString(R.string.SendVideoAsRound));
+                }
             }
             boolean allowShowPinned;
             if (currentChat != null) {
@@ -20994,7 +21006,55 @@ public class ChatActivity extends BaseFragment implements
     @Override
     public void onActivityResultFragment(int requestCode, int resultCode, Intent data) {
         if (resultCode == Activity.RESULT_OK) {
-            if (requestCode == 0 || requestCode == 2) {
+            if (requestCode == 71) {
+                if (data == null || data.getData() == null) {
+                    showAttachmentError();
+                    return;
+                }
+                Uri uri = data.getData();
+                String videoPath = null;
+                try {
+                    videoPath = AndroidUtilities.getPath(uri);
+                } catch (Exception e) {
+                    FileLog.e(e);
+                }
+                if (videoPath == null) {
+                    try {
+                        final File file = AndroidUtilities.generateVideoPath();
+                        InputStream in = ApplicationLoader.applicationContext.getContentResolver().openInputStream(uri);
+                        FileOutputStream fos = new FileOutputStream(file);
+                        byte[] buffer = new byte[8 * 1024];
+                        int lengthRead;
+                        while ((lengthRead = in.read(buffer)) > 0) {
+                            fos.write(buffer, 0, lengthRead);
+                            fos.flush();
+                        }
+                        in.close();
+                        fos.close();
+                        videoPath = file.getAbsolutePath();
+                    } catch (Exception ex) {
+                        FileLog.e(ex);
+                    }
+                }
+                if (videoPath != null) {
+                    try {
+                        android.media.MediaMetadataRetriever retriever = new android.media.MediaMetadataRetriever();
+                        retriever.setDataSource(videoPath);
+                        String durationStr = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION);
+                        long duration = Long.parseLong(durationStr);
+                        retriever.release();
+                        if (duration > 60000) {
+                            BulletinFactory.of(this).createErrorBulletin(LocaleController.getString(R.string.VideoNoteDurationError)).show();
+                            return;
+                        }
+                    } catch (Exception e) {
+                        FileLog.e(e);
+                    }
+                    getSendMessagesHelper().sendMessage(null, videoPath, null, null, null, null, dialog_id, null, null, null, null, null, true, 0, null, null, null, true, 0, null, null, 0, false, null);
+                } else {
+                    showAttachmentError();
+                }
+            } else if (requestCode == 0 || requestCode == 2) {
                 createChatAttachView();
                 if (chatAttachAlert != null) {
                     chatAttachAlert.getPhotoLayout().onActivityResultFragment(requestCode, data, currentPicturePath);
