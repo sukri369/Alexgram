@@ -30,6 +30,7 @@ import android.content.ClipData;
 import android.content.ClipDescription;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
@@ -4857,7 +4858,8 @@ public class ChatActivityEnterView extends FrameLayout implements
             menuPopupLayout.addView(cell, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 48, LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT, 0, 48 * a++, 0, 0));
 
             if (SharedConfig.inappCamera) {
-                cell = new ActionBarMenuSubItem(getContext(), false, true);
+                boolean hasSendRound = NaConfig.INSTANCE.getSendVideoAsRound().Bool();
+                cell = new ActionBarMenuSubItem(getContext(), false, !hasSendRound);
                 cell.setTextAndIcon(getString(R.string.ChatAttachEnterMenuRecordVideo), R.drawable.input_video);
                 cell.setOnClickListener(v -> {
                     if (menuPopupWindow != null && menuPopupWindow.isShowing()) {
@@ -4896,6 +4898,27 @@ public class ChatActivityEnterView extends FrameLayout implements
 
                 cell.setMinimumWidth(AndroidUtilities.dp(196));
                 menuPopupLayout.addView(cell, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 48, LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT, 0, 48 * a++, 0, 0));
+
+                if (hasSendRound) {
+                    cell = new ActionBarMenuSubItem(getContext(), false, true);
+                    cell.setTextAndIcon(LocaleController.getString(R.string.SendVideoAsRound), R.drawable.input_video);
+                    cell.setOnClickListener(v -> {
+                        if (menuPopupWindow != null && menuPopupWindow.isShowing()) {
+                            menuPopupWindow.dismiss();
+                        }
+                        if (parentFragment != null) {
+                            try {
+                                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                                intent.setType("video/*");
+                                parentFragment.startActivityForResult(intent, 71);
+                            } catch (Exception e) {
+                                org.telegram.messenger.FileLog.e(e);
+                            }
+                        }
+                    });
+                    cell.setMinimumWidth(AndroidUtilities.dp(196));
+                    menuPopupLayout.addView(cell, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 48, LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT, 0, 48 * a++, 0, 0));
+                }
             }
         } else {
             long chatId = ChatsHelper.getChatId();
