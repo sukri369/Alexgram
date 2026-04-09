@@ -114,4 +114,6 @@
     <string name="EnableLiveVideoWallpaper">Live Video Wallpaper</string>
     <string name="ExportChat">Export Chat</string>
     <string name="ImportChat">Import Chat</string>
+    <string name="MusicGraph">Music Graph</string>
+    <string name="MusicGraphInfo">Display a colorful music visualizer while playing audio.</string>
 </resources>

@@ -23,6 +23,7 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.media.audiofx.Visualizer;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.LinearGradient;
@@ -111,6 +112,7 @@ import me.vkryl.android.animator.ReplaceAnimator;
 import me.vkryl.core.lambda.Destroyable;
 
 import tw.nekomimi.nekogram.NekoConfig;
+import xyz.nextalone.nagram.NaConfig;
 
 public class FragmentContextView extends FrameLayout implements NotificationCenter.NotificationCenterDelegate, VoIPService.StateListener, GroupCallMessagesController.CallMessageListener  {
     public final static int STYLE_NOT_SET = -1,
@@ -241,6 +243,12 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
     private boolean checkLiveStoryAfterAnimation;
     private boolean checkPlayerAfterAnimation;
     private boolean checkImportAfterAnimation;
+    private MusicVisualizerView visualizerView;
+
+    private static Visualizer globalVisualizer;
+    private static int globalAudioSessionId = -1;
+    private static final ArrayList<MusicVisualizerView> visualizerViews = new ArrayList<>();
+    private static byte[] globalVisualizerBytes;
 
     private final static float[] speeds = new float[] {
         .5f, 1f, 1.2f, 1.5f, 1.7f, 2f
@@ -1487,6 +1495,16 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
             }
         }
 
+        if (currentStyle == STYLE_AUDIO_PLAYER && NaConfig.INSTANCE.getMusicGraph().Bool()) {
+            if (visualizerView == null) {
+                visualizerView = new MusicVisualizerView(getContext());
+                frameLayout.addView(visualizerView, 0, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+                visualizerView.setVisibility(VISIBLE);
+                visualizerView.setColor(getThemedColor(Theme.key_inappPlayerTitle));
+            }
+            visualizerView.start(MediaController.getInstance().getAudioSessionId());
+        }
+
         if (currentStyle == STYLE_ACTIVE_GROUP_CALL || currentStyle == STYLE_CONNECTING_GROUP_CALL) {
             Theme.getFragmentContextViewWavesDrawable().addParent(this);
             if (VoIPService.getSharedInstance() != null) {
@@ -1846,6 +1864,10 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
                 checkCall(false);
                 return;
             }
+            if (visualizerView != null) {
+                visualizerView.setVisibility(GONE);
+                visualizerView.stop();
+            }
             if (visible) {
                 if (playbackSpeedButton != null && playbackSpeedButton.isSubMenuShowing()) {
                     playbackSpeedButton.toggleSubMenu();
@@ -1989,6 +2011,10 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
                     }
 
                     updatePlaybackButton(false);
+                    if (visualizerView != null) {
+                        visualizerView.setVisibility(GONE);
+                        visualizerView.stop();
+                    }
                 } else {
                     isMusic = true;
                     if (playbackSpeedButton != null) {
@@ -2012,6 +2038,15 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
                             continue;
                         }
                         textView.setEllipsize(TextUtils.TruncateAt.END);
+                    }
+                    if (NaConfig.INSTANCE.getMusicGraph().Bool()) {
+                        if (visualizerView == null) {
+                            visualizerView = new MusicVisualizerView(getContext());
+                            frameLayout.addView(visualizerView, 0, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+                        }
+                        visualizerView.setVisibility(VISIBLE);
+                        visualizerView.setColor(getThemedColor(Theme.key_inappPlayerTitle));
+                        visualizerView.start(MediaController.getInstance().getAudioSessionId());
                     }
                 }
                 TypefaceSpan span = new TypefaceSpan(AndroidUtilities.bold(), 0, getThemedColor(Theme.key_inappPlayerPerformer));
@@ -2936,11 +2971,231 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
 
     @Override
     public void onPopGroupCallMessage() {
-        if (groupCallMessageCounter > 0) {
-            groupCallMessageCounter--;
-            if (groupCallMessageCounter == 0) {
-                callMessagesAnimator.replace(null, true);
+        }
+    }
+
+    private class MusicVisualizerView extends View {
+        private Paint mPaint;
+        private final int numBars = 75; // More bars for detailed look
+        private float[] amplitudes = new float[numBars];
+
+        public MusicVisualizerView(Context context) {
+            super(context);
+            mPaint = new Paint();
+            mPaint.setAntiAlias(true);
+            mPaint.setStyle(Paint.Style.FILL);
+        }
+
+        public void setColor(int color) {
+            // Ignored in favor of full colorful mode
+            invalidate();
+        }
+
+        public void start(int audioSessionId) {
+            if (audioSessionId <= 0 || !NaConfig.INSTANCE.getMusicGraph().Bool()) return;
+
+            synchronized (visualizerViews) {
+                if (!visualizerViews.contains(this)) {
+                    visualizerViews.add(this);
+                }
+
+                if (globalVisualizer != null && globalAudioSessionId == audioSessionId) {
+                    return;
+                }
+
+                releaseGlobalVisualizer(false);
+
+                globalAudioSessionId = audioSessionId;
+                try {
+                    globalVisualizer = new Visualizer(audioSessionId);
+                    globalVisualizer.setCaptureSize(Visualizer.getCaptureSizeRange()[1]);
+                    globalVisualizer.setDataCaptureListener(new Visualizer.OnDataCaptureListener() {
+                        @Override
+                        public void onWaveFormDataCapture(Visualizer visualizer, byte[] bytes, int samplingRate) {
+                        }
+
+                        @Override
+                        public void onFftDataCapture(Visualizer visualizer, byte[] bytes, int samplingRate) {
+                            globalVisualizerBytes = bytes;
+                            synchronized (visualizerViews) {
+                                for (int i = 0; i < visualizerViews.size(); i++) {
+                                    visualizerViews.get(i).postInvalidate();
+                                }
+                            }
+                        }
+                    }, Visualizer.getMaxCaptureRate() / 2, false, true);
+                    globalVisualizer.setEnabled(true);
+                } catch (Exception e) {
+                    android.util.Log.e("MusicVisualizer", "Error enabling visualizer", e);
+                }
             }
+        }
+
+        public void stop() {
+            synchronized (visualizerViews) {
+                visualizerViews.remove(this);
+                if (visualizerViews.isEmpty()) {
+                    AndroidUtilities.runOnUIThread(() -> releaseGlobalVisualizer(true), 1000);
+                }
+            }
+            invalidate();
+        }
+
+        private void releaseGlobalVisualizer(boolean delayed) {
+            synchronized (visualizerViews) {
+                if (delayed && !visualizerViews.isEmpty()) {
+                    return;
+                }
+                if (globalVisualizer != null) {
+                    try {
+                        globalVisualizer.setEnabled(false);
+                        globalVisualizer.release();
+                    } catch (Exception e) {
+                        // ignore
+                    }
+                    globalVisualizer = null;
+                    globalAudioSessionId = -1;
+                    globalVisualizerBytes = null;
+                }
+            }
+        }
+
+        @Override
+        protected void onAttachedToWindow() {
+            super.onAttachedToWindow();
+            if (getVisibility() == VISIBLE) {
+                start(MediaController.getInstance().getAudioSessionId());
+            }
+        }
+
+        @Override
+        protected void onDetachedFromWindow() {
+            super.onDetachedFromWindow();
+            stop();
+        }
+
+        @Override
+        public void setVisibility(int visibility) {
+            super.setVisibility(visibility);
+            if (visibility == VISIBLE) {
+                start(MediaController.getInstance().getAudioSessionId());
+            } else {
+                stop();
+            }
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            super.onDraw(canvas);
+            byte[] mBytes = globalVisualizerBytes;
+            if (mBytes == null) {
+                return;
+            }
+
+            int width = getWidth();
+            int height = getHeight();
+
+            // Recalculate bar width
+            float barTotalWidth = (float) width / numBars;
+            float space = barTotalWidth * 0.15f; // reduced spacing
+            float barDrawWidth = barTotalWidth - space;
+            if (barDrawWidth < 1) barDrawWidth = 1;
+
+            // Define vibrant colors for full spectrum
+            // Using HSL allows us to easily cycle through the rainbow
+
+            for (int i = 0; i < numBars; i++) {
+                int m = mBytes.length / 2;
+
+                float barProgress = numBars > 1 ? i / (float) (numBars - 1) : 0f;
+                float fftProgress = i * 1.0f / numBars;
+
+                // The first yellow bars were sampling the very lowest FFT bins, which stay
+                // elevated almost all the time. Push only that edge slightly inward so it
+                // rests around medium height but can still climb on real bass peaks.
+                if (barProgress < 0.18f) {
+                    float edgeProgress = barProgress / 0.18f;
+                    fftProgress = 0.035f + edgeProgress * 0.145f;
+                }
+
+                int index = (int) (fftProgress * (m / 2)) * 2;
+                
+                if (index < 2) index = 2; // Skip DC
+                if (index + 1 >= mBytes.length) break;
+                
+                byte rfk = mBytes[index];
+                byte ifk = mBytes[index + 1];
+                float magnitude = (float) (rfk * rfk + ifk * ifk);
+                int dbValue = (int) (10 * Math.log10(magnitude));
+
+                float targetAmplitude = (dbValue > 0 ? dbValue : 0);
+                
+                // Boost sensitivity
+                targetAmplitude = (targetAmplitude * 4.5f);
+
+                // Keep the left yellow section a bit calmer, but not low. Peaks still pass.
+                if (barProgress < 0.18f) {
+                    float lowBandDamping = 0.68f + 0.32f * (barProgress / 0.18f);
+                    targetAmplitude *= lowBandDamping;
+                }
+
+                if (targetAmplitude > height) targetAmplitude = height;
+                
+                // Decay logic
+                if (targetAmplitude > amplitudes[i]) {
+                    amplitudes[i] = targetAmplitude;
+                } else {
+                    amplitudes[i] = Math.max(amplitudes[i] - (height / 15.0f), 0);
+                }
+
+                if (amplitudes[i] > 0) {
+                    float x = i * barTotalWidth + (space / 2);
+                    float y = height - amplitudes[i];
+                    
+                    // Dynamic Color Calculation
+                    // Hue varies across the bars (rainbow layout)
+                    // We can also vary lightness based on amplitude for "pop"
+                    
+                    float hue = (float) i / numBars * 360f; // Full rainbow across width
+                    // Or reverse: 360 - ...
+                    
+                    // Convert HSL to Color
+                    int barColor = ColorUtils.HSLToColor(new float[]{hue, 1.0f, 0.5f});
+                    
+                    // Create per-bar gradient or set color
+                    // For the "tiles" look, we can draw small blocks
+                    
+                    // Drawing "tiles" or blocks
+                    float blockSize = barDrawWidth; // square blocks
+                    float blockSpace = 2f; 
+                    
+                    // If height is small, blocks might be too small, so fallback to solid bar if needed
+                    // But user asked for "break bars into many and small tiles"
+                    
+                    float currentY = height;
+                    while (currentY > y) {
+                        float top = currentY - blockSize;
+                        if (top < y) top = y; // Clip top block
+                        
+                        // Gradient logic: lower blocks = darker, higher blocks = brighter?
+                        // Or color shift as it goes up?
+                        
+                        // Let's shift hue slightly as we go up for a "changing color" effect
+                        float heightFactor = (height - currentY) / height; // 0 at bottom, 1 at top
+                        float localHue = (hue + (heightFactor * 60)) % 360; 
+                        
+                        int tileColor = ColorUtils.HSLToColor(new float[]{localHue, 1.0f, 0.5f});
+                        mPaint.setColor(tileColor);
+                        mPaint.setAlpha(255); // Full opacity
+                        
+                        canvas.drawRect(x, top, x + barDrawWidth, currentY - blockSpace, mPaint);
+                        
+                        currentY -= (blockSize + blockSpace);
+                    }
+                }
+            }
+            
+            invalidate(); 
         }
     }
 }

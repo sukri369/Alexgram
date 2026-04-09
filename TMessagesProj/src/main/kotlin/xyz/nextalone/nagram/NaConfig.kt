@@ -135,6 +135,12 @@ object NaConfig {
             ConfigItem.configTypeBool,
             false
         )
+    val musicGraph =
+        addConfig(
+            "MusicGraph",
+            ConfigItem.configTypeBool,
+            false
+        )
     val showNoQuoteForward =
         addConfig(
             "NoQuoteForward",
