@@ -2971,6 +2971,11 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
 
     @Override
     public void onPopGroupCallMessage() {
+        if (groupCallMessageCounter > 0) {
+            groupCallMessageCounter--;
+            if (groupCallMessageCounter == 0) {
+                callMessagesAnimator.replace(null, true);
+            }
         }
     }
 
