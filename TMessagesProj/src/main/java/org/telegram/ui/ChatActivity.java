@@ -1205,7 +1205,6 @@ public class ChatActivity extends BaseFragment implements
     public float paddingTopHeight;
     public int chatListViewPaddingVisibleOffset;
 
-    private int contentPaddingTop;
     private float contentPanTranslation;
     private float contentPanTranslationT;
     private float floatingDateViewOffset;
@@ -19371,12 +19370,6 @@ public class ChatActivity extends BaseFragment implements
             invalidateChatListViewTopPadding();
         }
 
-        @Override
-        public void setPadding(int left, int top, int right, int bottom) {
-            contentPaddingTop = top;
-            invalidateChatListViewTopPadding();
-            invalidateMessagesVisiblePart();
-        }
 
         @Override
         public boolean dispatchKeyEvent(KeyEvent event) {
