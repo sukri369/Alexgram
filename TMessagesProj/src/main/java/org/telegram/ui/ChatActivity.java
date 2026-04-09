@@ -1682,6 +1682,8 @@ public class ChatActivity extends BaseFragment implements
     };
 
     private final static int copy = 10;
+    private final static int export_chat = 136;
+    private final static int import_chat = 137;
     private final static int forward = 11;
     private final static int delete = 12;
     private final static int chat_enc_timer = 13;
@@ -4378,6 +4380,10 @@ public class ChatActivity extends BaseFragment implements
                     if (!getMessagesController().getTranslateController().toggleTranslatingDialog(getDialogId(), true)) {
                         updateTopPanel(true);
                     }
+                } else if (id == export_chat) {
+                    xyz.nextalone.nagram.utils.ChatExportImport.exportChat(getParentActivity(), messages, avatarContainer.getTitle());
+                } else if (id == import_chat) {
+                    xyz.nextalone.nagram.utils.ChatExportImport.importChat(this, 137);
                 } else if (id == call || id == video_call) {
                     if (currentUser != null && getParentActivity() != null) {
                         VoIPHelper.startCall(currentUser, id == video_call, userInfo != null && userInfo.video_calls_available, getParentActivity(), getMessagesController().getUserFull(currentUser.id), getAccountInstance());
@@ -5006,6 +5012,11 @@ public class ChatActivity extends BaseFragment implements
         if (currentChat != null && forumTopic != null && chatMode == 0) {
             closeTopicItem = headerItem.lazilyAddSubItem(topic_close, R.drawable.msg_topic_close, LocaleController.getString(R.string.CloseTopic));
             closeTopicItem.setVisibility(currentChat != null && ChatObject.canManageTopic(currentAccount, currentChat, forumTopic) && forumTopic != null && !forumTopic.closed ? View.VISIBLE : View.GONE);
+        }
+
+        if (chatMode == 0 && (!isThreadChat() || isTopic) && !isReport()) {
+            headerItem.lazilyAddSubItem(export_chat, R.drawable.msg_filehq_solar, LocaleController.getString(R.string.ExportChat));
+            headerItem.lazilyAddSubItem(import_chat, R.drawable.msg_download_solar, LocaleController.getString(R.string.ImportChat));
         }
         menu.setVisibility(inMenuMode ? View.GONE : View.VISIBLE);
 
@@ -21046,6 +21057,10 @@ public class ChatActivity extends BaseFragment implements
                     }
                 }
                 afterMessageSend();
+            } else if (requestCode == 137) {
+                if (data != null && data.getData() != null) {
+                    xyz.nextalone.nagram.utils.ChatExportImport.handleImportResult(getParentActivity(), dialog_id, data.getData());
+                }
             } else if (requestCode == 21) {
                 if (data == null) {
                     showAttachmentError();
