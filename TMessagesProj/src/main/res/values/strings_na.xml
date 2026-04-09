@@ -25,9 +25,15 @@
     <string name="AppIconGoogle" translatable="false">Google</string>
     <string name="AppIconColorful">Colorful</string>
     <string name="AppIconDarkGreen">Dark Green</string>
-    <string name="AppIconNeon">Neon</string>
+    <string name="AppIconNeon">Alexgram Neon</string>
     <string name="AppIconNiello">Niello</string>
-    <string name="AppIconBlue">Blue</string>
+    <string name="AppIconBlue">Alexgram Blue</string>
+    <string name="AppIconColored">Alexgram Colored</string>
+    <string name="AppIconDark">Alexgram Dark</string>
+    <string name="AppIconGreen">Alexgram Green</string>
+    <string name="AppIconPink">Alexgram Pink</string>
+    <string name="AppIconRoseBlue">Alexgram RoseBlue</string>
+    <string name="AppIconWhite">Alexgram White</string>
     <string name="AppIconDarkBlue">Dark Blue</string>
     <string name="AppIconBlurBlue">Blur Blue</string>
     <string name="InputMessageId">Enter Message ID</string>
