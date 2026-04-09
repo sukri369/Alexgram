@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="RunInBackground">Run in Background</string>
+    <string name="RunInBackgroundInfo">Keep the app running in the background to ensure reliable notifications.</string>
+    <string name="NagramXPushService">Alexgram Push Service</string>
     <string name="N_Config">N-Config</string>
     <string name="CombineMessage">Combine Messages</string>
     <string name="TextStyle">Text Style</string>

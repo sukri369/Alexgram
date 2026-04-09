@@ -247,6 +247,70 @@ import tw.nekomimi.nekogram.helpers.TypefaceHelper;
 import xyz.nextalone.nagram.NaConfig;
 
 public class AndroidUtilities {
+
+    public static void requestIgnoreBatteryOptimizations(Activity activity) {
+        if (activity == null) return;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PowerManager pm = (PowerManager) activity.getSystemService(Context.POWER_SERVICE);
+            String packageName = activity.getPackageName();
+            if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+                try {
+                    Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                    intent.setData(Uri.parse("package:" + packageName));
+                    activity.startActivity(intent);
+                } catch (Exception e) {
+                    FileLog.e(e);
+                }
+            }
+        }
+    }
+
+    public static void requestNotificationPermission(Activity activity) {
+        if (activity == null) return;
+        if (Build.VERSION.SDK_INT >= 33) {
+            if (activity.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                try {
+                    activity.requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 1001);
+                } catch (Exception e) {
+                    FileLog.e(e);
+                }
+            }
+        }
+    }
+
+    public static Intent getAutoStartIntent() {
+        String manufacturer = Build.MANUFACTURER.toLowerCase();
+        Intent intent = null;
+        try {
+            if (manufacturer.contains("xiaomi") || manufacturer.contains("redmi")) {
+                intent = new Intent();
+                intent.setComponent(new android.content.ComponentName("com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity"));
+            } else if (manufacturer.contains("oppo") || manufacturer.contains("realme")) {
+                intent = new Intent();
+                intent.setComponent(new android.content.ComponentName("com.coloros.safecenter", "com.coloros.safecenter.permission.startup.StartupAppListActivity"));
+            } else if (manufacturer.contains("vivo")) {
+                intent = new Intent();
+                intent.setComponent(new android.content.ComponentName("com.iqoo.secure", "com.iqoo.secure.ui.phoneoptimize.AddWhiteListActivity"));
+            } else if (manufacturer.contains("letv")) {
+                intent = new Intent();
+                intent.setComponent(new android.content.ComponentName("com.letv.android.letvsafe", "com.letv.android.letvsafe.AutobootManageActivity"));
+            } else if (manufacturer.contains("honor") || manufacturer.contains("huawei")) {
+                intent = new Intent();
+                intent.setComponent(new android.content.ComponentName("com.huawei.systemmanager", "com.huawei.systemmanager.startupmgr.ui.StartupNormalAppListActivity"));
+            } else if (manufacturer.contains("samsung")) {
+                intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                intent.setData(Uri.parse("package:" + ApplicationLoader.applicationContext.getPackageName()));
+            } else if (manufacturer.contains("asus")) {
+                intent = new Intent();
+                intent.setComponent(new android.content.ComponentName("com.asus.mobilemanager", "com.asus.mobilemanager.entry.FunctionActivity"));
+            } else if (manufacturer.contains("oneplus")) {
+                intent = new Intent();
+                intent.setComponent(new android.content.ComponentName("com.oneplus.security", "com.oneplus.security.chainlaunch.view.ChainLaunchAppListActivity"));
+            }
+        } catch (Exception ignore) {}
+        return intent;
+    }
+
     public final static int LIGHT_STATUS_BAR_OVERLAY = 0x0f000000, DARK_STATUS_BAR_OVERLAY = 0x33000000;
 
     public final static int REPLACING_TAG_TYPE_LINK = 0;

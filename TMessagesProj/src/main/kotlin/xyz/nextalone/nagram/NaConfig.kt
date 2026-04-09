@@ -403,6 +403,12 @@ object NaConfig {
             ConfigItem.configTypeBool,
             false
         )
+    val runInBackground =
+        addConfig(
+            "RunInBackground",
+            ConfigItem.configTypeBool,
+            false
+        )
     val pushServiceTypeUnifiedGateway =
         addConfig(
             "PushServiceTypeUnifiedGateway",
