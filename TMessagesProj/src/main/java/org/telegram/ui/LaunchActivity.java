@@ -448,7 +448,11 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         } catch (Throwable ignore) {
 
         }
-        getWindow().setBackgroundDrawableResource(R.drawable.transparent);
+        if (savedInstanceState == null) {
+            getWindow().setBackgroundDrawableResource(R.drawable.splash_background);
+        } else {
+            getWindow().setBackgroundDrawableResource(R.drawable.transparent);
+        }
         flagSecureReason = new FlagSecureReason(getWindow(), () -> SharedConfig.passcodeHash.length() > 0 && !SharedConfig.allowScreenCapture);
         flagSecureReason.attach();
 
@@ -868,6 +872,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                         .withEndAction(() -> {
                             if (splashView.getParent() != null) {
                                 frameLayout.removeView(splashView);
+                                getWindow().setBackgroundDrawableResource(R.drawable.transparent);
                             }
                         })
                         .start();
