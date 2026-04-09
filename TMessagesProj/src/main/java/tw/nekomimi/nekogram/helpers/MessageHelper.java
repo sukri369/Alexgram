@@ -1240,4 +1240,31 @@ public class MessageHelper extends BaseController {
         }
         return null;
     }
+
+    public static final String TRANSLATION_SEPARATOR = "\n\n--------\n\n";
+
+    public static boolean shouldKeepOriginalForManualTranslation(int translatorMode) {
+        return translatorMode == 1 || translatorMode == 2;
+    }
+
+    public static String buildTranslatedDisplayText(String original, Object translated, boolean keepOriginal) {
+        String translatedText;
+        if (translated instanceof TLRPC.TL_textWithEntities) {
+            translatedText = ((TLRPC.TL_textWithEntities) translated).text;
+        } else {
+            translatedText = String.valueOf(translated);
+        }
+        if (keepOriginal && !TextUtils.isEmpty(original)) {
+            return translatedText + TRANSLATION_SEPARATOR + original;
+        }
+        return translatedText;
+    }
+
+    public static boolean isLegacyTranslatedSummary(TLRPC.TL_textWithEntities original, TLRPC.TL_textWithEntities translated) {
+        if (original == null || translated == null || TextUtils.isEmpty(translated.text)) {
+            return false;
+        }
+        return translated.text.contains(TRANSLATION_SEPARATOR);
+    }
 }
+
