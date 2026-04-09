@@ -151,6 +151,8 @@ import com.radolyn.ayugram.utils.AyuGhostUtils;
 import com.radolyn.ayugram.utils.AyuState;
 import com.radolyn.ayugram.utils.LastSeenHelper;
 
+import xyz.nextalone.nagram.NaConfig;
+import xyz.nextalone.nagram.StarFallView;
 import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
@@ -5057,6 +5059,12 @@ public class ChatActivity extends BaseFragment implements
         scrimBlur3Factory.setSourceRootView(viewPositionWatcher, contentView);
 
         contentView.setOccupyStatusBar(!inBubbleMode && !isInsideContainer && !inPreviewMode);
+        if (NaConfig.INSTANCE.getStarFallInChat().Bool()) {
+            StarFallView starFallView = new StarFallView(context);
+            contentView.addView(starFallView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+            starFallView.setClickable(false);
+            starFallView.setFocusable(false);
+        }
         if (isPillChatHeaderEnabled()) {
             contentView.backgroundImageUnderActionBar = true;
             contentView.setBackgroundColor(Color.TRANSPARENT);

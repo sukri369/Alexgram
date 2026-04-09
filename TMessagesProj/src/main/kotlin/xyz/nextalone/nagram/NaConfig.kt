@@ -319,6 +319,12 @@ object NaConfig {
             ConfigItem.configTypeBool,
             true
         )
+    val starFallInChat =
+        addConfig(
+            "StarFallInChat",
+            ConfigItem.configTypeBool,
+            false
+        )
     val pillChatTitleOnboardingShown =
         addConfig(
             "PillChatTitleOnboardingShown",

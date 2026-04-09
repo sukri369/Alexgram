@@ -220,6 +220,7 @@ public class NekoGeneralSettingsActivity extends BaseNekoXSettingsActivity {
             getString(R.string.Snowflakes),
             getString(R.string.DecorationNone),
     }, null));
+    private final AbstractConfigCell starFallInChatRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getStarFallInChat(), getString(R.string.StarFallInChatDescription)));
     private final AbstractConfigCell notificationIconRow = cellGroup.appendCell(new ConfigCellSelectBox(null, NaConfig.INSTANCE.getNotificationIcon(), new String[]{
             getString(R.string.MapPreviewProviderTelegram),
             getString(R.string.NagramX),
