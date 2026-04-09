@@ -4383,7 +4383,7 @@ public class ChatActivity extends BaseFragment implements
                 } else if (id == export_chat) {
                     xyz.nextalone.nagram.utils.ChatExportImport.exportChat(getParentActivity(), messages, avatarContainer.getTitle());
                 } else if (id == import_chat) {
-                    xyz.nextalone.nagram.utils.ChatExportImport.importChat(this, 137);
+                    xyz.nextalone.nagram.utils.ChatExportImport.importChat(ChatActivity.this, 137);
                 } else if (id == call || id == video_call) {
                     if (currentUser != null && getParentActivity() != null) {
                         VoIPHelper.startCall(currentUser, id == video_call, userInfo != null && userInfo.video_calls_available, getParentActivity(), getMessagesController().getUserFull(currentUser.id), getAccountInstance());
