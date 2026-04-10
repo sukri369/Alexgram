@@ -313,7 +313,6 @@
     <string name="StorageSettings">Depolama</string>
     <string name="MainTabsSettingsHeader">Ana Sekmeler</string>
     <string name="MainTabsHideTitles">Başlıkları Gizle</string>
-    <string name="MainTabsHideContacts">Kişiler Sekmesini Gizle</string>
     <string name="PasscodeShowMessagePreviewWhenLocked">Mesaj Önizlemelerini Göster</string>
     <string name="PasscodeShowMessagePreviewWhenLockedAbout">Parola kilidi etkinken bile bildirim içeriğini gösterir.</string>
     <string name="StickerSavedHint">Çıkartma galeriye kaydedildi.</string>

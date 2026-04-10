@@ -102,7 +102,7 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
         if (index == INDEX_CHATS) {
             return MainTabsHelper.getChatsPosition();
         } else if (index == INDEX_CONTACTS) {
-            return MainTabsHelper.isContactsTabHidden() ? -1 : MainTabsHelper.getContactsPosition();
+            return MainTabsHelper.getContactsPosition();
         } else if (index == INDEX_PROFILE) {
             return MainTabsHelper.getProfilePosition();
         } else {
@@ -125,7 +125,6 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
     private MainTabsLayout tabsView;
     private BlurredBackgroundDrawable tabsViewBackground;
     private View fadeView;
-    private boolean lastHideContacts = NaConfig.INSTANCE.getMainTabsHideContacts().Bool();
 
     public MainTabsActivity() {
         super();
@@ -270,7 +269,7 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
 
         final boolean compact = MainTabsHelper.isMainTabsHideTitleStyle();
         final int mainTabsMargin = MainTabsHelper.getMainTabsMargin();
-        final boolean hideContacts = MainTabsHelper.isContactsTabHidden();
+        final boolean hideContacts = false;
         final int tabsViewWidth = MainTabsHelper.getTabsViewWidth();
 
         tabsView = new MainTabsLayout(context);
@@ -318,7 +317,6 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
             tabsView.setViewVisible(view, true, false);
         }
         checkUi_callTabVisible(getUserConfig().showCallsTab, false);
-        tabsView.setViewVisible(tabs[INDEX_CONTACTS], !hideContacts, false);
 
         selectTab(viewPager.getCurrentPosition(), false);
 
@@ -581,7 +579,7 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
 
     @Override
     protected BaseFragment createBaseFragmentAt(int position) {
-        if (!MainTabsHelper.isContactsTabHidden() && position == MainTabsHelper.getContactsPosition()) {
+        if (position == MainTabsHelper.getContactsPosition()) {
             Bundle args = new Bundle();
             args.putBoolean("needPhonebook", true);
             args.putBoolean("needFinishFragment", false);
@@ -622,21 +620,11 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
 
     @Override
     public void clearViews() {
-        final boolean hideContacts = MainTabsHelper.isContactsTabHidden();
-        if (hideContacts != lastHideContacts) {
-            if (viewPager != null) {
-                // Ensure ViewPagerFixed is not left with an out-of-range position on rebuild.
-                viewPager.setPosition(getStartPosition());
-            }
-
-            // Fragment positions are cached. Drop non-chats fragments to avoid mismatches after layout changes.
-            for (int pos = 1; pos <= 3; pos++) {
-                dropFragmentAtPosition(pos);
-            }
-
-            dropCallsFragmentAfterPageScroll = false;
-            lastHideContacts = hideContacts;
+        for (int pos = 1; pos <= 3; pos++) {
+            dropFragmentAtPosition(pos);
         }
+
+        dropCallsFragmentAfterPageScroll = false;
 
         super.clearViews();
     }

@@ -313,7 +313,6 @@
     <string name="StorageSettings">Almacenamiento</string>
     <string name="MainTabsSettingsHeader">Pestañas principales</string>
     <string name="MainTabsHideTitles">Ocultar títulos</string>
-    <string name="MainTabsHideContacts">Ocultar pestaña de contactos</string>
     <string name="PasscodeShowMessagePreviewWhenLocked">Mostrar vista previa de mensajes</string>
     <string name="PasscodeShowMessagePreviewWhenLockedAbout">Muestra el contenido de las notificaciones incluso cuando el bloqueo con código está activo.</string>
     <string name="StickerSavedHint">Sticker guardado en la galería.</string>

@@ -1407,12 +1407,6 @@ object NaConfig {
             ConfigItem.configTypeBool,
             false
         )
-    val mainTabsHideContacts =
-        addConfig(
-            "MainTabsHideContacts",
-            ConfigItem.configTypeBool,
-            false
-        )
     val showNotificationPreviewWhenLocked =
         addConfig(
             "ShowNotificationPreviewWhenLocked",
