@@ -137,9 +137,36 @@ public class HiddenChatsController {
         Set<String> ids = hiddenChatIds.get(currentAccount);
         return ids != null && ids.contains(String.valueOf(dialogId));
     }
+
+    public boolean isHidden(long dialogId) {
+        return isHidden(UserConfig.selectedAccount, dialogId);
+    }
     
     public int getHiddenCount(int currentAccount) {
         Set<String> ids = hiddenChatIds.get(currentAccount);
         return ids != null ? ids.size() : 0;
+    }
+
+    public boolean hasHiddenChats() {
+        for (int i = 0; i < UserConfig.MAX_ACCOUNT_COUNT; i++) {
+            if (getHiddenCount(i) > 0) return true;
+        }
+        return false;
+    }
+
+    public boolean isLocked() {
+        return !isUnlocked;
+    }
+
+    public void hide(long dialogId) {
+        if (!isHidden(UserConfig.selectedAccount, dialogId)) {
+            toggleHidden(UserConfig.selectedAccount, dialogId);
+        }
+    }
+
+    public void unhide(long dialogId) {
+        if (isHidden(UserConfig.selectedAccount, dialogId)) {
+            toggleHidden(UserConfig.selectedAccount, dialogId);
+        }
     }
 }

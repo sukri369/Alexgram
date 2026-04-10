@@ -7095,4 +7095,33 @@ public class AndroidUtilities {
         }
         return null;
     }
+
+    public static java.io.File saveBitmapToGallery(android.graphics.Bitmap bitmap, String name) {
+        if (bitmap == null) return null;
+        try {
+            java.io.File dir = new java.io.File(android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_PICTURES), "NagramX");
+            if (!dir.exists()) {
+                dir.mkdirs();
+            }
+            java.io.File file = new java.io.File(dir, name + "_" + System.currentTimeMillis() + ".jpg");
+            java.io.FileOutputStream out = new java.io.FileOutputStream(file);
+            bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 100, out);
+            out.flush();
+            out.close();
+
+            // Notify gallery
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+                android.content.Intent mediaScanIntent = new android.content.Intent(android.content.Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                android.net.Uri contentUri = android.net.Uri.fromFile(file);
+                mediaScanIntent.setData(contentUri);
+                ApplicationLoader.applicationContext.sendBroadcast(mediaScanIntent);
+            } else {
+                ApplicationLoader.applicationContext.sendBroadcast(new android.content.Intent(android.content.Intent.ACTION_MEDIA_MOUNTED, android.net.Uri.parse("file://" + android.os.Environment.getExternalStorageDirectory())));
+            }
+            return file;
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+        return null;
+    }
 }

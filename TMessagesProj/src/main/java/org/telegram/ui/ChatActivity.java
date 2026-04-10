@@ -13,6 +13,11 @@ import static org.telegram.messenger.AndroidUtilities.lerp;
 import static org.telegram.messenger.LocaleController.formatPluralStringComma;
 import static org.telegram.messenger.LocaleController.formatString;
 import static org.telegram.messenger.LocaleController.getString;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 import static org.telegram.ui.bots.AffiliateProgramFragment.percents;
 
 import android.Manifest;
@@ -595,6 +600,13 @@ public class ChatActivity extends BaseFragment implements
     private ChatActionCell greetingsInfo;
     private QuickRepliesEmptyView quickRepliesEmptyView;
     private BusinessLinksEmptyView businessLinksEmptyView;
+    private boolean assistantQuotaNotified;
+    private boolean assistantLimitNotified;
+    private boolean assistantWaitResponse;
+    private boolean assistantAutoReplyInFlight;
+    private int assistantLastAutoReplyMessageId;
+    private long mergeDialogId;
+
     public ChatActivityFragmentView contentView;
     private ChatBigEmptyView bigEmptyView;
     private ArrayList<View> actionModeViews = new ArrayList<>();
@@ -9559,7 +9571,7 @@ public class ChatActivity extends BaseFragment implements
         }
         // Initialize AI Assistant
         if (xyz.nextalone.nagram.NaConfig.INSTANCE.getEnableAIReply().Bool()) {
-            chatAnimeAssistantView = new ChatAnimeAssistantView(context);
+            chatAnimeAssistantView = new ChatAnimeAssistantView(context, contentView, dialog_id);
             miniChatAssistantView = new MiniChatAssistantView(context);
             contentView.addView(chatAnimeAssistantView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
             contentView.addView(miniChatAssistantView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
@@ -50476,5 +50488,7 @@ public class ChatActivity extends BaseFragment implements
                 if (fis != null) fis.close();
             } catch (Throwable e) { /* ignore */ }
         }
+    public TLRPC.Message getThreadMessage() {
+        return replyingMessageObject != null ? replyingMessageObject.messageOwner : null;
     }
 }
