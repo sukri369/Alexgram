@@ -9535,8 +9535,10 @@ public class ChatActivity extends BaseFragment implements
 
         actionBar.setClipChildren(false);
         actionBar.setClipToPadding(false);
-        fragmentView.setClipChildren(false);
-        fragmentView.setClipToPadding(false);
+        if (fragmentView instanceof ViewGroup) {
+            ((ViewGroup) fragmentView).setClipChildren(false);
+            ((ViewGroup) fragmentView).setClipToPadding(false);
+        }
         return fragmentView;
     }
 
