@@ -202,15 +202,15 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
 
     // AI Reply
     private final AbstractConfigCell headerAiReply = cellGroup.appendCell(new ConfigCellHeader("AI Reply"));
-    private final AbstractConfigCell aiAssistanceSettingsRow = cellGroup.appendCell(new ConfigCellText("AI Assistance Settings", () -> presentFragment(new AIAssistanceSettingsActivity())));
+    private final AbstractConfigCell aiAssistanceSettingsRow = cellGroup.appendCell(new ConfigCellText("AiAssistanceSettings", () -> presentFragment(new AIAssistanceSettingsActivity())));
     private final AbstractConfigCell enableAIReplyRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getEnableAIReply()));
     private final AbstractConfigCell enableSummarizeChatRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getEnableSummarizeChat()));
     private final AbstractConfigCell aiModelUrlRow = cellGroup.appendCell(new ConfigCellTextInput("AI Model URL", NaConfig.INSTANCE.getAiModelUrl(), "https://api.openai.com/v1/chat/completions", null));
     private final AbstractConfigCell aiApiKeyRow = cellGroup.appendCell(new ConfigCellTextInput("AI API Key", NaConfig.INSTANCE.getAiApiKey(), "sk-...", null));
-    private final AbstractConfigCell testAiApiRow = cellGroup.appendCell(new ConfigCellText("Test AI API", () -> testAiApi(NaConfig.INSTANCE.getAiModelUrl().String(), NaConfig.INSTANCE.getAiApiKey().String())));
+    private final AbstractConfigCell testAiApiRow = cellGroup.appendCell(new ConfigCellText("TestAiApi", () -> testAiApi(NaConfig.INSTANCE.getAiModelUrl().String(), NaConfig.INSTANCE.getAiApiKey().String())));
     private final AbstractConfigCell aiModelUrl2Row = cellGroup.appendCell(new ConfigCellTextInput("AI Model URL 2", NaConfig.INSTANCE.getAiModelUrl2(), "https://api.openai.com/v1/chat/completions", null));
     private final AbstractConfigCell aiApiKey2Row = cellGroup.appendCell(new ConfigCellTextInput("AI API Key 2", NaConfig.INSTANCE.getAiApiKey2(), "sk-...", null));
-    private final AbstractConfigCell testAiApi2Row = cellGroup.appendCell(new ConfigCellText("Test AI API 2", () -> testAiApi(NaConfig.INSTANCE.getAiModelUrl2().String(), NaConfig.INSTANCE.getAiApiKey2().String())));
+    private final AbstractConfigCell testAiApi2Row = cellGroup.appendCell(new ConfigCellText("TestAiApi2", () -> testAiApi(NaConfig.INSTANCE.getAiModelUrl2().String(), NaConfig.INSTANCE.getAiApiKey2().String())));
     private final AbstractConfigCell dividerAiReply = cellGroup.appendCell(new ConfigCellDivider());
 
     public NekoExperimentalSettingsActivity() {
