@@ -1431,6 +1431,12 @@ object NaConfig {
             ConfigItem.configTypeBool,
             false
         )
+    val hideTabsOnScroll =
+        addConfig(
+            "HideTabsOnScroll",
+            ConfigItem.configTypeBool,
+            false
+        )
 
     val enableAIReply =
         addConfig(

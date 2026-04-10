@@ -4668,6 +4668,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                                 }
                                 if (changed && scrollUpdated && (goingDown || scrollingManually)) {
                                     hideFloatingButton(goingDown);
+                                    if (NaConfig.INSTANCE.getHideTabsOnScroll().Bool()) {
+                                        NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.setTabsVisible, !goingDown);
+                                        NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.setTabsVisible, !goingDown);
+                                    }
                                 }
                                 prevPosition = firstVisiblePosition;
                                 prevTop = firstViewTop;

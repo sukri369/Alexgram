@@ -239,6 +239,7 @@ public class NekoGeneralSettingsActivity extends BaseNekoXSettingsActivity {
     private final AbstractConfigCell headerMainTabs = cellGroup.appendCell(new ConfigCellHeader(getString(R.string.MainTabsSettingsHeader)));
     private final AbstractConfigCell hideTitlesRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getMainTabsHideTitles()));
     private final AbstractConfigCell hideBottomNavigationBarRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getHideBottomNavigationBar()));
+    private final AbstractConfigCell hideTabsOnScrollRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getHideTabsOnScroll()));
     private final AbstractConfigCell hideContactsRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getHideContacts()));
     private final AbstractConfigCell dividerMainTabs = cellGroup.appendCell(new ConfigCellDivider());
 
@@ -386,6 +387,10 @@ public class NekoGeneralSettingsActivity extends BaseNekoXSettingsActivity {
                 parentLayout.rebuildAllFragmentViews(false, false);
             } else if (key.equals(NaConfig.INSTANCE.getHideContacts().getKey())) {
                 parentLayout.rebuildAllFragmentViews(false, false);
+            } else if (key.equals(NaConfig.INSTANCE.getHideTabsOnScroll().getKey())) {
+                if (!(boolean) newValue) {
+                    getNotificationCenter().postNotificationName(NotificationCenter.setTabsVisible, true);
+                }
             }
         };
 
@@ -660,6 +665,7 @@ public class NekoGeneralSettingsActivity extends BaseNekoXSettingsActivity {
         if (listAdapter == null) {
             if (hideBottomNavigationBar) {
                 cellGroup.rows.remove(hideTitlesRow);
+                cellGroup.rows.remove(hideTabsOnScrollRow);
             }
             return;
         }
@@ -671,11 +677,23 @@ public class NekoGeneralSettingsActivity extends BaseNekoXSettingsActivity {
                 listAdapter.notifyItemInserted(index);
                 changed = true;
             }
+            if (!cellGroup.rows.contains(hideTabsOnScrollRow)) {
+                int index = cellGroup.rows.indexOf(hideBottomNavigationBarRow);
+                cellGroup.rows.add(index + 1, hideTabsOnScrollRow);
+                listAdapter.notifyItemInserted(index + 1);
+                changed = true;
+            }
         } else {
             int rowIndex = cellGroup.rows.indexOf(hideTitlesRow);
             if (rowIndex != -1) {
                 cellGroup.rows.remove(hideTitlesRow);
                 listAdapter.notifyItemRemoved(rowIndex);
+                changed = true;
+            }
+            int rowIndex2 = cellGroup.rows.indexOf(hideTabsOnScrollRow);
+            if (rowIndex2 != -1) {
+                cellGroup.rows.remove(hideTabsOnScrollRow);
+                listAdapter.notifyItemRemoved(rowIndex2);
                 changed = true;
             }
         }
