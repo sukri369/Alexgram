@@ -66,6 +66,7 @@ import org.telegram.ui.Components.blur3.source.BlurredBackgroundSourceRenderNode
 import org.telegram.ui.Components.chat.ViewPositionWatcher;
 import org.telegram.ui.Components.glass.GlassTabView;
 import org.telegram.ui.Stories.recorder.HintView2;
+import org.telegram.ui.Components.ViewPagerFixed;
 import org.telegram.ui.web.WebBrowserSettings;
 
 import java.util.ArrayList;
