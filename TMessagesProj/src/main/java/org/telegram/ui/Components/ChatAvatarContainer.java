@@ -837,7 +837,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                     canvas.restore();
                     drewBlur = true;
                 }
-            }
+
             if (!drewBlur) {
                 canvas.drawRoundRect(pillRect, radius, radius, pillPaint);
             } else {
