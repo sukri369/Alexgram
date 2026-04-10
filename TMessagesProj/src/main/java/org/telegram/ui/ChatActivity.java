@@ -19331,7 +19331,7 @@ public class ChatActivity extends BaseFragment implements
                 } else if (child == actionBar) {
                     childTop -= getPaddingTop();
                 } else if (child == videoPlayerContainer) {
-                    childTop = isPillChatHeaderEnabled() ? (occupyStatusBar ? AndroidUtilities.statusBarHeight : 0) : actionBar.getMeasuredHeight();
+                    childTop = isPillChatHeaderEnabled() ? (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) : actionBar.getMeasuredHeight();
                 } else if (child == instantCameraView || child == overlayView || child == animatingImageView) {
                     childTop = 0;
                 } else if (child == textSelectionHelper.getOverlayView(getContext())) {
