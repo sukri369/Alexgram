@@ -19286,9 +19286,8 @@ public class ChatActivity extends BaseFragment implements
                                 childTop += actionBar.getMeasuredHeight();
                             }
                         }
-                        // DECISIVE FIX: Force offset for pinned messages specifically
-                        if (isPillChatHeaderEnabled() && (child == topPanelLayout || child == topPanelLayoutFade)) {
-                            childTop = getPaddingTop() + ActionBar.getCurrentActionBarHeight() + AndroidUtilities.dp(16);
+                        if (isPillChatHeaderEnabled() && (child == topPanelLayout || child == topPanelLayoutFade || child == topPanelLayoutThanos || child == mentionContainer || child == mentionContainerFade)) {
+                            childTop = getPaddingTop() + ActionBar.getCurrentActionBarHeight() + AndroidUtilities.dp(38);
                         }
                         break;
                     case Gravity.CENTER_VERTICAL:

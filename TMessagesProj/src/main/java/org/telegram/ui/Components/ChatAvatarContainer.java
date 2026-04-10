@@ -786,21 +786,29 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
 
             boolean drewBlur = false;
             if (parentFragment != null && parentFragment.getContentView() != null) {
-                float blurY = getY();
-                if (getParent() instanceof View) {
-                    blurY += ((View) getParent()).getY();
-                }
+                // DECISIVE FIX: Use absolute location to hit the status bar exactly
+                int[] loc = new int[2];
+                getLocationOnScreen(loc);
+                int viewY = loc[1]; 
+                float blurY = viewY; 
 
                 // Draw full-width header blur
                 if (getParent() instanceof View) {
                     View p = (View) getParent();
                     int pWidth = p.getWidth();
-                    int xOffset = (int) getX();
+                    // Get root action bar width for full coverage
+                    if (parentFragment.getActionBar() != null) {
+                        pWidth = parentFragment.getActionBar().getMeasuredWidth();
+                    }
+                    int xOffset = loc[0];
                     int statusBarHeight = occupyStatusBar ? AndroidUtilities.statusBarHeight : 0;
 
-                    // DECISIVE FIX: ONLY blur the status bar area, nothing else.
-                    headerBlurRect.set(-xOffset, -statusBarHeight, pWidth - xOffset, 0);
-                    if (!headerBlurRect.isEmpty()) {
+                    // DECISIVE FIX: Use absolute coordinates relative to the screen top
+                    // We want to blur [0, 0, pWidth, statusBarHeight] in screen space.
+                    // Translated to this view's space: Rect(-loc[0], -loc[1], pWidth - loc[0], statusBarHeight - loc[1])
+                    headerBlurRect.set(-loc[0], -loc[1], pWidth - loc[0], statusBarHeight - loc[1]);
+                    
+                    if (!headerBlurRect.isEmpty() && statusBarHeight > 0) {
                         pillPaint.setColor(0);
                         final int glassBlurAlpha = darkPillSurface ? 60 : 25; 
                         final int glassSourceAlpha = 245; 
@@ -808,14 +816,13 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                     }
                 }
 
-                // Draw pill background ON TOP (Maintaining the "great" look from before)
+                // Draw pill background ON TOP
                 if (!pillRect.isEmpty()) {
                     pillBlurRect.set((int) pillRect.left, (int) pillRect.top, (int) Math.ceil(pillRect.right), (int) Math.ceil(pillRect.bottom));
                     pillClipPath.rewind();
                     pillClipPath.addRoundRect(pillRect, radius, radius, Path.Direction.CW);
                     canvas.save();
                     canvas.clipPath(pillClipPath);
-                    // Pill: Solid-ish frosted look they liked
                     pillPaint.setColor(pillBgColor | 0xFF000000);
                     final int pillOverlayAlpha = darkPillSurface ? 180 : 252;
                     final int pillSourceAlpha = 255;
@@ -1283,6 +1290,43 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
     }
 
     @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        if (isPillChatTitleEnabled()) {
+            int width = MeasureSpec.getSize(widthMeasureSpec);
+            int height = MeasureSpec.getSize(heightMeasureSpec);
+
+            // Calculate required width for the pill
+            float titleContentW = getViewContentWidth(titleTextView);
+            View subView = getSubtitleTextView();
+            float subtitleContentW = subView != null && subView.getVisibility() != GONE ? getViewContentWidth(subView) : 0;
+            float contentW = Math.max(titleContentW, subtitleContentW);
+            
+            int paddingH = getPillHorizontalPadding();
+            int avatarW = (avatarImageView.getVisibility() == VISIBLE ? dp(54) : 0);
+            
+            // The view itself should try to be as wide as possible to avoid clipping the pill
+            // but we must handle the Actionbar title layout constraints
+            int neededWidth = (int) (contentW + paddingH * 2 + avatarW + dp(16));
+            
+            // In Actionbar, we usually want to take available space
+            setMeasuredDimension(width, height);
+
+            // Now measure children with their own specs
+            avatarImageView.measure(MeasureSpec.makeMeasureSpec(dp(42), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(dp(42), MeasureSpec.EXACTLY));
+            int textMaxWidth = Math.max(0, width - avatarW - paddingH * 2);
+            titleTextView.measure(MeasureSpec.makeMeasureSpec(textMaxWidth, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(height, MeasureSpec.AT_MOST));
+            if (subView != null) {
+                subView.measure(MeasureSpec.makeMeasureSpec(textMaxWidth, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(height, MeasureSpec.AT_MOST));
+            }
+            if (timeItem != null) {
+                timeItem.measure(MeasureSpec.makeMeasureSpec(dp(34), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(dp(34), MeasureSpec.EXACTLY));
+            }
+        } else {
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        }
+    }
+
+    @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         int actionBarHeight = ActionBar.getCurrentActionBarHeight();
         int viewTop = (actionBarHeight - dp(42)) / 2 + (Build.VERSION.SDK_INT >= 21 && occupyStatusBar ? AndroidUtilities.statusBarHeight : 0);
@@ -1291,10 +1335,17 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         int avatarRight = leftPadding + dp(42);
 
         if (isCentered()) {
-            final int parentWidth = (getParent() instanceof View) ? ((View) getParent()).getMeasuredWidth() : getWidth();
-            final int xInParent = (int) getX();
-            // Aim for the far right edge of the header area
-            avatarRight = parentWidth - xInParent - dp(2); 
+            // DECISIVE FIX: Anchor to the absolute right of the entire ActionBar
+            int parentWidth = right - left;
+            if (parentFragment != null && parentFragment.getActionBar() != null) {
+                parentWidth = parentFragment.getActionBar().getMeasuredWidth();
+            }
+            int[] loc = new int[2];
+            getLocationInWindow(loc);
+            int xInWindow = loc[0];
+            
+            // Anchor 2dp from the absolute right edge of the screen/header
+            avatarRight = parentWidth - xInWindow - dp(2); 
             avatarLeft = avatarRight - dp(42);
         }
 
