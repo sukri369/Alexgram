@@ -150,6 +150,18 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
     public final static int saveItemId = 204;
     public final static int WEB_SEARCH_TYPE = 7;
 
+    public boolean onBackPressed() {
+        int position = getCurrentItem();
+        if (viewPagerAdapter != null && position >= 0 && position < viewPagerAdapter.items.size()) {
+            if (viewPagerAdapter.items.get(position).type == ViewPagerAdapter.WEB_SEARCH_TYPE_ITEM) {
+                if (webSearchContainer != null) {
+                    return webSearchContainer.onBackPressed();
+                }
+            }
+        }
+        return false;
+    }
+
     private ActionBarMenuItem speedItem;
     private ActionBarMenuItem gotoItem;
     private ActionBarMenuItem forwardItem;

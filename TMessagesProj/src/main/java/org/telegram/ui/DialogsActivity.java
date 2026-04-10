@@ -7366,6 +7366,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             }
             return false;
         } else if (animatorSearchVisible.getValue()) {
+            if (searchViewPager != null && searchViewPager.onBackPressed()) {
+                return false;
+            }
             if (invoked) {
                 fragmentSearchField.editText.getText().clear();
                 fragmentSearchFieldWatcher.toggleSearch(false);
