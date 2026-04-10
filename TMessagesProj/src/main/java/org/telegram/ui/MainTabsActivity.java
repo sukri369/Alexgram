@@ -229,7 +229,7 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
         if (lastHideContacts != hideContacts) {
             lastHideContacts = hideContacts;
             final int currentPosition = viewPager.getCurrentPosition();
-            rebuildFragments();
+            fragmentsArr.clear();
             if (viewPager != null) {
                 int position = currentPosition;
                 if (hideContacts && currentPosition >= 1) {
@@ -237,10 +237,17 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
                 } else if (!hideContacts && currentPosition >= 1) {
                     position = currentPosition + 1;
                 }
+                ViewPagerFixed.Adapter adapter = viewPager.adapter;
                 viewPager.setAdapter(null);
                 viewPager.setAdapter(adapter);
                 viewPager.scrollToPosition(position);
                 selectTab(position, false);
+
+                if (tabs != null) {
+                    for (int index = 0; index < tabs.length; index++) {
+                        tabsView.setViewVisible(tabs[index], index != INDEX_CONTACTS || !hideContacts, false);
+                    }
+                }
             }
         }
 
