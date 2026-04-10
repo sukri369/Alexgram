@@ -799,43 +799,15 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                     int statusBarHeight = occupyStatusBar ? AndroidUtilities.statusBarHeight : 0;
 
                     // Draw BASE HEADER GLASS with GRADIENT MERGE
-                    int fadeStart = (int) pillRect.centerY() - AndroidUtilities.dp(16);
-                    int fadeHeight = AndroidUtilities.dp(32);
-
-                    // 1. Static part (Top to fade start)
-                    headerBlurRect.set(-xOffset, -statusBarHeight, pWidth - xOffset, fadeStart);
+                    // DECISIVE FIX: ONLY blur the status bar area, nothing else.
+                    headerBlurRect.set(-xOffset, -statusBarHeight, pWidth - xOffset, 0);
                     if (!headerBlurRect.isEmpty()) {
-                        pillPaint.setColor(0); // Ensure no solid tint
-                        final int glassBlurAlpha = darkPillSurface ? 70 : 30; // Clean blur tint
+                        pillPaint.setColor(0);
+                        final int glassBlurAlpha = darkPillSurface ? 60 : 25; 
                         final int glassSourceAlpha = 245; 
                         parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true, glassBlurAlpha, glassSourceAlpha);
                     }
 
-                    // 2. Smooth Gradient Fade (replacing discrete strips)
-                    headerBlurRect.set(-xOffset, fadeStart, pWidth - xOffset, fadeStart + fadeHeight);
-                    if (!headerBlurRect.isEmpty()) {
-                        canvas.saveLayer(headerBlurRect.left, headerBlurRect.top, headerBlurRect.right, headerBlurRect.bottom, null);
-
-                        // Draw full blur density
-                        final int baseBlurAlpha = 45;
-                        final int baseSourceAlpha = 245;
-                        if (parentFragment != null && parentFragment.getContentView() != null) {
-                            parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true, baseBlurAlpha, baseSourceAlpha);
-                        }
-
-                        // Apply smooth alpha mask
-                        if (fadeGradientPaint == null) {
-                            fadeGradientPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-                            fadeGradientPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_IN));
-                        }
-                        if (fadeGradient == null) {
-                            fadeGradient = new LinearGradient(0, 0, 0, 1, 0xFF000000, 0x00000000, Shader.TileMode.CLAMP);
-                            fadeMatrix = new Matrix();
-                        }
-                        fadeMatrix.setScale(1, fadeHeight);
-                        fadeMatrix.postTranslate(0, fadeStart);
-                        fadeGradient.setLocalMatrix(fadeMatrix);
-                        fadeGradientPaint.setShader(fadeGradient);
 
                         canvas.drawRect(headerBlurRect, fadeGradientPaint);
                         canvas.restore();
@@ -1325,8 +1297,11 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         int avatarRight = leftPadding + dp(42);
 
         if (isCentered()) {
-            avatarLeft = getWidth() - dp(8) - dp(42);
-            avatarRight = getWidth() - dp(8);
+            final int parentWidth = (getParent() instanceof View) ? ((View) getParent()).getMeasuredWidth() : getWidth();
+            final int xInParent = (int) getX();
+            // Aim for the far right edge of the header area
+            avatarRight = parentWidth - xInParent - dp(2); 
+            avatarLeft = avatarRight - dp(42);
         }
 
         avatarImageView.layout(avatarLeft, viewTop + 1, avatarRight, viewTop + 1 + dp(42));

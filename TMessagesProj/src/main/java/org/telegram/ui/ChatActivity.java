@@ -19286,6 +19286,10 @@ public class ChatActivity extends BaseFragment implements
                                 childTop += actionBar.getMeasuredHeight();
                             }
                         }
+                        // DECISIVE FIX: Force offset for pinned messages specifically
+                        if (isPillChatHeaderEnabled() && (child == topPanelLayout || child == topPanelLayoutFade)) {
+                            childTop = getPaddingTop() + ActionBar.getCurrentActionBarHeight() + AndroidUtilities.dp(16);
+                        }
                         break;
                     case Gravity.CENTER_VERTICAL:
                         childTop = ((b - paddingBottom) - t - height) / 2 + lp.topMargin - lp.bottomMargin;
@@ -19327,7 +19331,7 @@ public class ChatActivity extends BaseFragment implements
                 } else if (child == actionBar) {
                     childTop -= getPaddingTop();
                 } else if (child == videoPlayerContainer) {
-                    childTop = isPillChatHeaderEnabled() ? 0 : actionBar.getMeasuredHeight();
+                    childTop = isPillChatHeaderEnabled() ? (occupyStatusBar ? AndroidUtilities.statusBarHeight : 0) : actionBar.getMeasuredHeight();
                 } else if (child == instantCameraView || child == overlayView || child == animatingImageView) {
                     childTop = 0;
                 } else if (child == textSelectionHelper.getOverlayView(getContext())) {
