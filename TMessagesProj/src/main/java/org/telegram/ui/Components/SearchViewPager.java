@@ -1820,8 +1820,15 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
 
             SearchEngineBottomSheet.EngineBadgeView floatingBadge = new SearchEngineBottomSheet.EngineBadgeView(context);
             floatingBadge.setEngine(selected);
-            floatingBadge.setPadding(AndroidUtilities.dp(4), AndroidUtilities.dp(4), AndroidUtilities.dp(4), AndroidUtilities.dp(4));
-            floatingBadge.setBackground(Theme.createSimpleSelectorRoundRectDrawable(AndroidUtilities.dp(20), Theme.getColor(Theme.key_windowBackgroundGray), Theme.getColor(Theme.key_listSelector)));
+            floatingBadge.setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8));
+            android.graphics.drawable.GradientDrawable fabBg = new android.graphics.drawable.GradientDrawable();
+            fabBg.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+            fabBg.setColor(Theme.getColor(Theme.key_windowBackgroundWhite));
+            if (android.os.Build.VERSION.SDK_INT >= 21) {
+                floatingBadge.setElevation(AndroidUtilities.dp(4));
+                floatingBadge.setOutlineProvider(android.view.ViewOutlineProvider.BACKGROUND);
+            }
+            floatingBadge.setBackground(fabBg);
             
             final ViewConfiguration config = ViewConfiguration.get(context);
             final int touchSlop = config.getScaledTouchSlop();
@@ -1854,9 +1861,9 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
                                 float newTy = startTranslationY + deltaY;
                                 
                                 float minX = -v.getLeft() + AndroidUtilities.dp(8);
-                                float maxX = resultsLayout.getWidth() - v.getRight() - AndroidUtilities.dp(8);
+                                float maxX = getWidth() - v.getRight() - AndroidUtilities.dp(8);
                                 float minY = -v.getTop() + AndroidUtilities.dp(8);
-                                float maxY = resultsLayout.getHeight() - v.getBottom() - AndroidUtilities.dp(8);
+                                float maxY = getHeight() - v.getBottom() - AndroidUtilities.dp(8);
                                 
                                 v.setTranslationX(Math.max(minX, Math.min(newTx, maxX)));
                                 v.setTranslationY(Math.max(minY, Math.min(newTy, maxY)));
@@ -1877,8 +1884,8 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
                                 }).show();
                             } else {
                                 float currentTx = v.getTranslationX();
-                                float centerX = resultsLayout.getWidth() / 2f - (v.getLeft() + v.getRight()) / 2f;
-                                float targetTx = (currentTx < centerX) ? (-v.getLeft() + AndroidUtilities.dp(8)) : (resultsLayout.getWidth() - v.getRight() - AndroidUtilities.dp(8));
+                                float centerX = getWidth() / 2f - (v.getLeft() + v.getRight()) / 2f;
+                                float targetTx = (currentTx < centerX) ? (-v.getLeft() + AndroidUtilities.dp(8)) : (getWidth() - v.getRight() - AndroidUtilities.dp(8));
                                 v.animate().translationX(targetTx)
                                     .setDuration(250)
                                     .setInterpolator(new OvershootInterpolator(0.8f))
@@ -1889,7 +1896,7 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
                     return false;
                 }
             });
-            resultsLayout.addView(floatingBadge, LayoutHelper.createFrame(40, 40, android.view.Gravity.TOP | android.view.Gravity.RIGHT, 0, 8, 8, 0));
+            addView(floatingBadge, LayoutHelper.createFrame(56, 56, android.view.Gravity.BOTTOM | android.view.Gravity.RIGHT, 0, 0, 16, 16));
         }
 
         private class WebProgressBar extends View {
