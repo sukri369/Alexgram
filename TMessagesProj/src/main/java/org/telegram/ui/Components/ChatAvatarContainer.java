@@ -741,7 +741,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             float paddingV = getPillVerticalPadding();
             
             float avatarW = (avatarImageView.getVisibility() == VISIBLE && !isCentered() ? dp(42) + dp(8) : 0);
-            float pillW = contentW + paddingH * 2;
+            float pillW = contentW + paddingH * 2 + (isCentered() ? dp(16) : 0); // Add safety margin for centering
 
             final float hardLeft = isCentered() ? getPillCenteredSafeLeft() : dp(8);
             final float hardRight = isCentered() ? getPillCenteredSafeRight() : getWidth() - dp(8);
@@ -1160,7 +1160,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             int avatarW = 0; // Avatar is on the extreme right, not impacting pill width directly now
             
             // Re-check for overflowing alignment
-            float availableWidthForText = Math.max(getPillMinimumContentWidth(), width - paddingH * 2 - dp(32));
+            float availableWidthForText = Math.max(getPillMinimumContentWidth(), width - paddingH * 2 - dp(64));
             pillTitleOverflowing = contentW > availableWidthForText + 0.5f;
 
             if (pillTitleOverflowing) {
@@ -1172,6 +1172,16 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                 } else if (animatedSubtitleTextView != null) {
                     animatedSubtitleTextView.setGravity(Gravity.LEFT);
                     animatedSubtitleTextView.setEllipsizeByGradient(true);
+                }
+            } else {
+                titleTextView.setGravity(Gravity.CENTER_HORIZONTAL);
+                titleTextView.setEllipsizeByGradient(false);
+                if (subtitleTextView != null) {
+                    subtitleTextView.setGravity(Gravity.CENTER_HORIZONTAL);
+                    subtitleTextView.setEllipsizeByGradient(false);
+                } else if (animatedSubtitleTextView != null) {
+                    animatedSubtitleTextView.setGravity(Gravity.CENTER_HORIZONTAL);
+                    animatedSubtitleTextView.setEllipsizeByGradient(false);
                 }
             }
 
