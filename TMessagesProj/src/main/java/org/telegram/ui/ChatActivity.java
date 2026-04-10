@@ -246,9 +246,8 @@ import org.telegram.ui.ActionBar.ThemeDescription;
 import org.telegram.ui.Components.ChatAnimeAssistantView;
 import org.telegram.ui.Components.chat.MiniChatAssistantView;
 import org.telegram.ui.AIAssistanceSettingsActivity;
-import tw.nekomimi.nekogram.helpers.AndroidUtil;
-import xyz.nextalone.nagram.helpers.LanguageHelper;
-import xyz.nextalone.nagram.helpers.LlmConfig;
+import tw.nekomimi.nekogram.utils.AndroidUtil;
+import tw.nekomimi.nekogram.llm.LlmConfig;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -50507,7 +50506,4 @@ public class ChatActivity extends BaseFragment implements
         }
     }
 
-    public TLRPC.Message getThreadMessage() {
-        return replyingMessageObject != null ? replyingMessageObject.messageOwner : null;
-    }
 }
