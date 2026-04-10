@@ -10664,4 +10664,5 @@
     <string name="AiAssistanceSettings">AI Assistance Settings</string>
     <string name="TestAiApi">Test AI API</string>
     <string name="TestAiApi2">Test AI API 2</string>
+    <string name="TranslateEntireChat">Translate Entire Chat</string>
 </resources>
