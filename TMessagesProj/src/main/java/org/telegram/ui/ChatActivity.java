@@ -238,6 +238,21 @@ import org.telegram.ui.ActionBar.INavigationLayout;
 import org.telegram.ui.ActionBar.SimpleTextView;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
+import org.telegram.ui.Components.ChatAnimeAssistantView;
+import org.telegram.ui.Components.chat.MiniChatAssistantView;
+import org.telegram.ui.Cells.AppRatingCell;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.MediaType;
+import okhttp3.Response;
+import okhttp3.Callback;
+import okhttp3.Call;
+import org.json.JSONObject;
+import org.json.JSONArray;
+
+import tw.nekomimi.nekogram.helpers.EntitiesHelper;
 import org.telegram.ui.ActionBar.theme.ThemeKey;
 import org.telegram.ui.Adapters.FiltersView;
 import org.telegram.ui.Adapters.MessagesSearchAdapter;
@@ -470,6 +485,8 @@ public class ChatActivity extends BaseFragment implements
     private final static int nkbtn_report = 2041;
     private final static int nkbtn_clearDeleted = 2100;
     private final static int nkbtn_viewDeleted = 2101;
+    private final static int nkbtn_ai_reply = 2102;
+    private final static int nkbtn_ai_summarize = 2103;
     private final static int send_video_as_round = 1846;
 
     public int shareAlertDebugMode = DEBUG_SHARE_ALERT_MODE_NORMAL;
@@ -520,6 +537,8 @@ public class ChatActivity extends BaseFragment implements
     private WallpaperBitmapProvider wallpaperBitmapProvider = new WallpaperBitmapProvider();
 
     protected ChatActivityEnterView chatActivityEnterView;
+    private ChatAnimeAssistantView chatAnimeAssistantView;
+    private MiniChatAssistantView miniChatAssistantView;
     private ChatActivityEnterTopView chatActivityEnterTopView;
     private boolean isActionBarTooNarrow;
     private int chatActivityEnterViewAnimateFromTop;
@@ -9538,6 +9557,25 @@ public class ChatActivity extends BaseFragment implements
         if (fragmentView instanceof ViewGroup) {
             ((ViewGroup) fragmentView).setClipChildren(false);
             ((ViewGroup) fragmentView).setClipToPadding(false);
+        }
+        // Initialize AI Assistant
+        if (xyz.nextalone.nagram.NaConfig.INSTANCE.getEnableAIReply().Bool()) {
+            chatAnimeAssistantView = new ChatAnimeAssistantView(context);
+            miniChatAssistantView = new MiniChatAssistantView(context);
+            contentView.addView(chatAnimeAssistantView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+            contentView.addView(miniChatAssistantView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+            
+            chatAnimeAssistantView.setAssistantRequestDelegate(new ChatAnimeAssistantView.AssistantRequestDelegate() {
+                @Override
+                public void onRequest(String prompt, ChatAnimeAssistantView.AssistantRequestCallback callback) {
+                    requestAnimeAssistantReply(prompt, callback);
+                }
+
+                @Override
+                public void onAction(String action, String argument, ChatAnimeAssistantView.AssistantRequestCallback callback) {
+                    executeAnimeAssistantAction(action, argument, callback);
+                }
+            });
         }
         return fragmentView;
     }
@@ -45582,6 +45620,14 @@ public class ChatActivity extends BaseFragment implements
                 repeatMessage(false,false);
                 break;
             }
+            case nkbtn_ai_reply: {
+                showAiReplyDialog();
+                break;
+            }
+            case nkbtn_ai_summarize: {
+                showSummarizeDialog();
+                break;
+            }
             case nkbtn_repeatascopy: {
                 repeatMessage(false, true);
                 break;
@@ -47986,6 +48032,16 @@ public class ChatActivity extends BaseFragment implements
                     options.add(nkbtn_hide);
                     icons.add(R.drawable.msg_disable);
                 }
+                if (NaConfig.INSTANCE.getEnableAIReply().Bool()) {
+                    items.add("Reply with AI");
+                    options.add(nkbtn_ai_reply);
+                    icons.add(R.drawable.magic_stick_solar);
+                }
+                if (NaConfig.INSTANCE.getEnableSummarizeChat().Bool()) {
+                    items.add("Summarize");
+                    options.add(nkbtn_ai_summarize);
+                    icons.add(R.drawable.msg_edit);
+                }
                 boolean canViewStats = false;
                 if (message.messageOwner.views > 0 || message.messageOwner.forwards > 0) {
                     if (message.messageOwner.fwd_from != null && message.messageOwner.fwd_from.channel_post != 0) {
@@ -49396,5 +49452,1030 @@ public class ChatActivity extends BaseFragment implements
                 dismiss.run();
             });
         }, 800);
+    }
+
+    private void showSummarizeDialog() {
+        try {
+            if (selectedObject == null) {
+                return;
+            }
+            final MessageObject messageToSummarize = selectedObject;
+
+            final android.widget.EditText inputField = new android.widget.EditText(getParentActivity());
+            inputField.setBackground(Theme.createEditTextDrawable(getParentActivity(), false));
+            inputField.setTextSize(16);
+            inputField.setTextColor(getThemedColor(Theme.key_dialogTextBlack));
+            inputField.setHint("Check summary instructions (Optional)...");
+            inputField.setHintTextColor(getThemedColor(Theme.key_dialogTextHint));
+            inputField.setPadding(AndroidUtilities.dp(4), AndroidUtilities.dp(4), AndroidUtilities.dp(4), AndroidUtilities.dp(4));
+
+            android.widget.LinearLayout container = new android.widget.LinearLayout(getParentActivity());
+            container.setOrientation(android.widget.LinearLayout.VERTICAL);
+            container.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(8), AndroidUtilities.dp(24), 0);
+            container.addView(inputField, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+            builder.setTitle("AI Summary");
+            builder.setView(container);
+            builder.setPositiveButton("Summarize", null); 
+            builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+
+            AlertDialog dialog = builder.create();
+            dialog.show();
+
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+                try {
+                    String userInstruction = inputField.getText().toString().trim();
+                    String prompt = "Please summarize the following message concisely and beautifully, using bullet points or paragraphs as appropriate to make it easy to read.";
+                    if (!android.text.TextUtils.isEmpty(userInstruction)) {
+                        prompt = "Please summarize the following message based on this instruction: " + userInstruction;
+                    }
+
+                    // Show loading
+                    final android.widget.ProgressBar progressBar = new android.widget.ProgressBar(getParentActivity());
+                    container.addView(progressBar, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, android.view.Gravity.CENTER, 0, 16, 0, 0));
+                    inputField.setEnabled(false);
+                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+
+                    startAiGeneration(prompt, messageToSummarize, new AiGenerationCallback() {
+                        @Override
+                        public void onSuccess(String result) {
+                            AndroidUtilities.runOnUIThread(() -> {
+                                try {
+                                    if (dialog.isShowing()) dialog.dismiss();
+                                } catch (Throwable e) { /* ignore */ }
+
+                                if (getParentActivity() != null) {
+                                    android.widget.TextView summaryView = new android.widget.TextView(getParentActivity());
+                                    // Make it beautiful: Parse Markdown using Telegram's internal parser
+                                    CharSequence formattedResult = tw.nekomimi.nekogram.helpers.EntitiesHelper.parseMarkdown(result);
+                                    summaryView.setText(formattedResult);
+                                    summaryView.setTextSize(16);
+                                    summaryView.setTextColor(getThemedColor(Theme.key_dialogTextBlack));
+                                    summaryView.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(8), AndroidUtilities.dp(24), AndroidUtilities.dp(8));
+                                    summaryView.setTextIsSelectable(true);
+                                    summaryView.setMovementMethod(new android.text.method.ScrollingMovementMethod());
+
+                                    android.widget.ScrollView scrollView = new android.widget.ScrollView(getParentActivity());
+                                    scrollView.addView(summaryView);
+
+                                    AlertDialog.Builder resultBuilder = new AlertDialog.Builder(getParentActivity());
+                                    resultBuilder.setTitle("Summary Result");
+                                    resultBuilder.setView(scrollView);
+                                    resultBuilder.setPositiveButton("Close", null);
+                                    resultBuilder.setNeutralButton("Copy", (d, w) -> {
+                                        android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getParentActivity().getSystemService(android.content.Context.CLIPBOARD_SERVICE);
+                                        // Copy raw markdown text so it can be pasted with formatting elsewhere or re-rendered
+                                        android.content.ClipData clip = android.content.ClipData.newPlainText("Summary", result);
+                                        clipboard.setPrimaryClip(clip);
+                                        android.widget.Toast.makeText(getParentActivity(), "Copied to clipboard", android.widget.Toast.LENGTH_SHORT).show();
+                                    });
+                                    resultBuilder.show();
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void onError(String error) {
+                            AndroidUtilities.runOnUIThread(() -> {
+                                try {
+                                    container.removeView(progressBar);
+                                    inputField.setEnabled(true);
+                                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
+                                    if (getParentActivity() != null) {
+                                        android.widget.TextView errorView = new android.widget.TextView(getParentActivity());
+                                        errorView.setText(error);
+                                        errorView.setTextSize(16);
+                                        errorView.setTextColor(getThemedColor(Theme.key_dialogTextBlack));
+                                        errorView.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(8), AndroidUtilities.dp(24), AndroidUtilities.dp(8));
+                                        errorView.setTextIsSelectable(true);
+
+                                        android.widget.ScrollView scrollView = new android.widget.ScrollView(getParentActivity());
+                                        scrollView.addView(errorView);
+
+                                        AlertDialog.Builder errorBuilder = new AlertDialog.Builder(getParentActivity());
+                                        errorBuilder.setTitle("Error");
+                                        errorBuilder.setView(scrollView);
+                                        errorBuilder.setPositiveButton("OK", null);
+                                        errorBuilder.setNeutralButton("Copy", (d, w) -> {
+                                            android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getParentActivity().getSystemService(android.content.Context.CLIPBOARD_SERVICE);
+                                            android.content.ClipData clip = android.content.ClipData.newPlainText("Error Log", error);
+                                            clipboard.setPrimaryClip(clip);
+                                            android.widget.Toast.makeText(getParentActivity(), "Copied to clipboard", android.widget.Toast.LENGTH_SHORT).show();
+                                        });
+                                        errorBuilder.show();
+                                    }
+                                } catch (Throwable e) {
+                                    e.printStackTrace();
+                                }
+                            });
+                        }
+                    });
+                } catch (Throwable e) {
+                    if (getParentActivity() != null) {
+                        android.widget.Toast.makeText(getParentActivity(), "Crash in Start: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
+                    }
+                    e.printStackTrace();
+                }
+            });
+        } catch (Throwable e) {
+            if (getParentActivity() != null) {
+                android.widget.Toast.makeText(getParentActivity(), "Dialog Crash: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
+            }
+            e.printStackTrace();
+        }
+    }
+
+    private void showAiReplyDialog() {
+        try {
+            if (selectedObject == null) {
+                return;
+            }
+            final MessageObject messageToReply = selectedObject;
+
+            if (getParentActivity() == null) {
+                return;
+            }
+
+            final android.widget.EditText inputField = new android.widget.EditText(getParentActivity());
+            inputField.setBackground(Theme.createEditTextDrawable(getParentActivity(), false));
+            inputField.setTextSize(16);
+            inputField.setTextColor(getThemedColor(Theme.key_dialogTextBlack));
+            inputField.setHint("Enter your prompt for AI...");
+            inputField.setHintTextColor(getThemedColor(Theme.key_dialogTextHint));
+            inputField.setPadding(AndroidUtilities.dp(4), AndroidUtilities.dp(4), AndroidUtilities.dp(4), AndroidUtilities.dp(4));
+
+            android.widget.LinearLayout container = new android.widget.LinearLayout(getParentActivity());
+            container.setOrientation(android.widget.LinearLayout.VERTICAL);
+            container.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(8), AndroidUtilities.dp(24), 0);
+            container.addView(inputField, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+            builder.setTitle("AI Reply");
+            builder.setView(container);
+            builder.setPositiveButton("Generate", null); 
+            builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+
+            AlertDialog dialog = builder.create();
+            dialog.show();
+
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+                try {
+                    String prompt = inputField.getText().toString().trim();
+                    if (android.text.TextUtils.isEmpty(prompt)) {
+                        return;
+                    }
+
+                    // Show loading
+                    final android.widget.ProgressBar progressBar = new android.widget.ProgressBar(getParentActivity());
+                    container.addView(progressBar, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, android.view.Gravity.CENTER, 0, 16, 0, 0));
+                    inputField.setEnabled(false);
+                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+
+                    startAiGeneration(prompt, messageToReply, new AiGenerationCallback() {
+                        @Override
+                        public void onSuccess(String result) {
+                            AndroidUtilities.runOnUIThread(() -> {
+                                try {
+                                    if (dialog.isShowing()) dialog.dismiss();
+                                } catch (Throwable e) { /* ignore */ }
+
+                                if (chatActivityEnterView != null && chatActivityEnterView.getEditField() != null) {
+                                    chatActivityEnterView.getEditField().setText(result);
+                                    chatActivityEnterView.getEditField().setSelection(result.length());
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void onError(String error) {
+                            AndroidUtilities.runOnUIThread(() -> {
+                                try {
+                                    container.removeView(progressBar);
+                                    inputField.setEnabled(true);
+                                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
+                                    if (getParentActivity() != null) {
+                                        android.widget.TextView errorView = new android.widget.TextView(getParentActivity());
+                                        errorView.setText(error);
+                                        errorView.setTextSize(16);
+                                        errorView.setTextColor(getThemedColor(Theme.key_dialogTextBlack));
+                                        errorView.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(8), AndroidUtilities.dp(24), AndroidUtilities.dp(8));
+                                        errorView.setTextIsSelectable(true);
+
+                                        android.widget.ScrollView scrollView = new android.widget.ScrollView(getParentActivity());
+                                        scrollView.addView(errorView);
+
+                                        AlertDialog.Builder errorBuilder = new AlertDialog.Builder(getParentActivity());
+                                        errorBuilder.setTitle("Error");
+                                        errorBuilder.setView(scrollView);
+                                        errorBuilder.setPositiveButton("OK", null);
+                                        errorBuilder.setNeutralButton("Copy", (d, w) -> {
+                                            android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getParentActivity().getSystemService(android.content.Context.CLIPBOARD_SERVICE);
+                                            android.content.ClipData clip = android.content.ClipData.newPlainText("Error Log", error);
+                                            clipboard.setPrimaryClip(clip);
+                                            android.widget.Toast.makeText(getParentActivity(), "Copied to clipboard", android.widget.Toast.LENGTH_SHORT).show();
+                                        });
+                                        errorBuilder.show();
+                                    }
+                                } catch (Throwable e) {
+                                    e.printStackTrace();
+                                }
+                            });
+                        }
+                    });
+                } catch (Throwable e) {
+                    if (getParentActivity() != null) {
+                        android.widget.Toast.makeText(getParentActivity(), "Crash in Start: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
+                    }
+                    e.printStackTrace();
+                }
+            });
+        } catch (Throwable e) {
+            if (getParentActivity() != null) {
+                android.widget.Toast.makeText(getParentActivity(), "Dialog Crash: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
+            }
+            e.printStackTrace();
+        }
+    }
+
+    private void executeAnimeAssistantAction(String action, String argument, ChatAnimeAssistantView.AssistantRequestCallback callback) {
+        AndroidUtilities.runOnUIThread(() -> {
+            try {
+                String normalizedAction = action == null ? "" : action.toLowerCase(Locale.US).trim();
+                String normalizedArgument = argument == null ? "" : argument.trim();
+
+                if ("find_message".equals(normalizedAction)) {
+                    if (TextUtils.isEmpty(normalizedArgument)) {
+                        callback.onError("Tell me the text to find in this chat.");
+                        return;
+                    }
+                    openSearchWithText(normalizedArgument);
+                    callback.onSuccess("Opened chat search for: \"" + normalizedArgument + "\".");
+                    return;
+                }
+
+                if ("scroll_chat".equals(normalizedAction)) {
+                    String direction = normalizedArgument.toLowerCase(Locale.US);
+                    if (TextUtils.isEmpty(direction)) {
+                        direction = "down";
+                    }
+                    if ("bottom".equals(direction) || "latest".equals(direction) || "newest".equals(direction)) {
+                        scrollToLastMessage(true, true);
+                        callback.onSuccess("Scrolled to latest messages.");
+                        return;
+                    }
+                    if ("top".equals(direction) || "oldest".equals(direction)) {
+                        if (messages != null && !messages.isEmpty()) {
+                            MessageObject oldest = messages.get(messages.size() - 1);
+                            scrollToMessageId(oldest.getId(), 0, false, 0, true, 0);
+                            callback.onSuccess("Jumped toward older messages.");
+                        } else {
+                            callback.onError("No loaded messages yet to jump.");
+                        }
+                        return;
+                    }
+                    if (chatListView == null) {
+                        callback.onError("Chat list is not ready yet.");
+                        return;
+                    }
+                    int delta = AndroidUtilities.dp(420);
+                    if ("up".equals(direction)) {
+                        chatListView.smoothScrollBy(0, -delta);
+                        callback.onSuccess("Scrolled up.");
+                    } else {
+                        chatListView.smoothScrollBy(0, delta);
+                        callback.onSuccess("Scrolled down.");
+                    }
+                    return;
+                }
+
+                if ("play_media".equals(normalizedAction)) {
+                    String mediaType = TextUtils.isEmpty(normalizedArgument) ? "any" : normalizedArgument.toLowerCase(Locale.US);
+                    if (playMediaRequestedByAssistant(mediaType)) {
+                        if ("video".equals(mediaType)) {
+                            callback.onSuccess("Playing a visible video in this chat.");
+                        } else if ("audio".equals(mediaType)) {
+                            callback.onSuccess("Playing a visible audio/voice message.");
+                        } else {
+                            callback.onSuccess("Playing visible media in this chat.");
+                        }
+                    } else {
+                        callback.onError("No playable " + mediaType + " found on screen right now.");
+                    }
+                    return;
+                }
+
+                callback.onError("That action is not supported yet.");
+            } catch (Throwable t) {
+                callback.onError("Could not run action: " + t.getMessage());
+            }
+        });
+    }
+
+    private boolean playMediaRequestedByAssistant(String mediaType) {
+        String type = TextUtils.isEmpty(mediaType) ? "any" : mediaType;
+        MessageObject playing = MediaController.getInstance().getPlayingMessageObject();
+        if (playing != null && (playing.getDialogId() == dialog_id || playing.getDialogId() == mergeDialogId)) {
+            if ("any".equals(type)
+                    || ("video".equals(type) && (playing.isVideo() || playing.isRoundVideo()))
+                    || ("audio".equals(type) && (playing.isVoice() || playing.isMusic() || playing.isRoundVideo()))) {
+                return true;
+            }
+        }
+
+        if ("video".equals(type)) {
+            if (maybePlayVisibleVideo()) {
+                return true;
+            }
+            return playVisibleMessageByType(false, true);
+        }
+        if ("audio".equals(type)) {
+            return playVisibleMessageByType(true, false);
+        }
+        return playVisibleMessageByType(true, false) || maybePlayVisibleVideo() || playVisibleMessageByType(false, true);
+    }
+
+    private boolean playVisibleMessageByType(boolean preferAudio, boolean preferVideo) {
+        if (chatListView == null) {
+            return false;
+        }
+        MessageObject candidate = null;
+        int count = chatListView.getChildCount();
+        for (int i = 0; i < count; i++) {
+            View child = chatListView.getChildAt(i);
+            if (!(child instanceof ChatMessageCell)) {
+                continue;
+            }
+            ChatMessageCell cell = (ChatMessageCell) child;
+            MessageObject messageObject = cell.getMessageObject();
+            if (messageObject == null || messageObject.isVoiceOnce() || messageObject.isRoundOnce()) {
+                continue;
+            }
+
+            boolean isAudio = messageObject.isVoice() || messageObject.isMusic() || messageObject.isRoundVideo();
+            boolean isVideo = messageObject.isVideo() || messageObject.isRoundVideo();
+            if (!isAudio && !isVideo) {
+                continue;
+            }
+
+            if (preferAudio && isAudio) {
+                candidate = messageObject;
+                break;
+            }
+            if (preferVideo && isVideo) {
+                candidate = messageObject;
+                break;
+            }
+            if (!preferAudio && !preferVideo) {
+                candidate = messageObject;
+                break;
+            }
+            if (candidate == null) {
+                candidate = messageObject;
+            }
+        }
+
+        if (candidate == null) {
+            return false;
+        }
+        boolean result = MediaController.getInstance().playMessage(candidate);
+        if (result && (candidate.isVoice() || candidate.isRoundVideo())) {
+            MediaController.getInstance().setVoiceMessagesPlaylist(createVoiceMessagesPlaylist(candidate, false), false);
+        }
+        return result;
+    }
+
+    private void requestAnimeAssistantReply(String prompt, ChatAnimeAssistantView.AssistantRequestCallback callback) {
+        final String context = buildAnimeAssistantContext();
+        final String decoratedPrompt = "Persona: You are Alexgram's anime-style floating assistant. " +
+                "Tone: friendly, playful, slightly teasing but respectful. " +
+            "Keep responses concise, practical, and conversational. " +
+            "Identity rule: when the user asks about 'my name' or 'who am I', refer to the account owner from context, never other chat participants. " +
+            "User prompt: " + prompt;
+        final String url1;
+        final String key1;
+
+        try {
+            url1 = NaConfig.INSTANCE.getAiModelUrl().String();
+            key1 = NaConfig.INSTANCE.getAiApiKey().String();
+        } catch (Throwable e) {
+            AndroidUtilities.runOnUIThread(() -> callback.onError("Config loading failed: " + e.getMessage()));
+            return;
+        }
+
+        callAiApi(url1, key1, decoratedPrompt, context, null, new AiGenerationCallback() {
+            @Override
+            public void onSuccess(String result) {
+                AndroidUtilities.runOnUIThread(() -> callback.onSuccess(result));
+            }
+
+            @Override
+            public void onError(String error) {
+                try {
+                    String url2 = NaConfig.INSTANCE.getAiModelUrl2().String();
+                    String key2 = NaConfig.INSTANCE.getAiApiKey2().String();
+                    if (TextUtils.isEmpty(url2)) {
+                        AndroidUtilities.runOnUIThread(() -> callback.onError(error));
+                        return;
+                    }
+
+                    callAiApi(url2, key2, decoratedPrompt, context, null, new AiGenerationCallback() {
+                        @Override
+                        public void onSuccess(String result) {
+                            AndroidUtilities.runOnUIThread(() -> callback.onSuccess(result));
+                        }
+
+                        @Override
+                        public void onError(String fallbackError) {
+                            AndroidUtilities.runOnUIThread(() -> callback.onError(fallbackError));
+                        }
+                    });
+                } catch (Throwable failoverCrash) {
+                    AndroidUtilities.runOnUIThread(() -> callback.onError(error + "\n(Failover crash: " + failoverCrash.getMessage() + ")"));
+                }
+            }
+        });
+    }
+
+    private String buildAnimeAssistantContext() {
+        StringBuilder sb = new StringBuilder(512);
+        sb.append("You are replying inside Alexgram chat.\n");
+        long ownerId = getUserConfig().getClientUserId();
+        TLRPC.User ownerUser = getMessagesController().getUser(ownerId);
+        if (ownerUser != null) {
+            sb.append("Account owner (this is the user you assist): ")
+                    .append(UserObject.getForcedFirstName(ownerUser));
+            if (!TextUtils.isEmpty(ownerUser.username)) {
+                sb.append(" (@").append(ownerUser.username).append(")");
+            }
+            sb.append("\n");
+        }
+        if (currentUser != null) {
+            sb.append("Dialog with user: ").append(UserObject.getForcedFirstName(currentUser)).append("\n");
+        } else if (currentChat != null) {
+            sb.append("Dialog in chat: ").append(currentChat.title).append("\n");
+        }
+
+        if (chatActivityEnterView != null) {
+            CharSequence draft = chatActivityEnterView.getFieldText();
+            if (!TextUtils.isEmpty(draft)) {
+                sb.append("Current input draft: ").append(draft).append("\n");
+            }
+        }
+
+        if (messages != null && !messages.isEmpty()) {
+            int added = 0;
+            sb.append("Recent messages:\n");
+            for (int i = 0; i < messages.size() && added < 3; i++) {
+                MessageObject messageObject = messages.get(i);
+                if (messageObject == null) {
+                    continue;
+                }
+                CharSequence text = messageObject.messageText;
+                if (TextUtils.isEmpty(text) && messageObject.caption != null) {
+                    text = messageObject.caption;
+                }
+                if (!TextUtils.isEmpty(text)) {
+                    String sample = text.toString();
+                    if (sample.length() > 160) {
+                        sample = sample.substring(0, 160) + "...";
+                    }
+                    sb.append("- ").append(sample.replace('\n', ' ')).append("\n");
+                    added++;
+                }
+            }
+        }
+
+        return sb.toString();
+    }
+
+    private boolean isAssistantAutoReplyEnabledForDialog() {
+        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("ai_assistant_prefs", Context.MODE_PRIVATE);
+        return preferences.getBoolean("assistant_auto_reply_" + dialog_id, false);
+    }
+
+    private boolean isAssistantGroupTagOnlyModeEnabled() {
+        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("ai_assistant_prefs", Context.MODE_PRIVATE);
+        return preferences.getBoolean("group_tag_only", false);
+    }
+
+    private String getAssistantPersonaHint() {
+        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("ai_assistant_prefs", Context.MODE_PRIVATE);
+        int persona = preferences.getInt("persona_preset", 0);
+        if (persona == 1) {
+            return "Playful but respectful.";
+        } else if (persona == 2) {
+            return "Wise, calm, and concise.";
+        }
+        return "Friendly and practical.";
+    }
+
+    private boolean isAssistantAutoReplyModeSupported() {
+        return chatMode != MODE_SCHEDULED
+                && chatMode != MODE_PINNED
+                && chatMode != MODE_EDIT_BUSINESS_LINK
+                && chatMode != MODE_SEARCH;
+    }
+
+    private String buildAutoReplyFallback(CharSequence sourceText) {
+        String text = sourceText == null ? "" : sourceText.toString().trim();
+        if (text.length() > 120) {
+            text = text.substring(0, 120).trim();
+        }
+        text = text.replace('\n', ' ').replace('"', '\'').trim();
+        if (TextUtils.isEmpty(text)) {
+            return "I saw your message, I will reply soon.";
+        }
+        if (text.endsWith("?")) {
+            return "About \"" + text + "\", let me check and get back to you.";
+        }
+        return "About \"" + text + "\", got it.";
+    }
+
+    private boolean isAssistantQuotaOrRateLimitError(String error) {
+        if (TextUtils.isEmpty(error)) {
+            return false;
+        }
+        String lower = error.toLowerCase();
+        return lower.contains("quota")
+                || lower.contains("resource_exhausted")
+                || lower.contains("rate limit")
+                || lower.contains("too many requests")
+                || lower.contains("insufficient_quota")
+                || lower.contains("retrydelay")
+                || lower.contains("http 429");
+    }
+
+    private void disableAssistantAutoReplyDueToQuota() {
+        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("ai_assistant_prefs", Context.MODE_PRIVATE);
+        preferences.edit().putBoolean("assistant_auto_reply_" + dialog_id, false).apply();
+        if (chatAnimeAssistantView != null) {
+            chatAnimeAssistantView.setAutoReplyEnabledState(false);
+        }
+        if (!assistantQuotaNotified) {
+            assistantQuotaNotified = true;
+            BulletinFactory.of(ChatActivity.this)
+                    .createSimpleBulletin(R.raw.error, "API quota reached. Auto Reply turned off.")
+                    .show();
+        }
+    }
+
+    private void tryAutoReplyWithLatestPendingMessage(boolean preferUnreadOnly) {
+        if (!isAssistantAutoReplyEnabledForDialog() || !isAssistantAutoReplyModeSupported() || assistantAutoReplyInFlight) {
+            return;
+        }
+        if (messages == null || messages.isEmpty()) {
+            return;
+        }
+
+        MessageObject candidate = null;
+        for (int i = 0; i < messages.size(); i++) {
+            MessageObject messageObject = messages.get(i);
+            if (messageObject == null || messageObject.getId() <= 0) {
+                continue;
+            }
+            if (messageObject.getId() <= assistantLastAutoReplyMessageId) {
+                continue;
+            }
+            if (messageObject.isOut() || messageObject.isOutOwner() || messageObject.messageOwner == null || messageObject.messageOwner.action != null) {
+                continue;
+            }
+            long messageDialogId = messageObject.getDialogId();
+            if (messageDialogId != dialog_id && messageDialogId != mergeDialogId) {
+                continue;
+            }
+            if (preferUnreadOnly && !messageObject.isUnread()) {
+                continue;
+            }
+
+            CharSequence text = messageObject.messageText;
+            if (TextUtils.isEmpty(text) && messageObject.caption != null) {
+                text = messageObject.caption;
+            }
+            if (TextUtils.isEmpty(text)) {
+                continue;
+            }
+            if (!shouldAutoReplyToIncomingMessage(messageObject)) {
+                continue;
+            }
+            candidate = messageObject;
+            break;
+        }
+
+        if (candidate == null && preferUnreadOnly) {
+            tryAutoReplyWithLatestPendingMessage(false);
+            return;
+        }
+        if (candidate != null) {
+            tryAutoReplyWithAssistant(candidate);
+        }
+    }
+
+    private void tryAutoReplyWithAssistant(MessageObject incomingMessage) {
+        if (!isAssistantAutoReplyEnabledForDialog() || !isAssistantAutoReplyModeSupported()) {
+            return;
+        }
+        if (incomingMessage == null || incomingMessage.getId() <= 0) {
+            return;
+        }
+        long messageDialogId = incomingMessage.getDialogId();
+        if (messageDialogId != dialog_id && messageDialogId != mergeDialogId) {
+            return;
+        }
+        if (incomingMessage.isOut() || incomingMessage.isOutOwner() || incomingMessage.messageOwner == null || incomingMessage.messageOwner.action != null) {
+            return;
+        }
+        if (!shouldAutoReplyToIncomingMessage(incomingMessage)) {
+            return;
+        }
+        if (assistantAutoReplyInFlight || incomingMessage.getId() <= assistantLastAutoReplyMessageId) {
+            return;
+        }
+
+        CharSequence sourceText = incomingMessage.messageText;
+        if (TextUtils.isEmpty(sourceText) && incomingMessage.caption != null) {
+            sourceText = incomingMessage.caption;
+        }
+        if (TextUtils.isEmpty(sourceText)) {
+            return;
+        }
+        final CharSequence fallbackSourceText = sourceText;
+
+        assistantAutoReplyInFlight = true;
+        final int targetMessageId = incomingMessage.getId();
+        final MessageObject replySourceMessage = incomingMessage;
+
+        String prompt = "Incoming message: \"" + sourceText.toString().replace('\n', ' ') + "\"\n"
+                + "Write a natural human reply in the same language, maximum one short sentence. "
+            + "Reply directly to the message content and intent, avoid generic acknowledgements. "
+            + "Avoid robotic style. " + getAssistantPersonaHint();
+
+        requestAnimeAssistantReply(prompt, new ChatAnimeAssistantView.AssistantRequestCallback() {
+            @Override
+            public void onSuccess(String response) {
+                assistantAutoReplyInFlight = false;
+                if (TextUtils.isEmpty(response) || dialog_id == 0) {
+                    assistantLastAutoReplyMessageId = targetMessageId;
+                    return;
+                }
+                String cleaned = response.trim();
+                int lineBreak = cleaned.indexOf('\n');
+                if (lineBreak > 0) {
+                    cleaned = cleaned.substring(0, lineBreak).trim();
+                }
+                if (cleaned.length() > 220) {
+                    cleaned = cleaned.substring(0, 220).trim();
+                }
+                if (TextUtils.isEmpty(cleaned)) {
+                    assistantLastAutoReplyMessageId = targetMessageId;
+                    return;
+                }
+
+                ArrayList<TLRPC.MessageEntity> entities = null;
+                String finalReply = cleaned;
+
+                assistantLastAutoReplyMessageId = targetMessageId;
+                SendMessagesHelper.getInstance(currentAccount)
+                        .sendMessage(finalReply, dialog_id, replySourceMessage, getThreadMessage(), null, false, entities, null, null, !NaConfig.INSTANCE.getSilentMessageByDefault().Bool(), 0, 0, null, false);
+            }
+
+            @Override
+            public void onError(String error) {
+                assistantAutoReplyInFlight = false;
+                assistantLastAutoReplyMessageId = targetMessageId;
+                if (dialog_id == 0) {
+                    return;
+                }
+                if (isAssistantQuotaOrRateLimitError(error)) {
+                    disableAssistantAutoReplyDueToQuota();
+                    return;
+                }
+                String fallback = buildAutoReplyFallback(fallbackSourceText);
+                if (TextUtils.isEmpty(fallback)) {
+                    return;
+                }
+
+                ArrayList<TLRPC.MessageEntity> entities = null;
+                String finalFallback = fallback;
+                SendMessagesHelper.getInstance(currentAccount)
+                        .sendMessage(finalFallback, dialog_id, replySourceMessage, getThreadMessage(), null, false, entities, null, null, !NaConfig.INSTANCE.getSilentMessageByDefault().Bool(), 0, 0, null, false);
+            }
+        });
+    }
+
+    private boolean shouldAutoReplyToIncomingMessage(MessageObject incomingMessage) {
+        if (incomingMessage == null || !isAssistantGroupTagOnlyModeEnabled() || currentChat == null) {
+            return true;
+        }
+        if (incomingMessage.messageOwner != null && incomingMessage.messageOwner.mentioned) {
+            return true;
+        }
+
+        long selfUserId = getUserConfig().getClientUserId();
+        if (selfUserId != 0 && incomingMessage.messageOwner != null && incomingMessage.messageOwner.entities != null) {
+            for (int i = 0; i < incomingMessage.messageOwner.entities.size(); i++) {
+                TLRPC.MessageEntity entity = incomingMessage.messageOwner.entities.get(i);
+                if (entity instanceof TLRPC.TL_messageEntityMentionName) {
+                    if (((TLRPC.TL_messageEntityMentionName) entity).user_id == selfUserId) {
+                        return true;
+                    }
+                } else if (entity instanceof TLRPC.TL_inputMessageEntityMentionName) {
+                    TLRPC.InputUser inputUser = ((TLRPC.TL_inputMessageEntityMentionName) entity).user_id;
+                    if (inputUser != null && inputUser.user_id == selfUserId) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        TLRPC.User selfUser = getMessagesController().getUser(selfUserId);
+        String selfUsername = selfUser != null ? selfUser.username : null;
+        CharSequence text = incomingMessage.messageText;
+        if (TextUtils.isEmpty(text) && incomingMessage.caption != null) {
+            text = incomingMessage.caption;
+        }
+        if (!TextUtils.isEmpty(text) && !TextUtils.isEmpty(selfUsername)) {
+            String lowerText = text.toString().toLowerCase(Locale.US);
+            String at = ("@" + selfUsername).toLowerCase(Locale.US);
+            if (lowerText.contains(at)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private interface AiGenerationCallback {
+        void onSuccess(String result);
+        void onError(String error);
+    }
+
+    private void startAiGeneration(String userPrompt, MessageObject originalMessage, AiGenerationCallback callback) {
+        try {
+            // 1. Get Text Context
+            String messageText = originalMessage.messageText != null ? originalMessage.messageText.toString() : "";
+            if (android.text.TextUtils.isEmpty(messageText) && originalMessage.caption != null) {
+                messageText = originalMessage.caption.toString();
+            }
+
+            // 2. Get Image Context (if available)
+            File imageFile = null;
+            if (originalMessage.type == MessageObject.TYPE_PHOTO && originalMessage.messageOwner.media != null && originalMessage.messageOwner.media.photo != null) {
+                 try {
+                     TLRPC.PhotoSize photoSize = FileLoader.getClosestPhotoSizeWithSize(originalMessage.messageOwner.media.photo.sizes, 10000);
+                     if (photoSize != null) {
+                         imageFile = FileLoader.getInstance(currentAccount).getPathToAttach(photoSize, true);
+                         if (imageFile == null || !imageFile.exists()) {
+                             imageFile = FileLoader.getInstance(currentAccount).getPathToAttach(photoSize, false);
+                         }
+                     }
+                 } catch (Throwable e) {
+                     e.printStackTrace();
+                 }
+            }
+            
+            final String finalMessageText = messageText;
+            final File finalImageFile = (imageFile != null && imageFile.exists()) ? imageFile : null;
+
+            // 3. Try API 1
+            String url1 = "";
+            String key1 = "";
+            try {
+                 url1 = NaConfig.INSTANCE.getAiModelUrl().String(); 
+                 key1 = NaConfig.INSTANCE.getAiApiKey().String(); 
+            } catch (Throwable e) {
+                 callback.onError("Config loading failed: " + e.getMessage());
+                 return;
+            }
+
+            callAiApi(url1, key1, userPrompt, finalMessageText, finalImageFile, new AiGenerationCallback() {
+                @Override
+                public void onSuccess(String result) {
+                    callback.onSuccess(result);
+                }
+
+                @Override
+                public void onError(String error) {
+                    try {
+                        // 4. Failover to API 2
+                        String url2 = NaConfig.INSTANCE.getAiModelUrl2().String();
+                        String key2 = NaConfig.INSTANCE.getAiApiKey2().String();
+                        
+                        if (android.text.TextUtils.isEmpty(url2)) {
+                            callback.onError(error + "\n(Failover skipped: No API 2 configured)");
+                            return;
+                        }
+
+                        callAiApi(url2, key2, userPrompt, finalMessageText, finalImageFile, callback);
+                    } catch (Throwable e) {
+                        callback.onError(error + "\n(Failover crash: " + e.getMessage() + ")");
+                    }
+                }
+            });
+        } catch (Throwable e) {
+            callback.onError("Start Gen Crash: " + e.getMessage());
+        }
+    }
+
+    private void callAiApi(String apiUrl, String apiKey, String userPrompt, String originalMessageText, File imageFile, AiGenerationCallback callback) {
+        if (android.text.TextUtils.isEmpty(apiUrl)) {
+            callback.onError("API URL is not configured.");
+            return;
+        }
+
+        // Auto-detect Gemini Native API vs OpenAI Compatible API
+        // If URL contains googleapis but NOT openai, treat as Native Gemini
+        final boolean isGeminiNative = (apiUrl.contains("generativelanguage.googleapis.com") || apiUrl.contains("googleapis.com")) && !apiUrl.contains("openai");
+        String finalUrl = apiUrl;
+        
+        if (isGeminiNative && !apiUrl.contains(":generateContent")) {
+            // Append :generateContent if missing for native API
+            if (apiUrl.endsWith("/")) {
+                finalUrl = apiUrl.substring(0, apiUrl.length() - 1) + ":generateContent";
+            } else {
+                finalUrl = apiUrl + ":generateContent";
+            }
+        }
+
+        try {
+            OkHttpClient client = new OkHttpClient.Builder()
+                    .connectTimeout(30, TimeUnit.SECONDS)
+                    .readTimeout(60, TimeUnit.SECONDS)
+                    .build();
+
+            JSONObject jsonBody = new JSONObject();
+
+            if (isGeminiNative) {
+                // --- GEMINI NATIVE FORMAT ---
+                JSONArray contents = new JSONArray();
+                JSONObject contentObj = new JSONObject();
+                JSONArray parts = new JSONArray();
+
+                // Combine text parts (System + Context + User)
+                String combinedText = "System Instruction: You are a helpful assistant replying to a message in a chat.\n\n" +
+                        "Context Message:\n---\n" + originalMessageText + "\n---\n\n" +
+                        "User Request: " + userPrompt;
+                
+                JSONObject textPart = new JSONObject();
+                textPart.put("text", combinedText);
+                parts.put(textPart);
+
+                // Image Handling
+                if (imageFile != null) {
+                    try {
+                        byte[] fileBytes = readBytes(imageFile);
+                        if (fileBytes != null && fileBytes.length > 0) {
+                            String base64Image = android.util.Base64.encodeToString(fileBytes, android.util.Base64.NO_WRAP);
+                            JSONObject imagePart = new JSONObject();
+                            JSONObject inlineData = new JSONObject();
+                            inlineData.put("mime_type", "image/jpeg");
+                            inlineData.put("data", base64Image);
+                            imagePart.put("inline_data", inlineData);
+                            parts.put(imagePart);
+                        }
+                    } catch (Throwable e) { /* ignore image error */ }
+                }
+
+                contentObj.put("parts", parts);
+                contents.put(contentObj);
+                jsonBody.put("contents", contents);
+
+            } else {
+                // --- OPENAI FORMAT (Standard) ---
+                jsonBody.put("model", "gpt-4o"); 
+
+                JSONArray messages = new JSONArray();
+
+                JSONObject systemMsg = new JSONObject();
+                systemMsg.put("role", "system");
+                systemMsg.put("content", "You are a helpful assistant replying to a message in a chat.");
+                messages.put(systemMsg);
+
+                JSONObject userMsg = new JSONObject();
+                userMsg.put("role", "user");
+
+                JSONArray contentArray = new JSONArray();
+
+                JSONObject textPart = new JSONObject();
+                textPart.put("type", "text");
+                String content = "Context Message:\n---\n" + originalMessageText + "\n---\n\nUser Instruction: " + userPrompt;
+                textPart.put("text", content);
+                contentArray.put(textPart);
+
+                if (imageFile != null) {
+                    try {
+                        byte[] fileBytes = readBytes(imageFile);
+                        if (fileBytes != null && fileBytes.length > 0) {
+                            String base64Image = android.util.Base64.encodeToString(fileBytes, android.util.Base64.NO_WRAP);
+                            
+                            JSONObject imagePart = new JSONObject();
+                            imagePart.put("type", "image_url");
+                            JSONObject imageUrl = new JSONObject();
+                            imageUrl.put("url", "data:image/jpeg;base64," + base64Image);
+                            imagePart.put("image_url", imageUrl);
+                            contentArray.put(imagePart);
+                        }
+                    } catch (Throwable e) {
+                        // ignore image error
+                    }
+                }
+
+                userMsg.put("content", contentArray);
+                messages.put(userMsg);
+
+                jsonBody.put("messages", messages);
+            }
+
+            Request.Builder requestBuilder = new Request.Builder()
+                    .url(finalUrl)
+                    .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), jsonBody.toString()));
+
+            if (!android.text.TextUtils.isEmpty(apiKey)) {
+                if (isGeminiNative) {
+                    // Google prefer x-goog-api-key for API keys
+                    requestBuilder.addHeader("x-goog-api-key", apiKey);
+                } else {
+                    requestBuilder.addHeader("Authorization", "Bearer " + apiKey);
+                }
+            }
+
+            client.newCall(requestBuilder.build()).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    callback.onError(e.getMessage());
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    try {
+                        String responseBody = response.body().string();
+                        if (!response.isSuccessful()) {
+                            callback.onError("HTTP " + response.code() + ": " + responseBody);
+                            return;
+                        }
+
+                        JSONObject jsonResponse = new JSONObject(responseBody);
+                        
+                        if (isGeminiNative) {
+                             // Parse Gemini Response
+                             if (jsonResponse.has("candidates")) {
+                                  JSONArray candidates = jsonResponse.getJSONArray("candidates");
+                                  if (candidates.length() > 0) {
+                                      JSONObject candidate = candidates.getJSONObject(0);
+                                      if (candidate.has("content")) {
+                                          JSONObject content = candidate.getJSONObject("content");
+                                          JSONArray parts = content.getJSONArray("parts");
+                                          if (parts.length() > 0) {
+                                              String reply = parts.getJSONObject(0).getString("text");
+                                              callback.onSuccess(reply);
+                                              return;
+                                          }
+                                      }
+                                  }
+                             }
+                             callback.onError("No text generated (Safety Filter or Empty): " + responseBody);
+                        } else {
+                            // Parse OpenAI Response
+                            if (jsonResponse.has("choices")) {
+                                 JSONArray choices = jsonResponse.getJSONArray("choices");
+                                 if (choices.length() > 0) {
+                                     JSONObject message = choices.getJSONObject(0).getJSONObject("message");
+                                     String reply = message.getString("content");
+                                     callback.onSuccess(reply);
+                                     return;
+                                 } else {
+                                     callback.onError("No choices in response");
+                                 }
+                            } else {
+                                callback.onError("Unexpected JSON format: " + responseBody);
+                            }
+                        }
+                    } catch (Throwable e) {
+                        callback.onError("Parse/Response crash: " + e.getMessage());
+                    }
+                }
+            });
+
+        } catch (Throwable e) {
+            callback.onError("Build Request crash: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private byte[] readBytes(File file) {
+        FileInputStream fis = null;
+        try {
+            if (file.length() > 10 * 1024 * 1024) return null; // 10MB limit
+            fis = new FileInputStream(file);
+            byte[] buffer = new byte[(int) file.length()];
+            fis.read(buffer);
+            return buffer;
+        } catch (Throwable e) {
+            e.printStackTrace();
+            return null;
+        } finally {
+            try {
+                if (fis != null) fis.close();
+            } catch (Throwable e) { /* ignore */ }
+        }
     }
 }

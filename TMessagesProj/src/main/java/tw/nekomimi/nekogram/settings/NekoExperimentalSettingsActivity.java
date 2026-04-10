@@ -38,6 +38,7 @@ import org.telegram.ui.ActionBar.ActionBarLayout;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BottomSheet;
 import org.telegram.ui.ActionBar.Theme;
+import org.telegram.ui.AIAssistanceSettingsActivity;
 import org.telegram.ui.Cells.TextCell;
 import org.telegram.ui.Cells.TextCheckBoxCell;
 import org.telegram.ui.Cells.TextCheckCell;
@@ -193,6 +194,19 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
     private final AbstractConfigCell headerPangu = cellGroup.appendCell(new ConfigCellHeader(getString(R.string.Pangu)));
     private final AbstractConfigCell enablePanguOnSendingRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getEnablePanguOnSending(), getString(R.string.PanguInfo)));
     private final AbstractConfigCell dividerPangu = cellGroup.appendCell(new ConfigCellDivider());
+
+    // AI Reply
+    private final AbstractConfigCell headerAiReply = cellGroup.appendCell(new ConfigCellHeader("AI Reply"));
+    private final AbstractConfigCell aiAssistanceSettingsRow = cellGroup.appendCell(new ConfigCellText("AI Assistance Settings", () -> presentFragment(new AIAssistanceSettingsActivity())));
+    private final AbstractConfigCell enableAIReplyRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getEnableAIReply()));
+    private final AbstractConfigCell enableSummarizeChatRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getEnableSummarizeChat()));
+    private final AbstractConfigCell aiModelUrlRow = cellGroup.appendCell(new ConfigCellTextInput("AI Model URL", NaConfig.INSTANCE.getAiModelUrl(), "https://api.openai.com/v1/chat/completions", null));
+    private final AbstractConfigCell aiApiKeyRow = cellGroup.appendCell(new ConfigCellTextInput("AI API Key", NaConfig.INSTANCE.getAiApiKey(), "sk-...", null));
+    private final AbstractConfigCell testAiApiRow = cellGroup.appendCell(new ConfigCellText("Test AI API", () -> testAiApi(NaConfig.INSTANCE.getAiModelUrl().get(), NaConfig.INSTANCE.getAiApiKey().get())));
+    private final AbstractConfigCell aiModelUrl2Row = cellGroup.appendCell(new ConfigCellTextInput("AI Model URL 2", NaConfig.INSTANCE.getAiModelUrl2(), "https://api.openai.com/v1/chat/completions", null));
+    private final AbstractConfigCell aiApiKey2Row = cellGroup.appendCell(new ConfigCellTextInput("AI API Key 2", NaConfig.INSTANCE.getAiApiKey2(), "sk-...", null));
+    private final AbstractConfigCell testAiApi2Row = cellGroup.appendCell(new ConfigCellText("Test AI API 2", () -> testAiApi(NaConfig.INSTANCE.getAiModelUrl2().get(), NaConfig.INSTANCE.getAiApiKey2().get())));
+    private final AbstractConfigCell dividerAiReply = cellGroup.appendCell(new ConfigCellDivider());
 
     public NekoExperimentalSettingsActivity() {
         if (NaConfig.INSTANCE.getUseDeletedIcon().Bool()) {
@@ -474,6 +488,52 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
                 }
             }
         }
+    }
+
+        }
+    }
+
+    private void testAiApi(String url, String key) {
+        if (TextUtils.isEmpty(url) || TextUtils.isEmpty(key)) {
+            BulletinFactory.of(this).createSimpleBulletin(R.raw.error, "URL and API Key cannot be empty").show();
+            return;
+        }
+        AlertDialog progressDialog = new AlertDialog(getParentActivity(), 3);
+        progressDialog.setCanCancel(false);
+        progressDialog.show();
+        Utilities.globalQueue.postRunnable(() -> {
+            try {
+                java.net.URL requestUrl = new java.net.URL(url);
+                java.net.HttpURLConnection conn = (java.net.HttpURLConnection) requestUrl.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Content-Type", "application/json");
+                conn.setRequestProperty("Authorization", "Bearer " + key);
+                conn.setDoOutput(true);
+                conn.setConnectTimeout(10000);
+                conn.setReadTimeout(10000);
+
+                String jsonBody = "{\"model\": \"gpt-3.5-turbo\", \"messages\": [{\"role\": \"user\", \"content\": \"Say ping\"}], \"max_tokens\": 5}";
+                try (java.io.OutputStream os = conn.getOutputStream()) {
+                    byte[] input = jsonBody.getBytes("utf-8");
+                    os.write(input, 0, input.length);
+                }
+
+                int code = conn.getResponseCode();
+                AndroidUtilities.runOnUIThread(() -> {
+                    progressDialog.dismiss();
+                    if (code == 200) {
+                        BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "API Test Success! (HTTP 200)").show();
+                    } else {
+                        BulletinFactory.of(this).createSimpleBulletin(R.raw.error, "API Test Failed: HTTP " + code).show();
+                    }
+                });
+            } catch (Exception e) {
+                AndroidUtilities.runOnUIThread(() -> {
+                    progressDialog.dismiss();
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.error, "API Test Error: " + e.getMessage()).show();
+                });
+            }
+        });
     }
 
     private void showBottomSheet() {

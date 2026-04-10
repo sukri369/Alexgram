@@ -127,4 +127,11 @@
     <string name="MusicGraphInfo">Display a colorful music visualizer while playing audio.</string>
     <string name="SendVideoAsRound">Send Video as Round</string>
     <string name="VideoNoteDurationError">Round video cannot be longer than 60 seconds.</string>
+    <string name="HiddenChats">Hidden Chats</string>
+    <string name="HideChat">Add to Hidden Chats</string>
+    <string name="UnhideChat">Remove from Hidden Chats</string>
+    <string name="HideChats">Hide Chats</string>
+    <string name="UnhideChats">Unhide Chats</string>
+    <string name="HiddenChatsPasscode">Hidden Chats Passcode</string>
+    <string name="UnlockHiddenChats">Unlock Hidden Chats</string>
 </resources>

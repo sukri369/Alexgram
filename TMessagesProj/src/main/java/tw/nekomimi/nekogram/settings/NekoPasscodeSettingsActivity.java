@@ -59,6 +59,8 @@ public class NekoPasscodeSettingsActivity extends BaseNekoSettingsActivity {
 
     private int showNotificationContentWhenLockedRow;
     private int showNotificationContentWhenLocked2Row;
+    private int hiddenChatsRow;
+    private int hiddenChats2Row;
 
     private final ArrayList<Integer> accounts = new ArrayList<>();
 
@@ -171,6 +173,8 @@ public class NekoPasscodeSettingsActivity extends BaseNekoSettingsActivity {
             if (view instanceof TextCheckCell textCheckCell) {
                 textCheckCell.setChecked(value);
             }
+        } else if (position == hiddenChatsRow) {
+            presentFragment(new HiddenChatsSettingsActivity());
         }
     }
 
@@ -228,6 +232,8 @@ public class NekoPasscodeSettingsActivity extends BaseNekoSettingsActivity {
 
         showNotificationContentWhenLockedRow = rowCount++;
         showNotificationContentWhenLocked2Row = rowCount++;
+        hiddenChatsRow = rowCount++;
+        hiddenChats2Row = rowCount++;
     }
 
     private class ListAdapter extends BaseListAdapter {
@@ -259,6 +265,8 @@ public class NekoPasscodeSettingsActivity extends BaseNekoSettingsActivity {
                     } else if (position == removePanicCodeRow) {
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteRedText3));
                         textCell.setText(getString(R.string.PasscodePanicCodeRemove), false);
+                    } else if (position == hiddenChatsRow) {
+                        textCell.setText(getString(R.string.HiddenChats), true);
                     }
                     break;
                 }
@@ -289,7 +297,7 @@ public class NekoPasscodeSettingsActivity extends BaseNekoSettingsActivity {
                     } else if (position == panicCode2Row) {
                         cell.setText(getString(R.string.PasscodePanicCodeAbout));
                     } else if (position == showInSettings2Row) {
-                        var link = String.format(Locale.ENGLISH, "https://t.me/nasettings/%s", PasscodeHelper.getSettingsKey());
+                        var link = String.format(Locale.ENGLISH, "https://t.me/alexsettings/%s", PasscodeHelper.getSettingsKey());
                         var stringBuilder = new SpannableStringBuilder(AndroidUtilities.replaceTags(getString(R.string.PasscodeShowInSettingsAbout)));
                         stringBuilder.append("\n").append(link);
                         stringBuilder.setSpan(new URLSpanNoUnderline(null) {
@@ -304,6 +312,9 @@ public class NekoPasscodeSettingsActivity extends BaseNekoSettingsActivity {
                         cell.setText(stringBuilder);
                     } else if (position == showNotificationContentWhenLocked2Row) {
                         cell.setText(getString(R.string.PasscodeShowMessagePreviewWhenLockedAbout));
+                        cell.setBackground(Theme.getThemedDrawable(mContext, R.drawable.greydivider, Theme.key_windowBackgroundGrayShadow));
+                    } else if (position == hiddenChats2Row) {
+                        cell.setText(getString(R.string.HiddenChatsAbout));
                         cell.setBackground(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
                     }
                     break;
@@ -333,10 +344,12 @@ public class NekoPasscodeSettingsActivity extends BaseNekoSettingsActivity {
                 return 3;
             } else if (position == accountsStartRow) {
                 return 4;
-            } else if (position == showInSettings2Row || position == accountsEndRow || position == panicCode2Row || position == showNotificationContentWhenLocked2Row) {
+            } else if (position == showInSettings2Row || position == accountsEndRow || position == panicCode2Row || position == showNotificationContentWhenLocked2Row || position == hiddenChats2Row) {
                 return 7;
             } else if (position > accountsStartRow && position < accountsEndRow) {
                 return 11;
+            } else if (position == hiddenChatsRow) {
+                return 2;
             }
             return 2;
         }

@@ -586,6 +586,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private ActionBarMenuSubItem readItem;
     @Nullable
     private ActionBarMenuSubItem blockItem;
+    @Nullable
+    private ActionBarMenuSubItem hideChatItem;
 
     private float additionalFloatingTranslation;
     private float floatingButtonPanOffset;
@@ -691,6 +693,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private final static int pin2 = 108;
     private final static int add_to_folder = 109;
     private final static int remove_from_folder = 110;
+    private final static int hide_chat = 111;
 
     private final static int select_all = 1000;
 
@@ -3564,6 +3567,13 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 statusDrawable.center = true;
                 actionBar.setTitle(actionBarTitleNax = TypefaceHelper.getTitleText(currentAccount), statusDrawable);
                 actionBar.setOnLongClickListener(v -> {
+                    if (tw.nekomimi.nekogram.helpers.HiddenChatsController.getInstance().hasPasscode()) {
+                        presentFragment(new tw.nekomimi.nekogram.ui.HiddenChatsPasscodeActivity(tw.nekomimi.nekogram.ui.HiddenChatsPasscodeActivity.MODE_UNLOCK_CHATS));
+                        return true;
+                    } else if (tw.nekomimi.nekogram.helpers.HiddenChatsController.getInstance().hasHiddenChats()) {
+                        presentFragment(new tw.nekomimi.nekogram.settings.HiddenChatsSettingsActivity());
+                        return true;
+                    }
                     if (NekoConfig.hideAllTab.Bool() && filterTabsView != null && filterTabsView.getCurrentTabId() != Integer.MAX_VALUE) {
                         filterTabsView.toggleAllTabs(true);
                         filterTabsView.selectDefaultTab();
@@ -6793,6 +6803,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         readItem = otherItem.addSubItem(read, R.drawable.msg_markread, LocaleController.getString(R.string.MarkAsRead));
         clearItem = otherItem.addSubItem(clear, R.drawable.msg_clear, LocaleController.getString(R.string.ClearHistory));
         blockItem = otherItem.addSubItem(block, R.drawable.msg_block, LocaleController.getString(R.string.BlockUser));
+        hideChatItem = otherItem.addSubItem(hide_chat, R.drawable.msg_hidden, tw.nekomimi.nekogram.helpers.HiddenChatsController.getInstance().isLocked() ? getString(R.string.HideChat) : getString(R.string.UnhideChat));
         otherItem.addSubItem(select_all, R.drawable.msg_select_between_solar, LocaleController.getString(R.string.SelectAll));
 
         muteItem.setOnLongClickListener(e -> {
@@ -9126,6 +9137,22 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     }
 
     private void performSelectedDialogsAction(ArrayList<Long> selectedDialogs, int action, boolean alert, boolean longPress) {
+        if (action == hide_chat) {
+            tw.nekomimi.nekogram.helpers.HiddenChatsController controller = tw.nekomimi.nekogram.helpers.HiddenChatsController.getInstance();
+            boolean hide = !controller.isHidden(selectedDialogs.get(0));
+            for (int a = 0; a < selectedDialogs.size(); a++) {
+                long dialogId = selectedDialogs.get(a);
+                if (hide) {
+                    controller.hide(dialogId);
+                    getNotificationsController().setDialogNotificationsSettings(dialogId, 0, NotificationsController.SETTING_MUTE_FOREVER);
+                } else {
+                    controller.unhide(dialogId);
+                }
+            }
+            hideActionMode(true);
+            updateVisibleRows(MessagesController.UPDATE_MASK_SELECT_DIALOG);
+            return;
+        }
         performSelectedDialogsAction(selectedDialogs, action, alert, longPress, null);
     }
 
@@ -9712,6 +9739,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         canClearCacheCount = 0;
         int cantBlockCount = 0;
         canReportSpamCount = 0;
+        int canHideCount = 0;
+        int canUnhideCount = 0;
         if (hide) {
             return;
         }
@@ -9810,6 +9839,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 canClearHistoryCount++;
                 canDeleteCount++;
             }
+            if (tw.nekomimi.nekogram.helpers.HiddenChatsController.getInstance().isHidden(dialog.id)) {
+                canUnhideCount++;
+            } else {
+                canHideCount++;
+            }
         }
         if (deleteItem != null) {
             if (canDeleteCount != count) {
@@ -9858,6 +9892,18 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             } else {
                 archiveItem.setVisibility(View.GONE);
                 archive2Item.setVisibility(View.GONE);
+            }
+        }
+        if (hideChatItem != null) {
+            if (canUnhideCount != 0 && canHideCount != 0) {
+                hideChatItem.setVisibility(View.GONE);
+            } else {
+                hideChatItem.setVisibility(View.VISIBLE);
+                if (canUnhideCount != 0) {
+                    hideChatItem.setTextAndIcon(getString(R.string.UnhideChat), R.drawable.msg_unhidden);
+                } else {
+                    hideChatItem.setTextAndIcon(getString(R.string.HideChat), R.drawable.msg_hidden);
+                }
             }
         }
         if (pinItem != null && pin2Item != null) {
@@ -10918,7 +10964,18 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         }
         MessagesController messagesController = AccountInstance.getInstance(currentAccount).getMessagesController();
         if (dialogsType == DIALOGS_TYPE_DEFAULT) {
-            return messagesController.getDialogs(folderId);
+            ArrayList<TLRPC.Dialog> dialogs = messagesController.getDialogs(folderId);
+            if (tw.nekomimi.nekogram.helpers.HiddenChatsController.getInstance().isLocked() && !(this instanceof tw.nekomimi.nekogram.ui.HiddenChatsActivity)) {
+                ArrayList<TLRPC.Dialog> filtered = new ArrayList<>();
+                for (int a = 0; a < dialogs.size(); a++) {
+                    TLRPC.Dialog dialog = dialogs.get(a);
+                    if (!tw.nekomimi.nekogram.helpers.HiddenChatsController.getInstance().isHidden(dialog.id)) {
+                        filtered.add(dialog);
+                    }
+                }
+                return filtered;
+            }
+            return dialogs;
         } else if (dialogsType == DIALOGS_TYPE_WIDGET || dialogsType == DIALOGS_TYPE_IMPORT_HISTORY) {
             return messagesController.dialogsServerOnly;
         } else if (dialogsType == DIALOGS_TYPE_ADD_USERS_TO) {

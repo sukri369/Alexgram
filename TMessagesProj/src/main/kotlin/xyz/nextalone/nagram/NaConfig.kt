@@ -1432,6 +1432,55 @@ object NaConfig {
             false
         )
 
+    val enableAIReply =
+        addConfig(
+            "enableAIReply",
+            ConfigItem.configTypeBool,
+            false
+        )
+    val enableSummarizeChat =
+        addConfig(
+            "enableSummarizeChat",
+            ConfigItem.configTypeBool,
+            false
+        )
+    val aiModelUrl =
+        addConfig(
+            "aiModelUrl",
+            ConfigItem.configTypeString,
+            ""
+        )
+    val aiApiKey =
+        addConfig(
+            "aiApiKey",
+            ConfigItem.configTypeString,
+            ""
+        )
+    val aiModelUrl2 =
+        addConfig(
+            "aiModelUrl2",
+            ConfigItem.configTypeString,
+            ""
+        )
+    val aiApiKey2 =
+        addConfig(
+            "aiApiKey2",
+            ConfigItem.configTypeString,
+            ""
+        )
+    val aiAssistantPersona =
+        addConfig(
+            "aiAssistantPersona",
+            ConfigItem.configTypeString,
+            ""
+        )
+    val aiAssistantIntensity =
+        addConfig(
+            "aiAssistantIntensity",
+            ConfigItem.configTypeInt,
+            70
+        )
+
     val preferredTranslateTargetLangList = ArrayList<String>()
     fun updatePreferredTranslateTargetLangList() {
         AndroidUtilities.runOnUIThread({
