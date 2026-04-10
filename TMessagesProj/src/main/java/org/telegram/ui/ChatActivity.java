@@ -19279,8 +19279,12 @@ public class ChatActivity extends BaseFragment implements
                 switch (verticalGravity) {
                     case Gravity.TOP:
                         childTop = lp.topMargin + getPaddingTop();
-                        if (child != actionBar && actionBar.getVisibility() == VISIBLE && !isPillChatHeaderEnabled()) {
-                            childTop += actionBar.getMeasuredHeight();
+                        if (child != actionBar && actionBar.getVisibility() == VISIBLE) {
+                            if (isPillChatHeaderEnabled()) {
+                                childTop += ActionBar.getCurrentActionBarHeight();
+                            } else {
+                                childTop += actionBar.getMeasuredHeight();
+                            }
                         }
                         break;
                     case Gravity.CENTER_VERTICAL:
@@ -49189,10 +49193,11 @@ public class ChatActivity extends BaseFragment implements
             contentView.setTag(TAG_LAYOUT_NO_ACTIONBAR_OFFSET, Boolean.TRUE);
             contentView.backgroundImageUnderActionBar = true;
             contentView.setBackgroundColor(Color.TRANSPARENT); // Override ActionBarLayout's default windowBackgroundWhite
-            final int targetTopPadding = actionBar.getMeasuredHeight() != 0
-                ? actionBar.getMeasuredHeight()
-                : ActionBar.getCurrentActionBarHeight() + (!inPreviewMode ? AndroidUtilities.statusBarHeight : 0);
-            if (contentView.getPaddingTop() < targetTopPadding) {
+            final int headerHeight = ActionBar.getCurrentActionBarHeight();
+            final int statusBarHeight = (!inPreviewMode && actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0);
+            final int targetTopPadding = headerHeight + statusBarHeight;
+            
+            if (contentView.getPaddingTop() != targetTopPadding) {
                 contentView.setPadding(contentView.getPaddingLeft(), targetTopPadding, contentView.getPaddingRight(), contentView.getPaddingBottom());
             }
             contentView.requestLayout();
