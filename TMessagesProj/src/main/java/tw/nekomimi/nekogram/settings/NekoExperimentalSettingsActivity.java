@@ -13,9 +13,14 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.content.Intent;
+import android.text.TextUtils;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -487,9 +492,6 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
                     }
                 }
             }
-        }
-    }
-
         }
     }
 
