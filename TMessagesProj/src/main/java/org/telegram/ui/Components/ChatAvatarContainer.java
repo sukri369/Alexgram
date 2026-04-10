@@ -170,11 +170,11 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
     }
 
     private int getPillHorizontalPadding() {
-        return dp(20);
+        return dp(32);
     }
 
     private int getPillVerticalPadding() {
-        return dp(6);
+        return dp(8);
     }
 
     private int getPillMinimumWidth() {
@@ -740,8 +740,8 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             float paddingH = getPillHorizontalPadding();
             float paddingV = getPillVerticalPadding();
             
-            float avatarW = (avatarImageView.getVisibility() == VISIBLE ? dp(42) + dp(8) : 0);
-            float pillW = contentW + paddingH * 2 + (isCentered() ? avatarW : 0);
+            float avatarW = (avatarImageView.getVisibility() == VISIBLE && !isCentered() ? dp(42) + dp(8) : 0);
+            float pillW = contentW + paddingH * 2;
 
             final float hardLeft = isCentered() ? getPillCenteredSafeLeft() : dp(8);
             final float hardRight = isCentered() ? getPillCenteredSafeRight() : getWidth() - dp(8);
@@ -751,7 +751,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
 
             float cx;
             if (isCentered()) {
-                cx = (hardLeft + hardRight) / 2f;
+                cx = getWidth() / 2f;
             } else {
                 cx = titleTextView.getX() + titleTextView.getMeasuredWidth() / 2f;
             }
@@ -1157,10 +1157,10 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             float contentW = Math.max(titleContentW, subtitleContentW);
             
             int paddingH = getPillHorizontalPadding();
-            int avatarW = (avatarImageView.getVisibility() == VISIBLE ? dp(54) : 0);
+            int avatarW = 0; // Avatar is on the extreme right, not impacting pill width directly now
             
             // Re-check for overflowing alignment
-            float availableWidthForText = Math.max(getPillMinimumContentWidth(), width - avatarW - paddingH * 2 - dp(16));
+            float availableWidthForText = Math.max(getPillMinimumContentWidth(), width - paddingH * 2 - dp(32));
             pillTitleOverflowing = contentW > availableWidthForText + 0.5f;
 
             if (pillTitleOverflowing) {

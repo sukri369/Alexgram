@@ -9533,6 +9533,10 @@ public class ChatActivity extends BaseFragment implements
         ViewCompat.setOnApplyWindowInsetsListener(fragmentView, this::onApplyWindowInsets);
         Timer.finish(t);
 
+        actionBar.setClipChildren(false);
+        actionBar.setClipToPadding(false);
+        fragmentView.setClipChildren(false);
+        fragmentView.setClipToPadding(false);
         return fragmentView;
     }
 
@@ -12668,6 +12672,9 @@ public class ChatActivity extends BaseFragment implements
         float oldPadding = chatListViewPaddingTop;
         chatListViewPaddingTop = dp(4) + contentPaddingTop + (paddingTopHeight = topPanelViewH + pinnedViewH)
             + getTopicTabsSideSize(TopicsTabsView.Position.TOP);
+        if (isPillChatHeaderEnabled()) {
+            chatListViewPaddingTop += dp(44);
+        }
         chatListViewPaddingTop += blurredViewTopOffset;
         chatListViewPaddingVisibleOffset = 0;
         chatListViewPaddingTop += contentPanTranslation;
