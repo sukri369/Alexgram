@@ -31,24 +31,28 @@ public final class MainTabsHelper {
         return getMainTabsHeight() + getMainTabsMargin() * 2;
     }
 
+    public static boolean isContactsTabHidden() {
+        return NaConfig.INSTANCE.getHideContacts().Bool();
+    }
+
     public static int getChatsPosition() {
         return 0;
     }
 
     public static int getContactsPosition() {
-        return 1;
+        return isContactsTabHidden() ? -1 : 1;
     }
 
     public static int getCallsOrSettingsPosition() {
-        return 2;
+        return isContactsTabHidden() ? 1 : 2;
     }
 
     public static int getProfilePosition() {
-        return 3;
+        return isContactsTabHidden() ? 2 : 3;
     }
 
     public static int getFragmentsCount() {
-        return MainTabsActivity.TABS_COUNT;
+        return isContactsTabHidden() ? 3 : 4;
     }
 
     public static int getTabsViewWidth() {

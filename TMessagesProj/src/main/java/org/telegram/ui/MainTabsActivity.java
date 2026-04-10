@@ -117,6 +117,7 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
         this, CubicBezierInterpolator.EASE_OUT_QUINT, 380, true);
 
 
+    private boolean lastHideContacts;
     private IUpdateLayout updateLayout;
     private boolean dropCallsFragmentAfterPageScroll;
 
@@ -224,7 +225,24 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
         super.onResume();
         blur3_updateColors();
         checkContactsTabBadge();
-        checkUnreadCount(true);
+        final boolean hideContacts = NaConfig.INSTANCE.getHideContacts().Bool();
+        if (lastHideContacts != hideContacts) {
+            lastHideContacts = hideContacts;
+            final int currentPosition = viewPager.getCurrentPosition();
+            rebuildFragments();
+            if (viewPager != null) {
+                int position = currentPosition;
+                if (hideContacts && currentPosition >= 1) {
+                    position = Math.max(0, currentPosition - 1);
+                } else if (!hideContacts && currentPosition >= 1) {
+                    position = currentPosition + 1;
+                }
+                viewPager.setAdapter(null);
+                viewPager.setAdapter(adapter);
+                viewPager.scrollToPosition(position);
+                selectTab(position, false);
+            }
+        }
 
         Bulletin.Delegate delegate = new Bulletin.Delegate() {
             @Override
@@ -269,7 +287,8 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
 
         final boolean compact = MainTabsHelper.isMainTabsHideTitleStyle();
         final int mainTabsMargin = MainTabsHelper.getMainTabsMargin();
-        final boolean hideContacts = false;
+        final boolean hideContacts = MainTabsHelper.isContactsTabHidden();
+        lastHideContacts = hideContacts;
         final int tabsViewWidth = MainTabsHelper.getTabsViewWidth();
 
         tabsView = new MainTabsLayout(context);
@@ -314,7 +333,7 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
             });
 
             tabsView.addView(tabs[index]);
-            tabsView.setViewVisible(view, true, false);
+            tabsView.setViewVisible(view, index != INDEX_CONTACTS || !hideContacts, false);
         }
         checkUi_callTabVisible(getUserConfig().showCallsTab, false);
 

@@ -1407,6 +1407,12 @@ object NaConfig {
             ConfigItem.configTypeBool,
             false
         )
+    val hideContacts =
+        addConfig(
+            "HideContacts",
+            ConfigItem.configTypeBool,
+            false
+        )
     val showNotificationPreviewWhenLocked =
         addConfig(
             "ShowNotificationPreviewWhenLocked",
