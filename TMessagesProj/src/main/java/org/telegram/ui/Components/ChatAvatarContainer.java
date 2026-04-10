@@ -821,7 +821,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                         parentFragment.getContentView().drawBlurRect(canvas, relativeY, headerBlurRect, pillPaint, true, glassBlurAlpha, glassSourceAlpha);
                     }
                 }
-            }
+
 
                 // Draw pill background ON TOP
                 if (!pillRect.isEmpty()) {
@@ -837,10 +837,8 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                     canvas.restore();
                     drewBlur = true;
                 }
-
+            }
             if (!drewBlur) {
-                canvas.drawRoundRect(pillRect, radius, radius, pillPaint);
-            } else {
                 pillPaint.setColor((pillBgColor & 0x00FFFFFF) | (darkPillSurface ? 0x28000000 : 0x1E000000));
                 canvas.drawRoundRect(pillRect, radius, radius, pillPaint);
             }
