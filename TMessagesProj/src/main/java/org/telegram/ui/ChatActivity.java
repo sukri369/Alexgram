@@ -19281,7 +19281,7 @@ public class ChatActivity extends BaseFragment implements
                         childTop = lp.topMargin + getPaddingTop();
                         if (child != actionBar && actionBar.getVisibility() == VISIBLE) {
                             if (isPillChatHeaderEnabled()) {
-                                childTop += ActionBar.getCurrentActionBarHeight();
+                                childTop += ActionBar.getCurrentActionBarHeight() + AndroidUtilities.dp(16);
                             } else {
                                 childTop += actionBar.getMeasuredHeight();
                             }
@@ -49152,7 +49152,14 @@ public class ChatActivity extends BaseFragment implements
         actionBar.setCastShadows(false);
         actionBar.setShadowAlpha(0);
         actionBar.setOccupyStatusBar(!inPreviewMode);
+        actionBar.setClipChildren(false);
+        actionBar.setClipToPadding(false);
         actionBar.setTranslationY(0);
+        
+        if (contentView != null) {
+            contentView.setClipChildren(false);
+            contentView.setClipToPadding(false);
+        }
         final boolean darkTheme = Theme.isCurrentThemeDark();
         final int pillForegroundColor = darkTheme ? 0xFFF4F5F7 : 0xFF1A1A1A;
         final int pillSubtitleColor = darkTheme ? 0xB8F4F5F7 : 0xFF6F6F76;

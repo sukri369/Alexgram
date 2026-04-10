@@ -805,7 +805,8 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                     // 1. Static part (Top to fade start)
                     headerBlurRect.set(-xOffset, -statusBarHeight, pWidth - xOffset, fadeStart);
                     if (!headerBlurRect.isEmpty()) {
-                        final int glassBlurAlpha = darkPillSurface ? 80 : 35; // Tint based on darkness
+                        pillPaint.setColor(0); // Ensure no solid tint
+                        final int glassBlurAlpha = darkPillSurface ? 70 : 30; // Clean blur tint
                         final int glassSourceAlpha = 245; 
                         parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true, glassBlurAlpha, glassSourceAlpha);
                     }
@@ -1324,8 +1325,8 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         int avatarRight = leftPadding + dp(42);
 
         if (isCentered()) {
-            avatarLeft = getWidth() - leftPadding - dp(42);
-            avatarRight = avatarLeft + dp(42);
+            avatarLeft = getWidth() - dp(8) - dp(42);
+            avatarRight = getWidth() - dp(8);
         }
 
         avatarImageView.layout(avatarLeft, viewTop + 1, avatarRight, viewTop + 1 + dp(42));
