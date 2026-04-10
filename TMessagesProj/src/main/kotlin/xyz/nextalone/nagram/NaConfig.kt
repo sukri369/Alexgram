@@ -1437,6 +1437,18 @@ object NaConfig {
             ConfigItem.configTypeBool,
             false
         )
+    val searchEngineInSearchBar =
+        addConfig(
+            "SearchEngineInSearchBar",
+            ConfigItem.configTypeBool,
+            true
+        )
+    val selectedSearchEngine =
+        addConfig(
+            "SelectedSearchEngine",
+            ConfigItem.configTypeInt,
+            0
+        )
 
     val enableAIReply =
         addConfig(

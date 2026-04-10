@@ -341,4 +341,7 @@
     <string name="CenterActionBarTitleOff">Off</string>
     <string name="TabletModeOn">On</string>
     <string name="TabletModeOff">Off</string>
+    <string name="HideTabsOnScroll">Hide Navigation Bar on Scroll</string>
+    <string name="SearchEngineInSearchBar">Search on Internet in Search Bar</string>
+    <string name="SearchEngineInSearchBarDescription">Adds a tab to the global search to search the web using a selection of search engines.</string>
 </resources>

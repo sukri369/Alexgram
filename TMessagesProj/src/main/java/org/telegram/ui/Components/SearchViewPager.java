@@ -5,24 +5,37 @@ import static org.telegram.ui.PremiumPreviewFragment.applyNewSpan;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
+import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.Typeface;
 import android.graphics.drawable.AnimatedVectorDrawable;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.view.animation.OvershootInterpolator;
+import android.webkit.WebChromeClient;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -30,6 +43,7 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
@@ -48,6 +62,7 @@ import org.telegram.ui.ActionBar.ActionBarMenu;
 import org.telegram.ui.ActionBar.ActionBarMenuItem;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BackDrawable;
+import org.telegram.ui.ActionBar.ItemOptions;
 import org.telegram.ui.ActionBar.MenuDrawable;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
@@ -77,6 +92,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 
+import tw.nekomimi.nekogram.ui.SearchEngineBottomSheet;
 import xyz.nextalone.nagram.NaConfig;
 
 public class SearchViewPager extends ViewPagerFixed implements FilteredSearchView.UiCallback, NotificationCenter.NotificationCenterDelegate, IBlur3Capture {
@@ -107,6 +123,7 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
 
     public boolean postsAreNew;
     public final @NonNull PostsSearchContainer postsSearchContainer;
+    public WebSearchContainer webSearchContainer;
 
     public boolean expandedPublicPosts = false;
     private DefaultItemAnimator hashtagItemAnimator;
@@ -130,6 +147,7 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
     public final static int deleteItemId = 202;
     public final static int speedItemId = 203;
     public final static int saveItemId = 204;
+    public final static int WEB_SEARCH_TYPE = 7;
 
     private ActionBarMenuItem speedItem;
     private ActionBarMenuItem gotoItem;
@@ -776,6 +794,8 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
         } else if (view instanceof SearchDownloadsContainer) {
             ((SearchDownloadsContainer) view).setKeyboardHeight(keyboardSize, false);
             ((SearchDownloadsContainer) view).search(query);
+        } else if (view == webSearchContainer) {
+            webSearchContainer.search(query);
         }
     }
 
@@ -1281,6 +1301,9 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
         if (downloadsContainer != null) {
             downloadsContainer.setPagesPaddings(pagesPaddingTop, pagesPaddingBottom, doNotRequestLayout);
         }
+        if (webSearchContainer != null) {
+            webSearchContainer.setPaddingTop(pagesPaddingTop);
+        }
         for (int i = 0, N = viewsByType.size(); i < N; i++) {
             View v = viewsByType.valueAt(i);
             if (v instanceof FilteredSearchView) {
@@ -1408,6 +1431,9 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.dialogsNeedReload);
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.reloadWebappsHints);
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.storiesListUpdated);
+        if (webSearchContainer != null) {
+            webSearchContainer.destroy();
+        }
     }
 
     @Override
@@ -1505,6 +1531,7 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
         private final static int BOTS_TYPE = 4;
         private final static int PUBLIC_POSTS_TYPE = 5;
         private final static int POSTS_TYPE = 6;
+        private final static int WEB_SEARCH_TYPE_ITEM = 7;
 
         public ViewPagerAdapter() {
             updateItems();
@@ -1539,6 +1566,9 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
                 item.filterIndex = 4;
                 items.add(item);
             }
+            if (NaConfig.INSTANCE.getSearchEngineInSearchBar().Bool()) {
+                items.add(new Item(WEB_SEARCH_TYPE_ITEM));
+            }
         }
 
         @Override
@@ -1559,6 +1589,8 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
                 return getString(R.string.DownloadsTabs);
             } else if (items.get(position).type == PUBLIC_POSTS_TYPE) {
                 return getString(R.string.PublicPostsTabs);
+            } else if (items.get(position).type == WEB_SEARCH_TYPE_ITEM) {
+                return getString(R.string.Search);
             } else {
                 return FiltersView.filters[items.get(position).filterIndex].getTitle();
             }
@@ -1593,8 +1625,11 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
                 downloadsContainer.recyclerListView.addEdgeEffectListener(SearchViewPager.this::invalidateBlur);
                 downloadsContainer.setUiCallback(SearchViewPager.this);
                 return downloadsContainer;
-            } else if (viewType == 6 && UserConfig.getInstance(currentAccount).isPremium()) {
-                return postsSearchContainer;
+            } else if (viewType == 9) {
+                if (webSearchContainer == null) {
+                    webSearchContainer = new WebSearchContainer(getContext(), parent);
+                }
+                return webSearchContainer;
             } else {
                 FilteredSearchView filteredSearchView = new FilteredSearchView(parent);
                 filteredSearchView.setChatPreviewDelegate(chatPreviewDelegate);
@@ -1635,6 +1670,9 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
             }
             if (items.get(position).type == POSTS_TYPE) {
                 return 6;
+            }
+            if (items.get(position).type == WEB_SEARCH_TYPE_ITEM) {
+                return 9;
             }
             return items.get(position).type + position;
         }
@@ -1679,5 +1717,338 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
                 BulletinFactory.of(fragmentView, null).createDownloadBulletin(BulletinFactory.FileType.UNKNOWNS, count, null).show();
             }
         });
+    }
+
+    public boolean onBackPressed() {
+        if (getChildAt(getCurrentPosition()) == webSearchContainer) {
+            return webSearchContainer.onBackPressed();
+        }
+        return false;
+    }
+
+    public class WebSearchContainer extends FrameLayout {
+
+        private final DialogsActivity host;
+        private String currentQuery = "";
+        private String lastPerformedQuery = "";
+
+        // UI States
+        private final FrameLayout promptLayout;
+        private final FrameLayout resultsLayout;
+
+        // Prompt UI elements
+        private final SearchEngineBottomSheet.EngineBadgeView badgeView;
+        private final TextView engineNameView;
+        private final LinearLayout enginePillLayout;
+        private final TextView hintLabel;
+
+        // Results UI elements
+        private WebView webView;
+        private SwipeRefreshLayout swipeRefreshLayout;
+        private View progressBar;
+
+        private final Runnable searchRunnable = this::performSearch;
+
+        public WebSearchContainer(Context context, DialogsActivity host) {
+            super(context);
+            this.host = host;
+            setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
+
+            // Prompt Layout
+            promptLayout = new FrameLayout(context);
+            addView(promptLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+
+            LinearLayout inner = new LinearLayout(context);
+            inner.setOrientation(LinearLayout.VERTICAL);
+            inner.setGravity(android.view.Gravity.CENTER_HORIZONTAL);
+
+            enginePillLayout = new LinearLayout(context);
+            enginePillLayout.setOrientation(LinearLayout.HORIZONTAL);
+            enginePillLayout.setGravity(android.view.Gravity.CENTER_VERTICAL);
+            enginePillLayout.setPadding(AndroidUtilities.dp(16), 0, AndroidUtilities.dp(12), 0);
+            android.graphics.drawable.GradientDrawable pillBg = new android.graphics.drawable.GradientDrawable();
+            pillBg.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
+            pillBg.setCornerRadius(AndroidUtilities.dp(20));
+            pillBg.setColor(Theme.getColor(Theme.key_windowBackgroundGray));
+            enginePillLayout.setBackground(pillBg);
+
+            badgeView = new SearchEngineBottomSheet.EngineBadgeView(context);
+            int selected = NaConfig.INSTANCE.getSelectedSearchEngine().Int();
+            badgeView.setEngine(selected);
+            enginePillLayout.addView(badgeView, LayoutHelper.createLinear(32, 32, android.view.Gravity.CENTER_VERTICAL, 0, 0, 8, 0));
+
+            engineNameView = new TextView(context);
+            engineNameView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+            engineNameView.setTextSize(14);
+            engineNameView.setSingleLine(true);
+            engineNameView.setText(SearchEngineBottomSheet.getEngineName(selected));
+            enginePillLayout.addView(engineNameView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, android.view.Gravity.CENTER_VERTICAL));
+
+            ImageView arrowView = new ImageView(context);
+            arrowView.setImageResource(R.drawable.arrow_more);
+            arrowView.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText), PorterDuff.Mode.SRC_IN));
+            arrowView.setRotation(90);
+            enginePillLayout.addView(arrowView, LayoutHelper.createLinear(20, 20, android.view.Gravity.CENTER_VERTICAL, 4, 0, 0, 0));
+
+            enginePillLayout.setOnClickListener(v -> {
+                new SearchEngineBottomSheet(context, index -> {
+                    badgeView.setEngine(index);
+                    engineNameView.setText(SearchEngineBottomSheet.getEngineName(index));
+                    if (!TextUtils.isEmpty(currentQuery)) {
+                        performSearch(true);
+                    }
+                }).show();
+            });
+
+            hintLabel = new TextView(context);
+            hintLabel.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
+            hintLabel.setTextSize(15);
+            hintLabel.setGravity(android.view.Gravity.CENTER);
+            hintLabel.setText("Type in the search bar above to search the web");
+
+            inner.addView(enginePillLayout, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, 40, android.view.Gravity.CENTER_HORIZONTAL, 0, 0, 0, 24));
+            inner.addView(hintLabel, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 24));
+            promptLayout.addView(inner, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, android.view.Gravity.CENTER));
+
+            resultsLayout = new FrameLayout(context);
+            resultsLayout.setVisibility(View.GONE);
+            addView(resultsLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+
+            progressBar = new WebProgressBar(context);
+            resultsLayout.addView(progressBar, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 3, android.view.Gravity.TOP));
+
+            SearchEngineBottomSheet.EngineBadgeView floatingBadge = new SearchEngineBottomSheet.EngineBadgeView(context);
+            floatingBadge.setEngine(selected);
+            floatingBadge.setPadding(AndroidUtilities.dp(4), AndroidUtilities.dp(4), AndroidUtilities.dp(4), AndroidUtilities.dp(4));
+            floatingBadge.setBackground(Theme.createSimpleSelectorRoundRectDrawable(AndroidUtilities.dp(20), Theme.getColor(Theme.key_windowBackgroundGray), Theme.getColor(Theme.key_listSelector)));
+            
+            final ViewConfiguration config = ViewConfiguration.get(context);
+            final int touchSlop = config.getScaledTouchSlop();
+            
+            floatingBadge.setOnTouchListener(new View.OnTouchListener() {
+                private float startX, startY;
+                private float startTranslationX, startTranslationY;
+                private boolean isDragging;
+
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    switch (event.getAction()) {
+                        case MotionEvent.ACTION_DOWN:
+                            startX = event.getRawX();
+                            startY = event.getRawY();
+                            startTranslationX = v.getTranslationX();
+                            startTranslationY = v.getTranslationY();
+                            isDragging = false;
+                            v.animate().scaleX(1.1f).scaleY(1.1f).setDuration(120).start();
+                            return true;
+
+                        case MotionEvent.ACTION_MOVE:
+                            float deltaX = event.getRawX() - startX;
+                            float deltaY = event.getRawY() - startY;
+                            if (!isDragging && (Math.abs(deltaX) > touchSlop || Math.abs(deltaY) > touchSlop)) {
+                                isDragging = true;
+                            }
+                            if (isDragging) {
+                                float newTx = startTranslationX + deltaX;
+                                float newTy = startTranslationY + deltaY;
+                                
+                                float minX = -v.getLeft() + AndroidUtilities.dp(8);
+                                float maxX = resultsLayout.getWidth() - v.getRight() - AndroidUtilities.dp(8);
+                                float minY = -v.getTop() + AndroidUtilities.dp(8);
+                                float maxY = resultsLayout.getHeight() - v.getBottom() - AndroidUtilities.dp(8);
+                                
+                                v.setTranslationX(Math.max(minX, Math.min(newTx, maxX)));
+                                v.setTranslationY(Math.max(minY, Math.min(newTy, maxY)));
+                            }
+                            return true;
+
+                        case MotionEvent.ACTION_UP:
+                        case MotionEvent.ACTION_CANCEL:
+                            v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(120).start();
+                            if (!isDragging) {
+                                new SearchEngineBottomSheet(context, index -> {
+                                    badgeView.setEngine(index);
+                                    floatingBadge.setEngine(index);
+                                    engineNameView.setText(SearchEngineBottomSheet.getEngineName(index));
+                                    if (!TextUtils.isEmpty(currentQuery)) {
+                                        performSearch(true);
+                                    }
+                                }).show();
+                            } else {
+                                float currentTx = v.getTranslationX();
+                                float centerX = resultsLayout.getWidth() / 2f - (v.getLeft() + v.getRight()) / 2f;
+                                float targetTx = (currentTx < centerX) ? (-v.getLeft() + AndroidUtilities.dp(8)) : (resultsLayout.getWidth() - v.getRight() - AndroidUtilities.dp(8));
+                                v.animate().translationX(targetTx)
+                                    .setDuration(250)
+                                    .setInterpolator(new OvershootInterpolator(0.8f))
+                                    .start();
+                            }
+                            return true;
+                    }
+                    return false;
+                }
+            });
+            resultsLayout.addView(floatingBadge, LayoutHelper.createFrame(40, 40, android.view.Gravity.TOP | android.view.Gravity.RIGHT, 0, 8, 8, 0));
+        }
+
+        private class WebProgressBar extends View {
+            private Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            private float progress;
+
+            public WebProgressBar(Context context) {
+                super(context);
+            }
+
+            @Override
+            protected void onDraw(Canvas canvas) {
+                if (progress <= 0 || progress >= 1.0f) return;
+                paint.setColor(Theme.getColor(Theme.key_featuredStickers_addButton));
+                canvas.drawRect(0, 0, getWidth() * progress, getHeight(), paint);
+            }
+
+            public void setProgress(float p) {
+                this.progress = p;
+                invalidate();
+            }
+        }
+
+        @SuppressLint("SetJavaScriptEnabled")
+        private void ensureWebView() {
+            if (webView != null) return;
+
+            swipeRefreshLayout = new SwipeRefreshLayout(getContext());
+            swipeRefreshLayout.setColorSchemeColors(Theme.getColor(Theme.key_featuredStickers_addButton));
+            swipeRefreshLayout.setProgressBackgroundColorSchemeColor(Theme.getColor(Theme.key_windowBackgroundWhite));
+            swipeRefreshLayout.setOnRefreshListener(() -> {
+                if (webView != null) {
+                    webView.reload();
+                }
+            });
+
+            webView = new WebView(getContext()) {
+                @Override
+                protected void onScrollChanged(int l, int t, int oldl, int oldt) {
+                    super.onScrollChanged(l, t, oldl, oldt);
+                    if (swipeRefreshLayout != null) {
+                        swipeRefreshLayout.setEnabled(t == 0);
+                    }
+                }
+            };
+            WebSettings settings = webView.getSettings();
+            settings.setJavaScriptEnabled(true);
+            settings.setDomStorageEnabled(true);
+            settings.setDatabaseEnabled(true);
+            settings.setLoadWithOverviewMode(true);
+            settings.setUseWideViewPort(true);
+            if (Build.VERSION.SDK_INT >= 21) {
+                settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+            }
+
+            if (Theme.isCurrentThemeDark() && Build.VERSION.SDK_INT >= 29) {
+                // FORCE_DARK_ON might be deprecated or behave differently, but let's keep it if Alexgram used it
+                // settings.setForceDark(WebSettings.FORCE_DARK_ON);
+            }
+
+            webView.setWebViewClient(new WebViewClient() {
+                @Override
+                public void onPageStarted(WebView view, String url, android.graphics.Bitmap favicon) {
+                    if (progressBar != null) progressBar.setVisibility(View.VISIBLE);
+                }
+
+                @Override
+                public void onPageFinished(WebView view, String url) {
+                    if (progressBar != null) progressBar.setVisibility(View.GONE);
+                    if (swipeRefreshLayout != null) swipeRefreshLayout.setRefreshing(false);
+                }
+            });
+
+            webView.setWebChromeClient(new WebChromeClient() {
+                @Override
+                public void onProgressChanged(WebView view, int newProgress) {
+                    if (progressBar instanceof WebProgressBar) {
+                        ((WebProgressBar) progressBar).setProgress(newProgress / 100.0f);
+                    }
+                    if (newProgress == 100) {
+                        if (progressBar != null) progressBar.setVisibility(View.GONE);
+                        if (swipeRefreshLayout != null) swipeRefreshLayout.setRefreshing(false);
+                    }
+                }
+            });
+
+            swipeRefreshLayout.addView(webView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+            resultsLayout.addView(swipeRefreshLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        }
+
+        public void search(String query) {
+            currentQuery = query;
+            if (TextUtils.isEmpty(query)) {
+                showPrompt();
+                AndroidUtilities.cancelRunOnUIThread(searchRunnable);
+            } else {
+                AndroidUtilities.cancelRunOnUIThread(searchRunnable);
+                AndroidUtilities.runOnUIThread(searchRunnable, 500);
+            }
+        }
+
+        private void performSearch() {
+            performSearch(false);
+        }
+
+        private void performSearch(boolean force) {
+            if (TextUtils.isEmpty(currentQuery)) return;
+            if (!force && currentQuery.equals(lastPerformedQuery)) return;
+
+            ensureWebView();
+            promptLayout.setVisibility(View.GONE);
+            resultsLayout.setVisibility(View.VISIBLE);
+
+            String url = SearchEngineBottomSheet.getEngineUrl(NaConfig.INSTANCE.getSelectedSearchEngine().Int()) + Uri.encode(currentQuery);
+            webView.loadUrl(url);
+            lastPerformedQuery = currentQuery;
+        }
+
+        private void showPrompt() {
+            promptLayout.setVisibility(View.VISIBLE);
+            resultsLayout.setVisibility(View.GONE);
+            lastPerformedQuery = "";
+            if (webView != null) {
+                webView.stopLoading();
+                webView.loadUrl("about:blank");
+            }
+        }
+
+        public boolean onBackPressed() {
+            if (resultsLayout.getVisibility() == View.VISIBLE && webView != null) {
+                if (webView.canGoBack()) {
+                    webView.goBack();
+                } else {
+                    showPrompt();
+                }
+                return true;
+            }
+            return false;
+        }
+
+        public void destroy() {
+            AndroidUtilities.cancelRunOnUIThread(searchRunnable);
+            if (webView != null) {
+                try {
+                    ViewParent parent = webView.getParent();
+                    if (parent != null) {
+                        ((android.view.ViewGroup) parent).removeView(webView);
+                    }
+                    webView.stopLoading();
+                    webView.loadUrl("about:blank");
+                    webView.destroy();
+                    webView = null;
+                } catch (Exception e) {
+                    org.telegram.messenger.FileLog.e(e);
+                }
+            }
+        }
+
+        public void setPaddingTop(int top) {
+            setPadding(0, top, 0, 0);
+        }
     }
 }

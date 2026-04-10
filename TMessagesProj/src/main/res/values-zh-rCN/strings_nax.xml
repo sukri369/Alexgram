@@ -327,4 +327,5 @@
     <string name="CenterActionBarTitleOff">关闭</string>
     <string name="TabletModeOn">启用</string>
     <string name="TabletModeOff">禁用</string>
+    <string name="HideTabsOnScroll">滚动时隐藏底部导航栏</string>
 </resources>

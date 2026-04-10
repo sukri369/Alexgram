@@ -327,4 +327,5 @@
     <string name="CenterActionBarTitleOff">Выкл</string>
     <string name="TabletModeOn">Вкл</string>
     <string name="TabletModeOff">Выкл</string>
+    <string name="HideTabsOnScroll">Скрывать панель навигации при прокрутке</string>
 </resources>

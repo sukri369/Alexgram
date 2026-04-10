@@ -106,6 +106,7 @@ public class NekoGeneralSettingsActivity extends BaseNekoXSettingsActivity {
             getString(R.string.LastFirst),
             getString(R.string.FirstLast)
     }, null));
+    private final AbstractConfigCell searchEngineInSearchBarRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getSearchEngineInSearchBar(), getString(R.string.SearchEngineInSearchBarDescription)));
     private final AbstractConfigCell dividerGeneral = cellGroup.appendCell(new ConfigCellDivider());
 
     // Storage
@@ -391,6 +392,8 @@ public class NekoGeneralSettingsActivity extends BaseNekoXSettingsActivity {
                 if (!(boolean) newValue) {
                     getNotificationCenter().postNotificationName(NotificationCenter.setTabsVisible, true);
                 }
+            } else if (key.equals(NaConfig.INSTANCE.getSearchEngineInSearchBar().getKey())) {
+                tooltip.showWithAction(0, UndoView.ACTION_NEED_RESTART, null, null);
             }
         };
 
