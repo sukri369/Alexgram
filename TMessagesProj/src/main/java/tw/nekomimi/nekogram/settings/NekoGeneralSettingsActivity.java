@@ -273,8 +273,6 @@ public class NekoGeneralSettingsActivity extends BaseNekoXSettingsActivity {
             cellGroup.rows.remove(usePersianCalendarRow);
             cellGroup.rows.remove(displayPersianCalendarByLatinRow);
         }
-        wasCentered = isCentered();
-        wasCenteredAtBeginning = wasCentered;
 
         checkCustomDoHRows();
         checkMapDriftingFixRows();
