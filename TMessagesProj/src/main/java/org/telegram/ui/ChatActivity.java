@@ -19286,7 +19286,7 @@ public class ChatActivity extends BaseFragment implements
                                 childTop += actionBar.getMeasuredHeight();
                             }
                         }
-                        if (isPillChatHeaderEnabled() && (child == topPanelLayout || child == topPanelLayoutFade || child == topPanelLayoutThanos || child == mentionContainer || child == mentionContainerFade)) {
+                        if (isPillChatHeaderEnabled() && (child == topPanelLayout || child == topPanelLayoutFade || child == mentionContainer)) {
                             childTop = getPaddingTop() + ActionBar.getCurrentActionBarHeight() + AndroidUtilities.dp(38);
                         }
                         break;

@@ -794,27 +794,34 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
 
                 // Draw full-width header blur
                 if (getParent() instanceof View) {
-                    View p = (View) getParent();
-                    int pWidth = p.getWidth();
-                    // Get root action bar width for full coverage
+                    View parentView = (View) getParent();
+                    int pWidth = parentView.getWidth();
                     if (parentFragment.getActionBar() != null) {
                         pWidth = parentFragment.getActionBar().getMeasuredWidth();
                     }
-                    int xOffset = loc[0];
+                    
+                    int[] screenLoc = new int[2];
+                    getLocationOnScreen(screenLoc);
+                    int[] parentLoc = new int[2];
+                    parentFragment.getContentView().getLocationOnScreen(parentLoc);
+                    
+                    // Root coordinate system: (0,0) is screen top-left.
+                    // We want to blur the area from Y=0 to Y=statusBarHeight in screen space.
+                    // In ChatAvatarContainer's coordinate system, screen Y=0 is at -screenLoc[1].
                     int statusBarHeight = occupyStatusBar ? AndroidUtilities.statusBarHeight : 0;
-
-                    // DECISIVE FIX: Use absolute coordinates relative to the screen top
-                    // We want to blur [0, 0, pWidth, statusBarHeight] in screen space.
-                    // Translated to this view's space: Rect(-loc[0], -loc[1], pWidth - loc[0], statusBarHeight - loc[1])
-                    headerBlurRect.set(-loc[0], -loc[1], pWidth - loc[0], statusBarHeight - loc[1]);
+                    headerBlurRect.set(-screenLoc[0], -screenLoc[1], pWidth - screenLoc[0], statusBarHeight - screenLoc[1]);
                     
                     if (!headerBlurRect.isEmpty() && statusBarHeight > 0) {
                         pillPaint.setColor(0);
                         final int glassBlurAlpha = darkPillSurface ? 60 : 25; 
                         final int glassSourceAlpha = 245; 
-                        parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true, glassBlurAlpha, glassSourceAlpha);
+                        
+                        // We pass the layout Y of this view relative to the content view for parallax alignment
+                        int relativeY = screenLoc[1] - parentLoc[1];
+                        parentFragment.getContentView().drawBlurRect(canvas, relativeY, headerBlurRect, pillPaint, true, glassBlurAlpha, glassSourceAlpha);
                     }
                 }
+            }
 
                 // Draw pill background ON TOP
                 if (!pillRect.isEmpty()) {
@@ -1141,7 +1148,50 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                 animatedSubtitleTextView.setEllipsizeByGradientCentered(false);
                 animatedSubtitleTextView.setEllipsizeMiddle(false);
             }
+
+            int width = MeasureSpec.getSize(widthMeasureSpec);
+            int height = MeasureSpec.getSize(heightMeasureSpec);
+
+            // Calculate content-based width for the pill
+            float titleContentW = getViewContentWidth(titleTextView);
+            View subView = getSubtitleTextView();
+            float subtitleContentW = subView != null && subView.getVisibility() != GONE ? getViewContentWidth(subView) : 0;
+            float contentW = Math.max(titleContentW, subtitleContentW);
+            
+            int paddingH = getPillHorizontalPadding();
+            int avatarW = (avatarImageView.getVisibility() == VISIBLE ? dp(54) : 0);
+            
+            // Re-check for overflowing alignment
+            float availableWidthForText = Math.max(getPillMinimumContentWidth(), width - avatarW - paddingH * 2 - dp(16));
+            pillTitleOverflowing = contentW > availableWidthForText + 0.5f;
+
+            if (pillTitleOverflowing) {
+                titleTextView.setGravity(Gravity.LEFT);
+                titleTextView.setEllipsizeByGradient(true);
+                if (subtitleTextView != null) {
+                    subtitleTextView.setGravity(Gravity.LEFT);
+                    subtitleTextView.setEllipsizeByGradient(true);
+                } else if (animatedSubtitleTextView != null) {
+                    animatedSubtitleTextView.setGravity(Gravity.LEFT);
+                    animatedSubtitleTextView.setEllipsizeByGradient(true);
+                }
+            }
+
+            // Now measure children
+            avatarImageView.measure(MeasureSpec.makeMeasureSpec(dp(42), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(dp(42), MeasureSpec.EXACTLY));
+            int textMaxWidth = (int) availableWidthForText;
+            titleTextView.measure(MeasureSpec.makeMeasureSpec(textMaxWidth, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(height, MeasureSpec.AT_MOST));
+            if (subView != null) {
+                subView.measure(MeasureSpec.makeMeasureSpec(textMaxWidth, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(height, MeasureSpec.AT_MOST));
+            }
+            if (timeItem != null) {
+                timeItem.measure(MeasureSpec.makeMeasureSpec(dp(34), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(dp(34), MeasureSpec.EXACTLY));
+            }
+            setMeasuredDimension(width, height);
+            lastWidth = width;
         } else {
+            pillTitleOverflowing = false;
+            pillSubtitleOverflowing = false;
             titleTextView.setEllipsizeByGradient(true);
             titleTextView.setEllipsizeByGradientCentered(false);
             titleTextView.setEllipsizeMiddle(false);
@@ -1153,83 +1203,33 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                 animatedSubtitleTextView.setEllipsizeByGradientCentered(false);
                 animatedSubtitleTextView.setEllipsizeMiddle(false);
             }
-        }
-        int padding = isCentered() ? dp(isPreviewMode() ? 35 : 10) : 0;
-        int width = MeasureSpec.getSize(widthMeasureSpec) + (isCentered() ? 0 : titleTextView.getPaddingRight());
-        int availableWidth = width - dp(((avatarImageView.getVisibility() == VISIBLE || isCentered()) ? 54 : 0) + 16);
-        if (pillCentered) {
-            availableWidth = getPillMaxContentWidth(width);
-        }
-        int textMaxWidth = Math.max(getPillMinimumContentWidth(), availableWidth - padding);
-        if (pillCentered) {
-            textMaxWidth = Math.max(getPillMinimumContentWidth(), availableWidth);
-        }
-        avatarImageView.measure(MeasureSpec.makeMeasureSpec(dp(42), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(dp(42), MeasureSpec.EXACTLY));
-        titleTextView.measure(MeasureSpec.makeMeasureSpec(textMaxWidth, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(dp(24 + 8) + titleTextView.getPaddingRight(), MeasureSpec.AT_MOST));
-        if (subtitleTextView != null) {
-            subtitleTextView.measure(MeasureSpec.makeMeasureSpec(textMaxWidth, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(dp(20), MeasureSpec.AT_MOST));
-        } else if (animatedSubtitleTextView != null) {
-            animatedSubtitleTextView.measure(MeasureSpec.makeMeasureSpec(textMaxWidth, pillCentered ? MeasureSpec.AT_MOST : MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(dp(20), MeasureSpec.AT_MOST));
-        }
-        if (pillCentered) {
-            pillTitleOverflowing = getRawViewContentWidth(titleTextView) > titleTextView.getMeasuredWidth() + 0.5f;
-            titleTextView.setGravity(pillTitleOverflowing ? Gravity.LEFT : Gravity.CENTER_HORIZONTAL);
-            titleTextView.setEllipsizeByGradient(pillTitleOverflowing);
-            titleTextView.setEllipsizeByGradientCentered(false);
-            if (subtitleTextView != null) {
-                pillSubtitleOverflowing = getRawViewContentWidth(subtitleTextView) > subtitleTextView.getMeasuredWidth() + 0.5f;
-                subtitleTextView.setGravity(pillSubtitleOverflowing ? Gravity.LEFT : Gravity.CENTER_HORIZONTAL);
-                subtitleTextView.setEllipsizeByGradient(pillSubtitleOverflowing);
-                subtitleTextView.setEllipsizeByGradientCentered(false);
-            } else if (animatedSubtitleTextView != null) {
-                pillSubtitleOverflowing = getRawViewContentWidth(animatedSubtitleTextView) > animatedSubtitleTextView.getMeasuredWidth() + 0.5f;
-                animatedSubtitleTextView.setGravity(pillSubtitleOverflowing ? Gravity.LEFT : Gravity.CENTER_HORIZONTAL);
-                animatedSubtitleTextView.setEllipsizeByGradient(pillSubtitleOverflowing);
-                animatedSubtitleTextView.setEllipsizeByGradientCentered(false);
-            } else {
-                pillSubtitleOverflowing = false;
-            }
-
-            // Gravity is part of child text layout; re-measure after deciding final alignment.
+            int padding = isCentered() ? dp(isPreviewMode() ? 35 : 10) : 0;
+            int width = MeasureSpec.getSize(widthMeasureSpec) + (isCentered() ? 0 : titleTextView.getPaddingRight());
+            int availableWidth = width - dp(((avatarImageView.getVisibility() == VISIBLE || isCentered()) ? 54 : 0) + 16);
+            int textMaxWidth = Math.max(dp(72), availableWidth - padding);
+            
+            avatarImageView.measure(MeasureSpec.makeMeasureSpec(dp(42), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(dp(42), MeasureSpec.EXACTLY));
             titleTextView.measure(MeasureSpec.makeMeasureSpec(textMaxWidth, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(dp(24 + 8) + titleTextView.getPaddingRight(), MeasureSpec.AT_MOST));
             if (subtitleTextView != null) {
                 subtitleTextView.measure(MeasureSpec.makeMeasureSpec(textMaxWidth, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(dp(20), MeasureSpec.AT_MOST));
             } else if (animatedSubtitleTextView != null) {
-                animatedSubtitleTextView.measure(MeasureSpec.makeMeasureSpec(textMaxWidth, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(dp(20), MeasureSpec.AT_MOST));
+                animatedSubtitleTextView.measure(MeasureSpec.makeMeasureSpec(textMaxWidth, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(dp(20), MeasureSpec.AT_MOST));
             }
-        } else {
-            pillTitleOverflowing = false;
-            pillSubtitleOverflowing = false;
-            titleTextView.setEllipsizeByGradient(true);
-            titleTextView.setEllipsizeByGradientCentered(false);
-            if (subtitleTextView != null) {
-                subtitleTextView.setEllipsizeByGradient(true);
-                subtitleTextView.setEllipsizeByGradientCentered(false);
+            if (timeItem != null) {
+                timeItem.measure(MeasureSpec.makeMeasureSpec(dp(34), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(dp(34), MeasureSpec.EXACTLY));
             }
-            if (animatedSubtitleTextView != null) {
-                animatedSubtitleTextView.setEllipsizeByGradient(true);
-                animatedSubtitleTextView.setEllipsizeByGradientCentered(false);
+            if (starBgItem != null) {
+                starBgItem.measure(MeasureSpec.makeMeasureSpec(dp(20), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(dp(20), MeasureSpec.EXACTLY));
             }
+            if (starFgItem != null) {
+                starFgItem.measure(MeasureSpec.makeMeasureSpec(dp(20), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(dp(20), MeasureSpec.EXACTLY));
+            }
+            setMeasuredDimension(width, MeasureSpec.getSize(heightMeasureSpec));
+            if (lastWidth != -1 && lastWidth != width && lastWidth > width) {
+                fadeOutToLessWidth(lastWidth);
+            }
+            lastWidth = width;
         }
-        if (timeItem != null) {
-            timeItem.measure(MeasureSpec.makeMeasureSpec(dp(34), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(dp(34), MeasureSpec.EXACTLY));
-        }
-        if (starBgItem != null) {
-            starBgItem.measure(MeasureSpec.makeMeasureSpec(dp(20), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(dp(20), MeasureSpec.EXACTLY));
-        }
-        if (starFgItem != null) {
-            starFgItem.measure(MeasureSpec.makeMeasureSpec(dp(20), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(dp(20), MeasureSpec.EXACTLY));
-        }
-        setMeasuredDimension(width, MeasureSpec.getSize(heightMeasureSpec));
-        if (lastWidth != -1 && lastWidth != width && lastWidth > width) {
-            fadeOutToLessWidth(lastWidth);
-        }
-        SimpleTextView titleTextLargerCopyView = this.titleTextLargerCopyView.get();
-        if (titleTextLargerCopyView != null) {
-            int largerAvailableWidth = largerWidth - dp((avatarImageView.getVisibility() == VISIBLE ? 54 : 0) + 16);
-            titleTextLargerCopyView.measure(MeasureSpec.makeMeasureSpec(largerAvailableWidth, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(dp(24), MeasureSpec.AT_MOST));
-        }
-        lastWidth = width;
     }
 
     private void fadeOutToLessWidth(int largerWidth) {
@@ -1289,42 +1289,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         setClipChildren(false);
     }
 
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        if (isPillChatTitleEnabled()) {
-            int width = MeasureSpec.getSize(widthMeasureSpec);
-            int height = MeasureSpec.getSize(heightMeasureSpec);
 
-            // Calculate required width for the pill
-            float titleContentW = getViewContentWidth(titleTextView);
-            View subView = getSubtitleTextView();
-            float subtitleContentW = subView != null && subView.getVisibility() != GONE ? getViewContentWidth(subView) : 0;
-            float contentW = Math.max(titleContentW, subtitleContentW);
-            
-            int paddingH = getPillHorizontalPadding();
-            int avatarW = (avatarImageView.getVisibility() == VISIBLE ? dp(54) : 0);
-            
-            // The view itself should try to be as wide as possible to avoid clipping the pill
-            // but we must handle the Actionbar title layout constraints
-            int neededWidth = (int) (contentW + paddingH * 2 + avatarW + dp(16));
-            
-            // In Actionbar, we usually want to take available space
-            setMeasuredDimension(width, height);
-
-            // Now measure children with their own specs
-            avatarImageView.measure(MeasureSpec.makeMeasureSpec(dp(42), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(dp(42), MeasureSpec.EXACTLY));
-            int textMaxWidth = Math.max(0, width - avatarW - paddingH * 2);
-            titleTextView.measure(MeasureSpec.makeMeasureSpec(textMaxWidth, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(height, MeasureSpec.AT_MOST));
-            if (subView != null) {
-                subView.measure(MeasureSpec.makeMeasureSpec(textMaxWidth, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(height, MeasureSpec.AT_MOST));
-            }
-            if (timeItem != null) {
-                timeItem.measure(MeasureSpec.makeMeasureSpec(dp(34), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(dp(34), MeasureSpec.EXACTLY));
-            }
-        } else {
-            super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        }
-    }
 
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
