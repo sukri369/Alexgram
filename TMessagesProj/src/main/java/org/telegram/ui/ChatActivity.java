@@ -245,6 +245,10 @@ import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
 import org.telegram.ui.Components.ChatAnimeAssistantView;
 import org.telegram.ui.Components.chat.MiniChatAssistantView;
+import org.telegram.ui.AIAssistanceSettingsActivity;
+import tw.nekomimi.nekogram.helpers.AndroidUtil;
+import xyz.nextalone.nagram.helpers.LanguageHelper;
+import xyz.nextalone.nagram.helpers.LlmConfig;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -605,8 +609,7 @@ public class ChatActivity extends BaseFragment implements
     private boolean assistantWaitResponse;
     private boolean assistantAutoReplyInFlight;
     private int assistantLastAutoReplyMessageId;
-    private long mergeDialogId;
-
+    
     public ChatActivityFragmentView contentView;
     private ChatBigEmptyView bigEmptyView;
     private ArrayList<View> actionModeViews = new ArrayList<>();
@@ -3603,6 +3606,9 @@ public class ChatActivity extends BaseFragment implements
             AndroidUtilities.cancelRunOnUIThread(chatInviteRunnable);
             chatInviteRunnable = null;
         }
+        if (chatAnimeAssistantView != null) {
+            chatAnimeAssistantView.onDestroy();
+        }
 
         // na: unread count
         getNotificationCenter().removeObserver(this, NotificationCenter.dialogsUnreadCounterChanged);
@@ -4536,6 +4542,8 @@ public class ChatActivity extends BaseFragment implements
                     presentFragment(TopicCreateFragment.create(-dialog_id, 0).setOpenInChatActivity(ChatActivity.this));
                 } else if (id == 888) {
                     dumpCanvas();
+                } else if (id == 889) {
+                    presentFragment(new AIAssistanceSettingsActivity());
                 } else {
                     nkbtn_onclick_actionbar(id);
                 }
@@ -5077,6 +5085,7 @@ public class ChatActivity extends BaseFragment implements
 
         if (BuildConfig.DEBUG && headerItem != null) {
             headerItem.addSubItem(888, R.drawable.menu_download_round, "Dump Canvas");
+            headerItem.addSubItem(889, R.drawable.magic_stick_solar, "AI Assistance Settings");
         }
 
         actionModeViews.clear();
@@ -22769,6 +22778,7 @@ public class ChatActivity extends BaseFragment implements
                     }
                 }
             }
+            tryAutoReplyWithLatestPendingMessage(true);
         } else if (id == NotificationCenter.invalidateMotionBackground) {
             if (chatListView != null) {
                 chatListView.invalidateViews();
@@ -22965,6 +22975,7 @@ public class ChatActivity extends BaseFragment implements
                     return;
                 }
                 processNewMessages(arr);
+                tryAutoReplyWithLatestPendingMessage(true);
             } else if (ChatObject.isChannel(currentChat) && !currentChat.megagroup && chatInfo != null && did == -chatInfo.linked_chat_id) {
                 for (int a = 0, N = arr.size(); a < N; a++) {
                     MessageObject messageObject = arr.get(a);
@@ -30731,6 +30742,9 @@ public class ChatActivity extends BaseFragment implements
     @Override
     public void onResume() {
         super.onResume();
+        if (chatAnimeAssistantView != null) {
+            chatAnimeAssistantView.onResume();
+        }
         applyPillHeaderAppearance();
         cachedIsGestureNavigation = AndroidUtil.isGestureNavigation(getContext());
         checkShowBlur(false);
@@ -30935,6 +30949,9 @@ public class ChatActivity extends BaseFragment implements
     @Override
     public void onPause() {
         super.onPause();
+        if (chatAnimeAssistantView != null) {
+            chatAnimeAssistantView.onPause();
+        }
         scrolling = false;
         if (scrimPopupWindow != null) {
             scrimPopupWindow.setPauseNotifications(false);
@@ -50488,6 +50505,8 @@ public class ChatActivity extends BaseFragment implements
                 if (fis != null) fis.close();
             } catch (Throwable e) { /* ignore */ }
         }
+    }
+
     public TLRPC.Message getThreadMessage() {
         return replyingMessageObject != null ? replyingMessageObject.messageOwner : null;
     }
