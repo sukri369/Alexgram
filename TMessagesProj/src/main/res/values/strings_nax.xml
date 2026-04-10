@@ -342,4 +342,6 @@
     <string name="CenterActionBarTitleOff">Off</string>
     <string name="TabletModeOn">On</string>
     <string name="TabletModeOff">Off</string>
+    <string name="PillChatTitle">Pill Chat Header</string>
+    <string name="PillChatTitleDescription">Shows a floating pill-shaped title in the chat header instead of the default action bar</string>
 </resources>
