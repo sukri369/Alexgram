@@ -240,7 +240,6 @@ import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
 import org.telegram.ui.Components.ChatAnimeAssistantView;
 import org.telegram.ui.Components.chat.MiniChatAssistantView;
-import org.telegram.ui.Cells.AppRatingCell;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
