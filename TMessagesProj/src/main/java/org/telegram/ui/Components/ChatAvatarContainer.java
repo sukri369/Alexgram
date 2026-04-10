@@ -798,7 +798,6 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                     int xOffset = (int) getX();
                     int statusBarHeight = occupyStatusBar ? AndroidUtilities.statusBarHeight : 0;
 
-                    // Draw BASE HEADER GLASS with GRADIENT MERGE
                     // DECISIVE FIX: ONLY blur the status bar area, nothing else.
                     headerBlurRect.set(-xOffset, -statusBarHeight, pWidth - xOffset, 0);
                     if (!headerBlurRect.isEmpty()) {
@@ -806,11 +805,6 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                         final int glassBlurAlpha = darkPillSurface ? 60 : 25; 
                         final int glassSourceAlpha = 245; 
                         parentFragment.getContentView().drawBlurRect(canvas, blurY, headerBlurRect, pillPaint, true, glassBlurAlpha, glassSourceAlpha);
-                    }
-
-
-                        canvas.drawRect(headerBlurRect, fadeGradientPaint);
-                        canvas.restore();
                     }
                 }
 
