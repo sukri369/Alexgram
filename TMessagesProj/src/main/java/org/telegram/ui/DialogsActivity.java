@@ -13491,7 +13491,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     channelPrefs.edit().putBoolean("channel_intro", true).apply();
                 }
             });
-            if (hideBottomNavigationBar || MainTabsHelper.isContactsTabHidden()) {
+            if (hideBottomNavigationBar) {
                 io.add(R.drawable.msg_contacts, getString(R.string.Contacts), () -> {
                     Bundle args = new Bundle();
                     args.putBoolean("needPhonebook", true);
