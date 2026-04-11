@@ -110,10 +110,6 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         actionBar.setItemsColor(color, false);
         actionBar.setTitleColor(color);
         
-        int color = isDark ? Color.WHITE : 0xFF1A1A2E;
-        actionBar.setItemsColor(color, false);
-        actionBar.setTitleColor(color);
-        
         final int search_id = 1;
         final int cloud_id = 2;
         org.telegram.ui.ActionBar.ActionBarMenu menu = actionBar.createMenu();
