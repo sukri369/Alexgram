@@ -132,10 +132,10 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         final int search_id = 1;
         final int cloud_id = 2;
         org.telegram.ui.ActionBar.ActionBarMenu menu = actionBar.createMenu();
-        ImageView cloudItem = menu.addItem(cloud_id, R.drawable.cloud_sync);
-        ImageView searchItem = menu.addItem(search_id, R.drawable.ic_ab_search_solar);
-        if (cloudItem != null) cloudItem.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN));
-        if (searchItem != null) searchItem.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN));
+        org.telegram.ui.ActionBar.ActionBarMenuItem cloudItem = menu.addItem(cloud_id, R.drawable.cloud_sync);
+        org.telegram.ui.ActionBar.ActionBarMenuItem searchItem = menu.addItem(search_id, R.drawable.ic_ab_search_solar);
+        if (cloudItem != null) cloudItem.setIconColor(color);
+        if (searchItem != null) searchItem.setIconColor(color);
         
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
