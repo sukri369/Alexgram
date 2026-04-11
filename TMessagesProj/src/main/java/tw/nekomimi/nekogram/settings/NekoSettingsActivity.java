@@ -109,33 +109,13 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         actionBar.setItemsColor(color, false);
         actionBar.setTitleColor(color);
         
-        listView = new org.telegram.ui.Components.BlurredRecyclerView(context);
-        listView.setLayoutManager(layoutManager = new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
-        listView.setVerticalScrollBarEnabled(false);
-        listView.setPadding(0, AndroidUtilities.dp(56) + (AndroidUtilities.isTablet() ? 0 : AndroidUtilities.statusBarHeight), 0, AndroidUtilities.dp(40));
-        listView.setClipToPadding(false);
-        listView.setAdapter(listAdapter = createAdapter(context));
-        listView.setOnItemClickListener(this::onItemClick);
-        listView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
-                View header = recyclerView.getChildAt(0);
-                if (header != null && recyclerView.getChildAdapterPosition(header) == headerRow) {
-                    float alpha = Math.max(0, Math.min(1.0f, (Math.abs(header.getY()) - AndroidUtilities.dp(40)) / (float) AndroidUtilities.dp(60)));
-                    actionBar.getTitleTextView().setAlpha(alpha);
-                } else {
-                    actionBar.getTitleTextView().setAlpha(1.0f);
-                }
-            }
-        });
-        
         final int search_id = 1;
         final int cloud_id = 2;
         org.telegram.ui.ActionBar.ActionBarMenu menu = actionBar.createMenu();
-        org.telegram.ui.ActionBar.ActionBarMenuItem cloudItem = menu.addItem(cloud_id, R.drawable.cloud_sync);
         org.telegram.ui.ActionBar.ActionBarMenuItem searchItem = menu.addItem(search_id, R.drawable.ic_ab_search_solar);
-        if (cloudItem != null) cloudItem.setIconColor(color);
+        org.telegram.ui.ActionBar.ActionBarMenuItem cloudItem = menu.addItem(cloud_id, R.drawable.cloud_sync);
         if (searchItem != null) searchItem.setIconColor(color);
+        if (cloudItem != null) cloudItem.setIconColor(color);
         
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
@@ -143,8 +123,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
                 if (id == -1) {
                     finishFragment();
                 } else if (id == search_id) {
-                    // Search functionality is usually handled by the base class or a common helper
-                    // Since we are in a custom redesign, we might need to trigger it manually
+                    // Search functionality can be added here
                 } else if (id == cloud_id) {
                     CloudSettingsHelper.getInstance().showDialog(NekoSettingsActivity.this);
                 }
@@ -152,6 +131,29 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         });
 
         actionBar.getTitleTextView().setAlpha(0.0f);
+        
+        listView = new org.telegram.ui.Components.BlurredRecyclerView(context);
+        listView.setLayoutManager(layoutManager = new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
+        listView.setVerticalScrollBarEnabled(false);
+        listView.setPadding(0, AndroidUtilities.dp(44) + (AndroidUtilities.isTablet() ? 0 : AndroidUtilities.statusBarHeight), 0, AndroidUtilities.dp(40));
+        listView.setClipToPadding(false);
+        listView.setAdapter(listAdapter = createAdapter(context));
+        listView.setOnItemClickListener(this::onItemClick);
+        listView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                View header = layoutManager.findViewByPosition(headerRow);
+                if (header != null) {
+                    int top = header.getTop();
+                    float alpha = Math.max(0, Math.min(1.0f, (Math.abs(top) - AndroidUtilities.dp(40)) / (float) AndroidUtilities.dp(60)));
+                    actionBar.getTitleTextView().setAlpha(alpha);
+                    actionBar.setBackgroundColor(ColorUtils.setAlphaComponent(isDark ? 0xFF1E2732 : Color.WHITE, (int) (alpha * 255)));
+                } else {
+                    actionBar.getTitleTextView().setAlpha(1.0f);
+                    actionBar.setBackgroundColor(isDark ? 0xFF1E2732 : Color.WHITE);
+                }
+            }
+        });
         
         frameLayout.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
         frameLayout.addView(actionBar, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
@@ -280,8 +282,18 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         public BrandingHeaderView(Context context) {
             super(context);
             setPadding(0, dp(48), 0, dp(24));
+            setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
 
             FrameLayout logoContainer = new FrameLayout(context);
+            if (android.os.Build.VERSION.SDK_INT >= 21) {
+                logoContainer.setOutlineProvider(new android.view.ViewOutlineProvider() {
+                    @Override
+                    public void getOutline(View view, android.graphics.Outline outline) {
+                        outline.setOval(0, 0, view.getWidth(), view.getHeight());
+                    }
+                });
+                logoContainer.setClipToOutline(true);
+            }
             GradientDrawable logoBg = new GradientDrawable();
             logoBg.setShape(GradientDrawable.OVAL);
             logoBg.setColor(isDark ? 0x1AFFFFFF : 0x1A000000);
@@ -290,8 +302,8 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
 
             logoView = new ImageView(context);
             logoView.setImageResource(R.drawable.ic_launcher_alexgram_white);
-            logoView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-            logoContainer.addView(logoView, LayoutHelper.createFrame(70, 70, Gravity.CENTER));
+            logoView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            logoContainer.addView(logoView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
             nameView = new TextView(context);
             nameView.setText("Alexgram");
@@ -360,10 +372,10 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
             texts.addView(subtitleView);
             container.addView(texts, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f));
             switchView = new Switch(context);
-            container.addView(switchView, LayoutHelper.createLinear(44, 24));
+            container.addView(switchView, LayoutHelper.createLinear(38, 20));
             addView(container);
             divider = new View(context);
-            addView(divider, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 1, Gravity.BOTTOM, 56, 0, 16, 0));
+            addView(divider, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 1, Gravity.BOTTOM, 54, 0, 14, 0));
         }
 
         public void setData(String title, String subtitle, int iconRes, boolean checked, OnSwitchListener listener, boolean first, boolean last) {
@@ -379,6 +391,15 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
             titleView.setTextColor(isDark ? Color.WHITE : 0xFF1A1A2E);
             subtitleView.setTextColor(isDark ? 0xAAFFFFFF : 0xAA5C6B7F);
             iconView.setColorFilter(new PorterDuffColorFilter(checked ? 0xFF2196F3 : (isDark ? 0xFFAAAAAA : 0xFF777777), PorterDuff.Mode.SRC_IN));
+            
+            if (iconRes == R.drawable.msg_delete_solar) {
+                iconView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                iconView.setPadding(dp(2), dp(2), dp(2), dp(2));
+            } else {
+                iconView.setScaleType(ImageView.ScaleType.CENTER);
+                iconView.setPadding(0, 0, 0, 0);
+            }
+            
             divider.setBackgroundColor(dividerColor);
             divider.setVisibility(last ? GONE : VISIBLE);
             setOnClickListener(v -> {
