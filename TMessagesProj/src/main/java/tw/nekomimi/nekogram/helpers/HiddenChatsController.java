@@ -68,7 +68,7 @@ public class HiddenChatsController {
 
     private void saveIds(int currentAccount) {
         if (hiddenChatIds.indexOfKey(currentAccount) >= 0) {
-            preferences.edit().putStringSet("hidden_ids_" + currentAccount, hiddenChatIds.get(currentAccount)).apply();
+            preferences.edit().putStringSet("hidden_ids_" + currentAccount, new java.util.HashSet<>(hiddenChatIds.get(currentAccount))).apply();
         }
     }
 

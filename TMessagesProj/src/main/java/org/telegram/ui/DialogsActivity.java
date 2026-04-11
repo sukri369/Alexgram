@@ -325,7 +325,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     private final WindowInsetsStateHolder windowInsetsStateHolder = new WindowInsetsStateHolder(this::checkInsets);
 
-    private boolean canShowFilterTabsView;
+    protected boolean canShowFilterTabsView;
     private int initialSearchType = -1;
 
     private final String ACTION_MODE_SEARCH_DIALOGS_TAG = "search_dialogs_action_mode";
@@ -512,12 +512,12 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private HintView2 storyPremiumHint;
     private boolean canShowStoryHint;
     private boolean storyHintShown;
-    private FragmentFloatingButton floatingButton3;
-    private FragmentFloatingButton floatingButtonStories;
+    protected FragmentFloatingButton floatingButton3;
+    protected FragmentFloatingButton floatingButtonStories;
     private ChatAvatarContainer avatarContainer;
     private int undoViewIndex;
     private UndoView[] undoView = new UndoView[2];
-    private FilterTabsView filterTabsView;
+    protected FilterTabsView filterTabsView;
     private boolean askingForPermissions;
     private int searchViewPagerIndex;
     @Nullable
