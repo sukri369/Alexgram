@@ -190,7 +190,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
                 } else if (position == ghostModeRow) {
                     cell.setData("Ghost Mode", "Read silently", R.drawable.msg_secret, NekoConfig.isGhostModeActive(), isChecked -> NekoConfig.setGhostMode(isChecked), false, false);
                 } else if (position == musicGraphRow) {
-                    cell.setData("Music Graph", "Visualizer in player", R.drawable.msg_calls_vibrate, NaConfig.INSTANCE.getMusicGraph().Bool(), isChecked -> NaConfig.INSTANCE.getMusicGraph().setConfigBool(isChecked), false, false);
+                    cell.setData("Music Graph", "Visualizer in player", R.drawable.baseline_music_note_24, NaConfig.INSTANCE.getMusicGraph().Bool(), isChecked -> NaConfig.INSTANCE.getMusicGraph().setConfigBool(isChecked), false, false);
                 } else if (position == saveDeletedRow) {
                     cell.setData("Save Deleted", "Save deleted messages", R.drawable.msg_delete_solar, NaConfig.INSTANCE.getEnableSaveDeletedMessages().Bool(), isChecked -> NaConfig.INSTANCE.getEnableSaveDeletedMessages().setConfigBool(isChecked), false, true);
                 }
@@ -258,7 +258,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
             addView(nameView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 0, 88, 0, 0));
 
             versionView = new TextView(context);
-            versionView.setText("v" + BuildVars.BUILD_VERSION_STRING + " (" + BuildVars.BUILD_VERSION + ")");
+            versionView.setText("v" + BuildVars.BUILD_VERSION_STRING);
             versionView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
             versionView.setAlpha(0.7f);
             versionView.setTextColor(isDark ? Color.WHITE : 0xFF5C6B7F);
@@ -356,15 +356,15 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         }
         public void setData(String title, String subtitle, int iconRes, int iconColor, View.OnClickListener listener, boolean first, boolean last) {
             removeAllViews();
-            addView(createItem(mContext, title, subtitle, iconRes, iconColor, listener, first, last));
+            addView(createItem(getContext(), title, subtitle, iconRes, iconColor, listener, first, last));
         }
         public void setMultiData(CoreItem[] items) {
             removeAllViews();
             for (int i = 0; i < items.length; i++) {
                 CoreItem item = items[i];
-                addView(createItem(mContext, item.title, item.subtitle, item.iconRes, item.iconColor, item.listener, i == 0, i == items.length - 1));
+                addView(createItem(getContext(), item.title, item.subtitle, item.iconRes, item.iconColor, item.listener, i == 0, i == items.length - 1));
                 if (i < items.length - 1) {
-                    View d = new View(mContext);
+                    View d = new View(getContext());
                     d.setBackgroundColor(dividerColor);
                     addView(d, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 1, 56, 0, 16, 0));
                 }
@@ -429,13 +429,13 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         }
         public void update() {
             removeAllViews();
-            addView(createAction(mContext, "Export", R.drawable.msg_share, v -> SettingsBackupHelper.backupSettings(getParentActivity(), resourcesProvider)), LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f));
-            addView(new View(mContext), LayoutHelper.createLinear(dp(10), 1));
-            addView(createAction(mContext, "Reset", R.drawable.msg_reset, v -> resetSettings()), LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f));
-            addView(new View(mContext), LayoutHelper.createLinear(dp(10), 1));
-            addView(createAction(mContext, "Restart", R.drawable.msg_retry, v -> AppRestartHelper.triggerRebirth(getParentActivity(), new Intent(getParentActivity(), LaunchActivity.class))), LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f));
-            addView(new View(mContext), LayoutHelper.createLinear(dp(10), 1));
-            addView(createAction(mContext, "About", R.drawable.msg_info, v -> presentFragment(new NekoAboutActivity())), LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f));
+            addView(createAction(getContext(), "Export", R.drawable.msg_share, v -> SettingsBackupHelper.backupSettings(getParentActivity(), resourcesProvider)), LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f));
+            addView(new View(getContext()), LayoutHelper.createLinear(dp(10), 1));
+            addView(createAction(getContext(), "Reset", R.drawable.msg_reset, v -> resetSettings()), LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f));
+            addView(new View(getContext()), LayoutHelper.createLinear(dp(10), 1));
+            addView(createAction(getContext(), "Restart", R.drawable.msg_retry, v -> AppRestartHelper.triggerRebirth(getParentActivity(), new Intent(getParentActivity(), LaunchActivity.class))), LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f));
+            addView(new View(getContext()), LayoutHelper.createLinear(dp(10), 1));
+            addView(createAction(getContext(), "About", R.drawable.msg_info, v -> presentFragment(new NekoAboutActivity())), LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f));
         }
         private View createAction(Context ctx, String text, int iconRes, View.OnClickListener listener) {
             LinearLayout btn = new LinearLayout(ctx);
@@ -474,7 +474,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
             textView.setTextColor(isDark ? 0x80FFFFFF : 0x805C6B7F);
             addView(textView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
         }
-        public void update() { textView.setText("Alexgram v" + BuildVars.BUILD_VERSION_STRING + " (" + BuildVars.BUILD_VERSION + ")"); }
+        public void update() { textView.setText("Alexgram v" + BuildVars.BUILD_VERSION_STRING); }
     }
 
     private void resetSettings() {
