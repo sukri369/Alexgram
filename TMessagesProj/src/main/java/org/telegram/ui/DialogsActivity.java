@@ -9153,14 +9153,14 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private void performSelectedDialogsAction(ArrayList<Long> selectedDialogs, int action, boolean alert, boolean longPress) {
         if (action == hide_chat) {
             tw.nekomimi.nekogram.helpers.HiddenChatsController controller = tw.nekomimi.nekogram.helpers.HiddenChatsController.getInstance();
-            boolean hide = !controller.isHidden(selectedDialogs.get(0));
+            boolean hide = !controller.isHidden(currentAccount, selectedDialogs.get(0));
             for (int a = 0; a < selectedDialogs.size(); a++) {
                 long dialogId = selectedDialogs.get(a);
                 if (hide) {
-                    controller.hide(dialogId);
+                    controller.hide(currentAccount, dialogId);
                     getNotificationsController().setDialogNotificationsSettings(dialogId, 0, NotificationsController.SETTING_MUTE_FOREVER);
                 } else {
-                    controller.unhide(dialogId);
+                    controller.unhide(currentAccount, dialogId);
                 }
             }
             hideActionMode(true);
@@ -10971,28 +10971,32 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     private ArrayList<TLRPC.Dialog> botShareDialogs;
 
+            getMessagesController().sortDialogsList(botShareDialogs);
+            return botShareDialogs;
+        }
+
+        // Alexgram Hidden Chats
+        if (tw.nekomimi.nekogram.helpers.HiddenChatsController.getInstance().isLocked() && !(this instanceof tw.nekomimi.nekogram.ui.HiddenChatsActivity)) {
+             ArrayList<TLRPC.Dialog> filtered = new ArrayList<>();
+             for (int a = 0; a < dialogsArray.size(); a++) {
+                  TLRPC.Dialog dialog = dialogsArray.get(a);
+                  if (!tw.nekomimi.nekogram.helpers.HiddenChatsController.getInstance().isHidden(currentAccount, dialog.id)) {
+                       filtered.add(dialog);
+                  }
+             }
+             return filtered;
+        }
+
+        return dialogsArray;
+    }
+
     @NonNull
     public ArrayList<TLRPC.Dialog> getDialogsArray(int currentAccount, int dialogsType, int folderId, boolean frozen) {
-        if (frozen && frozenDialogsList != null) {
-            return frozenDialogsList;
-        }
-        MessagesController messagesController = AccountInstance.getInstance(currentAccount).getMessagesController();
-        if (dialogsType == DIALOGS_TYPE_DEFAULT) {
-            ArrayList<TLRPC.Dialog> dialogs = messagesController.getDialogs(folderId);
-            if (tw.nekomimi.nekogram.helpers.HiddenChatsController.getInstance().isLocked() && !(this instanceof tw.nekomimi.nekogram.ui.HiddenChatsActivity)) {
-                ArrayList<TLRPC.Dialog> filtered = new ArrayList<>();
-                for (int a = 0; a < dialogs.size(); a++) {
-                    TLRPC.Dialog dialog = dialogs.get(a);
-                    if (!tw.nekomimi.nekogram.helpers.HiddenChatsController.getInstance().isHidden(dialog.id)) {
-                        filtered.add(dialog);
-                    }
-                }
-                return filtered;
-            }
-            return dialogs;
-        } else if (dialogsType == DIALOGS_TYPE_WIDGET || dialogsType == DIALOGS_TYPE_IMPORT_HISTORY) {
-            return messagesController.dialogsServerOnly;
-        } else if (dialogsType == DIALOGS_TYPE_ADD_USERS_TO) {
+        ArrayList<TLRPC.Dialog> dialogsArray = getDialogsArrayInternal(currentAccount, dialogsType, folderId, frozen);
+        return dialogsArray;
+    }
+
+    private ArrayList<TLRPC.Dialog> getDialogsArrayInternal(int currentAccount, int dialogsType, int folderId, boolean frozen) {
             ArrayList<TLRPC.Dialog> dialogs = new ArrayList<>(messagesController.dialogsCanAddUsers.size() + messagesController.dialogsMyChannels.size() + messagesController.dialogsMyGroups.size() + 2);
             if (messagesController.dialogsMyChannels.size() > 0 && allowChannels) {
                 dialogs.add(new DialogsHeader(DialogsHeader.HEADER_TYPE_MY_CHANNELS));

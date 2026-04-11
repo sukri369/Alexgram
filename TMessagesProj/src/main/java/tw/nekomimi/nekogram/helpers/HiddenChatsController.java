@@ -158,15 +158,15 @@ public class HiddenChatsController {
         return !isUnlocked;
     }
 
-    public void hide(long dialogId) {
-        if (!isHidden(UserConfig.selectedAccount, dialogId)) {
-            toggleHidden(UserConfig.selectedAccount, dialogId);
+    public void hide(int currentAccount, long dialogId) {
+        if (!isHidden(currentAccount, dialogId)) {
+            toggleHidden(currentAccount, dialogId);
         }
     }
 
-    public void unhide(long dialogId) {
-        if (isHidden(UserConfig.selectedAccount, dialogId)) {
-            toggleHidden(UserConfig.selectedAccount, dialogId);
+    public void unhide(int currentAccount, long dialogId) {
+        if (isHidden(currentAccount, dialogId)) {
+            toggleHidden(currentAccount, dialogId);
         }
     }
 }
