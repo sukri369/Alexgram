@@ -2714,7 +2714,8 @@ public class VoIPFragment implements
             setMicrohoneAction(bottomMuteBtn, service, animated);
 
             int effect = NaConfig.INSTANCE.getVoiceChangerEffectValue();
-            bottomVoiceChangerBtn.setText(effect == 0 ? LocaleController.getString("VoiceChanger", R.string.VoiceChanger) : VoiceChangerSelectAlert.getEffectName(effect), animated);
+            String effectName = effect == 0 ? LocaleController.getString("VoiceChanger", R.string.VoiceChanger) : LocaleController.getString(VoiceChangerSelectAlert.getEffectName(effect), VoiceChangerSelectAlert.getEffectKey(effect));
+            bottomVoiceChangerBtn.setText(effectName, animated);
 
             bottomEndCallBtn.setData(R.drawable.calls_decline, Color.WHITE, 0xFFF01D2C, LocaleController.getString(R.string.VoipEndCall2), false, animated);
             bottomEndCallBtn.setOnClickListener(view -> {

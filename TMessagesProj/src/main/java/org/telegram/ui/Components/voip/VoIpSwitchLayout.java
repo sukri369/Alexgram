@@ -44,6 +44,7 @@ public class VoIpSwitchLayout extends FrameLayout {
     private final TextView currentTextView;
     private final TextView newTextView;
     public int animationDelay;
+    private Drawable iconDrawable;
 
     public void setOnBtnClickedListener(VoIpButtonView.OnBtnClickedListener onBtnClickedListener) {
         voIpButtonView.setOnBtnClickedListener(onBtnClickedListener);
@@ -71,6 +72,55 @@ public class VoIpSwitchLayout extends FrameLayout {
         addView(newTextView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, VoIpButtonView.ITEM_SIZE + 6, 0, 2));
         currentTextView.setVisibility(GONE);
         newTextView.setVisibility(GONE);
+    }
+
+    public void setText(String text, boolean animated) {
+        if (text == null) text = "";
+        setContentDescription(text);
+
+        if (currentTextView.getVisibility() == GONE && newTextView.getVisibility() == GONE) {
+            currentTextView.setVisibility(VISIBLE);
+            currentTextView.setText(text);
+            newTextView.setText(text);
+            return;
+        }
+
+        if (text.equals(currentTextView.getText()) && text.equals(newTextView.getText())) {
+            return;
+        }
+
+        if (animated) {
+            final String finalNewText = text;
+            currentTextView.animate().alpha(0f).translationY(-AndroidUtilities.dp(4)).setDuration(140).setListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    currentTextView.setText(finalNewText);
+                    currentTextView.setTranslationY(0);
+                    currentTextView.setAlpha(1.0f);
+                }
+            }).start();
+            newTextView.setText(text);
+            newTextView.setVisibility(VISIBLE);
+            newTextView.setAlpha(0);
+            newTextView.setTranslationY(AndroidUtilities.dp(5));
+            newTextView.animate().alpha(1.0f).translationY(0).setDuration(150).setListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    newTextView.setVisibility(GONE);
+                }
+            }).start();
+        } else {
+            currentTextView.setText(text);
+            newTextView.setText(text);
+            currentTextView.setVisibility(VISIBLE);
+            newTextView.setVisibility(GONE);
+        }
+    }
+
+    public void setIcon(int resId) {
+        iconDrawable = getContext().getResources().getDrawable(resId).mutate();
+        iconDrawable.setColorFilter(new PorterDuffColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN));
+        voIpButtonView.invalidate();
     }
 
     private void setText(Type type, boolean isSelectedState) {
@@ -416,6 +466,16 @@ public class VoIpSwitchLayout extends FrameLayout {
                     }
                     singleIcon.draw(canvas);
                 }
+                return;
+            }
+
+            if (iconDrawable != null) {
+                canvas.drawCircle(cx, cy, maxRadius, backgroundProvider.getLightPaint());
+                if (backgroundProvider.isReveal()) {
+                    canvas.drawCircle(cx, cy, maxRadius, backgroundProvider.getRevealPaint());
+                }
+                iconDrawable.setBounds((int) cx - AndroidUtilities.dp(12), (int) cy - AndroidUtilities.dp(12), (int) cx + AndroidUtilities.dp(12), (int) cy + AndroidUtilities.dp(12));
+                iconDrawable.draw(canvas);
                 return;
             }
             if (selectedIcon == null || unSelectedIcon == null) return;
