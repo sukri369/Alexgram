@@ -12,6 +12,7 @@ import android.graphics.Path;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.PorterDuffXfermode;
+import android.graphics.drawable.Drawable;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.MotionEvent;
@@ -20,6 +21,7 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.LocaleController;
@@ -44,7 +46,6 @@ public class VoIpSwitchLayout extends FrameLayout {
     private final TextView currentTextView;
     private final TextView newTextView;
     public int animationDelay;
-    private Drawable iconDrawable;
 
     public void setOnBtnClickedListener(VoIpButtonView.OnBtnClickedListener onBtnClickedListener) {
         voIpButtonView.setOnBtnClickedListener(onBtnClickedListener);
@@ -118,9 +119,7 @@ public class VoIpSwitchLayout extends FrameLayout {
     }
 
     public void setIcon(int resId) {
-        iconDrawable = getContext().getResources().getDrawable(resId).mutate();
-        iconDrawable.setColorFilter(new PorterDuffColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN));
-        voIpButtonView.invalidate();
+        voIpButtonView.setIcon(ContextCompat.getDrawable(getContext(), resId).mutate());
     }
 
     private void setText(Type type, boolean isSelectedState) {
@@ -308,6 +307,7 @@ public class VoIpSwitchLayout extends FrameLayout {
         private RLottieDrawable unSelectedIcon;
         private RLottieDrawable selectedIcon;
         private RLottieDrawable singleIcon;
+        private Drawable iconDrawable;
         private final Paint maskPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         private final Paint whiteCirclePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         private final Paint darkPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -408,6 +408,14 @@ public class VoIpSwitchLayout extends FrameLayout {
 
         public void setOnBtnClickedListener(OnBtnClickedListener onBtnClickedListener) {
             this.onBtnClickedListener = onBtnClickedListener;
+        }
+
+        public void setIcon(Drawable drawable) {
+            this.iconDrawable = drawable;
+            if (this.iconDrawable != null) {
+                this.iconDrawable.setColorFilter(new PorterDuffColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN));
+            }
+            invalidate();
         }
 
         public VoIpButtonView(@NonNull Context context, VoIPBackgroundProvider backgroundProvider) {
