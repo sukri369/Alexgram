@@ -126,6 +126,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
     private LinearGradient fadeGradient;
     private Paint fadeGradientPaint;
     private Matrix fadeMatrix;
+    private final Paint voiceChangerPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
     private final Runnable pillOnboardingHighlightRunnable = new Runnable() {
         @Override
@@ -673,6 +674,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
 
         emojiStatusDrawable = new AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable(titleTextView, dp(24));
         botVerificationDrawable = new AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable(titleTextView, dp(17));
+        voiceChangerPaint.setColor(0xff33cc33);
     }
 
     public void setAvatarOptionsMenuItem(ActionBarMenuItem menuItem) {
@@ -721,6 +723,18 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         canvas.save();
         final float s = bounce.getScale(.02f);
         canvas.scale(s, s, getWidth() / 2f, getHeight() / 2f);
+
+        if (NaConfig.getVoiceChangerEffectValue() != 0) {
+            float x, y;
+            if (isPillChatTitleEnabled()) {
+                x = pillRect.right - dp(12);
+                y = pillRect.top + dp(12);
+            } else {
+                x = titleTextView.getRight() + dp(4);
+                y = titleTextView.getTop() + dp(12);
+            }
+            canvas.drawCircle(x, y, dp(3), voiceChangerPaint);
+        }
 
         if (isPillChatTitleEnabled() && titleTextView != null) {
             int actionBarHeight = ActionBar.getCurrentActionBarHeight();
@@ -2113,6 +2127,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         if (parentFragment != null) {
             NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.didUpdateConnectionState);
             NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.emojiLoaded);
+            NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.voiceChangerUpdated);
             if (parentFragment.getChatMode() == ChatActivity.MODE_SAVED) {
                 NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.savedMessagesDialogsUpdate);
             }
@@ -2133,6 +2148,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         if (parentFragment != null) {
             NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.didUpdateConnectionState);
             NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.emojiLoaded);
+            NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.voiceChangerUpdated);
             if (parentFragment.getChatMode() == ChatActivity.MODE_SAVED) {
                 NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.savedMessagesDialogsUpdate);
             }
@@ -2163,6 +2179,8 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             invalidate();
         } else if (id == NotificationCenter.savedMessagesDialogsUpdate) {
             updateSubtitle(true);
+        } else if (id == NotificationCenter.voiceChangerUpdated) {
+            invalidate();
         }
     }
 

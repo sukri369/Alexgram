@@ -98,6 +98,8 @@ import org.telegram.tgnet.tl.TL_stories;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
+
+import xyz.nextalone.nagram.utils.VoiceChanger;
 import org.telegram.ui.Adapters.FiltersView;
 import org.telegram.ui.CastSync;
 import org.telegram.ui.ChatActivity;
@@ -1109,6 +1111,7 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
                 }
                 buffer.rewind();
                 int len = audioRecorder.read(buffer, buffer.capacity());
+                VoiceChanger.process(buffer, len);
                 if (len > 0) {
                     buffer.limit(len);
                     double sum = 0;

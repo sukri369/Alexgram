@@ -561,6 +561,30 @@ object NaConfig {
         )
 
     // NagramX
+    val voiceChangerEffect =
+        addConfig(
+            "VoiceChangerEffect",
+            ConfigItem.configTypeInt,
+            0
+        )
+    val showVoiceChangerInChatMenu =
+        addConfig(
+            "ShowVoiceChangerInChatMenu",
+            ConfigItem.configTypeBool,
+            true
+        )
+
+    @JvmStatic
+    fun getVoiceChangerEffectValue(): Int {
+        return voiceChangerEffect.Int()
+    }
+
+    @JvmStatic
+    fun setVoiceChangerEffectValue(value: Int) {
+        voiceChangerEffect.setConfigInt(value)
+        NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.voiceChangerUpdated)
+    }
+
     val enableSaveDeletedMessages =
         addConfig(
             "EnableSaveDeletedMessages",

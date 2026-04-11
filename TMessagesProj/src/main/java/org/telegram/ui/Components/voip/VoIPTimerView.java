@@ -17,8 +17,10 @@ import androidx.core.graphics.ColorUtils;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.R;
 import org.telegram.messenger.voip.VoIPService;
+import org.telegram.messenger.NotificationCenter;
+import xyz.nextalone.nagram.NaConfig;
 
-public class VoIPTimerView extends View {
+public class VoIPTimerView extends View implements NotificationCenter.NotificationCenterDelegate {
 
     StaticLayout timerLayout;
     RectF rectF = new RectF();
@@ -29,6 +31,7 @@ public class VoIPTimerView extends View {
     private int signalBarCount = 4;
     private boolean isDrawCallIcon = false;
     private final Drawable callsDeclineDrawable;
+    private final Paint voiceChangerPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
     Runnable updater = () -> {
         if (getVisibility() == View.VISIBLE) {
@@ -44,6 +47,7 @@ public class VoIPTimerView extends View {
         inactivePaint.setColor(ColorUtils.setAlphaComponent(Color.WHITE, (int) (255 * 0.4f)));
         callsDeclineDrawable = ContextCompat.getDrawable(context, R.drawable.calls_decline);
         callsDeclineDrawable.setBounds(0, 0, AndroidUtilities.dp(24), AndroidUtilities.dp(24));
+        voiceChangerPaint.setColor(0xff33cc33);
     }
 
     @Override
@@ -97,6 +101,11 @@ public class VoIPTimerView extends View {
         int totalWidth = timerLayout == null ? 0 : timerLayout.getWidth() + AndroidUtilities.dp(21);
         canvas.save();
         canvas.translate((getMeasuredWidth() - totalWidth) / 2f, 0);
+
+        if (NaConfig.getVoiceChangerEffectValue() != 0) {
+            canvas.drawCircle(-AndroidUtilities.dp(8), getMeasuredHeight() / 2f, AndroidUtilities.dp(3), voiceChangerPaint);
+        }
+
         canvas.save();
         if (isDrawCallIcon) {
             canvas.translate(-AndroidUtilities.dp(7), -AndroidUtilities.dp(3));
@@ -126,5 +135,24 @@ public class VoIPTimerView extends View {
     public void setDrawCallIcon() {
         isDrawCallIcon = true;
         invalidate();
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.voiceChangerUpdated);
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.voiceChangerUpdated);
+    }
+
+    @Override
+    public void didReceivedNotification(int id, int account, Object... args) {
+        if (id == NotificationCenter.voiceChangerUpdated) {
+            invalidate();
+        }
     }
 }

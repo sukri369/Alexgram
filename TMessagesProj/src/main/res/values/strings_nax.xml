@@ -344,4 +344,21 @@
     <string name="HideTabsOnScroll">Hide Navigation Bar on Scroll</string>
     <string name="SearchEngineInSearchBar">Search on Internet in Search Bar</string>
     <string name="SearchEngineInSearchBarDescription">Adds a tab to the global search to search the web using a selection of search engines.</string>
+    <string name="VoiceChanger">Voice Changer</string>
+    <string name="VoiceChangerNormal">Normal</string>
+    <string name="VoiceChangerRobotic">Robotic</string>
+    <string name="VoiceChangerAlien">Alien</string>
+    <string name="VoiceChangerHoarseness">Hoarseness</string>
+    <string name="VoiceChangerModulation">Modulation</string>
+    <string name="VoiceChangerChild">Child</string>
+    <string name="VoiceChangerMouse">Mouse</string>
+    <string name="VoiceChangerMan">Man</string>
+    <string name="VoiceChangerWoman">Woman</string>
+    <string name="VoiceChangerMonster">Monster</string>
+    <string name="VoiceChangerEcho">Echo</string>
+    <string name="VoiceChangerNoise">Noise</string>
+    <string name="VoiceChangerHelium">Helium</string>
+    <string name="VoiceChangerHexafluoride">Hexafluoride</string>
+    <string name="VoiceChangerCave">Cave</string>
+    <string name="ShowVoiceChangerInChatMenu">Show Voice Changer in Chat Menu</string>
 </resources>
