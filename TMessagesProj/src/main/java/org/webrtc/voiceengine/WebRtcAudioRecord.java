@@ -30,6 +30,8 @@ import org.telegram.messenger.voip.VideoCapturerDevice;
 import org.webrtc.Logging;
 import org.webrtc.ThreadUtils;
 
+import xyz.nextalone.nagram.utils.VoiceChanger;
+
 public class WebRtcAudioRecord {
 
   private static final String TAG = "WebRtcAudioRecord";
@@ -168,6 +170,9 @@ public class WebRtcAudioRecord {
       long lastTime = System.nanoTime();
       while (keepAlive) {
         int bytesRead = audioRecord.read(byteBuffer, byteBuffer.capacity());
+        if (bytesRead > 0) {
+          VoiceChanger.process(byteBuffer, bytesRead);
+        }
         int deviceBytesRead;
         if (deviceAudioRecord != null) {
           deviceBytesRead = deviceAudioRecord.read(deviceByteBuffer, deviceByteBuffer.capacity());

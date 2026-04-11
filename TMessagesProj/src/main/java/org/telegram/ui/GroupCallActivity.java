@@ -224,6 +224,8 @@ import me.vkryl.android.animator.BoolAnimator;
 import me.vkryl.android.animator.FactorAnimator;
 
 import tw.nekomimi.nekogram.NekoConfig;
+import xyz.nextalone.nagram.NaConfig;
+import xyz.nextalone.nagram.ui.VoiceChangerSelectAlert;
 
 public class GroupCallActivity extends BottomSheet implements NotificationCenter.NotificationCenterDelegate, VoIPService.StateListener, FactorAnimator.Target {
 
@@ -234,6 +236,7 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
     private static final int admin_can_speak_item = 2;
     private static final int share_invite_link_item = 3;
     private static final int leave_item = 4;
+    private static final int voice_changer_item = 14;
     private static final int start_record_item = 5;
     private static final int edit_item = 6;
     private static final int permission_item = 7;
@@ -398,6 +401,8 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
     private ActionBarMenuSubItem everyoneItem;
     private ActionBarMenuSubItem adminItem;
     private final ActionBarMenuSubItem leaveItem;
+    private ActionBarMenuSubItem voiceChangerItem;
+    private Paint greenDotPaint;
     private final ActionBarMenuSubItem enableComments;
     private final ActionBarMenuSubItem disableComments;
     private final LinearLayout menuItemsContainer;
@@ -1183,6 +1188,7 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
         accountInstance.getNotificationCenter().removeObserver(this, NotificationCenter.conferenceEmojiUpdated);
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.webRtcMicAmplitudeEvent);
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.didEndCall);
+        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.voiceChangerUpdated);
         super.dismiss();
     }
 
@@ -1354,6 +1360,11 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
             if (VoIPService.getSharedInstance() == null) {
                 dismiss();
             }
+        } else if (id == NotificationCenter.voiceChangerUpdated) {
+            if (titleLayout != null) {
+                titleLayout.invalidate();
+            }
+            updateItems();
         } else if (id == NotificationCenter.chatInfoDidLoad) {
             TLRPC.ChatFull chatFull = (TLRPC.ChatFull) args[0];
             if (chatFull.id == getChatId()) {
@@ -1681,6 +1692,12 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
         }
         noiseItem.setIcon(SharedConfig.noiseSupression ? R.drawable.msg_noise_on : R.drawable.msg_noise_off);
         noiseItem.setSubtext(SharedConfig.noiseSupression ? getString(R.string.VoipNoiseCancellationEnabled) : getString(R.string.VoipNoiseCancellationDisabled));
+
+        if (voiceChangerItem != null) {
+            int effect = NaConfig.INSTANCE.getVoiceChangerEffectValue();
+            voiceChangerItem.setSubtext(effect == 0 ? LocaleController.getString("VoiceChangerNormal", R.string.VoiceChangerNormal) : VoiceChangerSelectAlert.getEffectName(effect));
+            voiceChangerItem.setColors(Theme.getColor(Theme.key_voipgroup_actionBarItems), Theme.getColor(Theme.key_voipgroup_actionBarItems));
+        }
 
         if (canManageCall()) {
             leaveItem.setVisibility(View.VISIBLE);
@@ -2305,6 +2322,8 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
                         return;
                     }
                     service.setNoiseSupressionEnabled(SharedConfig.noiseSupression);
+                } else if (id == voice_changer_item) {
+                    showDialog(new VoiceChangerSelectAlert(getContext()));
                 } else if (id == sound_item) {
                     VoIPService service = VoIPService.getSharedInstance();
                     if (service == null) {
@@ -4823,7 +4842,21 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
             liveLabelTextView.setVisibility(View.GONE);
         }
 
-        titleLayout = new LinearLayout(getContext());
+        greenDotPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        greenDotPaint.setColor(0xff34c759);
+
+        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.voiceChangerUpdated);
+
+        titleLayout = new LinearLayout(getContext()) {
+            @Override
+            protected void dispatchDraw(Canvas canvas) {
+                super.dispatchDraw(canvas);
+                if (NaConfig.INSTANCE.getVoiceChangerEffectValue() != 0) {
+                    float radius = AndroidUtilities.dp(3);
+                    canvas.drawCircle(titleTextView.getRight() + AndroidUtilities.dp(6), getMeasuredHeight() / 2f, radius, greenDotPaint);
+                }
+            }
+        };
         titleLayout.setOrientation(LinearLayout.HORIZONTAL);
         titleLayout.addView(titleTextView, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f));
         titleLayout.addView(liveLabelTextView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, 18, 6, 4, 0,0));
@@ -4884,6 +4917,9 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
 
         noiseItem = otherItem.addSubItem(noise_item, R.drawable.msg_noise_on, null, getString(R.string.VoipNoiseCancellation), true, false);
         noiseItem.setItemHeight(56);
+
+        voiceChangerItem = otherItem.addSubItem(voice_changer_item, R.drawable.msg_voicechat, null, LocaleController.getString("VoiceChanger", R.string.VoiceChanger), true, false);
+        voiceChangerItem.setItemHeight(56);
 
         soundItemDivider = otherItem.addDivider(ColorUtils.blendARGB(Theme.getColor(Theme.key_voipgroup_actionBar), Color.BLACK, 0.3f));
         ((ViewGroup.MarginLayoutParams) soundItemDivider.getLayoutParams()).topMargin = 0;

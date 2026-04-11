@@ -138,6 +138,8 @@ import org.telegram.ui.Components.voip.VoIpCoverView;
 import org.telegram.ui.Components.voip.VoIpSnowView;
 import org.telegram.ui.Components.voip.VoIpSwitchLayout;
 import org.telegram.ui.Stories.recorder.HintView2;
+import xyz.nextalone.nagram.NaConfig;
+import xyz.nextalone.nagram.ui.VoiceChangerSelectAlert;
 import org.webrtc.EglBase;
 import org.webrtc.GlRectDrawer;
 import org.webrtc.RendererCommon;
@@ -168,6 +170,7 @@ public class VoIPFragment implements
     private VoIpSwitchLayout bottomSpeakerBtn;
     private VoIpSwitchLayout bottomVideoBtn;
     private VoIpSwitchLayout bottomMuteBtn;
+    private VoIpSwitchLayout bottomVoiceChangerBtn;
     private VoIPToggleButton bottomEndCallBtn;
     private final VoIPBackgroundProvider backgroundProvider = new VoIPBackgroundProvider();
 
@@ -551,6 +554,7 @@ public class VoIPFragment implements
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.emojiLoaded);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.closeInCallActivity);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.nearEarEvent);
+        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.voiceChangerUpdated);
     }
 
     private void destroy() {
@@ -562,6 +566,7 @@ public class VoIPFragment implements
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.emojiLoaded);
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.closeInCallActivity);
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.nearEarEvent);
+        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.voiceChangerUpdated);
         if (pipSource != null) {
             pipSource.destroy();
             pipSource = null;
@@ -604,6 +609,8 @@ public class VoIPFragment implements
             if (isNearEar) {
                 callingUserPhotoViewMini.setMute(true, true);
             }
+        } else if (id == NotificationCenter.voiceChangerUpdated) {
+            updateButtons(true);
         }
     }
 
@@ -1107,15 +1114,27 @@ public class VoIPFragment implements
         bottomMuteBtn.setScaleX(0f);
         bottomMuteBtn.setScaleY(0f);
         bottomMuteBtn.animate().setStartDelay(startDelay + 32).translationY(0).scaleY(1f).scaleX(1f).setDuration(250).start();
+        bottomVoiceChangerBtn = new VoIpSwitchLayout(context, backgroundProvider);
+        bottomVoiceChangerBtn.setTranslationY(AndroidUtilities.dp(100));
+        bottomVoiceChangerBtn.setScaleX(0f);
+        bottomVoiceChangerBtn.setScaleY(0f);
+        bottomVoiceChangerBtn.animate().setStartDelay(startDelay + 48).translationY(0).scaleY(1f).scaleX(1f).setDuration(250).start();
         bottomEndCallBtn.setTranslationY(AndroidUtilities.dp(100));
         bottomEndCallBtn.setScaleX(0f);
         bottomEndCallBtn.setScaleY(0f);
-        bottomEndCallBtn.animate().setStartDelay(startDelay + 48).translationY(0).scaleY(1f).scaleX(1f).setDuration(250).start();
+        bottomEndCallBtn.animate().setStartDelay(startDelay + 64).translationY(0).scaleY(1f).scaleX(1f).setDuration(250).start();
 
         buttonsLayout.addView(bottomSpeakerBtn);
         buttonsLayout.addView(bottomVideoBtn);
         buttonsLayout.addView(bottomMuteBtn);
+        buttonsLayout.addView(bottomVoiceChangerBtn);
         buttonsLayout.addView(bottomEndCallBtn);
+
+        bottomVoiceChangerBtn.setText(LocaleController.getString("VoiceChanger", R.string.VoiceChanger), false);
+        bottomVoiceChangerBtn.setIcon(R.drawable.msg_voicechat);
+        bottomVoiceChangerBtn.setOnClickListener(v -> {
+            new VoiceChangerSelectAlert(context).show();
+        });
 
         acceptDeclineView = new AcceptDeclineView(context);
         acceptDeclineView.setListener(new AcceptDeclineView.Listener() {
@@ -1317,10 +1336,12 @@ public class VoIPFragment implements
         bottomSpeakerBtn.setType(VoIpSwitchLayout.Type.SPEAKER, false);
         bottomMuteBtn.setType(VoIpSwitchLayout.Type.MICRO, false);
         bottomVideoBtn.setType(VoIpSwitchLayout.Type.VIDEO, true);
+        bottomVoiceChangerBtn.setVisibility(View.VISIBLE);
         bottomEndCallBtn.setVisibility(View.VISIBLE);
         bottomSpeakerBtn.setVisibility(View.VISIBLE);
         bottomMuteBtn.setVisibility(View.VISIBLE);
         bottomVideoBtn.setVisibility(View.VISIBLE);
+        bottomVoiceChangerBtn.setAlpha(0f);
         bottomEndCallBtn.setAlpha(0f);
         bottomSpeakerBtn.setAlpha(0f);
         bottomMuteBtn.setAlpha(0f);
@@ -2692,6 +2713,9 @@ public class VoIPFragment implements
             setVideoAction(bottomVideoBtn, service, false);
             setMicrohoneAction(bottomMuteBtn, service, animated);
 
+            int effect = NaConfig.INSTANCE.getVoiceChangerEffectValue();
+            bottomVoiceChangerBtn.setText(effect == 0 ? LocaleController.getString("VoiceChanger", R.string.VoiceChanger) : VoiceChangerSelectAlert.getEffectName(effect), animated);
+
             bottomEndCallBtn.setData(R.drawable.calls_decline, Color.WHITE, 0xFFF01D2C, LocaleController.getString(R.string.VoipEndCall2), false, animated);
             bottomEndCallBtn.setOnClickListener(view -> {
                 if (VoIPService.getSharedInstance() != null) {
@@ -2713,6 +2737,10 @@ public class VoIPFragment implements
         }
         if (bottomMuteBtn.getVisibility() == View.VISIBLE) {
             bottomMuteBtn.animationDelay = animationDelay;
+            animationDelay += 16;
+        }
+        if (bottomVoiceChangerBtn.getVisibility() == View.VISIBLE) {
+            bottomVoiceChangerBtn.animationDelay = animationDelay;
             animationDelay += 16;
         }
         if (bottomEndCallBtn.getVisibility() == View.VISIBLE) {
