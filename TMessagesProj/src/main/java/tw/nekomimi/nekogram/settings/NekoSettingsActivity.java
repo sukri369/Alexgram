@@ -38,7 +38,9 @@ import org.telegram.ui.LaunchActivity;
 import tw.nekomimi.nekogram.NekoConfig;
 import tw.nekomimi.nekogram.helpers.AppRestartHelper;
 import tw.nekomimi.nekogram.helpers.CloudSettingsHelper;
+import tw.nekomimi.nekogram.helpers.HiddenChatsController;
 import tw.nekomimi.nekogram.helpers.SettingsBackupHelper;
+import tw.nekomimi.nekogram.ui.HiddenChatsPasscodeActivity;
 import tw.nekomimi.nekogram.utils.AlertUtil;
 import xyz.nextalone.nagram.NaConfig;
 
@@ -244,7 +246,13 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
             } else if (viewType == 3) {
                 CardItemCell cell = (CardItemCell) holder.itemView;
                 if (position == hiddenChatsRow) {
-                    cell.setData("Hidden Chats", "Secure vault for private chats", R.drawable.msg_folders_private_solar, 0xFFE91E63, v -> presentFragment(new HiddenChatsSettingsActivity()), true, true);
+                    cell.setData("Hidden Chats", "Secure vault for private chats", R.drawable.msg_folders_private_solar, 0xFFE91E63, v -> {
+                        if (HiddenChatsController.getInstance().hasPasscode()) {
+                            presentFragment(new HiddenChatsPasscodeActivity(HiddenChatsPasscodeActivity.MODE_UNLOCK_SETTINGS));
+                        } else {
+                            presentFragment(new HiddenChatsPasscodeActivity(HiddenChatsPasscodeActivity.MODE_SETUP_PASSCODE));
+                        }
+                    }, true, true);
                 } else if (position == coreSettingsRow) {
                     cell.setMultiData(new CoreItem[]{
                             new CoreItem("General", "Appearance, Language, Behavior", R.drawable.msg_settings, 0xFF2196F3, v -> presentFragment(new NekoGeneralSettingsActivity())),
