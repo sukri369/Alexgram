@@ -10971,9 +10971,12 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     private ArrayList<TLRPC.Dialog> botShareDialogs;
 
-            getMessagesController().sortDialogsList(botShareDialogs);
-            return botShareDialogs;
+    @NonNull
+    public ArrayList<TLRPC.Dialog> getDialogsArray(int currentAccount, int dialogsType, int folderId, boolean frozen) {
+        if (frozen && frozenDialogsList != null) {
+            return frozenDialogsList;
         }
+        ArrayList<TLRPC.Dialog> dialogsArray = getDialogsArrayInternal(currentAccount, dialogsType, folderId, frozen);
 
         // Alexgram Hidden Chats
         if (tw.nekomimi.nekogram.helpers.HiddenChatsController.getInstance().isLocked() && !(this instanceof tw.nekomimi.nekogram.ui.HiddenChatsActivity)) {
@@ -10990,13 +10993,13 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         return dialogsArray;
     }
 
-    @NonNull
-    public ArrayList<TLRPC.Dialog> getDialogsArray(int currentAccount, int dialogsType, int folderId, boolean frozen) {
-        ArrayList<TLRPC.Dialog> dialogsArray = getDialogsArrayInternal(currentAccount, dialogsType, folderId, frozen);
-        return dialogsArray;
-    }
-
     private ArrayList<TLRPC.Dialog> getDialogsArrayInternal(int currentAccount, int dialogsType, int folderId, boolean frozen) {
+        MessagesController messagesController = AccountInstance.getInstance(currentAccount).getMessagesController();
+        if (dialogsType == DIALOGS_TYPE_DEFAULT) {
+            return messagesController.getDialogs(folderId);
+        } else if (dialogsType == DIALOGS_TYPE_WIDGET || dialogsType == DIALOGS_TYPE_IMPORT_HISTORY) {
+            return messagesController.dialogsServerOnly;
+        } else if (dialogsType == DIALOGS_TYPE_ADD_USERS_TO) {
             ArrayList<TLRPC.Dialog> dialogs = new ArrayList<>(messagesController.dialogsCanAddUsers.size() + messagesController.dialogsMyChannels.size() + messagesController.dialogsMyGroups.size() + 2);
             if (messagesController.dialogsMyChannels.size() > 0 && allowChannels) {
                 dialogs.add(new DialogsHeader(DialogsHeader.HEADER_TYPE_MY_CHANNELS));
@@ -11083,7 +11086,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             return botShareDialogs;
         } else if (dialogsType == DIALOGS_TYPE_BOT_REQUEST_PEER) {
             ArrayList<TLRPC.Dialog> dialogs = new ArrayList<>();
-            TLRPC.User bot = messagesController.getUser(requestPeerBotId);
             if (requestPeerType instanceof TLRPC.TL_requestPeerTypeUser) {
                 ConcurrentHashMap<Long, TLRPC.User> users = messagesController.getUsers();
                 for (TLRPC.Dialog dialog : messagesController.dialogsUsersOnly) {
@@ -11104,6 +11106,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             } else if (requestPeerType instanceof TLRPC.TL_requestPeerTypeChat || requestPeerType instanceof TLRPC.TL_requestPeerTypeBroadcast) {
                 ConcurrentHashMap<Long, TLRPC.Chat> chats = messagesController.getChats();
                 ArrayList<TLRPC.Dialog> sourceDialogs = requestPeerType instanceof TLRPC.TL_requestPeerTypeChat ? messagesController.dialogsGroupsOnly : messagesController.dialogsChannelsOnly;
+                TLRPC.User bot = messagesController.getUser(requestPeerBotId);
                 for (TLRPC.Dialog dialog : sourceDialogs) {
                     TLRPC.Chat chat = getMessagesController().getChat(-dialog.id);
                     if (meetRequestPeerRequirements(bot, chat)) {
