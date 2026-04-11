@@ -11249,11 +11249,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         }
     }
 
-    private void updateVisibleRows(int mask) {
+    protected void updateVisibleRows(int mask) {
         updateVisibleRows(mask, true);
     }
 
-    private void updateVisibleRows(int mask, boolean animated) {
+    protected void updateVisibleRows(int mask, boolean animated) {
         if ((dialogsListFrozen && (mask & MessagesController.UPDATE_MASK_REORDER) == 0) || isPaused) {
             return;
         }

@@ -7,6 +7,7 @@ import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import tw.nekomimi.nekogram.helpers.HiddenChatsController;
+import org.telegram.messenger.MessagesStorage;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
@@ -60,18 +61,19 @@ public class HiddenChatsActivity extends DialogsActivity {
                         // The main FAB is usually the one with the compose icon or the last one added.
                         // The story FAB is added first.
                         if (i == vg.getChildCount() - 1) { // Main FAB
-                            fab.setImageResource(R.drawable.msg_filled_fab_compose_32);
+                            fab.setImageResource(R.drawable.filled_fab_compose_32);
                             fab.setOnClickListener(v -> {
                                 Bundle args = new Bundle();
                                 args.putBoolean("onlySelect", true);
                                 args.putInt("dialogsType", 3); // Forward/Select type
                                 DialogsActivity picker = new DialogsActivity(args);
-                                picker.setDelegate((fragment, dids, messages, type) -> {
-                                    for (long did : dids) {
-                                        HiddenChatsController.getInstance().hide(currentAccount, did);
+                                picker.setDelegate((fragment, dids, message, param, notify, scheduleDate, scheduleRepeatPeriod, topicsFragment) -> {
+                                    for (MessagesStorage.TopicKey topicKey : dids) {
+                                        HiddenChatsController.getInstance().hide(currentAccount, topicKey.dialogId);
                                     }
                                     fragment.finishFragment();
                                     updateVisibleRows(0);
+                                    return true;
                                 });
                                 presentFragment(picker);
                             });
