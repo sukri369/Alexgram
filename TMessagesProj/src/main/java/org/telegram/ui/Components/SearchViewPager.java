@@ -151,7 +151,7 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
     public final static int WEB_SEARCH_TYPE = 7;
 
     public boolean onBackPressed() {
-        int position = getCurrentItem();
+        int position = getCurrentPosition();
         if (viewPagerAdapter != null && position >= 0 && position < viewPagerAdapter.items.size()) {
             if (viewPagerAdapter.items.get(position).type == ViewPagerAdapter.WEB_SEARCH_TYPE_ITEM) {
                 if (webSearchContainer != null) {
@@ -1732,12 +1732,6 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
         });
     }
 
-    public boolean onBackPressed() {
-        if (getChildAt(getCurrentPosition()) == webSearchContainer) {
-            return webSearchContainer.onBackPressed();
-        }
-        return false;
-    }
 
     public class WebSearchContainer extends FrameLayout {
 
@@ -1828,7 +1822,7 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
             addView(resultsLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
             progressBar = new WebProgressBar(context);
-            resultsLayout.addView(progressBar, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 3, android.view.Gravity.TOP));
+            progressBar.setVisibility(View.GONE);
 
             SearchEngineBottomSheet.EngineBadgeView floatingBadge = new SearchEngineBottomSheet.EngineBadgeView(context);
             floatingBadge.setEngine(selected);
@@ -1997,6 +1991,7 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
 
             swipeRefreshLayout.addView(webView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
             resultsLayout.addView(swipeRefreshLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+            resultsLayout.addView(progressBar, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 3, android.view.Gravity.TOP));
         }
 
         public void search(String query) {
