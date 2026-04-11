@@ -1132,7 +1132,7 @@ public class VoIPFragment implements
 
         bottomVoiceChangerBtn.setText(LocaleController.getString("VoiceChanger", R.string.VoiceChanger), false);
         bottomVoiceChangerBtn.setIcon(R.drawable.msg_voicechat);
-        bottomVoiceChangerBtn.setOnClickListener(v -> {
+        bottomVoiceChangerBtn.setOnBtnClickedListener(v -> {
             new VoiceChangerSelectAlert(context).show();
         });
 
