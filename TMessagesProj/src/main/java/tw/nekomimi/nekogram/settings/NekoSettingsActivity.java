@@ -116,6 +116,42 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         listView.setClipToPadding(false);
         listView.setAdapter(listAdapter = createAdapter(context));
         listView.setOnItemClickListener(this::onItemClick);
+        listView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                View header = recyclerView.getChildAt(0);
+                if (header != null && recyclerView.getChildAdapterPosition(header) == headerRow) {
+                    float alpha = Math.max(0, Math.min(1.0f, (Math.abs(header.getY()) - AndroidUtilities.dp(40)) / (float) AndroidUtilities.dp(60)));
+                    actionBar.getTitleTextView().setAlpha(alpha);
+                } else {
+                    actionBar.getTitleTextView().setAlpha(1.0f);
+                }
+            }
+        });
+        
+        final int search_id = 1;
+        final int cloud_id = 2;
+        org.telegram.ui.ActionBar.ActionBarMenu menu = actionBar.createMenu();
+        ImageView cloudItem = menu.addItem(cloud_id, R.drawable.cloud_sync);
+        ImageView searchItem = menu.addItem(search_id, R.drawable.ic_ab_search_solar);
+        if (cloudItem != null) cloudItem.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN));
+        if (searchItem != null) searchItem.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN));
+        
+        actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
+            @Override
+            public void onItemClick(int id) {
+                if (id == -1) {
+                    finishFragment();
+                } else if (id == search_id) {
+                    // Search functionality is usually handled by the base class or a common helper
+                    // Since we are in a custom redesign, we might need to trigger it manually
+                } else if (id == cloud_id) {
+                    CloudSettingsHelper.getInstance().showDialog(NekoSettingsActivity.this);
+                }
+            }
+        });
+
+        actionBar.getTitleTextView().setAlpha(0.0f);
         
         frameLayout.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
         frameLayout.addView(actionBar, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
@@ -243,27 +279,35 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
 
         public BrandingHeaderView(Context context) {
             super(context);
-            setPadding(0, dp(24), 0, dp(16));
+            setPadding(0, dp(48), 0, dp(24));
+
+            FrameLayout logoContainer = new FrameLayout(context);
+            GradientDrawable logoBg = new GradientDrawable();
+            logoBg.setShape(GradientDrawable.OVAL);
+            logoBg.setColor(isDark ? 0x1AFFFFFF : 0x1A000000);
+            logoContainer.setBackground(logoBg);
+            addView(logoContainer, LayoutHelper.createFrame(110, 110, Gravity.CENTER_HORIZONTAL));
+
             logoView = new ImageView(context);
-            logoView.setImageResource(R.mipmap.ic_launcher_nagram);
+            logoView.setImageResource(R.drawable.ic_launcher_alexgram_white);
             logoView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-            addView(logoView, LayoutHelper.createFrame(80, 80, Gravity.CENTER_HORIZONTAL));
+            logoContainer.addView(logoView, LayoutHelper.createFrame(70, 70, Gravity.CENTER));
 
             nameView = new TextView(context);
             nameView.setText("Alexgram");
-            nameView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 24);
+            nameView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 28);
             nameView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
             nameView.setTextColor(isDark ? Color.WHITE : 0xFF1A1A2E);
             nameView.setGravity(Gravity.CENTER);
-            addView(nameView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 0, 88, 0, 0));
+            addView(nameView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 0, 120, 0, 0));
 
             versionView = new TextView(context);
             versionView.setText("v" + BuildVars.BUILD_VERSION_STRING);
-            versionView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
-            versionView.setAlpha(0.7f);
+            versionView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
+            versionView.setAlpha(0.6f);
             versionView.setTextColor(isDark ? Color.WHITE : 0xFF5C6B7F);
             versionView.setGravity(Gravity.CENTER);
-            addView(versionView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 0, 118, 0, 0));
+            addView(versionView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 0, 156, 0, 0));
         }
         public void update() {
             nameView.setTextColor(isDark ? Color.WHITE : 0xFF1A1A2E);
@@ -429,36 +473,37 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         }
         public void update() {
             removeAllViews();
-            addView(createAction(getContext(), "Export", R.drawable.msg_share, v -> SettingsBackupHelper.backupSettings(getParentActivity(), resourcesProvider)), LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f));
-            addView(new View(getContext()), LayoutHelper.createLinear(dp(10), 1));
-            addView(createAction(getContext(), "Reset", R.drawable.msg_reset, v -> resetSettings()), LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f));
-            addView(new View(getContext()), LayoutHelper.createLinear(dp(10), 1));
-            addView(createAction(getContext(), "Restart", R.drawable.msg_retry, v -> AppRestartHelper.triggerRebirth(getParentActivity(), new Intent(getParentActivity(), LaunchActivity.class))), LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f));
-            addView(new View(getContext()), LayoutHelper.createLinear(dp(10), 1));
-            addView(createAction(getContext(), "About", R.drawable.msg_info, v -> presentFragment(new NekoAboutActivity())), LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f));
+            int color = isDark ? Color.WHITE : 0xFF1A1A2E;
+            addView(createAction(getContext(), "Export", R.drawable.msg_share, color, v -> SettingsBackupHelper.backupSettings(getParentActivity(), resourcesProvider)), LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f));
+            addView(new View(getContext()), LayoutHelper.createLinear(dp(12), 1));
+            addView(createAction(getContext(), "Reset", R.drawable.msg_reset, color, v -> resetSettings()), LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f));
+            addView(new View(getContext()), LayoutHelper.createLinear(dp(12), 1));
+            addView(createAction(getContext(), "Restart", R.drawable.msg_retry, color, v -> AppRestartHelper.triggerRebirth(getParentActivity(), new Intent(getParentActivity(), LaunchActivity.class))), LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f));
+            addView(new View(getContext()), LayoutHelper.createLinear(dp(12), 1));
+            addView(createAction(getContext(), "About", R.drawable.msg_info, color, v -> presentFragment(new NekoAboutActivity())), LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f));
         }
-        private View createAction(Context ctx, String text, int iconRes, View.OnClickListener listener) {
+        private View createAction(Context ctx, String text, int iconRes, int textColor, View.OnClickListener listener) {
             LinearLayout btn = new LinearLayout(ctx);
             btn.setOrientation(VERTICAL);
             btn.setGravity(Gravity.CENTER);
-            btn.setPadding(0, dp(12), 0, dp(12));
+            btn.setPadding(0, dp(14), 0, dp(14));
             btn.setClickable(true);
             btn.setOnClickListener(listener);
             GradientDrawable bg = new GradientDrawable();
             bg.setColor(cardBg);
-            bg.setCornerRadius(dp(16));
+            bg.setCornerRadius(dp(18));
             bg.setStroke(dp(1), cardBorder);
             btn.setBackground(bg);
             ImageView icon = new ImageView(ctx);
             icon.setImageResource(iconRes);
             icon.setColorFilter(new PorterDuffColorFilter(0xFF2196F3, PorterDuff.Mode.SRC_IN));
-            btn.addView(icon, LayoutHelper.createLinear(24, 24));
+            btn.addView(icon, LayoutHelper.createLinear(26, 26));
             TextView tv = new TextView(ctx);
             tv.setText(text);
-            tv.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 10);
+            tv.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11);
             tv.setGravity(Gravity.CENTER);
-            tv.setTextColor(isDark ? Color.WHITE : 0xFF1A1A2E);
-            btn.addView(tv, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 4, 0, 0));
+            tv.setTextColor(textColor);
+            btn.addView(tv, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 6, 0, 0));
             return btn;
         }
     }
