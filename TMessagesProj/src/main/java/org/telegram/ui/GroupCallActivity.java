@@ -2323,7 +2323,7 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
                     }
                     service.setNoiseSupressionEnabled(SharedConfig.noiseSupression);
                 } else if (id == voice_changer_item) {
-                    showDialog(new VoiceChangerSelectAlert(getContext()));
+                    new VoiceChangerSelectAlert(getContext()).show();
                 } else if (id == sound_item) {
                     VoIPService service = VoIPService.getSharedInstance();
                     if (service == null) {
