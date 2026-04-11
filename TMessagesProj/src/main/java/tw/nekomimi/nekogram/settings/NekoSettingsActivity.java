@@ -1,31 +1,23 @@
 package tw.nekomimi.nekogram.settings;
 
-import static android.view.View.OVER_SCROLL_NEVER;
 import static org.telegram.messenger.AndroidUtilities.dp;
 import static org.telegram.messenger.LocaleController.getString;
 
-import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
-import android.net.Uri;
-import android.os.Build;
-import android.text.Editable;
-import android.text.InputType;
-import android.text.SpannableStringBuilder;
-import android.text.Spanned;
-import android.text.TextWatcher;
-import android.text.style.ForegroundColorSpan;
+import android.graphics.drawable.GradientDrawable;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -33,347 +25,129 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
+import org.telegram.messenger.BuildVars;
 import org.telegram.messenger.R;
-import org.telegram.messenger.SendMessagesHelper;
 import org.telegram.ui.ActionBar.ActionBar;
-import org.telegram.ui.ActionBar.ActionBarMenu;
-import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.Theme;
-import org.telegram.ui.BasePermissionsActivity;
-import org.telegram.ui.Cells.SettingsSearchCell;
-import org.telegram.ui.Cells.TextCell;
-import org.telegram.ui.Components.EditTextBoldCursor;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
-import org.telegram.ui.DocumentSelectActivity;
+import org.telegram.ui.Components.Switch;
 import org.telegram.ui.LaunchActivity;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.UUID;
 
 import tw.nekomimi.nekogram.NekoConfig;
 import tw.nekomimi.nekogram.helpers.AppRestartHelper;
 import tw.nekomimi.nekogram.helpers.CloudSettingsHelper;
-import tw.nekomimi.nekogram.helpers.PasscodeHelper;
 import tw.nekomimi.nekogram.helpers.SettingsBackupHelper;
-import tw.nekomimi.nekogram.helpers.SettingsHelper;
-import tw.nekomimi.nekogram.helpers.SettingsSearchResult;
 import tw.nekomimi.nekogram.utils.AlertUtil;
+import xyz.nextalone.nagram.NaConfig;
 
 public class NekoSettingsActivity extends BaseNekoSettingsActivity {
 
-    private static final int MENU_SEARCH = 1;
-    private static final int MENU_SYNC = 2;
+    private boolean isDark;
+    private int cardBg;
+    private int cardBorder;
+    private int dividerColor;
 
-    private int generalRow;
-    private int translatorRow;
-    private int chatRow;
-    private int passcodeRow;
-    private int experimentRow;
-    private int categoriesEndRow;
-
-    private int importSettingsRow;
-    private int exportSettingsRow;
-    private int resetSettingsRow;
-    private int appRestartRow;
-    private int nSettingsEndRow;
-
-
-    private int aboutRow;
+    private int headerRow;
+    private int quickSettingsHeaderRow;
+    private int hideContactsRow;
+    private int ghostModeRow;
+    private int musicGraphRow;
+    private int saveDeletedRow;
+    private int privacyHeaderRow;
+    private int hiddenChatsRow;
+    private int coreHeaderRow;
+    private int coreSettingsRow;
+    private int advancedHeaderRow;
+    private int advancedSettingsRow;
+    private int actionsRow;
+    private int footerRow;
 
     @Override
     protected void updateRows() {
-        super.updateRows();
-
-        generalRow = addRow();
-        translatorRow = addRow();
-        chatRow = addRow();
-        if (!PasscodeHelper.isSettingsHidden()) {
-            passcodeRow = addRow();
-        } else {
-            passcodeRow = -1;
-        }
-        experimentRow = addRow();
-        categoriesEndRow = addRow();
-
-        importSettingsRow = addRow();
-        exportSettingsRow = addRow();
-        resetSettingsRow = addRow();
-        appRestartRow = addRow();
-        nSettingsEndRow = addRow();
-
-        aboutRow = addRow();
+        rowCount = 0;
+        headerRow = addRow();
+        
+        quickSettingsHeaderRow = addRow();
+        hideContactsRow = addRow();
+        ghostModeRow = addRow();
+        musicGraphRow = addRow();
+        saveDeletedRow = addRow();
+        
+        privacyHeaderRow = addRow();
+        hiddenChatsRow = addRow();
+        
+        coreHeaderRow = addRow();
+        coreSettingsRow = addRow();
+        
+        advancedHeaderRow = addRow();
+        advancedSettingsRow = addRow();
+        
+        actionsRow = addRow();
+        footerRow = addRow();
     }
 
     @Override
     public View createView(Context context) {
-        View view = super.createView(context);
+        setupColors();
+        
+        fragmentView = new FrameLayout(context);
+        FrameLayout frameLayout = (FrameLayout) fragmentView;
+        frameLayout.setBackgroundColor(Color.TRANSPARENT);
 
-        ActionBarMenu menu = actionBar.createMenu();
-        menu.addItem(MENU_SEARCH, R.drawable.outline_header_search, resourcesProvider);
-        menu.addItem(MENU_SYNC, R.drawable.cloud_sync, resourcesProvider);
+        // Add animated background
+        AlexgramSettingsHeaderView backgroundView = new AlexgramSettingsHeaderView(context);
+        frameLayout.addView(backgroundView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
-        actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
-            @Override
-            public void onItemClick(int id) {
-                if (id == -1) {
-                    finishFragment();
-                } else if (id == MENU_SEARCH) {
-                    showSettingsSearchDialog();
-                } else if (id == MENU_SYNC) {
-                    CloudSettingsHelper.getInstance().showDialog(NekoSettingsActivity.this);
-                }
-            }
-        });
+        actionBar.setBackButtonImage(R.drawable.ic_ab_back);
+        actionBar.setTitle("A-Settings");
+        actionBar.setBackgroundColor(Color.TRANSPARENT);
+        actionBar.setCastShadows(false);
+        actionBar.setAddToContainer(false);
+        
+        int color = isDark ? Color.WHITE : 0xFF1A1A2E;
+        actionBar.setItemsColor(color, false);
+        actionBar.setTitleColor(color);
+        
+        listView = new org.telegram.ui.Components.BlurredRecyclerView(context);
+        listView.setLayoutManager(layoutManager = new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
+        listView.setVerticalScrollBarEnabled(false);
+        listView.setPadding(0, AndroidUtilities.dp(56) + (AndroidUtilities.isTablet() ? 0 : AndroidUtilities.statusBarHeight), 0, AndroidUtilities.dp(40));
+        listView.setClipToPadding(false);
+        listView.setAdapter(listAdapter = createAdapter(context));
+        listView.setOnItemClickListener(this::onItemClick);
+        
+        frameLayout.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        frameLayout.addView(actionBar, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
-        return view;
+        return fragmentView;
     }
 
-    /**
-     * @noinspection SizeReplaceableByIsEmpty
-     */
-    private void showSettingsSearchDialog() {
-        try {
-            Activity parent = getParentActivity();
-            if (parent == null) return;
-
-            ArrayList<SettingsSearchResult> results = SettingsHelper.onCreateSearchArray(fragment -> AndroidUtilities.runOnUIThread(() -> {
-                try {
-                    presentFragment(fragment);
-                } catch (Exception ignore) {
-                }
-            }));
-
-            final ArrayList<SettingsSearchResult> filtered = new ArrayList<>(results);
-            final String[] currentQuery = new String[]{""};
-            final int searchHeight = dp(36);
-            final int clearSize = dp(36);
-            final int pad = dp(12);
-
-            LinearLayout containerLayout = new LinearLayout(parent);
-            containerLayout.setOrientation(LinearLayout.VERTICAL);
-            containerLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
-
-            FrameLayout searchFrame = new FrameLayout(parent);
-            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, searchHeight + dp(12));
-            layoutParams.leftMargin = dp(10);
-            layoutParams.rightMargin = dp(10);
-            layoutParams.topMargin = dp(6);
-            layoutParams.bottomMargin = dp(2);
-            searchFrame.setLayoutParams(layoutParams);
-            searchFrame.setClipToPadding(true);
-            searchFrame.setClipChildren(true);
-
-            ImageView searchIcon = new ImageView(parent);
-            searchIcon.setScaleType(ImageView.ScaleType.CENTER);
-            searchIcon.setImageResource(R.drawable.ic_ab_search);
-            searchIcon.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_windowBackgroundWhiteGrayIcon), PorterDuff.Mode.MULTIPLY));
-            searchFrame.addView(searchIcon, LayoutHelper.createFrame(48, 48, Gravity.LEFT | Gravity.CENTER_VERTICAL));
-
-            EditTextBoldCursor searchField = new EditTextBoldCursor(parent);
-            searchField.setHint(getString(R.string.Search));
-            searchField.setTextColor(getThemedColor(Theme.key_dialogTextBlack));
-            searchField.setHintTextColor(getThemedColor(Theme.key_windowBackgroundWhiteHintText));
-            searchField.setSingleLine(true);
-            searchField.setBackground(null);
-            searchField.setInputType(InputType.TYPE_CLASS_TEXT);
-            searchField.setLineColors(getThemedColor(Theme.key_windowBackgroundWhiteInputField), getThemedColor(Theme.key_windowBackgroundWhiteInputFieldActivated), getThemedColor(Theme.key_text_RedRegular));
-            searchField.setPadding(dp(61), pad / 2, dp(48), pad / 2);
-            searchField.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT, Gravity.CENTER_VERTICAL));
-            searchFrame.addView(searchField);
-
-            ImageView clearButton = new ImageView(parent);
-            clearButton.setScaleType(ImageView.ScaleType.CENTER);
-            clearButton.setImageResource(R.drawable.ic_close_white);
-            clearButton.setBackground(Theme.createSelectorDrawable(getThemedColor(Theme.key_actionBarWhiteSelector), Theme.RIPPLE_MASK_CIRCLE_20DP));
-            clearButton.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_windowBackgroundWhiteGrayIcon), PorterDuff.Mode.MULTIPLY));
-            clearButton.setLayoutParams(new FrameLayout.LayoutParams(clearSize, clearSize, Gravity.END | Gravity.CENTER_VERTICAL));
-            searchFrame.addView(clearButton);
-            containerLayout.addView(searchFrame);
-
-            AlertDialog.Builder builder = new AlertDialog.Builder(parent, resourceProvider);
-            builder.setView(containerLayout);
-            builder.setNegativeButton(getString(R.string.Close), null);
-            final AlertDialog dialog = builder.create();
-            dialog.setOnShowListener(d -> {
-                try {
-                    searchField.requestFocus();
-                    AndroidUtilities.showKeyboard(searchField);
-                } catch (Exception ignore) {
-                }
-            });
-
-            RecyclerListView searchListView = new RecyclerListView(parent);
-            searchListView.setOverScrollMode(OVER_SCROLL_NEVER);
-            searchListView.setLayoutManager(new LinearLayoutManager(parent, LinearLayoutManager.VERTICAL, false));
-
-            var adapter = new RecyclerListView.SelectionAdapter() {
-                @Override
-                public boolean isEnabled(RecyclerView.ViewHolder holder) {
-                    return true;
-                }
-
-                @NonNull
-                @Override
-                public RecyclerListView.Holder onCreateViewHolder(@NonNull ViewGroup parent1, int viewType) {
-                    View view = new SettingsSearchCell(parent);
-                    view.setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
-                    return new RecyclerListView.Holder(view);
-                }
-
-                @Override
-                public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-                    SettingsSearchCell cell = (SettingsSearchCell) holder.itemView;
-                    SettingsSearchResult r = filtered.get(position);
-                    String[] path = r.path2 != null ? new String[]{r.path1, r.path2} : new String[]{r.path1};
-                    CharSequence titleToSet = r.searchTitle == null ? "" : r.searchTitle;
-                    String q = currentQuery[0];
-                    if (q != null && !q.isEmpty() && titleToSet.length() > 0) {
-                        SpannableStringBuilder ss = new SpannableStringBuilder(titleToSet);
-                        String lower = titleToSet.toString().toLowerCase();
-                        String[] parts = q.split("\\s+");
-                        int highlightColor = getThemedColor(Theme.key_windowBackgroundWhiteBlueText4);
-                        for (String p : parts) {
-                            if (p.isEmpty()) continue;
-                            int idx = 0;
-                            while (true) {
-                                int found = lower.indexOf(p, idx);
-                                if (found == -1) break;
-                                try {
-                                    ss.setSpan(new ForegroundColorSpan(highlightColor), found, found + p.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                                } catch (Exception ignore) {
-                                }
-                                idx = found + p.length();
-                            }
-                        }
-                        titleToSet = ss;
-                    }
-                    cell.setTextAndValueAndIcon(titleToSet, path, r.iconResId, position < filtered.size() - 1);
-                }
-
-                @Override
-                public int getItemCount() {
-                    return filtered.size();
-                }
-            };
-
-            searchListView.setAdapter(adapter);
-            searchListView.setOnItemClickListener((v, position) -> {
-                if (position < 0 || position >= filtered.size()) return;
-                SettingsSearchResult r = filtered.get(position);
-                try {
-                    if (r.openRunnable != null) r.openRunnable.run();
-                } catch (Exception ignore) {
-                }
-                dialog.dismiss();
-            });
-
-            containerLayout.addView(searchListView, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
-
-            searchField.addTextChangedListener(new TextWatcher() {
-                @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                }
-
-                @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-                }
-
-                @SuppressLint("NotifyDataSetChanged")
-                @Override
-                public void afterTextChanged(Editable s) {
-                    String q = s.toString().toLowerCase().trim();
-                    currentQuery[0] = q;
-                    filtered.clear();
-                    if (q.isEmpty()) {
-                        filtered.addAll(results);
-                    } else {
-                        String[] parts = q.split("\\s+");
-                        for (SettingsSearchResult item : results) {
-                            String title = item.searchTitle == null ? "" : item.searchTitle.toLowerCase();
-                            boolean ok = true;
-                            for (String p : parts) {
-                                if (!title.contains(p)) {
-                                    ok = false;
-                                    break;
-                                }
-                            }
-                            if (ok) filtered.add(item);
-                        }
-                    }
-                    adapter.notifyDataSetChanged();
-                    searchIcon.setVisibility(q.length() > 20 ? View.GONE : View.VISIBLE);
-                    clearButton.setVisibility(q.isEmpty() ? View.GONE : View.VISIBLE);
-                }
-            });
-
-            clearButton.setOnClickListener(v -> {
-                searchField.setText("");
-                searchField.requestFocus();
-                AndroidUtilities.showKeyboard(searchField);
-            });
-            clearButton.setVisibility(View.GONE);
-
-            showDialog(dialog);
-        } catch (Exception ignore) {
+    private void setupColors() {
+        isDark = Theme.getActiveTheme().isDark();
+        if (isDark) {
+            cardBg = 0x221E2732;
+            cardBorder = 0x15FFFFFF;
+            dividerColor = 0x10FFFFFF;
+        } else {
+            cardBg = 0x40FFFFFF;
+            cardBorder = 0x20000000;
+            dividerColor = 0x15000000;
         }
     }
 
-    @Override
-    protected String getActionBarTitle() {
-        return getString(R.string.NekoSettings);
-    }
-
-    @SuppressLint("ApplySharedPref")
     @Override
     protected void onItemClick(View view, int position, float x, float y) {
-        if (position == chatRow) {
-            presentFragment(new NekoChatSettingsActivity());
-        } else if (position == generalRow) {
-            presentFragment(new NekoGeneralSettingsActivity());
-        } else if (position == passcodeRow) {
-            presentFragment(new NekoPasscodeSettingsActivity());
-        } else if (position == experimentRow) {
-            presentFragment(new NekoExperimentalSettingsActivity());
-        } else if (position == translatorRow) {
-            presentFragment(new NekoTranslatorSettingsActivity());
-        } else if (position == aboutRow) {
-            presentFragment(new NekoAboutActivity());
-        } else if (position == importSettingsRow) {
-            if (Build.VERSION.SDK_INT >= 33) {
-                openFilePicker();
-            } else {
-                DocumentSelectActivity activity = getDocumentSelectActivity(getParentActivity());
-                if (activity != null) {
-                    presentFragment(activity);
-                }
-            }
-        } else if (position == resetSettingsRow) {
-            AlertUtil.showConfirm(getParentActivity(),
-                    getString(R.string.ResetSettingsAlert),
-                    R.drawable.msg_reset,
-                    getString(R.string.Reset),
-                    true,
-                    () -> {
-                        ApplicationLoader.applicationContext.getSharedPreferences("nekocloud", Activity.MODE_PRIVATE).edit().clear().commit();
-                        ApplicationLoader.applicationContext.getSharedPreferences("nekox_config", Activity.MODE_PRIVATE).edit().clear().commit();
-                        NekoConfig.getPreferences().edit().clear().commit();
-                        AppRestartHelper.triggerRebirth(getParentActivity(), new Intent(getParentActivity(), LaunchActivity.class));
-                    });
-        } else if (position == exportSettingsRow) {
-            SettingsBackupHelper.backupSettings(getParentActivity(), resourceProvider);
-        } else if (position == appRestartRow) {
-            AppRestartHelper.triggerRebirth(getParentActivity(), new Intent(getParentActivity(), LaunchActivity.class));
-        }
     }
 
     @Override
     protected BaseListAdapter createAdapter(Context context) {
         return new ListAdapter(context);
+    }
+
+    @Override
+    protected String getActionBarTitle() {
+        return "A-Settings";
     }
 
     private class ListAdapter extends BaseListAdapter {
@@ -382,122 +156,338 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
             super(context);
         }
 
+        @NonNull
+        @Override
+        public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View view;
+            switch (viewType) {
+                case 0: view = new BrandingHeaderView(mContext); break;
+                case 1: view = new SectionHeaderCell(mContext); break;
+                case 2: view = new CardSwitchCell(mContext); break;
+                case 3: view = new CardItemCell(mContext); break;
+                case 4: view = new ActionsCell(mContext); break;
+                case 5: view = new FooterCell(mContext); break;
+                default: view = new View(mContext); break;
+            }
+            return new RecyclerListView.Holder(view);
+        }
+
         @Override
         public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position, boolean partial) {
             int viewType = holder.getItemViewType();
-            switch (viewType) {
-                case TYPE_SHADOW: {
-                    holder.itemView.setBackground(Theme.getThemedDrawable(mContext, R.drawable.greydivider, Theme.key_windowBackgroundGrayShadow));
-                    break;
+            if (viewType == 0) {
+                ((BrandingHeaderView) holder.itemView).update();
+            } else if (viewType == 1) {
+                SectionHeaderCell cell = (SectionHeaderCell) holder.itemView;
+                if (position == quickSettingsHeaderRow) cell.setText("QUICK SETTINGS");
+                else if (position == privacyHeaderRow) cell.setText("PRIVACY");
+                else if (position == coreHeaderRow) cell.setText("CORE SETTINGS");
+                else if (position == advancedHeaderRow) cell.setText("ADVANCED");
+            } else if (viewType == 2) {
+                CardSwitchCell cell = (CardSwitchCell) holder.itemView;
+                if (position == hideContactsRow) {
+                    cell.setData("Hide Contacts", "Hide contacts tab", R.drawable.msg_contacts, NaConfig.INSTANCE.getHideContacts().Bool(), isChecked -> NaConfig.INSTANCE.getHideContacts().setConfigBool(isChecked), true, false);
+                } else if (position == ghostModeRow) {
+                    cell.setData("Ghost Mode", "Read silently", R.drawable.msg_secret, NekoConfig.isGhostModeActive(), isChecked -> NekoConfig.setGhostMode(isChecked), false, false);
+                } else if (position == musicGraphRow) {
+                    cell.setData("Music Graph", "Visualizer in player", R.drawable.msg_calls_vibrate, NaConfig.INSTANCE.getMusicGraph().Bool(), isChecked -> NaConfig.INSTANCE.getMusicGraph().setConfigBool(isChecked), false, false);
+                } else if (position == saveDeletedRow) {
+                    cell.setData("Save Deleted", "Save deleted messages", R.drawable.msg_delete_solar, NaConfig.INSTANCE.getEnableSaveDeletedMessages().Bool(), isChecked -> NaConfig.INSTANCE.getEnableSaveDeletedMessages().setConfigBool(isChecked), false, true);
                 }
-                case TYPE_TEXT: {
-                    TextCell textCell = (TextCell) holder.itemView;
-                    if (position == chatRow) {
-                        textCell.setTextAndIcon(getString(R.string.Chat), R.drawable.msg_discussion, true);
-                    } else if (position == generalRow) {
-                        textCell.setTextAndIcon(getString(R.string.General), R.drawable.msg_theme, true);
-                    } else if (position == translatorRow) {
-                        textCell.setTextAndIcon(getString(R.string.TranslatorSettings), R.drawable.ic_translate, true);
-                    } else if (position == passcodeRow) {
-                        textCell.setTextAndIcon(getString(R.string.PasscodeNeko), R.drawable.msg_permissions, true);
-                    } else if (position == experimentRow) {
-                        textCell.setTextAndIcon(getString(R.string.Experimental), R.drawable.msg_fave, true);
-                    } else if (position == importSettingsRow) {
-                        textCell.setTextAndIcon(getString(R.string.ImportSettings), R.drawable.msg_photo_settings_solar, true);
-                    } else if (position == exportSettingsRow) {
-                        textCell.setTextAndIcon(getString(R.string.BackupSettings), R.drawable.msg_instant_link_solar, true);
-                    } else if (position == resetSettingsRow) {
-                        textCell.setTextAndIcon(getString(R.string.ResetSettings), R.drawable.msg_reset_solar, true);
-                    } else if (position == appRestartRow) {
-                        textCell.setTextAndIcon(getString(R.string.RestartApp), R.drawable.msg_retry_solar, true);
-                    } else if (position == aboutRow) {
-                        textCell.setTextAndIcon(getString(R.string.About), R.drawable.msg_info, true);
-                    }
-                    break;
+            } else if (viewType == 3) {
+                CardItemCell cell = (CardItemCell) holder.itemView;
+                if (position == hiddenChatsRow) {
+                    cell.setData("Hidden Chats", "Secure vault for private chats", R.drawable.msg_folders_private_solar, 0xFFE91E63, v -> presentFragment(new HiddenChatsSettingsActivity()), true, true);
+                } else if (position == coreSettingsRow) {
+                    cell.setMultiData(new CoreItem[]{
+                            new CoreItem("General", "Appearance, Language, Behavior", R.drawable.msg_settings, 0xFF2196F3, v -> presentFragment(new NekoGeneralSettingsActivity())),
+                            new CoreItem("Translator", "Messages, Languages, Engine", R.drawable.ic_translate, 0xFF9C27B0, v -> presentFragment(new NekoTranslatorSettingsActivity())),
+                            new CoreItem("Chats", "UI, Privacy, Media", R.drawable.msg_discussion, 0xFF4CAF50, v -> presentFragment(new NekoChatSettingsActivity())),
+                            new CoreItem("Passcode", "Security & Fingerprint", R.drawable.msg_permissions, 0xFFF44336, v -> presentFragment(new NekoPasscodeSettingsActivity()))
+                    });
+                } else if (position == advancedSettingsRow) {
+                    cell.setMultiData(new CoreItem[]{
+                            new CoreItem("Cloud Settings", "Sync, backup, and restore", R.drawable.cloud_sync, 0xFF00BCD4, v -> CloudSettingsHelper.getInstance().showDialog(NekoSettingsActivity.this)),
+                            new CoreItem("Experimental", "Beta Tools & Features", R.drawable.msg_fave, 0xFF673AB7, v -> presentFragment(new NekoExperimentalSettingsActivity()))
+                    });
                 }
-
+            } else if (viewType == 4) {
+                ((ActionsCell) holder.itemView).update();
+            } else if (viewType == 5) {
+                ((FooterCell) holder.itemView).update();
             }
         }
 
         @Override
         public int getItemViewType(int position) {
-            if (position == categoriesEndRow || position == nSettingsEndRow) {
-                return TYPE_SHADOW;
-            } else if (position == chatRow || position == generalRow || position == passcodeRow || position == experimentRow || position == translatorRow ||
-                    position == importSettingsRow || position == exportSettingsRow || position == resetSettingsRow || position == appRestartRow ||
-                    position == aboutRow) {
-                return TYPE_TEXT;
-            }
-            return TYPE_SHADOW;
+            if (position == headerRow) return 0;
+            if (position == quickSettingsHeaderRow || position == privacyHeaderRow || position == coreHeaderRow || position == advancedHeaderRow) return 1;
+            if (position == hideContactsRow || position == ghostModeRow || position == musicGraphRow || position == saveDeletedRow) return 2;
+            if (position == hiddenChatsRow || position == coreSettingsRow || position == advancedSettingsRow) return 3;
+            if (position == actionsRow) return 4;
+            if (position == footerRow) return 5;
+            return -1;
+        }
+
+        @Override
+        public boolean isEnabled(RecyclerView.ViewHolder holder) {
+            int viewType = holder.getItemViewType();
+            return viewType == 2 || viewType == 3 || viewType == 4;
         }
     }
 
-    private DocumentSelectActivity getDocumentSelectActivity(Activity parent) {
-        try {
-            if (parent.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                parent.requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, BasePermissionsActivity.REQUEST_CODE_EXTERNAL_STORAGE);
-                return null;
-            }
-        } catch (Throwable ignore) {
+    private class BrandingHeaderView extends FrameLayout {
+        private final ImageView logoView;
+        private final TextView nameView;
+        private final TextView versionView;
+
+        public BrandingHeaderView(Context context) {
+            super(context);
+            setPadding(0, dp(24), 0, dp(16));
+            logoView = new ImageView(context);
+            logoView.setImageResource(R.mipmap.ic_launcher_nagram);
+            logoView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            addView(logoView, LayoutHelper.createFrame(80, 80, Gravity.CENTER_HORIZONTAL));
+
+            nameView = new TextView(context);
+            nameView.setText("Alexgram");
+            nameView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 24);
+            nameView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+            nameView.setTextColor(isDark ? Color.WHITE : 0xFF1A1A2E);
+            nameView.setGravity(Gravity.CENTER);
+            addView(nameView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 0, 88, 0, 0));
+
+            versionView = new TextView(context);
+            versionView.setText("v" + BuildVars.BUILD_VERSION_STRING + " (" + BuildVars.BUILD_VERSION + ")");
+            versionView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
+            versionView.setAlpha(0.7f);
+            versionView.setTextColor(isDark ? Color.WHITE : 0xFF5C6B7F);
+            versionView.setGravity(Gravity.CENTER);
+            addView(versionView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 0, 118, 0, 0));
         }
-        DocumentSelectActivity fragment = new DocumentSelectActivity(false);
-        fragment.setMaxSelectedFiles(1);
-        fragment.setAllowPhoto(false);
-        fragment.setDelegate(new DocumentSelectActivity.DocumentSelectActivityDelegate() {
-            @Override
-            public void didSelectFiles(DocumentSelectActivity activity, ArrayList<String> files, String caption, boolean notify, int scheduleDate) {
-                activity.finishFragment();
-                SettingsBackupHelper.importSettings(parent, new File(files.get(0)));
-            }
-
-            @Override
-            public void didSelectPhotos(ArrayList<SendMessagesHelper.SendingMediaInfo> photos, boolean notify, int scheduleDate) {
-            }
-
-            @Override
-            public void startDocumentSelectActivity() {
-            }
-        });
-        return fragment;
-    }
-
-    private void openFilePicker() {
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType("application/json");
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        try {
-            startActivityForResult(intent, 21);
-        } catch (android.content.ActivityNotFoundException ex) {
-            AlertUtil.showSimpleAlert(getParentActivity(), ex);
+        public void update() {
+            nameView.setTextColor(isDark ? Color.WHITE : 0xFF1A1A2E);
+            versionView.setTextColor(isDark ? 0xAAFFFFFF : 0xAA5C6B7F);
         }
     }
 
-    @Override
-    public void onActivityResultFragment(int requestCode, int resultCode, Intent data) {
-        if (requestCode == 21 && resultCode == Activity.RESULT_OK && data != null) {
-            Uri uri = data.getData();
-            if (uri != null) {
-                File cacheDir = AndroidUtilities.getCacheDir();
-                String tempFile = UUID.randomUUID().toString().replace("-", "") + ".nekox-settings.json";
-                File file = new File(cacheDir.getPath(), tempFile);
-                try {
-                    final InputStream inputStream = ApplicationLoader.applicationContext.getContentResolver().openInputStream(uri);
-                    if (inputStream != null) {
-                        OutputStream outputStream = new FileOutputStream(file);
-                        final byte[] buffer = new byte[4 * 1024];
-                        int read;
-                        while ((read = inputStream.read(buffer)) != -1) {
-                            outputStream.write(buffer, 0, read);
-                        }
-                        inputStream.close();
-                        outputStream.flush();
-                        outputStream.close();
-                        SettingsBackupHelper.importSettings(getParentActivity(), file);
-                    }
-                } catch (Exception ignore) {
+    private class SectionHeaderCell extends FrameLayout {
+        private final TextView textView;
+        public SectionHeaderCell(Context context) {
+            super(context);
+            setPadding(dp(22), dp(16), dp(16), dp(8));
+            textView = new TextView(context);
+            textView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11);
+            textView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+            textView.setLetterSpacing(0.05f);
+            textView.setTextColor(isDark ? 0x88FFFFFF : 0x885C6B7F);
+            addView(textView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
+        }
+        public void setText(String text) { textView.setText(text); }
+    }
+
+    private class CardSwitchCell extends FrameLayout {
+        private final LinearLayout container;
+        private final ImageView iconView;
+        private final TextView titleView;
+        private final TextView subtitleView;
+        private final Switch switchView;
+        private final View divider;
+
+        public CardSwitchCell(Context context) {
+            super(context);
+            setPadding(dp(16), 0, dp(16), 0);
+            container = new LinearLayout(context);
+            container.setOrientation(LinearLayout.HORIZONTAL);
+            container.setGravity(Gravity.CENTER_VERTICAL);
+            container.setPadding(dp(14), dp(12), dp(14), dp(12));
+            iconView = new ImageView(context);
+            iconView.setScaleType(ImageView.ScaleType.CENTER);
+            container.addView(iconView, LayoutHelper.createLinear(32, 32));
+            LinearLayout texts = new LinearLayout(context);
+            texts.setOrientation(LinearLayout.VERTICAL);
+            texts.setPadding(dp(12), 0, 0, 0);
+            titleView = new TextView(context);
+            titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
+            titleView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+            texts.addView(titleView);
+            subtitleView = new TextView(context);
+            subtitleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
+            texts.addView(subtitleView);
+            container.addView(texts, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f));
+            switchView = new Switch(context);
+            container.addView(switchView, LayoutHelper.createLinear(44, 24));
+            addView(container);
+            divider = new View(context);
+            addView(divider, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 1, Gravity.BOTTOM, 56, 0, 16, 0));
+        }
+
+        public void setData(String title, String subtitle, int iconRes, boolean checked, OnSwitchListener listener, boolean first, boolean last) {
+            titleView.setText(title);
+            subtitleView.setText(subtitle);
+            iconView.setImageResource(iconRes);
+            switchView.setChecked(checked, false);
+            GradientDrawable bg = new GradientDrawable();
+            bg.setColor(cardBg);
+            float r = dp(16);
+            bg.setCornerRadii(new float[]{first ? r : 0, first ? r : 0, first ? r : 0, first ? r : 0, last ? r : 0, last ? r : 0, last ? r : 0, last ? r : 0});
+            container.setBackground(bg);
+            titleView.setTextColor(isDark ? Color.WHITE : 0xFF1A1A2E);
+            subtitleView.setTextColor(isDark ? 0xAAFFFFFF : 0xAA5C6B7F);
+            iconView.setColorFilter(new PorterDuffColorFilter(checked ? 0xFF2196F3 : (isDark ? 0xFFAAAAAA : 0xFF777777), PorterDuff.Mode.SRC_IN));
+            divider.setBackgroundColor(dividerColor);
+            divider.setVisibility(last ? GONE : VISIBLE);
+            setOnClickListener(v -> {
+                boolean target = !switchView.isChecked();
+                switchView.setChecked(target, true);
+                listener.onSwitch(target);
+                iconView.setColorFilter(new PorterDuffColorFilter(target ? 0xFF2196F3 : (isDark ? 0xFFAAAAAA : 0xFF777777), PorterDuff.Mode.SRC_IN));
+            });
+        }
+    }
+
+    private interface OnSwitchListener { void onSwitch(boolean isChecked); }
+
+    private class CardItemCell extends LinearLayout {
+        public CardItemCell(Context context) {
+            super(context);
+            setOrientation(VERTICAL);
+            setPadding(dp(16), 0, dp(16), 8);
+        }
+        public void setData(String title, String subtitle, int iconRes, int iconColor, View.OnClickListener listener, boolean first, boolean last) {
+            removeAllViews();
+            addView(createItem(mContext, title, subtitle, iconRes, iconColor, listener, first, last));
+        }
+        public void setMultiData(CoreItem[] items) {
+            removeAllViews();
+            for (int i = 0; i < items.length; i++) {
+                CoreItem item = items[i];
+                addView(createItem(mContext, item.title, item.subtitle, item.iconRes, item.iconColor, item.listener, i == 0, i == items.length - 1));
+                if (i < items.length - 1) {
+                    View d = new View(mContext);
+                    d.setBackgroundColor(dividerColor);
+                    addView(d, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 1, 56, 0, 16, 0));
                 }
             }
-            super.onActivityResultFragment(requestCode, resultCode, data);
         }
+        private View createItem(Context ctx, String title, String subtitle, int iconRes, int iconColor, View.OnClickListener listener, boolean first, boolean last) {
+            LinearLayout row = new LinearLayout(ctx);
+            row.setOrientation(HORIZONTAL);
+            row.setGravity(Gravity.CENTER_VERTICAL);
+            row.setPadding(dp(14), dp(12), dp(14), dp(12));
+            row.setClickable(true);
+            row.setOnClickListener(listener);
+            GradientDrawable bg = new GradientDrawable();
+            bg.setColor(cardBg);
+            float r = dp(16);
+            bg.setCornerRadii(new float[]{first ? r : 0, first ? r : 0, first ? r : 0, first ? r : 0, last ? r : 0, last ? r : 0, last ? r : 0, last ? r : 0});
+            row.setBackground(bg);
+            ImageView iconView = new ImageView(ctx);
+            iconView.setImageResource(iconRes);
+            iconView.setColorFilter(Color.WHITE);
+            iconView.setScaleType(ImageView.ScaleType.CENTER);
+            GradientDrawable iconBg = new GradientDrawable();
+            iconBg.setCornerRadius(dp(10));
+            iconBg.setColor(iconColor);
+            iconView.setBackground(iconBg);
+            row.addView(iconView, LayoutHelper.createLinear(32, 32));
+            LinearLayout texts = new LinearLayout(ctx);
+            texts.setOrientation(VERTICAL);
+            texts.setPadding(dp(12), 0, 0, 0);
+            TextView titleView = new TextView(ctx);
+            titleView.setText(title);
+            titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
+            titleView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+            titleView.setTextColor(isDark ? Color.WHITE : 0xFF1A1A2E);
+            texts.addView(titleView);
+            TextView subView = new TextView(ctx);
+            subView.setText(subtitle);
+            subView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
+            subView.setTextColor(isDark ? 0xAAFFFFFF : 0xAA5C6B7F);
+            texts.addView(subView);
+            row.addView(texts, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f));
+            ImageView arrow = new ImageView(ctx);
+            arrow.setImageResource(R.drawable.msg_arrowright);
+            arrow.setColorFilter(new PorterDuffColorFilter(isDark ? 0x44FFFFFF : 0x22000000, PorterDuff.Mode.SRC_IN));
+            row.addView(arrow, LayoutHelper.createLinear(20, 20));
+            return row;
+        }
+    }
+
+    private static class CoreItem {
+        String title, subtitle;
+        int iconRes, iconColor;
+        View.OnClickListener listener;
+        CoreItem(String t, String s, int i, int c, View.OnClickListener l) { title = t; subtitle = s; iconRes = i; iconColor = c; listener = l; }
+    }
+
+    private class ActionsCell extends LinearLayout {
+        public ActionsCell(Context context) {
+            super(context);
+            setOrientation(HORIZONTAL);
+            setPadding(dp(16), dp(8), dp(16), dp(8));
+        }
+        public void update() {
+            removeAllViews();
+            addView(createAction(mContext, "Export", R.drawable.msg_share, v -> SettingsBackupHelper.backupSettings(getParentActivity(), resourcesProvider)), LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f));
+            addView(new View(mContext), LayoutHelper.createLinear(dp(10), 1));
+            addView(createAction(mContext, "Reset", R.drawable.msg_reset, v -> resetSettings()), LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f));
+            addView(new View(mContext), LayoutHelper.createLinear(dp(10), 1));
+            addView(createAction(mContext, "Restart", R.drawable.msg_retry, v -> AppRestartHelper.triggerRebirth(getParentActivity(), new Intent(getParentActivity(), LaunchActivity.class))), LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f));
+            addView(new View(mContext), LayoutHelper.createLinear(dp(10), 1));
+            addView(createAction(mContext, "About", R.drawable.msg_info, v -> presentFragment(new NekoAboutActivity())), LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f));
+        }
+        private View createAction(Context ctx, String text, int iconRes, View.OnClickListener listener) {
+            LinearLayout btn = new LinearLayout(ctx);
+            btn.setOrientation(VERTICAL);
+            btn.setGravity(Gravity.CENTER);
+            btn.setPadding(0, dp(12), 0, dp(12));
+            btn.setClickable(true);
+            btn.setOnClickListener(listener);
+            GradientDrawable bg = new GradientDrawable();
+            bg.setColor(cardBg);
+            bg.setCornerRadius(dp(16));
+            bg.setStroke(dp(1), cardBorder);
+            btn.setBackground(bg);
+            ImageView icon = new ImageView(ctx);
+            icon.setImageResource(iconRes);
+            icon.setColorFilter(new PorterDuffColorFilter(0xFF2196F3, PorterDuff.Mode.SRC_IN));
+            btn.addView(icon, LayoutHelper.createLinear(24, 24));
+            TextView tv = new TextView(ctx);
+            tv.setText(text);
+            tv.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 10);
+            tv.setGravity(Gravity.CENTER);
+            tv.setTextColor(isDark ? Color.WHITE : 0xFF1A1A2E);
+            btn.addView(tv, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 4, 0, 0));
+            return btn;
+        }
+    }
+
+    private class FooterCell extends FrameLayout {
+        private final TextView textView;
+        public FooterCell(Context context) {
+            super(context);
+            setPadding(0, dp(32), 0, dp(32));
+            textView = new TextView(context);
+            textView.setTextSize(11);
+            textView.setGravity(Gravity.CENTER);
+            textView.setTextColor(isDark ? 0x80FFFFFF : 0x805C6B7F);
+            addView(textView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+        }
+        public void update() { textView.setText("Alexgram v" + BuildVars.BUILD_VERSION_STRING + " (" + BuildVars.BUILD_VERSION + ")"); }
+    }
+
+    private void resetSettings() {
+        AlertUtil.showConfirm(getParentActivity(),
+                getString(R.string.ResetSettingsAlert),
+                R.drawable.msg_reset,
+                getString(R.string.Reset),
+                true,
+                () -> {
+                    ApplicationLoader.applicationContext.getSharedPreferences("nekocloud", Activity.MODE_PRIVATE).edit().clear().commit();
+                    ApplicationLoader.applicationContext.getSharedPreferences("nekox_config", Activity.MODE_PRIVATE).edit().clear().commit();
+                    NekoConfig.getPreferences().edit().clear().commit();
+                    AppRestartHelper.triggerRebirth(getParentActivity(), new Intent(getParentActivity(), LaunchActivity.class));
+                });
     }
 }
