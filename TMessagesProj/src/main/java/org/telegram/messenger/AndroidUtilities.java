@@ -2913,8 +2913,19 @@ public class AndroidUtilities {
         if (force) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 try {
-                    window.getClass().getMethod("setFrameRate", float.class, int.class).invoke(window, screenMaxRefreshRate, 0);
-                } catch (Exception ignore) {}
+                    Object decorView = window.getDecorView();
+                    Object viewRootImpl = decorView.getClass().getMethod("getViewRootImpl").invoke(decorView);
+                    if (viewRootImpl != null) {
+                        Object surfaceControl = viewRootImpl.getClass().getMethod("getSurfaceControl").invoke(viewRootImpl);
+                        if (surfaceControl != null) {
+                            surfaceControl.getClass().getMethod("setFrameRate", float.class, int.class).invoke(surfaceControl, screenMaxRefreshRate, 0);
+                        }
+                    }
+                } catch (Throwable ignore) {
+                    try {
+                        window.getDecorView().getClass().getMethod("setFrameRate", float.class, int.class).invoke(window.getDecorView(), screenMaxRefreshRate, 0);
+                    } catch (Throwable ignore2) {}
+                }
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 Display display;
@@ -2928,12 +2939,9 @@ public class AndroidUtilities {
                     if (modes != null) {
                         Display.Mode bestMode = null;
                         for (Display.Mode mode : modes) {
-                            if (bestMode == null || mode.getRefreshRate() > bestMode.getRefreshRate()) {
+                            if (bestMode == null || mode.getRefreshRate() > bestMode.getRefreshRate() || 
+                                (Math.abs(mode.getRefreshRate() - bestMode.getRefreshRate()) < 0.1f && (mode.getPhysicalWidth() > bestMode.getPhysicalWidth() || mode.getPhysicalHeight() > bestMode.getPhysicalHeight()))) {
                                 bestMode = mode;
-                            } else if (Math.abs(mode.getRefreshRate() - bestMode.getRefreshRate()) < 0.1f) {
-                                if (mode.getPhysicalWidth() > bestMode.getPhysicalWidth() || mode.getPhysicalHeight() > bestMode.getPhysicalHeight()) {
-                                    bestMode = mode;
-                                }
                             }
                         }
                         if (bestMode != null) {

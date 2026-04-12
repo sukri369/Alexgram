@@ -142,6 +142,20 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
         listView.setAdapter(listAdapter);
         listView.setOnItemClickListener(this::onItemClick);
         listView.setClipToPadding(false);
+
+        listView.addItemDecoration(new RecyclerView.ItemDecoration() {
+            @Override
+            public void getItemOffsets(@NonNull android.graphics.Rect outRect, @NonNull View view, @NonNull RecyclerView recyclerView, @NonNull RecyclerView.State state) {
+                int position = recyclerView.getChildAdapterPosition(view);
+                if (position == RecyclerView.NO_POSITION || isBreakType(position)) {
+                    outRect.set(0, 0, 0, 0);
+                    return;
+                }
+                boolean isFirst = position == 0 || isBreakType(position - 1);
+                boolean isLast = position == listAdapter.getItemCount() - 1 || isBreakType(position + 1);
+                outRect.set(dp(24), isFirst ? dp(4) : 0, dp(24), isLast ? dp(12) : 0);
+            }
+        });
         listView.setOnItemLongClickListener((view, position, x, y) -> {
             if (onItemLongClick(view, position, x, y)) {
                 return true;
@@ -167,9 +181,7 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
     }
 
     protected boolean isAlexgramTheme() {
-        return this instanceof NekoAboutActivity ||
-               this instanceof NekoPasscodeSettingsActivity ||
-               this instanceof GhostModeActivity;
+        return true;
     }
 
     private void setupBrandingColors() {
@@ -412,9 +424,6 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
                 gd.setStroke(dp(1), cardBorder);
             }
             view.setBackground(gd);
-
-            RecyclerView.LayoutParams lp = (RecyclerView.LayoutParams) view.getLayoutParams();
-            lp.setMargins(dp(16), 0, dp(16), isLast ? dp(12) : 0);
 
             if (view instanceof TextSettingsCell cell) {
                 cell.getTextView().setTextColor(isDark ? android.graphics.Color.WHITE : 0xFF1A1A2E);
