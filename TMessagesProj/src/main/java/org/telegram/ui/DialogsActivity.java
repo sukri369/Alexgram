@@ -496,7 +496,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     private float contactsAlpha = 1f;
     private ValueAnimator contactsAlphaAnimator;
-    private ViewPage[] viewPages;
+    protected ViewPage[] viewPages;
     private ActionBarMenuItem passcodeItem;
     private ActionBarMenuItem downloadsItem;
     private DownloadProgressIcon downloadProgressIcon;
