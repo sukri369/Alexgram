@@ -351,6 +351,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private boolean storiesOverscrollCalled;
     private boolean wasDrawn;
     public boolean hasMainTabs;
+    private String customTitle;
 
     public MessagesStorage.TopicKey getOpenedDialogId() {
         return openedDialogId;
@@ -2834,6 +2835,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             closeFragment = arguments.getBoolean("closeFragment", true);
             allowGlobalSearch = arguments.getBoolean("allowGlobalSearch", true);
             hasMainTabs = arguments.getBoolean("hasMainTabs", false);
+            customTitle = arguments.getString("customTitle");
 
             byte[] requestPeerTypeBytes = arguments.getByteArray("requestPeerType");
             if (requestPeerTypeBytes != null) {
@@ -3513,6 +3515,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 actionBar.setTitle(actionBarTitleNax = LocaleController.getString(R.string.ReplyToDialog));
             } else if (isQuote) {
                 actionBar.setTitle(actionBarTitleNax = LocaleController.getString(R.string.QuoteTo));
+            } else if (customTitle != null) {
+                actionBar.setTitle(actionBarTitleNax = customTitle);
             } else if (initialDialogsType == DIALOGS_TYPE_FORWARD && selectAlertString == null) {
                 actionBar.setTitle(actionBarTitleNax = getString(R.string.ForwardTo));
             } else if (initialDialogsType == DIALOGS_TYPE_WIDGET) {
@@ -10312,7 +10316,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         if (commentView != null) {
             animatorForwardButtonVisible.setValue(!selectedDialogs.isEmpty(), true);
             if (selectedDialogs.isEmpty()) {
-                if (initialDialogsType == DIALOGS_TYPE_FORWARD && selectAlertString == null) {
+                if (customTitle != null) {
+                    actionBar.setTitle(actionBarTitleNax = customTitle);
+                } else if (initialDialogsType == DIALOGS_TYPE_FORWARD && selectAlertString == null) {
                     actionBar.setTitle(actionBarTitleNax = LocaleController.getString(R.string.ForwardTo));
                 } else {
                     actionBar.setTitle(actionBarTitleNax = LocaleController.getString(R.string.SelectChat));

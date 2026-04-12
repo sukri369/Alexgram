@@ -44,6 +44,7 @@ public class HiddenChatsActivity extends DialogsActivity {
                 Bundle args = new Bundle();
                 args.putBoolean("onlySelect", true);
                 args.putInt("dialogsType", 3); // Forward/Select type
+                args.putString("customTitle", LocaleController.getString("HideChat", R.string.HideChat));
                 DialogsActivity picker = new DialogsActivity(args);
                 picker.setDelegate((fragment, dids, message, param, notify, scheduleDate, scheduleRepeatPeriod, topicsFragment) -> {
                     for (MessagesStorage.TopicKey topicKey : dids) {
