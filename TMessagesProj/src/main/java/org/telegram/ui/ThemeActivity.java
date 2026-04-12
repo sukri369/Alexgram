@@ -242,6 +242,8 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
     private int notificationIconSelectorRow;
     private int notificationIconShadowRow;
 
+    private int onlineThemesRow;
+
     private int rowCount;
 
     private boolean updatingLocation;
@@ -602,6 +604,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
         searchEngineRow = -1;
         bluetoothScoRow = -1;
         settings2Row = -1;
+        onlineThemesRow = -1;
 
         swipeGestureHeaderRow = -1;
         swipeGestureRow = -1;
@@ -694,6 +697,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
 
             nightThemeRow = rowCount++;
             browserRow = rowCount++;
+            onlineThemesRow = rowCount++;
             liteModeRow = rowCount++;
             stickersRow = rowCount++;
             stickersSectionRow = rowCount++;
@@ -1499,6 +1503,8 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                 presentFragment(new StickersActivity(MediaDataController.TYPE_IMAGE, null));
             } else if (position == liteModeRow) {
                 presentFragment(new LiteModeSettingsActivity());
+            } else if (position == onlineThemesRow) {
+                presentFragment(new OnlineThemesActivity());
             }
         });
         if (currentType == THEME_TYPE_BASIC) {
@@ -2711,6 +2717,9 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                         cell.offsetFromImage = 64;
                         cell.heightDp = 60;
                         cell.imageLeft = 20;
+                    } else if (position == onlineThemesRow) {
+                        cell.setColors(Theme.key_dialogIcon, Theme.key_windowBackgroundWhiteBlackText);
+                        cell.setTextAndIcon("Online Themes", R.drawable.msg2_chats_add, true);
                     }
                     break;
                 }
