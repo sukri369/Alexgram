@@ -576,7 +576,7 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
 
         private boolean isBreakType(int position) {
             int type = getItemViewType(position);
-            return type == CellGroup.ITEM_TYPE_DIVIDER || type == CellGroup.ITEM_TYPE_TEXT;
+            return type == CellGroup.ITEM_TYPE_DIVIDER || type == CellGroup.ITEM_TYPE_TEXT || type == CellGroup.ITEM_TYPE_HEADER;
         }
 
         protected void onBindCustomViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {

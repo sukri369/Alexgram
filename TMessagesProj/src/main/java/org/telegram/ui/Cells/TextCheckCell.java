@@ -180,8 +180,7 @@ public class TextCheckCell extends FrameLayout {
         AvatarSpan.checkSpansParent(text, this);
         textView.setText(text);
         if (isNekoCell) {
-            textView.setLines(0);
-            textView.setMaxLines(0);
+            textView.setMaxLines(5);
             textView.setSingleLine(false);
         }
         isMultiline = false;
@@ -269,10 +268,13 @@ public class TextCheckCell extends FrameLayout {
                     textView.setMaxLines(1);
                     textView.setEllipsize(TextUtils.TruncateAt.END);
                 }
+                valueTextView.setMaxLines(5);
+                valueTextView.setSingleLine(false);
+            } else {
+                valueTextView.setLines(0);
+                valueTextView.setMaxLines(0);
+                valueTextView.setSingleLine(false);
             }
-            valueTextView.setLines(0);
-            valueTextView.setMaxLines(0);
-            valueTextView.setSingleLine(false);
             valueTextView.setEllipsize(null);
             valueTextView.setPadding(0, 0, 0, AndroidUtilities.dp(11));
         } else {
