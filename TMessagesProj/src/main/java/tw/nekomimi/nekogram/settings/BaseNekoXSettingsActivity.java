@@ -158,9 +158,7 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
         return this instanceof NekoGeneralSettingsActivity || 
                this instanceof NekoTranslatorSettingsActivity || 
                this instanceof NekoChatSettingsActivity || 
-               this instanceof NekoExperimentalSettingsActivity ||
-               this instanceof NekoPasscodeSettingsActivity ||
-               this instanceof GhostModeActivity;
+               this instanceof NekoExperimentalSettingsActivity;
     }
 
     private void setupBrandingColors() {
