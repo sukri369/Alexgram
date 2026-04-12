@@ -64,6 +64,10 @@ public class HiddenChatsActivity extends DialogsActivity {
                 viewPage.listView.requestLayout();
             }
         }
+
+        if (actionBar != null) {
+            actionBar.setOnLongClickListener(v -> true);
+        }
         
         return view;
     }
