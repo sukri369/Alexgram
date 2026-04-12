@@ -317,7 +317,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             this, CubicBezierInterpolator.EASE_OUT_QUINT, 350);
     private final BoolAnimator animatorForwardButtonVisible = new BoolAnimator(ANIMATOR_ID_FORWARD_BUTTON_VISIBLE,
             this, CubicBezierInterpolator.EASE_OUT_QUINT, 350);
-    private final BoolAnimator animatorFilterTabsVisible = new BoolAnimator(ANIMATOR_ID_FILTER_TABS_VISIBLE,
+    protected final BoolAnimator animatorFilterTabsVisible = new BoolAnimator(ANIMATOR_ID_FILTER_TABS_VISIBLE,
             this, CubicBezierInterpolator.EASE_OUT_QUINT, 350);
     private final BoolAnimator animatorSearchFilterTabsVisible = new BoolAnimator(ANIMATOR_ID_SEARCH_FILTER_TABS_VISIBLE,
             this, CubicBezierInterpolator.EASE_OUT_QUINT, 350);

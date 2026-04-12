@@ -20,13 +20,19 @@ public class HiddenChatsActivity extends DialogsActivity {
     
     @Override
     public View createView(android.content.Context context) {
+        hasStories = false;
+        canShowFilterTabsView = false;
         View view = super.createView(context);
         
         if (filterTabsView != null) {
             filterTabsView.setVisibility(View.GONE);
-            canShowFilterTabsView = false;
+            animatorFilterTabsVisible.setValue(false, false);
         }
         
+        if (dialogStoriesCell != null) {
+            dialogStoriesCell.setVisibility(View.GONE);
+        }
+
         if (floatingButtonStories != null) {
             floatingButtonStories.setVisibility(View.GONE);
         }
@@ -49,6 +55,12 @@ public class HiddenChatsActivity extends DialogsActivity {
                 });
                 presentFragment(picker);
             });
+        }
+
+        for (ViewPage viewPage : viewPages) {
+            if (viewPage != null && viewPage.listView != null) {
+                viewPage.listView.requestLayout();
+            }
         }
         
         return view;
