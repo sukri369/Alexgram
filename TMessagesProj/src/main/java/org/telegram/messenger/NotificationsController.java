@@ -6255,7 +6255,7 @@ public class NotificationsController extends BaseController {
         if (notificationIconConfigValue >= 0 && notificationIconConfigValue < allowedIcons.size()) {
             return allowedIcons.get(notificationIconConfigValue).background;
         }
-        return R.drawable.notification;
+        return R.drawable.ic_launcher_alexgram_blue;
     }
 
     public void loadTopicsNotificationsExceptions(long dialogId, Consumer<HashSet<Integer>> consumer) {
