@@ -2720,6 +2720,10 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                     } else if (position == onlineThemesRow) {
                         cell.setColors(Theme.key_dialogIcon, Theme.key_windowBackgroundWhiteBlackText);
                         cell.setTextAndIcon("Online Themes", R.drawable.msg2_chats_add, true);
+                        cell.setSubtitle("Browse and download community themes");
+                        cell.heightDp = 60;
+                        cell.offsetFromImage = 64;
+                        cell.imageLeft = 20;
                     }
                     break;
                 }
@@ -2794,7 +2798,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
             } else if (position == bubbleRadiusRow) {
                 return TYPE_BUBBLE_RADIUS;
             } else if (position == backgroundRow || position == editThemeRow || position == createNewThemeRow ||
-                        position == liteModeRow || position == stickersRow) {
+                        position == liteModeRow || position == stickersRow || position == onlineThemesRow) {
                 return TYPE_TEXT_PREFERENCE;
             } else if (position == swipeGestureRow) {
                 return TYPE_SWIPE_GESTURE;
