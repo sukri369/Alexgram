@@ -308,14 +308,13 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
                 logoContainer.setOutlineProvider(new android.view.ViewOutlineProvider() {
                     @Override
                     public void getOutline(View view, android.graphics.Outline outline) {
-                        outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), dp(20));
+                        outline.setOval(0, 0, view.getWidth(), view.getHeight());
                     }
                 });
                 logoContainer.setClipToOutline(true);
             }
             GradientDrawable logoBg = new GradientDrawable();
-            logoBg.setShape(GradientDrawable.RECTANGLE);
-            logoBg.setCornerRadius(dp(20));
+            logoBg.setShape(GradientDrawable.OVAL);
             logoBg.setColor(isDark ? 0x1AFFFFFF : 0x1A000000);
             logoContainer.setBackground(logoBg);
             addView(logoContainer, LayoutHelper.createFrame(80, 80, Gravity.CENTER_HORIZONTAL));
