@@ -79,6 +79,14 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
 
     protected BlurredRecyclerView listView;
     protected BaseListAdapter listAdapter;
+
+    protected boolean isBreakType(int position) {
+        if (listAdapter == null || position < 0 || position >= listAdapter.getItemCount()) {
+            return true;
+        }
+        int type = listAdapter.getItemViewType(position);
+        return type == TYPE_SHADOW || type == TYPE_INFO_PRIVACY;
+    }
     protected LinearLayoutManager layoutManager;
     protected Theme.ResourcesProvider resourcesProvider;
 
@@ -98,8 +106,6 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
 
         updateRows();
 
-        return true;
-    }
 
     @Override
     public View createView(Context context) {
@@ -147,12 +153,12 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
             @Override
             public void getItemOffsets(@NonNull android.graphics.Rect outRect, @NonNull View view, @NonNull RecyclerView recyclerView, @NonNull RecyclerView.State state) {
                 int position = recyclerView.getChildAdapterPosition(view);
-                if (position == RecyclerView.NO_POSITION || isBreakType(position)) {
+                if (position == RecyclerView.NO_POSITION || BaseNekoSettingsActivity.this.isBreakType(position)) {
                     outRect.set(0, 0, 0, 0);
                     return;
                 }
-                boolean isFirst = position == 0 || isBreakType(position - 1);
-                boolean isLast = position == listAdapter.getItemCount() - 1 || isBreakType(position + 1);
+                boolean isFirst = position == 0 || BaseNekoSettingsActivity.this.isBreakType(position - 1);
+                boolean isLast = position == listAdapter.getItemCount() - 1 || BaseNekoSettingsActivity.this.isBreakType(position + 1);
                 outRect.set(dp(24), isFirst ? dp(4) : 0, dp(24), isLast ? dp(12) : 0);
             }
         });
@@ -328,18 +334,9 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
     }
 
     @Override
-    public boolean onInsets(int left, int top, int right, int bottom) {
+    public void onInsets(int left, int top, int right, int bottom) {
         listView.setPadding(0, 0, 0, bottom);
         listView.setClipToPadding(false);
-        return true;
-    }
-
-    protected boolean isBreakType(int position) {
-        if (listAdapter == null || position < 0 || position >= listAdapter.getItemCount()) {
-            return true;
-        }
-        int type = listAdapter.getItemViewType(position);
-        return type == TYPE_SHADOW || type == TYPE_INFO_PRIVACY;
     }
 
     private class BlurContentView extends SizeNotifierFrameLayout {
