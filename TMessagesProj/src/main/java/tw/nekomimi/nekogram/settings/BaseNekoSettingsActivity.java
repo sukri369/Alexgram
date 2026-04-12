@@ -103,11 +103,9 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
     @Override
     public boolean onFragmentCreate() {
         super.onFragmentCreate();
-
         updateRows();
-
-
-    @Override
+        return true;
+    }
     public View createView(Context context) {
         setupBrandingColors();
         fragmentView = new BlurContentView(context);
