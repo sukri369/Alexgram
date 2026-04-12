@@ -136,5 +136,6 @@
     <string name="UnlockHiddenChats">Unlock Hidden Chats</string>
     <string name="HiddenChatsAbout">Hide sensitive chats from the main list. Access them by holding the Title bar after unlocking with a passcode or biometric.</string>
     <string name="HideContacts">Hide Contacts</string>
+    <string name="RestartRequired">Restart required to apply changes</string>
 </resources>
 
