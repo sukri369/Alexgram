@@ -2921,13 +2921,6 @@ public class AndroidUtilities {
                     }
                 }
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                try {
-                    window.setFrameRate(rate, Surface.FRAME_RATE_COMPATIBILITY_DEFAULT);
-                } catch (Throwable e) {
-                    FileLog.e(e);
-                }
-            }
         }
         try {
             wm.updateViewLayout(window.getDecorView(), params);
