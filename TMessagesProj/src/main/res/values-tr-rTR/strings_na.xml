@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="N_Config">N-Ayarları</string>
     <string name="CombineMessage">Mesajları Birleştir</string>
@@ -86,7 +86,7 @@
     <string name="RegexFiltersCaseInsensitive">Büyük/küçük harfe duyarsız ifadeler</string>
     <string name="RegexFiltersAdd">Filtre ekle</string>
     <string name="RegexFiltersEdit">Filtreyi düzenle</string>
-    <string name="RegexFiltersAddDescription">Düzenli ifadenizi (regex) tam olarak test etmek için <![CDATA[<a href="https://regex101.com">regex101.com</a>]]> sitesini kullanabilirsiniz. Düz metin de kullanabilirsiniz, ancak köşeli parantezleri kaçış karakteriyle (escape) ayırmayı unutmayın.</string>
+    <string name="RegexFiltersAddDescription">Düzenli ifadenizi (regex) tam olarak test etmek için &lt;a href="https://regex101.com"&gt;regex101.com&lt;/a&gt; sitesini kullanabilirsiniz. Düz metin de kullanabilirsiniz, ancak köşeli parantezleri kaçış karakteriyle (escape) ayırmayı unutmayın.</string>
     <string name="RegexFiltersAddError">Regex sözdizimi (syntax) hatası</string>
     <string name="ShowTimeHint">Ayrıntılar için Saate Dokunun</string>
     <string name="SearchHashtagDefaultPageChannel">Kanallarda Varsayılan Hashtag Arama Sayfası</string>
@@ -104,4 +104,37 @@
     <string name="VideoPlayerDecoderPreferSW">Yazılım (SW) Tercih Et</string>
     <string name="VideoPlayerDecoderHardware">Sadece Donanım (HW)</string>
     <string name="VideoPlayerDecoderPreferHW">Donanım (HW) Tercih Et</string>
+    <string name="RunInBackground">Arka planda çalıştır</string>
+    <string name="RunInBackgroundInfo">Güvenilir bildirimler için uygulamayı arka planda çalışmaya devam ettirin.</string>
+    <string name="NagramXPushService">Alexgram Bildirim Servisi</string>
+    <string name="AppIconGoogle" translatable="false">Google</string>
+    <string name="AppIconColored">Alexgram Renkli</string>
+    <string name="AppIconDark">Alexgram Karanlık</string>
+    <string name="AppIconGreen">Alexgram Yeşil</string>
+    <string name="AppIconPink">Alexgram Pembe</string>
+    <string name="AppIconRoseBlue">Alexgram GülMavi</string>
+    <string name="AppIconWhite">Alexgram Beyaz</string>
+    <string name="Nagram" translatable="false">Alexgram</string>
+    <string name="PushServiceTypeFCM" translatable="false">Google FCM</string>
+    <string name="PushServiceTypeUnified" translatable="false">UnifiedPush</string>
+    <string name="PushServiceTypeMicroG" translatable="false">microG</string>
+    <string name="PushServiceTypeUnifiedGateway">Unified Push Gateway</string>
+    <string name="Pangu" translatable="false">Pangu</string>
+    <string name="EnableLiveVideoWallpaper">Canlı Video Duvar Kağıdı</string>
+    <string name="ExportChat">Sohbeti dışa aktar</string>
+    <string name="ImportChat">Sohbeti içe aktar</string>
+    <string name="MusicGraph">Müzik Grafiği</string>
+    <string name="MusicGraphInfo">Ses çalarken renkli bir müzik görselleştiricisi gösterir.</string>
+    <string name="SendVideoAsRound">Görüntülü mesaj olarak gönder</string>
+    <string name="VideoNoteDurationError">Görüntülü mesaj 60 saniyeden uzun olamaz.</string>
+    <string name="HiddenChats">Gizli Sohbetler</string>
+    <string name="HideChat">Gizli sohbetlere ekle</string>
+    <string name="UnhideChat">Gizli sohbetlerden kaldır</string>
+    <string name="HideChats">Sohbetleri gizle</string>
+    <string name="UnhideChats">Sohbetleri göster</string>
+    <string name="HiddenChatsPasscode">Gizli Sohbet Şifresi</string>
+    <string name="UnlockHiddenChats">Gizli Sohbetlerin Kilidini Aç</string>
+    <string name="HiddenChatsAbout">Hassas sohbetleri ana listeden gizleyin. Şifre veya biyometrik ile kilidi açtıktan sonra Başlık çubuğuna basılı tutarak bunlara erişin.</string>
+    <string name="HideContacts">Kişileri gizle</string>
+    <string name="RestartRequired">Değişiklikleri uygulamak için yeniden başlatma gerekiyor</string>
 </resources>

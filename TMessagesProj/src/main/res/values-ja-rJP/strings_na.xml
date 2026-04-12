@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="N_Config">N-設定</string>
     <string name="CombineMessage">メッセージを結合</string>
@@ -86,7 +86,7 @@
     <string name="RegexFiltersCaseInsensitive">大文字と小文字を区別しない</string>
     <string name="RegexFiltersAdd">フィルターを追加</string>
     <string name="RegexFiltersEdit">フィルターを編集</string>
-    <string name="RegexFiltersAddDescription">ウェブサイト <![CDATA[<a href="https://regex101.com">regex101.com</a>]]> を使用して、正規表現を完全にテストできます。プレーンテキストを使用することもできますが、括弧をエスケープすることを忘れないでください。</string>
+    <string name="RegexFiltersAddDescription">ウェブサイト &lt;a href="https://regex101.com"&gt;regex101.com&lt;/a&gt; を使用して、正規表現を完全にテストできます。プレーンテキストを使用することもできますが、括弧をエスケープすることを忘れないでください。</string>
     <string name="RegexFiltersAddError">構文エラー</string>
     <string name="ShowTimeHint">時間をタップして詳細を表示</string>
     <string name="SearchHashtagDefaultPageChannel">チャンネルでのハッシュタグ検索ページ</string>
@@ -104,4 +104,37 @@
     <string name="VideoPlayerDecoderPreferSW">SW 優先</string>
     <string name="VideoPlayerDecoderHardware">HW のみ</string>
     <string name="VideoPlayerDecoderPreferHW">HW 優先</string>
+    <string name="RunInBackground">バックグラウンドで実行</string>
+    <string name="RunInBackgroundInfo">通知を確実にするため、アプリをバックグラウンドで実行し続けます。</string>
+    <string name="NagramXPushService">Alexgram プッシュサービス</string>
+    <string name="AppIconGoogle" translatable="false">Google</string>
+    <string name="AppIconColored">Alexgram カラー</string>
+    <string name="AppIconDark">Alexgram ダーク</string>
+    <string name="AppIconGreen">Alexgram グリーン</string>
+    <string name="AppIconPink">Alexgram ピンク</string>
+    <string name="AppIconRoseBlue">Alexgram ローズブルー</string>
+    <string name="AppIconWhite">Alexgram ホワイト</string>
+    <string name="Nagram" translatable="false">Alexgram</string>
+    <string name="PushServiceTypeFCM" translatable="false">Google FCM</string>
+    <string name="PushServiceTypeUnified" translatable="false">UnifiedPush</string>
+    <string name="PushServiceTypeMicroG" translatable="false">microG</string>
+    <string name="PushServiceTypeUnifiedGateway">Unified Push Gateway</string>
+    <string name="Pangu" translatable="false">Pangu</string>
+    <string name="EnableLiveVideoWallpaper">ライブビデオ壁紙</string>
+    <string name="ExportChat">チャットをエクスポート</string>
+    <string name="ImportChat">チャットをインポート</string>
+    <string name="MusicGraph">ミュージックグラフ</string>
+    <string name="MusicGraphInfo">オーディオ再生中にカラフルなミュージックビジュアライザーを表示します。</string>
+    <string name="SendVideoAsRound">ビデオメッセージとして送信</string>
+    <string name="VideoNoteDurationError">ビデオメッセージは60秒以上にすることはできません。</string>
+    <string name="HiddenChats">非表示のチャット</string>
+    <string name="HideChat">非表示のチャットに追加</string>
+    <string name="UnhideChat">非表示のチャットから削除</string>
+    <string name="HideChats">チャットを非表示にする</string>
+    <string name="UnhideChats">チャットを表示する</string>
+    <string name="HiddenChatsPasscode">非表示のチャットのパスコード</string>
+    <string name="UnlockHiddenChats">非表示のチャットのロックを解除</string>
+    <string name="HiddenChatsAbout">メインリストから機密チャットを非表示にします。パスコードまたは生体認証でロックを解除した後、タイトルバーを長押ししてアクセスします。</string>
+    <string name="HideContacts">連絡先を非表示にする</string>
+    <string name="RestartRequired">変更を適用するには再起動が必要です</string>
 </resources>

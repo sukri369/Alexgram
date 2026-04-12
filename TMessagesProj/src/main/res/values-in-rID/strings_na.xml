@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="N_Config">Konfig-N</string>
     <string name="CombineMessage">Gabungkan Pesan</string>
@@ -87,7 +87,7 @@
     <string name="RegexFiltersCaseInsensitive">Ekspresi yang tidak peka huruf besar/kecil</string>
     <string name="RegexFiltersAdd">Tambahkan penyaring</string>
     <string name="RegexFiltersEdit">Sunting penyaring</string>
-    <string name="RegexFiltersAddDescription">Anda dapat menggudakan situs <![CDATA[<a href="https://regex101.com">regex101.com</a>]]> untuk menguji ekspresi reguler Anda secara menyeluruh. Anda juga dapat menggunakan teks biasa, tetapi jangan lupa untuk menghilangkan tanda kurung.</string>
+    <string name="RegexFiltersAddDescription">Anda dapat menggudakan situs &lt;a href="https://regex101.com"&gt;regex101.com&lt;/a&gt; untuk menguji ekspresi reguler Anda secara menyeluruh. Anda juga dapat menggunakan teks biasa, tetapi jangan lupa untuk menghilangkan tanda kurung.</string>
     <string name="RegexFiltersAddError">Kesalahan sintaks regex</string>
     <string name="ShowTimeHint">Ketuk Waktu untuk Rincian</string>
     <string name="SearchHashtagDefaultPageChannel">Halaman Pencarian Hashtag Default di Saluran</string>
@@ -105,4 +105,36 @@
     <string name="VideoPlayerDecoderPreferSW">Lebih suka SW</string>
     <string name="VideoPlayerDecoderHardware">Hanya HW</string>
     <string name="VideoPlayerDecoderPreferHW">Lebih suka HW</string>
+    <string name="RunInBackground">Jalankan di Latar Belakang</string>
+    <string name="RunInBackgroundInfo">Tetap jalankan aplikasi di latar belakang untuk memastikan notifikasi handal.</string>
+    <string name="NagramXPushService">Layanan Push Alexgram</string>
+    <string name="AppIconGoogle" translatable="false">Google</string>
+    <string name="AppIconColored">Alexgram Berwarna</string>
+    <string name="AppIconDark">Alexgram Gelap</string>
+    <string name="AppIconGreen">Alexgram Hijau</string>
+    <string name="AppIconPink">Alexgram Merah Muda</string>
+    <string name="AppIconRoseBlue">Alexgram RoseBlue</string>
+    <string name="AppIconWhite">Alexgram Putih</string>
+    <string name="Nagram" translatable="false">Alexgram</string>
+    <string name="PushServiceTypeFCM" translatable="false">Google FCM</string>
+    <string name="PushServiceTypeUnified" translatable="false">UnifiedPush</string>
+    <string name="PushServiceTypeMicroG" translatable="false">microG</string>
+    <string name="Pangu" translatable="false">Pangu</string>
+    <string name="EnableLiveVideoWallpaper">Wallpaper Video Langsung</string>
+    <string name="ExportChat">Ekspor Obrolan</string>
+    <string name="ImportChat">Impor Obrolan</string>
+    <string name="MusicGraph">Grafik Musik</string>
+    <string name="MusicGraphInfo">Tampilkan visualisator musik berwarna-warni saat memutar audio.</string>
+    <string name="SendVideoAsRound">Kirim sebagai Pesan Video</string>
+    <string name="VideoNoteDurationError">Pesan video tidak boleh lebih dari 60 detik.</string>
+    <string name="HiddenChats">Obrolan Tersembunyi</string>
+    <string name="HideChat">Tambahkan ke Obrolan Tersembunyi</string>
+    <string name="UnhideChat">Hapus dari Obrolan Tersembunyi</string>
+    <string name="HideChats">Sembunyikan Obrolan</string>
+    <string name="UnhideChats">Tampilkan Obrolan</string>
+    <string name="HiddenChatsPasscode">Sandi Obrolan Tersembunyi</string>
+    <string name="UnlockHiddenChats">Buka Kunci Obrolan Tersembunyi</string>
+    <string name="HiddenChatsAbout">Sembunyikan obrolan sensitif dari daftar utama. Akses dengan menahan bilah Judul setelah membuka kunci dengan sandi atau biometrik.</string>
+    <string name="HideContacts">Sembunyikan Kontak</string>
+    <string name="RestartRequired">Diperlukan mulai ulang untuk menerapkan perubahan</string>
 </resources>

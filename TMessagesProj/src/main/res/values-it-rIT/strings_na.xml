@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="N_Config">N-Config</string>
     <string name="CombineMessage">Unisci Messaggi</string>
@@ -87,7 +87,7 @@
     <string name="RegexFiltersCaseInsensitive">Espressioni senza distinzione tra maiuscole e minuscole</string>
     <string name="RegexFiltersAdd">Aggiungi Filtro</string>
     <string name="RegexFiltersEdit">Modifica Filtro</string>
-    <string name="RegexFiltersAddDescription">È possibile utilizzare il sito <![CDATA[<a href="https://regex101.com">regex101.com</a>]]> per testare completamente l\'espressione regolare. È anche possibile utilizzare testo semplice, ma non dimenticare di sostituire le parentesi.</string>
+    <string name="RegexFiltersAddDescription">È possibile utilizzare il sito &lt;a href="https://regex101.com"&gt;regex101.com&lt;/a&gt; per testare completamente l\'espressione regolare. È anche possibile utilizzare testo semplice, ma non dimenticare di sostituire le parentesi.</string>
     <string name="RegexFiltersAddError">Errore di sintassi Regex</string>
     <string name="ShowTimeHint">Tocca L\'orario per Dettagli</string>
     <string name="SearchHashtagDefaultPageChannel">Hashtag Default per la Ricerca nei Canali</string>
@@ -105,4 +105,36 @@
     <string name="VideoPlayerDecoderPreferSW">Preferisci SW</string>
     <string name="VideoPlayerDecoderHardware">Solo HW</string>
     <string name="VideoPlayerDecoderPreferHW">Preferisci HW</string>
+    <string name="RunInBackground">Esegui in Background</string>
+    <string name="RunInBackgroundInfo">Mantieni l\'app in esecuzione in background per garantire notifiche affidabili.</string>
+    <string name="NagramXPushService">Servizio Push Alexgram</string>
+    <string name="AppIconGoogle" translatable="false">Google</string>
+    <string name="AppIconColored">Alexgram Colorata</string>
+    <string name="AppIconDark">Alexgram Scura</string>
+    <string name="AppIconGreen">Alexgram Verde</string>
+    <string name="AppIconPink">Alexgram Rosa</string>
+    <string name="AppIconRoseBlue">Alexgram Rosa-Blu</string>
+    <string name="AppIconWhite">Alexgram Bianca</string>
+    <string name="Nagram" translatable="false">Alexgram</string>
+    <string name="PushServiceTypeFCM" translatable="false">Google FCM</string>
+    <string name="PushServiceTypeUnified" translatable="false">UnifiedPush</string>
+    <string name="PushServiceTypeMicroG" translatable="false">microG</string>
+    <string name="Pangu" translatable="false">Pangu</string>
+    <string name="EnableLiveVideoWallpaper">Sfondo Video Animato</string>
+    <string name="ExportChat">Esporta Chat</string>
+    <string name="ImportChat">Importa Chat</string>
+    <string name="MusicGraph">Grafico Musicale</string>
+    <string name="MusicGraphInfo">Visualizza un visualizzatore musicale colorato durante la riproduzione dell\'audio.</string>
+    <string name="SendVideoAsRound">Invia come Videomessaggio</string>
+    <string name="VideoNoteDurationError">I videomessaggi non possono durare più di 60 secondi.</string>
+    <string name="HiddenChats">Chat Nascoste</string>
+    <string name="HideChat">Aggiungi alle Chat Nascoste</string>
+    <string name="UnhideChat">Rimuovi dalle Chat Nascoste</string>
+    <string name="HideChats">Nascondi Chat</string>
+    <string name="UnhideChats">Mostra Chat</string>
+    <string name="HiddenChatsPasscode">Codice per Chat Nascoste</string>
+    <string name="UnlockHiddenChats">Sblocca Chat Nascoste</string>
+    <string name="HiddenChatsAbout">Nascondi le chat sensibili dalla lista principale. Accedi ad esse tenendo premuta la barra del titolo dopo averle sbloccate con un codice o dati biometrici.</string>
+    <string name="HideContacts">Nascondi Contatti</string>
+    <string name="RestartRequired">Riavvio richiesto per applicare le modifiche</string>
 </resources>

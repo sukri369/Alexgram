@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="N_Config">Konfiguracja-Nagram</string>
     <string name="CombineMessage">Połącz wiadomości</string>
@@ -86,7 +86,7 @@
     <string name="RegexFiltersCaseInsensitive">Wyrażenia bez uwzględniania wielkości liter</string>
     <string name="RegexFiltersAdd">Dodaj filtr</string>
     <string name="RegexFiltersEdit">Edytuj filtr</string>
-    <string name="RegexFiltersAddDescription">Możesz skorzystać ze strony <![CDATA[<a href="https://regex101.com">regex101.com</a>]]>, aby w pełni przetestować swoje wyrażenie regularne. Możesz również użyć zwykłego tekstu, ale pamiętaj o użyciu nawiasów kwadratowych.</string>
+    <string name="RegexFiltersAddDescription">Możesz skorzystać ze strony &lt;a href="https://regex101.com"&gt;regex101.com&lt;/a&gt;, aby w pełni przetestować swoje wyrażenie regularne. Możesz również użyć zwykłego tekstu, ale pamiętaj o użyciu nawiasów kwadratowych.</string>
     <string name="RegexFiltersAddError">Błąd składni wyrażenia regularnego</string>
     <string name="ShowTimeHint">Kliknij Czas, aby poznać szczegóły</string>
     <string name="SearchHashtagDefaultPageChannel">Domyślna strona wyszukiwania hashtagów w kanałach</string>
@@ -104,4 +104,37 @@
     <string name="VideoPlayerDecoderPreferSW">Preferuj SW</string>
     <string name="VideoPlayerDecoderHardware">Tylko HW</string>
     <string name="VideoPlayerDecoderPreferHW">Preferuj HW</string>
+    <string name="RunInBackground">Uruchom w tle</string>
+    <string name="RunInBackgroundInfo">Utrzymuj aplikację w tle, aby zapewnić niezawodne powiadomienia.</string>
+    <string name="NagramXPushService">Alexgram Push Service</string>
+    <string name="AppIconGoogle" translatable="false">Google</string>
+    <string name="AppIconColored">Alexgram Colored</string>
+    <string name="AppIconDark">Alexgram Dark</string>
+    <string name="AppIconGreen">Alexgram Green</string>
+    <string name="AppIconPink">Alexgram Pink</string>
+    <string name="AppIconRoseBlue">Alexgram RoseBlue</string>
+    <string name="AppIconWhite">Alexgram White</string>
+    <string name="Nagram" translatable="false">Alexgram</string>
+    <string name="PushServiceTypeFCM" translatable="false">Google FCM</string>
+    <string name="PushServiceTypeUnified" translatable="false">UnifiedPush</string>
+    <string name="PushServiceTypeMicroG" translatable="false">microG</string>
+    <string name="PushServiceTypeUnifiedGateway">Unified Push Gateway</string>
+    <string name="Pangu" translatable="false">Pangu</string>
+    <string name="EnableLiveVideoWallpaper">Animowana tapeta wideo</string>
+    <string name="ExportChat">Eksportuj czat</string>
+    <string name="ImportChat">Importuj czat</string>
+    <string name="MusicGraph">Wizualizacja muzyki</string>
+    <string name="MusicGraphInfo">Wyświetlaj kolorową wizualizację muzyki podczas odtwarzania dźwięku.</string>
+    <string name="SendVideoAsRound">Wyślij jako wiadomość wideo</string>
+    <string name="VideoNoteDurationError">Wiadomość wideo nie może być dłuższa niż 60 sekund.</string>
+    <string name="HiddenChats">Ukryte czaty</string>
+    <string name="HideChat">Dodaj do ukrytych czatów</string>
+    <string name="UnhideChat">Usuń z ukrytych czatów</string>
+    <string name="HideChats">Ukryj czaty</string>
+    <string name="UnhideChats">Pokaż czaty</string>
+    <string name="HiddenChatsPasscode">Hasło ukrytych czatów</string>
+    <string name="UnlockHiddenChats">Odblokuj ukryte czaty</string>
+    <string name="HiddenChatsAbout">Ukryj wrażliwe czaty z listy głównej. Dostęp do nich uzyskasz, przytrzymując pasek tytułu po odblokowaniu hasłem lub biometrią.</string>
+    <string name="HideContacts">Ukryj kontakty</string>
+    <string name="RestartRequired">Wymagany restart, aby zastosować zmiany</string>
 </resources>

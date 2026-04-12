@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="N_Config">N-設定</string>
     <string name="CombineMessage">合併訊息</string>
@@ -86,7 +86,7 @@
     <string name="RegexFiltersCaseInsensitive">不區分大小寫</string>
     <string name="RegexFiltersAdd">新增過濾器</string>
     <string name="RegexFiltersEdit">編輯過濾器</string>
-    <string name="RegexFiltersAddDescription">您可以使用網站 <![CDATA[<a href="https://regex101.com">regex101.com</a>]]> 來測試您的正規表示式。您也可以使用純文字，但請不要忘記使用轉義符號。</string>
+    <string name="RegexFiltersAddDescription">您可以使用網站 &lt;a href="https://regex101.com"&gt;regex101.com&lt;/a&gt; 來測試您的正規表示式。您也可以使用純文字，但請不要忘記使用轉義符號。</string>
     <string name="RegexFiltersAddError">正規表示式語法錯誤</string>
     <string name="ShowTimeHint">點擊時間顯示詳細資訊</string>
     <string name="SearchHashtagDefaultPageChannel">在頻道中點擊標籤時預設的搜尋頁面</string>
@@ -104,4 +104,37 @@
     <string name="VideoPlayerDecoderPreferSW">軟解優先</string>
     <string name="VideoPlayerDecoderHardware">僅硬解</string>
     <string name="VideoPlayerDecoderPreferHW">硬解優先</string>
+    <string name="RunInBackground">背景執行</string>
+    <string name="RunInBackgroundInfo">保持程式在背景執行以確保通知可靠。</string>
+    <string name="NagramXPushService">Alexgram 推送服務</string>
+    <string name="AppIconGoogle" translatable="false">Google</string>
+    <string name="AppIconColored">Alexgram 彩色</string>
+    <string name="AppIconDark">Alexgram 深色</string>
+    <string name="AppIconGreen">Alexgram 綠色</string>
+    <string name="AppIconPink">Alexgram 粉色</string>
+    <string name="AppIconRoseBlue">Alexgram 藍粉色</string>
+    <string name="AppIconWhite">Alexgram 白色</string>
+    <string name="Nagram" translatable="false">Alexgram</string>
+    <string name="PushServiceTypeFCM" translatable="false">Google FCM</string>
+    <string name="PushServiceTypeUnified" translatable="false">UnifiedPush</string>
+    <string name="PushServiceTypeMicroG" translatable="false">microG</string>
+    <string name="PushServiceTypeUnifiedGateway">Unified Push Gateway</string>
+    <string name="Pangu" translatable="false">Pangu</string>
+    <string name="EnableLiveVideoWallpaper">影片桌面</string>
+    <string name="ExportChat">匯出聊天</string>
+    <string name="ImportChat">匯入聊天</string>
+    <string name="MusicGraph">音樂圖表</string>
+    <string name="MusicGraphInfo">播放音訊時顯示彩色音樂視覺化效果。</string>
+    <string name="SendVideoAsRound">發送圓形影片</string>
+    <string name="VideoNoteDurationError">圓形影片不能超過 60 秒。</string>
+    <string name="HiddenChats">隱藏聊天</string>
+    <string name="HideChat">添加到隱藏聊天</string>
+    <string name="UnhideChat">從隱藏聊天中移除</string>
+    <string name="HideChats">隱藏聊天列表</string>
+    <string name="UnhideChats">顯示聊天列表</string>
+    <string name="HiddenChatsPasscode">隱藏聊天密碼</string>
+    <string name="UnlockHiddenChats">解鎖隱藏聊天</string>
+    <string name="HiddenChatsAbout">從主列表中隱藏敏感聊天。解鎖後長按標題欄即可訪問。</string>
+    <string name="HideContacts">隱藏聯絡人</string>
+    <string name="RestartRequired">需要重啟以應用更改</string>
 </resources>
