@@ -1602,6 +1602,9 @@ object NaConfig {
         if (customTitle.String() == "Nagram") {
             customTitle.setConfigString("Alexgram")
         }
+        if (NekoConfig.customSavePath.String() == "Nagram") {
+            NekoConfig.customSavePath.setConfigString("Alexgram")
+        }
     }
 
     private fun addConfig(

@@ -1850,7 +1850,8 @@
     <string name="NewMessageTitle">New Message</string>
     <string name="InviteFriendsHelp">Select contacts to invite them to Telegram</string>
     <string name="InviteToTelegram">INVITE TO TELEGRAM</string>
-    <string name="ShareTelegram2">Share Telegram</string>
+    <string name="ShareTelegram">Share Alexgram</string>
+    <string name="ShareTelegram2">Share Alexgram</string>
     <string name="UpdateContactsTitle">Update contacts?</string>
     <string name="UpdateContactsMessage">Telegram has detected many unsynced contacts, would you like to sync them now? Choose \'OK\' if you\'re using your own device, SIM card and Google account.</string>
     <string name="SortedByName">Sorted by name</string>
@@ -1858,7 +1859,8 @@
     <string name="AddContactByPhone">Add %1$s</string>
     <string name="PhoneNumberSearch">Phone number</string>
     <string name="NoContactsYet2Invite">Invite Friends ></string>
-
+    <string name="NoContactsYet">No contacts on Alexgram yet</string>
+    <string name="NoContactsYetLine1">Share Alexgram</string>
     <string name="NoContactsYet3">Add Contacts</string>
     <string name="NoContactsYet3Sub">You have no contacts on Telegram yet. How about adding them?</string>
 
@@ -3899,9 +3901,13 @@
     <string name="AddToTheGroupForwardCount">Number of last messages to forward:</string>
     <string name="AddToTheGroup">Add %1$s to the group?</string>
     <string name="AddManyMembersAlertTitle_one">Add member</string>
+    <string name="AddManyMembersAlertTitle_few">Add %1$d members</string>
+    <string name="AddManyMembersAlertTitle_many">Add %1$d members</string>
     <string name="AddManyMembersAlertTitle_other">Add %1$d members</string>
     <string name="AddMembersAlertNamesText">Are you sure you want to add %1$s to **%2$s**?</string>
     <string name="AddManyMembersAlertNamesText_one">Are you sure you want to add member to **%2$s**?</string>
+    <string name="AddManyMembersAlertNamesText_few">Are you sure you want to add %1$d members to **%2$s**?</string>
+    <string name="AddManyMembersAlertNamesText_many">Are you sure you want to add %1$d members to **%2$s**?</string>
     <string name="AddManyMembersAlertNamesText_other">Are you sure you want to add %1$d members to **%2$s**?</string>
     <string name="AddMembersForwardMessages">Show the last 100 messages to the new members</string>
     <string name="AddOneMemberForwardMessages">Show the last 100 messages to **%1$s**</string>
