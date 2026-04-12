@@ -2841,11 +2841,22 @@ public class AndroidUtilities {
                     display.getSize(displaySize);
                     screenRefreshRate = display.getRefreshRate();
                     screenMaxRefreshRate = screenRefreshRate;
-                    float[] rates = display.getSupportedRefreshRates();
-                    if (rates != null) {
-                        for (int i = 0; i < rates.length; ++i) {
-                            if (rates[i] > screenMaxRefreshRate) {
-                                screenMaxRefreshRate = rates[i];
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        Display.Mode[] modes = display.getSupportedModes();
+                        if (modes != null) {
+                            for (Display.Mode mode : modes) {
+                                if (mode.getRefreshRate() > screenMaxRefreshRate) {
+                                    screenMaxRefreshRate = mode.getRefreshRate();
+                                }
+                            }
+                        }
+                    } else {
+                        float[] rates = display.getSupportedRefreshRates();
+                        if (rates != null) {
+                            for (float rate : rates) {
+                                if (rate > screenMaxRefreshRate) {
+                                    screenMaxRefreshRate = rate;
+                                }
                             }
                         }
                     }
@@ -2897,8 +2908,12 @@ public class AndroidUtilities {
         final WindowManager wm = window.getWindowManager();
         if (wm == null) return;
         WindowManager.LayoutParams params = window.getAttributes();
-        params.preferredRefreshRate = rate;
-        if (NaConfig.INSTANCE.getForceMaxRefreshRate().Bool()) {
+        boolean force = NaConfig.INSTANCE.getForceMaxRefreshRate().Bool();
+        params.preferredRefreshRate = force ? screenMaxRefreshRate : rate;
+        if (force) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                window.setFrameRate(screenMaxRefreshRate, android.view.Surface.FRAME_RATE_COMPATIBILITY_FIXED_SOURCE);
+            }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 Display display;
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -2913,6 +2928,10 @@ public class AndroidUtilities {
                         for (Display.Mode mode : modes) {
                             if (bestMode == null || mode.getRefreshRate() > bestMode.getRefreshRate()) {
                                 bestMode = mode;
+                            } else if (Math.abs(mode.getRefreshRate() - bestMode.getRefreshRate()) < 0.1f) {
+                                if (mode.getPhysicalWidth() > bestMode.getPhysicalWidth() || mode.getPhysicalHeight() > bestMode.getPhysicalHeight()) {
+                                    bestMode = mode;
+                                }
                             }
                         }
                         if (bestMode != null) {
