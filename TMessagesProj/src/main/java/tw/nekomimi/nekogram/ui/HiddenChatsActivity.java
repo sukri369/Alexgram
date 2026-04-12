@@ -7,6 +7,7 @@ import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import tw.nekomimi.nekogram.helpers.HiddenChatsController;
+import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesStorage;
 import android.os.Bundle;
 import android.view.View;
