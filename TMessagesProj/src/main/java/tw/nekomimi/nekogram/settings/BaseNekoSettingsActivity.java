@@ -132,7 +132,7 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
         itemAnimator.setDelayAnimations(false);
         listView.setItemAnimator(itemAnimator);
         if (isAlexgramTheme()) {
-            listView.setPadding(0, dp(12), 0, dp(40));
+            listView.setPadding(0, AndroidUtilities.statusBarHeight + dp(64), 0, dp(40));
         }
         frameLayout.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
@@ -388,11 +388,10 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
             if (type == TYPE_HEADER) {
                 view.setBackground(null);
                 if (view instanceof HeaderCell headerCell) {
-                    headerCell.getTextView().setTextColor(isDark ? 0x88FFFFFF : 0x885C6B7F);
-                    headerCell.getTextView().setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 11);
-                    headerCell.getTextView().setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
-                    headerCell.getTextView().setLetterSpacing(0.05f);
-                    headerCell.setPadding(dp(6), dp(16), dp(16), dp(8));
+                    headerCell.getTextView().setTextColor(isDark ? 0xFF33A1FF : 0xFF007AFF);
+                    headerCell.getTextView().setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 14);
+                    headerCell.getTextView().setTypeface(AndroidUtilities.bold());
+                    headerCell.setPadding(dp(21), dp(16), dp(21), dp(8));
                 }
                 return;
             }
@@ -419,16 +418,16 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
 
             if (view instanceof TextSettingsCell cell) {
                 cell.getTextView().setTextColor(isDark ? android.graphics.Color.WHITE : 0xFF1A1A2E);
-                cell.getValueTextView().setTextColor(isDark ? 0xAAFFFFFF : 0xAA5C6B7F);
+                cell.getValueTextView().setTextColor(isDark ? 0xFFB0B0B0 : 0xFF8E8E93);
             } else if (view instanceof TextCheckCell cell) {
                 cell.getTextView().setTextColor(isDark ? android.graphics.Color.WHITE : 0xFF1A1A2E);
-                cell.getValueTextView().setTextColor(isDark ? 0xAAFFFFFF : 0xAA5C6B7F);
+                cell.getValueTextView().setTextColor(isDark ? 0xFFB0B0B0 : 0xFF8E8E93);
             } else if (view instanceof TextCell cell) {
                 cell.getTextView().setTextColor(isDark ? android.graphics.Color.WHITE : 0xFF1A1A2E);
-                cell.getValueTextView().setTextColor(isDark ? 0xAAFFFFFF : 0xAA5C6B7F);
+                cell.getValueTextView().setTextColor(isDark ? 0xFFB0B0B0 : 0xFF8E8E93);
             } else if (view instanceof TextDetailSettingsCell cell) {
                 cell.getTextView().setTextColor(isDark ? android.graphics.Color.WHITE : 0xFF1A1A2E);
-                cell.getValueTextView().setTextColor(isDark ? 0xAAFFFFFF : 0xAA5C6B7F);
+                cell.getValueTextView().setTextColor(isDark ? 0xFFB0B0B0 : 0xFF8E8E93);
             }
         }
 
