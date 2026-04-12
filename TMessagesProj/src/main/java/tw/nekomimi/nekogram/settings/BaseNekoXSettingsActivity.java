@@ -70,6 +70,11 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
     protected HashMap<Integer, String> rowMapReverse = new HashMap<>(20);
     protected HashMap<Integer, ConfigItem> rowConfigMapReverse = new HashMap<>(20);
 
+    protected boolean isDark;
+    protected int cardBg;
+    protected int cardBorder;
+    protected int dividerColor;
+
     protected BlurredRecyclerView createListView(Context context) {
         return new BlurredRecyclerView(context);
     }
@@ -83,11 +88,22 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
 
     @Override
     public View createView(Context context) {
+        setupBrandingColors();
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
         actionBar.setTitle(getTitle());
 
         if (AndroidUtilities.isTablet()) {
             actionBar.setOccupyStatusBar(false);
+        }
+
+        if (isAlexgramTheme()) {
+            actionBar.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+            actionBar.setCastShadows(false);
+            actionBar.setAddToContainer(false);
+            int color = isDark ? android.graphics.Color.WHITE : 0xFF1A1A2E;
+            actionBar.setItemsColor(color, false);
+            actionBar.setTitleColor(color);
+            actionBar.setItemsBackgroundColor(isDark ? 0x0FFFFFFF : 0x0F000000, false);
         }
 
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
@@ -102,8 +118,13 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
         });
 
         fragmentView = new FrameLayout(context);
-        fragmentView.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundGray));
+        fragmentView.setBackgroundColor(isAlexgramTheme() ? android.graphics.Color.TRANSPARENT : getThemedColor(Theme.key_windowBackgroundGray));
         FrameLayout frameLayout = (FrameLayout) fragmentView;
+
+        if (isAlexgramTheme()) {
+            AlexgramSettingsHeaderView backgroundView = new AlexgramSettingsHeaderView(context);
+            frameLayout.addView(backgroundView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        }
 
         listView = createListView(context);
         listView.setVerticalScrollBarEnabled(false);
@@ -116,6 +137,9 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
         itemAnimator.setSupportsChangeAnimations(false);
 
         listView.setItemAnimator(itemAnimator);
+        if (isAlexgramTheme()) {
+            listView.setPadding(0, dp(12), 0, dp(40));
+        }
         frameLayout.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.TOP | Gravity.LEFT));
 
         tooltip = new UndoView(context);
@@ -123,7 +147,30 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
 
         listView.setSections(true);
         actionBar.setAdaptiveBackground(listView);
+        if (isAlexgramTheme()) {
+            frameLayout.addView(actionBar, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+        }
         return fragmentView;
+    }
+
+    protected boolean isAlexgramTheme() {
+        return this instanceof NekoGeneralSettingsActivity || 
+               this instanceof NekoTranslatorSettingsActivity || 
+               this instanceof NekoChatSettingsActivity || 
+               this instanceof NekoExperimentalSettingsActivity;
+    }
+
+    private void setupBrandingColors() {
+        isDark = Theme.getActiveTheme().isDark();
+        if (isDark) {
+            cardBg = 0x221E2732;
+            cardBorder = 0x15FFFFFF;
+            dividerColor = 0x10FFFFFF;
+        } else {
+            cardBg = 0x40FFFFFF;
+            cardBorder = 0x20000000;
+            dividerColor = 0x15000000;
+        }
     }
 
     protected void onActionBarItemClick(int id) {
@@ -470,7 +517,69 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
                     a.onBindViewHolder(holder);
                     onBindDefaultViewHolder(holder, position);
                 }
+                if (isAlexgramTheme()) {
+                    modernizeCell(holder.itemView, position);
+                }
             }
+        }
+
+        private void modernizeCell(View view, int position) {
+            int type = getItemViewType(position);
+            if (type == CellGroup.ITEM_TYPE_DIVIDER || type == CellGroup.ITEM_TYPE_TEXT) {
+                view.setBackground(null);
+                view.getLayoutParams().height = dp(12);
+                return;
+            }
+            if (type == CellGroup.ITEM_TYPE_HEADER) {
+                view.setBackground(null);
+                if (view instanceof HeaderCell headerCell) {
+                    headerCell.getTextView().setTextColor(isDark ? 0x88FFFFFF : 0x885C6B7F);
+                    headerCell.getTextView().setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 11);
+                    headerCell.getTextView().setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+                    headerCell.getTextView().setLetterSpacing(0.05f);
+                    headerCell.setPadding(dp(6), dp(16), dp(16), dp(8));
+                }
+                return;
+            }
+
+            boolean isFirst = position == 0 || isBreakType(position - 1);
+            boolean isLast = position == getItemCount() - 1 || isBreakType(position + 1);
+
+            android.graphics.drawable.GradientDrawable gd = new android.graphics.drawable.GradientDrawable();
+            gd.setColor(cardBg);
+            float r = dp(16);
+            gd.setCornerRadii(new float[]{
+                    isFirst ? r : 0, isFirst ? r : 0,
+                    isFirst ? r : 0, isFirst ? r : 0,
+                    isLast ? r : 0, isLast ? r : 0,
+                    isLast ? r : 0, isLast ? r : 0
+            });
+            if (isFirst && isLast) {
+                gd.setStroke(dp(1), cardBorder);
+            }
+            view.setBackground(gd);
+
+            RecyclerView.LayoutParams lp = (RecyclerView.LayoutParams) view.getLayoutParams();
+            lp.setMargins(dp(16), 0, dp(16), isLast ? dp(12) : 0);
+
+            if (view instanceof TextSettingsCell cell) {
+                cell.getTextView().setTextColor(isDark ? android.graphics.Color.WHITE : 0xFF1A1A2E);
+                cell.getValueTextView().setTextColor(isDark ? 0xAAFFFFFF : 0xAA5C6B7F);
+            } else if (view instanceof TextCheckCell cell) {
+                cell.getTextView().setTextColor(isDark ? android.graphics.Color.WHITE : 0xFF1A1A2E);
+                cell.getValueTextView().setTextColor(isDark ? 0xAAFFFFFF : 0xAA5C6B7F);
+            } else if (view instanceof TextCell cell) {
+                cell.getTextView().setTextColor(isDark ? android.graphics.Color.WHITE : 0xFF1A1A2E);
+                cell.getValueTextView().setTextColor(isDark ? 0xAAFFFFFF : 0xAA5C6B7F);
+            } else if (view instanceof TextDetailSettingsCell cell) {
+                cell.getTextView().setTextColor(isDark ? android.graphics.Color.WHITE : 0xFF1A1A2E);
+                cell.getValueTextView().setTextColor(isDark ? 0xAAFFFFFF : 0xAA5C6B7F);
+            }
+        }
+
+        private boolean isBreakType(int position) {
+            int type = getItemViewType(position);
+            return type == CellGroup.ITEM_TYPE_DIVIDER || type == CellGroup.ITEM_TYPE_TEXT || type == CellGroup.ITEM_TYPE_HEADER;
         }
 
         protected void onBindCustomViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
