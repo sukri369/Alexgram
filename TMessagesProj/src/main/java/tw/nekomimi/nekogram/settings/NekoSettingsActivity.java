@@ -313,6 +313,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
                 });
                 logoContainer.setClipToOutline(true);
             }
+            GradientDrawable logoBg = new GradientDrawable();
             logoBg.setShape(GradientDrawable.OVAL);
             logoBg.setColor(Color.TRANSPARENT);
             logoContainer.setBackground(logoBg);
