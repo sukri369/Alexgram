@@ -300,7 +300,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
 
         public BrandingHeaderView(Context context) {
             super(context);
-            setPadding(0, dp(48), 0, dp(24));
+            setPadding(0, dp(80), 0, dp(24));
             setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
 
             FrameLayout logoContainer = new FrameLayout(context);
@@ -308,14 +308,14 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
                 logoContainer.setOutlineProvider(new android.view.ViewOutlineProvider() {
                     @Override
                     public void getOutline(View view, android.graphics.Outline outline) {
-                        outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), dp(22));
+                        outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), dp(20));
                     }
                 });
                 logoContainer.setClipToOutline(true);
             }
             GradientDrawable logoBg = new GradientDrawable();
             logoBg.setShape(GradientDrawable.RECTANGLE);
-            logoBg.setCornerRadius(dp(22));
+            logoBg.setCornerRadius(dp(20));
             logoBg.setColor(isDark ? 0x1AFFFFFF : 0x1A000000);
             logoContainer.setBackground(logoBg);
             addView(logoContainer, LayoutHelper.createFrame(80, 80, Gravity.CENTER_HORIZONTAL));
@@ -351,6 +351,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         private final TextView textView;
         public SectionHeaderCell(Context context) {
             super(context);
+            setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
             setPadding(dp(22), dp(16), dp(16), dp(8));
             textView = new TextView(context);
             textView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11);
@@ -372,6 +373,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
 
         public CardSwitchCell(Context context) {
             super(context);
+            setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
             setPadding(dp(16), 0, dp(16), 0);
             container = new LinearLayout(context);
             container.setOrientation(LinearLayout.HORIZONTAL);
@@ -436,6 +438,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
     private class CardItemCell extends LinearLayout {
         public CardItemCell(Context context) {
             super(context);
+            setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
             setOrientation(VERTICAL);
             setPadding(dp(16), 0, dp(16), 8);
         }
@@ -509,6 +512,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
     private class ActionsCell extends LinearLayout {
         public ActionsCell(Context context) {
             super(context);
+            setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
             setOrientation(HORIZONTAL);
             setPadding(dp(16), dp(8), dp(16), dp(8));
         }
@@ -553,6 +557,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         private final TextView textView;
         public FooterCell(Context context) {
             super(context);
+            setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
             setPadding(0, dp(32), 0, dp(32));
             textView = new TextView(context);
             textView.setTextSize(11);
