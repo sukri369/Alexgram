@@ -300,7 +300,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
 
         public BrandingHeaderView(Context context) {
             super(context);
-            setPadding(0, dp(24), 0, dp(24));
+            setPadding(0, dp(48), 0, dp(24));
             setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
 
             FrameLayout logoContainer = new FrameLayout(context);
@@ -308,13 +308,14 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
                 logoContainer.setOutlineProvider(new android.view.ViewOutlineProvider() {
                     @Override
                     public void getOutline(View view, android.graphics.Outline outline) {
-                        outline.setOval(0, 0, view.getWidth(), view.getHeight());
+                        outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), dp(22));
                     }
                 });
                 logoContainer.setClipToOutline(true);
             }
             GradientDrawable logoBg = new GradientDrawable();
-            logoBg.setShape(GradientDrawable.OVAL);
+            logoBg.setShape(GradientDrawable.RECTANGLE);
+            logoBg.setCornerRadius(dp(22));
             logoBg.setColor(isDark ? 0x1AFFFFFF : 0x1A000000);
             logoContainer.setBackground(logoBg);
             addView(logoContainer, LayoutHelper.createFrame(80, 80, Gravity.CENTER_HORIZONTAL));
@@ -392,7 +393,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
             container.addView(texts, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f));
             switchView = new Switch(context);
             container.addView(switchView, LayoutHelper.createLinear(38, 20, Gravity.CENTER_VERTICAL, 0, 0, 0, 0));
-            addView(container);
+            addView(container, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
             divider = new View(context);
             addView(divider, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 1, Gravity.BOTTOM, 54, 0, 14, 0));
         }
@@ -440,13 +441,13 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         }
         public void setData(String title, String subtitle, int iconRes, int iconColor, View.OnClickListener listener, boolean first, boolean last) {
             removeAllViews();
-            addView(createItem(getContext(), title, subtitle, iconRes, iconColor, listener, first, last));
+            addView(createItem(getContext(), title, subtitle, iconRes, iconColor, listener, first, last), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
         }
         public void setMultiData(CoreItem[] items) {
             removeAllViews();
             for (int i = 0; i < items.length; i++) {
                 CoreItem item = items[i];
-                addView(createItem(getContext(), item.title, item.subtitle, item.iconRes, item.iconColor, item.listener, i == 0, i == items.length - 1));
+                addView(createItem(getContext(), item.title, item.subtitle, item.iconRes, item.iconColor, item.listener, i == 0, i == items.length - 1), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
                 if (i < items.length - 1) {
                     View d = new View(getContext());
                     d.setBackgroundColor(dividerColor);
