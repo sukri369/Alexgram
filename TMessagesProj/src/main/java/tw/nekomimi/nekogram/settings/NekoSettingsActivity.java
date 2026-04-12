@@ -313,16 +313,24 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
                 });
                 logoContainer.setClipToOutline(true);
             }
-            GradientDrawable logoBg = new GradientDrawable();
             logoBg.setShape(GradientDrawable.OVAL);
-            logoBg.setColor(isDark ? 0x1AFFFFFF : 0x1A000000);
+            logoBg.setColor(Color.TRANSPARENT);
             logoContainer.setBackground(logoBg);
             addView(logoContainer, LayoutHelper.createFrame(80, 80, Gravity.CENTER_HORIZONTAL));
 
             logoView = new ImageView(context);
+            if (android.os.Build.VERSION.SDK_INT >= 21) {
+                logoView.setOutlineProvider(new android.view.ViewOutlineProvider() {
+                    @Override
+                    public void getOutline(View view, android.graphics.Outline outline) {
+                        outline.setOval(0, 0, view.getWidth(), view.getHeight());
+                    }
+                });
+                logoView.setClipToOutline(true);
+            }
             logoView.setImageResource(R.drawable.ic_launcher_alexgram_white);
-            logoView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-            logoContainer.addView(logoView, LayoutHelper.createFrame(56, 56, Gravity.CENTER));
+            logoView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            logoContainer.addView(logoView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
             nameView = new TextView(context);
             nameView.setText("Alexgram");
