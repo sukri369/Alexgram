@@ -1594,10 +1594,11 @@ object NaConfig {
             getPreferences().edit { remove("SpringAnimation") }
         }
 
-        val currentLlmApiUrl = llmApiUrl.String()
-        val normalizedLlmApiUrl = LlmUrlNormalizer.normalizeBaseUrl(currentLlmApiUrl)
         if (normalizedLlmApiUrl != currentLlmApiUrl) {
             llmApiUrl.setConfigString(normalizedLlmApiUrl)
+        }
+        if (customTitle.String() == "Nagram") {
+            customTitle.setConfigString("Alexgram")
         }
     }
 

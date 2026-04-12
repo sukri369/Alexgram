@@ -203,6 +203,9 @@ public class NekoConfig {
 
     public static void init() {
         loadConfig(false);
+        if ("Nagram".equals(customSavePath.String())) {
+            customSavePath.setConfigString("Alexgram");
+        }
     }
 
     public static ConfigItem addConfig(String k, int t, Object d) {

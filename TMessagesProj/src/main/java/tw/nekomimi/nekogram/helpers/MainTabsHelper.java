@@ -56,6 +56,6 @@ public final class MainTabsHelper {
     }
 
     public static int getTabsViewWidth() {
-        return TAB_WIDTH * getFragmentsCount() + (getMainTabsMargin() + TAB_PADDING) * 2;
+        return TAB_WIDTH * 4 + (getMainTabsMargin() + TAB_PADDING) * 2;
     }
 }
