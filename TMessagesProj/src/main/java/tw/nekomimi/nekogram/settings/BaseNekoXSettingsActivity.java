@@ -538,7 +538,7 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
                         headerCell.getTextView().setTextColor(isDark ? 0xFF33A1FF : 0xFF007AFF);
                         headerCell.getTextView().setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 14);
                         headerCell.getTextView().setTypeface(AndroidUtilities.bold());
-                        headerCell.getContentTextView().setPadding(dp(24), dp(16), dp(24), dp(8));
+                        headerCell.getTextView().setPadding(dp(24), dp(16), dp(24), dp(8));
                     }
                     return;
                 } else if (type == CellGroup.ITEM_TYPE_DIVIDER) {

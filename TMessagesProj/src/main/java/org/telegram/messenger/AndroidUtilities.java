@@ -2911,9 +2911,6 @@ public class AndroidUtilities {
         boolean force = NaConfig.INSTANCE.getForceMaxRefreshRate().Bool();
         params.preferredRefreshRate = force ? screenMaxRefreshRate : rate;
         if (force) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                window.setFrameRate(screenMaxRefreshRate, android.view.Surface.FRAME_RATE_COMPATIBILITY_FIXED_SOURCE);
-            }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 Display display;
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
