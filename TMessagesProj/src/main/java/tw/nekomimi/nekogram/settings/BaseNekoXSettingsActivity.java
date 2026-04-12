@@ -82,11 +82,6 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
     }
 
     @Override
-    protected boolean isAlexgramTheme() {
-        return true;
-    }
-
-    @Override
     public boolean onFragmentCreate() {
         super.onFragmentCreate();
         updateRows();
@@ -133,6 +128,16 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
             frameLayout.addView(backgroundView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
         }
 
+        listView = createListView(context);
+        listView.setVerticalScrollBarEnabled(false);
+        listView.setLayoutManager(layoutManager = new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
+
+        DefaultItemAnimator itemAnimator = new DefaultItemAnimator();
+        itemAnimator.setChangeDuration(350);
+        itemAnimator.setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT);
+        itemAnimator.setDelayAnimations(false);
+        itemAnimator.setSupportsChangeAnimations(false);
+
         listView.setItemAnimator(itemAnimator);
 
         listView.addItemDecoration(new RecyclerView.ItemDecoration() {
@@ -144,7 +149,9 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
                     return;
                 }
                 boolean isFirst = position == 0 || isBreakType(position - 1);
-                boolean isLast = position == listAdapter.getItemCount() - 1 || isBreakType(position + 1);
+                var adapter = getListAdapter();
+                int itemCount = adapter != null ? adapter.getItemCount() : 0;
+                boolean isLast = position == itemCount - 1 || isBreakType(position + 1);
                 outRect.set(dp(24), isFirst ? dp(4) : 0, dp(24), isLast ? dp(12) : 0);
             }
         });
@@ -167,10 +174,16 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
     }
 
     protected boolean isAlexgramTheme() {
-        return this instanceof NekoGeneralSettingsActivity || 
-               this instanceof NekoTranslatorSettingsActivity || 
-               this instanceof NekoChatSettingsActivity || 
-               this instanceof NekoExperimentalSettingsActivity;
+        return true;
+    }
+
+    protected boolean isBreakType(int position) {
+        CellGroup cellGroup = getCellGroup();
+        if (cellGroup == null || position < 0 || position >= cellGroup.rows.size()) {
+            return true;
+        }
+        int type = cellGroup.rows.get(position).getType();
+        return type == CellGroup.ITEM_TYPE_HEADER || type == CellGroup.ITEM_TYPE_DIVIDER;
     }
 
     private void setupBrandingColors() {
