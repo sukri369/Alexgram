@@ -328,9 +328,18 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
     }
 
     @Override
-    public void onInsets(int left, int top, int right, int bottom) {
+    public boolean onInsets(int left, int top, int right, int bottom) {
         listView.setPadding(0, 0, 0, bottom);
         listView.setClipToPadding(false);
+        return true;
+    }
+
+    protected boolean isBreakType(int position) {
+        if (listAdapter == null || position < 0 || position >= listAdapter.getItemCount()) {
+            return true;
+        }
+        int type = listAdapter.getItemViewType(position);
+        return type == TYPE_SHADOW || type == TYPE_INFO_PRIVACY;
     }
 
     private class BlurContentView extends SizeNotifierFrameLayout {
