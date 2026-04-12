@@ -6240,17 +6240,21 @@ public class NotificationsController extends BaseController {
 
     private int getNotificationIconResId() {
         int notificationIconConfigValue = NaConfig.INSTANCE.getNotificationIcon().Int();
-        switch (notificationIconConfigValue) {
-            case 0:
-                return R.drawable.notification;
-            case 1:
-                return R.drawable.nagramx_notification;
-            case 2:
-                return R.drawable.nagram_notification;
-            case 3:
-                return R.drawable.neko_notification;
+        java.util.ArrayList<org.telegram.ui.LauncherIconController.LauncherIcon> allowedIcons = new java.util.ArrayList<>();
+        for (org.telegram.ui.LauncherIconController.LauncherIcon icon : org.telegram.ui.LauncherIconController.LauncherIcon.values()) {
+            if (icon == org.telegram.ui.LauncherIconController.LauncherIcon.TELEGRAM ||
+                    icon == org.telegram.ui.LauncherIconController.LauncherIcon.VINTAGE ||
+                    icon == org.telegram.ui.LauncherIconController.LauncherIcon.AQUA ||
+                    icon == org.telegram.ui.LauncherIconController.LauncherIcon.PREMIUM ||
+                    icon == org.telegram.ui.LauncherIconController.LauncherIcon.TURBO ||
+                    icon == org.telegram.ui.LauncherIconController.LauncherIcon.NOX) {
+                continue;
+            }
+            allowedIcons.add(icon);
         }
-
+        if (notificationIconConfigValue >= 0 && notificationIconConfigValue < allowedIcons.size()) {
+            return allowedIcons.get(notificationIconConfigValue).background;
+        }
         return R.drawable.notification;
     }
 
