@@ -215,10 +215,14 @@ public class NekoGeneralSettingsActivity extends BaseNekoXSettingsActivity {
     }, null));
     private final AbstractConfigCell starFallInChatRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getStarFallInChat(), getString(R.string.StarFallInChatDescription)));
     private final AbstractConfigCell notificationIconRow = cellGroup.appendCell(new ConfigCellSelectBox(null, NaConfig.INSTANCE.getNotificationIcon(), new String[]{
-            getString(R.string.MapPreviewProviderTelegram),
-            getString(R.string.NagramX),
-            getString(R.string.Nagram),
-            getString(R.string.NekoX)
+            getString(R.string.AppIconBlue),
+            getString(R.string.AppIconColored),
+            getString(R.string.AppIconDark),
+            getString(R.string.AppIconGreen),
+            getString(R.string.AppIconNeon),
+            getString(R.string.AppIconPink),
+            getString(R.string.AppIconRoseBlue),
+            getString(R.string.AppIconWhite)
     }, null));
     private final AbstractConfigCell tabletModeRow = cellGroup.appendCell(new ConfigCellSelectBox(null, NekoConfig.tabletMode, new String[]{
             getString(R.string.TabletModeDefault),
