@@ -541,9 +541,6 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
                 dropFragmentAtPosition(MainTabsHelper.getCallsOrSettingsPosition());
                 dropCallsFragmentAfterPageScroll = false;
             }
-            if (currentPosition != MainTabsHelper.getProfilePosition()) {
-                dropFragmentAtPosition(MainTabsHelper.getProfilePosition());
-            }
         }
 
     }
