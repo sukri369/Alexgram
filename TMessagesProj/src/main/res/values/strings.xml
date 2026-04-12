@@ -10671,4 +10671,6 @@
     <string name="TestAiApi">Test AI API</string>
     <string name="TestAiApi2">Test AI API 2</string>
     <string name="TranslateEntireChat">Translate Entire Chat</string>
-</resources>
+    <string name="ExperimentalForceMaxFPS">Force Max FPS</string>
+    <string name="ExperimentalForceMaxFPSInfo">Try to force the device to use the maximum possible refresh rate for a smoother experience.</string>
+</resources>

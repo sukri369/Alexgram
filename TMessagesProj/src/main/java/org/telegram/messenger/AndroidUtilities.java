@@ -98,6 +98,8 @@ import android.view.Surface;
 import android.view.SurfaceView;
 import android.view.TextureView;
 import android.view.View;
+import xyz.nextalone.nagram.NaConfig;
+
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.ViewParent;
@@ -2896,6 +2898,37 @@ public class AndroidUtilities {
         if (wm == null) return;
         WindowManager.LayoutParams params = window.getAttributes();
         params.preferredRefreshRate = rate;
+        if (NaConfig.INSTANCE.getForceMaxRefreshRate().Bool()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                Display display;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    display = window.getContext().getDisplay();
+                } else {
+                    display = wm.getDefaultDisplay();
+                }
+                if (display != null) {
+                    Display.Mode[] modes = display.getSupportedModes();
+                    if (modes != null) {
+                        Display.Mode bestMode = null;
+                        for (Display.Mode mode : modes) {
+                            if (bestMode == null || mode.getRefreshRate() > bestMode.getRefreshRate()) {
+                                bestMode = mode;
+                            }
+                        }
+                        if (bestMode != null) {
+                            params.preferredDisplayModeId = bestMode.getModeId();
+                        }
+                    }
+                }
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                try {
+                    window.setFrameRate(rate, Surface.FRAME_RATE_COMPATIBILITY_DEFAULT);
+                } catch (Throwable e) {
+                    FileLog.e(e);
+                }
+            }
+        }
         try {
             wm.updateViewLayout(window.getDecorView(), params);
         } catch (Exception e) {
@@ -2905,8 +2938,30 @@ public class AndroidUtilities {
 
     public static void setPreferredMaxRefreshRate(WindowManager wm, View windowView, WindowManager.LayoutParams params) {
         if (wm == null) return;
-        if (Math.abs(params.preferredRefreshRate - screenMaxRefreshRate) > 0.2) {
+        if (NaConfig.INSTANCE.getForceMaxRefreshRate().Bool() || Math.abs(params.preferredRefreshRate - screenMaxRefreshRate) > 0.2) {
             params.preferredRefreshRate = screenMaxRefreshRate;
+            if (NaConfig.INSTANCE.getForceMaxRefreshRate().Bool() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                Display display;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    display = windowView.getContext().getDisplay();
+                } else {
+                    display = wm.getDefaultDisplay();
+                }
+                if (display != null) {
+                    Display.Mode[] modes = display.getSupportedModes();
+                    if (modes != null) {
+                        Display.Mode bestMode = null;
+                        for (Display.Mode mode : modes) {
+                            if (bestMode == null || mode.getRefreshRate() > bestMode.getRefreshRate()) {
+                                bestMode = mode;
+                            }
+                        }
+                        if (bestMode != null) {
+                            params.preferredDisplayModeId = bestMode.getModeId();
+                        }
+                    }
+                }
+            }
             if (windowView.isAttachedToWindow()) {
                 try {
                     wm.updateViewLayout(windowView, params);

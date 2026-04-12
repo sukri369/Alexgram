@@ -560,6 +560,12 @@ object NaConfig {
             ConfigItem.configTypeInt,
             1
         )
+    val forceMaxRefreshRate =
+        addConfig(
+            "ForceMaxRefreshRate",
+            ConfigItem.configTypeBool,
+            false
+        )
 
     // NagramX
     val voiceChangerEffect =

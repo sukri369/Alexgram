@@ -187,6 +187,7 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
             getString(R.string.PerformanceClassAverage),
             getString(R.string.PerformanceClassLow),
     }, null));
+    private final AbstractConfigCell forceMaxRefreshRateRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getForceMaxRefreshRate(), getString(R.string.ExperimentalForceMaxFPSInfo)));
     private final AbstractConfigCell dividerNConfig = cellGroup.appendCell(new ConfigCellDivider());
 
     // Story
@@ -301,6 +302,11 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
                 tooltip.showWithAction(0, UndoView.ACTION_NEED_RESTART, null, null);
             } else if (key.equals(NaConfig.INSTANCE.getRunInBackground().getKey())) {
                 updateRunInBackground((Boolean) newValue);
+            } else if (key.equals(NaConfig.INSTANCE.getForceMaxRefreshRate().getKey())) {
+                tooltip.showWithAction(0, UndoView.ACTION_NEED_RESTART, null, null);
+                if (getParentActivity() != null) {
+                    AndroidUtilities.setPreferredMaxRefreshRate(getParentActivity().getWindow());
+                }
             }
         };
 
