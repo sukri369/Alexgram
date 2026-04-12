@@ -543,8 +543,9 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
                     return;
                 } else if (type == CellGroup.ITEM_TYPE_DIVIDER) {
                     view.setBackground(null);
-                    if (view.getLayoutParams() != null) {
-                        view.getLayoutParams().height = dp(12);
+                    if (view.getLayoutParams() instanceof ViewGroup.MarginLayoutParams lp) {
+                        lp.height = dp(12);
+                        lp.setMargins(0, 0, 0, 0);
                     }
                     return;
                 }
@@ -557,9 +558,15 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
                     int topRadius = isFirst ? radius : 0;
                     int bottomRadius = isLast ? radius : 0;
 
-                    lp.leftMargin = lp.rightMargin = dp(14);
-                    lp.topMargin = isFirst ? dp(4) : 0;
-                    lp.bottomMargin = isLast ? dp(4) : 0;
+                    // Stable margins to avoid jumping
+                    int horizontalMargin = dp(18);
+                    int topMargin = isFirst ? dp(4) : 0;
+                    int bottomMargin = isLast ? dp(4) : 0;
+                    
+                    if (lp.leftMargin != horizontalMargin || lp.rightMargin != horizontalMargin || lp.topMargin != topMargin || lp.bottomMargin != bottomMargin) {
+                        lp.setMargins(horizontalMargin, topMargin, horizontalMargin, bottomMargin);
+                        view.requestLayout();
+                    }
 
                     android.graphics.drawable.GradientDrawable gd = new android.graphics.drawable.GradientDrawable();
                     gd.setColor(cardBg);
@@ -569,17 +576,23 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
                     }
                     view.setBackground(gd);
 
+                    int textColor = isDark ? android.graphics.Color.WHITE : 0xFF1A1A2E;
+                    int valueColor = isDark ? 0xFF33A1FF : 0xFF007AFF;
+
                     if (view instanceof TextSettingsCell cell) {
-                        cell.getTextView().setTextColor(isDark ? android.graphics.Color.WHITE : 0xFF1A1A2E);
-                        cell.getValueTextView().setTextColor(isDark ? 0xFF33A1FF : 0xFF007AFF);
+                        cell.getTextView().setTextColor(textColor);
+                        cell.getValueTextView().setTextColor(valueColor);
                     } else if (view instanceof TextCheckCell cell) {
-                        cell.getTextView().setTextColor(isDark ? android.graphics.Color.WHITE : 0xFF1A1A2E);
+                        cell.getTextView().setTextColor(textColor);
+                        if (cell.getValueTextView() != null) {
+                            cell.getValueTextView().setTextColor(valueColor);
+                        }
                     } else if (view instanceof TextCell cell) {
-                        cell.getTextView().setTextColor(isDark ? android.graphics.Color.WHITE : 0xFF1A1A2E);
-                        cell.getValueTextView().setTextColor(isDark ? 0xFF33A1FF : 0xFF007AFF);
+                        cell.getTextView().setTextColor(textColor);
+                        cell.getValueTextView().setTextColor(valueColor);
                     } else if (view instanceof TextDetailSettingsCell cell) {
-                        cell.getTextView().setTextColor(isDark ? android.graphics.Color.WHITE : 0xFF1A1A2E);
-                        cell.getValueTextView().setTextColor(isDark ? 0xFF33A1FF : 0xFF007AFF);
+                        cell.getTextView().setTextColor(textColor);
+                        cell.getValueTextView().setTextColor(valueColor);
                     }
                 }
             } catch (Throwable e) {
