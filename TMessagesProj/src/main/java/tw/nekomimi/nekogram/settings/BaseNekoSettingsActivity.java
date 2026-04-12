@@ -431,7 +431,7 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
             }
         }
 
-        private boolean isBreakType(int position) {
+        protected boolean isBreakType(int position) {
             int type = getItemViewType(position);
             return type == TYPE_SHADOW || type == TYPE_INFO_PRIVACY;
         }

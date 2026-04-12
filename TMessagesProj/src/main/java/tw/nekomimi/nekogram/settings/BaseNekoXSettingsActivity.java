@@ -82,6 +82,11 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
     }
 
     @Override
+    protected boolean isAlexgramTheme() {
+        return true;
+    }
+
+    @Override
     public boolean onFragmentCreate() {
         super.onFragmentCreate();
         updateRows();
@@ -128,17 +133,22 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
             frameLayout.addView(backgroundView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
         }
 
-        listView = createListView(context);
-        listView.setVerticalScrollBarEnabled(false);
-        listView.setLayoutManager(layoutManager = new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
-
-        DefaultItemAnimator itemAnimator = new DefaultItemAnimator();
-        itemAnimator.setChangeDuration(350);
-        itemAnimator.setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT);
-        itemAnimator.setDelayAnimations(false);
-        itemAnimator.setSupportsChangeAnimations(false);
-
         listView.setItemAnimator(itemAnimator);
+
+        listView.addItemDecoration(new RecyclerView.ItemDecoration() {
+            @Override
+            public void getItemOffsets(@NonNull android.graphics.Rect outRect, @NonNull View view, @NonNull RecyclerView recyclerView, @NonNull RecyclerView.State state) {
+                int position = recyclerView.getChildAdapterPosition(view);
+                if (position == RecyclerView.NO_POSITION || isBreakType(position)) {
+                    outRect.set(0, 0, 0, 0);
+                    return;
+                }
+                boolean isFirst = position == 0 || isBreakType(position - 1);
+                boolean isLast = position == listAdapter.getItemCount() - 1 || isBreakType(position + 1);
+                outRect.set(dp(24), isFirst ? dp(4) : 0, dp(24), isLast ? dp(12) : 0);
+            }
+        });
+
         if (isAlexgramTheme()) {
             listView.setPadding(0, AndroidUtilities.statusBarHeight + dp(120), 0, dp(40));
             listView.setClipToPadding(false);
@@ -558,17 +568,6 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
                     int topRadius = isFirst ? radius : 0;
                     int bottomRadius = isLast ? radius : 0;
 
-                    // Slimmer margins to make cards look more compact (narrower)
-                    int horizontalMargin = dp(24);
-                    int topMargin = isFirst ? dp(4) : 0;
-                    int bottomMargin = isLast ? dp(4) : 0;
-                    
-                    if (lp.leftMargin != horizontalMargin || lp.rightMargin != horizontalMargin || lp.topMargin != topMargin || lp.bottomMargin != bottomMargin) {
-                        lp.setMargins(horizontalMargin, topMargin, horizontalMargin, bottomMargin);
-                        view.setLayoutParams(lp); // Force update
-                        view.requestLayout();
-                    }
-
                     android.graphics.drawable.GradientDrawable gd = new android.graphics.drawable.GradientDrawable();
                     gd.setColor(cardBg);
                     gd.setCornerRadii(new float[]{topRadius, topRadius, topRadius, topRadius, bottomRadius, bottomRadius, bottomRadius, bottomRadius});
@@ -601,7 +600,7 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
             }
         }
 
-        private boolean isBreakType(int position) {
+        protected boolean isBreakType(int position) {
             if (position < 0 || position >= getItemCount()) return true;
             int type = getItemViewType(position);
             return type == CellGroup.ITEM_TYPE_DIVIDER || type == CellGroup.ITEM_TYPE_HEADER;
