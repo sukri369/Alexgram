@@ -506,77 +506,89 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
 
         @Override
         public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-            CellGroup cellGroup = getCellGroup();
-            if (cellGroup == null || position < 0 || position >= cellGroup.rows.size()) {
-                return;
-            }
-            AbstractConfigCell a = cellGroup.rows.get(position);
-            if (a != null) {
-                if (a instanceof ConfigCellCustom) {
-                    onBindCustomViewHolder(holder, position);
-                } else {
-                    a.onBindViewHolder(holder);
-                    onBindDefaultViewHolder(holder, position);
+            try {
+                CellGroup cellGroup = getCellGroup();
+                if (cellGroup == null || position < 0 || position >= cellGroup.rows.size()) {
+                    return;
                 }
-                if (isAlexgramTheme()) {
-                    modernizeCell(holder.itemView, position);
+                AbstractConfigCell a = cellGroup.rows.get(position);
+                if (a != null) {
+                    if (a instanceof ConfigCellCustom) {
+                        onBindCustomViewHolder(holder, position);
+                    } else {
+                        a.onBindViewHolder(holder);
+                        onBindDefaultViewHolder(holder, position);
+                    }
+                    if (isAlexgramTheme()) {
+                        modernizeCell(holder.itemView, position);
+                    }
                 }
+            } catch (Throwable e) {
+                FileLog.e("BaseListAdapter.onBindViewHolder crash at position " + position, e);
             }
         }
 
         private void modernizeCell(View view, int position) {
-            int type = getItemViewType(position);
-            if (type == CellGroup.ITEM_TYPE_HEADER) {
-                if (view instanceof HeaderCell headerCell) {
-                    headerCell.getTextView().setTextColor(isDark ? 0xFF33A1FF : 0xFF007AFF);
-                    headerCell.getTextView().setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 14);
-                    headerCell.getTextView().setTypeface(AndroidUtilities.bold());
-                    headerCell.setPadding(dp(21), dp(16), dp(21), dp(8));
+            try {
+                int type = getItemViewType(position);
+                if (type == CellGroup.ITEM_TYPE_HEADER) {
+                    if (view instanceof HeaderCell headerCell) {
+                        headerCell.getTextView().setTextColor(isDark ? 0xFF33A1FF : 0xFF007AFF);
+                        headerCell.getTextView().setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 14);
+                        headerCell.getTextView().setTypeface(AndroidUtilities.bold());
+                        headerCell.setPadding(dp(21), dp(16), dp(21), dp(8));
+                    }
+                    return;
+                } else if (type == CellGroup.ITEM_TYPE_DIVIDER) {
+                    view.setBackground(null);
+                    if (view.getLayoutParams() != null) {
+                        view.getLayoutParams().height = dp(12);
+                    }
+                    return;
                 }
-            } else if (type == CellGroup.ITEM_TYPE_DIVIDER || type == CellGroup.ITEM_TYPE_TEXT) {
-                view.setBackground(null);
-                view.getLayoutParams().height = dp(12);
-                return;
-            }
 
-            boolean isFirst = position == 0 || isBreakType(position - 1);
-            boolean isLast = position == getItemCount() - 1 || isBreakType(position + 1);
+                if (view.getLayoutParams() instanceof ViewGroup.MarginLayoutParams lp) {
+                    boolean isFirst = position == 0 || isBreakType(position - 1);
+                    boolean isLast = position == getItemCount() - 1 || isBreakType(position + 1);
 
-            android.graphics.drawable.GradientDrawable gd = new android.graphics.drawable.GradientDrawable();
-            gd.setColor(cardBg);
-            float r = dp(16);
-            gd.setCornerRadii(new float[]{
-                    isFirst ? r : 0, isFirst ? r : 0,
-                    isFirst ? r : 0, isFirst ? r : 0,
-                    isLast ? r : 0, isLast ? r : 0,
-                    isLast ? r : 0, isLast ? r : 0
-            });
-            if (isFirst && isLast) {
-                gd.setStroke(dp(1), cardBorder);
-            }
-            view.setBackground(gd);
+                    int radius = dp(12);
+                    int topRadius = isFirst ? radius : 0;
+                    int bottomRadius = isLast ? radius : 0;
 
-            RecyclerView.LayoutParams lp = (RecyclerView.LayoutParams) view.getLayoutParams();
-            lp.setMargins(dp(16), 0, dp(16), isLast ? dp(12) : 0);
+                    lp.leftMargin = lp.rightMargin = dp(14);
+                    lp.topMargin = isFirst ? dp(4) : 0;
+                    lp.bottomMargin = isLast ? dp(4) : 0;
 
-            if (view instanceof TextSettingsCell cell) {
-                cell.getTextView().setTextColor(isDark ? android.graphics.Color.WHITE : 0xFF1A1A2E);
-                cell.getValueTextView().setTextColor(isDark ? 0xFF33A1FF : 0xFF007AFF);
-            } else if (view instanceof TextCheckCell cell) {
-                cell.getTextView().setTextColor(isDark ? android.graphics.Color.WHITE : 0xFF1A1A2E);
-                cell.getValueTextView().setTextColor(isDark ? 0xFF33A1FF : 0xFF007AFF);
-            } else if (view instanceof TextCell cell) {
-                cell.getTextView().setTextColor(isDark ? android.graphics.Color.WHITE : 0xFF1A1A2E);
-                cell.getValueTextView().setTextColor(isDark ? 0xFF33A1FF : 0xFF007AFF);
-            } else if (view instanceof TextDetailSettingsCell cell) {
-                cell.getTextView().setTextColor(isDark ? android.graphics.Color.WHITE : 0xFF1A1A2E);
-                cell.getValueTextView().setTextColor(isDark ? 0xFF33A1FF : 0xFF007AFF);
+                    android.graphics.drawable.GradientDrawable gd = new android.graphics.drawable.GradientDrawable();
+                    gd.setColor(cardBg);
+                    gd.setCornerRadii(new float[]{topRadius, topRadius, topRadius, topRadius, bottomRadius, bottomRadius, bottomRadius, bottomRadius});
+                    if (isFirst && isLast) {
+                        gd.setStroke(dp(1), cardBorder);
+                    }
+                    view.setBackground(gd);
+
+                    if (view instanceof TextSettingsCell cell) {
+                        cell.getTextView().setTextColor(isDark ? android.graphics.Color.WHITE : 0xFF1A1A2E);
+                        cell.getValueTextView().setTextColor(isDark ? 0xFF33A1FF : 0xFF007AFF);
+                    } else if (view instanceof TextCheckCell cell) {
+                        cell.getTextView().setTextColor(isDark ? android.graphics.Color.WHITE : 0xFF1A1A2E);
+                    } else if (view instanceof TextCell cell) {
+                        cell.getTextView().setTextColor(isDark ? android.graphics.Color.WHITE : 0xFF1A1A2E);
+                        cell.getValueTextView().setTextColor(isDark ? 0xFF33A1FF : 0xFF007AFF);
+                    } else if (view instanceof TextDetailSettingsCell cell) {
+                        cell.getTextView().setTextColor(isDark ? android.graphics.Color.WHITE : 0xFF1A1A2E);
+                        cell.getValueTextView().setTextColor(isDark ? 0xFF33A1FF : 0xFF007AFF);
+                    }
+                }
+            } catch (Throwable e) {
+                FileLog.e("modernizeCell crash at position " + position, e);
             }
         }
 
         private boolean isBreakType(int position) {
+            if (position < 0 || position >= getItemCount()) return true;
             int type = getItemViewType(position);
-            return type == CellGroup.ITEM_TYPE_DIVIDER || type == CellGroup.ITEM_TYPE_TEXT || type == CellGroup.ITEM_TYPE_HEADER;
+            return type == CellGroup.ITEM_TYPE_DIVIDER || type == CellGroup.ITEM_TYPE_HEADER;
         }
 
         protected void onBindCustomViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {

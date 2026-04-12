@@ -155,7 +155,7 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
     private final AbstractConfigCell translucentDeletedMessagesRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getTranslucentDeletedMessages()));
     private final AbstractConfigCell useDeletedIconRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getUseDeletedIcon()));
     private final AbstractConfigCell customDeletedMarkRow = cellGroup.appendCell(new ConfigCellTextInput(null, NaConfig.INSTANCE.getCustomDeletedMark(), "", null));
-    private final AbstractConfigCell clearMessageDatabaseRow = cellGroup.appendCell(new ConfigCellTextCheckIcon(null, "ClearMessageDatabase", null, AyuData.totalSize > 0 ? AndroidUtilities.formatFileSize(AyuData.totalSize) : "...", R.drawable.msg_clear, false, () -> new AlertDialog.Builder(getContext(), getResourceProvider())
+    private final AbstractConfigCell clearMessageDatabaseRow = cellGroup.appendCell(new ConfigCellTextCheckIcon(null, "ClearMessageDatabase", null, AyuData.totalSize > 0 ? AndroidUtilities.formatFileSize(AyuData.totalSize) : "...", R.drawable.msg_clear_solar, false, () -> new AlertDialog.Builder(getContext(), getResourceProvider())
             .setTitle(getString(R.string.ClearMessageDatabase))
             .setMessage(getString(R.string.AreYouSure))
             .setPositiveButton(getString(R.string.Clear), (dialog, which) -> {
@@ -208,10 +208,18 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
     private final AbstractConfigCell enableSummarizeChatRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getEnableSummarizeChat()));
     private final AbstractConfigCell aiModelUrlRow = cellGroup.appendCell(new ConfigCellTextInput("AI Model URL", NaConfig.INSTANCE.getAiModelUrl(), "https://api.openai.com/v1/chat/completions", null));
     private final AbstractConfigCell aiApiKeyRow = cellGroup.appendCell(new ConfigCellTextInput("AI API Key", NaConfig.INSTANCE.getAiApiKey(), "sk-...", null));
-    private final AbstractConfigCell testAiApiRow = cellGroup.appendCell(new ConfigCellText("TestAiApi", () -> testAiApi(NaConfig.INSTANCE.getAiModelUrl().String(), NaConfig.INSTANCE.getAiApiKey().String())));
+    private final AbstractConfigCell testAiApiRow = cellGroup.appendCell(new ConfigCellText("TestAiApi", () -> {
+        String url = NaConfig.INSTANCE.getAiModelUrl().String();
+        String key = NaConfig.INSTANCE.getAiApiKey().String();
+        testAiApi(url != null ? url : "", key != null ? key : "");
+    }));
     private final AbstractConfigCell aiModelUrl2Row = cellGroup.appendCell(new ConfigCellTextInput("AI Model URL 2", NaConfig.INSTANCE.getAiModelUrl2(), "https://api.openai.com/v1/chat/completions", null));
     private final AbstractConfigCell aiApiKey2Row = cellGroup.appendCell(new ConfigCellTextInput("AI API Key 2", NaConfig.INSTANCE.getAiApiKey2(), "sk-...", null));
-    private final AbstractConfigCell testAiApi2Row = cellGroup.appendCell(new ConfigCellText("TestAiApi2", () -> testAiApi(NaConfig.INSTANCE.getAiModelUrl2().String(), NaConfig.INSTANCE.getAiApiKey2().String())));
+    private final AbstractConfigCell testAiApi2Row = cellGroup.appendCell(new ConfigCellText("TestAiApi2", () -> {
+        String url = NaConfig.INSTANCE.getAiModelUrl2().String();
+        String key = NaConfig.INSTANCE.getAiApiKey2().String();
+        testAiApi(url != null ? url : "", key != null ? key : "");
+    }));
     private final AbstractConfigCell dividerAiReply = cellGroup.appendCell(new ConfigCellDivider());
 
     public NekoExperimentalSettingsActivity() {
