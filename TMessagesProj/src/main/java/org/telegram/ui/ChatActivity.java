@@ -30749,6 +30749,11 @@ public class ChatActivity extends BaseFragment implements
             xyz.nextalone.nagram.analytics.domain.ChatLockManager lockMgr =
                 xyz.nextalone.nagram.analytics.domain.ChatLockManager.Companion.get(getParentActivity());
             if (lockMgr.isLockedSync(getDialogId())) {
+                android.content.Intent lockIntent = new android.content.Intent(
+                    getParentActivity(),
+                    xyz.nextalone.nagram.analytics.ui.ChatLockedActivity.class
+                );
+                lockIntent.putExtra("chat_id", getDialogId());
                 lockIntent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK 
                     | android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 getParentActivity().startActivity(lockIntent);
