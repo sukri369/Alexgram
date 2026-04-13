@@ -9,6 +9,7 @@ import kotlinx.coroutines.launch
 import org.telegram.messenger.NotificationCenter
 import xyz.nextalone.nagram.analytics.data.AnalyticsDao
 import xyz.nextalone.nagram.analytics.data.BlockedChat
+import java.util.Collections
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -21,9 +22,13 @@ class ChatLockManager @Inject constructor(
 
     /** In-memory set of currently locked chat IDs — synced from DB flow */
     private val lockedChatIds = mutableSetOf<Long>()
+    
+    /** Flag to indicate if the cache has been populated at least once */
+    @Volatile
+    private var isCacheWarm = false
 
     /** Chats the user has unlocked this session (temporary unlock) */
-    private val sessionUnlocked = mutableSetOf<Long>()
+    private val sessionUnlocked = Collections.synchronizedSet(mutableSetOf<Long>())
 
     companion object {
         fun get(context: Context): ChatLockManager {
@@ -39,6 +44,7 @@ class ChatLockManager @Inject constructor(
                     lockedChatIds.clear()
                     lockedChatIds.addAll(list.map { it.chatId })
                 }
+                isCacheWarm = true
             }
         }
     }
@@ -48,7 +54,14 @@ class ChatLockManager @Inject constructor(
     /** Returns true if this chat should be blocked right now */
     fun isLockedSync(chatId: Long): Boolean {
         if (sessionUnlocked.contains(chatId)) return false
-        return synchronized(lockedChatIds) { lockedChatIds.contains(chatId) }
+        
+        // Fast path: cache is pre-populated
+        if (isCacheWarm) {
+            return synchronized(lockedChatIds) { lockedChatIds.contains(chatId) }
+        }
+        
+        // Safe path: cache is cold, perform legacy blocking lookup to avoid race
+        return isChatLockedBlocking(chatId)
     }
 
     /** Temporarily unlock for this session (until app restart) */
@@ -57,7 +70,7 @@ class ChatLockManager @Inject constructor(
         NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.updateInterfaces)
     }
 
-    // ── Suspend-based ─────────────────────────────────────────────────────────
+    // ── Suspend / Blocking ───────────────────────────────────────────────────
 
     suspend fun isChatLocked(chatId: Long): Boolean {
         if (sessionUnlocked.contains(chatId)) return false
@@ -66,7 +79,12 @@ class ChatLockManager @Inject constructor(
 
     fun isChatLockedBlocking(chatId: Long): Boolean {
         if (sessionUnlocked.contains(chatId)) return false
-        return kotlinx.coroutines.runBlocking { dao.isChatBlocked(chatId) }
+        return try {
+            // Using runBlocking is generally stable for rare sync events in TMessagesProj
+            kotlinx.coroutines.runBlocking { dao.isChatBlocked(chatId) }
+        } catch (e: Exception) {
+            false
+        }
     }
 
     suspend fun setChatLock(chatId: Long, locked: Boolean) {

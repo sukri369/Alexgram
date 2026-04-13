@@ -375,7 +375,7 @@ public class ApplicationLoader extends Application {
                                 xyz.nextalone.nagram.analytics.ui.AppLimitReachedActivity.class
                             );
                             limitIntent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK
-                                | android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                | android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK);
                             applicationContext.startActivity(limitIntent);
                         }
                     } catch (Exception e) {
