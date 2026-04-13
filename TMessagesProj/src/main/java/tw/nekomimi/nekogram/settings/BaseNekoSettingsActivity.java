@@ -96,6 +96,17 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
     protected HashMap<String, Integer> rowMap = new HashMap<>(20);
     protected HashMap<Integer, String> rowMapReverse = new HashMap<>(20);
 
+    protected int addRow() {
+        return rowCount++;
+    }
+
+    protected int addRow(String key) {
+        int row = rowCount++;
+        rowMap.put(key, row);
+        rowMapReverse.put(row, key);
+        return row;
+    }
+
     protected boolean isDark;
     protected int cardBg;
     protected int cardBorder;

@@ -82,6 +82,9 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
     @Override
     protected void updateRows() {
         rowCount = 0;
+        rowMap.clear();
+        rowMapReverse.clear();
+
         headerRow = addRow();
         
         quickSettingsHeaderRow = addRow();
@@ -92,25 +95,27 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
             quickSettingsEndRow = -1;
         } else {
             quickSettingsStartRow = rowCount;
-            rowCount += quickSettings.size();
+            for (QuickSettingEntry entry : quickSettings) {
+                addRow(entry.key);
+            }
             quickSettingsEndRow = rowCount;
         }
 
-        hideContactsRow = addRow();
-        ghostModeRow = addRow();
-        musicGraphRow = addRow();
-        saveDeletedRow = addRow();
+        hideContactsRow = addRow("hide_contacts");
+        ghostModeRow = addRow("ghost_mode");
+        musicGraphRow = addRow("music_graph");
+        saveDeletedRow = addRow("save_deleted");
         
         privacyHeaderRow = addRow();
-        hiddenChatsRow = addRow();
+        hiddenChatsRow = addRow("hidden_chats");
         
         coreHeaderRow = addRow();
-        coreSettingsRow = addRow();
+        coreSettingsRow = addRow("core_settings");
         
         advancedHeaderRow = addRow();
-        advancedSettingsRow = addRow();
+        advancedSettingsRow = addRow("advanced_settings");
         
-        actionsRow = addRow();
+        actionsRow = addRow("actions");
         footerRow = addRow();
     }
 
@@ -249,14 +254,18 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
     @Override
     protected boolean onItemLongClick(View view, int position, float x, float y) {
         if (position >= quickSettingsStartRow && position < quickSettingsEndRow) {
-            QuickSettingEntry entry = QuickSettingsController.getInstance().getQuickSettings().get(position - quickSettingsStartRow);
-            showDialog(new AlertDialog.Builder(getParentActivity()).setItems(new CharSequence[]{"Remove from Quick Settings"}, (dialog, which) -> {
-                QuickSettingsController.getInstance().removeQuickSetting(entry.key);
-                updateRows();
-                listAdapter.notifyDataSetChanged();
-                BulletinFactory.of(this).createSimpleBulletin(R.drawable.msg_delete, "Removed from Quick Settings").show();
-            }).create());
-            return true;
+            String key = rowMapReverse.get(position);
+            if (key != null) {
+                ItemOptions options = makeLongClickOptions(view);
+                options.add(R.drawable.msg_delete, "Remove from Quick Settings", () -> {
+                    QuickSettingsController.getInstance().removeQuickSetting(key);
+                    updateRows();
+                    listAdapter.notifyDataSetChanged();
+                    BulletinFactory.of(this).createSimpleBulletin(R.drawable.msg_delete, "Removed from Quick Settings").show();
+                });
+                options.show();
+                return true;
+            }
         }
         return super.onItemLongClick(view, position, x, y);
     }
