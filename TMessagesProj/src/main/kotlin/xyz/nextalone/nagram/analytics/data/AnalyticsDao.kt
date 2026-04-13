@@ -17,6 +17,10 @@ interface AnalyticsDao {
     @Query("SELECT * FROM app_usage ORDER BY date DESC LIMIT :days")
     fun getAppUsageFlow(days: Int): Flow<List<AppUsageRecord>>
 
+    @Query("DELETE FROM app_usage")
+    suspend fun clearAllAppUsage()
+
+
     // ── Chat Usage ────────────────────────────────────────────────────────────
 
     @Query("SELECT * FROM chat_usage WHERE chatId = :chatId AND date = :date")
@@ -51,6 +55,10 @@ interface AnalyticsDao {
 
     @Query("SELECT SUM(timeSpentSeconds) FROM chat_usage WHERE date BETWEEN :start AND :end")
     suspend fun getTotalTimeInRange(start: Long, end: Long): Long?
+
+    @Query("DELETE FROM chat_usage")
+    suspend fun clearAllChatUsage()
+
 
     // ── Limits ────────────────────────────────────────────────────────────────
 

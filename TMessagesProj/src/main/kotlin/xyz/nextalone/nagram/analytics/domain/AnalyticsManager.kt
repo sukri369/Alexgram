@@ -42,6 +42,16 @@ class AnalyticsManager @Inject constructor(
     private var currentChatId: Long = 0
     private var chatStartTime: Long = 0
 
+    // ── Global Enable/Disable Logic ───────────────────────────────────────────
+    
+    private val prefs = MessagesController.getGlobalMainSettings()
+    
+    var isEnabled: Boolean
+        get() = prefs.getBoolean("nagram_analytics_enabled", true)
+        set(value) {
+            prefs.edit().putBoolean("nagram_analytics_enabled", value).apply()
+        }
+
     fun startTracking() {
         lastUpdateTime = System.currentTimeMillis()
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.didReceiveNewMessages)
@@ -49,6 +59,8 @@ class AnalyticsManager @Inject constructor(
     }
 
     override fun didReceivedNotification(id: Int, account: Int, vararg args: Any?) {
+        if (!isEnabled) return
+        
         if (id == NotificationCenter.didReceiveNewMessages) {
             val messages = args[1] as ArrayList<MessageObject>
             scope.launch {
@@ -76,6 +88,8 @@ class AnalyticsManager @Inject constructor(
     }
 
     fun onAppForeground() {
+        if (!isEnabled) return
+        
         lastUpdateTime = System.currentTimeMillis()
         scope.launch {
             val today = getTodayTimestamp()
@@ -85,6 +99,8 @@ class AnalyticsManager @Inject constructor(
     }
 
     fun onAppBackground() {
+        if (!isEnabled) return
+        
         val duration = (System.currentTimeMillis() - lastUpdateTime) / 1000
         if (duration > 0) {
             scope.launch {
@@ -96,11 +112,15 @@ class AnalyticsManager @Inject constructor(
     }
 
     fun onChatStarted(chatId: Long) {
+        if (!isEnabled) return
+        
         currentChatId = chatId
         chatStartTime = System.currentTimeMillis()
     }
 
     fun onChatEnded(chatId: Long) {
+        if (!isEnabled) return
+        
         if (currentChatId == chatId) {
             val duration = (System.currentTimeMillis() - chatStartTime) / 1000
             if (duration > 0) {

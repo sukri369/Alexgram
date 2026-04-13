@@ -79,8 +79,10 @@ fun DashboardScreen(vm: DashboardViewModel = viewModel()) {
 
     // Dialog state
     var showLimitDialog by remember { mutableStateOf(false) }
+    var showResetDialog by remember { mutableStateOf(false) }
     var editingLimit by remember { mutableStateOf<AnalyticsLimit?>(null) }
     var lockTargetChat by remember { mutableStateOf<ChatUsageInfo?>(null) }
+
 
     var isVisible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { isVisible = true }
@@ -91,7 +93,14 @@ fun DashboardScreen(vm: DashboardViewModel = viewModel()) {
             state = listState,
             contentPadding = PaddingValues(bottom = 48.dp),
         ) {
-            item { TopHeroBar() }
+            item { 
+                TopHeroBar(
+                    isEnabled = uiState.isTrackingEnabled,
+                    onToggle = { vm.toggleTracking() },
+                    onReset = { showResetDialog = true }
+                ) 
+            }
+
 
             item {
                 AnimatedIn(isVisible, 50) {
@@ -217,6 +226,29 @@ fun DashboardScreen(vm: DashboardViewModel = viewModel()) {
         )
     }
 
+    // ── Reset Confirmation Dialog ─────────────────────────────────────────────
+    if (showResetDialog) {
+        AlertDialog(
+            onDismissRequest = { showResetDialog = false },
+            containerColor = c.bgCard,
+            title = { Text("Reset Analytics?", color = c.textPrimary, fontWeight = FontWeight.Bold) },
+            text = { Text("This will permanently clear all your historical usage data and chat statistics. Your locked chats and limits will be preserved.", color = c.textSecondary, fontSize = 14.sp) },
+            confirmButton = {
+                TextButton(onClick = {
+                    vm.resetAnalyticsData()
+                    showResetDialog = false
+                }) {
+                    Text("RESET DATA", color = NeonRed, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResetDialog = false }) {
+                    Text("CANCEL", color = c.textSecondary)
+                }
+            }
+        )
+    }
+
     // ── Limit Editor Dialog ───────────────────────────────────────────────────
     if (showLimitDialog) {
         LimitEditorDialog(
@@ -230,10 +262,16 @@ fun DashboardScreen(vm: DashboardViewModel = viewModel()) {
     }
 }
 
+
+
 // ─── Top Hero Bar ─────────────────────────────────────────────────────────────
 
 @Composable
-fun TopHeroBar() {
+fun TopHeroBar(
+    isEnabled: Boolean,
+    onToggle: () -> Unit,
+    onReset: () -> Unit
+) {
     val c = LocalAnalyticsColors.current
     Box(
         modifier = Modifier.fillMaxWidth()
@@ -249,11 +287,34 @@ fun TopHeroBar() {
                     infiniteRepeatable(tween(900, easing = FastOutSlowInEasing), RepeatMode.Reverse),
                     label = "dot"
                 )
-                Box(Modifier.size(7.dp).background(NeonCyan.copy(alpha = dotAlpha), CircleShape))
+                Box(Modifier.size(7.dp).background(if (isEnabled) NeonCyan.copy(alpha = dotAlpha) else c.textSecondary.copy(0.4f), CircleShape))
                 Spacer(Modifier.width(7.dp))
-                Text("LIVE", fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, color = NeonCyan, letterSpacing = 2.sp)
+                Text(
+                    if (isEnabled) "LIVE" else "PAUSED",
+                    fontSize = 10.sp, fontWeight = FontWeight.ExtraBold,
+                    color = if (isEnabled) NeonCyan else c.textSecondary,
+                    letterSpacing = 2.sp
+                )
                 Spacer(Modifier.weight(1f))
-                Icon(Icons.Default.Analytics, null, tint = NeonCyan.copy(0.5f), modifier = Modifier.size(20.dp))
+                
+                // Reset Button
+                IconButton(onClick = onReset, modifier = Modifier.size(24.dp)) {
+                    Icon(Icons.Default.Refresh, null, tint = c.textSecondary.copy(0.5f), modifier = Modifier.size(18.dp))
+                }
+                Spacer(Modifier.width(16.dp))
+                
+                // Toggle Switch (Custom)
+                Switch(
+                    checked = isEnabled,
+                    onCheckedChange = { onToggle() },
+                    modifier = Modifier.scale(0.7f),
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = Color.White,
+                        checkedTrackColor = NeonCyan,
+                        uncheckedThumbColor = c.textSecondary,
+                        uncheckedTrackColor = c.bgCardAlt
+                    )
+                )
             }
             Spacer(Modifier.height(12.dp))
             Text("Neural Analytics", color = c.textPrimary, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = (-0.5).sp)
@@ -261,9 +322,10 @@ fun TopHeroBar() {
         }
     }
     Box(Modifier.fillMaxWidth().height(1.dp).background(
-        Brush.horizontalGradient(listOf(Color.Transparent, NeonCyan.copy(0.5f), Color.Transparent))
+        Brush.horizontalGradient(listOf(Color.Transparent, if (isEnabled) NeonCyan.copy(0.5f) else c.textSecondary.copy(0.2f), Color.Transparent))
     ))
 }
+
 
 // ─── Usage Stats Row ──────────────────────────────────────────────────────────
 

@@ -1,6 +1,9 @@
 package xyz.nextalone.nagram.analytics.ui.viewmodel
 
 import android.content.Context
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -12,6 +15,7 @@ import org.telegram.messenger.MessagesController
 import org.telegram.messenger.UserConfig
 import org.telegram.tgnet.TLRPC
 import xyz.nextalone.nagram.analytics.data.*
+import xyz.nextalone.nagram.analytics.domain.AnalyticsManager
 import java.util.*
 import javax.inject.Inject
 
@@ -49,7 +53,8 @@ data class DashboardUiState(
     val todayMinutes: Long = 0,
     val weekMinutes: Long = 0,
     val totalSessionsAllTime: Int = 0,
-    val sessionInsights: SessionInsightData = SessionInsightData(0, 0, 0, 0, 0)
+    val sessionInsights: SessionInsightData = SessionInsightData(0, 0, 0, 0, 0),
+    val isTrackingEnabled: Boolean = true
 )
 
 // ─── ViewModel ────────────────────────────────────────────────────────────────
@@ -63,6 +68,8 @@ class DashboardViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(DashboardUiState())
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
+    private val analyticsManager = AnalyticsManager.get(context)
+
     init {
         loadData()
     }
@@ -71,7 +78,7 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             combine(
                 dao.getAppUsageFlow(30),
-                dao.getTopChatsAllTimeFlow(10),
+                dao.getTopChatsAllTimeFlow(20),
                 dao.getAllLimitsFlow(),
                 dao.getBlockedChatsFlow()
             ) { arr ->
@@ -118,7 +125,8 @@ class DashboardViewModel @Inject constructor(
                         totalMedia       = totalMedia,
                         uniqueChats      = topChats.size,
                         totalTimeSeconds = totalTimeSecs
-                    )
+                    ),
+                    isTrackingEnabled = analyticsManager.isEnabled
                 )
             }
         }
@@ -184,6 +192,22 @@ class DashboardViewModel @Inject constructor(
                 messagesReceived = agg.messagesReceived,
                 mediaCount       = agg.mediaCount
             )
+        }
+    }
+
+    // ─── Global Controls ──────────────────────────────────────────────────────
+
+    fun toggleTracking() {
+        analyticsManager.isEnabled = !analyticsManager.isEnabled
+        // Force refresh state
+        _uiState.update { it.copy(isTrackingEnabled = analyticsManager.isEnabled) }
+    }
+
+    fun resetAnalyticsData() {
+        viewModelScope.launch {
+            dao.clearAllAppUsage()
+            dao.clearAllChatUsage()
+            // Data will clear automatically via Flow collection
         }
     }
 
