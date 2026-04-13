@@ -152,7 +152,7 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
                 var adapter = getListAdapter();
                 int itemCount = adapter != null ? adapter.getItemCount() : 0;
                 boolean isLast = position == itemCount - 1 || isBreakType(position + 1);
-                outRect.set(dp(24), isFirst ? dp(4) : 0, dp(24), isLast ? dp(12) : 0);
+                outRect.set(dp(12), isFirst ? dp(4) : 0, dp(12), isLast ? dp(12) : 0);
             }
         });
 
@@ -183,7 +183,7 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
             return true;
         }
         int type = cellGroup.rows.get(position).getType();
-        return type == CellGroup.ITEM_TYPE_HEADER || type == CellGroup.ITEM_TYPE_DIVIDER;
+        return type == CellGroup.ITEM_TYPE_DIVIDER;
     }
 
     private void setupBrandingColors() {
@@ -561,7 +561,7 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
                         headerCell.getTextView().setTextColor(isDark ? 0xFF33A1FF : 0xFF007AFF);
                         headerCell.getTextView().setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 14);
                         headerCell.getTextView().setTypeface(AndroidUtilities.bold());
-                        headerCell.getTextView().setPadding(dp(24), dp(16), dp(24), dp(8));
+                        headerCell.getTextView().setPadding(dp(21), dp(16), dp(21), dp(8));
                     }
                     return;
                 } else if (type == CellGroup.ITEM_TYPE_DIVIDER) {
@@ -577,7 +577,7 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
                     boolean isFirst = position == 0 || isBreakType(position - 1);
                     boolean isLast = position == getItemCount() - 1 || isBreakType(position + 1);
 
-                    int radius = dp(12);
+                    int radius = dp(16);
                     int topRadius = isFirst ? radius : 0;
                     int bottomRadius = isLast ? radius : 0;
 

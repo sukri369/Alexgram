@@ -267,6 +267,7 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
         listAdapter = new ListAdapter(context);
 
         listView.setAdapter(listAdapter);
+        listView.invalidateItemDecorations();
 
         setupDefaultListeners();
 
