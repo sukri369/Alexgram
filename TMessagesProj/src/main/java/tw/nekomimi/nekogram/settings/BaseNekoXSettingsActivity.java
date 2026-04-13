@@ -334,7 +334,7 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
         return options.setScrimViewBackground(background);
     }
 
-    protected void addDefaultLongClickOptions(ItemOptions options, String prefix, int position) {
+    protected void addDefaultLongClickOptions(ItemOptions options, String prefix, int position, View view) {
         String key = getRowKey(position);
         String value = getRowValue(position);
         options.add(R.drawable.msg_link2, getString(R.string.CopyLink), () -> {
@@ -399,7 +399,7 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
 
     protected void showDefaultLongClickOptions(View view, String prefix, int position) {
         ItemOptions options = makeLongClickOptions(view);
-        addDefaultLongClickOptions(options, prefix, position);
+        addDefaultLongClickOptions(options, prefix, position, view);
         showLongClickOptions(view, options);
     }
 

@@ -321,15 +321,6 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
 
     protected abstract String getActionBarTitle();
 
-    @SuppressLint("NotifyDataSetChanged")
-    @Override
-    public void onResume() {
-        super.onResume();
-        if (listAdapter != null) {
-            listAdapter.notifyDataSetChanged();
-        }
-    }
-
     protected boolean hasWhiteActionBar() {
         return true;
     }
