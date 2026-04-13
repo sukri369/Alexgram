@@ -196,8 +196,8 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
     }
 
     @Override
-    public void onFragmentResume() {
-        super.onFragmentResume();
+    public void onResume() {
+        super.onResume();
         updateRows();
         if (listAdapter != null) {
             listAdapter.notifyDataSetChanged();
