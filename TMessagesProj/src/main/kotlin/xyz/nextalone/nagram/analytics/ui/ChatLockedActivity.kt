@@ -30,6 +30,9 @@ import org.telegram.messenger.MessagesController
 import org.telegram.messenger.UserConfig
 import xyz.nextalone.nagram.analytics.domain.ChatLockManager
 import xyz.nextalone.nagram.analytics.domain.AnalyticsManager
+import xyz.nextalone.nagram.analytics.ui.theme.AnalyticsTheme
+import xyz.nextalone.nagram.analytics.ui.theme.LocalAnalyticsColors
+import xyz.nextalone.nagram.analytics.ui.theme.NeonPink
 
 class ChatLockedActivity : ComponentActivity() {
 
@@ -43,14 +46,16 @@ class ChatLockedActivity : ComponentActivity() {
         val chatName = resolveChatName(chatId)
 
         setContent {
-            ChatLockedScreen(
-                chatName = chatName,
-                onGoToAnalytics = {
-                    startActivity(Intent(this, AnalyticsDashboardActivity::class.java))
-                    finish()
-                },
-                onDismiss = { finish() }
-            )
+            AnalyticsTheme {
+                ChatLockedScreen(
+                    chatName = chatName,
+                    onGoToAnalytics = {
+                        startActivity(Intent(this, AnalyticsDashboardActivity::class.java))
+                        finish()
+                    },
+                    onDismiss = { finish() }
+                )
+            }
         }
     }
 
@@ -77,14 +82,7 @@ private fun ChatLockedScreen(
     onGoToAnalytics: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    val BgDark    = Color(0xFF0A0C18)
-    val NeonPink  = Color(0xFFE91E8C)
-    val NeonCyan  = Color(0xFF00E5FF)
-    val TextPrimary = Color(0xFFEEF0F8)
-    val TextSecond  = Color(0xFF8A94B0)
-    val CardBg      = Color(0xFF12152A)
-    val GlassBorder = Color(0xFF2A2F4A)
-
+    val c = LocalAnalyticsColors.current
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { visible = true }
 
@@ -104,12 +102,7 @@ private fun ChatLockedScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.radialGradient(
-                    listOf(Color(0xFF1A0D2E), Color(0xFF0A0C18)),
-                    radius = 1200f
-                )
-            )
+            .background(c.bgScreen)
             .systemBarsPadding(),
         contentAlignment = Alignment.Center
     ) {
@@ -137,7 +130,11 @@ private fun ChatLockedScreen(
                             .scale(scale)
                             .clip(CircleShape)
                             .background(
-                                Brush.radialGradient(listOf(NeonPink.copy(0.3f), Color(0xFF1A0D2E)))
+                                if (c.isDark) {
+                                    Brush.radialGradient(listOf(NeonPink.copy(0.3f), Color(0xFF1A0D2E)))
+                                } else {
+                                    Brush.radialGradient(listOf(NeonPink.copy(0.1f), Color.White))
+                                }
                             )
                             .border(2.dp, NeonPink.copy(0.6f), CircleShape),
                         contentAlignment = Alignment.Center
@@ -156,7 +153,7 @@ private fun ChatLockedScreen(
                 // Title
                 Text(
                     "Chat Locked",
-                    color = TextPrimary,
+                    color = c.textPrimary,
                     fontSize = 28.sp,
                     fontWeight = FontWeight.ExtraBold,
                     letterSpacing = (-0.5).sp
@@ -178,13 +175,13 @@ private fun ChatLockedScreen(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(18.dp))
-                        .background(CardBg)
-                        .border(1.dp, GlassBorder, RoundedCornerShape(18.dp))
+                        .background(c.bgCard)
+                        .border(1.dp, c.border, RoundedCornerShape(18.dp))
                         .padding(horizontal = 20.dp, vertical = 14.dp)
                 ) {
                     Text(
                         "This chat has been locked by you.\nTo unlock it, visit the Analytics page\nand remove the lock from your settings.",
-                        color = TextSecond,
+                        color = c.textSecondary,
                         fontSize = 13.sp,
                         lineHeight = 20.sp,
                         textAlign = TextAlign.Center
@@ -244,7 +241,7 @@ private fun ChatLockedScreen(
                 ) {
                     Text(
                         "Go Back",
-                        color = TextSecond,
+                        color = c.textSecondary,
                         fontSize = 14.sp
                     )
                 }
@@ -256,5 +253,6 @@ private fun ChatLockedScreen(
 private val OvershootInterpolatorEasing = Easing { t ->
     val tension = 2.5f
     val scaledT = t - 1f
+    scaledT * scaledT * ((tension + 1) * scaledT + tension) + 1f
     scaledT * scaledT * ((tension + 1) * scaledT + tension) + 1f
 }

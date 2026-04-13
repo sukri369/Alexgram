@@ -42,28 +42,16 @@ import org.telegram.tgnet.TLRPC
 import org.telegram.ui.Components.AvatarDrawable
 import org.telegram.ui.Components.BackupImageView
 import xyz.nextalone.nagram.analytics.data.AnalyticsLimit
+import xyz.nextalone.nagram.analytics.ui.theme.LocalAnalyticsColors
+import xyz.nextalone.nagram.analytics.ui.theme.NeonCyan
+import xyz.nextalone.nagram.analytics.ui.theme.NeonGreen
+import xyz.nextalone.nagram.analytics.ui.theme.NeonOrange
+import xyz.nextalone.nagram.analytics.ui.theme.NeonPink
+import xyz.nextalone.nagram.analytics.ui.theme.NeonPurple
 import xyz.nextalone.nagram.analytics.ui.viewmodel.ChatUsageInfo
 import xyz.nextalone.nagram.analytics.ui.viewmodel.DashboardViewModel
 
-// ─── Design Tokens ───────────────────────────────────────────────────────────
-
-private val BgDark      = Color(0xFF0D0F1A)
-private val BgCard      = Color(0xFF161927)
-private val BgCardAlt   = Color(0xFF1C2033)
-private val NeonCyan    = Color(0xFF00E5FF)
-private val NeonPurple  = Color(0xFFAA00FF)
-private val NeonPink    = Color(0xFFE91E8C)
-private val NeonGreen   = Color(0xFF00E676)
-private val NeonOrange  = Color(0xFFFF6D00)
-private val TextPrimary = Color(0xFFEEF0F8)
-private val TextSecond  = Color(0xFF8A94B0)
-private val GlassBorder = Color(0xFF2A2F4A)
-
-private val AccentGradient = Brush.linearGradient(listOf(NeonCyan, NeonPurple))
-private val HeroGradient   = Brush.verticalGradient(listOf(Color(0xFF1A1F3C), Color(0xFF0D0F1A)))
-private val BgGradient     = Brush.verticalGradient(listOf(BgDark, Color(0xFF0A0C16)))
-
-// Avatar placeholder colors keyed by chat ID
+// ─── Avatar palette (shared) ─────────────────────────────────────────────────
 private val avatarPalette = listOf(
     0xFF1565C0.toInt(), 0xFF6A1B9A.toInt(), 0xFF00695C.toInt(),
     0xFF558B2F.toInt(), 0xFF4527A0.toInt(), 0xFF0277BD.toInt(),
@@ -77,6 +65,7 @@ private val avatarPalette = listOf(
 @Composable
 fun DashboardScreen(vm: DashboardViewModel = viewModel()) {
     val uiState by vm.uiState.collectAsState()
+    val c = LocalAnalyticsColors.current
 
     // Dialog state
     var showLimitDialog by remember { mutableStateOf(false) }
@@ -86,7 +75,7 @@ fun DashboardScreen(vm: DashboardViewModel = viewModel()) {
     var isVisible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { isVisible = true }
 
-    Box(modifier = Modifier.fillMaxSize().background(BgGradient)) {
+    Box(modifier = Modifier.fillMaxSize().background(c.bgScreen)) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = 48.dp),
@@ -185,7 +174,7 @@ fun DashboardScreen(vm: DashboardViewModel = viewModel()) {
                 Spacer(Modifier.height(20.dp))
                 Text(
                     "Neural Analytics · Alexgram",
-                    color = TextSecond.copy(alpha = 0.35f),
+                    color = c.textSecondary.copy(alpha = 0.35f),
                     fontSize = 11.sp,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -226,9 +215,10 @@ fun DashboardScreen(vm: DashboardViewModel = viewModel()) {
 
 @Composable
 fun TopHeroBar() {
+    val c = LocalAnalyticsColors.current
     Box(
         modifier = Modifier.fillMaxWidth()
-            .background(HeroGradient)
+            .background(c.bgHero)
             .padding(top = 48.dp, bottom = 24.dp, start = 24.dp, end = 24.dp)
     ) {
         Column {
@@ -246,8 +236,8 @@ fun TopHeroBar() {
                 Icon(Icons.Default.Analytics, null, tint = NeonCyan.copy(0.5f), modifier = Modifier.size(20.dp))
             }
             Spacer(Modifier.height(12.dp))
-            Text("Neural Analytics", color = TextPrimary, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = (-0.5).sp)
-            Text("Your digital behaviour, decoded", color = TextSecond, fontSize = 13.sp)
+            Text("Neural Analytics", color = c.textPrimary, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = (-0.5).sp)
+            Text("Your digital behaviour, decoded", color = c.textSecondary, fontSize = 13.sp)
         }
     }
     Box(Modifier.fillMaxWidth().height(1.dp).background(
@@ -264,6 +254,7 @@ fun UsageStatsRow(
     totalSessions: Int,
     appUsageHistory: List<xyz.nextalone.nagram.analytics.data.AppUsageRecord>
 ) {
+    val c = LocalAnalyticsColors.current
     val todaySecs = appUsageHistory.firstOrNull()?.totalTimeSeconds ?: 0L
     val progress = (todaySecs / (24f * 3600f)).coerceIn(0f, 1f)
     val todayH = todayMinutes / 60; val todayM = todayMinutes % 60
@@ -276,24 +267,24 @@ fun UsageStatsRow(
                 // Circular ring
                 Box(contentAlignment = Alignment.Center, modifier = Modifier.size(108.dp)) {
                     Canvas(Modifier.fillMaxSize()) {
-                        drawCircle(Color(0xFF1A2040), style = Stroke(9.dp.toPx()))
-                        drawArc(AccentGradient, -90f, 360f * progress, false,
+                        drawCircle(c.bgCardAlt, style = Stroke(9.dp.toPx()))
+                        drawArc(c.accentGradient, -90f, 360f * progress, false,
                             style = Stroke(9.dp.toPx(), cap = StrokeCap.Round))
                     }
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
                             if (todayH > 0) "${todayH}h\n${todayM}m" else "${todayM}m",
-                            color = TextPrimary, fontSize = 17.sp, fontWeight = FontWeight.ExtraBold,
+                            color = c.textPrimary, fontSize = 17.sp, fontWeight = FontWeight.ExtraBold,
                             lineHeight = 20.sp
                         )
-                        Text("TODAY", color = TextSecond, fontSize = 8.sp, letterSpacing = 1.sp)
+                        Text("TODAY", color = c.textSecondary, fontSize = 8.sp, letterSpacing = 1.sp)
                     }
                 }
                 Spacer(Modifier.width(18.dp))
                 Column(Modifier.weight(1f)) {
                     StatRow("Today", if (todayH > 0) "${todayH}h ${todayM}m" else "${todayM}m", NeonCyan)
                     Spacer(Modifier.height(8.dp))
-                    Box(Modifier.fillMaxWidth().height(1.dp).background(GlassBorder))
+                    Box(Modifier.fillMaxWidth().height(1.dp).background(c.border))
                     Spacer(Modifier.height(8.dp))
                     StatRow("This Week", if (weekH > 0) "${weekH}h ${weekM}m" else "${weekM}m", NeonPurple)
                 }
@@ -311,24 +302,26 @@ fun UsageStatsRow(
 
 @Composable
 private fun StatRow(label: String, value: String, color: Color) {
+    val c = LocalAnalyticsColors.current
     Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-        Text(label, color = TextSecond, fontSize = 12.sp)
+        Text(label, color = c.textSecondary, fontSize = 12.sp)
         Text(value, color = color, fontSize = 12.sp, fontWeight = FontWeight.Bold)
     }
 }
 
 @Composable
 fun StatChip(modifier: Modifier, label: String, value: String, color: Color) {
+    val c = LocalAnalyticsColors.current
     Box(
         modifier = modifier.clip(RoundedCornerShape(14.dp))
-            .background(BgCard)
+            .background(c.bgCard)
             .border(1.dp, color.copy(0.3f), RoundedCornerShape(14.dp))
             .padding(vertical = 12.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(value, color = color, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold)
-            Text(label, color = TextSecond, fontSize = 10.sp)
+            Text(label, color = c.textSecondary, fontSize = 10.sp)
         }
     }
 }
@@ -337,17 +330,19 @@ fun StatChip(modifier: Modifier, label: String, value: String, color: Color) {
 
 @Composable
 fun ActivityBarChart(history: List<xyz.nextalone.nagram.analytics.data.AppUsageRecord>) {
+    val c = LocalAnalyticsColors.current
     GlassCard(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
         Box(Modifier.fillMaxWidth().height(155.dp).padding(10.dp)) {
             if (history.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(Icons.Default.BarChart, null, tint = TextSecond.copy(0.4f), modifier = Modifier.size(36.dp))
+                        Icon(Icons.Default.BarChart, null, tint = c.textSecondary.copy(0.4f), modifier = Modifier.size(36.dp))
                         Spacer(Modifier.height(6.dp))
-                        Text("Activity tracked after first session", color = TextSecond, fontSize = 11.sp)
+                        Text("Activity tracked after first session", color = c.textSecondary, fontSize = 11.sp)
                     }
                 }
             } else {
+                val isDark = c.isDark
                 AndroidView(
                     modifier = Modifier.fillMaxSize(),
                     factory = { ctx ->
@@ -373,11 +368,18 @@ fun ActivityBarChart(history: List<xyz.nextalone.nagram.analytics.data.AppUsageR
                             val maxVal = entries.maxOf { it.y }
                             val barColors = entries.map { e ->
                                 val ratio = if (maxVal > 0) e.y / maxVal else 0f
-                                // Interpolate from purple → cyan based on usage intensity
-                                when {
-                                    ratio > 0.7f -> AndroidColor.parseColor("#00E5FF")
-                                    ratio > 0.4f -> AndroidColor.parseColor("#7B2FFF")
-                                    else         -> AndroidColor.parseColor("#3A1A6A")
+                                if (isDark) {
+                                    when {
+                                        ratio > 0.7f -> AndroidColor.parseColor("#00E5FF")
+                                        ratio > 0.4f -> AndroidColor.parseColor("#7B2FFF")
+                                        else         -> AndroidColor.parseColor("#3A1A6A")
+                                    }
+                                } else {
+                                    when {
+                                        ratio > 0.7f -> AndroidColor.parseColor("#0077AA")
+                                        ratio > 0.4f -> AndroidColor.parseColor("#5500AA")
+                                        else         -> AndroidColor.parseColor("#BBCAF0")
+                                    }
                                 }
                             }
                             val dataSet = BarDataSet(entries, "").apply {
@@ -393,7 +395,7 @@ fun ActivityBarChart(history: List<xyz.nextalone.nagram.analytics.data.AppUsageR
                 )
                 Text(
                     "Last 14 days",
-                    color = TextSecond.copy(0.6f), fontSize = 9.sp,
+                    color = c.textSecondary.copy(0.6f), fontSize = 9.sp,
                     modifier = Modifier.align(Alignment.TopEnd).padding(2.dp)
                 )
             }
@@ -405,6 +407,7 @@ fun ActivityBarChart(history: List<xyz.nextalone.nagram.analytics.data.AppUsageR
 
 @Composable
 fun SectionLabel(title: String, subtitle: String, icon: ImageVector, color: Color) {
+    val c = LocalAnalyticsColors.current
     Row(
         Modifier.padding(start = 20.dp, end = 20.dp, top = 22.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -418,7 +421,7 @@ fun SectionLabel(title: String, subtitle: String, icon: ImageVector, color: Colo
         Spacer(Modifier.width(10.dp))
         Column {
             Text(title, color = color, fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.5.sp)
-            Text(subtitle, color = TextSecond, fontSize = 11.sp)
+            Text(subtitle, color = c.textSecondary, fontSize = 11.sp)
         }
     }
 }
@@ -432,6 +435,7 @@ fun ChatDominanceRow(
     maxTime: Long,
     onLongPress: () -> Unit
 ) {
+    val c = LocalAnalyticsColors.current
     val progress = (chatInfo.timeSpentSeconds / maxTime.toFloat()).coerceIn(0f, 1f)
     val mins = chatInfo.timeSpentSeconds / 60
     val secs = chatInfo.timeSpentSeconds % 60
@@ -455,10 +459,10 @@ fun ChatDominanceRow(
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(BgCard)
+            .background(c.bgCard)
             .border(
                 1.dp,
-                if (chatInfo.isLocked) NeonPink.copy(0.5f) else GlassBorder,
+                if (chatInfo.isLocked) NeonPink.copy(0.5f) else c.border,
                 RoundedCornerShape(16.dp)
             )
             .combinedClickable(
@@ -482,7 +486,7 @@ fun ChatDominanceRow(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     chatInfo.displayName,
-                    color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
+                    color = c.textPrimary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
                     maxLines = 1, overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
                 )
@@ -497,12 +501,12 @@ fun ChatDominanceRow(
                 chatInfo.isUser    -> "Contact"
                 else               -> "Chat"
             }
-            Text(typeLabel, color = TextSecond, fontSize = 10.sp)
+            Text(typeLabel, color = c.textSecondary, fontSize = 10.sp)
             Spacer(Modifier.height(5.dp))
             LinearProgressIndicator(
                 progress = { progress },
                 modifier = Modifier.fillMaxWidth().height(3.dp).clip(CircleShape),
-                color = NeonCyan, trackColor = GlassBorder
+                color = NeonCyan, trackColor = c.border
             )
         }
 
@@ -510,7 +514,7 @@ fun ChatDominanceRow(
 
         Column(horizontalAlignment = Alignment.End) {
             Text(timeLabel, color = NeonCyan, fontSize = 14.sp, fontWeight = FontWeight.ExtraBold)
-            Text("${msgTotal} MSG", color = TextSecond, fontSize = 10.sp)
+            Text("${msgTotal} MSG", color = c.textSecondary, fontSize = 10.sp)
             if (chatInfo.mediaCount > 0) {
                 Text("${chatInfo.mediaCount} media", color = NeonPurple.copy(0.7f), fontSize = 9.sp)
             }
@@ -583,6 +587,7 @@ fun ControlLimitCard(
     onEdit: (AnalyticsLimit) -> Unit,
     onDelete: (AnalyticsLimit) -> Unit
 ) {
+    val c = LocalAnalyticsColors.current
     val enabled = limit.isEnabled
     val h = limit.dailyLimitSeconds / 3600
     val m = (limit.dailyLimitSeconds % 3600) / 60
@@ -595,19 +600,19 @@ fun ControlLimitCard(
 
     GlassCard(
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-        borderColor = if (enabled) NeonPink.copy(0.4f) else GlassBorder
+        borderColor = if (enabled) NeonPink.copy(0.4f) else c.border
     ) {
         Column(Modifier.fillMaxWidth().padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     Modifier.size(38.dp).background(
-                        if (enabled) NeonPink.copy(0.15f) else BgCardAlt,
+                        if (enabled) NeonPink.copy(0.15f) else c.bgCardAlt,
                         RoundedCornerShape(10.dp)
                     ), contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         if (limit.type == 0) Icons.Default.Timer else Icons.Default.LockClock,
-                        null, tint = if (enabled) NeonPink else TextSecond,
+                        null, tint = if (enabled) NeonPink else c.textSecondary,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -615,12 +620,12 @@ fun ControlLimitCard(
                 Column(Modifier.weight(1f)) {
                     Text(
                         if (limit.type == 0) "DAILY APP LIMIT" else "CHAT LIMIT",
-                        color = if (enabled) NeonPink else TextSecond,
+                        color = if (enabled) NeonPink else c.textSecondary,
                         fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp
                     )
                     Text(
                         if (limit.type == 0) "Daily App Time Limit" else "Per-Chat Limit",
-                        color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold
+                        color = c.textPrimary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold
                     )
                 }
                 Switch(
@@ -629,14 +634,14 @@ fun ControlLimitCard(
                     colors = SwitchDefaults.colors(
                         checkedThumbColor = Color.White,
                         checkedTrackColor = NeonPink.copy(0.8f),
-                        uncheckedThumbColor = TextSecond,
-                        uncheckedTrackColor = BgCardAlt
+                        uncheckedThumbColor = c.textSecondary,
+                        uncheckedTrackColor = c.bgCardAlt
                     )
                 )
             }
 
             Spacer(Modifier.height(10.dp))
-            Box(Modifier.fillMaxWidth().height(1.dp).background(GlassBorder))
+            Box(Modifier.fillMaxWidth().height(1.dp).background(c.border))
             Spacer(Modifier.height(10.dp))
 
             // Time display + Edit/Delete
@@ -662,12 +667,13 @@ fun ControlLimitCard(
 
 @Composable
 fun AddLimitButton(onAdd: () -> Unit) {
+    val c = LocalAnalyticsColors.current
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(BgCard)
+            .background(c.bgCard)
             .border(1.dp, NeonPink.copy(0.3f), RoundedCornerShape(16.dp))
             .clickable { onAdd() }
             .padding(16.dp)
@@ -676,8 +682,8 @@ fun AddLimitButton(onAdd: () -> Unit) {
             Icon(Icons.Default.AddCircle, null, tint = NeonPink, modifier = Modifier.size(26.dp))
             Spacer(Modifier.width(12.dp))
             Column {
-                Text("Set Daily Limit", color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
-                Text("Tap to configure a custom time limit", color = TextSecond, fontSize = 11.sp)
+                Text("Set Daily Limit", color = c.textPrimary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                Text("Tap to configure a custom time limit", color = c.textSecondary, fontSize = 11.sp)
             }
         }
     }
@@ -688,10 +694,11 @@ fun AddLimitButton(onAdd: () -> Unit) {
 @Composable
 fun SessionInsightsCard(state: xyz.nextalone.nagram.analytics.ui.viewmodel.DashboardUiState) {
     val si = state.sessionInsights
+    val c = LocalAnalyticsColors.current
 
     GlassCard(Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
         Column(Modifier.padding(18.dp)) {
-            Text("All-Time Breakdown", color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            Text("All-Time Breakdown", color = c.textPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(14.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 InsightTile(Modifier.weight(1f), "Sent", si.totalSent.toString(), NeonCyan, Icons.Default.Send)
@@ -704,14 +711,14 @@ fun SessionInsightsCard(state: xyz.nextalone.nagram.analytics.ui.viewmodel.Dashb
             }
             if (si.totalTimeSeconds > 0) {
                 Spacer(Modifier.height(10.dp))
-                Box(Modifier.fillMaxWidth().height(1.dp).background(GlassBorder))
+                Box(Modifier.fillMaxWidth().height(1.dp).background(c.border))
                 Spacer(Modifier.height(10.dp))
                 val totalH = si.totalTimeSeconds / 3600
                 val totalM = (si.totalTimeSeconds % 3600) / 60
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.History, null, tint = NeonCyan, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Total chat time: ", color = TextSecond, fontSize = 12.sp)
+                    Text("Total chat time: ", color = c.textSecondary, fontSize = 12.sp)
                     Text(
                         if (totalH > 0) "${totalH}h ${totalM}m" else "${totalM}m",
                         color = NeonCyan, fontSize = 12.sp, fontWeight = FontWeight.Bold
@@ -724,6 +731,7 @@ fun SessionInsightsCard(state: xyz.nextalone.nagram.analytics.ui.viewmodel.Dashb
 
 @Composable
 fun InsightTile(modifier: Modifier, label: String, value: String, color: Color, icon: ImageVector) {
+    val c = LocalAnalyticsColors.current
     Row(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
@@ -735,8 +743,8 @@ fun InsightTile(modifier: Modifier, label: String, value: String, color: Color, 
         Icon(icon, null, tint = color, modifier = Modifier.size(16.dp))
         Spacer(Modifier.width(7.dp))
         Column {
-            Text(value, color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.ExtraBold)
-            Text(label, color = TextSecond, fontSize = 10.sp)
+            Text(value, color = c.textPrimary, fontSize = 16.sp, fontWeight = FontWeight.ExtraBold)
+            Text(label, color = c.textSecondary, fontSize = 10.sp)
         }
     }
 }
@@ -750,19 +758,20 @@ fun ChatLockSheet(
     onDismiss: () -> Unit,
     onLock: (autoUnlockMins: Int) -> Unit
 ) {
+    val c = LocalAnalyticsColors.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var selectedMins by remember { mutableIntStateOf(0) } // 0 = permanent
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = Color(0xFF12152A),
+        containerColor = c.bgCard,
         tonalElevation = 0.dp
     ) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp).navigationBarsPadding()) {
 
             // Handle bar
-            Box(Modifier.width(40.dp).height(4.dp).background(GlassBorder, CircleShape).align(Alignment.CenterHorizontally))
+            Box(Modifier.width(40.dp).height(4.dp).background(c.border, CircleShape).align(Alignment.CenterHorizontally))
             Spacer(Modifier.height(16.dp))
 
             // Header
@@ -784,16 +793,16 @@ fun ChatLockSheet(
                 Column {
                     Text(
                         if (chatInfo.isLocked) "Unlock Chat?" else "Lock Chat",
-                        color = TextPrimary, fontSize = 18.sp, fontWeight = FontWeight.Bold
+                        color = c.textPrimary, fontSize = 18.sp, fontWeight = FontWeight.Bold
                     )
-                    Text(chatInfo.displayName, color = TextSecond, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(chatInfo.displayName, color = c.textSecondary, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
 
             Spacer(Modifier.height(20.dp))
 
             if (!chatInfo.isLocked) {
-                Text("Auto-unlock timer", color = TextSecond, fontSize = 12.sp)
+                Text("Auto-unlock timer", color = c.textSecondary, fontSize = 12.sp)
                 Spacer(Modifier.height(12.dp))
 
                 // Timer options
@@ -813,8 +822,8 @@ fun ChatLockSheet(
                                 modifier = Modifier
                                     .weight(1f)
                                     .clip(RoundedCornerShape(12.dp))
-                                    .background(if (sel) NeonPink.copy(0.2f) else BgCardAlt)
-                                    .border(1.dp, if (sel) NeonPink else GlassBorder, RoundedCornerShape(12.dp))
+                                    .background(if (sel) NeonPink.copy(0.2f) else c.bgCardAlt)
+                                    .border(1.dp, if (sel) NeonPink else c.border, RoundedCornerShape(12.dp))
                                     .clickable { selectedMins = mins }
                                     .padding(vertical = 10.dp),
                                 contentAlignment = Alignment.Center
@@ -822,11 +831,11 @@ fun ChatLockSheet(
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Icon(
                                         if (mins == 0) Icons.Default.Lock else Icons.Default.Timer,
-                                        null, tint = if (sel) NeonPink else TextSecond,
+                                        null, tint = if (sel) NeonPink else c.textSecondary,
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Spacer(Modifier.height(3.dp))
-                                    Text(label, color = if (sel) NeonPink else TextSecond, fontSize = 10.sp)
+                                    Text(label, color = if (sel) NeonPink else c.textSecondary, fontSize = 10.sp)
                                 }
                             }
                         }
@@ -870,6 +879,7 @@ fun LimitEditorDialog(
     onDismiss: () -> Unit,
     onSave: (hours: Int, minutes: Int, enabled: Boolean) -> Unit
 ) {
+    val c = LocalAnalyticsColors.current
     val initH = existing?.let { (it.dailyLimitSeconds / 3600).toInt() } ?: 1
     val initM = existing?.let { ((it.dailyLimitSeconds % 3600) / 60).toInt() } ?: 0
 
@@ -879,21 +889,21 @@ fun LimitEditorDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = Color(0xFF12152A),
+        containerColor = c.bgCard,
         title = {
             Text(
                 if (existing == null) "Set Daily App Limit" else "Edit Limit",
-                color = TextPrimary, fontWeight = FontWeight.Bold
+                color = c.textPrimary, fontWeight = FontWeight.Bold
             )
         },
         text = {
             Column {
-                Text("Choose your daily usage limit", color = TextSecond, fontSize = 12.sp)
+                Text("Choose your daily usage limit", color = c.textSecondary, fontSize = 12.sp)
                 Spacer(Modifier.height(16.dp))
 
                 // Hours picker
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Hours", color = TextPrimary, fontSize = 14.sp, modifier = Modifier.weight(1f))
+                    Text("Hours", color = c.textPrimary, fontSize = 14.sp, modifier = Modifier.weight(1f))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         IconButton(onClick = { if (hours > 0) hours-- }) {
                             Icon(Icons.Default.Remove, null, tint = NeonCyan)
@@ -913,7 +923,7 @@ fun LimitEditorDialog(
 
                 // Minutes picker (increments of 5)
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Minutes", color = TextPrimary, fontSize = 14.sp, modifier = Modifier.weight(1f))
+                    Text("Minutes", color = c.textPrimary, fontSize = 14.sp, modifier = Modifier.weight(1f))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         IconButton(onClick = { minutes = ((minutes - 5 + 60) % 60) }) {
                             Icon(Icons.Default.Remove, null, tint = NeonPurple)
@@ -948,14 +958,14 @@ fun LimitEditorDialog(
                 Spacer(Modifier.height(12.dp))
 
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Enable immediately", color = TextPrimary, fontSize = 13.sp, modifier = Modifier.weight(1f))
+                    Text("Enable immediately", color = c.textPrimary, fontSize = 13.sp, modifier = Modifier.weight(1f))
                     Switch(
                         checked = enabled, onCheckedChange = { enabled = it },
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = Color.White,
                             checkedTrackColor = NeonPink.copy(0.8f),
-                            uncheckedThumbColor = TextSecond,
-                            uncheckedTrackColor = BgCardAlt
+                            uncheckedThumbColor = c.textSecondary,
+                            uncheckedTrackColor = c.bgCardAlt
                         )
                     )
                 }
@@ -972,7 +982,7 @@ fun LimitEditorDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = TextSecond)
+                Text("Cancel", color = c.textSecondary)
             }
         }
     )
@@ -982,19 +992,20 @@ fun LimitEditorDialog(
 
 @Composable
 fun EmptyCard(message: String) {
+    val c = LocalAnalyticsColors.current
     Box(
         modifier = Modifier.fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(BgCard)
-            .border(1.dp, GlassBorder, RoundedCornerShape(16.dp))
+            .background(c.bgCard)
+            .border(1.dp, c.border, RoundedCornerShape(16.dp))
             .padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(Icons.Default.HourglassEmpty, null, tint = TextSecond.copy(0.5f), modifier = Modifier.size(30.dp))
+            Icon(Icons.Default.HourglassEmpty, null, tint = c.textSecondary.copy(0.5f), modifier = Modifier.size(30.dp))
             Spacer(Modifier.height(8.dp))
-            Text(message, color = TextSecond, fontSize = 12.sp)
+            Text(message, color = c.textSecondary, fontSize = 12.sp)
         }
     }
 }
@@ -1002,8 +1013,9 @@ fun EmptyCard(message: String) {
 // ─── Reusable Components ──────────────────────────────────────────────────────
 
 @Composable
-fun GlassCard(modifier: Modifier = Modifier, borderColor: Color = GlassBorder, content: @Composable () -> Unit) {
-    Box(modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(BgCard).border(1.dp, borderColor, RoundedCornerShape(20.dp))) {
+fun GlassCard(modifier: Modifier = Modifier, borderColor: Color? = null, content: @Composable () -> Unit) {
+    val c = LocalAnalyticsColors.current
+    Box(modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(c.bgCard).border(1.dp, borderColor ?: c.border, RoundedCornerShape(20.dp))) {
         content()
     }
 }

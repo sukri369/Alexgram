@@ -14,6 +14,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import xyz.nextalone.nagram.analytics.ui.theme.LocalAnalyticsColors
+import xyz.nextalone.nagram.analytics.ui.theme.NeonPink
+import xyz.nextalone.nagram.analytics.ui.theme.NeonCyan
+import xyz.nextalone.nagram.analytics.ui.theme.NeonPurple
 
 @Composable
 fun UnlockScreen(
@@ -21,16 +25,13 @@ fun UnlockScreen(
     subtitle: String = "Enter PIN to access this chat",
     onUnlockSuccess: () -> Unit
 ) {
+    val c = LocalAnalyticsColors.current
     var pin by remember { mutableStateOf("") }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(Color(0xFF1A1A2E), Color(0xFF16213E))
-                )
-            ),
+            .background(c.bgScreen),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -40,7 +41,7 @@ fun UnlockScreen(
             Icon(
                 imageVector = Icons.Default.Lock,
                 contentDescription = null,
-                tint = Color(0xFFE91E63),
+                tint = NeonPink,
                 modifier = Modifier.size(64.dp)
             )
             
@@ -48,14 +49,14 @@ fun UnlockScreen(
             
             Text(
                 text = title,
-                color = Color.White,
+                color = c.textPrimary,
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold
             )
             
             Text(
                 text = subtitle,
-                color = Color.White.copy(alpha = 0.7f),
+                color = c.textSecondary,
                 fontSize = 16.sp
             )
             
@@ -69,7 +70,7 @@ fun UnlockScreen(
                         modifier = Modifier
                             .size(16.dp)
                             .background(
-                                if (filled) Color(0xFF2196F3) else Color.White.copy(alpha = 0.2f),
+                                if (filled) NeonCyan else c.textSecondary.copy(alpha = 0.2f),
                                 CircleShape
                             )
                     )
@@ -78,12 +79,13 @@ fun UnlockScreen(
             
             Spacer(modifier = Modifier.height(64.dp))
             
-            // Number Pad Placeholder (could be a full keypad)
+            // Number Pad Placeholder
             Button(
-                onClick = { onUnlockSuccess() }, // For demo, any click unlocks
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))
+                onClick = { onUnlockSuccess() },
+                colors = ButtonDefaults.buttonColors(containerColor = NeonPurple.copy(0.8f)),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
             ) {
-                Text("Unlock (Demo)")
+                Text("Unlock (Demo)", color = Color.White, fontWeight = FontWeight.Bold)
             }
         }
     }

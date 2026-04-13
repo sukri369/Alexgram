@@ -20,7 +20,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -32,6 +31,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import xyz.nextalone.nagram.analytics.domain.AddictionController
+import xyz.nextalone.nagram.analytics.ui.theme.AnalyticsTheme
+import xyz.nextalone.nagram.analytics.ui.theme.LocalAnalyticsColors
+import xyz.nextalone.nagram.analytics.ui.theme.NeonOrange
+import xyz.nextalone.nagram.analytics.ui.theme.NeonRed
+import xyz.nextalone.nagram.analytics.ui.theme.NeonCyan
 
 class AppLimitReachedActivity : ComponentActivity() {
 
@@ -52,14 +56,16 @@ class AppLimitReachedActivity : ComponentActivity() {
         val limitSeconds = controller.getLimitSeconds()
 
         setContent {
-            AppLimitReachedScreen(
-                usedSeconds = usedSeconds,
-                limitSeconds = limitSeconds,
-                onGoToAnalytics = {
-                    startActivity(Intent(this, AnalyticsDashboardActivity::class.java))
-                    finish()
-                }
-            )
+            AnalyticsTheme {
+                AppLimitReachedScreen(
+                    usedSeconds = usedSeconds,
+                    limitSeconds = limitSeconds,
+                    onGoToAnalytics = {
+                        startActivity(Intent(this, AnalyticsDashboardActivity::class.java))
+                        finish()
+                    }
+                )
+            }
         }
     }
 }
@@ -70,14 +76,7 @@ private fun AppLimitReachedScreen(
     limitSeconds: Long,
     onGoToAnalytics: () -> Unit
 ) {
-    val BgDark      = Color(0xFF090B15)
-    val NeonOrange  = Color(0xFFFF6D00)
-    val NeonRed     = Color(0xFFFF1744)
-    val NeonCyan    = Color(0xFF00E5FF)
-    val TextPrimary = Color(0xFFEEF0F8)
-    val TextSecond  = Color(0xFF8A94B0)
-    val CardBg      = Color(0xFF12152A)
-    val GlassBorder = Color(0xFF2A2F4A)
+    val c = LocalAnalyticsColors.current
 
     val usedH = usedSeconds / 3600
     val usedM = (usedSeconds % 3600) / 60
@@ -104,21 +103,11 @@ private fun AppLimitReachedScreen(
         animationSpec = infiniteRepeatable(tween(1400, easing = FastOutSlowInEasing), RepeatMode.Reverse),
         label = "glowAlpha"
     )
-    val ringRotation by infiniteTransition.animateFloat(
-        initialValue = 0f, targetValue = 360f,
-        animationSpec = infiniteRepeatable(tween(8000, easing = LinearEasing)),
-        label = "ring"
-    )
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.radialGradient(
-                    listOf(Color(0xFF1F0A00), Color(0xFF090B15)),
-                    radius = 1400f
-                )
-            )
+            .background(c.bgScreen)
             .systemBarsPadding(),
         contentAlignment = Alignment.Center
     ) {
@@ -135,7 +124,7 @@ private fun AppLimitReachedScreen(
                     Canvas(Modifier.fillMaxSize()) {
                         // Background ring
                         drawCircle(
-                            color = Color(0xFF1E2040),
+                            color = c.bgCardAlt,
                             style = Stroke(12.dp.toPx())
                         )
                         // Progress arc
@@ -167,8 +156,9 @@ private fun AppLimitReachedScreen(
                             modifier = Modifier.size(32.dp)
                         )
                         Spacer(Modifier.height(4.dp))
+                        val percentage = (progress * 100).toInt()
                         Text(
-                            "100%",
+                            "$percentage%",
                             color = NeonRed,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.ExtraBold
@@ -180,7 +170,7 @@ private fun AppLimitReachedScreen(
 
                 Text(
                     "Daily Limit Reached",
-                    color = TextPrimary,
+                    color = c.textPrimary,
                     fontSize = 26.sp,
                     fontWeight = FontWeight.ExtraBold,
                     letterSpacing = (-0.5).sp
@@ -190,7 +180,7 @@ private fun AppLimitReachedScreen(
 
                 Text(
                     "You've been on Alexgram for too long today.",
-                    color = TextSecond,
+                    color = c.textSecondary,
                     fontSize = 13.sp,
                     textAlign = TextAlign.Center
                 )
@@ -201,7 +191,7 @@ private fun AppLimitReachedScreen(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(20.dp))
-                        .background(CardBg)
+                        .background(c.bgCard)
                         .border(1.dp, NeonOrange.copy(0.3f), RoundedCornerShape(20.dp))
                         .padding(horizontal = 20.dp, vertical = 16.dp)
                 ) {
@@ -214,7 +204,7 @@ private fun AppLimitReachedScreen(
                             Modifier
                                 .width(1.dp)
                                 .height(48.dp)
-                                .background(GlassBorder)
+                                .background(c.border)
                         )
                         UsageStat("Limit", limitLabel, NeonRed)
                     }
@@ -226,8 +216,8 @@ private fun AppLimitReachedScreen(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(16.dp))
-                        .background(CardBg)
-                        .border(1.dp, GlassBorder, RoundedCornerShape(16.dp))
+                        .background(c.bgCard)
+                        .border(1.dp, c.border, RoundedCornerShape(16.dp))
                         .padding(horizontal = 18.dp, vertical = 12.dp)
                 ) {
                     Row(verticalAlignment = Alignment.Top) {
@@ -240,7 +230,7 @@ private fun AppLimitReachedScreen(
                         Spacer(Modifier.width(8.dp))
                         Text(
                             "To extend your limit or remove it, go to\nAnalytics → Control Matrix → Daily App Limit.",
-                            color = TextSecond,
+                            color = c.textSecondary,
                             fontSize = 12.sp,
                             lineHeight = 18.sp
                         )
@@ -304,7 +294,7 @@ private fun AppLimitReachedScreen(
                     Spacer(Modifier.width(6.dp))
                     Text(
                         "Limit resets at midnight",
-                        color = TextSecond.copy(0.5f),
+                        color = c.textSecondary.copy(0.5f),
                         fontSize = 11.sp
                     )
                 }
@@ -315,9 +305,10 @@ private fun AppLimitReachedScreen(
 
 @Composable
 private fun UsageStat(label: String, value: String, color: Color) {
+    val c = LocalAnalyticsColors.current
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(value, color = color, fontSize = 22.sp, fontWeight = FontWeight.ExtraBold)
         Spacer(Modifier.height(2.dp))
-        Text(label, color = Color(0xFF8A94B0), fontSize = 11.sp)
+        Text(label, color = c.textSecondary, fontSize = 11.sp)
     }
 }
