@@ -300,7 +300,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
 
         public BrandingHeaderView(Context context) {
             super(context);
-            setPadding(0, dp(80), 0, dp(24));
+            setPadding(0, dp(40), 0, dp(8));
             setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
 
             FrameLayout logoContainer = new FrameLayout(context);
