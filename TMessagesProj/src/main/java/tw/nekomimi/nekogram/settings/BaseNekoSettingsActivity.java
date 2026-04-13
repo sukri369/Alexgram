@@ -174,29 +174,36 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
                 items.add(getString(R.string.CopyLink));
                 if (!QuickSettingsController.getInstance().isAdded(rowKey)) {
                     items.add("Add to Quick Settings");
+                } else {
+                    items.add("Remove from Quick Settings");
                 }
                 showDialog(new AlertDialog.Builder(context).setItems(items.toArray(new CharSequence[0]), (dialogInterface, i) -> {
                     if (i == 0) {
                         AndroidUtilities.addToClipboard(String.format(Locale.getDefault(), "https://%s/alexsettings/%s?r=%s", getMessagesController().linkPrefix, getKey(), rowKey));
                         BulletinFactory.of(BaseNekoSettingsActivity.this).createCopyLinkBulletin().show();
                     } else if (i == 1) {
-                        String title = "";
-                        int type = QuickSettingEntry.TYPE_NAVIGATE;
-                        if (view instanceof TextSettingsCell) {
-                            title = ((TextSettingsCell) view).getTextView().getText().toString();
-                        } else if (view instanceof TextCheckCell) {
-                            title = ((TextCheckCell) view).getTextView().getText().toString();
-                            type = QuickSettingEntry.TYPE_SWITCH;
-                        } else if (view instanceof TextDetailSettingsCell) {
-                            title = ((TextDetailSettingsCell) view).getTextView().getText().toString();
-                        } else if (view instanceof NotificationsCheckCell) {
-                            title = ((NotificationsCheckCell) view).getTextView().getText().toString();
-                            type = QuickSettingEntry.TYPE_SWITCH;
-                        }
+                        if (!QuickSettingsController.getInstance().isAdded(rowKey)) {
+                            String title = "";
+                            int type = QuickSettingEntry.TYPE_NAVIGATE;
+                            if (view instanceof TextSettingsCell) {
+                                title = ((TextSettingsCell) view).getTextView().getText().toString();
+                            } else if (view instanceof TextCheckCell) {
+                                title = ((TextCheckCell) view).getTextView().getText().toString();
+                                type = QuickSettingEntry.TYPE_SWITCH;
+                            } else if (view instanceof TextDetailSettingsCell) {
+                                title = ((TextDetailSettingsCell) view).getTextView().getText().toString();
+                            } else if (view instanceof NotificationsCheckCell) {
+                                title = ((NotificationsCheckCell) view).getTextView().getText().toString();
+                                type = QuickSettingEntry.TYPE_SWITCH;
+                            }
 
-                        if (!title.isEmpty()) {
-                            QuickSettingsController.getInstance().addQuickSetting(new QuickSettingEntry(rowKey, title, "msg_settings", 0xFF2196F3, type, getClass().getName()));
-                            BulletinFactory.of(BaseNekoSettingsActivity.this).createSimpleBulletin(R.drawable.msg_settings, "Added to Quick Settings").show();
+                            if (title != null && !title.isEmpty()) {
+                                QuickSettingsController.getInstance().addQuickSetting(new QuickSettingEntry(rowKey, title, "msg_settings", 0xFF2196F3, type, getClass().getName()));
+                                BulletinFactory.of(BaseNekoSettingsActivity.this).createSimpleBulletin(R.drawable.msg_settings, "Added to Quick Settings").show();
+                            }
+                        } else {
+                            QuickSettingsController.getInstance().removeQuickSetting(rowKey);
+                            BulletinFactory.of(BaseNekoSettingsActivity.this).createSimpleBulletin(R.drawable.msg_delete, "Removed from Quick Settings").show();
                         }
                     }
                 }).create());

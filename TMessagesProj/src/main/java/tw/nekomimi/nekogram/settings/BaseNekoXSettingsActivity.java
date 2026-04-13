@@ -350,9 +350,14 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
 
                     if (title != null && title.length() > 0) {
                         QuickSettingsController.getInstance().addQuickSetting(new QuickSettingEntry(key, title.toString(), iconResName, 0xFF2196F3, type, getClass().getName()));
-                        BulletinFactory.of(this).createSimpleBulletin(R.drawable.msg_settings, "Added to Quick Settings").show();
+                        BulletinFactory.of(BaseNekoXSettingsActivity.this).createSimpleBulletin(R.drawable.msg_settings, "Added to Quick Settings").show();
                     }
                 }
+            });
+        } else {
+            options.add(R.drawable.msg_delete, "Remove from Quick Settings", () -> {
+                QuickSettingsController.getInstance().removeQuickSetting(key);
+                BulletinFactory.of(BaseNekoXSettingsActivity.this).createSimpleBulletin(R.drawable.msg_delete, "Removed from Quick Settings").show();
             });
         }
     }

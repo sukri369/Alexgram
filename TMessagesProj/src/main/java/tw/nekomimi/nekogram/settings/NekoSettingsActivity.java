@@ -195,6 +195,15 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         return fragmentView;
     }
 
+    @Override
+    public void onFragmentResume() {
+        super.onFragmentResume();
+        updateRows();
+        if (listAdapter != null) {
+            listAdapter.notifyDataSetChanged();
+        }
+    }
+
     private void setupColors() {
         isDark = Theme.getActiveTheme().isDark();
         if (isDark) {
