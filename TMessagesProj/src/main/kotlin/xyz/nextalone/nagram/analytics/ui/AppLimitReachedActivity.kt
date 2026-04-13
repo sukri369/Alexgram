@@ -30,6 +30,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
+import org.telegram.messenger.NotificationCenter
+import org.telegram.ui.ActionBar.Theme
 import xyz.nextalone.nagram.analytics.domain.AddictionController
 import xyz.nextalone.nagram.analytics.ui.theme.AnalyticsTheme
 import xyz.nextalone.nagram.analytics.ui.theme.LocalAnalyticsColors
@@ -37,26 +39,30 @@ import xyz.nextalone.nagram.analytics.ui.theme.NeonOrange
 import xyz.nextalone.nagram.analytics.ui.theme.NeonRed
 import xyz.nextalone.nagram.analytics.ui.theme.NeonCyan
 
-class AppLimitReachedActivity : ComponentActivity() {
+class AppLimitReachedActivity : ComponentActivity(), NotificationCenter.NotificationCenterDelegate {
+
+    private var isDarkState by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
-        // Block back press — user must go to Analytics or wait
+        // Block back press
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                // Move to background instead of showing previous screen
                 moveTaskToBack(true)
             }
         })
+
+        isDarkState = Theme.isCurrentThemeDark()
+        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.didSetNewTheme)
 
         val controller = AddictionController.get(applicationContext)
         val usedSeconds = controller.getTodaySeconds()
         val limitSeconds = controller.getLimitSeconds()
 
         setContent {
-            AnalyticsTheme {
+            AnalyticsTheme(darkTheme = isDarkState) {
                 AppLimitReachedScreen(
                     usedSeconds = usedSeconds,
                     limitSeconds = limitSeconds,
@@ -66,6 +72,17 @@ class AppLimitReachedActivity : ComponentActivity() {
                     }
                 )
             }
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.didSetNewTheme)
+    }
+
+    override fun didReceivedNotification(id: Int, account: Int, vararg args: Any?) {
+        if (id == NotificationCenter.didSetNewTheme) {
+            isDarkState = Theme.isCurrentThemeDark()
         }
     }
 }
@@ -119,15 +136,12 @@ private fun AppLimitReachedScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.padding(horizontal = 28.dp)
             ) {
-                // Animated circular progress indicator
                 Box(contentAlignment = Alignment.Center, modifier = Modifier.size(150.dp)) {
                     Canvas(Modifier.fillMaxSize()) {
-                        // Background ring
                         drawCircle(
                             color = c.bgCardAlt,
                             style = Stroke(12.dp.toPx())
                         )
-                        // Progress arc
                         drawArc(
                             brush = Brush.sweepGradient(listOf(NeonOrange, NeonRed, NeonOrange)),
                             startAngle = -90f,
@@ -135,7 +149,6 @@ private fun AppLimitReachedScreen(
                             useCenter = false,
                             style = Stroke(12.dp.toPx(), cap = StrokeCap.Round)
                         )
-                        // Glow dot at end of arc
                         val angle = Math.toRadians((-90f + 360f * progress).toDouble())
                         val radius = size.minDimension / 2f - 6.dp.toPx()
                         drawCircle(
@@ -147,7 +160,6 @@ private fun AppLimitReachedScreen(
                             )
                         )
                     }
-                    // Center icon
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(
                             Icons.Default.Timer,
@@ -187,7 +199,6 @@ private fun AppLimitReachedScreen(
 
                 Spacer(Modifier.height(20.dp))
 
-                // Usage stats card
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(20.dp))
@@ -212,7 +223,6 @@ private fun AppLimitReachedScreen(
 
                 Spacer(Modifier.height(16.dp))
 
-                // Info card
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(16.dp))
@@ -239,7 +249,6 @@ private fun AppLimitReachedScreen(
 
                 Spacer(Modifier.height(28.dp))
 
-                // Go to Analytics button (primary CTA)
                 Button(
                     onClick = onGoToAnalytics,
                     modifier = Modifier
@@ -281,7 +290,6 @@ private fun AppLimitReachedScreen(
 
                 Spacer(Modifier.height(16.dp))
 
-                // Bottom warning
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center

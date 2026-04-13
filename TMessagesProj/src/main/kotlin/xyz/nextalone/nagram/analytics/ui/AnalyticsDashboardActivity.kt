@@ -4,26 +4,40 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.ui.Modifier
+import androidx.compose.runtime.*
 import dagger.hilt.android.AndroidEntryPoint
+import org.telegram.messenger.NotificationCenter
+import org.telegram.ui.ActionBar.Theme
 import xyz.nextalone.nagram.analytics.ui.screens.DashboardScreen
 import xyz.nextalone.nagram.analytics.ui.theme.AnalyticsTheme
-import xyz.nextalone.nagram.analytics.ui.theme.DarkAnalyticsColors
-import xyz.nextalone.nagram.analytics.ui.theme.LightAnalyticsColors
 
 @AndroidEntryPoint
-class AnalyticsDashboardActivity : ComponentActivity() {
+class AnalyticsDashboardActivity : ComponentActivity(), NotificationCenter.NotificationCenterDelegate {
+
+    private var isDarkState by mutableStateOf(false)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        
+        isDarkState = Theme.isCurrentThemeDark()
+        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.didSetNewTheme)
+
         setContent {
-            AnalyticsTheme {
+            AnalyticsTheme(darkTheme = isDarkState) {
                 DashboardScreen()
             }
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.didSetNewTheme)
+    }
+
+    override fun didReceivedNotification(id: Int, account: Int, vararg args: Any?) {
+        if (id == NotificationCenter.didSetNewTheme) {
+            isDarkState = Theme.isCurrentThemeDark()
         }
     }
 }

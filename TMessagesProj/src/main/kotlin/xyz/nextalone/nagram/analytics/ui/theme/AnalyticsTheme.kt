@@ -7,6 +7,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import org.telegram.ui.ActionBar.Theme
 
 // ─── Accent colours (same in both modes) ─────────────────────────────────────
 val NeonCyan   = Color(0xFF00C8E8)
@@ -63,7 +64,7 @@ val LocalAnalyticsColors = staticCompositionLocalOf { DarkAnalyticsColors }
 /** Root wrapper — auto-selects dark / light palette based on system setting */
 @Composable
 fun AnalyticsTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = Theme.isCurrentThemeDark(),
     content: @Composable () -> Unit
 ) {
     val colors = if (darkTheme) DarkAnalyticsColors else LightAnalyticsColors

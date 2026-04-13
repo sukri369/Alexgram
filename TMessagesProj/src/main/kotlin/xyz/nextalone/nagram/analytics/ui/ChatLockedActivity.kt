@@ -27,26 +27,31 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import org.telegram.messenger.MessagesController
+import org.telegram.messenger.NotificationCenter
 import org.telegram.messenger.UserConfig
+import org.telegram.ui.ActionBar.Theme
 import xyz.nextalone.nagram.analytics.domain.ChatLockManager
 import xyz.nextalone.nagram.analytics.domain.AnalyticsManager
 import xyz.nextalone.nagram.analytics.ui.theme.AnalyticsTheme
 import xyz.nextalone.nagram.analytics.ui.theme.LocalAnalyticsColors
 import xyz.nextalone.nagram.analytics.ui.theme.NeonPink
 
-class ChatLockedActivity : ComponentActivity() {
+class ChatLockedActivity : ComponentActivity(), NotificationCenter.NotificationCenterDelegate {
+
+    private var isDarkState by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         val chatId = intent.getLongExtra("chat_id", 0L)
-
-        // Resolve chat name
         val chatName = resolveChatName(chatId)
 
+        isDarkState = Theme.isCurrentThemeDark()
+        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.didSetNewTheme)
+
         setContent {
-            AnalyticsTheme {
+            AnalyticsTheme(darkTheme = isDarkState) {
                 ChatLockedScreen(
                     chatName = chatName,
                     onGoToAnalytics = {
@@ -56,6 +61,17 @@ class ChatLockedActivity : ComponentActivity() {
                     onDismiss = { finish() }
                 )
             }
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.didSetNewTheme)
+    }
+
+    override fun didReceivedNotification(id: Int, account: Int, vararg args: Any?) {
+        if (id == NotificationCenter.didSetNewTheme) {
+            isDarkState = Theme.isCurrentThemeDark()
         }
     }
 
@@ -86,7 +102,6 @@ private fun ChatLockedScreen(
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { visible = true }
 
-    // Pulsing lock animation
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val scale by infiniteTransition.animateFloat(
         initialValue = 0.92f, targetValue = 1.08f,
@@ -114,16 +129,13 @@ private fun ChatLockedScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.padding(32.dp)
             ) {
-                // Animated lock icon
                 Box(contentAlignment = Alignment.Center) {
-                    // Outer glow ring
                     Box(
                         Modifier
                             .size(120.dp)
                             .clip(CircleShape)
                             .background(NeonPink.copy(alpha = glowAlpha * 0.15f))
                     )
-                    // Inner icon container
                     Box(
                         Modifier
                             .size(88.dp)
@@ -150,7 +162,6 @@ private fun ChatLockedScreen(
 
                 Spacer(Modifier.height(28.dp))
 
-                // Title
                 Text(
                     "Chat Locked",
                     color = c.textPrimary,
@@ -161,7 +172,6 @@ private fun ChatLockedScreen(
 
                 Spacer(Modifier.height(8.dp))
 
-                // Subtitle with chat name
                 Text(
                     "\"$chatName\"",
                     color = NeonPink,
@@ -171,7 +181,6 @@ private fun ChatLockedScreen(
 
                 Spacer(Modifier.height(16.dp))
 
-                // Info card
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(18.dp))
@@ -190,7 +199,6 @@ private fun ChatLockedScreen(
 
                 Spacer(Modifier.height(28.dp))
 
-                // Go to Analytics button
                 Button(
                     onClick = onGoToAnalytics,
                     modifier = Modifier
@@ -234,7 +242,6 @@ private fun ChatLockedScreen(
 
                 Spacer(Modifier.height(12.dp))
 
-                // Dismiss / go back
                 TextButton(
                     onClick = onDismiss,
                     modifier = Modifier.fillMaxWidth()
@@ -253,6 +260,5 @@ private fun ChatLockedScreen(
 private val OvershootInterpolatorEasing = Easing { t ->
     val tension = 2.5f
     val scaledT = t - 1f
-    scaledT * scaledT * ((tension + 1) * scaledT + tension) + 1f
     scaledT * scaledT * ((tension + 1) * scaledT + tension) + 1f
 }
