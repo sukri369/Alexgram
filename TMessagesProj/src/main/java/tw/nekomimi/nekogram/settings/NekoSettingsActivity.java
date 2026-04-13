@@ -370,6 +370,9 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
                 }
             } else if (viewType == 3) {
                 CardItemCell cell = (CardItemCell) holder.itemView;
+                if (position == hiddenChatsRow) {
+                    cell.setData("Hidden Chats", "Private conversations", R.drawable.msg_secret, 0xFF2196F3, v -> {
+                        presentFragment(new tw.nekomimi.nekogram.ui.HiddenChatsActivity());
                     }, true, false);
                 } else if (position == analyticsRow) {
                     cell.setData("Analytics & Control", "Usage stats, chat lock & focus mode", R.drawable.msg_stats_solar, 0xFF2196F3, v -> {
