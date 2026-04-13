@@ -157,7 +157,7 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
                 }
                 boolean isFirst = position == 0 || BaseNekoSettingsActivity.this.isBreakType(position - 1);
                 boolean isLast = position == listAdapter.getItemCount() - 1 || BaseNekoSettingsActivity.this.isBreakType(position + 1);
-                outRect.set(dp(12), isFirst ? dp(4) : 0, dp(12), isLast ? dp(12) : 0);
+                outRect.set(dp(16), isFirst ? dp(4) : 0, dp(16), isLast ? dp(12) : 0);
             }
         });
         listView.setOnItemLongClickListener((view, position, x, y) -> {

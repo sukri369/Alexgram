@@ -382,7 +382,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         public CardSwitchCell(Context context) {
             super(context);
             setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
-            setPadding(dp(12), 0, dp(12), 0);
+            setPadding(dp(16), 0, dp(16), 0);
             container = new LinearLayout(context);
             container.setOrientation(LinearLayout.HORIZONTAL);
             container.setGravity(Gravity.CENTER_VERTICAL);
@@ -448,7 +448,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
             super(context);
             setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
             setOrientation(VERTICAL);
-            setPadding(dp(12), 0, dp(12), 8);
+            setPadding(dp(16), 0, dp(16), 8);
         }
         public void setData(String title, String subtitle, int iconRes, int iconColor, View.OnClickListener listener, boolean first, boolean last) {
             removeAllViews();
@@ -522,7 +522,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
             super(context);
             setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
             setOrientation(HORIZONTAL);
-            setPadding(dp(12), dp(8), dp(12), dp(8));
+            setPadding(dp(16), dp(8), dp(16), dp(8));
         }
         public void update() {
             removeAllViews();

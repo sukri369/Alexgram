@@ -152,7 +152,7 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
                 var adapter = getListAdapter();
                 int itemCount = adapter != null ? adapter.getItemCount() : 0;
                 boolean isLast = position == itemCount - 1 || isBreakType(position + 1);
-                outRect.set(dp(12), isFirst ? dp(4) : 0, dp(12), isLast ? dp(12) : 0);
+                outRect.set(dp(16), isFirst ? dp(4) : 0, dp(16), isLast ? dp(12) : 0);
             }
         });
 
