@@ -89,6 +89,7 @@ interface AnalyticsDao {
 
     @Query("""
         SELECT 
+            0 AS id,
             accountIndex,
             0 AS chatId,
             date,
