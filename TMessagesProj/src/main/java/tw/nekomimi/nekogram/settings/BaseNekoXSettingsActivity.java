@@ -564,7 +564,6 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
                         headerCell.setPadding(dp(21), dp(12), dp(21), 0);
                         headerCell.getTextView().setPadding(0, dp(4), 0, dp(4));
                     }
-                    return;
                 } else if (type == CellGroup.ITEM_TYPE_DIVIDER) {
                     view.setBackground(null);
                     if (view.getLayoutParams() instanceof ViewGroup.MarginLayoutParams lp) {
@@ -617,7 +616,7 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
         protected boolean isBreakType(int position) {
             if (position < 0 || position >= getItemCount()) return true;
             int type = getItemViewType(position);
-            return type == CellGroup.ITEM_TYPE_DIVIDER || type == CellGroup.ITEM_TYPE_HEADER;
+            return type == CellGroup.ITEM_TYPE_DIVIDER;
         }
 
         protected void onBindCustomViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
