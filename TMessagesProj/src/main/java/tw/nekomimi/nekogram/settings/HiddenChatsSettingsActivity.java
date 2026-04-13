@@ -103,7 +103,12 @@ public class HiddenChatsSettingsActivity extends BaseFragment {
 
         // Open Hidden Chats
         optionsCard.addView(createSettingItem(context, "Open Hidden Chats", "Access your hidden chats now", R.drawable.msg_folders_private_solar, 0xFFE91E63, v -> {
-            presentFragment(new HiddenChatsActivity(null));
+            HiddenChatsController controller = HiddenChatsController.getInstance();
+            if (controller.hasPasscode() && controller.isLocked()) {
+                presentFragment(new HiddenChatsPasscodeActivity(HiddenChatsPasscodeActivity.MODE_UNLOCK_CHATS));
+            } else {
+                presentFragment(new HiddenChatsActivity(new android.os.Bundle()));
+            }
         }, false));
 
         optionsCard.addView(createGlassDivider(context));
