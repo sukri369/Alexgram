@@ -53,6 +53,10 @@ public class ConfigCellSelectBox extends AbstractConfigCell implements WithBindC
         return this.key;
     }
 
+    public String getTitle() {
+        return title;
+    }
+
     public boolean isEnabled() {
         return true;
     }

@@ -120,6 +120,10 @@ public class NotificationsCheckCell extends FrameLayout {
         return checkBox;
     }
 
+    public TextView getTextView() {
+        return textView;
+    }
+
     protected int processColor(int color) {
         return color;
     }

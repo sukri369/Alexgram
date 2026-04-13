@@ -327,7 +327,7 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
                 CellGroup cellGroup = getCellGroup();
                 if (cellGroup != null && position >= 0 && position < cellGroup.rows.size()) {
                     AbstractConfigCell cell = cellGroup.rows.get(position);
-                    String title = "";
+                    CharSequence title = null;
                     String iconResName = "msg_settings";
                     int type = QuickSettingEntry.TYPE_NAVIGATE;
                     
@@ -348,8 +348,8 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
                         type = QuickSettingEntry.TYPE_DIALOG;
                     }
 
-                    if (!title.isEmpty()) {
-                        QuickSettingsController.getInstance().addQuickSetting(new QuickSettingEntry(key, title, iconResName, 0xFF2196F3, type, getClass().getName()));
+                    if (title != null && title.length() > 0) {
+                        QuickSettingsController.getInstance().addQuickSetting(new QuickSettingEntry(key, title.toString(), iconResName, 0xFF2196F3, type, getClass().getName()));
                         BulletinFactory.of(this).createSimpleBulletin(R.drawable.msg_settings, "Added to Quick Settings").show();
                     }
                 }
