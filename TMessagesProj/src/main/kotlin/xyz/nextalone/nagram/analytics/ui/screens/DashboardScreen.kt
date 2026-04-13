@@ -21,8 +21,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -49,7 +51,9 @@ import xyz.nextalone.nagram.analytics.ui.theme.NeonGreen
 import xyz.nextalone.nagram.analytics.ui.theme.NeonOrange
 import xyz.nextalone.nagram.analytics.ui.theme.NeonPink
 import xyz.nextalone.nagram.analytics.ui.theme.NeonPurple
+import xyz.nextalone.nagram.analytics.ui.theme.NeonRed
 import xyz.nextalone.nagram.analytics.ui.viewmodel.ChatUsageInfo
+
 import xyz.nextalone.nagram.analytics.ui.viewmodel.DashboardViewModel
 
 // ─── Avatar palette (shared) ─────────────────────────────────────────────────
