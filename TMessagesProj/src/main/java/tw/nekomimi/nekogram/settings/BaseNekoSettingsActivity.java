@@ -404,7 +404,8 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
                     headerCell.getTextView().setTextColor(isDark ? 0xFF33A1FF : 0xFF007AFF);
                     headerCell.getTextView().setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 14);
                     headerCell.getTextView().setTypeface(AndroidUtilities.bold());
-                    headerCell.setPadding(dp(21), dp(16), dp(21), dp(8));
+                    headerCell.setPadding(dp(21), dp(12), dp(21), 0);
+                    headerCell.getTextView().setPadding(0, dp(4), 0, dp(4));
                 }
             } else if (type == TYPE_SHADOW || type == TYPE_INFO_PRIVACY) {
                 view.setBackground(null);
