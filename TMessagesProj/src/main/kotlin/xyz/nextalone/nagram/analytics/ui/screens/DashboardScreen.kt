@@ -219,7 +219,8 @@ fun TopHeroBar() {
     Box(
         modifier = Modifier.fillMaxWidth()
             .background(c.bgHero)
-            .padding(top = 48.dp, bottom = 24.dp, start = 24.dp, end = 24.dp)
+            .statusBarsPadding()
+            .padding(top = 16.dp, bottom = 24.dp, start = 24.dp, end = 24.dp)
     ) {
         Column {
             Row(verticalAlignment = Alignment.CenterVertically) {
