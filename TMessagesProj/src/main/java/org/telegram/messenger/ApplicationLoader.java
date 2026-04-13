@@ -63,6 +63,7 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics;
 
 import static android.os.Build.VERSION.SDK_INT;
 
+@dagger.hilt.android.HiltAndroidApp
 public class ApplicationLoader extends Application {
 
     public static ApplicationLoader applicationLoaderInstance;
@@ -303,6 +304,7 @@ public class ApplicationLoader extends Application {
             DownloadController.getInstance(a);
         }
         BillingController.getInstance().startConnection();
+        xyz.nextalone.nagram.analytics.domain.AnalyticsManager.Companion.get(applicationContext).startTracking();
     }
 
     public ApplicationLoader() {
@@ -362,6 +364,15 @@ public class ApplicationLoader extends Application {
                 super.onActivityStarted(activity);
                 if (wasInBackground) {
                     ensureCurrentNetworkGet(true);
+                    xyz.nextalone.nagram.analytics.domain.AnalyticsManager.Companion.get(applicationContext).onAppForeground();
+                }
+            }
+
+            @Override
+            public void onActivityStopped(Activity activity) {
+                super.onActivityStopped(activity);
+                if (isBackground()) {
+                    xyz.nextalone.nagram.analytics.domain.AnalyticsManager.Companion.get(applicationContext).onAppBackground();
                 }
             }
         };

@@ -74,6 +74,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
     private int saveDeletedRow;
     private int privacyHeaderRow;
     private int hiddenChatsRow;
+    private int analyticsRow;
     private int coreHeaderRow;
     private int coreSettingsRow;
     private int advancedHeaderRow;
@@ -110,6 +111,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         
         privacyHeaderRow = addRow();
         hiddenChatsRow = addRow("hidden_chats");
+        analyticsRow = addRow("analytics");
         
         coreHeaderRow = addRow();
         coreSettingsRow = addRow("core_settings");
@@ -368,14 +370,18 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
                 }
             } else if (viewType == 3) {
                 CardItemCell cell = (CardItemCell) holder.itemView;
-                if (position == hiddenChatsRow) {
-                    cell.setData("Hidden Chats", "Secure vault for private chats", R.drawable.msg_folders_private_solar, 0xFFE91E63, v -> {
-                        if (HiddenChatsController.getInstance().hasPasscode()) {
-                            presentFragment(new HiddenChatsPasscodeActivity(HiddenChatsPasscodeActivity.MODE_UNLOCK_SETTINGS));
-                        } else {
-                            presentFragment(new HiddenChatsPasscodeActivity(HiddenChatsPasscodeActivity.MODE_SETUP_PASSCODE));
-                        }
-                    }, true, true);
+                    }, true, false);
+                } else if (position == analyticsRow) {
+                    cell.setData("Analytics & Control", "Usage stats, chat lock & focus mode", R.drawable.msg_stats_solar, 0xFF2196F3, v -> {
+                        presentFragment(new org.telegram.ui.ActionBar.BaseFragment() {
+                            @Override
+                            public View createView(Context context) {
+                                context.startActivity(new Intent(context, xyz.nextalone.nagram.analytics.ui.AnalyticsDashboardActivity.class));
+                                finishFragment();
+                                return new View(context);
+                            }
+                        });
+                    }, false, true);
                 } else if (position == coreSettingsRow) {
                     cell.setMultiData(new CoreItem[]{
                             new CoreItem("General", "Appearance, Language, Behavior", R.drawable.msg_settings, 0xFF2196F3, v -> presentFragment(new NekoGeneralSettingsActivity())),
@@ -402,7 +408,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
             if (position == headerRow) return 0;
             if (position == quickSettingsHeaderRow || position == privacyHeaderRow || position == coreHeaderRow || position == advancedHeaderRow) return 1;
             if (position == hideContactsRow || position == ghostModeRow || position == musicGraphRow || position == saveDeletedRow) return 2;
-            if (position == hiddenChatsRow || position == coreSettingsRow || position == advancedSettingsRow) return 3;
+            if (position == hiddenChatsRow || position == analyticsRow || position == coreSettingsRow || position == advancedSettingsRow) return 3;
             if (position >= quickSettingsStartRow && position < quickSettingsEndRow) {
                 QuickSettingEntry entry = QuickSettingsController.getInstance().getQuickSettings().get(position - quickSettingsStartRow);
                 return entry.type == QuickSettingEntry.TYPE_SWITCH ? 6 : 7;

@@ -30744,6 +30744,7 @@ public class ChatActivity extends BaseFragment implements
     @Override
     public void onResume() {
         super.onResume();
+        xyz.nextalone.nagram.analytics.domain.AnalyticsManager.Companion.get(getParentActivity()).onChatStarted(getDialogId());
         if (chatAnimeAssistantView != null) {
             chatAnimeAssistantView.onResume();
         }
@@ -30951,6 +30952,7 @@ public class ChatActivity extends BaseFragment implements
     @Override
     public void onPause() {
         super.onPause();
+        xyz.nextalone.nagram.analytics.domain.AnalyticsManager.Companion.get(getParentActivity()).onChatEnded(getDialogId());
         if (chatAnimeAssistantView != null) {
             chatAnimeAssistantView.onPause();
         }
