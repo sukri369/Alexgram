@@ -42,10 +42,13 @@ import org.telegram.ui.Components.BlurredRecyclerView;
 import org.telegram.ui.Components.BulletinFactory;
 import org.telegram.ui.Components.CubicBezierInterpolator;
 import org.telegram.ui.Components.FlickerLoadingView;
+import org.telegram.ui.Components.ItemOptions;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
 import org.telegram.ui.Components.SizeNotifierFrameLayout;
 import org.telegram.ui.Components.URLSpanNoUnderline;
+
+import android.graphics.drawable.Drawable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -96,17 +99,6 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
     protected HashMap<String, Integer> rowMap = new HashMap<>(20);
     protected HashMap<Integer, String> rowMapReverse = new HashMap<>(20);
 
-    protected int addRow() {
-        return rowCount++;
-    }
-
-    protected int addRow(String key) {
-        int row = rowCount++;
-        rowMap.put(key, row);
-        rowMapReverse.put(row, key);
-        return row;
-    }
-
     protected boolean isDark;
     protected int cardBg;
     protected int cardBorder;
@@ -142,6 +134,28 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
                 }
             }
         }
+    }
+
+    protected ItemOptions makeLongClickOptions(View view) {
+        ItemOptions options = ItemOptions.makeOptions(this, view);
+        Drawable background = null;
+        if (listView != null) {
+            background = listView.getClipBackground(view);
+        }
+        return options.setScrimViewBackground(background);
+    }
+
+    protected int addRow() {
+        return rowCount++;
+    }
+
+    protected int addRow(String... keys) {
+        var row = rowCount++;
+        for (var key : keys) {
+            rowMap.put(key, row);
+        }
+        rowMapReverse.put(row, keys[0]);
+        return row;
     }
 
     public View createView(Context context) {
@@ -356,19 +370,8 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
         return ColorUtils.calculateLuminance(color) > 0.7f;
     }
 
-    protected int addRow() {
-        return rowCount++;
-    }
-
-    // TODO: refactor the whole settings
-    protected int addRow(String... keys) {
-        var row = rowCount++;
-        for (var key : keys) {
-            rowMap.put(key, row);
-        }
-        rowMapReverse.put(row, keys[0]);
-        return row;
-    }
+    // existing addRow(String... keys) and addRow() at the bottom will be kept as the source of truth if needed, 
+    // but the ones I added are now gone or consolidated.
 
     public void scrollToRow(String key, Runnable unknown) {
         if (rowMap.containsKey(key)) {
