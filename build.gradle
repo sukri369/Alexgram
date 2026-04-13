@@ -29,12 +29,6 @@ subprojects {
                     coreLibraryDesugaringEnabled = true
                 }
 
-                kotlin {
-                    compilerOptions {
-                        jvmTarget = JvmTarget.JVM_21
-                    }
-                }
-
                 defaultConfig {
                     minSdk = 27
                     targetSdk = 36

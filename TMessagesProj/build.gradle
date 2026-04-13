@@ -58,6 +58,12 @@ if (nativeTarget == 'SKIP') {
 }
 
 android {
+    kotlin {
+        compilerOptions {
+            jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
+        }
+    }
+
     defaultConfig.applicationId = APP_PACKAGE
 
     packaging {
