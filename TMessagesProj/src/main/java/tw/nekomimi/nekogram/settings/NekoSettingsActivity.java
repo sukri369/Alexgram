@@ -568,6 +568,13 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
                 listener.onSwitch(target);
                 iconView.setColorFilter(new PorterDuffColorFilter(target ? 0xFF2196F3 : (isDark ? 0xFFAAAAAA : 0xFF777777), PorterDuff.Mode.SRC_IN));
             });
+            setOnLongClickListener(v -> {
+                int position = -1;
+                if (getParent() instanceof RecyclerListView) {
+                    position = ((RecyclerListView) getParent()).getChildAdapterPosition(this);
+                }
+                return onItemLongClick(this, position, 0, 0);
+            });
         }
     }
 
@@ -636,6 +643,13 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
             arrow.setImageResource(R.drawable.msg_arrowright);
             arrow.setColorFilter(new PorterDuffColorFilter(isDark ? 0x44FFFFFF : 0x22000000, PorterDuff.Mode.SRC_IN));
             row.addView(arrow, LayoutHelper.createLinear(20, 20));
+            row.setOnLongClickListener(v -> {
+                int position = -1;
+                if (getParent() instanceof RecyclerListView) {
+                    position = ((RecyclerListView) getParent()).getChildAdapterPosition(this);
+                }
+                return onItemLongClick(this, position, 0, 0);
+            });
             return row;
         }
     }
