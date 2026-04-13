@@ -44,6 +44,11 @@ object NaConfig {
     val sync = Any()
     private var configLoaded = false
     private val configs = ArrayList<ConfigItem>()
+    
+    @JvmStatic
+    fun getAllConfigs(): List<ConfigItem> {
+        return ArrayList(configs)
+    }
 
     // Configs
     val showTextBold =

@@ -40,6 +40,8 @@ import tw.nekomimi.nekogram.NekoConfig;
 import tw.nekomimi.nekogram.helpers.AppRestartHelper;
 import tw.nekomimi.nekogram.helpers.CloudSettingsHelper;
 import tw.nekomimi.nekogram.helpers.HiddenChatsController;
+import tw.nekomimi.nekogram.helpers.QuickSettingEntry;
+import tw.nekomimi.nekogram.helpers.QuickSettingsController;
 import tw.nekomimi.nekogram.helpers.SettingsBackupHelper;
 import tw.nekomimi.nekogram.ui.HiddenChatsPasscodeActivity;
 import tw.nekomimi.nekogram.utils.AlertUtil;
@@ -54,6 +56,8 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
 
     private int headerRow;
     private int quickSettingsHeaderRow;
+    private int quickSettingsStartRow;
+    private int quickSettingsEndRow;
     private int hideContactsRow;
     private int ghostModeRow;
     private int musicGraphRow;
@@ -73,6 +77,17 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         headerRow = addRow();
         
         quickSettingsHeaderRow = addRow();
+        
+        List<QuickSettingEntry> quickSettings = QuickSettingsController.getInstance().getQuickSettings();
+        if (quickSettings.isEmpty()) {
+            quickSettingsStartRow = -1;
+            quickSettingsEndRow = -1;
+        } else {
+            quickSettingsStartRow = rowCount;
+            rowCount += quickSettings.size();
+            quickSettingsEndRow = rowCount;
+        }
+
         hideContactsRow = addRow();
         ghostModeRow = addRow();
         musicGraphRow = addRow();
@@ -188,6 +203,46 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
 
     @Override
     protected void onItemClick(View view, int position, float x, float y) {
+        if (position >= quickSettingsStartRow && position < quickSettingsEndRow) {
+            QuickSettingEntry entry = QuickSettingsController.getInstance().getQuickSettings().get(position - quickSettingsStartRow);
+            if (entry.type == QuickSettingEntry.TYPE_SWITCH) {
+                ConfigItem config = findConfig(entry.key);
+                if (config != null) {
+                    config.toggleConfigBool();
+                    if (view instanceof CardSwitchCell) {
+                        ((CardSwitchCell) view).setChecked(config.Bool());
+                    }
+                }
+            } else if (entry.type == QuickSettingEntry.TYPE_DIALOG) {
+                // For now, these might require opening the original screen
+                // or I can implement specific dialog logic if I had the row
+            }
+        }
+    }
+
+    @Override
+    protected boolean onItemLongClick(View view, int position, float x, float y) {
+        if (position >= quickSettingsStartRow && position < quickSettingsEndRow) {
+            QuickSettingEntry entry = QuickSettingsController.getInstance().getQuickSettings().get(position - quickSettingsStartRow);
+            showDialog(new AlertDialog.Builder(getParentActivity()).setItems(new CharSequence[]{"Remove from Quick Settings"}, (dialog, which) -> {
+                QuickSettingsController.getInstance().removeQuickSetting(entry.key);
+                updateRows();
+                listAdapter.notifyDataSetChanged();
+                BulletinFactory.of(this).createSimpleBulletin(R.drawable.msg_delete, "Removed from Quick Settings").show();
+            }).create());
+            return true;
+        }
+        return super.onItemLongClick(view, position, x, y);
+    }
+
+    private ConfigItem findConfig(String key) {
+        for (ConfigItem config : NekoConfig.getAllConfigs()) {
+            if (config.key.equals(key)) return config;
+        }
+        for (ConfigItem config : NaConfig.INSTANCE.getAllConfigs()) {
+            if (config.key.equals(key)) return config;
+        }
+        return null;
     }
 
     @Override
@@ -217,6 +272,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
                 case 3: view = new CardItemCell(mContext); break;
                 case 4: view = new ActionsCell(mContext); break;
                 case 5: view = new FooterCell(mContext); break;
+                case 6: view = new CardSwitchCell(mContext); break; // Quick Setting Switch
                 default: view = new View(mContext); break;
             }
             return new RecyclerListView.Holder(view);
@@ -233,6 +289,18 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
                 else if (position == privacyHeaderRow) cell.setText("PRIVACY");
                 else if (position == coreHeaderRow) cell.setText("CORE SETTINGS");
                 else if (position == advancedHeaderRow) cell.setText("ADVANCED");
+            } else if (viewType == 6) {
+                CardSwitchCell cell = (CardSwitchCell) holder.itemView;
+                QuickSettingEntry entry = QuickSettingsController.getInstance().getQuickSettings().get(position - quickSettingsStartRow);
+                ConfigItem config = findConfig(entry.key);
+                int resId = mContext.getResources().getIdentifier(entry.iconResName, "drawable", mContext.getPackageName());
+                if (resId == 0) resId = R.drawable.msg_settings;
+                
+                boolean isLast = position == quickSettingsEndRow - 1;
+                cell.setData(entry.title, null, resId, config != null && config.Bool(), isChecked -> {
+                    if (config != null) config.setConfigBool(isChecked);
+                    NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.reloadInterface);
+                }, position == quickSettingsStartRow, isLast);
             } else if (viewType == 2) {
                 CardSwitchCell cell = (CardSwitchCell) holder.itemView;
                 if (position == hideContactsRow) {
@@ -281,6 +349,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
             if (position == quickSettingsHeaderRow || position == privacyHeaderRow || position == coreHeaderRow || position == advancedHeaderRow) return 1;
             if (position == hideContactsRow || position == ghostModeRow || position == musicGraphRow || position == saveDeletedRow) return 2;
             if (position == hiddenChatsRow || position == coreSettingsRow || position == advancedSettingsRow) return 3;
+            if (position >= quickSettingsStartRow && position < quickSettingsEndRow) return 6;
             if (position == actionsRow) return 4;
             if (position == footerRow) return 5;
             return -1;
@@ -289,7 +358,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         @Override
         public boolean isEnabled(RecyclerView.ViewHolder holder) {
             int viewType = holder.getItemViewType();
-            return viewType == 2 || viewType == 3 || viewType == 4;
+            return viewType == 2 || viewType == 3 || viewType == 4 || viewType == 6;
         }
     }
 
@@ -317,7 +386,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
             logoBg.setShape(GradientDrawable.OVAL);
             logoBg.setColor(Color.TRANSPARENT);
             logoContainer.setBackground(logoBg);
-            addView(logoContainer, LayoutHelper.createFrame(64, 64, Gravity.CENTER_HORIZONTAL));
+            addView(logoContainer, LayoutHelper.createFrame(60, 60, Gravity.CENTER_HORIZONTAL));
 
             logoView = new ImageView(context);
             if (android.os.Build.VERSION.SDK_INT >= 21) {
@@ -335,7 +404,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
 
             nameView = new TextView(context);
             nameView.setText("Alexgram");
-            nameView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 19);
+            nameView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 18);
             nameView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
             nameView.setTextColor(isDark ? Color.WHITE : 0xFF1A1A2E);
             nameView.setGravity(Gravity.CENTER);
@@ -343,7 +412,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
 
             versionView = new TextView(context);
             versionView.setText("v" + BuildVars.BUILD_VERSION_STRING);
-            versionView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
+            versionView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
             versionView.setAlpha(0.6f);
             versionView.setTextColor(isDark ? Color.WHITE : 0xFF5C6B7F);
             versionView.setGravity(Gravity.CENTER);

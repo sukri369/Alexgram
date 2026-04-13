@@ -214,6 +214,10 @@ public class NekoConfig {
         return a;
     }
 
+    public static List<ConfigItem> getAllConfigs() {
+        return new ArrayList<>(configs);
+    }
+
     public static void loadConfig(boolean force) {
         synchronized (sync) {
             if (configLoaded && !force) {

@@ -51,6 +51,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
 
+import tw.nekomimi.nekogram.helpers.QuickSettingEntry;
+import tw.nekomimi.nekogram.helpers.QuickSettingsController;
 import tw.nekomimi.nekogram.ui.cells.AccountCell;
 import tw.nekomimi.nekogram.ui.cells.EmojiSetCell;
 import tw.nekomimi.nekogram.ui.cells.HeaderCell;
@@ -167,9 +169,36 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
             var holder = listView.findViewHolderForAdapterPosition(position);
             var key = getKey();
             if (key != null && holder != null && listAdapter.isEnabled(holder) && rowMapReverse.containsKey(position)) {
-                showDialog(new AlertDialog.Builder(context).setItems(new CharSequence[]{getString(R.string.CopyLink)}, (dialogInterface, i) -> {
-                    AndroidUtilities.addToClipboard(String.format(Locale.getDefault(), "https://%s/alexsettings/%s?r=%s", getMessagesController().linkPrefix, getKey(), rowMapReverse.get(position)));
-                    BulletinFactory.of(BaseNekoSettingsActivity.this).createCopyLinkBulletin().show();
+                String rowKey = rowMapReverse.get(position);
+                ArrayList<CharSequence> items = new ArrayList<>();
+                items.add(getString(R.string.CopyLink));
+                if (!QuickSettingsController.getInstance().isAdded(rowKey)) {
+                    items.add("Add to Quick Settings");
+                }
+                showDialog(new AlertDialog.Builder(context).setItems(items.toArray(new CharSequence[0]), (dialogInterface, i) -> {
+                    if (i == 0) {
+                        AndroidUtilities.addToClipboard(String.format(Locale.getDefault(), "https://%s/alexsettings/%s?r=%s", getMessagesController().linkPrefix, getKey(), rowKey));
+                        BulletinFactory.of(BaseNekoSettingsActivity.this).createCopyLinkBulletin().show();
+                    } else if (i == 1) {
+                        String title = "";
+                        int type = QuickSettingEntry.TYPE_NAVIGATE;
+                        if (view instanceof TextSettingsCell) {
+                            title = ((TextSettingsCell) view).getTextView().getText().toString();
+                        } else if (view instanceof TextCheckCell) {
+                            title = ((TextCheckCell) view).getTextView().getText().toString();
+                            type = QuickSettingEntry.TYPE_SWITCH;
+                        } else if (view instanceof TextDetailSettingsCell) {
+                            title = ((TextDetailSettingsCell) view).getTextView().getText().toString();
+                        } else if (view instanceof NotificationsCheckCell) {
+                            title = ((NotificationsCheckCell) view).getTextView().getText().toString();
+                            type = QuickSettingEntry.TYPE_SWITCH;
+                        }
+
+                        if (!title.isEmpty()) {
+                            QuickSettingsController.getInstance().addQuickSetting(new QuickSettingEntry(rowKey, title, "msg_settings", 0xFF2196F3, type, getClass().getName()));
+                            BulletinFactory.of(BaseNekoSettingsActivity.this).createSimpleBulletin(R.drawable.msg_settings, "Added to Quick Settings").show();
+                        }
+                    }
                 }).create());
                 return true;
             }

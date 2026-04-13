@@ -46,10 +46,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
 
+import tw.nekomimi.nekogram.NekoConfig;
 import tw.nekomimi.nekogram.config.CellGroup;
 import tw.nekomimi.nekogram.config.ConfigItem;
 import tw.nekomimi.nekogram.config.cell.AbstractConfigCell;
-import tw.nekomimi.nekogram.ui.cells.HeaderCell;
 import tw.nekomimi.nekogram.config.cell.ConfigCellCheckBox;
 import tw.nekomimi.nekogram.config.cell.ConfigCellCustom;
 import tw.nekomimi.nekogram.config.cell.ConfigCellSelectBox;
@@ -62,6 +62,8 @@ import tw.nekomimi.nekogram.config.cell.ConfigCellTextInput2;
 import tw.nekomimi.nekogram.config.cell.WithBindConfig;
 import tw.nekomimi.nekogram.config.cell.WithKey;
 import tw.nekomimi.nekogram.config.cell.WithOnClick;
+import tw.nekomimi.nekogram.helpers.QuickSettingEntry;
+import tw.nekomimi.nekogram.helpers.QuickSettingsController;
 import tw.nekomimi.nekogram.ui.cells.HeaderCell;
 
 public class BaseNekoXSettingsActivity extends BaseFragment {
@@ -319,6 +321,40 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
             AndroidUtilities.addToClipboard(String.format(Locale.getDefault(), "https://%s/alexsettings/%s?r=%s&v=%s", getMessagesController().linkPrefix, prefix, key, value));
             BulletinFactory.of(this).createCopyLinkBulletin().show();
         });
+
+        if (!QuickSettingsController.getInstance().isAdded(key)) {
+            options.add(R.drawable.msg_settings, "Add to Quick Settings", () -> {
+                CellGroup cellGroup = getCellGroup();
+                if (cellGroup != null && position >= 0 && position < cellGroup.rows.size()) {
+                    AbstractConfigCell cell = cellGroup.rows.get(position);
+                    String title = "";
+                    String iconResName = "msg_settings";
+                    int type = QuickSettingEntry.TYPE_NAVIGATE;
+                    
+                    if (cell instanceof ConfigCellTextCheck) {
+                        title = ((ConfigCellTextCheck) cell).getTitle();
+                        type = QuickSettingEntry.TYPE_SWITCH;
+                    } else if (cell instanceof ConfigCellTextCheckIcon) {
+                        ConfigCellTextCheckIcon iconCell = (ConfigCellTextCheckIcon) cell;
+                        title = iconCell.getTitle();
+                        type = QuickSettingEntry.TYPE_SWITCH;
+                        try {
+                            iconResName = getContext().getResources().getResourceEntryName(iconCell.getResId());
+                        } catch (Exception ignored) {}
+                    } else if (cell instanceof ConfigCellTextDetail) {
+                        title = ((ConfigCellTextDetail) cell).getTitle();
+                    } else if (cell instanceof ConfigCellSelectBox) {
+                        title = ((ConfigCellSelectBox) cell).getTitle();
+                        type = QuickSettingEntry.TYPE_DIALOG;
+                    }
+
+                    if (!title.isEmpty()) {
+                        QuickSettingsController.getInstance().addQuickSetting(new QuickSettingEntry(key, title, iconResName, 0xFF2196F3, type, getClass().getName()));
+                        BulletinFactory.of(this).createSimpleBulletin(R.drawable.msg_settings, "Added to Quick Settings").show();
+                    }
+                }
+            });
+        }
     }
 
     protected void showDefaultLongClickOptions(View view, String prefix, int position) {
