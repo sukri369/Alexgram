@@ -105,4 +105,6 @@ interface AnalyticsDao {
         LIMIT :days
     """)
     fun getDailyMessageVolumeFlow(accountIndex: Int, days: Int): Flow<List<ChatUsageRecord>>
+    @Query("SELECT EXISTS(SELECT 1 FROM blocked_chats WHERE accountIndex = :accountIndex AND chatId = :chatId)")
+    suspend fun isChatBlocked(accountIndex: Int, chatId: Long): Boolean
 }
