@@ -64,7 +64,7 @@ class AnalyticsManager @Inject constructor(
         val usage = dao.getChatUsage(msg.getDialogId(), today) ?: ChatUsageRecord(chatId = msg.getDialogId(), date = today)
         
         val isSent = msg.isOut()
-        val isMedia = msg.hasPhoto() || msg.hasVideo() || msg.hasDocument() || msg.hasAudio() || msg.hasVoice()
+        val isMedia = msg.isPhoto() || msg.isVideo() || msg.isDocument() || msg.isMusic() || msg.isVoice() || msg.isRoundVideo()
         
         val updated = usage.copy(
             messagesSent = usage.messagesSent + if (isSent) 1 else 0,
