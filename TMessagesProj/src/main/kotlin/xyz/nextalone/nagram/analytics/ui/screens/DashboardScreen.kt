@@ -66,6 +66,15 @@ private val avatarPalette = listOf(
 fun DashboardScreen(vm: DashboardViewModel = viewModel()) {
     val uiState by vm.uiState.collectAsState()
     val c = LocalAnalyticsColors.current
+    val listState = rememberLazyListState()
+
+    // Derived alpha for status bar guard
+    val statusBarAlpha by remember {
+        derivedStateOf {
+            if (listState.firstVisibleItemIndex > 0) 1f
+            else (listState.firstVisibleItemScrollOffset / 200f).coerceIn(0f, 1f)
+        }
+    }
 
     // Dialog state
     var showLimitDialog by remember { mutableStateOf(false) }
@@ -78,6 +87,7 @@ fun DashboardScreen(vm: DashboardViewModel = viewModel()) {
     Box(modifier = Modifier.fillMaxSize().background(c.bgScreen)) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
+            state = listState,
             contentPadding = PaddingValues(bottom = 48.dp),
         ) {
             item { TopHeroBar() }
@@ -183,6 +193,14 @@ fun DashboardScreen(vm: DashboardViewModel = viewModel()) {
                 )
             }
         }
+
+        // ── Status Bar Guard (Sticky) ────────────────────────────────────────
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .windowInsetsTopHeight(WindowInsets.statusBars)
+                .background(c.bgPrimary.copy(alpha = statusBarAlpha * 0.95f))
+        )
     }
 
     // ── Chat Lock Bottom Sheet ────────────────────────────────────────────────
@@ -219,7 +237,7 @@ fun TopHeroBar() {
     Box(
         modifier = Modifier.fillMaxWidth()
             .background(c.bgHero)
-            .statusBarsPadding()
+            .windowInsetsPadding(WindowInsets.statusBars)
             .padding(top = 16.dp, bottom = 24.dp, start = 24.dp, end = 24.dp)
     ) {
         Column {
