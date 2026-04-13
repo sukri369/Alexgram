@@ -1,6 +1,5 @@
 package xyz.nextalone.nagram.analytics.ui.screens
 
-import android.graphics.drawable.ColorDrawable
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
@@ -14,7 +13,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -28,7 +26,6 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -132,11 +129,11 @@ fun DashboardScreen(vm: DashboardViewModel = viewModel()) {
                     }
                 }
             } else {
-                items(uiState.topChats, key = { it.record.chatId }) { chatInfo ->
+                items(uiState.topChats, key = { it.chatId }) { chatInfo ->
                     AnimatedIn(isVisible, 400) {
                         ChatDominanceRow(
                             chatInfo = chatInfo,
-                            maxTime = uiState.topChats.maxOf { it.record.timeSpentSeconds }.coerceAtLeast(1L),
+                            maxTime = uiState.topChats.maxOf { it.timeSpentSeconds }.coerceAtLeast(1L),
                             onLongPress = { lockTargetChat = chatInfo }
                         )
                     }
@@ -205,8 +202,8 @@ fun DashboardScreen(vm: DashboardViewModel = viewModel()) {
             chatInfo = target,
             onDismiss = { lockTargetChat = null },
             onLock = { mins ->
-                if (target.isLocked) vm.unlockChat(target.record.chatId)
-                else vm.lockChat(target.record.chatId, mins)
+                if (target.isLocked) vm.unlockChat(target.chatId)
+                else vm.lockChat(target.chatId, mins)
                 lockTargetChat = null
             }
         )
@@ -435,20 +432,19 @@ fun ChatDominanceRow(
     maxTime: Long,
     onLongPress: () -> Unit
 ) {
-    val record = chatInfo.record
-    val progress = (record.timeSpentSeconds / maxTime.toFloat()).coerceIn(0f, 1f)
-    val mins = record.timeSpentSeconds / 60
-    val secs = record.timeSpentSeconds % 60
+    val progress = (chatInfo.timeSpentSeconds / maxTime.toFloat()).coerceIn(0f, 1f)
+    val mins = chatInfo.timeSpentSeconds / 60
+    val secs = chatInfo.timeSpentSeconds % 60
     val timeLabel = when {
         mins >= 60 -> "${mins / 60}h ${mins % 60}m"
         mins > 0   -> "${mins}m"
         else       -> "${secs}s"
     }
-    val msgTotal = record.messagesSent + record.messagesReceived
+    val msgTotal = chatInfo.messagesSent + chatInfo.messagesReceived
 
     // Avatar color from palette
-    val avatarColor = remember(chatInfo.record.chatId) {
-        val idx = ((chatInfo.record.chatId % avatarPalette.size).toInt().let {
+    val avatarColor = remember(chatInfo.chatId) {
+        val idx = ((chatInfo.chatId % avatarPalette.size).toInt().let {
             if (it < 0) it + avatarPalette.size else it
         })
         Color(avatarPalette[idx])
@@ -474,7 +470,7 @@ fun ChatDominanceRow(
     ) {
         // ── Real Avatar via Telegram's BackupImageView ────────────────────────
         TelegramAvatar(
-            chatId = record.chatId,
+            chatId = chatInfo.chatId,
             initial = chatInfo.initial,
             fallbackColor = avatarColor,
             size = 44
@@ -515,8 +511,8 @@ fun ChatDominanceRow(
         Column(horizontalAlignment = Alignment.End) {
             Text(timeLabel, color = NeonCyan, fontSize = 14.sp, fontWeight = FontWeight.ExtraBold)
             Text("${msgTotal} MSG", color = TextSecond, fontSize = 10.sp)
-            if (record.mediaCount > 0) {
-                Text("${record.mediaCount} media", color = NeonPurple.copy(0.7f), fontSize = 9.sp)
+            if (chatInfo.mediaCount > 0) {
+                Text("${chatInfo.mediaCount} media", color = NeonPurple.copy(0.7f), fontSize = 9.sp)
             }
         }
     }
@@ -937,7 +933,6 @@ fun LimitEditorDialog(
                 Spacer(Modifier.height(12.dp))
 
                 // Preview
-                val totalMins = hours * 60 + minutes
                 Box(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
                         .background(NeonCyan.copy(0.07f))

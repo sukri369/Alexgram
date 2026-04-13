@@ -15,16 +15,22 @@ import xyz.nextalone.nagram.analytics.data.*
 import java.util.*
 import javax.inject.Inject
 
-// ─── Data Models ─────────────────────────────────────────────────────────────
+// ─── UI Data Models ───────────────────────────────────────────────────────────
 
+/** Enriched chat info with resolved Telegram name, type, and lock state */
 data class ChatUsageInfo(
-    val record: ChatUsageRecord,
+    val chatId: Long,
     val displayName: String,
     val isUser: Boolean,
     val isGroup: Boolean,
     val isChannel: Boolean,
     val initial: String,
-    val isLocked: Boolean = false
+    val isLocked: Boolean = false,
+    // Aggregated metrics from all-time data
+    val timeSpentSeconds: Long = 0,
+    val messagesSent: Long = 0,
+    val messagesReceived: Long = 0,
+    val mediaCount: Long = 0
 )
 
 data class SessionInsightData(
@@ -62,10 +68,7 @@ class DashboardViewModel @Inject constructor(
     }
 
     private fun loadData() {
-        val today = getTodayTimestamp()
-
         viewModelScope.launch {
-            // Combine 4 flows: app history, top chats all time, limits, blocked chats
             combine(
                 dao.getAppUsageFlow(30),
                 dao.getTopChatsAllTimeFlow(10),
@@ -75,51 +78,45 @@ class DashboardViewModel @Inject constructor(
                 @Suppress("UNCHECKED_CAST")
                 Quad(
                     arr[0] as List<AppUsageRecord>,
-                    arr[1] as List<ChatUsageRecord>,
+                    arr[1] as List<ChatUsageAggregate>,
                     arr[2] as List<AnalyticsLimit>,
                     arr[3] as List<BlockedChat>
                 )
             }.collect { quad ->
-                val appUsage = quad.a
-                val topChats = quad.b
-                val limits = quad.c
+                val appUsage    = quad.a
+                val topChats    = quad.b
+                val limits      = quad.c
                 val blockedChats = quad.d
 
-                // Today & week minutes from app_usage
-                val todayRecord = appUsage.firstOrNull()
-                val todayMins = (todayRecord?.totalTimeSeconds ?: 0L) / 60L
-                val weekMins = appUsage.take(7).sumOf { it.totalTimeSeconds } / 60L
-
-                // Sessions all-time
+                // Today & this week in minutes
+                val todayMins = (appUsage.firstOrNull()?.totalTimeSeconds ?: 0L) / 60L
+                val weekMins  = appUsage.take(7).sumOf { it.totalTimeSeconds } / 60L
                 val totalSessions = appUsage.sumOf { it.sessionCount }
 
-                // Real session insights (all-time aggregated from chat records)
-                val totalSent = topChats.sumOf { it.messagesSent.toLong() }
-                val totalReceived = topChats.sumOf { it.messagesReceived.toLong() }
-                val totalMedia = topChats.sumOf { it.mediaCount.toLong() }
-                val uniqueChats = topChats.size
+                // Session insights from all-time aggregated data
+                val totalSent     = topChats.sumOf { it.messagesSent }
+                val totalReceived = topChats.sumOf { it.messagesReceived }
+                val totalMedia    = topChats.sumOf { it.mediaCount }
                 val totalTimeSecs = topChats.sumOf { it.timeSpentSeconds }
 
-                val blockedIds = blockedChats.map { it.chatId }.toSet()
+                val lockedIds = blockedChats.map { it.chatId }.toSet()
 
-                // Resolve real names from Telegram API
-                val enrichedChats = topChats.map { record ->
-                    resolveChatInfo(record, blockedIds)
-                }
+                // Resolve real Telegram names / types
+                val enriched = topChats.map { agg -> resolveChatInfo(agg, lockedIds) }
 
                 _uiState.value = DashboardUiState(
-                    appUsageHistory = appUsage,
-                    topChats = enrichedChats,
-                    limits = limits,
-                    blockedChats = blockedChats,
-                    todayMinutes = todayMins,
-                    weekMinutes = weekMins,
+                    appUsageHistory      = appUsage,
+                    topChats             = enriched,
+                    limits               = limits,
+                    blockedChats         = blockedChats,
+                    todayMinutes         = todayMins,
+                    weekMinutes          = weekMins,
                     totalSessionsAllTime = totalSessions,
-                    sessionInsights = SessionInsightData(
-                        totalSent = totalSent,
-                        totalReceived = totalReceived,
-                        totalMedia = totalMedia,
-                        uniqueChats = uniqueChats,
+                    sessionInsights      = SessionInsightData(
+                        totalSent        = totalSent,
+                        totalReceived    = totalReceived,
+                        totalMedia       = totalMedia,
+                        uniqueChats      = topChats.size,
                         totalTimeSeconds = totalTimeSecs
                     )
                 )
@@ -127,12 +124,12 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
-    /** Resolves real Telegram chat name and type for a given ChatUsageRecord */
-    private fun resolveChatInfo(record: ChatUsageRecord, lockedIds: Set<Long>): ChatUsageInfo {
+    /** Resolves the real Telegram display name and type for an aggregated chat record */
+    private fun resolveChatInfo(agg: ChatUsageAggregate, lockedIds: Set<Long>): ChatUsageInfo {
         return try {
             val account = UserConfig.selectedAccount
-            val mc = MessagesController.getInstance(account)
-            val chatId = record.chatId
+            val mc      = MessagesController.getInstance(account)
+            val chatId  = agg.chatId
 
             if (chatId > 0) {
                 val user: TLRPC.User? = mc.getUser(chatId)
@@ -140,33 +137,52 @@ class DashboardViewModel @Inject constructor(
                     ContactsController.formatName(user.first_name, user.last_name)
                         .takeIf { it.isNotBlank() } ?: "User $chatId"
                 } else "User $chatId"
+
                 ChatUsageInfo(
-                    record = record,
-                    displayName = name,
-                    isUser = true, isGroup = false, isChannel = false,
-                    initial = name.firstOrNull()?.uppercaseChar()?.toString() ?: "U",
-                    isLocked = lockedIds.contains(chatId)
+                    chatId        = chatId,
+                    displayName   = name,
+                    isUser        = true,
+                    isGroup       = false,
+                    isChannel     = false,
+                    initial       = name.firstOrNull()?.uppercaseChar()?.toString() ?: "U",
+                    isLocked      = lockedIds.contains(chatId),
+                    timeSpentSeconds = agg.timeSpentSeconds,
+                    messagesSent  = agg.messagesSent,
+                    messagesReceived = agg.messagesReceived,
+                    mediaCount    = agg.mediaCount
                 )
             } else {
                 val chat: TLRPC.Chat? = mc.getChat(-chatId)
-                val name = chat?.title?.takeIf { it.isNotBlank() } ?: "Chat ${-chatId}"
+                val name      = chat?.title?.takeIf { it.isNotBlank() } ?: "Chat ${-chatId}"
                 val isChannel = chat?.broadcast == true
-                val isGroup = !isChannel
+
                 ChatUsageInfo(
-                    record = record,
-                    displayName = name,
-                    isUser = false, isGroup = isGroup, isChannel = isChannel,
-                    initial = name.firstOrNull()?.uppercaseChar()?.toString() ?: "G",
-                    isLocked = lockedIds.contains(chatId)
+                    chatId        = chatId,
+                    displayName   = name,
+                    isUser        = false,
+                    isGroup       = !isChannel,
+                    isChannel     = isChannel,
+                    initial       = name.firstOrNull()?.uppercaseChar()?.toString() ?: "G",
+                    isLocked      = lockedIds.contains(chatId),
+                    timeSpentSeconds = agg.timeSpentSeconds,
+                    messagesSent  = agg.messagesSent,
+                    messagesReceived = agg.messagesReceived,
+                    mediaCount    = agg.mediaCount
                 )
             }
         } catch (e: Exception) {
             ChatUsageInfo(
-                record = record,
-                displayName = "ID ${record.chatId}",
-                isUser = false, isGroup = false, isChannel = false,
-                initial = "?",
-                isLocked = false
+                chatId      = agg.chatId,
+                displayName = "ID ${agg.chatId}",
+                isUser      = false,
+                isGroup     = false,
+                isChannel   = false,
+                initial     = "?",
+                isLocked    = false,
+                timeSpentSeconds = agg.timeSpentSeconds,
+                messagesSent     = agg.messagesSent,
+                messagesReceived = agg.messagesReceived,
+                mediaCount       = agg.mediaCount
             )
         }
     }
@@ -181,27 +197,12 @@ class DashboardViewModel @Inject constructor(
 
     fun setAppLimit(hours: Int, minutes: Int, enabled: Boolean) {
         viewModelScope.launch {
-            val totalSeconds = (hours * 3600L) + (minutes * 60L)
             dao.insertLimit(
                 AnalyticsLimit(
-                    type = 0,
-                    targetId = 0,
-                    dailyLimitSeconds = totalSeconds,
-                    isEnabled = enabled
-                )
-            )
-        }
-    }
-
-    fun setChatLimit(chatId: Long, hours: Int, minutes: Int, enabled: Boolean) {
-        viewModelScope.launch {
-            val totalSeconds = (hours * 3600L) + (minutes * 60L)
-            dao.insertLimit(
-                AnalyticsLimit(
-                    type = 1,
-                    targetId = chatId,
-                    dailyLimitSeconds = totalSeconds,
-                    isEnabled = enabled
+                    type              = 0,
+                    targetId          = 0L,
+                    dailyLimitSeconds = (hours * 3600L) + (minutes * 60L),
+                    isEnabled         = enabled
                 )
             )
         }
@@ -215,10 +216,21 @@ class DashboardViewModel @Inject constructor(
 
     // ─── Chat Lock Actions ────────────────────────────────────────────────────
 
-    /** Lock a chat with optional auto-unlock duration in minutes (0 = permanent) */
+    /**
+     * Lock a chat.
+     * @param autoUnlockMinutes 0 = permanent, >0 = auto-unlock after that many minutes
+     */
     fun lockChat(chatId: Long, autoUnlockMinutes: Int = 0) {
         viewModelScope.launch {
-            dao.blockChat(BlockedChat(chatId = chatId, lockType = if (autoUnlockMinutes > 0) 1 else 0))
+            val unlockAt = if (autoUnlockMinutes > 0)
+                System.currentTimeMillis() + autoUnlockMinutes * 60_000L else 0L
+            dao.blockChat(
+                BlockedChat(
+                    chatId      = chatId,
+                    lockType    = if (autoUnlockMinutes > 0) 1 else 0,
+                    unlocksAtMs = unlockAt
+                )
+            )
         }
     }
 
@@ -228,16 +240,7 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
-    // ─── Helpers ─────────────────────────────────────────────────────────────
-
-    private fun getTodayTimestamp(): Long {
-        val calendar = Calendar.getInstance()
-        calendar.set(Calendar.HOUR_OF_DAY, 0)
-        calendar.set(Calendar.MINUTE, 0)
-        calendar.set(Calendar.SECOND, 0)
-        calendar.set(Calendar.MILLISECOND, 0)
-        return calendar.timeInMillis
-    }
+    // ─── Private Helpers ──────────────────────────────────────────────────────
 
     private data class Quad<A, B, C, D>(val a: A, val b: B, val c: C, val d: D)
 }
