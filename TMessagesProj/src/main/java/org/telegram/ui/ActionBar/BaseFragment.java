@@ -255,6 +255,10 @@ public abstract class BaseFragment {
         return null;
     }
 
+    public void setArguments(Bundle args) {
+        arguments = args;
+    }
+
     public Bundle getArguments() {
         return arguments;
     }

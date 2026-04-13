@@ -436,7 +436,7 @@ public class NekoGeneralSettingsActivity extends BaseNekoXSettingsActivity {
         if (a == pushServiceTypeUnifiedGatewayRow) {
             ItemOptions options = makeLongClickOptions(view);
             options.add(R.drawable.msg_stats, getString(R.string.Statistics), this::showUnifiedPushStatistics);
-            addDefaultLongClickOptions(options, "general", position);
+            addDefaultLongClickOptions(options, "general", position, view);
             showLongClickOptions(view, options);
             return true;
         }
