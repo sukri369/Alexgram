@@ -25,6 +25,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import xyz.nextalone.nagram.analytics.ui.viewmodel.DashboardViewModel
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.StrokeCap
+import com.github.mikephil.charting.charts.LineChart
+import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
+import android.graphics.Color as AndroidColor
+import android.graphics.drawable.GradientDrawable
 
 // Premium Design System
 object PremiumTheme {
@@ -178,19 +188,19 @@ fun UsageHeroSection(totalTimeSeconds: Long) {
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Box(contentAlignment = Alignment.Center, modifier = Modifier.size(180.dp)) {
-                CircularProgressIndicator(
-                    progress = 1f,
-                    modifier = Modifier.fillMaxSize(),
-                    color = Color.White.copy(alpha = 0.1f),
-                    strokeWidth = 12.dp
-                )
-                CircularProgressIndicator(
-                    progress = progress,
-                    modifier = Modifier.fillMaxSize(),
-                    brush = PremiumTheme.AccentsGradient,
-                    strokeWidth = 12.dp,
-                    strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
-                )
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    drawCircle(
+                        color = Color.White.copy(alpha = 0.1f),
+                        style = Stroke(width = 12.dp.toPx())
+                    )
+                    drawArc(
+                        brush = PremiumTheme.AccentsGradient,
+                        startAngle = -90f,
+                        sweepAngle = 360f * progress,
+                        useCenter = false,
+                        style = Stroke(width = 12.dp.toPx(), cap = StrokeCap.Round)
+                    )
+                }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         text = minutes.toString(),
@@ -219,12 +229,6 @@ fun UsageHeroSection(totalTimeSeconds: Long) {
 
 @Composable
 fun UsageActivityChart(history: List<xyz.nextalone.nagram.analytics.data.AppUsageRecord>) {
-    import androidx.compose.ui.viewinterop.AndroidView
-    import com.github.mikephil.charting.charts.LineChart
-    import com.github.mikephil.charting.data.Entry
-    import com.github.mikephil.charting.data.LineData
-    import com.github.mikephil.charting.data.LineDataSet
-    import android.graphics.Color as AndroidColor
 
     Card(
         modifier = Modifier
@@ -254,11 +258,12 @@ fun UsageActivityChart(history: List<xyz.nextalone.nagram.analytics.data.AppUsag
                 if (entries.isNotEmpty()) {
                     val dataSet = LineDataSet(entries, "Usage").apply {
                         mode = LineDataSet.Mode.CUBIC_BEZIER
-                        color = PremiumTheme.NeonCyan.copy(alpha = 0.8f).hashCode()
+                        setCircleColor(PremiumTheme.NeonCyan.hashCode())
+                        color = PremiumTheme.NeonCyan.hashCode()
                         setDrawFilled(true)
-                        fillDrawable = android.graphics.drawable.GradientDrawable(
-                            android.graphics.drawable.GradientDrawable.Orientation.TOP_BOTTOM,
-                            intArrayOf(PremiumTheme.NeonCyan.hashCode(), AndroidColor.TRANSPARENT)
+                        fillDrawable = GradientDrawable(
+                            GradientDrawable.Orientation.TOP_BOTTOM,
+                            intArrayOf(0x4400FFF0, 0x00000000)
                         )
                         setDrawCircles(false)
                         lineWidth = 3f
