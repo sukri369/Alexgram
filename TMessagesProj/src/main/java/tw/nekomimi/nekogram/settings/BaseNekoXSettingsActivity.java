@@ -211,6 +211,30 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
         if (getListAdapter() != null) {
             getListAdapter().notifyDataSetChanged();
         }
+
+        if (getArguments() != null) {
+            String scrollToKey = getArguments().getString("scrollToKey");
+            if (scrollToKey != null) {
+                getArguments().remove("scrollToKey");
+                int position = -1;
+                if (rowMap.containsKey(scrollToKey)) {
+                    position = rowMap.get(scrollToKey);
+                }
+                if (position != -1) {
+                    final int pos = position;
+                    listView.scrollToPosition(pos);
+                    listView.postDelayed(() -> {
+                        RecyclerView.ViewHolder holder = listView.findViewHolderForAdapterPosition(pos);
+                        if (holder != null) {
+                            handleCellClick(holder.itemView, pos, 0, 0);
+                        } else {
+                            // Fallback if not visibly loaded yet
+                            handleCellClick(null, pos, 0, 0);
+                        }
+                    }, 100);
+                }
+            }
+        }
     }
 
     @Override
@@ -328,6 +352,7 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
                 if (cellGroup != null && position >= 0 && position < cellGroup.rows.size()) {
                     AbstractConfigCell cell = cellGroup.rows.get(position);
                     CharSequence title = null;
+                    String subtitle = null;
                     String iconResName = "msg_settings";
                     int type = QuickSettingEntry.TYPE_NAVIGATE;
                     
@@ -346,10 +371,20 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
                     } else if (cell instanceof ConfigCellSelectBox) {
                         title = ((ConfigCellSelectBox) cell).getTitle();
                         type = QuickSettingEntry.TYPE_DIALOG;
+                    } else if (cell instanceof ConfigCellTextInput) {
+                        title = ((ConfigCellTextInput) cell).getKey();
+                        type = QuickSettingEntry.TYPE_DIALOG;
+                    }
+
+                    if (view instanceof org.telegram.ui.Cells.TextSettingsCell) {
+                        org.telegram.ui.Components.AnimatedTextView vtv = ((org.telegram.ui.Cells.TextSettingsCell) view).getValueTextView();
+                        if (vtv != null && vtv.getVisibility() == View.VISIBLE) {
+                            subtitle = vtv.getText().toString();
+                        }
                     }
 
                     if (title != null && title.length() > 0) {
-                        QuickSettingsController.getInstance().addQuickSetting(new QuickSettingEntry(key, title.toString(), iconResName, 0xFF2196F3, type, getClass().getName()));
+                        QuickSettingsController.getInstance().addQuickSetting(new QuickSettingEntry(key, title.toString(), subtitle, iconResName, 0xFF2196F3, type, getClass().getName()));
                         BulletinFactory.of(BaseNekoXSettingsActivity.this).createSimpleBulletin(R.drawable.msg_settings, "Added to Quick Settings").show();
                     }
                 }

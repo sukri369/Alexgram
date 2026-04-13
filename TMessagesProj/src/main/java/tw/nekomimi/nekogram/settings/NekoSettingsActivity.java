@@ -179,6 +179,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         listView.setClipToPadding(false);
         listView.setAdapter(listAdapter = createAdapter(context));
         listView.setOnItemClickListener(this::onItemClick);
+        listView.setOnItemLongClickListener(this::onItemLongClick);
         listView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
@@ -229,9 +230,17 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
                         ((CardSwitchCell) view).setChecked(config.Bool());
                     }
                 }
-            } else if (entry.type == QuickSettingEntry.TYPE_DIALOG) {
-                // For now, these might require opening the original screen
-                // or I can implement specific dialog logic if I had the row
+            } else {
+                try {
+                    Class<?> clazz = Class.forName(entry.activityClass);
+                    BaseFragment fragment = (BaseFragment) clazz.getConstructor().newInstance();
+                    android.os.Bundle args = new android.os.Bundle();
+                    args.putString("scrollToKey", entry.key);
+                    fragment.setArguments(args);
+                    presentFragment(fragment);
+                } catch (Exception e) {
+                    org.telegram.messenger.FileLog.e(e);
+                }
             }
         }
     }
@@ -289,6 +298,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
                 case 4: view = new ActionsCell(mContext); break;
                 case 5: view = new FooterCell(mContext); break;
                 case 6: view = new CardSwitchCell(mContext); break; // Quick Setting Switch
+                case 7: view = new CardItemCell(mContext); break; // Quick Setting Dialog/Nav
                 default: view = new View(mContext); break;
             }
             return new RecyclerListView.Holder(view);
@@ -317,6 +327,22 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
                     if (config != null) config.setConfigBool(isChecked);
                     NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.reloadInterface);
                 }, position == quickSettingsStartRow, isLast);
+            } else if (viewType == 7) {
+                CardItemCell cell = (CardItemCell) holder.itemView;
+                QuickSettingEntry entry = QuickSettingsController.getInstance().getQuickSettings().get(position - quickSettingsStartRow);
+                ConfigItem config = findConfig(entry.key);
+                int resId = mContext.getResources().getIdentifier(entry.iconResName, "drawable", mContext.getPackageName());
+                if (resId == 0) resId = R.drawable.msg_settings;
+                
+                String subtitle = entry.subtitle;
+                if (config != null) {
+                    if (config.type == ConfigItem.configTypeString || config.type == ConfigItem.configTypeInt) {
+                        subtitle = config.String();
+                    }
+                }
+                
+                boolean isLast = position == quickSettingsEndRow - 1;
+                cell.setData(entry.title, subtitle, resId, 0xFF2196F3, v -> onItemClick(cell, position, 0, 0), position == quickSettingsStartRow, isLast);
             } else if (viewType == 2) {
                 CardSwitchCell cell = (CardSwitchCell) holder.itemView;
                 if (position == hideContactsRow) {
@@ -365,7 +391,10 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
             if (position == quickSettingsHeaderRow || position == privacyHeaderRow || position == coreHeaderRow || position == advancedHeaderRow) return 1;
             if (position == hideContactsRow || position == ghostModeRow || position == musicGraphRow || position == saveDeletedRow) return 2;
             if (position == hiddenChatsRow || position == coreSettingsRow || position == advancedSettingsRow) return 3;
-            if (position >= quickSettingsStartRow && position < quickSettingsEndRow) return 6;
+            if (position >= quickSettingsStartRow && position < quickSettingsEndRow) {
+                QuickSettingEntry entry = QuickSettingsController.getInstance().getQuickSettings().get(position - quickSettingsStartRow);
+                return entry.type == QuickSettingEntry.TYPE_SWITCH ? 6 : 7;
+            }
             if (position == actionsRow) return 4;
             if (position == footerRow) return 5;
             return -1;
@@ -374,7 +403,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         @Override
         public boolean isEnabled(RecyclerView.ViewHolder holder) {
             int viewType = holder.getItemViewType();
-            return viewType == 2 || viewType == 3 || viewType == 4 || viewType == 6;
+            return viewType == 2 || viewType == 3 || viewType == 4 || viewType == 6 || viewType == 7;
         }
     }
 

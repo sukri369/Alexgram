@@ -103,11 +103,36 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
 
 
     @Override
-    public boolean onFragmentCreate() {
-        super.onFragmentCreate();
-        updateRows();
-        return true;
+    public void onResume() {
+        super.onResume();
+        if (listAdapter != null) {
+            listAdapter.notifyDataSetChanged();
+        }
+
+        if (getArguments() != null) {
+            String scrollToKey = getArguments().getString("scrollToKey");
+            if (scrollToKey != null) {
+                getArguments().remove("scrollToKey");
+                int position = -1;
+                if (rowMap.containsKey(scrollToKey)) {
+                    position = rowMap.get(scrollToKey);
+                }
+                if (position != -1) {
+                    final int pos = position;
+                    listView.scrollToPosition(pos);
+                    listView.postDelayed(() -> {
+                        RecyclerView.ViewHolder holder = listView.findViewHolderForAdapterPosition(pos);
+                        if (holder != null) {
+                            onItemClick(holder.itemView, pos, 0, 0);
+                        } else {
+                            onItemClick(null, pos, 0, 0);
+                        }
+                    }, 100);
+                }
+            }
+        }
     }
+
     public View createView(Context context) {
         setupBrandingColors();
         fragmentView = new BlurContentView(context);
@@ -184,9 +209,13 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
                     } else if (i == 1) {
                         if (!QuickSettingsController.getInstance().isAdded(rowKey)) {
                             String title = "";
+                            String subtitle = null;
                             int type = QuickSettingEntry.TYPE_NAVIGATE;
                             if (view instanceof TextSettingsCell) {
                                 title = ((TextSettingsCell) view).getTextView().getText().toString();
+                                try {
+                                    subtitle = ((TextSettingsCell) view).getValueTextView().getText().toString();
+                                } catch (Exception ignored) {}
                             } else if (view instanceof TextCheckCell) {
                                 title = ((TextCheckCell) view).getTextView().getText().toString();
                                 type = QuickSettingEntry.TYPE_SWITCH;
@@ -198,7 +227,7 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
                             }
 
                             if (title != null && !title.isEmpty()) {
-                                QuickSettingsController.getInstance().addQuickSetting(new QuickSettingEntry(rowKey, title, "msg_settings", 0xFF2196F3, type, getClass().getName()));
+                                QuickSettingsController.getInstance().addQuickSetting(new QuickSettingEntry(rowKey, title, subtitle, "msg_settings", 0xFF2196F3, type, getClass().getName()));
                                 BulletinFactory.of(BaseNekoSettingsActivity.this).createSimpleBulletin(R.drawable.msg_settings, "Added to Quick Settings").show();
                             }
                         } else {
