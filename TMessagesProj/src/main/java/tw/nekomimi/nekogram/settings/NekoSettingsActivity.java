@@ -37,6 +37,7 @@ import org.telegram.ui.Components.Switch;
 import org.telegram.ui.LaunchActivity;
 
 import tw.nekomimi.nekogram.NekoConfig;
+import tw.nekomimi.nekogram.config.ConfigItem;
 import tw.nekomimi.nekogram.helpers.AppRestartHelper;
 import tw.nekomimi.nekogram.helpers.CloudSettingsHelper;
 import tw.nekomimi.nekogram.helpers.HiddenChatsController;
@@ -46,6 +47,9 @@ import tw.nekomimi.nekogram.helpers.SettingsBackupHelper;
 import tw.nekomimi.nekogram.ui.HiddenChatsPasscodeActivity;
 import tw.nekomimi.nekogram.utils.AlertUtil;
 import xyz.nextalone.nagram.NaConfig;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class NekoSettingsActivity extends BaseNekoSettingsActivity {
 
