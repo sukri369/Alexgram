@@ -85,6 +85,23 @@ interface AnalyticsDao {
     @Query("DELETE FROM blocked_chats WHERE accountIndex = :accountIndex AND chatId = :chatId")
     suspend fun unblockChat(accountIndex: Int, chatId: Long)
 
-    @Query("SELECT EXISTS(SELECT 1 FROM blocked_chats WHERE accountIndex = :accountIndex AND chatId = :chatId)")
-    suspend fun isChatBlocked(accountIndex: Int, chatId: Long): Boolean
+    // ── Aggregations ─────────────────────────────────────────────────────────
+
+    @Query("""
+        SELECT 
+            accountIndex,
+            0 AS chatId,
+            date,
+            SUM(timeSpentSeconds) AS timeSpentSeconds,
+            SUM(messagesSent) AS messagesSent,
+            SUM(messagesReceived) AS messagesReceived,
+            SUM(textCount) AS textCount,
+            SUM(mediaCount) AS mediaCount
+        FROM chat_usage
+        WHERE accountIndex = :accountIndex
+        GROUP BY date
+        ORDER BY date DESC
+        LIMIT :days
+    """)
+    fun getDailyMessageVolumeFlow(accountIndex: Int, days: Int): Flow<List<ChatUsageRecord>>
 }

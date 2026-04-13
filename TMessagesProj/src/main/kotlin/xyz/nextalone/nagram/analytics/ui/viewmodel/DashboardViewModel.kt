@@ -18,7 +18,6 @@ import javax.inject.Inject
 
 // ─── UI Data Models ───────────────────────────────────────────────────────────
 
-/** Enriched chat info with resolved Telegram name, type, and lock state */
 data class ChatUsageInfo(
     val chatId: Long,
     val displayName: String,
@@ -27,7 +26,6 @@ data class ChatUsageInfo(
     val isChannel: Boolean,
     val initial: String,
     val isLocked: Boolean = false,
-    // Aggregated metrics from all-time data
     val timeSpentSeconds: Long = 0,
     val messagesSent: Long = 0,
     val messagesReceived: Long = 0,
@@ -43,7 +41,10 @@ data class SessionInsightData(
 )
 
 data class DashboardUiState(
-    val appUsageHistory: List<AppUsageRecord> = emptyList(),
+    /** The "Live Activity" graph — now showing message pulse per account (Isolated) */
+    val messageHistoryPulse: List<ChatUsageRecord> = emptyList(),
+    /** Universal summary of app usage (Shared) */
+    val globalAppHistory: List<AppUsageRecord> = emptyList(),
     val topChats: List<ChatUsageInfo> = emptyList(),
     val limits: List<AnalyticsLimit> = emptyList(),
     val blockedChats: List<BlockedChat> = emptyList(),
@@ -66,7 +67,8 @@ class DashboardViewModel @Inject constructor(
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
     private val analyticsManager = AnalyticsManager.get(context)
-    private val account = UserConfig.selectedAccount
+    private val activeAccount = UserConfig.selectedAccount
+    private val universalAccount = 0
 
     init {
         loadData()
@@ -75,42 +77,43 @@ class DashboardViewModel @Inject constructor(
     private fun loadData() {
         viewModelScope.launch {
             combine(
-                dao.getAppUsageFlow(account, 30),
-                dao.getTopChatsAllTimeFlow(account, 20),
-                dao.getAllLimitsFlow(account),
-                dao.getBlockedChatsFlow(account)
+                dao.getAppUsageFlow(universalAccount, 30),      // UNIVERSAL
+                dao.getTopChatsAllTimeFlow(activeAccount, 20),  // ISOLATED
+                dao.getAllLimitsFlow(universalAccount),        // UNIVERSAL
+                dao.getBlockedChatsFlow(activeAccount),          // ISOLATED
+                dao.getDailyMessageVolumeFlow(activeAccount, 14) // ISOLATED graph data
             ) { arr ->
                 @Suppress("UNCHECKED_CAST")
-                Quad(
+                Penta(
                     arr[0] as List<AppUsageRecord>,
                     arr[1] as List<ChatUsageAggregate>,
                     arr[2] as List<AnalyticsLimit>,
-                    arr[3] as List<BlockedChat>
+                    arr[3] as List<BlockedChat>,
+                    arr[4] as List<ChatUsageRecord>
                 )
-            }.collect { quad ->
-                val appUsage    = quad.a
-                val topChats    = quad.b
-                val limits      = quad.c
-                val blockedChats = quad.d
+            }.collect { penta ->
+                val appUsage     = penta.a
+                val topChats     = penta.b
+                val limits       = penta.c
+                val blockedChats = penta.d
+                val messagePulse = penta.e
 
-                // Today & this week in minutes
+                // ── UNIVERSAL STATS ──
                 val todayMins = (appUsage.firstOrNull()?.totalTimeSeconds ?: 0L) / 60L
                 val weekMins  = appUsage.take(7).sumOf { it.totalTimeSeconds } / 60L
                 val totalSessions = appUsage.sumOf { it.sessionCount }
 
-                // Session insights from all-time aggregated data
+                // ── ISOLATED STATS ──
                 val totalSent     = topChats.sumOf { it.messagesSent }
                 val totalReceived = topChats.sumOf { it.messagesReceived }
                 val totalMedia    = topChats.sumOf { it.mediaCount }
                 val totalTimeSecs = topChats.sumOf { it.timeSpentSeconds }
-
-                val lockedIds = blockedChats.map { it.chatId }.toSet()
-
-                // Resolve real Telegram names / types
-                val enriched = topChats.map { agg -> resolveChatInfo(agg, lockedIds) }
+                val lockedIds     = blockedChats.map { it.chatId }.toSet()
+                val enriched      = topChats.map { agg -> resolveChatInfo(agg, lockedIds) }
 
                 _uiState.value = DashboardUiState(
-                    appUsageHistory      = appUsage,
+                    messageHistoryPulse  = messagePulse, 
+                    globalAppHistory     = appUsage,
                     topChats             = enriched,
                     limits               = limits,
                     blockedChats         = blockedChats,
@@ -130,11 +133,9 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
-    /** Resolves the real Telegram display name and type for an aggregated chat record */
     private fun resolveChatInfo(agg: ChatUsageAggregate, lockedIds: Set<Long>): ChatUsageInfo {
         return try {
-            val account = UserConfig.selectedAccount
-            val mc      = MessagesController.getInstance(account)
+            val mc      = MessagesController.getInstance(activeAccount)
             val chatId  = agg.chatId
 
             if (chatId > 0) {
@@ -178,22 +179,13 @@ class DashboardViewModel @Inject constructor(
             }
         } catch (e: Exception) {
             ChatUsageInfo(
-                chatId      = agg.chatId,
-                displayName = "ID ${agg.chatId}",
-                isUser      = false,
-                isGroup     = false,
-                isChannel   = false,
-                initial     = "?",
-                isLocked    = false,
-                timeSpentSeconds = agg.timeSpentSeconds,
-                messagesSent     = agg.messagesSent,
-                messagesReceived = agg.messagesReceived,
-                mediaCount       = agg.mediaCount
+                chatId = agg.chatId, displayName = "ID ${agg.chatId}", isUser = false, isGroup = false, isChannel = false, initial = "?",
+                timeSpentSeconds = agg.timeSpentSeconds, messagesSent = agg.messagesSent, messagesReceived = agg.messagesReceived, mediaCount = agg.mediaCount
             )
         }
     }
 
-    // ─── Global Controls ──────────────────────────────────────────────────────
+    // ─── Global Controls (Universal) ──────────────────────────────────────────
 
     fun toggleTracking() {
         analyticsManager.isEnabled = !analyticsManager.isEnabled
@@ -202,12 +194,12 @@ class DashboardViewModel @Inject constructor(
 
     fun resetAnalyticsData() {
         viewModelScope.launch {
-            dao.clearAllAppUsage(account)
-            dao.clearAllChatUsage(account)
+            dao.clearAllAppUsage(universalAccount)
+            dao.clearAllChatUsage(activeAccount)
         }
     }
 
-    // ─── Limit Actions ────────────────────────────────────────────────────────
+    // ─── Limit Actions (Universal) ───────────────────────────────────────────
 
     fun toggleLimit(limit: AnalyticsLimit) {
         viewModelScope.launch {
@@ -219,7 +211,7 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             dao.insertLimit(
                 AnalyticsLimit(
-                    accountIndex      = account,
+                    accountIndex      = universalAccount,
                     type              = 0,
                     targetId          = 0L,
                     dailyLimitSeconds = (hours * 3600L) + (minutes * 60L),
@@ -231,11 +223,11 @@ class DashboardViewModel @Inject constructor(
 
     fun deleteLimit(limit: AnalyticsLimit) {
         viewModelScope.launch {
-            dao.deleteLimit(account, limit.type, limit.targetId)
+            dao.deleteLimit(universalAccount, limit.type, limit.targetId)
         }
     }
 
-    // ─── Chat Lock Actions ────────────────────────────────────────────────────
+    // ─── Chat Lock Actions (Isolated) ─────────────────────────────────────────
 
     fun lockChat(chatId: Long, autoUnlockMinutes: Int = 0) {
         viewModelScope.launch {
@@ -243,7 +235,7 @@ class DashboardViewModel @Inject constructor(
                 System.currentTimeMillis() + autoUnlockMinutes * 60_000L else 0L
             dao.blockChat(
                 BlockedChat(
-                    accountIndex = account,
+                    accountIndex = activeAccount,
                     chatId      = chatId,
                     lockType    = if (autoUnlockMinutes > 0) 1 else 0,
                     unlocksAtMs = unlockAt
@@ -254,11 +246,9 @@ class DashboardViewModel @Inject constructor(
 
     fun unlockChat(chatId: Long) {
         viewModelScope.launch {
-            dao.unblockChat(account, chatId)
+            dao.unblockChat(activeAccount, chatId)
         }
     }
 
-    // ─── Private Helpers ──────────────────────────────────────────────────────
-
-    private data class Quad<A, B, C, D>(val a: A, val b: B, val c: C, val d: D)
+    private data class Penta<A, B, C, D, E>(val a: A, val b: B, val c: C, val d: D, val e: E)
 }

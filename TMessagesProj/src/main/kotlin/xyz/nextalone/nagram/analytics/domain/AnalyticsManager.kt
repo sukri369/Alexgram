@@ -92,11 +92,12 @@ class AnalyticsManager @Inject constructor(
     fun onAppForeground() {
         if (!isEnabled) return
         
-        val account = UserConfig.selectedAccount
+        // App usage is universal (shared across all accounts)
+        val universalAccount = 0
         lastUpdateTime = System.currentTimeMillis()
         scope.launch {
             val today = getTodayTimestamp()
-            val usage = dao.getAppUsage(account, today) ?: AppUsageRecord(accountIndex = account, date = today)
+            val usage = dao.getAppUsage(universalAccount, today) ?: AppUsageRecord(accountIndex = universalAccount, date = today)
             dao.insertAppUsage(usage.copy(sessionCount = usage.sessionCount + 1))
         }
     }
@@ -104,12 +105,13 @@ class AnalyticsManager @Inject constructor(
     fun onAppBackground() {
         if (!isEnabled) return
         
-        val account = UserConfig.selectedAccount
+        // App usage is universal (shared across all accounts)
+        val universalAccount = 0
         val duration = (System.currentTimeMillis() - lastUpdateTime) / 1000
         if (duration > 0) {
             scope.launch {
                 val today = getTodayTimestamp()
-                val usage = dao.getAppUsage(account, today) ?: AppUsageRecord(accountIndex = account, date = today)
+                val usage = dao.getAppUsage(universalAccount, today) ?: AppUsageRecord(accountIndex = universalAccount, date = today)
                 dao.insertAppUsage(usage.copy(totalTimeSeconds = usage.totalTimeSeconds + duration))
             }
         }

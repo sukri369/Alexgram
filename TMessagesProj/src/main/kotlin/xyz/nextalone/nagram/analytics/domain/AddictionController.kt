@@ -49,15 +49,15 @@ class AddictionController @Inject constructor(
 
     /** 
      * Fail-safe synchronous check for app start.
-     * Uses currently active account.
+     * App limit is universal (Global).
      */
     fun isLimitExceeded(): Boolean {
-        val account = UserConfig.selectedAccount
+        val universalAccount = 0
         val limit = if (!isCacheWarm) {
             // COLD CACHE FALLBACK
-            runBlocking(Dispatchers.IO) { dao.getLimit(account, 0, 0) }
+            runBlocking(Dispatchers.IO) { dao.getLimit(universalAccount, 0, 0) }
         } else {
-            _appLimit.value[account]
+            _appLimit.value[universalAccount]
         } ?: return false
 
         if (!limit.isEnabled) return false
@@ -67,21 +67,21 @@ class AddictionController @Inject constructor(
         return todayUsage >= limit.dailyLimitSeconds
     }
 
-    /** Helper for UI: Get today's usage in seconds for the active account */
+    /** Helper for UI: Get today's usage in seconds (Universal for app) */
     fun getTodaySeconds(): Long {
-        val account = UserConfig.selectedAccount
+        val universalAccount = 0
         return runBlocking(Dispatchers.IO) {
-            dao.getAppUsage(account, getTodayTimestamp())?.totalTimeSeconds ?: 0L
+            dao.getAppUsage(universalAccount, getTodayTimestamp())?.totalTimeSeconds ?: 0L
         }
     }
 
-    /** Helper for UI: Get current limit in seconds for the active account */
+    /** Helper for UI: Get current app limit in seconds (Universal for app) */
     fun getLimitSeconds(): Long {
-        val account = UserConfig.selectedAccount
+        val universalAccount = 0
         return if (!isCacheWarm) {
-            runBlocking(Dispatchers.IO) { dao.getLimit(account, 0, 0) }
+            runBlocking(Dispatchers.IO) { dao.getLimit(universalAccount, 0, 0) }
         } else {
-            _appLimit.value[account]
+            _appLimit.value[universalAccount]
         }?.dailyLimitSeconds ?: 0L
     }
 

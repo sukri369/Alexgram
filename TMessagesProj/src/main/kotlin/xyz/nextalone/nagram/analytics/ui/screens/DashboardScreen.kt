@@ -112,7 +112,7 @@ fun DashboardScreen(vm: DashboardViewModel = viewModel()) {
                         todayMinutes = uiState.todayMinutes,
                         weekMinutes = uiState.weekMinutes,
                         totalSessions = uiState.totalSessionsAllTime,
-                        appUsageHistory = uiState.appUsageHistory
+                        appUsageHistory = uiState.globalAppHistory
                     )
                 }
             }
@@ -120,12 +120,12 @@ fun DashboardScreen(vm: DashboardViewModel = viewModel()) {
             // ── Live Activity ─────────────────────────────────────────────────
             item {
                 AnimatedIn(isVisible, 150) {
-                    SectionLabel("LIVE ACTIVITY", "Last 14 days usage", Icons.Default.ShowChart, NeonCyan)
+                    SectionLabel("LIVE ACTIVITY", "Account message volume (14d)", Icons.Default.ShowChart, NeonCyan)
                 }
             }
             item {
                 AnimatedIn(isVisible, 200) {
-                    ActivityBarChart(uiState.appUsageHistory)
+                    AccountActivityPulseChart(uiState.messageHistoryPulse)
                 }
             }
 
@@ -415,16 +415,16 @@ fun StatChip(modifier: Modifier, label: String, value: String, color: Color) {
 // ─── Activity Chart ───────────────────────────────────────────────────────────
 
 @Composable
-fun ActivityBarChart(history: List<xyz.nextalone.nagram.analytics.data.AppUsageRecord>) {
+fun AccountActivityPulseChart(history: List<xyz.nextalone.nagram.analytics.data.ChatUsageRecord>) {
     val c = LocalAnalyticsColors.current
     GlassCard(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
         Box(Modifier.fillMaxWidth().height(155.dp).padding(10.dp)) {
             if (history.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(Icons.Default.BarChart, null, tint = c.textSecondary.copy(0.4f), modifier = Modifier.size(36.dp))
+                        Icon(Icons.Default.ShowChart, null, tint = c.textSecondary.copy(0.4f), modifier = Modifier.size(36.dp))
                         Spacer(Modifier.height(6.dp))
-                        Text("Activity tracked after first session", color = c.textSecondary, fontSize = 11.sp)
+                        Text("Start messaging to see your pulse", color = c.textSecondary, fontSize = 11.sp)
                     }
                 }
             } else {
@@ -442,18 +442,17 @@ fun ActivityBarChart(history: List<xyz.nextalone.nagram.analytics.data.AppUsageR
                             setDrawGridBackground(false)
                             setDrawBorders(false)
                             setBackgroundColor(AndroidColor.TRANSPARENT)
-                            setNoDataText("")
                         }
                     },
                     update = { chart ->
-                        val data = history.reversed().takeLast(14)
+                        val data = history.take(14).reversed()
                         val entries = data.mapIndexed { i, r ->
-                            BarEntry(i.toFloat(), r.totalTimeSeconds / 60f)
+                            BarEntry(i.toFloat(), (r.messagesSent + r.messagesReceived).toFloat())
                         }
                         if (entries.isNotEmpty()) {
-                            val maxVal = entries.maxOf { it.y }
+                            val maxVal = entries.maxOf { it.y }.coerceAtLeast(1f)
                             val barColors = entries.map { e ->
-                                val ratio = if (maxVal > 0) e.y / maxVal else 0f
+                                val ratio = e.y / maxVal
                                 if (isDark) {
                                     when {
                                         ratio > 0.7f -> AndroidColor.parseColor("#00E5FF")
@@ -480,7 +479,7 @@ fun ActivityBarChart(history: List<xyz.nextalone.nagram.analytics.data.AppUsageR
                     }
                 )
                 Text(
-                    "Last 14 days",
+                    "Volume Pulse",
                     color = c.textSecondary.copy(0.6f), fontSize = 9.sp,
                     modifier = Modifier.align(Alignment.TopEnd).padding(2.dp)
                 )
