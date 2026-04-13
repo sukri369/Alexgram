@@ -62,11 +62,27 @@ class AddictionController @Inject constructor(
 
         if (!limit.isEnabled) return false
 
-        val todayUsage = runBlocking(Dispatchers.IO) {
-            dao.getAppUsage(account, getTodayTimestamp())?.totalTimeSeconds ?: 0L
-        }
+        val todayUsage = getTodaySeconds()
 
         return todayUsage >= limit.dailyLimitSeconds
+    }
+
+    /** Helper for UI: Get today's usage in seconds for the active account */
+    fun getTodaySeconds(): Long {
+        val account = UserConfig.selectedAccount
+        return runBlocking(Dispatchers.IO) {
+            dao.getAppUsage(account, getTodayTimestamp())?.totalTimeSeconds ?: 0L
+        }
+    }
+
+    /** Helper for UI: Get current limit in seconds for the active account */
+    fun getLimitSeconds(): Long {
+        val account = UserConfig.selectedAccount
+        return if (!isCacheWarm) {
+            runBlocking(Dispatchers.IO) { dao.getLimit(account, 0, 0) }
+        } else {
+            _appLimit.value[account]
+        }?.dailyLimitSeconds ?: 0L
     }
 
     private fun getTodayTimestamp(): Long {
