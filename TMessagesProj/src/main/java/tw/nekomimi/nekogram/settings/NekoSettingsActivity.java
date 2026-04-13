@@ -381,15 +381,10 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
                     }, true, false);
                 } else if (position == analyticsRow) {
                     cell.setData("Analytics & Control", "Usage stats, chat lock & focus mode", R.drawable.msg_stats_solar, 0xFF2196F3, v -> {
-                        presentFragment(new org.telegram.ui.ActionBar.BaseFragment() {
-                            @Override
-                            public View createView(Context context) {
-                                context.startActivity(new Intent(context, xyz.nextalone.nagram.analytics.ui.AnalyticsDashboardActivity.class));
-                                finishFragment();
-                                return new View(context);
-                            }
-                        });
+                        Intent intent = new Intent(getParentActivity(), xyz.nextalone.nagram.analytics.ui.AnalyticsDashboardActivity.class);
+                        getParentActivity().startActivity(intent);
                     }, false, true);
+
                 } else if (position == coreSettingsRow) {
                     cell.setMultiData(new CoreItem[]{
                             new CoreItem("General", "Appearance, Language, Behavior", R.drawable.msg_settings, 0xFF2196F3, v -> presentFragment(new NekoGeneralSettingsActivity())),
