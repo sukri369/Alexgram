@@ -136,7 +136,7 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
         itemAnimator.setDelayAnimations(false);
         listView.setItemAnimator(itemAnimator);
         if (isAlexgramTheme()) {
-            listView.setPadding(0, AndroidUtilities.statusBarHeight + dp(120), 0, dp(40));
+            listView.setPadding(0, AndroidUtilities.statusBarHeight + dp(64), 0, dp(40));
             listView.setClipToPadding(false);
         }
         frameLayout.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
