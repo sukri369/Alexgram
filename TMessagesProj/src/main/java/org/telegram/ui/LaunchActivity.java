@@ -1108,11 +1108,11 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         FloatingDebugController.setActive(this, SharedConfig.isFloatingDebugActive, false);
     }
 
-    public void addOnUserLeaveHintListener(Runnable callback) {
+    public void addUserLeaveHintListener(Runnable callback) {
         onUserLeaveHintListeners.add(callback);
     }
 
-    public void removeOnUserLeaveHintListener(Runnable callback) {
+    public void removeUserLeaveHintListener(Runnable callback) {
         onUserLeaveHintListeners.remove(callback);
     }
 
