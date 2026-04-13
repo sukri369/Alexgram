@@ -106,8 +106,16 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
 
 
     @Override
+    public boolean onFragmentCreate() {
+        super.onFragmentCreate();
+        updateRows();
+        return true;
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
+        updateRows();
         if (listAdapter != null) {
             listAdapter.notifyDataSetChanged();
         }
@@ -389,6 +397,7 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
     protected void updateRows() {
         rowCount = 0;
         rowMap.clear();
+        rowMapReverse.clear();
     }
 
     @Override
