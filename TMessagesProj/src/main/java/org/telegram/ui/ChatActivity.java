@@ -30744,6 +30744,23 @@ public class ChatActivity extends BaseFragment implements
     @Override
     public void onResume() {
         super.onResume();
+        // ── Chat Lock Enforcement ─────────────────────────────────────────────
+        try {
+            xyz.nextalone.nagram.analytics.domain.ChatLockManager lockMgr =
+                xyz.nextalone.nagram.analytics.domain.ChatLockManager.Companion.get(getParentActivity());
+            if (lockMgr.isLockedSync(getDialogId())) {
+                android.content.Intent lockIntent = new android.content.Intent(
+                    getParentActivity(),
+                    xyz.nextalone.nagram.analytics.ui.ChatLockedActivity.class
+                );
+                lockIntent.putExtra("chat_id", getDialogId());
+                getParentActivity().startActivity(lockIntent);
+                finishFragment();
+                return;
+            }
+        } catch (Exception e) {
+            // Fail open — never block due to an error
+        }
         xyz.nextalone.nagram.analytics.domain.AnalyticsManager.Companion.get(getParentActivity()).onChatStarted(getDialogId());
         if (chatAnimeAssistantView != null) {
             chatAnimeAssistantView.onResume();

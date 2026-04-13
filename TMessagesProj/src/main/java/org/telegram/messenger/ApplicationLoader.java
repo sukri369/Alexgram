@@ -365,6 +365,22 @@ public class ApplicationLoader extends Application {
                 if (wasInBackground) {
                     ensureCurrentNetworkGet(true);
                     xyz.nextalone.nagram.analytics.domain.AnalyticsManager.Companion.get(applicationContext).onAppForeground();
+                    // ── App Time Limit Enforcement ────────────────────────────
+                    try {
+                        xyz.nextalone.nagram.analytics.domain.AddictionController ctrl =
+                            xyz.nextalone.nagram.analytics.domain.AddictionController.Companion.get(applicationContext);
+                        if (ctrl.isLimitExceeded()) {
+                            android.content.Intent limitIntent = new android.content.Intent(
+                                applicationContext,
+                                xyz.nextalone.nagram.analytics.ui.AppLimitReachedActivity.class
+                            );
+                            limitIntent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+                                | android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                            applicationContext.startActivity(limitIntent);
+                        }
+                    } catch (Exception e) {
+                        // Fail open — never block due to an error
+                    }
                 }
             }
 
