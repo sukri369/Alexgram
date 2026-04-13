@@ -2,9 +2,13 @@ package xyz.nextalone.nagram.analytics.data
 
 import androidx.room.*
 
-@Entity(tableName = "app_usage")
+@Entity(
+    tableName = "app_usage",
+    primaryKeys = ["accountIndex", "date"]
+)
 data class AppUsageRecord(
-    @PrimaryKey val date: Long, // Midnight timestamp
+    val accountIndex: Int = 0,
+    val date: Long, // Midnight timestamp
     val totalTimeSeconds: Long = 0,
     val sessionCount: Int = 0
 )
@@ -12,6 +16,7 @@ data class AppUsageRecord(
 @Entity(tableName = "chat_usage")
 data class ChatUsageRecord(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val accountIndex: Int = 0,
     val chatId: Long,
     val date: Long, // Midnight timestamp
     val timeSpentSeconds: Long = 0,
@@ -23,6 +28,7 @@ data class ChatUsageRecord(
 
 /** Aggregated result from an all-time GROUP BY chatId query */
 data class ChatUsageAggregate(
+    val accountIndex: Int,
     val chatId: Long,
     val timeSpentSeconds: Long,
     val messagesSent: Long,
@@ -33,18 +39,23 @@ data class ChatUsageAggregate(
 
 @Entity(
     tableName = "analytics_limits",
-    primaryKeys = ["type", "targetId"]
+    primaryKeys = ["accountIndex", "type", "targetId"]
 )
 data class AnalyticsLimit(
+    val accountIndex: Int = 0,
     val type: Int,         // 0 = App global, 1 = specific chat
     val targetId: Long = 0, // 0 for global, chatId for per-chat
     val dailyLimitSeconds: Long = 0,
     val isEnabled: Boolean = false
 )
 
-@Entity(tableName = "blocked_chats")
+@Entity(
+    tableName = "blocked_chats",
+    primaryKeys = ["accountIndex", "chatId"]
+)
 data class BlockedChat(
-    @PrimaryKey val chatId: Long,
+    val accountIndex: Int = 0,
+    val chatId: Long,
     val lockType: Int = 0,           // 0 = Permanent, 1 = Timed
     val unlocksAtMs: Long = 0L       // Epoch ms when auto-unlock fires, 0 = never
 )

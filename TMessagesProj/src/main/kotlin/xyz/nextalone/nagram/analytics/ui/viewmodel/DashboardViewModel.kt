@@ -1,9 +1,6 @@
 package xyz.nextalone.nagram.analytics.ui.viewmodel
 
 import android.content.Context
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -69,6 +66,7 @@ class DashboardViewModel @Inject constructor(
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
     private val analyticsManager = AnalyticsManager.get(context)
+    private val account = UserConfig.selectedAccount
 
     init {
         loadData()
@@ -77,10 +75,10 @@ class DashboardViewModel @Inject constructor(
     private fun loadData() {
         viewModelScope.launch {
             combine(
-                dao.getAppUsageFlow(30),
-                dao.getTopChatsAllTimeFlow(20),
-                dao.getAllLimitsFlow(),
-                dao.getBlockedChatsFlow()
+                dao.getAppUsageFlow(account, 30),
+                dao.getTopChatsAllTimeFlow(account, 20),
+                dao.getAllLimitsFlow(account),
+                dao.getBlockedChatsFlow(account)
             ) { arr ->
                 @Suppress("UNCHECKED_CAST")
                 Quad(
@@ -199,15 +197,13 @@ class DashboardViewModel @Inject constructor(
 
     fun toggleTracking() {
         analyticsManager.isEnabled = !analyticsManager.isEnabled
-        // Force refresh state
         _uiState.update { it.copy(isTrackingEnabled = analyticsManager.isEnabled) }
     }
 
     fun resetAnalyticsData() {
         viewModelScope.launch {
-            dao.clearAllAppUsage()
-            dao.clearAllChatUsage()
-            // Data will clear automatically via Flow collection
+            dao.clearAllAppUsage(account)
+            dao.clearAllChatUsage(account)
         }
     }
 
@@ -223,6 +219,7 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             dao.insertLimit(
                 AnalyticsLimit(
+                    accountIndex      = account,
                     type              = 0,
                     targetId          = 0L,
                     dailyLimitSeconds = (hours * 3600L) + (minutes * 60L),
@@ -234,22 +231,19 @@ class DashboardViewModel @Inject constructor(
 
     fun deleteLimit(limit: AnalyticsLimit) {
         viewModelScope.launch {
-            dao.deleteLimit(limit.type, limit.targetId)
+            dao.deleteLimit(account, limit.type, limit.targetId)
         }
     }
 
     // ─── Chat Lock Actions ────────────────────────────────────────────────────
 
-    /**
-     * Lock a chat.
-     * @param autoUnlockMinutes 0 = permanent, >0 = auto-unlock after that many minutes
-     */
     fun lockChat(chatId: Long, autoUnlockMinutes: Int = 0) {
         viewModelScope.launch {
             val unlockAt = if (autoUnlockMinutes > 0)
                 System.currentTimeMillis() + autoUnlockMinutes * 60_000L else 0L
             dao.blockChat(
                 BlockedChat(
+                    accountIndex = account,
                     chatId      = chatId,
                     lockType    = if (autoUnlockMinutes > 0) 1 else 0,
                     unlocksAtMs = unlockAt
@@ -260,7 +254,7 @@ class DashboardViewModel @Inject constructor(
 
     fun unlockChat(chatId: Long) {
         viewModelScope.launch {
-            dao.unblockChat(chatId)
+            dao.unblockChat(account, chatId)
         }
     }
 

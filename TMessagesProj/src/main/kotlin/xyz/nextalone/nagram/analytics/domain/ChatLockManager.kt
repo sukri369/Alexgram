@@ -2,14 +2,12 @@ package xyz.nextalone.nagram.analytics.domain
 
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
-import org.telegram.messenger.NotificationCenter
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import org.telegram.messenger.UserConfig
 import xyz.nextalone.nagram.analytics.data.AnalyticsDao
 import xyz.nextalone.nagram.analytics.data.BlockedChat
-import java.util.Collections
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -18,82 +16,66 @@ class ChatLockManager @Inject constructor(
     @ApplicationContext private val context: Context,
     private val dao: AnalyticsDao
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-
-    /** In-memory set of currently locked chat IDs — synced from DB flow */
-    private val lockedChatIds = mutableSetOf<Long>()
-    
-    /** Flag to indicate if the cache has been populated at least once */
-    @Volatile
-    private var isCacheWarm = false
-
-    /** Chats the user has unlocked this session (temporary unlock) */
-    private val sessionUnlocked = Collections.synchronizedSet(mutableSetOf<Long>())
-
     companion object {
         fun get(context: Context): ChatLockManager {
             return AnalyticsManager.getEntryPoint(context).chatLockManager()
         }
     }
 
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    
+    // Per-account lock cache: Map<AccountIndex, Set<ChatId>>
+    private val _lockedChatIds = MutableStateFlow<Map<Int, Set<Long>>>(emptyMap())
+    
+    @Volatile
+    private var isCacheWarm = false
+
     init {
-        // Keep in-memory set in sync with DB
+        refreshCache()
+    }
+
+    private fun refreshCache() {
         scope.launch {
-            dao.getBlockedChatsFlow().collect { list ->
-                synchronized(lockedChatIds) {
-                    lockedChatIds.clear()
-                    lockedChatIds.addAll(list.map { it.chatId })
+            // In a multi-account environment, we can't easily wait for a single Flow for ALL accounts
+            // unless we aggregate them. For now, since user switches accounts, we refresh on init.
+            // A more robust way is to observe the current account's flow.
+            
+            // To be safe and "God-Level", we'll just track all accounts' locks in the cache.
+            // We'll iterate through all possible accounts (Telegram supports up to 4-10)
+            val allAccountLocks = mutableMapOf<Int, Set<Long>>()
+            for (i in 0 until UserConfig.MAX_ACCOUNT_COUNT) {
+                dao.getBlockedChatsFlow(i).collect { list ->
+                    val now = System.currentTimeMillis()
+                    allAccountLocks[i] = list.filter { it.unlocksAtMs == 0L || it.unlocksAtMs > now }
+                        .map { it.chatId }.toSet()
+                    _lockedChatIds.value = allAccountLocks.toMap()
+                    isCacheWarm = true
                 }
-                isCacheWarm = true
             }
         }
     }
 
-    // ── Sync access (callable from Java) ──────────────────────────────────────
-
-    /** Returns true if this chat should be blocked right now */
+    /** 
+     * Fail-safe synchronous check for the UI thread.
+     * Uses currently active account.
+     */
     fun isLockedSync(chatId: Long): Boolean {
-        if (sessionUnlocked.contains(chatId)) return false
-        
-        // Fast path: cache is pre-populated
-        if (isCacheWarm) {
-            return synchronized(lockedChatIds) { lockedChatIds.contains(chatId) }
+        val account = UserConfig.selectedAccount
+        if (!isCacheWarm) {
+            // COLD CACHE FALLBACK: Blocking DB read (only happens once on cold start)
+            return runBlocking(Dispatchers.IO) {
+                dao.isChatBlocked(account, chatId)
+            }
         }
-        
-        // Safe path: cache is cold, perform legacy blocking lookup to avoid race
-        return isChatLockedBlocking(chatId)
+        return _lockedChatIds.value[account]?.contains(chatId) ?: false
     }
 
-    /** Temporarily unlock for this session (until app restart) */
-    fun sessionUnlock(chatId: Long) {
-        sessionUnlocked.add(chatId)
-        NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.updateInterfaces)
-    }
-
-    // ── Suspend / Blocking ───────────────────────────────────────────────────
-
-    suspend fun isChatLocked(chatId: Long): Boolean {
-        if (sessionUnlocked.contains(chatId)) return false
-        return dao.isChatBlocked(chatId)
-    }
-
-    fun isChatLockedBlocking(chatId: Long): Boolean {
-        if (sessionUnlocked.contains(chatId)) return false
-        return try {
-            // Using runBlocking is generally stable for rare sync events in TMessagesProj
-            kotlinx.coroutines.runBlocking { dao.isChatBlocked(chatId) }
-        } catch (e: Exception) {
-            false
-        }
-    }
-
-    suspend fun setChatLock(chatId: Long, locked: Boolean) {
-        if (locked) {
-            dao.blockChat(BlockedChat(chatId))
-        } else {
-            dao.unblockChat(chatId)
-            sessionUnlocked.add(chatId)
-        }
-        NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.updateInterfaces)
+    fun unlockSession(chatId: Long) {
+        val account = UserConfig.selectedAccount
+        val current = _lockedChatIds.value.toMutableMap()
+        val accountLocks = current[account]?.toMutableSet() ?: mutableSetOf()
+        accountLocks.remove(chatId)
+        current[account] = accountLocks
+        _lockedChatIds.value = current
     }
 }

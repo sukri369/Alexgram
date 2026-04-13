@@ -2,10 +2,9 @@ package xyz.nextalone.nagram.analytics.domain
 
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import org.telegram.messenger.UserConfig
 import xyz.nextalone.nagram.analytics.data.AnalyticsDao
 import xyz.nextalone.nagram.analytics.data.AnalyticsLimit
 import java.util.*
@@ -17,88 +16,57 @@ class AddictionController @Inject constructor(
     @ApplicationContext private val context: Context,
     private val dao: AnalyticsDao
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-
-    // ── In-memory state for sync access from Java ──────────────────────────────
-    @Volatile private var limitEnabled: Boolean = false
-    @Volatile private var limitSeconds: Long = 0L
-    @Volatile private var todaySeconds: Long = 0L
-    
-    @Volatile private var isCacheWarm = false
-
     companion object {
         fun get(context: Context): AddictionController {
             return AnalyticsManager.getEntryPoint(context).addictionController()
         }
     }
 
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    
+    // Per-account limit state: Map<AccountIndex, AnalyticsLimit?>
+    private val _appLimit = MutableStateFlow<Map<Int, AnalyticsLimit?>>(emptyMap())
+    
+    @Volatile
+    private var isCacheWarm = false
+
     init {
-        // Keep in-memory state in sync with DB changes
+        refreshCache()
+    }
+
+    private fun refreshCache() {
         scope.launch {
-            dao.getAllLimitsFlow().collect { limits ->
-                val appLimit = limits.firstOrNull { it.type == 0 && it.targetId == 0L }
-                limitEnabled = appLimit?.isEnabled ?: false
-                limitSeconds = appLimit?.dailyLimitSeconds ?: 0L
-                maybeSetCacheWarm()
-            }
-        }
-        scope.launch {
-            dao.getAppUsageFlow(1).collect { list ->
-                todaySeconds = list.firstOrNull()?.totalTimeSeconds ?: 0L
-                maybeSetCacheWarm()
+            val allAccountLimits = mutableMapOf<Int, AnalyticsLimit?>()
+            for (i in 0 until UserConfig.MAX_ACCOUNT_COUNT) {
+                // type 0 = App Global Limit, targetId = 0
+                val limit = dao.getLimit(i, 0, 0)
+                allAccountLimits[i] = limit
+                _appLimit.value = allAccountLimits.toMap()
+                isCacheWarm = true
             }
         }
     }
 
-    private fun maybeSetCacheWarm() {
-        // We consider cache warm when we at least have one emit from each flow (or if some already present)
-        // For simplicity, we just check if it's likely we have the state.
-        // We'll mark as warm as soon as we've had at least one limit check.
-        isCacheWarm = true 
-    }
-
-    /** True if the user has set and enabled a limit that is currently exceeded */
+    /** 
+     * Fail-safe synchronous check for app start.
+     * Uses currently active account.
+     */
     fun isLimitExceeded(): Boolean {
-        if (!isCacheWarm) {
-            // Safe path: synchronous direct check to avoid startup race
-            return isLimitExceededBlocking()
-        }
-        return limitEnabled && limitSeconds > 0L && todaySeconds >= limitSeconds
-    }
+        val account = UserConfig.selectedAccount
+        val limit = if (!isCacheWarm) {
+            // COLD CACHE FALLBACK
+            runBlocking(Dispatchers.IO) { dao.getLimit(account, 0, 0) }
+        } else {
+            _appLimit.value[account]
+        } ?: return false
 
-    fun isLimitExceededBlocking(): Boolean {
-        return try {
-            kotlinx.coroutines.runBlocking { checkAppLimitReached() }
-        } catch (e: Exception) {
-            false
-        }
-    }
-
-    /** True if a limit is set and enabled (regardless of whether exceeded) */
-    fun isLimitActive(): Boolean = limitEnabled && limitSeconds > 0L
-
-    /** How many seconds the user has used today */
-    fun getTodaySeconds(): Long = todaySeconds
-
-    /** The configured daily limit in seconds */
-    fun getLimitSeconds(): Long = limitSeconds
-
-    // ── Suspend-based checks (for internal use) ───────────────────────────────
-
-    suspend fun checkAppLimitReached(): Boolean {
-        val today = getTodayTimestamp()
-        val limit = dao.getLimit(0, 0) ?: return false
         if (!limit.isEnabled) return false
-        val currentUsage = dao.getAppUsage(today)?.totalTimeSeconds ?: 0
-        return currentUsage >= limit.dailyLimitSeconds
-    }
 
-    suspend fun checkChatLimitReached(chatId: Long): Boolean {
-        val today = getTodayTimestamp()
-        val limit = dao.getLimit(1, chatId) ?: return false
-        if (!limit.isEnabled) return false
-        val currentUsage = dao.getChatUsage(chatId, today)?.timeSpentSeconds ?: 0
-        return currentUsage >= limit.dailyLimitSeconds
+        val todayUsage = runBlocking(Dispatchers.IO) {
+            dao.getAppUsage(account, getTodayTimestamp())?.totalTimeSeconds ?: 0L
+        }
+
+        return todayUsage >= limit.dailyLimitSeconds
     }
 
     private fun getTodayTimestamp(): Long {

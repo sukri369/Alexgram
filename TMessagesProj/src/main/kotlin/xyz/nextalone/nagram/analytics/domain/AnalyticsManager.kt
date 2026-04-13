@@ -40,6 +40,7 @@ class AnalyticsManager @Inject constructor(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var lastUpdateTime: Long = 0
     private var currentChatId: Long = 0
+    private var currentAccount: Int = 0
     private var chatStartTime: Long = 0
 
     // ── Global Enable/Disable Logic ───────────────────────────────────────────
@@ -65,15 +66,16 @@ class AnalyticsManager @Inject constructor(
             val messages = args[1] as ArrayList<MessageObject>
             scope.launch {
                 messages.forEach { msg ->
-                    trackMessage(msg)
+                    trackMessage(account, msg)
                 }
             }
         }
     }
 
-    private suspend fun trackMessage(msg: MessageObject) {
+    private suspend fun trackMessage(accountIndex: Int, msg: MessageObject) {
         val today = getTodayTimestamp()
-        val usage = dao.getChatUsage(msg.getDialogId(), today) ?: ChatUsageRecord(chatId = msg.getDialogId(), date = today)
+        val usage = dao.getChatUsage(accountIndex, msg.getDialogId(), today) 
+            ?: ChatUsageRecord(accountIndex = accountIndex, chatId = msg.getDialogId(), date = today)
         
         val isSent = msg.isOut()
         val isMedia = msg.isPhoto() || msg.isVideo() || msg.isDocument() || msg.isMusic() || msg.isVoice() || msg.isRoundVideo()
@@ -90,10 +92,11 @@ class AnalyticsManager @Inject constructor(
     fun onAppForeground() {
         if (!isEnabled) return
         
+        val account = UserConfig.selectedAccount
         lastUpdateTime = System.currentTimeMillis()
         scope.launch {
             val today = getTodayTimestamp()
-            val usage = dao.getAppUsage(today) ?: AppUsageRecord(date = today)
+            val usage = dao.getAppUsage(account, today) ?: AppUsageRecord(accountIndex = account, date = today)
             dao.insertAppUsage(usage.copy(sessionCount = usage.sessionCount + 1))
         }
     }
@@ -101,11 +104,12 @@ class AnalyticsManager @Inject constructor(
     fun onAppBackground() {
         if (!isEnabled) return
         
+        val account = UserConfig.selectedAccount
         val duration = (System.currentTimeMillis() - lastUpdateTime) / 1000
         if (duration > 0) {
             scope.launch {
                 val today = getTodayTimestamp()
-                val usage = dao.getAppUsage(today) ?: AppUsageRecord(date = today)
+                val usage = dao.getAppUsage(account, today) ?: AppUsageRecord(accountIndex = account, date = today)
                 dao.insertAppUsage(usage.copy(totalTimeSeconds = usage.totalTimeSeconds + duration))
             }
         }
@@ -114,6 +118,7 @@ class AnalyticsManager @Inject constructor(
     fun onChatStarted(chatId: Long) {
         if (!isEnabled) return
         
+        currentAccount = UserConfig.selectedAccount
         currentChatId = chatId
         chatStartTime = System.currentTimeMillis()
     }
@@ -126,11 +131,13 @@ class AnalyticsManager @Inject constructor(
             if (duration > 0) {
                 scope.launch {
                     val today = getTodayTimestamp()
-                    val usage = dao.getChatUsage(chatId, today) ?: ChatUsageRecord(chatId = chatId, date = today)
+                    val usage = dao.getChatUsage(currentAccount, chatId, today) 
+                        ?: ChatUsageRecord(accountIndex = currentAccount, chatId = chatId, date = today)
                     dao.insertChatUsage(usage.copy(timeSpentSeconds = usage.timeSpentSeconds + duration))
                 }
             }
             currentChatId = 0
+            currentAccount = 0
         }
     }
 
