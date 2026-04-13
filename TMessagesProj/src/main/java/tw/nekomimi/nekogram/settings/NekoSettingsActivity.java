@@ -300,7 +300,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
 
         public BrandingHeaderView(Context context) {
             super(context);
-            setPadding(0, dp(40), 0, dp(8));
+            setPadding(0, dp(32), 0, dp(4));
             setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
 
             FrameLayout logoContainer = new FrameLayout(context);
@@ -317,7 +317,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
             logoBg.setShape(GradientDrawable.OVAL);
             logoBg.setColor(Color.TRANSPARENT);
             logoContainer.setBackground(logoBg);
-            addView(logoContainer, LayoutHelper.createFrame(80, 80, Gravity.CENTER_HORIZONTAL));
+            addView(logoContainer, LayoutHelper.createFrame(64, 64, Gravity.CENTER_HORIZONTAL));
 
             logoView = new ImageView(context);
             if (android.os.Build.VERSION.SDK_INT >= 21) {
@@ -335,11 +335,11 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
 
             nameView = new TextView(context);
             nameView.setText("Alexgram");
-            nameView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 24);
+            nameView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 19);
             nameView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
             nameView.setTextColor(isDark ? Color.WHITE : 0xFF1A1A2E);
             nameView.setGravity(Gravity.CENTER);
-            addView(nameView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 0, 88, 0, 0));
+            addView(nameView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 0, 72, 0, 0));
 
             versionView = new TextView(context);
             versionView.setText("v" + BuildVars.BUILD_VERSION_STRING);
@@ -347,7 +347,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
             versionView.setAlpha(0.6f);
             versionView.setTextColor(isDark ? Color.WHITE : 0xFF5C6B7F);
             versionView.setGravity(Gravity.CENTER);
-            addView(versionView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 0, 118, 0, 0));
+            addView(versionView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 0, 96, 0, 0));
         }
         public void update() {
             nameView.setTextColor(isDark ? Color.WHITE : 0xFF1A1A2E);
