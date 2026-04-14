@@ -70,6 +70,13 @@ class DashboardViewModel @Inject constructor(
     private val activeAccount = UserConfig.selectedAccount
     private val universalAccount = 0
 
+    private val tickerFlow = flow {
+        while (true) {
+            emit(Unit)
+            kotlinx.coroutines.delay(1000)
+        }
+    }
+
     init {
         loadData()
     }
@@ -81,35 +88,48 @@ class DashboardViewModel @Inject constructor(
                 dao.getTopChatsAllTimeFlow(activeAccount, 20),  // ISOLATED
                 dao.getAllLimitsFlow(universalAccount),        // UNIVERSAL
                 dao.getBlockedChatsFlow(activeAccount),          // ISOLATED
-                dao.getDailyMessageVolumeFlow(activeAccount, 14) // ISOLATED graph data
+                dao.getDailyMessageVolumeFlow(activeAccount, 14), // ISOLATED graph data
+                tickerFlow // Tick every second
             ) { arr ->
                 @Suppress("UNCHECKED_CAST")
-                Penta(
+                Hexa(
                     arr[0] as List<AppUsageRecord>,
                     arr[1] as List<ChatUsageAggregate>,
                     arr[2] as List<AnalyticsLimit>,
                     arr[3] as List<BlockedChat>,
-                    arr[4] as List<ChatUsageRecord>
+                    arr[4] as List<ChatUsageRecord>,
+                    arr[5] as Unit
                 )
-            }.collect { penta ->
-                val appUsage     = penta.a
-                val topChats     = penta.b
-                val limits       = penta.c
-                val blockedChats = penta.d
-                val messagePulse = penta.e
+            }.collect { hexa ->
+                val appUsage     = hexa.a
+                val dbTopChats   = hexa.b
+                val limits       = hexa.c
+                val blockedChats = hexa.d
+                val messagePulse = hexa.e
 
+                // ── LIVE INJECTION ──
+                val liveAppSecs = analyticsManager.getLiveAppSeconds()
+                
                 // ── UNIVERSAL STATS ──
-                val todayMins = (appUsage.firstOrNull()?.totalTimeSeconds ?: 0L) / 60L
-                val weekMins  = appUsage.take(7).sumOf { it.totalTimeSeconds } / 60L
+                val dbTodaySecs = appUsage.firstOrNull()?.totalTimeSeconds ?: 0L
+                val todayMins   = (dbTodaySecs + liveAppSecs) / 60L
+                val weekMins    = (appUsage.take(7).sumOf { it.totalTimeSeconds } + liveAppSecs) / 60L
                 val totalSessions = appUsage.sumOf { it.sessionCount }
 
                 // ── ISOLATED STATS ──
-                val totalSent     = topChats.sumOf { it.messagesSent }
-                val totalReceived = topChats.sumOf { it.messagesReceived }
-                val totalMedia    = topChats.sumOf { it.mediaCount }
-                val totalTimeSecs = topChats.sumOf { it.timeSpentSeconds }
+                val totalSent     = dbTopChats.sumOf { it.messagesSent }
+                val totalReceived = dbTopChats.sumOf { it.messagesReceived }
+                val totalMedia    = dbTopChats.sumOf { it.mediaCount }
+                val dbTotalTime   = dbTopChats.sumOf { it.timeSpentSeconds }
+                
                 val lockedIds     = blockedChats.map { it.chatId }.toSet()
-                val enriched      = topChats.map { agg -> resolveChatInfo(agg, lockedIds) }
+                
+                // Enrich chats and inject live chat duration
+                val enriched = dbTopChats.map { agg -> 
+                    val chatInfo = resolveChatInfo(agg, lockedIds)
+                    val liveChatSecs = analyticsManager.getLiveChatSeconds(agg.chatId)
+                    chatInfo.copy(timeSpentSeconds = chatInfo.timeSpentSeconds + liveChatSecs)
+                }
 
                 _uiState.value = DashboardUiState(
                     messageHistoryPulse  = messagePulse, 
@@ -124,14 +144,16 @@ class DashboardViewModel @Inject constructor(
                         totalSent        = totalSent,
                         totalReceived    = totalReceived,
                         totalMedia       = totalMedia,
-                        uniqueChats      = topChats.size,
-                        totalTimeSeconds = totalTimeSecs
+                        uniqueChats      = dbTopChats.size,
+                        totalTimeSeconds = dbTotalTime + liveAppSecs // Best effort total
                     ),
                     isTrackingEnabled = analyticsManager.isEnabled
                 )
             }
         }
     }
+
+    private data class Hexa<A, B, C, D, E, F>(val a: A, val b: B, val c: C, val d: D, val e: E, val f: F)
 
     private fun resolveChatInfo(agg: ChatUsageAggregate, lockedIds: Set<Long>): ChatUsageInfo {
         return try {

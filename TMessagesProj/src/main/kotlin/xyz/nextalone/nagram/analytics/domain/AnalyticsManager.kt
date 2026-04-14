@@ -59,6 +59,18 @@ class AnalyticsManager @Inject constructor(
             prefs.edit().putBoolean("nagram_analytics_enabled", value).apply()
         }
 
+    // ── Live Session Exposure (God-Level Precision) ──────────────────────────
+
+    fun getLiveAppSeconds(): Long {
+        if (!isEnabled || lastUpdateTime == 0L) return 0L
+        return (System.currentTimeMillis() - lastUpdateTime) / 1000
+    }
+
+    fun getLiveChatSeconds(chatId: Long): Long {
+        if (!isEnabled || currentChatId != chatId || chatStartTime == 0L) return 0L
+        return (System.currentTimeMillis() - chatStartTime) / 1000
+    }
+
     fun startTracking() {
         lastUpdateTime = System.currentTimeMillis()
         // Universal observer for theme etc can stay on global
@@ -78,7 +90,10 @@ class AnalyticsManager @Inject constructor(
             val messages = args[1] as ArrayList<MessageObject>
             scope.launch {
                 messages.forEach { msg ->
-                    trackMessage(account, msg)
+                    // Exclude Service Messages (User joined, etc.)
+                    if (msg.messageOwner !is org.telegram.tgnet.TLRPC.TL_messageService) {
+                        trackMessage(account, msg)
+                    }
                 }
             }
         }
@@ -90,7 +105,11 @@ class AnalyticsManager @Inject constructor(
             ?: ChatUsageRecord(accountIndex = accountIndex, chatId = msg.getDialogId(), date = today)
         
         val isSent = msg.isOut()
-        val isMedia = msg.isPhoto() || msg.isVideo() || msg.isDocument() || msg.isMusic() || msg.isVoice() || msg.isRoundVideo()
+        // Broad Media Detection (Everything that isn't raw text or service)
+        val isMedia = msg.isPhoto() || msg.isVideo() || msg.isDocument() || 
+                      msg.isMusic() || msg.isVoice() || msg.isRoundVideo() ||
+                      msg.isSticker() || msg.isAnimatedSticker() || msg.isGif() ||
+                      msg.messageOwner.media != null && msg.messageOwner.media !is org.telegram.tgnet.TLRPC.TL_messageMediaEmpty
         
         val updated = usage.copy(
             messagesSent = usage.messagesSent + if (isSent) 1 else 0,
