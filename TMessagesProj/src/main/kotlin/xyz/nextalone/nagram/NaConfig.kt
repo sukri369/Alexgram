@@ -573,6 +573,18 @@ object NaConfig {
         )
 
     // NagramX
+    val pinAccountOrder =
+        addConfig(
+            "PinAccountOrder",
+            ConfigItem.configTypeBool,
+            false
+        )
+    val accountOrder =
+        addConfig(
+            "AccountOrder",
+            ConfigItem.configTypeString,
+            ""
+        )
     val voiceChangerEffect =
         addConfig(
             "VoiceChangerEffect",

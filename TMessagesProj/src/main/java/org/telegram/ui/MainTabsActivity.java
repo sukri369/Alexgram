@@ -414,20 +414,35 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
                 accountNumbers.add(a);
             }
         }
-        Collections.sort(accountNumbers, (o1, o2) -> {
-            long l1 = UserConfig.getInstance(o1).loginTime;
-            long l2 = UserConfig.getInstance(o2).loginTime;
-            if (l1 > l2) {
-                return 1;
-            } else if (l1 < l2) {
-                return -1;
+        if (NaConfig.INSTANCE.getPinAccountOrder().Bool()) {
+            String savedOrder = NaConfig.INSTANCE.getAccountOrder().String();
+            if (!TextUtils.isEmpty(savedOrder)) {
+                String[] parts = savedOrder.split(",");
+                ArrayList<Integer> ordered = new ArrayList<>();
+                for (String part : parts) {
+                    try {
+                        int accId = Integer.parseInt(part);
+                        if (accountNumbers.contains(accId)) {
+                            ordered.add(accId);
+                            accountNumbers.remove((Integer) accId);
+                        }
+                    } catch (Exception ignore) {}
+                }
+                ordered.addAll(accountNumbers);
+                accountNumbers.clear();
+                accountNumbers.addAll(ordered);
             }
-            return 0;
-        });
+        } else {
+            Collections.sort(accountNumbers, (o1, o2) -> {
+                long l1 = UserConfig.getInstance(o1).loginTime;
+                long l2 = UserConfig.getInstance(o2).loginTime;
+                return Long.compare(l1, l2);
+            });
+        }
 
         ItemOptions o = ItemOptions.makeOptions(this, button);
         if (UserConfig.getActivatedAccountsCount() < UserConfig.MAX_ACCOUNT_COUNT) {
-            o.add(R.drawable.msg_addbot, getString(R.string.AddAccount), () -> {
+            ActionBarMenuSubItem addAccountItem = o.add(R.drawable.msg_addbot, getString(R.string.AddAccount), () -> {
                 int freeAccounts = 0;
                 Integer availableAccount = null;
                 for (int a = UserConfig.MAX_ACCOUNT_COUNT - 1; a >= 0; a--) {
@@ -445,6 +460,15 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
                     presentFragment(new LoginActivity(availableAccount));
                 } else if (!UserConfig.hasPremiumOnAccounts()) {
                     showDialog(new LimitReachedBottomSheet(this, getContext(), TYPE_ACCOUNTS, currentAccount, null));
+                }
+            });
+            addAccountItem.setRightIcon(NaConfig.INSTANCE.getPinAccountOrder().Bool() ? R.drawable.msg_pin_solar : R.drawable.msg_unpin_solar, v -> {
+                boolean pin = !NaConfig.INSTANCE.getPinAccountOrder().Bool();
+                NaConfig.INSTANCE.getPinAccountOrder().setConfigBool(pin);
+                ((ImageView) v).setImageResource(pin ? R.drawable.msg_pin_solar : R.drawable.msg_unpin_solar);
+                BotWebViewVibrationEffect.APP_ERROR.vibrate();
+                if (pin) {
+                    saveAccountOrder((ViewGroup) addAccountItem.getParent());
                 }
             });
         }
@@ -524,7 +548,71 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
         textView.setEllipsize(TextUtils.TruncateAt.END);
         btn.addView(textView, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f, Gravity.CENTER_VERTICAL, 13, 0, 14, 0));
 
+        btn.setTag(account);
+
+        ImageView reorderBtn = new ImageView(getContext());
+        reorderBtn.setImageResource(R.drawable.tabs_reorder_solar);
+        reorderBtn.setScaleType(ImageView.ScaleType.CENTER);
+        reorderBtn.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_dialogTextGray2), PorterDuff.Mode.SRC_IN));
+        btn.addView(reorderBtn, LayoutHelper.createLinear(48, 48, Gravity.CENTER_VERTICAL));
+        reorderBtn.setOnTouchListener(new View.OnTouchListener() {
+            private float lastY;
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    lastY = event.getRawY();
+                    return true;
+                } else if (event.getAction() == MotionEvent.ACTION_MOVE) {
+                    float dy = event.getRawY() - lastY;
+                    if (Math.abs(dy) > AndroidUtilities.dp(48)) {
+                        ViewGroup parent = (ViewGroup) btn.getParent();
+                        if (parent != null) {
+                            int index = parent.indexOfChild(btn);
+                            int nextIndex = index + (dy > 0 ? 1 : -1);
+                            if (nextIndex >= 0 && nextIndex < parent.getChildCount()) {
+                                View neighbor = parent.getChildAt(nextIndex);
+                                if (neighbor.getTag() instanceof Integer) {
+                                    swapAccountViews(parent, index, nextIndex);
+                                    lastY = event.getRawY();
+                                    BotWebViewVibrationEffect.APP_ERROR.vibrate();
+                                    if (!NaConfig.INSTANCE.getPinAccountOrder().Bool()) {
+                                        NaConfig.INSTANCE.getPinAccountOrder().setConfigBool(true);
+                                        // Need to find the Pin icon in the list to update it, but it's simpler to just save.
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    return true;
+                }
+                return false;
+            }
+        });
+
         return btn;
+    }
+
+    private void swapAccountViews(ViewGroup parent, int from, int to) {
+        if (from == to || from < 0 || to < 0 || from >= parent.getChildCount() || to >= parent.getChildCount()) {
+            return;
+        }
+        View view = parent.getChildAt(from);
+        parent.removeViewAt(from);
+        parent.addView(view, to);
+        saveAccountOrder(parent);
+    }
+
+    private void saveAccountOrder(ViewGroup parent) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < parent.getChildCount(); i++) {
+            View child = parent.getChildAt(i);
+            Object tag = child.getTag();
+            if (tag instanceof Integer) {
+                if (sb.length() > 0) sb.append(",");
+                sb.append(tag);
+            }
+        }
+        NaConfig.INSTANCE.getAccountOrder().setConfigString(sb.toString());
     }
 
     @Override
