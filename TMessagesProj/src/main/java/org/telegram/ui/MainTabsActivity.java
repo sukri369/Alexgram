@@ -447,7 +447,7 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
 
         ItemOptions o = ItemOptions.makeOptions(this, button);
         if (UserConfig.getActivatedAccountsCount() < UserConfig.MAX_ACCOUNT_COUNT) {
-            ActionBarMenuSubItem addAccountItem = o.add(R.drawable.msg_addbot, getString(R.string.AddAccount), () -> {
+            o.add(R.drawable.msg_addbot, getString(R.string.AddAccount), () -> {
                 int freeAccounts = 0;
                 Integer availableAccount = null;
                 for (int a = UserConfig.MAX_ACCOUNT_COUNT - 1; a >= 0; a--) {
@@ -467,6 +467,7 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
                     showDialog(new LimitReachedBottomSheet(this, getContext(), TYPE_ACCOUNTS, currentAccount, null));
                 }
             });
+            ActionBarMenuSubItem addAccountItem = o.subItem;
             addAccountItem.setRightIcon(NaConfig.INSTANCE.getPinAccountOrder().Bool() ? R.drawable.msg_pin_solar : R.drawable.msg_unpin_solar, v -> {
                 boolean pin = !NaConfig.INSTANCE.getPinAccountOrder().Bool();
                 NaConfig.INSTANCE.getPinAccountOrder().setConfigBool(pin);
