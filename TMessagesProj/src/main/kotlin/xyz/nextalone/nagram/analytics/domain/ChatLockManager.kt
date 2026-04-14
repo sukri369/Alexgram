@@ -35,20 +35,18 @@ class ChatLockManager @Inject constructor(
     }
 
     private fun refreshCache() {
-        scope.launch {
-            // In a multi-account environment, we can't easily wait for a single Flow for ALL accounts
-            // unless we aggregate them. For now, since user switches accounts, we refresh on init.
-            // A more robust way is to observe the current account's flow.
-            
-            // To be safe and "God-Level", we'll just track all accounts' locks in the cache.
-            // We'll iterate through all possible accounts (Telegram supports up to 4-10)
-            val allAccountLocks = mutableMapOf<Int, Set<Long>>()
-            for (i in 0 until UserConfig.MAX_ACCOUNT_COUNT) {
+        for (i in 0 until UserConfig.MAX_ACCOUNT_COUNT) {
+            scope.launch {
                 dao.getBlockedChatsFlow(i).collect { list ->
                     val now = System.currentTimeMillis()
-                    allAccountLocks[i] = list.filter { it.unlocksAtMs == 0L || it.unlocksAtMs > now }
+                    val lockedSet = list.filter { it.unlocksAtMs == 0L || it.unlocksAtMs > now }
                         .map { it.chatId }.toSet()
-                    _lockedChatIds.value = allAccountLocks.toMap()
+                    
+                    // Atomically update the per-account cache
+                    val current = _lockedChatIds.value.toMutableMap()
+                    current[i] = lockedSet
+                    _lockedChatIds.value = current.toMap()
+                    
                     isCacheWarm = true
                 }
             }
