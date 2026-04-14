@@ -1213,7 +1213,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             arrowView.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_windowBackgroundWhiteGrayIcon, resourcesProvider), PorterDuff.Mode.SRC_IN));
         }
 
-        public void set(int account) {
+        public void set(int account, int activeAccount) {
             final TLRPC.User user = UserConfig.getInstance(account).getCurrentUser();
 
             avatarDrawable.setInfo(account, user);
@@ -1246,7 +1246,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             counterView.setVisibility(counter > 0 ? View.VISIBLE : View.GONE);
             counterView.setText(LocaleController.formatNumber(counter, ','));
 
-            boolean selected = account == currentAccount;
+            boolean selected = account == activeAccount;
             checkView.setVisibility(selected ? View.VISIBLE : View.GONE);
             arrowView.setVisibility(selected ? View.GONE : View.VISIBLE);
         }
@@ -1269,7 +1269,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
 
             @Override
             public void bindView(View view, UItem item, boolean divider, UniversalAdapter adapter, UniversalRecyclerView listView) {
-                ((AccountCell) view).set(item.intValue);
+                ((AccountCell) view).set(item.intValue, adapter.currentAccount);
             }
 
             public static UItem of(int id, int account) {
