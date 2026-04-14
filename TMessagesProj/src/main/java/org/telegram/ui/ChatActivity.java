@@ -30763,7 +30763,7 @@ public class ChatActivity extends BaseFragment implements
         } catch (Exception e) {
             // Fail open — never block due to an error
         }
-        xyz.nextalone.nagram.analytics.domain.AnalyticsManager.Companion.get(getParentActivity()).onChatStarted(getDialogId());
+        xyz.nextalone.nagram.analytics.domain.AnalyticsManager.Companion.get(getParentActivity()).onChatStarted(currentAccount, getDialogId());
         if (chatAnimeAssistantView != null) {
             chatAnimeAssistantView.onResume();
         }
@@ -30971,7 +30971,7 @@ public class ChatActivity extends BaseFragment implements
     @Override
     public void onPause() {
         super.onPause();
-        xyz.nextalone.nagram.analytics.domain.AnalyticsManager.Companion.get(getParentActivity()).onChatEnded(getDialogId());
+        xyz.nextalone.nagram.analytics.domain.AnalyticsManager.Companion.get(getParentActivity()).onChatEnded(currentAccount, getDialogId());
         if (chatAnimeAssistantView != null) {
             chatAnimeAssistantView.onPause();
         }

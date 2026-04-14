@@ -217,16 +217,16 @@ class AnalyticsManager @Inject constructor(
         }
     }
 
-    fun onChatStarted(chatId: Long) {
+    fun onChatStarted(accountIndex: Int, chatId: Long) {
         if (!isEnabled) return
         
-        currentAccount = UserConfig.selectedAccount
+        currentAccount = accountIndex
         currentChatId = chatId
         chatStartTime = System.currentTimeMillis()
 
         // Real-time enforcement: Check quota on entry
         scope.launch {
-            enforceChatLimit(currentAccount, chatId)
+            enforceChatLimit(accountIndex, chatId)
         }
     }
 
@@ -248,21 +248,21 @@ class AnalyticsManager @Inject constructor(
         }
     }
 
-    fun onChatEnded(chatId: Long) {
+    fun onChatEnded(accountIndex: Int, chatId: Long) {
         if (!isEnabled) return
         
-        if (currentChatId == chatId) {
+        if (currentChatId == chatId && currentAccount == accountIndex) {
             val duration = (System.currentTimeMillis() - chatStartTime) / 1000
             if (duration > 0) {
                 scope.launch {
                     val today = getTodayTimestamp()
-                    val usage = dao.getChatUsage(currentAccount, chatId, today) 
-                        ?: ChatUsageRecord(accountIndex = currentAccount, chatId = chatId, date = today)
+                    val usage = dao.getChatUsage(accountIndex, chatId, today) 
+                        ?: ChatUsageRecord(accountIndex = accountIndex, chatId = chatId, date = today)
                     dao.insertChatUsage(usage.copy(timeSpentSeconds = usage.timeSpentSeconds + duration))
                 }
             }
             currentChatId = 0
-            currentAccount = 0
+            currentAccount = -1 // Reset to invalid -1 instead of 0 (which is an actual account index)
         }
     }
 
