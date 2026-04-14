@@ -49,16 +49,7 @@ import org.telegram.messenger.UserConfig
 import org.telegram.tgnet.TLRPC
 import org.telegram.ui.Components.AvatarDrawable
 import org.telegram.ui.Components.BackupImageView
-import xyz.nextalone.nagram.analytics.data.AnalyticsLimit
-import xyz.nextalone.nagram.analytics.ui.theme.LocalAnalyticsColors
-import xyz.nextalone.nagram.analytics.ui.theme.NeonCyan
-import xyz.nextalone.nagram.analytics.ui.theme.NeonGreen
-import xyz.nextalone.nagram.analytics.ui.theme.NeonOrange
-import xyz.nextalone.nagram.analytics.ui.theme.NeonPink
-import xyz.nextalone.nagram.analytics.ui.theme.NeonPurple
-import xyz.nextalone.nagram.analytics.ui.theme.NeonRed
-import xyz.nextalone.nagram.analytics.ui.viewmodel.ChatUsageInfo
-
+import xyz.nextalone.nagram.analytics.ui.theme.*
 import xyz.nextalone.nagram.analytics.ui.viewmodel.DashboardViewModel
 
 // ─── Avatar palette (shared) ─────────────────────────────────────────────────
