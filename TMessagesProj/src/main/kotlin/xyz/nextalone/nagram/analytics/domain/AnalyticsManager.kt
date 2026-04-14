@@ -55,8 +55,14 @@ class AnalyticsManager @Inject constructor(
 
     fun startTracking() {
         lastUpdateTime = System.currentTimeMillis()
+        // Universal observer for theme etc can stay on global
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.didReceiveNewMessages)
-        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.messagesRead)
+        
+        // Per-Account observers are required for messages (multi-account support)
+        for (a in 0 until UserConfig.MAX_ACCOUNT_COUNT) {
+            NotificationCenter.getInstance(a).addObserver(this, NotificationCenter.didReceiveNewMessages)
+            NotificationCenter.getInstance(a).addObserver(this, NotificationCenter.messagesRead)
+        }
     }
 
     override fun didReceivedNotification(id: Int, account: Int, vararg args: Any?) {
