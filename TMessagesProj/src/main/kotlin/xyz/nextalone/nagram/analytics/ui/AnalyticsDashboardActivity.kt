@@ -8,6 +8,7 @@ import androidx.compose.runtime.*
 import dagger.hilt.android.AndroidEntryPoint
 import org.telegram.messenger.NotificationCenter
 import org.telegram.ui.ActionBar.Theme
+import xyz.nextalone.nagram.analytics.domain.AnalyticsManager
 import xyz.nextalone.nagram.analytics.ui.screens.DashboardScreen
 import xyz.nextalone.nagram.analytics.ui.theme.AnalyticsTheme
 
@@ -30,8 +31,19 @@ class AnalyticsDashboardActivity : ComponentActivity(), NotificationCenter.Notif
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        AnalyticsManager.get(this).isDashboardActive = true
+    }
+
+    override fun onPause() {
+        super.onPause()
+        AnalyticsManager.get(this).isDashboardActive = false
+    }
+
     override fun onDestroy() {
         super.onDestroy()
+        AnalyticsManager.get(this).isDashboardActive = false
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.didSetNewTheme)
     }
 

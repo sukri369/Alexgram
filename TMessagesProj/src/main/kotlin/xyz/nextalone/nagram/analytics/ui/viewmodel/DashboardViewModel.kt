@@ -209,6 +209,8 @@ class DashboardViewModel @Inject constructor(
 
     fun setAppLimit(hours: Int, minutes: Int, enabled: Boolean) {
         viewModelScope.launch {
+            // First clear any existing app limits on any account to ensure total sync
+            dao.clearAllAppLimits()
             dao.insertLimit(
                 AnalyticsLimit(
                     accountIndex      = universalAccount,
@@ -223,7 +225,12 @@ class DashboardViewModel @Inject constructor(
 
     fun deleteLimit(limit: AnalyticsLimit) {
         viewModelScope.launch {
-            dao.deleteLimit(universalAccount, limit.type, limit.targetId)
+            if (limit.type == 0) {
+                // Universal sync: Delete all app limits across all accounts
+                dao.clearAllAppLimits()
+            } else {
+                dao.deleteLimit(activeAccount, limit.type, limit.targetId)
+            }
         }
     }
 

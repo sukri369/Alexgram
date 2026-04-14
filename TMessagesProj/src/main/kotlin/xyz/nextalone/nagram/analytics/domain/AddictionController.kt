@@ -51,7 +51,8 @@ class AddictionController @Inject constructor(
      * Fail-safe synchronous check for app start.
      * App limit is universal (Global).
      */
-    fun isLimitExceeded(): Boolean {
+    @JvmOverloads
+    fun isLimitExceeded(sessionDurationSeconds: Long = 0): Boolean {
         val universalAccount = 0
         val limit = if (!isCacheWarm) {
             // COLD CACHE FALLBACK
@@ -64,7 +65,7 @@ class AddictionController @Inject constructor(
 
         val todayUsage = getTodaySeconds()
 
-        return todayUsage >= limit.dailyLimitSeconds
+        return (todayUsage + sessionDurationSeconds) >= limit.dailyLimitSeconds
     }
 
     /** Helper for UI: Get today's usage in seconds (Universal for app) */

@@ -97,7 +97,7 @@ fun DashboardScreen(vm: DashboardViewModel = viewModel()) {
             state = listState,
             contentPadding = PaddingValues(bottom = 48.dp),
         ) {
-            item { 
+            item {
                 TopHeroBar(
                     isEnabled = uiState.isTrackingEnabled,
                     onToggle = { vm.toggleTracking() },
@@ -105,92 +105,70 @@ fun DashboardScreen(vm: DashboardViewModel = viewModel()) {
                 ) 
             }
 
-
             item {
-                AnimatedIn(isVisible, 50) {
-                    UsageStatsRow(
-                        todayMinutes = uiState.todayMinutes,
-                        weekMinutes = uiState.weekMinutes,
-                        totalSessions = uiState.totalSessionsAllTime,
-                        appUsageHistory = uiState.globalAppHistory
-                    )
-                }
+                UsageStatsRow(
+                    todayMinutes = uiState.todayMinutes,
+                    weekMinutes = uiState.weekMinutes,
+                    totalSessions = uiState.totalSessionsAllTime,
+                    appUsageHistory = uiState.globalAppHistory
+                )
             }
 
             // ── Live Activity ─────────────────────────────────────────────────
             item {
-                AnimatedIn(isVisible, 150) {
-                    SectionLabel("LIVE ACTIVITY", "Account message volume (14d)", Icons.Default.ShowChart, NeonCyan)
-                }
+                SectionLabel("LIVE ACTIVITY", "Account message volume (14d)", Icons.Default.ShowChart, NeonCyan)
             }
             item {
-                AnimatedIn(isVisible, 200) {
-                    AccountActivityPulseChart(uiState.messageHistoryPulse)
-                }
+                AccountActivityPulseChart(uiState.messageHistoryPulse)
             }
 
             // ── Domain Dominance ──────────────────────────────────────────────
             item {
-                AnimatedIn(isVisible, 300) {
-                    SectionLabel("DOMAIN DOMINANCE", "All-time chat breakdown", Icons.Default.Forum, NeonPurple)
-                }
+                SectionLabel("DOMAIN DOMINANCE", "All-time chat breakdown", Icons.Default.Forum, NeonPurple)
             }
             if (uiState.topChats.isEmpty()) {
                 item {
-                    AnimatedIn(isVisible, 340) {
-                        EmptyCard("Start chatting — data will appear here automatically")
-                    }
+                    EmptyCard("Start chatting — data will appear here automatically")
                 }
             } else {
+                val maxChatTime = uiState.topChats.maxOfOrNull { it.timeSpentSeconds }?.coerceAtLeast(1L) ?: 1L
                 items(uiState.topChats, key = { it.chatId }) { chatInfo ->
-                    AnimatedIn(isVisible, 400) {
-                        ChatDominanceRow(
-                            chatInfo = chatInfo,
-                            maxTime = uiState.topChats.maxOf { it.timeSpentSeconds }.coerceAtLeast(1L),
-                            onLongPress = { lockTargetChat = chatInfo }
-                        )
-                    }
+                    ChatDominanceRow(
+                        chatInfo = chatInfo,
+                        maxTime = maxChatTime,
+                        onLongPress = { lockTargetChat = chatInfo }
+                    )
                 }
             }
 
             // ── Control Matrix ─────────────────────────────────────────────────
             item {
-                AnimatedIn(isVisible, 500) {
-                    SectionLabel("CONTROL MATRIX", "Daily limits & overrides", Icons.Default.Tune, NeonPink)
-                }
+                SectionLabel("CONTROL MATRIX", "Daily limits & overrides", Icons.Default.Tune, NeonPink)
             }
             items(uiState.limits, key = { "${it.type}_${it.targetId}" }) { limit ->
-                AnimatedIn(isVisible, 540) {
-                    ControlLimitCard(
-                        limit = limit,
-                        onToggle = { vm.toggleLimit(it) },
-                        onEdit = {
-                            editingLimit = it
-                            showLimitDialog = true
-                        },
-                        onDelete = { vm.deleteLimit(it) }
-                    )
-                }
+                ControlLimitCard(
+                    limit = limit,
+                    onToggle = { vm.toggleLimit(it) },
+                    onEdit = {
+                        editingLimit = it
+                        showLimitDialog = true
+                    },
+                    onDelete = { vm.deleteLimit(it) }
+                )
             }
             item {
-                AnimatedIn(isVisible, 580) {
-                    AddLimitButton(onAdd = {
-                        editingLimit = null
-                        showLimitDialog = true
-                    })
-                }
+                AddLimitButton(onAdd = {
+                    editingLimit = null
+                    showLimitDialog = true
+                })
             }
 
             // ── Session Insights ───────────────────────────────────────────────
             item {
-                AnimatedIn(isVisible, 650) {
-                    SectionLabel("SESSION INSIGHTS", "All-time message analytics", Icons.Default.Analytics, NeonGreen)
-                }
+                SectionLabel("SESSION INSIGHTS", "All-time message analytics", Icons.Default.Analytics, NeonGreen)
             }
             item {
-                AnimatedIn(isVisible, 700) {
-                    SessionInsightsCard(uiState)
-                }
+                SessionInsightsCard(uiState)
             }
 
             // ── Footer ─────────────────────────────────────────────────────────
@@ -542,6 +520,7 @@ fun ChatDominanceRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .height(84.dp) // FIXED HEIGHT for scroll performance
             .padding(horizontal = 16.dp, vertical = 4.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(c.bgCard)
@@ -550,10 +529,7 @@ fun ChatDominanceRow(
                 if (chatInfo.isLocked) NeonPink.copy(0.5f) else c.border,
                 RoundedCornerShape(16.dp)
             )
-            .combinedClickable(
-                onClick = {},
-                onLongClick = onLongPress
-            )
+            .clickable { onLongPress() } // Simplified gesture for scroll stability
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -684,7 +660,9 @@ fun ControlLimitCard(
     }
 
     GlassCard(
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+        modifier = Modifier
+            .height(132.dp) // FIXED HEIGHT for scroll performance 
+            .padding(horizontal = 16.dp, vertical = 4.dp),
         borderColor = if (enabled) NeonPink.copy(0.4f) else c.border
     ) {
         Column(Modifier.fillMaxWidth().padding(16.dp)) {

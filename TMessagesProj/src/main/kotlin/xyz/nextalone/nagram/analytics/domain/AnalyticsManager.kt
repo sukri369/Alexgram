@@ -38,10 +38,16 @@ class AnalyticsManager @Inject constructor(
     }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private var monitorJob: Job? = null
     private var lastUpdateTime: Long = 0
     private var currentChatId: Long = 0
     private var currentAccount: Int = 0
     private var chatStartTime: Long = 0
+    private var lastTodayTimestamp: Long = 0
+
+    // Context Awareness to prevent navigation loops and "stuck" UI
+    @Volatile var isDashboardActive: Boolean = false
+    @Volatile var isLockScreenActive: Boolean = false
 
     // ── Global Enable/Disable Logic ───────────────────────────────────────────
     
@@ -101,6 +107,10 @@ class AnalyticsManager @Inject constructor(
         // App usage is universal (shared across all accounts)
         val universalAccount = 0
         lastUpdateTime = System.currentTimeMillis()
+        lastTodayTimestamp = getTodayTimestamp()
+        
+        startMonitoring()
+        
         scope.launch {
             val today = getTodayTimestamp()
             val usage = dao.getAppUsage(universalAccount, today) ?: AppUsageRecord(accountIndex = universalAccount, date = today)
@@ -108,8 +118,67 @@ class AnalyticsManager @Inject constructor(
         }
     }
 
+    private fun startMonitoring() {
+        monitorJob?.cancel()
+        monitorJob = scope.launch {
+            while (isActive) {
+                if (isEnabled) {
+                    val now = System.currentTimeMillis()
+                    val today = getTodayTimestamp()
+
+                    // MIDNIGHT RESET LOGIC (GOD-LEVEL)
+                    if (lastTodayTimestamp != 0L && today != lastTodayTimestamp) {
+                        // Midnight passed! Save current progress and rotate session
+                        onAppBackground() // Flush app usage
+                        if (currentChatId != 0L) {
+                            val activeChat = currentChatId // Copy to avoid race
+                            onChatEnded(activeChat) // Flush chat usage
+                            onChatStarted(activeChat) // Restart for new day
+                        }
+                        onAppForeground() // Restart app usage for new day
+                        continue // Re-evaluate in next loop with new timestamps
+                    }
+                    
+                    // 1. Check Global App Limit
+                    // CRITICAL FIX: Skip enforcement if dashboard is active to allow management
+                    // and Skip if already on a lock screen to avoid navigation loops (stuck UI)
+                    if (!isDashboardActive && !isLockScreenActive) {
+                        val addictionController = addictionController()
+                        val appSessionSecs = (now - lastUpdateTime) / 1000
+                        if (addictionController.isLimitExceeded(appSessionSecs)) {
+                            withContext(Dispatchers.Main) {
+                                val intent = android.content.Intent(context, xyz.nextalone.nagram.analytics.ui.AppLimitReachedActivity::class.java).apply {
+                                    addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                                }
+                                context.startActivity(intent)
+                            }
+                        }
+
+                        // 2. Check Active Chat Quota
+                        val activeChat = currentChatId
+                        val activeAccount = currentAccount
+                        if (activeChat != 0L) {
+                            val chatSessionSecs = (now - chatStartTime) / 1000
+                            enforceChatLimit(activeAccount, activeChat, chatSessionSecs)
+                        }
+                    }
+                }
+                delay(5000) // 5s heartbeat
+            }
+        }
+    }
+
+    private fun stopMonitoring() {
+        monitorJob?.cancel()
+        monitorJob = null
+    }
+
+    private fun addictionController() = AddictionController.get(context)
+
     fun onAppBackground() {
         if (!isEnabled) return
+        
+        stopMonitoring()
         
         // App usage is universal (shared across all accounts)
         val universalAccount = 0
@@ -129,6 +198,29 @@ class AnalyticsManager @Inject constructor(
         currentAccount = UserConfig.selectedAccount
         currentChatId = chatId
         chatStartTime = System.currentTimeMillis()
+
+        // Real-time enforcement: Check quota on entry
+        scope.launch {
+            enforceChatLimit(currentAccount, chatId)
+        }
+    }
+
+    private suspend fun enforceChatLimit(accountIndex: Int, chatId: Long, sessionDurationSeconds: Long = 0) {
+        val limit = dao.getLimit(accountIndex, 1, chatId)
+        if (limit != null && limit.isEnabled && limit.dailyLimitSeconds > 0) {
+            val usage = dao.getChatUsage(accountIndex, chatId, getTodayTimestamp())
+            val timeSpent = (usage?.timeSpentSeconds ?: 0L) + sessionDurationSeconds
+            
+            if (timeSpent >= limit.dailyLimitSeconds) {
+                withContext(Dispatchers.Main) {
+                    val intent = android.content.Intent(context, xyz.nextalone.nagram.analytics.ui.ChatLockedActivity::class.java).apply {
+                        putExtra("chat_id", chatId)
+                        addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                    }
+                    context.startActivity(intent)
+                }
+            }
+        }
     }
 
     fun onChatEnded(chatId: Long) {

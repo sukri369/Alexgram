@@ -33,6 +33,7 @@ import androidx.core.view.WindowCompat
 import org.telegram.messenger.NotificationCenter
 import org.telegram.ui.ActionBar.Theme
 import xyz.nextalone.nagram.analytics.domain.AddictionController
+import xyz.nextalone.nagram.analytics.domain.AnalyticsManager
 import xyz.nextalone.nagram.analytics.ui.theme.AnalyticsTheme
 import xyz.nextalone.nagram.analytics.ui.theme.LocalAnalyticsColors
 import xyz.nextalone.nagram.analytics.ui.theme.NeonOrange
@@ -75,8 +76,19 @@ class AppLimitReachedActivity : ComponentActivity(), NotificationCenter.Notifica
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        AnalyticsManager.get(this).isLockScreenActive = true
+    }
+
+    override fun onPause() {
+        super.onPause()
+        AnalyticsManager.get(this).isLockScreenActive = false
+    }
+
     override fun onDestroy() {
         super.onDestroy()
+        AnalyticsManager.get(this).isLockScreenActive = false
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.didSetNewTheme)
     }
 

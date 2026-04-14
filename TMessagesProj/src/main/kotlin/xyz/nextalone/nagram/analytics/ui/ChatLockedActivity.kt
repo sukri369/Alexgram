@@ -64,8 +64,19 @@ class ChatLockedActivity : ComponentActivity(), NotificationCenter.NotificationC
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        AnalyticsManager.get(this).isLockScreenActive = true
+    }
+
+    override fun onPause() {
+        super.onPause()
+        AnalyticsManager.get(this).isLockScreenActive = false
+    }
+
     override fun onDestroy() {
         super.onDestroy()
+        AnalyticsManager.get(this).isLockScreenActive = false
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.didSetNewTheme)
     }
 

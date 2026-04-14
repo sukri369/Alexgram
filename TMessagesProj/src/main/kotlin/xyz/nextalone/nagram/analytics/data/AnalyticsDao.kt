@@ -71,6 +71,12 @@ interface AnalyticsDao {
     @Query("DELETE FROM analytics_limits WHERE accountIndex = :accountIndex AND type = :type AND targetId = :targetId")
     suspend fun deleteLimit(accountIndex: Int, type: Int, targetId: Long)
 
+    @Query("DELETE FROM analytics_limits WHERE type = :type AND targetId = :targetId")
+    suspend fun deleteLimitUniversal(type: Int, targetId: Long)
+
+    @Query("DELETE FROM analytics_limits WHERE type = 0")
+    suspend fun clearAllAppLimits()
+
     @Query("SELECT * FROM analytics_limits WHERE accountIndex = :accountIndex AND type = :type AND targetId = :targetId")
     suspend fun getLimit(accountIndex: Int, type: Int, targetId: Long): AnalyticsLimit?
 
