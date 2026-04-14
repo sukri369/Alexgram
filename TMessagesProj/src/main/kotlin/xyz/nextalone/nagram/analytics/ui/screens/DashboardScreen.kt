@@ -38,6 +38,11 @@ import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.data.BarData
 import com.github.mikephil.charting.data.BarDataSet
 import com.github.mikephil.charting.data.BarEntry
+import xyz.nextalone.nagram.analytics.data.*
+import xyz.nextalone.nagram.analytics.ui.components.WheelPicker
+import xyz.nextalone.nagram.analytics.ui.viewmodel.ChatUsageInfo
+import xyz.nextalone.nagram.analytics.ui.viewmodel.DashboardUiState
+import java.util.*
 import android.graphics.Color as AndroidColor
 import org.telegram.messenger.MessagesController
 import org.telegram.messenger.UserConfig
@@ -907,6 +912,58 @@ fun ChatLockSheet(
                     }
                     Spacer(Modifier.height(8.dp))
                 }
+
+                // Custom Wheel Option
+                Spacer(Modifier.height(12.dp))
+                Box(Modifier.fillMaxWidth().height(1.dp).background(c.border.copy(0.5f)))
+                Spacer(Modifier.height(12.dp))
+                
+                Text("Custom auto-unlock duration", color = c.textSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(8.dp))
+                
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    var customHours by remember { mutableIntStateOf(selectedMins / 60) }
+                    var customMinutes by remember { mutableIntStateOf(selectedMins % 60) }
+
+                    // Sync custom state back to selectedMins
+                    LaunchedEffect(customHours, customMinutes) {
+                        selectedMins = (customHours * 60) + customMinutes
+                    }
+
+                    // Hybrid Hour Picker
+                    IconButton(onClick = { if (customHours > 0) customHours-- }) {
+                        Icon(Icons.Default.Remove, null, tint = NeonCyan, modifier = Modifier.size(16.dp))
+                    }
+                    WheelPicker(
+                        value = customHours,
+                        range = 0..23,
+                        onValueChange = { customHours = it },
+                        label = "Hrs"
+                    )
+                    IconButton(onClick = { if (customHours < 23) customHours++ }) {
+                        Icon(Icons.Default.Add, null, tint = NeonCyan, modifier = Modifier.size(16.dp))
+                    }
+
+                    Spacer(Modifier.width(16.dp))
+
+                    // Hybrid Minute Picker
+                    IconButton(onClick = { if (customMinutes > 0) customMinutes-- }) {
+                        Icon(Icons.Default.Remove, null, tint = NeonPurple, modifier = Modifier.size(16.dp))
+                    }
+                    WheelPicker(
+                        value = customMinutes,
+                        range = 0..59,
+                        onValueChange = { customMinutes = it },
+                        label = "Min"
+                    )
+                    IconButton(onClick = { if (customMinutes < 59) customMinutes++ }) {
+                        Icon(Icons.Default.Add, null, tint = NeonPurple, modifier = Modifier.size(16.dp))
+                    }
+                }
             }
 
             Spacer(Modifier.height(16.dp))
@@ -964,41 +1021,43 @@ fun LimitEditorDialog(
                 Text("Choose your daily usage limit", color = c.textSecondary, fontSize = 12.sp)
                 Spacer(Modifier.height(16.dp))
 
-                // Hours picker
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Hours", color = c.textPrimary, fontSize = 14.sp, modifier = Modifier.weight(1f))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(onClick = { if (hours > 0) hours-- }) {
-                            Icon(Icons.Default.Remove, null, tint = NeonCyan)
-                        }
-                        Text(
-                            "$hours", color = NeonCyan, fontSize = 22.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            modifier = Modifier.widthIn(min = 36.dp).wrapContentWidth()
-                        )
+                // Hybrid Time Selection (Professional Wheel + Buttons)
+                Row(
+                    Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Hours Column
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         IconButton(onClick = { if (hours < 23) hours++ }) {
-                            Icon(Icons.Default.Add, null, tint = NeonCyan)
+                            Icon(Icons.Default.KeyboardArrowUp, null, tint = NeonCyan)
+                        }
+                        WheelPicker(
+                            value = hours,
+                            range = 0..23,
+                            onValueChange = { hours = it },
+                            label = "HOURS"
+                        )
+                        IconButton(onClick = { if (hours > 0) hours-- }) {
+                            Icon(Icons.Default.KeyboardArrowDown, null, tint = NeonCyan)
                         }
                     }
-                }
 
-                Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.width(24.dp))
 
-                // Minutes picker (increments of 5)
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Minutes", color = c.textPrimary, fontSize = 14.sp, modifier = Modifier.weight(1f))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(onClick = { minutes = ((minutes - 5 + 60) % 60) }) {
-                            Icon(Icons.Default.Remove, null, tint = NeonPurple)
+                    // Minutes Column
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        IconButton(onClick = { if (minutes < 59) minutes++ }) {
+                            Icon(Icons.Default.KeyboardArrowUp, null, tint = NeonPurple)
                         }
-                        Text(
-                            "${minutes.toString().padStart(2, '0')}",
-                            color = NeonPurple, fontSize = 22.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            modifier = Modifier.widthIn(min = 36.dp).wrapContentWidth()
+                        WheelPicker(
+                            value = minutes,
+                            range = 0..59,
+                            onValueChange = { minutes = it },
+                            label = "MINUTES"
                         )
-                        IconButton(onClick = { minutes = (minutes + 5) % 60 }) {
-                            Icon(Icons.Default.Add, null, tint = NeonPurple)
+                        IconButton(onClick = { if (minutes > 0) minutes-- }) {
+                            Icon(Icons.Default.KeyboardArrowDown, null, tint = NeonPurple)
                         }
                     }
                 }

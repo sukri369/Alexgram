@@ -65,6 +65,9 @@ interface AnalyticsDao {
     @Query("SELECT * FROM analytics_limits WHERE accountIndex = :accountIndex")
     fun getAllLimitsFlow(accountIndex: Int): Flow<List<AnalyticsLimit>>
 
+    @Query("SELECT * FROM analytics_limits WHERE accountIndex = :accountIndex AND type = :type")
+    fun getLimitsByTypeFlow(accountIndex: Int, type: Int): Flow<List<AnalyticsLimit>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertLimit(limit: AnalyticsLimit)
 

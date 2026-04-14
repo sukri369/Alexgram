@@ -86,26 +86,32 @@ class DashboardViewModel @Inject constructor(
             combine(
                 dao.getAppUsageFlow(universalAccount, 30),      // UNIVERSAL
                 dao.getTopChatsAllTimeFlow(activeAccount, 20),  // ISOLATED
-                dao.getAllLimitsFlow(universalAccount),        // UNIVERSAL
+                dao.getLimitsByTypeFlow(universalAccount, 0),   // UNIVERSAL App Limits
+                dao.getLimitsByTypeFlow(activeAccount, 1),      // ISOLATED Chat Limits
                 dao.getBlockedChatsFlow(activeAccount),          // ISOLATED
                 dao.getDailyMessageVolumeFlow(activeAccount, 14), // ISOLATED graph data
                 tickerFlow // Tick every second
             ) { arr ->
                 @Suppress("UNCHECKED_CAST")
-                Hexa(
+                Hepta(
                     arr[0] as List<AppUsageRecord>,
                     arr[1] as List<ChatUsageAggregate>,
                     arr[2] as List<AnalyticsLimit>,
-                    arr[3] as List<BlockedChat>,
-                    arr[4] as List<ChatUsageRecord>,
-                    arr[5] as Unit
+                    arr[3] as List<AnalyticsLimit>,
+                    arr[4] as List<BlockedChat>,
+                    arr[5] as List<ChatUsageRecord>,
+                    arr[6] as Unit
                 )
-            }.collect { hexa ->
-                val appUsage     = hexa.a
-                val dbTopChats   = hexa.b
-                val limits       = hexa.c
-                val blockedChats = hexa.d
-                val messagePulse = hexa.e
+            }.collect { hepta ->
+                val appUsage     = hepta.a
+                val dbTopChats   = hepta.b
+                val appLimits    = hepta.c
+                val chatLimits   = hepta.d
+                val blockedChats = hepta.e
+                val messagePulse = hepta.f
+
+                // Combine universal app limits and isolated chat limits
+                val limits = appLimits + chatLimits
 
                 // ── LIVE INJECTION ──
                 val liveAppSecs = analyticsManager.getLiveAppSeconds()
@@ -153,7 +159,7 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
-    private data class Hexa<A, B, C, D, E, F>(val a: A, val b: B, val c: C, val d: D, val e: E, val f: F)
+    private data class Hepta<A, B, C, D, E, F, G>(val a: A, val b: B, val c: C, val d: D, val e: E, val f: F, val g: G)
 
     private fun resolveChatInfo(agg: ChatUsageAggregate, lockedIds: Set<Long>): ChatUsageInfo {
         return try {
