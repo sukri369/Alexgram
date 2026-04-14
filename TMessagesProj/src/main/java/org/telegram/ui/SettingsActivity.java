@@ -196,6 +196,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
     private View navigationBar;
 
     private int versionViewPressCount = 0;
+    private int accountsReorderId;
 
     public SettingsActivity() {
         this(null);
@@ -375,6 +376,8 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         search.loadFaqWebPage();
 
         listView = new UniversalRecyclerView(this, this::fillItems, this::onClick, this::onLongClick);
+        listView.listenReorder(this::onAccountReorder);
+        listView.allowReorder(true);
         listView.adapter.setApplyBackground(false);
         listView.setSections();
         listView.setPadding(0, AndroidUtilities.statusBarHeight + dp(12), 0, AndroidUtilities.navigationBarHeight + additionNavigationBarHeight);
@@ -662,16 +665,37 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                 accountNumbers.add(a);
             }
         }
-        Collections.sort(accountNumbers, (o1, o2) -> {
-            long l1 = UserConfig.getInstance(o1).loginTime;
-            long l2 = UserConfig.getInstance(o2).loginTime;
-            if (l1 > l2) {
-                return 1;
-            } else if (l1 < l2) {
-                return -1;
+        if (NaConfig.INSTANCE.getPinAccountOrder().Bool()) {
+            final String order = NaConfig.INSTANCE.getAccountOrder().String();
+            if (!TextUtils.isEmpty(order)) {
+                final String[] itemsArr = order.split(",");
+                Collections.sort(accountNumbers, (o1, o2) -> {
+                    int i1 = -1, i2 = -1;
+                    for (int i = 0; i < itemsArr.length; i++) {
+                        try {
+                            int acc = Integer.parseInt(itemsArr[i].trim());
+                            if (acc == o1) i1 = i;
+                            if (acc == o2) i2 = i;
+                        } catch (Exception ignore) {}
+                    }
+                    if (i1 != -1 && i2 != -1) return Integer.compare(i1, i2);
+                    if (i1 != -1) return -1;
+                    if (i2 != -1) return 1;
+                    return 0;
+                });
             }
-            return 0;
-        });
+        } else {
+            Collections.sort(accountNumbers, (o1, o2) -> {
+                long l1 = UserConfig.getInstance(o1).loginTime;
+                long l2 = UserConfig.getInstance(o2).loginTime;
+                if (l1 > l2) {
+                    return 1;
+                } else if (l1 < l2) {
+                    return -1;
+                }
+                return 0;
+            });
+        }
 
         final Set<String> suggestions = getMessagesController().pendingSuggestions;
         if (suggestions.contains("PREMIUM_GRACE")) {
@@ -714,11 +738,17 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         }
 
         if (accountNumbers.size() > 0) {
-            items.add(UItem.asHeader(getString(R.string.SettingsAccounts)));
-            for (int i = 0; i < accountNumbers.size(); ++i) {
-                items.add(AccountCell.Factory.of(i, accountNumbers.get(i)));
+            try {
+                accountsReorderId = adapter.reorderSectionStart();
+                items.add(AccountHeaderCell.Factory.of(1000, getString(R.string.SettingsAccounts)));
+                for (int i = 0; i < accountNumbers.size(); ++i) {
+                    items.add(AccountCell.Factory.of(i + 2000, accountNumbers.get(i)));
+                }
+                adapter.reorderSectionEnd();
+                items.add(UItem.asShadow(null));
+            } catch (Exception e) {
+                FileLog.e(e);
             }
-            items.add(UItem.asShadow(null));
         }
 
         items.add(SettingCell.Factory.of(100, 0xFF3CCFFF, 0xFF007AFF, R.drawable.filled_profile_settings, getString(R.string.NekoSettings)));
@@ -1006,6 +1036,83 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         listView.setPadding(0, statusBarHeight + dp(12), 0, navigationBarHeight + additionNavigationBarHeight);
         return WindowInsetsCompat.CONSUMED;
     }
+    
+    public static class AccountHeaderCell extends FrameLayout implements Theme.Colorable {
+
+        private final Theme.ResourcesProvider resourcesProvider;
+        private final SimpleTextView titleView;
+        private final ImageView pinView;
+
+        public AccountHeaderCell(Context context, Theme.ResourcesProvider resourcesProvider) {
+            super(context);
+            this.resourcesProvider = resourcesProvider;
+
+            titleView = new SimpleTextView(context);
+            titleView.setTextSize(14);
+            titleView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlueHeader, resourcesProvider));
+            titleView.setGravity(Gravity.CENTER_VERTICAL | (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT));
+            titleView.setTypeface(AndroidUtilities.bold());
+            addView(titleView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.FILL, 22, 0, 52, 0));
+
+            pinView = new ImageView(context);
+            pinView.setScaleType(ImageView.ScaleType.CENTER);
+            pinView.setOnClickListener(v -> {
+                boolean pin = !NaConfig.INSTANCE.getPinAccountOrder().Bool();
+                NaConfig.INSTANCE.getPinAccountOrder().setConfigBool(pin);
+                updatePin(pin);
+                org.telegram.messenger.BotWebViewVibrationEffect.APP_ERROR.vibrate();
+                if (v.getTag() instanceof UniversalAdapter) {
+                    ((UniversalAdapter) v.getTag()).update(true);
+                }
+            });
+            addView(pinView, LayoutHelper.createFrame(40, 40, (LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT) | Gravity.CENTER_VERTICAL, 8, 0, 8, 0));
+        }
+
+        public void set(CharSequence title, boolean pin, UniversalAdapter adapter) {
+            titleView.setText(title);
+            updatePin(pin);
+            pinView.setTag(adapter);
+        }
+
+        private void updatePin(boolean pin) {
+            pinView.setImageResource(pin ? R.drawable.msg_pin_solar : R.drawable.msg_unpin_solar);
+            pinView.setContentDescription(pin ? "Unpin" : "Pin");
+        }
+
+        @Override
+        public void updateColors() {
+            titleView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlueHeader, resourcesProvider));
+        }
+
+        @Override
+        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+            super.onMeasure(
+                    MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.EXACTLY),
+                    MeasureSpec.makeMeasureSpec(dp(40), MeasureSpec.EXACTLY)
+            );
+        }
+
+        public static class Factory extends UItem.UItemFactory<AccountHeaderCell> {
+            static { setup(new Factory()); }
+
+            @Override
+            public AccountHeaderCell createView(Context context, RecyclerListView listView, int currentAccount, int classGuid, Theme.ResourcesProvider resourcesProvider) {
+                return new AccountHeaderCell(context, resourcesProvider);
+            }
+
+            @Override
+            public void bindView(View view, UItem item, boolean divider, UniversalAdapter adapter, UniversalRecyclerView listView) {
+                ((AccountHeaderCell) view).set(item.text, NaConfig.INSTANCE.getPinAccountOrder().Bool(), adapter);
+            }
+
+            public static UItem of(int id, CharSequence title) {
+                final UItem item = UItem.ofFactory(AccountHeaderCell.Factory.class);
+                item.id = id;
+                item.text = title;
+                return item;
+            }
+        }
+    }
 
     public static class AccountCell extends LinearLayout implements Theme.Colorable {
 
@@ -1015,6 +1122,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         private SimpleTextView textView;
         private TextView counterView;
         private ImageView arrowView;
+        private ImageView reorderView;
 
         private final AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable botDrawable;
         private final AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable emojiStatusDrawable;
@@ -1063,10 +1171,16 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             arrowView.setScaleType(ImageView.ScaleType.CENTER);
             arrowView.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_windowBackgroundWhiteGrayIcon, resourcesProvider), PorterDuff.Mode.SRC_IN));
 
+            reorderView = new ImageView(context);
+            reorderView.setImageResource(R.drawable.tabs_reorder_solar);
+            reorderView.setScaleType(ImageView.ScaleType.CENTER);
+            reorderView.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_windowBackgroundWhiteGrayIcon, resourcesProvider), PorterDuff.Mode.SRC_IN));
+
             if (LocaleController.isRTL) {
                 textView.setGravity(Gravity.CENTER_VERTICAL | Gravity.RIGHT);
                 arrowView.setScaleX(-1);
 
+                addView(reorderView, LayoutHelper.createLinear(48, 48, 0, Gravity.CENTER_VERTICAL | Gravity.LEFT, 0, 0, 0, 0));
                 addView(arrowView, LayoutHelper.createLinear(24, 24, 0, Gravity.CENTER_VERTICAL | Gravity.LEFT, 12, 0, 0, 0));
                 addView(counterView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, 20, 0, Gravity.CENTER_VERTICAL, 0, 0, 0, 0));
                 addView(textView, LayoutHelper.createLinear(0, LayoutHelper.MATCH_PARENT, 1f, Gravity.FILL, 18, 0, 0, 0));
@@ -1079,6 +1193,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                 addView(textView, LayoutHelper.createLinear(0, LayoutHelper.MATCH_PARENT, 1f, Gravity.FILL, 0, 0, 18, 0));
                 addView(counterView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, 20, 0, Gravity.CENTER_VERTICAL, 0, 0, 0, 0));
                 addView(arrowView, LayoutHelper.createLinear(24, 24, 0, Gravity.CENTER_VERTICAL | Gravity.RIGHT, 0, 0, 12, 0));
+                addView(reorderView, LayoutHelper.createLinear(48, 48, 0, Gravity.CENTER_VERTICAL | Gravity.RIGHT, 0, 0, 0, 0));
             }
         }
 
@@ -1160,6 +1275,21 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             public boolean contentsEquals(UItem a, UItem b) {
                 return a.intValue == b.intValue;
             }
+        }
+    }
+
+    private void onAccountReorder(int id, ArrayList<UItem> items) {
+        if (id == accountsReorderId) {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < items.size(); i++) {
+                if (items.get(i).id >= 2000) {
+                    if (sb.length() > 0) sb.append(",");
+                    sb.append(items.get(i).intValue);
+                }
+            }
+            NaConfig.INSTANCE.getAccountOrder().setConfigString(sb.toString());
+            NaConfig.INSTANCE.getPinAccountOrder().setConfigBool(true);
+            org.telegram.messenger.BotWebViewVibrationEffect.APP_ERROR.vibrate();
         }
     }
 
