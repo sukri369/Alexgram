@@ -164,6 +164,12 @@ class AnalyticsManager @Inject constructor(
                     if (!isDashboardActive && !isLockScreenActive) {
                         val addictionController = addictionController()
                         val appSessionSecs = (now - lastUpdateTime) / 1000
+                        
+                        // DEBUG: Log enforcement pulse every minute or on hit
+                        if (appSessionSecs % 60 == 0L || addictionController.isLimitExceeded(appSessionSecs)) {
+                            FileLog.d("NagramAnalytics: Pulse check - session_secs=$appSessionSecs exceeded=${addictionController.isLimitExceeded(appSessionSecs)}")
+                        }
+
                         if (addictionController.isLimitExceeded(appSessionSecs)) {
                             withContext(Dispatchers.Main) {
                                 val intent = android.content.Intent(context, xyz.nextalone.nagram.analytics.ui.AppLimitReachedActivity::class.java).apply {

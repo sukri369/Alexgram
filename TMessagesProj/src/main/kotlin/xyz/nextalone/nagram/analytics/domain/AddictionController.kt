@@ -31,16 +31,16 @@ class AddictionController @Inject constructor(
     private var isCacheWarm = false
 
     init {
-        refreshCache()
+        startObserving()
     }
 
-    private fun refreshCache() {
+    private fun startObserving() {
         scope.launch {
-            val allAccountLimits = mutableMapOf<Int, AnalyticsLimit?>()
-            for (i in 0 until UserConfig.MAX_ACCOUNT_COUNT) {
-                // type 0 = App Global Limit, targetId = 0
-                val limit = dao.getLimit(i, 0, 0)
-                allAccountLimits[i] = limit
+            val universalAccount = 0
+            // Observe the universal App Limit (type 0) from account 0
+            dao.getLimitsByTypeFlow(universalAccount, 0).collect { limits ->
+                val allAccountLimits = mutableMapOf<Int, AnalyticsLimit?>()
+                allAccountLimits[universalAccount] = limits.firstOrNull()
                 _appLimit.value = allAccountLimits.toMap()
                 isCacheWarm = true
             }
