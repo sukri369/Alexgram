@@ -97,6 +97,7 @@ fun DashboardScreen(vm: DashboardViewModel = viewModel()) {
                 AnimatedIn(isVisible, 0) {
                     TopHeroBar(
                         isEnabled = uiState.isTrackingEnabled,
+                        todayMinutes = uiState.todayMinutes,
                         onToggle = { vm.toggleTracking() },
                         onReset = { showResetDialog = true }
                     ) 
@@ -273,10 +274,47 @@ fun DashboardScreen(vm: DashboardViewModel = viewModel()) {
 @Composable
 fun TopHeroBar(
     isEnabled: Boolean,
+    todayMinutes: Long,
     onToggle: () -> Unit,
     onReset: () -> Unit
 ) {
     val c = LocalAnalyticsColors.current
+    
+    // Dynamic Tagline Logic
+    val tagline = remember(todayMinutes) {
+        val roasts = listOf(
+            "Your screen time is embarrassing",
+            "You thought you used your phone less?",
+            "Reality check: this is your usage",
+            "You’re not as productive as you think",
+            "Your time didn’t disappear… it went here",
+            "This is where your day got wasted",
+            "You call this ‘just a few minutes’?",
+            "Your habits are louder than your excuses",
+            "You’re scrolling more than living",
+            "Proof you waste more time than you admit"
+        )
+        val neutral = listOf(
+            "Your digital behaviour, decoded",
+            "The pulse of your digital day",
+            "A deep dive into your habits",
+            "Balance is the key to focus",
+            "Your habits, visualized"
+        )
+        val praise = listOf(
+            "Digital discipline at its finest",
+            "Quality over quantity. Nice work.",
+            "You're in control today",
+            "Living life beyond the screen",
+            "Your focus is remarkable today"
+        )
+        
+        when {
+            todayMinutes >= 180 -> roasts.random() // High Usage Roast (3h+)
+            todayMinutes >= 60  -> neutral.random() // Medium Usage
+            else                -> praise.random()  // Low Usage Praise (<1h)
+        }
+    }
     Box(
         modifier = Modifier.fillMaxWidth()
             .background(c.bgHero)
@@ -322,7 +360,7 @@ fun TopHeroBar(
             }
             Spacer(Modifier.height(12.dp))
             Text("Neural Analytics", color = c.textPrimary, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = (-0.5).sp)
-            Text("Your digital behaviour, decoded", color = c.textSecondary, fontSize = 13.sp)
+            Text(tagline, color = c.textSecondary, fontSize = 13.sp)
         }
     }
     Box(Modifier.fillMaxWidth().height(1.dp).background(
