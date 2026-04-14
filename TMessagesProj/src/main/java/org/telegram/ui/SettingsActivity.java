@@ -661,11 +661,13 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         accountNumbers.clear();
         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
             if (PasscodeHelper.isAccountHidden(a)) continue;
-            if (UserConfig.getInstance(a).isClientActivated() && currentAccount != a) {
+            if (UserConfig.getInstance(a).isClientActivated()) {
                 accountNumbers.add(a);
             }
         }
-        if (NaConfig.INSTANCE.getPinAccountOrder().Bool()) {
+        if (accountNumbers.size() <= 1) {
+            accountNumbers.clear();
+        } else if (NaConfig.INSTANCE.getPinAccountOrder().Bool()) {
             final String order = NaConfig.INSTANCE.getAccountOrder().String();
             if (!TextUtils.isEmpty(order)) {
                 final String[] itemsArr = order.split(",");
@@ -1123,6 +1125,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         private TextView counterView;
         private ImageView arrowView;
         private ImageView reorderView;
+        private ImageView checkView;
 
         private final AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable botDrawable;
         private final AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable emojiStatusDrawable;
@@ -1195,6 +1198,12 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                 addView(arrowView, LayoutHelper.createLinear(24, 24, 0, Gravity.CENTER_VERTICAL | Gravity.RIGHT, 0, 0, 12, 0));
                 addView(reorderView, LayoutHelper.createLinear(48, 48, 0, Gravity.CENTER_VERTICAL | Gravity.RIGHT, 0, 0, 0, 0));
             }
+
+            checkView = new ImageView(context);
+            checkView.setImageResource(R.drawable.msg_check);
+            checkView.setScaleType(ImageView.ScaleType.CENTER);
+            checkView.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_featuredStickers_addButton, resourcesProvider), PorterDuff.Mode.SRC_IN));
+            addView(checkView, LayoutHelper.createLinear(24, 24, 0, Gravity.CENTER_VERTICAL | Gravity.RIGHT, 0, 0, 12, 0));
         }
 
         @Override
@@ -1236,6 +1245,10 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             int counter = MessagesStorage.getInstance(account).getMainUnreadCount();
             counterView.setVisibility(counter > 0 ? View.VISIBLE : View.GONE);
             counterView.setText(LocaleController.formatNumber(counter, ','));
+
+            boolean selected = account == currentAccount;
+            checkView.setVisibility(selected ? View.VISIBLE : View.GONE);
+            arrowView.setVisibility(selected ? View.GONE : View.VISIBLE);
         }
 
         @Override
