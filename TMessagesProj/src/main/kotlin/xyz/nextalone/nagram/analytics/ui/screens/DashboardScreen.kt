@@ -381,7 +381,10 @@ fun UsageStatsRow(
             StatChip(Modifier.weight(1f), "Sessions", totalSessions.toString(), NeonGreen)
             StatChip(Modifier.weight(1f), "Active Days", activeDays.toString(), NeonOrange)
             val avgMins = if (activeDays > 0) weekMinutes / activeDays else 0L
-            StatChip(Modifier.weight(1f), "Avg/Day", "${avgMins}m", NeonPink)
+            val avgH = avgMins / 60
+            val avgM = avgMins % 60
+            val avgLabel = if (avgH > 0) "${avgH}h ${avgM}m" else "${avgM}m"
+            StatChip(Modifier.weight(1f), "Avg/Day", avgLabel, NeonPink)
         }
     }
 }
@@ -594,9 +597,10 @@ fun ChatDominanceRow(
                 }
             }
             val typeLabel = when {
+                chatInfo.isBot     -> "Bot"
                 chatInfo.isChannel -> "Channel"
                 chatInfo.isGroup   -> "Group"
-                chatInfo.isUser    -> "Contact"
+                chatInfo.isUser    -> "Private Chat"
                 else               -> "Chat"
             }
             Text(typeLabel, color = c.textSecondary, fontSize = 10.sp)
