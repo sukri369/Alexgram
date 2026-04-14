@@ -34,10 +34,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.github.mikephil.charting.charts.BarChart
-import com.github.mikephil.charting.data.BarData
-import com.github.mikephil.charting.data.BarDataSet
-import com.github.mikephil.charting.data.BarEntry
+import com.github.mikephil.charting.charts.LineChart
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.data.Entry
 import xyz.nextalone.nagram.analytics.data.*
 import xyz.nextalone.nagram.analytics.ui.components.WheelPicker
 import xyz.nextalone.nagram.analytics.ui.viewmodel.ChatUsageInfo
@@ -94,77 +94,103 @@ fun DashboardScreen(vm: DashboardViewModel = viewModel()) {
             contentPadding = PaddingValues(bottom = 48.dp),
         ) {
             item {
-                TopHeroBar(
-                    isEnabled = uiState.isTrackingEnabled,
-                    onToggle = { vm.toggleTracking() },
-                    onReset = { showResetDialog = true }
-                ) 
+                AnimatedIn(isVisible, 0) {
+                    TopHeroBar(
+                        isEnabled = uiState.isTrackingEnabled,
+                        onToggle = { vm.toggleTracking() },
+                        onReset = { showResetDialog = true }
+                    ) 
+                }
             }
 
             item {
-                UsageStatsRow(
-                    todayMinutes = uiState.todayMinutes,
-                    weekMinutes = uiState.weekMinutes,
-                    totalSessions = uiState.totalSessionsAllTime,
-                    appUsageHistory = uiState.globalAppHistory
-                )
+                AnimatedIn(isVisible, 100) {
+                    UsageStatsRow(
+                        todayMinutes = uiState.todayMinutes,
+                        weekMinutes = uiState.weekMinutes,
+                        totalSessions = uiState.totalSessionsAllTime,
+                        appUsageHistory = uiState.globalAppHistory
+                    )
+                }
             }
 
             // ── Live Activity ─────────────────────────────────────────────────
             item {
-                SectionLabel("LIVE ACTIVITY", "Account message volume (14d)", Icons.Default.ShowChart, NeonCyan)
+                AnimatedIn(isVisible, 200) {
+                    SectionLabel("LIVE ACTIVITY", "Account message volume (14d)", Icons.Default.ShowChart, NeonCyan)
+                }
             }
             item {
-                AccountActivityPulseChart(uiState.messageHistoryPulse)
+                AnimatedIn(isVisible, 250) {
+                    AccountActivityPulseChart(uiState.messageHistoryPulse)
+                }
             }
 
             // ── Domain Dominance ──────────────────────────────────────────────
             item {
-                SectionLabel("DOMAIN DOMINANCE", "All-time chat breakdown", Icons.Default.Forum, NeonPurple)
+                AnimatedIn(isVisible, 300) {
+                    SectionLabel("DOMAIN DOMINANCE", "All-time chat breakdown", Icons.Default.Forum, NeonPurple)
+                }
             }
             if (uiState.topChats.isEmpty()) {
                 item {
-                    EmptyCard("Start chatting — data will appear here automatically")
+                    AnimatedIn(isVisible, 350) {
+                        EmptyCard("Start chatting — data will appear here automatically")
+                    }
                 }
             } else {
                 val maxChatTime = uiState.topChats.maxOfOrNull { it.timeSpentSeconds }?.coerceAtLeast(1L) ?: 1L
                 items(uiState.topChats, key = { it.chatId }) { chatInfo ->
-                    ChatDominanceRow(
-                        chatInfo = chatInfo,
-                        maxTime = maxChatTime,
-                        onLongPress = { lockTargetChat = chatInfo }
-                    )
+                    // Note: Staggering individual rows can be too much for long lists, 
+                    // we'll use a fixed delay for the section but individual rows will slide in together
+                    AnimatedIn(isVisible, 350) {
+                        ChatDominanceRow(
+                            chatInfo = chatInfo,
+                            maxTime = maxChatTime,
+                            onLongPress = { lockTargetChat = chatInfo }
+                        )
+                    }
                 }
             }
 
             // ── Control Matrix ─────────────────────────────────────────────────
             item {
-                SectionLabel("CONTROL MATRIX", "Daily limits & overrides", Icons.Default.Tune, NeonPink)
+                AnimatedIn(isVisible, 500) {
+                    SectionLabel("CONTROL MATRIX", "Daily limits & overrides", Icons.Default.Tune, NeonPink)
+                }
             }
             items(uiState.limits, key = { "${it.type}_${it.targetId}" }) { limit ->
-                ControlLimitCard(
-                    limit = limit,
-                    onToggle = { vm.toggleLimit(it) },
-                    onEdit = {
-                        editingLimit = it
-                        showLimitDialog = true
-                    },
-                    onDelete = { vm.deleteLimit(it) }
-                )
+                AnimatedIn(isVisible, 550) {
+                    ControlLimitCard(
+                        limit = limit,
+                        onToggle = { vm.toggleLimit(it) },
+                        onEdit = {
+                            editingLimit = it
+                            showLimitDialog = true
+                        },
+                        onDelete = { vm.deleteLimit(it) }
+                    )
+                }
             }
             item {
-                AddLimitButton(onAdd = {
-                    editingLimit = null
-                    showLimitDialog = true
-                })
+                AnimatedIn(isVisible, 600) {
+                    AddLimitButton(onAdd = {
+                        editingLimit = null
+                        showLimitDialog = true
+                    })
+                }
             }
 
             // ── Session Insights ───────────────────────────────────────────────
             item {
-                SectionLabel("SESSION INSIGHTS", "All-time message analytics", Icons.Default.Analytics, NeonGreen)
+                AnimatedIn(isVisible, 700) {
+                    SectionLabel("SESSION INSIGHTS", "All-time message analytics", Icons.Default.Analytics, NeonGreen)
+                }
             }
             item {
-                SessionInsightsCard(uiState)
+                AnimatedIn(isVisible, 750) {
+                    SessionInsightsCard(uiState)
+                }
             }
 
             // ── Footer ─────────────────────────────────────────────────────────
@@ -392,7 +418,7 @@ fun StatChip(modifier: Modifier, label: String, value: String, color: Color) {
 fun AccountActivityPulseChart(history: List<xyz.nextalone.nagram.analytics.data.ChatUsageRecord>) {
     val c = LocalAnalyticsColors.current
     GlassCard(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
-        Box(Modifier.fillMaxWidth().height(155.dp).padding(10.dp)) {
+        Box(Modifier.fillMaxWidth().height(155.dp).padding(horizontal = 4.dp, vertical = 8.dp)) {
             if (history.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -406,48 +432,63 @@ fun AccountActivityPulseChart(history: List<xyz.nextalone.nagram.analytics.data.
                 AndroidView(
                     modifier = Modifier.fillMaxSize(),
                     factory = { ctx ->
-                        BarChart(ctx).apply {
+                        LineChart(ctx).apply {
                             description.isEnabled = false
                             legend.isEnabled = false
                             setTouchEnabled(false)
                             xAxis.isEnabled = false
-                            axisLeft.isEnabled = false
+                            axisLeft.apply {
+                                isEnabled = true
+                                setDrawGridLines(true)
+                                setDrawAxisLine(false)
+                                setDrawLabels(false)
+                                gridColor = if (isDark) AndroidColor.parseColor("#1AFFFFFF") else AndroidColor.parseColor("#1A000000")
+                                gridLineWidth = 0.5f
+                                axisMinimum = 0f
+                            }
                             axisRight.isEnabled = false
                             setDrawGridBackground(false)
                             setDrawBorders(false)
                             setBackgroundColor(AndroidColor.TRANSPARENT)
+                            setViewPortOffsets(0f, 0f, 0f, 0f)
                         }
                     },
                     update = { chart ->
                         val data = history.take(14).reversed()
                         val entries = data.mapIndexed { i, r ->
-                            BarEntry(i.toFloat(), (r.messagesSent + r.messagesReceived).toFloat())
+                            Entry(i.toFloat(), (r.messagesSent + r.messagesReceived).toFloat())
                         }
                         if (entries.isNotEmpty()) {
-                            val maxVal = entries.maxOf { it.y }.coerceAtLeast(1f)
-                            val barColors = entries.map { e ->
-                                val ratio = e.y / maxVal
-                                if (isDark) {
-                                    when {
-                                        ratio > 0.7f -> AndroidColor.parseColor("#00E5FF")
-                                        ratio > 0.4f -> AndroidColor.parseColor("#7B2FFF")
-                                        else         -> AndroidColor.parseColor("#3A1A6A")
-                                    }
+                            val pulseColor = if (isDark) AndroidColor.parseColor("#00E5FF") else AndroidColor.parseColor("#0088CC")
+                            val dataSet = LineDataSet(entries, "").apply {
+                                mode = LineDataSet.Mode.HORIZONTAL_BEZIER
+                                color = pulseColor
+                                lineWidth = 2.5f
+                                setDrawCircles(true)
+                                setCircleColor(pulseColor)
+                                circleRadius = 3f
+                                setDrawCircleHole(true)
+                                circleHoleColor = if (isDark) AndroidColor.parseColor("#0A0E14") else AndroidColor.WHITE
+                                circleHoleRadius = 1.5f
+                                
+                                setDrawFilled(true)
+                                if (android.os.Build.VERSION.SDK_INT >= 18) {
+                                    val gradient = android.graphics.drawable.GradientDrawable(
+                                        android.graphics.drawable.GradientDrawable.Orientation.TOP_BOTTOM,
+                                        intArrayOf(
+                                            if (isDark) AndroidColor.parseColor("#3300E5FF") else AndroidColor.parseColor("#330088CC"),
+                                            AndroidColor.TRANSPARENT
+                                        )
+                                    )
+                                    fillDrawable = gradient
                                 } else {
-                                    when {
-                                        ratio > 0.7f -> AndroidColor.parseColor("#0077AA")
-                                        ratio > 0.4f -> AndroidColor.parseColor("#5500AA")
-                                        else         -> AndroidColor.parseColor("#BBCAF0")
-                                    }
+                                    fillColor = pulseColor
                                 }
-                            }
-                            val dataSet = BarDataSet(entries, "").apply {
-                                colors = barColors
+                                
                                 setDrawValues(false)
-                                barBorderWidth = 0f
                             }
-                            chart.data = BarData(dataSet).also { it.barWidth = 0.65f }
-                            chart.animateY(700, com.github.mikephil.charting.animation.Easing.EaseInOutCubic)
+                            chart.data = LineData(dataSet)
+                            chart.animateY(1200, com.github.mikephil.charting.animation.Easing.EaseInOutCubic)
                             chart.invalidate()
                         }
                     }
@@ -455,7 +496,7 @@ fun AccountActivityPulseChart(history: List<xyz.nextalone.nagram.analytics.data.
                 Text(
                     "Volume Pulse",
                     color = c.textSecondary.copy(0.6f), fontSize = 9.sp,
-                    modifier = Modifier.align(Alignment.TopEnd).padding(2.dp)
+                    modifier = Modifier.align(Alignment.TopEnd).padding(10.dp)
                 )
             }
         }
