@@ -151,8 +151,8 @@ class AnalyticsManager @Inject constructor(
                         onAppBackground() // Flush app usage
                         if (currentChatId != 0L) {
                             val activeChat = currentChatId // Copy to avoid race
-                            onChatEnded(activeChat) // Flush chat usage
-                            onChatStarted(activeChat) // Restart for new day
+                            onChatEnded(currentAccount, activeChat) // Flush chat usage
+                            onChatStarted(currentAccount, activeChat) // Restart for new day
                         }
                         onAppForeground() // Restart app usage for new day
                         continue // Re-evaluate in next loop with new timestamps
