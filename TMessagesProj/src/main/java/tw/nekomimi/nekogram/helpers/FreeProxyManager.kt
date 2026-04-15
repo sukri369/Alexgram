@@ -11,7 +11,7 @@ import tw.nekomimi.nekogram.utils.HttpClient
 import java.util.*
 
 object FreeProxyManager {
-    private const val ALL_PROXIES_URL = "https://cdn.jsdelivr.net/gh/proxifly/free-proxy-list@main/proxies/all/data.json"
+    private const val ALL_PROXIES_URL = "https://cdn.jsdelivr.net/gh/proxifly/free-proxy-list@main/proxies/protocols/socks5/data.json"
     private const val META_URL = "https://cdn.jsdelivr.net/gh/proxifly/free-proxy-list@main/proxies/meta/data.json"
 
     private val gson = Gson()

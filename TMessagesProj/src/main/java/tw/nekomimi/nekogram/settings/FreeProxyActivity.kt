@@ -73,6 +73,7 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
             countries = proxies.map { it.geolocation.country }.distinct().sorted()
             filterProxies()
             isLoading = false
+            updateRows()
             listAdapter?.notifyDataSetChanged()
             countryChips?.updateCountries(countries)
         }
