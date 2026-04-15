@@ -193,4 +193,76 @@ object AlertUtil {
         val providerConstant: Int,
         val nameResId: Int
     )
+
+    @JvmStatic
+    fun showMicPermissionDialog(ctx: Context) = AndroidUtilities.runOnUIThread {
+        val builder = org.telegram.ui.ActionBar.BottomSheet.Builder(ctx)
+        builder.setApplyTopPadding(false)
+        builder.setApplyBottomPadding(false)
+
+        val container = android.widget.LinearLayout(ctx)
+        container.orientation = android.widget.LinearLayout.VERTICAL
+        container.gravity = android.view.Gravity.CENTER_HORIZONTAL
+        container.setPadding(AndroidUtilities.dp(24f), AndroidUtilities.dp(32f), AndroidUtilities.dp(24f), AndroidUtilities.dp(24f))
+
+        val iconView = android.widget.ImageView(ctx)
+        iconView.setImageResource(R.drawable.input_mic)
+        iconView.setColorFilter(0xFFFFFFFF.toInt(), android.graphics.PorterDuff.Mode.SRC_IN)
+        val bg = android.graphics.drawable.GradientDrawable()
+        bg.shape = android.graphics.drawable.GradientDrawable.OVAL
+        bg.setColor(0xFFE91E63.toInt())
+        iconView.background = bg
+        iconView.scaleType = android.widget.ImageView.ScaleType.CENTER
+        container.addView(iconView, org.telegram.ui.Components.LayoutHelper.createLinear(72, 72, android.view.Gravity.CENTER_HORIZONTAL, 0, 0, 0, 16))
+
+        val titleView = android.widget.TextView(ctx)
+        titleView.text = "Microphone Access"
+        titleView.setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 20f)
+        titleView.typeface = AndroidUtilities.getTypeface("fonts/rmedium.ttf")
+        titleView.setTextColor(org.telegram.ui.ActionBar.Theme.getColor(org.telegram.ui.ActionBar.Theme.key_dialogTextBlack))
+        titleView.gravity = android.view.Gravity.CENTER
+        container.addView(titleView, org.telegram.ui.Components.LayoutHelper.createLinear(org.telegram.ui.Components.LayoutHelper.WRAP_CONTENT, org.telegram.ui.Components.LayoutHelper.WRAP_CONTENT, android.view.Gravity.CENTER_HORIZONTAL, 0, 0, 0, 8))
+
+        val descView = android.widget.TextView(ctx)
+        descView.text = "To create beautiful visualizers that react to your music, Alexgram needs access to your microphone.\n\nPlease grant the permission in Settings."
+        descView.setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 14f)
+        descView.setTextColor(org.telegram.ui.ActionBar.Theme.getColor(org.telegram.ui.ActionBar.Theme.key_dialogTextGray2))
+        descView.gravity = android.view.Gravity.CENTER
+        descView.setLineSpacing(AndroidUtilities.dp(2f).toFloat(), 1.0f)
+        container.addView(descView, org.telegram.ui.Components.LayoutHelper.createLinear(org.telegram.ui.Components.LayoutHelper.MATCH_PARENT, org.telegram.ui.Components.LayoutHelper.WRAP_CONTENT, android.view.Gravity.CENTER_HORIZONTAL, 0, 0, 0, 24))
+
+        val allowBtn = android.widget.TextView(ctx)
+        allowBtn.text = "Allow Microphone"
+        allowBtn.setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 15f)
+        allowBtn.typeface = AndroidUtilities.getTypeface("fonts/rmedium.ttf")
+        allowBtn.setTextColor(0xFFFFFFFF.toInt())
+        allowBtn.gravity = android.view.Gravity.CENTER
+        val btnBg = android.graphics.drawable.GradientDrawable()
+        btnBg.setColor(0xFF2196F3.toInt())
+        btnBg.cornerRadius = AndroidUtilities.dp(8f).toFloat()
+        allowBtn.background = btnBg
+        allowBtn.setOnClickListener {
+            builder.dismissRunnable.run()
+            val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+            intent.data = android.net.Uri.parse("package:" + ApplicationLoader.applicationContext.packageName)
+            ctx.startActivity(intent)
+        }
+        container.addView(allowBtn, org.telegram.ui.Components.LayoutHelper.createLinear(org.telegram.ui.Components.LayoutHelper.MATCH_PARENT, 48, android.view.Gravity.CENTER_HORIZONTAL, 0, 0, 0, 12))
+
+        val closeBtn = android.widget.TextView(ctx)
+        closeBtn.text = "Close"
+        closeBtn.setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 15f)
+        closeBtn.typeface = AndroidUtilities.getTypeface("fonts/rmedium.ttf")
+        closeBtn.setTextColor(0xFF2196F3.toInt())
+        closeBtn.gravity = android.view.Gravity.CENTER
+        val closeBg = android.graphics.drawable.GradientDrawable()
+        closeBg.setColor(0x1A2196F3)
+        closeBg.cornerRadius = AndroidUtilities.dp(8f).toFloat()
+        closeBtn.background = closeBg
+        closeBtn.setOnClickListener { builder.dismissRunnable.run() }
+        container.addView(closeBtn, org.telegram.ui.Components.LayoutHelper.createLinear(org.telegram.ui.Components.LayoutHelper.MATCH_PARENT, 48, android.view.Gravity.CENTER_HORIZONTAL, 0, 0, 0, 0))
+
+        builder.setCustomView(container)
+        builder.show()
+    }
 }

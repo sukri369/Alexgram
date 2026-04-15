@@ -338,7 +338,13 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
             if (position == cellGroup.rows.indexOf(musicGraphRow)) {
                 if (!NaConfig.INSTANCE.getMusicGraph().Bool()) {
                     if (Build.VERSION.SDK_INT >= 23 && getParentActivity().checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                        getParentActivity().requestPermissions(new String[]{android.Manifest.permission.RECORD_AUDIO}, 101);
+                        android.content.SharedPreferences prefs = org.telegram.messenger.MessagesController.getGlobalMainSettings();
+                        if (prefs.getBoolean("asked_mic_music_graph", false) || !getParentActivity().shouldShowRequestPermissionRationale(android.Manifest.permission.RECORD_AUDIO)) {
+                            tw.nekomimi.nekogram.utils.AlertUtil.showMicPermissionDialog(getParentActivity());
+                        } else {
+                            prefs.edit().putBoolean("asked_mic_music_graph", true).apply();
+                            getParentActivity().requestPermissions(new String[]{android.Manifest.permission.RECORD_AUDIO}, 101);
+                        }
                         return;
                     }
                 }

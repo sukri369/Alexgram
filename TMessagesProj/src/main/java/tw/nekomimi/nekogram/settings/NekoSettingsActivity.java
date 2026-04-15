@@ -356,6 +356,17 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
                 
                 boolean isLast = position == quickSettingsEndRow - 1;
                 cell.setData(entry.title, null, resId, config != null && config.Bool(), isChecked -> {
+                    if ("music_graph".equals(entry.key) && isChecked && android.os.Build.VERSION.SDK_INT >= 23 && getParentActivity().checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                        android.content.SharedPreferences prefs = org.telegram.messenger.MessagesController.getGlobalMainSettings();
+                        if (prefs.getBoolean("asked_mic_music_graph", false) || !getParentActivity().shouldShowRequestPermissionRationale(android.Manifest.permission.RECORD_AUDIO)) {
+                            tw.nekomimi.nekogram.utils.AlertUtil.showMicPermissionDialog(getParentActivity());
+                        } else {
+                            prefs.edit().putBoolean("asked_mic_music_graph", true).apply();
+                            getParentActivity().requestPermissions(new String[]{android.Manifest.permission.RECORD_AUDIO}, 101);
+                        }
+                        cell.setChecked(false);
+                        return;
+                    }
                     if (config != null) config.setConfigBool(isChecked);
                     NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.reloadInterface);
                 }, position == quickSettingsStartRow, isLast);
@@ -382,7 +393,20 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
                 } else if (position == ghostModeRow) {
                     cell.setData("Ghost Mode", "Read silently", R.drawable.msg_secret, NekoConfig.isGhostModeActive(), isChecked -> NekoConfig.setGhostMode(isChecked), false, false);
                 } else if (position == musicGraphRow) {
-                    cell.setData("Music Graph", "Visualizer in player", R.drawable.baseline_music_note_24, NaConfig.INSTANCE.getMusicGraph().Bool(), isChecked -> NaConfig.INSTANCE.getMusicGraph().setConfigBool(isChecked), false, false);
+                    cell.setData("Music Graph", "Visualizer in player", R.drawable.baseline_music_note_24, NaConfig.INSTANCE.getMusicGraph().Bool(), isChecked -> {
+                        if (isChecked && android.os.Build.VERSION.SDK_INT >= 23 && getParentActivity().checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                            android.content.SharedPreferences prefs = org.telegram.messenger.MessagesController.getGlobalMainSettings();
+                            if (prefs.getBoolean("asked_mic_music_graph", false) || !getParentActivity().shouldShowRequestPermissionRationale(android.Manifest.permission.RECORD_AUDIO)) {
+                                tw.nekomimi.nekogram.utils.AlertUtil.showMicPermissionDialog(getParentActivity());
+                            } else {
+                                prefs.edit().putBoolean("asked_mic_music_graph", true).apply();
+                                getParentActivity().requestPermissions(new String[]{android.Manifest.permission.RECORD_AUDIO}, 101);
+                            }
+                            cell.setChecked(false);
+                            return;
+                        }
+                        NaConfig.INSTANCE.getMusicGraph().setConfigBool(isChecked);
+                    }, false, false);
                 } else if (position == saveDeletedRow) {
                     cell.setData("Save Deleted", "Save deleted messages", R.drawable.msg_delete_solar, NaConfig.INSTANCE.getEnableSaveDeletedMessages().Bool(), isChecked -> NaConfig.INSTANCE.getEnableSaveDeletedMessages().setConfigBool(isChecked), false, true);
                 }
