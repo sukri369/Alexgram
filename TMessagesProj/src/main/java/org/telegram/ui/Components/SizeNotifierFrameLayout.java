@@ -475,6 +475,17 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
             videoMediaPlayer.setVolume(0, 0);
             videoMediaPlayer.prepareAsync();
             videoMediaPlayer.setOnPreparedListener(MediaPlayer::start);
+            videoMediaPlayer.setOnInfoListener((mp, what, extra) -> {
+                if (what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START) {
+                    if (backgroundView != null) {
+                        backgroundView.animate().alpha(0.0f).setDuration(250).withEndAction(() -> {
+                            if (backgroundView != null) backgroundView.setVisibility(View.GONE);
+                        }).start();
+                    }
+                    return true;
+                }
+                return false;
+            });
             videoWallpaperPlaying = true;
         } catch (Exception e) {
             FileLog.e(e);
@@ -494,10 +505,21 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
         boolean video = checkVideoWallpaper();
         if (backgroundDrawable == bitmap) {
             if (video) {
-                if (backgroundView != null) backgroundView.setVisibility(View.GONE);
                 if (videoTextureView != null) videoTextureView.setVisibility(View.VISIBLE);
+                if (videoMediaPlayer != null && videoMediaPlayer.isPlaying()) {
+                    if (backgroundView != null) backgroundView.setVisibility(View.GONE);
+                } else {
+                    if (backgroundView != null) {
+                        backgroundView.setVisibility(View.VISIBLE);
+                        backgroundView.setAlpha(1.0f);
+                    }
+                }
             } else {
-                if (backgroundView != null) backgroundView.setVisibility(View.VISIBLE);
+                if (backgroundView != null) {
+                    backgroundView.setVisibility(View.VISIBLE);
+                    backgroundView.animate().cancel();
+                    backgroundView.setAlpha(1.0f);
+                }
                 if (videoTextureView != null) videoTextureView.setVisibility(View.GONE);
             }
             return;
@@ -508,10 +530,21 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
         }
 
         if (video) {
-            if (backgroundView != null) backgroundView.setVisibility(View.GONE);
             if (videoTextureView != null) videoTextureView.setVisibility(View.VISIBLE);
+            if (videoMediaPlayer != null && videoMediaPlayer.isPlaying()) {
+                if (backgroundView != null) backgroundView.setVisibility(View.GONE);
+            } else {
+                if (backgroundView != null) {
+                    backgroundView.setVisibility(View.VISIBLE);
+                    backgroundView.setAlpha(1.0f);
+                }
+            }
         } else {
-            if (backgroundView != null) backgroundView.setVisibility(View.VISIBLE);
+            if (backgroundView != null) {
+                backgroundView.setVisibility(View.VISIBLE);
+                backgroundView.animate().cancel();
+                backgroundView.setAlpha(1.0f);
+            }
             if (videoTextureView != null) videoTextureView.setVisibility(View.GONE);
         }
         if (bitmap instanceof MotionBackgroundDrawable) {
