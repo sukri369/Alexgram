@@ -52,7 +52,10 @@ object FreeProxyManager {
         }
 
         try {
-            val request = Request.Builder().url(ALL_PROXIES_URL).build()
+            val request = Request.Builder()
+                .url(ALL_PROXIES_URL)
+                .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+                .build()
             val response = HttpClient.instance.newCall(request).execute()
             if (response.isSuccessful) {
                 val json = response.body?.string()
@@ -60,7 +63,11 @@ object FreeProxyManager {
                     val type = object : TypeToken<List<FreeProxy>>() {}.type
                     cachedProxies = gson.fromJson(json, type)
                     lastFetchTime = System.currentTimeMillis()
+                } else {
+                    FileLog.e("FreeProxyManager: ALL_PROXIES_URL response body is null")
                 }
+            } else {
+                FileLog.e("FreeProxyManager: ALL_PROXIES_URL failed with code ${response.code}")
             }
         } catch (e: Exception) {
             FileLog.e(e)
@@ -70,13 +77,20 @@ object FreeProxyManager {
 
     suspend fun fetchMeta(): FreeProxyMeta? = withContext(Dispatchers.IO) {
         try {
-            val request = Request.Builder().url(META_URL).build()
+            val request = Request.Builder()
+                .url(META_URL)
+                .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+                .build()
             val response = HttpClient.instance.newCall(request).execute()
             if (response.isSuccessful) {
                 val json = response.body?.string()
                 if (json != null) {
                     cachedMeta = gson.fromJson(json, FreeProxyMeta::class.java)
+                } else {
+                    FileLog.e("FreeProxyManager: META_URL response body is null")
                 }
+            } else {
+                FileLog.e("FreeProxyManager: META_URL failed with code ${response.code}")
             }
         } catch (e: Exception) {
             FileLog.e(e)

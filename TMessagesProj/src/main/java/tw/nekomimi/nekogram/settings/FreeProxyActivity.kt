@@ -37,6 +37,7 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
     private var proxies: List<FreeProxy> = emptyList()
     private var filteredProxies: List<FreeProxy> = emptyList()
     private var meta: FreeProxyManager.FreeProxyMeta? = null
+    private var isLoading = false
     
     private var fetchJob: Job? = null
     private val activityScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -64,11 +65,14 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
     }
 
     private fun loadData() {
+        isLoading = true
+        listAdapter?.notifyDataSetChanged()
         fetchJob = activityScope.launch {
             proxies = FreeProxyManager.fetchProxies()
             meta = FreeProxyManager.fetchMeta()
             countries = proxies.map { it.geolocation.country }.distinct().sorted()
             filterProxies()
+            isLoading = false
             listAdapter?.notifyDataSetChanged()
             countryChips?.updateCountries(countries)
         }
@@ -115,11 +119,15 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
     override fun updateRows() {
         super.updateRows()
         addRow("country_chips")
-        addRow("auto_connect")
-        addRow("header_proxies")
-        proxyStartRow = rowCount
-        rowCount += filteredProxies.size
-        proxyEndRow = rowCount
+        if (isLoading) {
+            addRow("loading")
+        } else {
+            addRow("auto_connect")
+            addRow("header_proxies")
+            proxyStartRow = rowCount
+            rowCount += filteredProxies.size
+            proxyEndRow = rowCount
+        }
     }
 
     override fun createAdapter(context: Context): BaseListAdapter {
@@ -129,6 +137,7 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
             override fun getItemViewType(position: Int): Int {
                 return when {
                     position == rowMap["country_chips"] -> 1001
+                    position == rowMap["loading"] -> TYPE_FLICKER
                     position == rowMap["auto_connect"] -> TYPE_SETTINGS
                     position == rowMap["header_proxies"] -> TYPE_HEADER
                     position in proxyStartRow until proxyEndRow -> TYPE_DETAIL_SETTINGS + 100 // Custom type
@@ -156,13 +165,13 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
                 when (position) {
                     rowMap["auto_connect"] -> {
                         val cell = holder.itemView as TextSettingsCell
-                        cell.setTextAndValue(LocaleController.getString("FreeProxyAuto", R.string.UseProxyRotation), "", true)
+                        cell.setTextAndValue(LocaleController.getString("FreeProxyAuto", R.string.FreeProxyAuto), "", true)
                         cell.setTextColor(if (isDark) 0xFF33A1FF.toInt() else 0xFF007AFF.toInt())
                     }
                     rowMap["header_proxies"] -> {
                         val cell = holder.itemView as HeaderCell
                         val count = meta?.totals?.all ?: filteredProxies.size
-                        cell.setText(LocaleController.formatString("FreeProxyCount", R.string.UseProxyRotation, count))
+                        cell.setText(LocaleController.formatString("FreeProxyCount", R.string.FreeProxyCount, count))
                     }
                 }
                 
@@ -198,7 +207,7 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
         }
     }
 
-    override fun getActionBarTitle(): String = LocaleController.getString("FreeProxy", R.string.UseProxyRotation)
+    override fun getActionBarTitle(): String = LocaleController.getString("FreeProxy", R.string.FreeProxy)
 
     override fun didReceivedNotification(id: Int, account: Int, vararg args: Any?) {
         if (id == NotificationCenter.proxyCheckDone) {
