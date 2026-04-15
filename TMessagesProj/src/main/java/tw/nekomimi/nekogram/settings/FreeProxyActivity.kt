@@ -68,14 +68,22 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
         isLoading = true
         listAdapter?.notifyDataSetChanged()
         fetchJob = activityScope.launch {
-            proxies = FreeProxyManager.fetchProxies()
-            meta = FreeProxyManager.fetchMeta()
-            countries = proxies.map { it.geolocation.country }.distinct().sorted()
-            filterProxies()
-            isLoading = false
-            updateRows()
-            listAdapter?.notifyDataSetChanged()
-            countryChips?.updateCountries(countries)
+            try {
+                proxies = FreeProxyManager.fetchProxies()
+                meta = FreeProxyManager.fetchMeta()
+                FileLog.d("FreeProxyActivity: Loaded ${proxies.size} proxies")
+                countries = proxies.map { it.geolocation.country }.distinct().sorted()
+                filterProxies()
+                isLoading = false
+                updateRows()
+                listAdapter?.notifyDataSetChanged()
+                countryChips?.updateCountries(countries)
+            } catch (e: Exception) {
+                FileLog.e(e)
+                isLoading = false
+                updateRows()
+                listAdapter?.notifyDataSetChanged()
+            }
         }
     }
 
@@ -95,19 +103,28 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
     override fun createActionBar(context: Context): ActionBar {
         val actionBar = super.createActionBar(context)
         
-        val menu = actionBar.createMenu()
-        val searchItem = menu.addItem(0, R.drawable.ic_ab_search).setIsSearchField(true)
-        searchItem.searchField.setHint(LocaleController.getString(R.string.Search))
-        searchItem.searchField.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                searchQuery = s?.toString() ?: ""
-                filterProxies()
-                listAdapter?.notifyDataSetChanged()
-            }
-            override fun afterTextChanged(s: Editable?) {}
-        })
-        
+        val searchItem = actionBar.createMenu().addItem(1, R.drawable.ic_ab_search).setIsSearchField(true)
+        searchItem.getSearchField()?.let { searchField ->
+            searchField.hint = LocaleController.getString("FreeProxySearchHint", R.string.FreeProxySearchHint)
+            searchItem.setActionBarMenuItemSearchListener(object : ActionBarMenuItem.ActionBarMenuItemSearchListener() {
+                override fun onSearchExpand() {
+                    isSearch = true
+                }
+                override fun onSearchCollapse() {
+                    isSearch = false
+                    currentSearchQuery = ""
+                    filterProxies()
+                    updateRows()
+                    listAdapter?.notifyDataSetChanged()
+                }
+                override fun onTextChanged(editText: EditText) {
+                    currentSearchQuery = editText.text.toString()
+                    filterProxies()
+                    updateRows()
+                    listAdapter?.notifyDataSetChanged()
+                }
+            })
+        }
         return actionBar
     }
 
@@ -147,43 +164,60 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
             }
 
             override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-                return if (viewType == 1001) {
-                    countryChips = HorizontalCountryChips(mContext)
-                    countryChips!!.layoutParams = RecyclerView.LayoutParams(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT)
-                    RecyclerListView.Holder(countryChips!!)
-                } else if (viewType == TYPE_DETAIL_SETTINGS + 100) {
-                    val cell = FreeProxyCell(mContext)
-                    cell.layoutParams = RecyclerView.LayoutParams(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT)
-                    RecyclerListView.Holder(cell)
-                } else {
-                    super.onCreateViewHolder(parent, viewType)
+                val view = when (viewType) {
+                    1001 -> {
+                        countryChips = HorizontalCountryChips(mContext).also {
+                            it.layoutParams = RecyclerView.LayoutParams(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT)
+                        }
+                        countryChips!!
+                    }
+                    TYPE_DETAIL_SETTINGS + 100 -> {
+                        FreeProxyCell(mContext).also {
+                            it.layoutParams = RecyclerView.LayoutParams(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT)
+                        }
+                    }
+                    TYPE_SETTINGS -> TextSettingsCell(mContext, resourcesProvider)
+                    TYPE_HEADER -> HeaderCell(mContext, resourcesProvider)
+                    TYPE_FLICKER -> FlickerLoadingView(mContext, resourcesProvider)
+                    else -> View(mContext)
                 }
+                return RecyclerListView.Holder(view)
             }
 
             override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-                super.onBindViewHolder(holder, position)
+                // Do NOT call super.onBindViewHolder because it has specific cell modernizer logic 
+                // that conflicts with our manual row map in this custom view
                 val type = getItemViewType(position)
+                
                 when (position) {
                     rowMap["auto_connect"] -> {
                         val cell = holder.itemView as TextSettingsCell
                         cell.setTextAndValue(LocaleController.getString("FreeProxyAuto", R.string.FreeProxyAuto), "", true)
                         cell.setTextColor(if (isDark) 0xFF33A1FF.toInt() else 0xFF007AFF.toInt())
+                        modernizeCellManual(cell, position)
                     }
                     rowMap["header_proxies"] -> {
                         val cell = holder.itemView as HeaderCell
                         val count = meta?.totals?.all ?: filteredProxies.size
                         cell.setText(LocaleController.formatString("FreeProxyCount", R.string.FreeProxyCount, count))
+                        modernizeCellManual(cell, position)
+                    }
+                    rowMap["country_chips"] -> {
+                        modernizeCellManual(holder.itemView, position)
                     }
                 }
                 
                 if (type == TYPE_DETAIL_SETTINGS + 100) {
-                    val proxyIndex = position - proxyStartRow
+                    val proxyIndex = position - (rowMap["header_proxies"]?.plus(1) ?: proxyStartRow)
                     if (proxyIndex in filteredProxies.indices) {
                         val proxy = filteredProxies[proxyIndex]
                         val cell = holder.itemView as FreeProxyCell
                         val ping = pingMap[proxy.proxy] ?: 0L
                         cell.setProxy(proxy, ping, proxyIndex != filteredProxies.size - 1)
+                        modernizeCellManual(cell, position)
                     }
+                } else if (type == TYPE_FLICKER) {
+                    modernizeCellManual(holder.itemView, position)
                 }
             }
         }
@@ -224,6 +258,32 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
                     listAdapter?.notifyDataSetChanged()
                 }
             }
+        }
+    }
+
+    private fun modernizeCellManual(view: View, position: Int) {
+        val type = listAdapter?.getItemViewType(position) ?: return
+        
+        val isFirst = position == 0 || isBreakType(position - 1)
+        val isLast = position == (listAdapter?.itemCount ?: 0) - 1 || isBreakType(position + 1)
+
+        val gd = android.graphics.drawable.GradientDrawable()
+        gd.setColor(cardBg)
+        val r = dp(16f).toFloat()
+        gd.setCornerRadii(floatArrayOf(
+            if (isFirst) r else 0f, if (isFirst) r else 0f,
+            if (isFirst) r else 0f, if (isFirst) r else 0f,
+            if (isLast) r else 0f, if (isLast) r else 0f,
+            if (isLast) r else 0f, if (isLast) r else 0f
+        ))
+        if (isFirst && isLast) {
+            gd.setStroke(dp(1f), cardBorder)
+        }
+        view.background = gd
+
+        if (view is TextSettingsCell) {
+            view.textView.setTextColor(if (isDark) android.graphics.Color.WHITE else 0xFF1A1A2E.toInt())
+            view.valueTextView.setTextColor(if (isDark) 0xFF33A1FF.toInt() else 0xFF007AFF.toInt())
         }
     }
 
