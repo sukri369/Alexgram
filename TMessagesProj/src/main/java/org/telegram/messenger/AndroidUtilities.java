@@ -2950,6 +2950,26 @@ public class AndroidUtilities {
                     }
                 }
             }
+        } else {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                try {
+                    Object decorView = window.getDecorView();
+                    Object viewRootImpl = decorView.getClass().getMethod("getViewRootImpl").invoke(decorView);
+                    if (viewRootImpl != null) {
+                        Object surfaceControl = viewRootImpl.getClass().getMethod("getSurfaceControl").invoke(viewRootImpl);
+                        if (surfaceControl != null) {
+                            surfaceControl.getClass().getMethod("setFrameRate", float.class, int.class).invoke(surfaceControl, 0f, 0);
+                        }
+                    }
+                } catch (Throwable ignore) {
+                    try {
+                        window.getDecorView().getClass().getMethod("setFrameRate", float.class, int.class).invoke(window.getDecorView(), 0f, 0);
+                    } catch (Throwable ignore2) {}
+                }
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                params.preferredDisplayModeId = 0;
+            }
         }
         try {
             wm.updateViewLayout(window.getDecorView(), params);
@@ -2960,9 +2980,10 @@ public class AndroidUtilities {
 
     public static void setPreferredMaxRefreshRate(WindowManager wm, View windowView, WindowManager.LayoutParams params) {
         if (wm == null) return;
-        if (NaConfig.INSTANCE.getForceMaxRefreshRate().Bool() || Math.abs(params.preferredRefreshRate - screenMaxRefreshRate) > 0.2) {
+        boolean force = NaConfig.INSTANCE.getForceMaxRefreshRate().Bool();
+        if (force || Math.abs(params.preferredRefreshRate - screenMaxRefreshRate) > 0.2 || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && params.preferredDisplayModeId != 0)) {
             params.preferredRefreshRate = screenMaxRefreshRate;
-            if (NaConfig.INSTANCE.getForceMaxRefreshRate().Bool() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (force && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 Display display;
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                     display = windowView.getContext().getDisplay();
@@ -2983,6 +3004,8 @@ public class AndroidUtilities {
                         }
                     }
                 }
+            } else if (!force && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                params.preferredDisplayModeId = 0;
             }
             if (windowView.isAttachedToWindow()) {
                 try {
