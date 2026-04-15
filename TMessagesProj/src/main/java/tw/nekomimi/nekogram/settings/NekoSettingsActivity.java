@@ -151,7 +151,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         
         org.telegram.ui.Components.BlurredRecyclerView searchListView = new org.telegram.ui.Components.BlurredRecyclerView(context);
         searchListView.setLayoutManager(new LinearLayoutManager(context));
-        searchListView.setPadding(0, AndroidUtilities.dp(64) + (AndroidUtilities.isTablet() ? 0 : AndroidUtilities.statusBarHeight), 0, AndroidUtilities.dp(16));
+        searchListView.setPadding(0, 0, 0, AndroidUtilities.dp(16));
         searchListView.setClipToPadding(false);
         
         final SearchAdapter searchAdapter = new SearchAdapter(context);
@@ -772,7 +772,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
 
         @Override
         public int getItemCount() {
-            return results.size();
+            return results.isEmpty() ? 0 : results.size() + 1;
         }
 
         @Override
@@ -783,6 +783,11 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         @NonNull
         @Override
         public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            if (viewType == 0) {
+                View header = new View(mContext);
+                header.setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, AndroidUtilities.dp(100)));
+                return new RecyclerListView.Holder(header);
+            }
             SettingsSearchResultCell cell = new SettingsSearchResultCell(mContext);
             cell.setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
             return new RecyclerListView.Holder(cell);
@@ -790,9 +795,11 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
 
         @Override
         public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+            if (holder.getItemViewType() == 0) return;
+            
             SettingsSearchResultCell cell = (SettingsSearchResultCell) holder.itemView;
-            SettingsSearchManager.SearchItem item = results.get(position);
-            cell.setData(item, position == results.size() - 1);
+            SettingsSearchManager.SearchItem item = results.get(position - 1);
+            cell.setData(item, position == results.size());
             cell.setOnClickListener(v -> {
                 try {
                     if (item.fragmentClass == NekoSettingsActivity.class) {
@@ -813,7 +820,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
 
         @Override
         public int getItemViewType(int position) {
-            return 0;
+            return position == 0 ? 0 : 1;
         }
     }
 
