@@ -149,14 +149,14 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         searchContainer.setVisibility(View.GONE);
         searchContainer.setAlpha(0.0f);
         
-        org.telegram.ui.Components.BlurredRecyclerView searchListView = new org.telegram.ui.Components.BlurredRecyclerView(context);
+        org.telegram.ui.Components.RecyclerListView searchListView = new org.telegram.ui.Components.RecyclerListView(context);
         searchListView.setLayoutManager(new LinearLayoutManager(context));
-        searchListView.setPadding(0, 0, 0, AndroidUtilities.dp(16));
-        searchListView.setClipToPadding(false);
+        searchListView.setPadding(0, AndroidUtilities.dp(64) + (AndroidUtilities.isTablet() ? 0 : AndroidUtilities.statusBarHeight), 0, AndroidUtilities.dp(16));
+        searchListView.setClipToPadding(true);
         
         final SearchAdapter searchAdapter = new SearchAdapter(context);
         searchListView.setAdapter(searchAdapter);
-        searchContainer.addView(searchListView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.TOP, 0, 115, 0, 0));
+        searchContainer.addView(searchListView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
         
         final int search_id = 1;
         final int cloud_id = 2;
