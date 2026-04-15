@@ -20,7 +20,10 @@ import org.telegram.messenger.*
 import org.telegram.ui.ActionBar.*
 import org.telegram.ui.Cells.HeaderCell
 import org.telegram.ui.Cells.ShadowSectionCell
+import org.telegram.ui.Cells.TextSettingsCell
 import org.telegram.ui.Components.*
+import androidx.recyclerview.widget.LinearLayoutManager
+import org.telegram.messenger.AndroidUtilities.dp
 import tw.nekomimi.nekogram.helpers.FreeProxyManager
 import tw.nekomimi.nekogram.helpers.FreeProxyManager.FreeProxy
 import java.util.*
@@ -89,8 +92,8 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
         
         val menu = actionBar.createMenu()
         val searchItem = menu.addItem(0, R.drawable.ic_ab_search).setIsSearchField(true)
-        searchItem.actionBarMenuItemSearchField.setHint(LocaleController.getString(R.string.Search))
-        searchItem.actionBarMenuItemSearchField.addTextChangedListener(object : TextWatcher {
+        searchItem.searchField.setHint(LocaleController.getString(R.string.Search))
+        searchItem.searchField.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 searchQuery = s?.toString() ?: ""
@@ -153,13 +156,13 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
                 when (position) {
                     rowMap["auto_connect"] -> {
                         val cell = holder.itemView as TextSettingsCell
-                        cell.setTextAndValue(LocaleController.getString("FreeProxyAuto", R.string.ProxyRotation), "", true)
+                        cell.setTextAndValue(LocaleController.getString("FreeProxyAuto", R.string.UseProxyRotation), "", true)
                         cell.setTextColor(if (isDark) 0xFF33A1FF.toInt() else 0xFF007AFF.toInt())
                     }
                     rowMap["header_proxies"] -> {
                         val cell = holder.itemView as HeaderCell
                         val count = meta?.totals?.all ?: filteredProxies.size
-                        cell.setText(LocaleController.formatString("FreeProxyCount", R.string.ProxyRotation, count))
+                        cell.setText(LocaleController.formatString("FreeProxyCount", R.string.UseProxyRotation, count))
                     }
                 }
                 
@@ -195,7 +198,7 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
         }
     }
 
-    override fun getActionBarTitle(): String = LocaleController.getString("FreeProxy", R.string.ProxyRotation)
+    override fun getActionBarTitle(): String = LocaleController.getString("FreeProxy", R.string.UseProxyRotation)
 
     override fun didReceivedNotification(id: Int, account: Int, vararg args: Any?) {
         if (id == NotificationCenter.proxyCheckDone) {
@@ -225,19 +228,19 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
             titleView.textSize = 16f
             titleView.setTextColor(if (isDark) 0xFFFFFFFF.toInt() else 0xFF1A1A2E.toInt())
             titleView.typeface = AndroidUtilities.bold()
-            addView(titleView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP or Gravity.START, 72, 10, 80, 0))
+            addView(titleView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT.toFloat(), Gravity.TOP or Gravity.START, 72f, 10f, 80f, 0f))
 
             subtitleView.textSize = 13f
             subtitleView.setTextColor(if (isDark) 0xAAFFFFFF.toInt() else 0xAA1A1A2E.toInt())
-            addView(subtitleView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP or Gravity.START, 72, 32, 80, 0))
+            addView(subtitleView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT.toFloat(), Gravity.TOP or Gravity.START, 72f, 32f, 80f, 0f))
 
             pingView.textSize = 12f
             pingView.gravity = Gravity.END
-            addView(pingView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP or Gravity.END, 0, 32, 16, 0))
+            addView(pingView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT.toFloat(), Gravity.TOP or Gravity.END, 0f, 32f, 16f, 0f))
 
-            addView(scoreView, LayoutHelper.createFrame(40, 40, Gravity.TOP or Gravity.START, 16, 12, 0, 0))
+            addView(scoreView, LayoutHelper.createFrame(40, 40f, Gravity.TOP or Gravity.START, 16f, 12f, 0f, 0f))
             
-            setPadding(0, 0, 0, dp(8))
+            setPadding(0, 0, 0, dp(8f))
         }
 
         fun setProxy(proxy: FreeProxy, ping: Long, divider: Boolean) {
@@ -266,7 +269,7 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
         }
 
         override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-            super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(dp(64), MeasureSpec.EXACTLY))
+            super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(dp(64f), MeasureSpec.EXACTLY))
         }
 
         override fun onDraw(canvas: Canvas) {
@@ -331,7 +334,7 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
                 override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerListView.Holder {
                     val textView = TextView(context)
                     textView.textSize = 14f
-                    textView.setPadding(dp(16), dp(8), dp(16), dp(8))
+                    textView.setPadding(dp(16f), dp(8f), dp(16f), dp(8f))
                     textView.gravity = Gravity.CENTER
                     return RecyclerListView.Holder(textView)
                 }
@@ -362,9 +365,9 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
 
                 override fun getItemCount(): Int = countryList.size + 1
             }
-            listView.setPadding(dp(12), dp(8), dp(12), dp(8))
+            listView.setPadding(dp(12f), dp(8f), dp(12f), dp(8f))
             listView.setClipToPadding(false)
-            addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 56))
+            addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 56f))
         }
 
         fun updateCountries(newCountries: List<String>) {

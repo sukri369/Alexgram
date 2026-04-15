@@ -964,7 +964,7 @@ public class ProxyListActivity extends BaseFragment implements NotificationCente
                     if (position == proxyAddRow) {
                         textCell.setText(LocaleController.getString(R.string.AddProxy), true);
                     } else if (position == freeProxyRow) {
-                        textCell.setText(LocaleController.getString("FreeProxy", R.string.ProxyRotation), deleteAllRow != -1);
+                        textCell.setText(LocaleController.getString("FreeProxy", R.string.UseProxyRotation), deleteAllRow != -1);
                     } else if (position == deleteAllRow) {
                         textCell.setTextColor(Theme.getColor(Theme.key_text_RedRegular));
                         textCell.setText(LocaleController.getString(R.string.DeleteAllProxies), false);
