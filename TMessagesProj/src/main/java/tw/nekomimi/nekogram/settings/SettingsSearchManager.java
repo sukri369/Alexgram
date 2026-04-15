@@ -85,7 +85,7 @@ public class SettingsSearchManager {
         add("Hide Bot Button", "Remove the bot command button from input field", "HideBotButtonInInputField", NekoChatSettingsActivity.class, "Chats", R.drawable.msg_bots);
 
         // --- MEDIA & CHANNELS ---
-        add("Auto-Play Voice", "Automatically play sequential voice messages", "DontAutoPlayNextVoice", NekoChatSettingsActivity.class, "Media", R.drawable.msg_voice_micro);
+        add("Auto-Play Voice", "Automatically play sequential voice messages", "DontAutoPlayNextVoice", NekoChatSettingsActivity.class, "Media", R.drawable.msg_calls);
         add("Show Small GIFs", "Minimize GIF size in the chat list", "ShowSmallGIF", NekoChatSettingsActivity.class, "Media", R.drawable.msg_gif);
         add("Disable Swipe to Next", "Prevent accidental swiping between channel posts", "disableSwipeToNext", NekoChatSettingsActivity.class, "Channels", R.drawable.msg_disable);
         add("Hide Share Button", "Remove the share button from channel messages", "HideShareButtonInChannel", NekoChatSettingsActivity.class, "Channels", R.drawable.msg_shareout);
