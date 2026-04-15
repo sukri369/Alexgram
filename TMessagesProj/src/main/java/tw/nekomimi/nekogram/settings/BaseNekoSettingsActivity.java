@@ -107,6 +107,7 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
 
     @Override
     public boolean onFragmentCreate() {
+        setupBrandingColors();
         super.onFragmentCreate();
         updateRows();
         return true;
