@@ -180,6 +180,13 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
 
         actionBar.setDrawBlurBackground(frameLayout);
 
+        if (isAlexgramTheme()) {
+            int color = isDark ? android.graphics.Color.WHITE : 0xFF1A1A2E;
+            actionBar.setItemsColor(color, false);
+            actionBar.setTitleColor(color);
+            actionBar.setItemsBackgroundColor(isDark ? 0x0FFFFFFF : 0x0F000000, false);
+        }
+
         listView = new BlurredRecyclerView(context);
         listView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
@@ -315,10 +322,11 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
             actionBar.setBackgroundColor(android.graphics.Color.TRANSPARENT);
             actionBar.setCastShadows(false);
             actionBar.setAddToContainer(false);
-            int color = isDark ? android.graphics.Color.WHITE : 0xFF1A1A2E;
+            boolean dark = Theme.getActiveTheme().isDark();
+            int color = dark ? android.graphics.Color.WHITE : 0xFF1A1A2E;
             actionBar.setItemsColor(color, false);
             actionBar.setTitleColor(color);
-            actionBar.setItemsBackgroundColor(isDark ? 0x0FFFFFFF : 0x0F000000, false);
+            actionBar.setItemsBackgroundColor(dark ? 0x0FFFFFFF : 0x0F000000, false);
         } else if (hasWhiteActionBar()) {
             actionBar.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
             actionBar.setItemsColor(getThemedColor(Theme.key_windowBackgroundWhiteBlackText), false);
@@ -481,7 +489,7 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
             int type = getItemViewType(position);
             if (type == TYPE_HEADER) {
                 if (view instanceof HeaderCell headerCell) {
-                    headerCell.getTextView().setTextColor(isDark ? 0xFF33A1FF : 0xFF007AFF);
+                    headerCell.getTextView().setTextColor(isDark ? 0xFFFFFFFF : 0xFF007AFF);
                     headerCell.getTextView().setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 14);
                     headerCell.getTextView().setTypeface(AndroidUtilities.bold());
                     headerCell.setPadding(dp(21), dp(12), dp(21), 0);
@@ -512,16 +520,16 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
 
             if (view instanceof TextSettingsCell cell) {
                 cell.getTextView().setTextColor(isDark ? android.graphics.Color.WHITE : 0xFF1A1A2E);
-                cell.getValueTextView().setTextColor(isDark ? 0xFF33A1FF : 0xFF007AFF);
+                cell.getValueTextView().setTextColor(isDark ? 0xFFFFFFFF : 0xFF007AFF);
             } else if (view instanceof TextCheckCell cell) {
                 cell.getTextView().setTextColor(isDark ? android.graphics.Color.WHITE : 0xFF1A1A2E);
-                cell.getValueTextView().setTextColor(isDark ? 0xFF33A1FF : 0xFF007AFF);
+                cell.getValueTextView().setTextColor(isDark ? 0xFFFFFFFF : 0xFF007AFF);
             } else if (view instanceof TextCell cell) {
                 cell.getTextView().setTextColor(isDark ? android.graphics.Color.WHITE : 0xFF1A1A2E);
-                cell.getValueTextView().setTextColor(isDark ? 0xFF33A1FF : 0xFF007AFF);
+                cell.getValueTextView().setTextColor(isDark ? 0xFFFFFFFF : 0xFF007AFF);
             } else if (view instanceof TextDetailSettingsCell cell) {
                 cell.getTextView().setTextColor(isDark ? android.graphics.Color.WHITE : 0xFF1A1A2E);
-                cell.getValueTextView().setTextColor(isDark ? 0xFF33A1FF : 0xFF007AFF);
+                cell.getValueTextView().setTextColor(isDark ? 0xFFFFFFFF : 0xFF007AFF);
             }
         }
 
