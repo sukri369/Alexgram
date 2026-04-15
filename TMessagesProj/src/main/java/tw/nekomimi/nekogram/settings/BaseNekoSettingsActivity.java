@@ -99,6 +99,9 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
     protected HashMap<String, Integer> rowMap = new HashMap<>(20);
     protected HashMap<Integer, String> rowMapReverse = new HashMap<>(20);
 
+    private int highlightRow = -1;
+    private final Paint highlightPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+
     protected boolean isDark;
     protected int cardBg;
     protected int cardBorder;
@@ -384,13 +387,15 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
 
     public void scrollToRow(String key, Runnable unknown) {
         if (rowMap.containsKey(key)) {
-            listView.highlightRow(() -> {
-                // noinspection ConstantConditions
-                int position = rowMap.get(key);
-                layoutManager.scrollToPositionWithOffset(position, dp(60));
-                return position;
-            });
-        } else {
+            int position = rowMap.get(key);
+            highlightRow = position;
+            layoutManager.scrollToPositionWithOffset(position, dp(60));
+            listAdapter.notifyItemChanged(position);
+            AndroidUtilities.runOnUIThread(() -> {
+                highlightRow = -1;
+                listAdapter.notifyItemChanged(position);
+            }, 1500);
+        } else if (unknown != null) {
             unknown.run();
         }
     }
@@ -479,6 +484,8 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
 
         private void modernizeCell(View view, int position) {
             int type = getItemViewType(position);
+            
+            boolean isHighlighted = position == highlightRow;
             if (type == TYPE_HEADER) {
                 if (view instanceof HeaderCell headerCell) {
                     headerCell.getTextView().setTextColor(isDark ? 0xFF33A1FF : 0xFF007AFF);
@@ -507,6 +514,9 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
             });
             if (isFirst && isLast) {
                 gd.setStroke(dp(1), cardBorder);
+            }
+            if (isHighlighted) {
+                gd.setColor(isDark ? 0x442196F3 : 0x222196F3);
             }
             view.setBackground(gd);
 

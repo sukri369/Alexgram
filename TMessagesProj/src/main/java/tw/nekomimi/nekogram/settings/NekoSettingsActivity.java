@@ -145,6 +145,19 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         actionBar.setItemsColor(color, false);
         actionBar.setTitleColor(color);
         
+        final FrameLayout searchContainer = new FrameLayout(context);
+        searchContainer.setVisibility(View.GONE);
+        searchContainer.setAlpha(0.0f);
+        
+        org.telegram.ui.Components.BlurredRecyclerView searchListView = new org.telegram.ui.Components.BlurredRecyclerView(context);
+        searchListView.setLayoutManager(new LinearLayoutManager(context));
+        searchListView.setPadding(0, AndroidUtilities.dp(4), 0, AndroidUtilities.dp(16));
+        searchListView.setClipToPadding(false);
+        
+        final SearchAdapter searchAdapter = new SearchAdapter(context);
+        searchListView.setAdapter(searchAdapter);
+        searchContainer.addView(searchListView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        
         final int search_id = 1;
         final int cloud_id = 2;
         org.telegram.ui.ActionBar.ActionBarMenu menu = actionBar.createMenu();
@@ -152,18 +165,23 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         searchItem.setIsSearchField(true).setActionBarMenuItemSearchListener(new org.telegram.ui.ActionBar.ActionBarMenuItem.ActionBarMenuItemSearchListener() {
             @Override
             public void onSearchExpand() {
-                // Handle search expansion
+                searchContainer.setVisibility(View.VISIBLE);
+                searchContainer.animate().alpha(1.0f).setDuration(200).start();
+                listView.animate().alpha(0.0f).setDuration(200).start();
             }
             @Override
             public void onSearchCollapse() {
-                // Handle search collapse
+                searchContainer.animate().alpha(0.0f).setDuration(200).withEndAction(() -> searchContainer.setVisibility(View.GONE)).start();
+                listView.animate().alpha(1.0f).setDuration(200).start();
+                searchAdapter.clear();
             }
             @Override
             public void onTextChanged(android.widget.EditText editText) {
-                // Handle search text change
+                String query = editText.getText().toString();
+                searchAdapter.search(query);
             }
         });
-        searchItem.setSearchFieldHint("Search settings...");
+        searchItem.setSearchFieldHint("Search anything...");
         
         org.telegram.ui.ActionBar.ActionBarMenuItem cloudItem = menu.addItem(cloud_id, R.drawable.cloud_sync);
         if (searchItem != null) searchItem.setIconColor(color);
@@ -201,6 +219,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         });
         
         frameLayout.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        frameLayout.addView(searchContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.TOP | Gravity.LEFT, 0, 64, 0, 0));
         frameLayout.addView(actionBar, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
         return fragmentView;
@@ -729,6 +748,72 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         public void update() { 
             textView.setText("Alexgram v" + BuildVars.BUILD_VERSION_STRING); 
             textView.setGravity(Gravity.CENTER);
+        }
+    }
+
+    private class SearchAdapter extends RecyclerListView.SelectionAdapter {
+        private final Context mContext;
+        private final List<SettingsSearchManager.SearchItem> results = new ArrayList<>();
+
+        public SearchAdapter(Context context) {
+            mContext = context;
+        }
+
+        public void search(String query) {
+            results.clear();
+            results.addAll(SettingsSearchManager.getInstance().search(query));
+            notifyDataSetChanged();
+        }
+
+        public void clear() {
+            results.clear();
+            notifyDataSetChanged();
+        }
+
+        @Override
+        public int getItemCount() {
+            return results.size();
+        }
+
+        @Override
+        public boolean isEnabled(RecyclerView.ViewHolder holder) {
+            return true;
+        }
+
+        @NonNull
+        @Override
+        public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            SettingsSearchResultCell cell = new SettingsSearchResultCell(mContext);
+            cell.setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
+            return new RecyclerListView.Holder(cell);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+            SettingsSearchResultCell cell = (SettingsSearchResultCell) holder.itemView;
+            SettingsSearchManager.SearchItem item = results.get(position);
+            cell.setData(item, position == results.size() - 1);
+            cell.setOnClickListener(v -> {
+                try {
+                    if (item.fragmentClass == NekoSettingsActivity.class) {
+                        actionBar.closeSearchField();
+                        scrollToRow(item.key, null);
+                    } else {
+                        BaseFragment fragment = item.fragmentClass.getConstructor().newInstance();
+                        android.os.Bundle args = new android.os.Bundle();
+                        args.putString("scrollToKey", item.key);
+                        fragment.setArguments(args);
+                        presentFragment(fragment);
+                    }
+                } catch (Exception e) {
+                    org.telegram.messenger.FileLog.e(e);
+                }
+            });
+        }
+
+        @Override
+        public int getItemViewType(int position) {
+            return 0;
         }
     }
 
