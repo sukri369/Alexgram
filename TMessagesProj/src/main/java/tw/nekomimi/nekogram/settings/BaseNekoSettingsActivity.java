@@ -128,22 +128,7 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
             String scrollToKey = getArguments().getString("scrollToKey");
             if (scrollToKey != null) {
                 getArguments().remove("scrollToKey");
-                int position = -1;
-                if (rowMap.containsKey(scrollToKey)) {
-                    position = rowMap.get(scrollToKey);
-                }
-                if (position != -1) {
-                    final int pos = position;
-                    listView.scrollToPosition(pos);
-                    listView.postDelayed(() -> {
-                        RecyclerView.ViewHolder holder = listView.findViewHolderForAdapterPosition(pos);
-                        if (holder != null) {
-                            onItemClick(holder.itemView, pos, 0, 0);
-                        } else {
-                            onItemClick(null, pos, 0, 0);
-                        }
-                    }, 100);
-                }
+                scrollToRow(scrollToKey, null);
             }
         }
     }
