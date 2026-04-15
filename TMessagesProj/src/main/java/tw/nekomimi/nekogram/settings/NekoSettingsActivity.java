@@ -151,7 +151,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         
         org.telegram.ui.Components.BlurredRecyclerView searchListView = new org.telegram.ui.Components.BlurredRecyclerView(context);
         searchListView.setLayoutManager(new LinearLayoutManager(context));
-        searchListView.setPadding(0, AndroidUtilities.dp(4), 0, AndroidUtilities.dp(16));
+        searchListView.setPadding(0, AndroidUtilities.dp(64) + (AndroidUtilities.isTablet() ? 0 : AndroidUtilities.statusBarHeight), 0, AndroidUtilities.dp(16));
         searchListView.setClipToPadding(false);
         
         final SearchAdapter searchAdapter = new SearchAdapter(context);
@@ -219,7 +219,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         });
         
         frameLayout.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
-        frameLayout.addView(searchContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.TOP | Gravity.LEFT, 0, 64, 0, 0));
+        frameLayout.addView(searchContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
         frameLayout.addView(actionBar, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
         return fragmentView;
