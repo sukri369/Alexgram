@@ -11,8 +11,16 @@ import tw.nekomimi.nekogram.utils.HttpClient
 import java.util.*
 
 object FreeProxyManager {
-    private const val ALL_PROXIES_URL = "https://cdn.jsdelivr.net/gh/proxifly/free-proxy-list@main/proxies/protocols/socks5/data.json"
-    private const val META_URL = "https://cdn.jsdelivr.net/gh/proxifly/free-proxy-list@main/proxies/meta/data.json"
+    private val MIRRORS_PROXIES = listOf(
+        "https://cdn.jsdelivr.net/gh/proxifly/free-proxy-list@main/proxies/protocols/socks5/data.json",
+        "https://raw.githubusercontent.com/proxifly/free-proxy-list/main/proxies/protocols/socks5/data.json",
+        "https://proxifly.dev/proxies/protocols/socks5/data.json"
+    )
+    private val MIRRORS_META = listOf(
+        "https://cdn.jsdelivr.net/gh/proxifly/free-proxy-list@main/proxies/meta/data.json",
+        "https://raw.githubusercontent.com/proxifly/free-proxy-list/main/proxies/meta/data.json",
+        "https://proxifly.dev/proxies/meta/data.json"
+    )
 
     private val gson = Gson()
     private var cachedProxies: List<FreeProxy> = emptyList()
@@ -47,53 +55,55 @@ object FreeProxyManager {
     )
 
     suspend fun fetchProxies(force: Boolean = false): List<FreeProxy> = withContext(Dispatchers.IO) {
-        if (!force && cachedProxies.isNotEmpty() && System.currentTimeMillis() - lastFetchTime < 300_000) {
+        if (!force && cachedProxies.isNotEmpty() && System.currentTimeMillis() - lastFetchTime < 300000) {
             return@withContext cachedProxies
         }
 
-        try {
-            val request = Request.Builder()
-                .url(ALL_PROXIES_URL)
-                .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
-                .build()
-            val response = HttpClient.instance.newCall(request).execute()
-            if (response.isSuccessful) {
-                val json = response.body?.string()
-                if (json != null) {
-                    val type = object : TypeToken<List<FreeProxy>>() {}.type
-                    cachedProxies = gson.fromJson(json, type)
-                    lastFetchTime = System.currentTimeMillis()
-                } else {
-                    FileLog.e("FreeProxyManager: ALL_PROXIES_URL response body is null")
+        for (url in MIRRORS_PROXIES) {
+            try {
+                val request = Request.Builder()
+                    .url(url)
+                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+                    .build()
+                val response = HttpClient.instance.newCall(request).execute()
+                if (response.isSuccessful) {
+                    val json = response.body?.string()
+                    if (json != null) {
+                        val type = object : TypeToken<List<FreeProxy>>() {}.type
+                        cachedProxies = gson.fromJson(json, type)
+                        lastFetchTime = System.currentTimeMillis()
+                        return@withContext cachedProxies
+                    }
                 }
-            } else {
-                FileLog.e("FreeProxyManager: ALL_PROXIES_URL failed with code ${response.code}")
+            } catch (e: Exception) {
+                FileLog.e("FreeProxyManager: Proxy mirror failed: $url", e)
             }
-        } catch (e: Exception) {
-            FileLog.e(e)
         }
         cachedProxies
     }
 
     suspend fun fetchMeta(): FreeProxyMeta? = withContext(Dispatchers.IO) {
-        try {
-            val request = Request.Builder()
-                .url(META_URL)
-                .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
-                .build()
-            val response = HttpClient.instance.newCall(request).execute()
-            if (response.isSuccessful) {
-                val json = response.body?.string()
-                if (json != null) {
-                    cachedMeta = gson.fromJson(json, FreeProxyMeta::class.java)
-                } else {
-                    FileLog.e("FreeProxyManager: META_URL response body is null")
+        if (cachedMeta != null && System.currentTimeMillis() - lastFetchTime < 300000) {
+            return@withContext cachedMeta
+        }
+
+        for (url in MIRRORS_META) {
+            try {
+                val request = Request.Builder()
+                    .url(url)
+                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+                    .build()
+                val response = HttpClient.instance.newCall(request).execute()
+                if (response.isSuccessful) {
+                    val json = response.body?.string()
+                    if (json != null) {
+                        cachedMeta = gson.fromJson(json, FreeProxyMeta::class.java)
+                        return@withContext cachedMeta
+                    }
                 }
-            } else {
-                FileLog.e("FreeProxyManager: META_URL failed with code ${response.code}")
+            } catch (e: Exception) {
+                FileLog.e("FreeProxyManager: Meta mirror failed: $url", e)
             }
-        } catch (e: Exception) {
-            FileLog.e(e)
         }
         cachedMeta
     }

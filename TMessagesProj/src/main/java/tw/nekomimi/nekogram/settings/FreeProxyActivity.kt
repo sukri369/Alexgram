@@ -73,6 +73,11 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
                 proxies = FreeProxyManager.fetchProxies()
                 meta = FreeProxyManager.fetchMeta()
                 FileLog.d("FreeProxyActivity: Loaded ${proxies.size} proxies")
+                if (proxies.isEmpty()) {
+                    showToast("No proxies found. Trying mirrors...")
+                } else {
+                    showToast("Loaded ${proxies.size} proxies")
+                }
                 countries = proxies.map { it.geolocation.country }.distinct().sorted()
                 filterProxies()
                 isLoading = false
@@ -81,6 +86,7 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
                 countryChips?.updateCountries(countries)
             } catch (e: Exception) {
                 FileLog.e(e)
+                showToast("Connection error. Please check your network.")
                 isLoading = false
                 updateRows()
                 listAdapter?.notifyDataSetChanged()
