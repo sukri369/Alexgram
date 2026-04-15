@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Locale;
 
 import org.telegram.messenger.R;
+import org.telegram.messenger.Utilities;
 import org.telegram.ui.AIAssistanceSettingsActivity;
 import org.telegram.ui.ActionBar.BaseFragment;
 
@@ -39,7 +40,8 @@ public class SettingsSearchManager {
     }
 
     private static SettingsSearchManager instance;
-    private final List<SearchItem> index = new ArrayList<>();
+    private final List<SearchItem> index = java.util.Collections.synchronizedList(new ArrayList<>());
+    private boolean isIndexing = false;
 
     public static SettingsSearchManager getInstance() {
         if (instance == null) {
@@ -49,7 +51,23 @@ public class SettingsSearchManager {
     }
 
     private SettingsSearchManager() {
-        loadIndex();
+        reloadIndex();
+    }
+
+    public boolean isIndexing() {
+        return isIndexing;
+    }
+
+    public void reloadIndex() {
+        if (isIndexing) return;
+        isIndexing = true;
+        Utilities.globalQueue.postRunnable(() -> {
+            try {
+                loadIndex();
+            } finally {
+                isIndexing = false;
+            }
+        });
     }
 
     private void loadIndex() {
@@ -139,7 +157,7 @@ public class SettingsSearchManager {
 
     public List<SearchItem> search(String query) {
         List<SearchItem> results = new ArrayList<>();
-        if (query == null || query.isEmpty()) return results;
+        if (query == null || query.isEmpty() || isIndexing) return results;
         
         String lowerQuery = query.toLowerCase(Locale.ROOT);
         for (SearchItem item : index) {

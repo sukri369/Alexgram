@@ -73,6 +73,7 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
     protected HashMap<String, Integer> rowMap = new HashMap<>(20);
     protected HashMap<Integer, String> rowMapReverse = new HashMap<>(20);
     protected HashMap<Integer, ConfigItem> rowConfigMapReverse = new HashMap<>(20);
+    private int highlightRow = -1;
 
     protected boolean isDark;
     protected int cardBg;
@@ -216,23 +217,7 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
             String scrollToKey = getArguments().getString("scrollToKey");
             if (scrollToKey != null) {
                 getArguments().remove("scrollToKey");
-                int position = -1;
-                if (rowMap.containsKey(scrollToKey)) {
-                    position = rowMap.get(scrollToKey);
-                }
-                if (position != -1) {
-                    final int pos = position;
-                    listView.scrollToPosition(pos);
-                    listView.postDelayed(() -> {
-                        RecyclerView.ViewHolder holder = listView.findViewHolderForAdapterPosition(pos);
-                        if (holder != null) {
-                            handleCellClick(holder.itemView, pos, 0, 0);
-                        } else {
-                            // Fallback if not visibly loaded yet
-                            handleCellClick(null, pos, 0, 0);
-                        }
-                    }, 100);
-                }
+                scrollToRow(scrollToKey, null);
             }
         }
     }
@@ -513,10 +498,17 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
         }
         if (position > -1 && listView != null && layoutManager != null) {
             int finalPosition = position;
-            listView.highlightRow(() -> {
-                layoutManager.scrollToPositionWithOffset(finalPosition, dp(60));
-                return finalPosition;
-            });
+            highlightRow = finalPosition;
+            layoutManager.scrollToPositionWithOffset(finalPosition, dp(60));
+            if (getListAdapter() != null) {
+                getListAdapter().notifyItemChanged(finalPosition);
+            }
+            AndroidUtilities.runOnUIThread(() -> {
+                highlightRow = -1;
+                if (getListAdapter() != null) {
+                    getListAdapter().notifyItemChanged(finalPosition);
+                }
+            }, 1500);
         } else if (unknown != null) {
             unknown.run();
         }
@@ -662,6 +654,9 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
                     gd.setCornerRadii(new float[]{topRadius, topRadius, topRadius, topRadius, bottomRadius, bottomRadius, bottomRadius, bottomRadius});
                     if (isFirst && isLast) {
                         gd.setStroke(dp(1), cardBorder);
+                    }
+                    if (position == highlightRow) {
+                        gd.setColor(isDark ? 0x442196F3 : 0x222196F3);
                     }
                     view.setBackground(gd);
 
