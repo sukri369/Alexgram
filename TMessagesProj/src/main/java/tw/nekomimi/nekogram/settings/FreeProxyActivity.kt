@@ -42,7 +42,8 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
     private var fetchJob: Job? = null
     private val activityScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     
-    private var searchQuery: String = ""
+    private var currentSearchQuery: String = ""
+    private var isSearch = false
     private var selectedCountry: String? = null
     
     private var countryChips: HorizontalCountryChips? = null
@@ -89,10 +90,10 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
 
     private fun filterProxies() {
         filteredProxies = proxies.filter { proxy ->
-            val matchesSearch = searchQuery.isEmpty() || 
-                proxy.ip.contains(searchQuery, true) || 
-                proxy.geolocation.country.contains(searchQuery, true) || 
-                proxy.geolocation.city.contains(searchQuery, true)
+            val matchesSearch = currentSearchQuery.isEmpty() || 
+                proxy.ip.contains(currentSearchQuery, true) || 
+                proxy.geolocation.country.contains(currentSearchQuery, true) || 
+                proxy.geolocation.city.contains(currentSearchQuery, true)
             
             val matchesCountry = selectedCountry == null || proxy.geolocation.country == selectedCountry
             
