@@ -1,5 +1,9 @@
 package tw.nekomimi.nekogram.settings;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
 import org.telegram.messenger.R;
 import org.telegram.ui.AIAssistanceSettingsActivity;
 import org.telegram.ui.ActionBar.BaseFragment;
