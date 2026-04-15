@@ -110,7 +110,8 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
     override fun createActionBar(context: Context): ActionBar {
         val actionBar = super.createActionBar(context)
         
-        val searchItem = actionBar.createMenu().addItem(1, R.drawable.ic_ab_search).setIsSearchField(true)
+        val menu = actionBar.createMenu()
+        val searchItem = menu.addItem(1, R.drawable.ic_ab_search).setIsSearchField(true)
         searchItem.getSearchField()?.let { searchField ->
             searchField.hint = LocaleController.getString("FreeProxySearchHint", R.string.FreeProxySearchHint)
             searchItem.setActionBarMenuItemSearchListener(object : ActionBarMenuItem.ActionBarMenuItemSearchListener() {
@@ -132,6 +133,17 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
                 }
             })
         }
+        
+        menu.addItem(2, R.drawable.ic_ab_other)
+        actionBar.setActionBarMenuOnItemClick(object : ActionBar.ActionBarMenuOnItemClick() {
+            override fun onItemClick(id: Int) {
+                if (id == -1) {
+                    finishFragment()
+                } else if (id == 2) {
+                    loadData()
+                }
+            }
+        })
         return actionBar
     }
 

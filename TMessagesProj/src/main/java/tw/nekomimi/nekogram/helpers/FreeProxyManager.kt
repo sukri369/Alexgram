@@ -1,6 +1,8 @@
 package tw.nekomimi.nekogram.helpers
 
+import androidx.annotation.Keep
 import com.google.gson.Gson
+import com.google.gson.annotations.SerializedName
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -27,31 +29,35 @@ object FreeProxyManager {
     private var cachedMeta: FreeProxyMeta? = null
     private var lastFetchTime: Long = 0
 
+    @Keep
     data class FreeProxy(
-        val proxy: String,
-        val protocol: String,
-        val ip: String,
-        val port: Int,
-        val https: Boolean,
-        val anonymity: String,
-        val score: Int,
-        val geolocation: Geolocation
+        @SerializedName("proxy") val proxy: String,
+        @SerializedName("protocol") val protocol: String,
+        @SerializedName("ip") val ip: String,
+        @SerializedName("port") val port: Int,
+        @SerializedName("https") val https: Boolean,
+        @SerializedName("anonymity") val anonymity: String,
+        @SerializedName("score") val score: Int,
+        @SerializedName("geolocation") val geolocation: Geolocation
     )
 
+    @Keep
     data class Geolocation(
-        val country: String,
-        val city: String
+        @SerializedName("country") val country: String,
+        @SerializedName("city") val city: String
     )
 
+    @Keep
     data class FreeProxyMeta(
-        val timestamp: String,
-        val totals: Totals
+        @SerializedName("timestamp") val timestamp: String,
+        @SerializedName("totals") val totals: Totals
     )
 
+    @Keep
     data class Totals(
-        val all: Int,
-        val protocols: Map<String, Int>,
-        val countries: Map<String, Int>
+        @SerializedName("all") val all: Int,
+        @SerializedName("protocols") val protocols: Map<String, Int>,
+        @SerializedName("countries") val countries: Map<String, Int>
     )
 
     suspend fun fetchProxies(force: Boolean = false): List<FreeProxy> = withContext(Dispatchers.IO) {
