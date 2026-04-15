@@ -1,0 +1,375 @@
+package tw.nekomimi.nekogram.settings
+
+import android.content.Context
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.RectF
+import android.text.Editable
+import android.text.TextUtils
+import android.text.TextWatcher
+import android.util.TypedValue
+import android.view.Gravity
+import android.view.View
+import android.view.ViewGroup
+import android.widget.EditText
+import android.widget.FrameLayout
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.recyclerview.widget.RecyclerView
+import org.telegram.messenger.*
+import org.telegram.ui.ActionBar.*
+import org.telegram.ui.Cells.HeaderCell
+import org.telegram.ui.Cells.ShadowSectionCell
+import org.telegram.ui.Components.*
+import tw.nekomimi.nekogram.helpers.FreeProxyManager
+import tw.nekomimi.nekogram.helpers.FreeProxyManager.FreeProxy
+import java.util.*
+import kotlinx.coroutines.*
+import org.telegram.messenger.NotificationCenter.NotificationCenterDelegate
+import org.telegram.tgnet.ConnectionsManager
+import tw.nekomimi.nekogram.utils.AlertUtil.showToast
+
+class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate {
+
+    private var proxies: List<FreeProxy> = emptyList()
+    private var filteredProxies: List<FreeProxy> = emptyList()
+    private var meta: FreeProxyManager.FreeProxyMeta? = null
+    
+    private var fetchJob: Job? = null
+    private val activityScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    
+    private var searchQuery: String = ""
+    private var selectedCountry: String? = null
+    
+    private var countryChips: HorizontalCountryChips? = null
+    private var countries: List<String> = emptyList()
+
+    private val pingMap = mutableMapOf<String, Long>()
+    private var proxyStartRow = 0
+    private var proxyEndRow = 0
+
+    override fun onFragmentCreate(): Boolean {
+        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.proxyCheckDone)
+        loadData()
+        return super.onFragmentCreate()
+    }
+
+    override fun onFragmentDestroy() {
+        super.onFragmentDestroy()
+        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.proxyCheckDone)
+        fetchJob?.cancel()
+    }
+
+    private fun loadData() {
+        fetchJob = activityScope.launch {
+            proxies = FreeProxyManager.fetchProxies()
+            meta = FreeProxyManager.fetchMeta()
+            countries = proxies.map { it.geolocation.country }.distinct().sorted()
+            filterProxies()
+            listAdapter?.notifyDataSetChanged()
+            countryChips?.updateCountries(countries)
+        }
+    }
+
+    private fun filterProxies() {
+        filteredProxies = proxies.filter { proxy ->
+            val matchesSearch = searchQuery.isEmpty() || 
+                proxy.ip.contains(searchQuery, true) || 
+                proxy.geolocation.country.contains(searchQuery, true) || 
+                proxy.geolocation.city.contains(searchQuery, true)
+            
+            val matchesCountry = selectedCountry == null || proxy.geolocation.country == selectedCountry
+            
+            matchesSearch && matchesCountry
+        }.sortedByDescending { it.score }
+    }
+
+    override fun createActionBar(context: Context): ActionBar {
+        val actionBar = super.createActionBar(context)
+        
+        val menu = actionBar.createMenu()
+        val searchItem = menu.addItem(0, R.drawable.ic_ab_search).setIsSearchField(true)
+        searchItem.actionBarMenuItemSearchField.setHint(LocaleController.getString(R.string.Search))
+        searchItem.actionBarMenuItemSearchField.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                searchQuery = s?.toString() ?: ""
+                filterProxies()
+                listAdapter?.notifyDataSetChanged()
+            }
+            override fun afterTextChanged(s: Editable?) {}
+        })
+        
+        return actionBar
+    }
+
+    override fun createView(context: Context): View {
+        val view = super.createView(context)
+        // Adjust list view if needed
+        return view
+    }
+
+    override fun updateRows() {
+        super.updateRows()
+        addRow("country_chips")
+        addRow("auto_connect")
+        addRow("header_proxies")
+        proxyStartRow = rowCount
+        rowCount += filteredProxies.size
+        proxyEndRow = rowCount
+    }
+
+    override fun createAdapter(context: Context): BaseListAdapter {
+        return object : BaseListAdapter(context) {
+            override fun getItemCount(): Int = rowCount
+
+            override fun getItemViewType(position: Int): Int {
+                return when {
+                    position == rowMap["country_chips"] -> 1001
+                    position == rowMap["auto_connect"] -> TYPE_SETTINGS
+                    position == rowMap["header_proxies"] -> TYPE_HEADER
+                    position in proxyStartRow until proxyEndRow -> TYPE_DETAIL_SETTINGS + 100 // Custom type
+                    else -> TYPE_SETTINGS
+                }
+            }
+
+            override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+                return if (viewType == 1001) {
+                    countryChips = HorizontalCountryChips(mContext)
+                    countryChips!!.layoutParams = RecyclerView.LayoutParams(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT)
+                    RecyclerListView.Holder(countryChips!!)
+                } else if (viewType == TYPE_DETAIL_SETTINGS + 100) {
+                    val cell = FreeProxyCell(mContext)
+                    cell.layoutParams = RecyclerView.LayoutParams(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT)
+                    RecyclerListView.Holder(cell)
+                } else {
+                    super.onCreateViewHolder(parent, viewType)
+                }
+            }
+
+            override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+                super.onBindViewHolder(holder, position)
+                val type = getItemViewType(position)
+                when (position) {
+                    rowMap["auto_connect"] -> {
+                        val cell = holder.itemView as TextSettingsCell
+                        cell.setTextAndValue(LocaleController.getString("FreeProxyAuto", R.string.ProxyRotation), "", true)
+                        cell.setTextColor(if (isDark) 0xFF33A1FF.toInt() else 0xFF007AFF.toInt())
+                    }
+                    rowMap["header_proxies"] -> {
+                        val cell = holder.itemView as HeaderCell
+                        val count = meta?.totals?.all ?: filteredProxies.size
+                        cell.setText(LocaleController.formatString("FreeProxyCount", R.string.ProxyRotation, count))
+                    }
+                }
+                
+                if (type == TYPE_DETAIL_SETTINGS + 100) {
+                    val proxyIndex = position - proxyStartRow
+                    if (proxyIndex in filteredProxies.indices) {
+                        val proxy = filteredProxies[proxyIndex]
+                        val cell = holder.itemView as FreeProxyCell
+                        val ping = pingMap[proxy.proxy] ?: 0L
+                        cell.setProxy(proxy, ping, proxyIndex != filteredProxies.size - 1)
+                    }
+                }
+            }
+        }
+    }
+
+    override fun onItemClick(view: View, position: Int, x: Float, y: Float) {
+        when (position) {
+            rowMap["auto_connect"] -> {
+                val best = FreeProxyManager.getAutoProxy()
+                if (best != null) {
+                    FreeProxyManager.applyProxy(best)
+                    finishFragment()
+                    showToast("Connected to best proxy: ${best.geolocation.city}, ${best.geolocation.country}")
+                }
+            }
+            in proxyStartRow until proxyEndRow -> {
+                val proxy = filteredProxies[position - proxyStartRow]
+                FreeProxyManager.applyProxy(proxy)
+                finishFragment()
+                showToast("Proxy applied: ${proxy.ip}")
+            }
+        }
+    }
+
+    override fun getActionBarTitle(): String = LocaleController.getString("FreeProxy", R.string.ProxyRotation)
+
+    override fun didReceivedNotification(id: Int, account: Int, vararg args: Any?) {
+        if (id == NotificationCenter.proxyCheckDone) {
+            val address = args[0] as String
+            val port = args[1] as Int
+            val ping = args[5] as Long
+            val key = "$address:$port"
+            // We need to find which proxy this belongs to
+            // Proxifly uses proxy string like "socks5://ip:port"
+            proxies.find { it.ip == address && it.port == port }?.let {
+                pingMap[it.proxy] = ping
+                AndroidUtilities.runOnUIThread {
+                    listAdapter?.notifyDataSetChanged()
+                }
+            }
+        }
+    }
+
+    private inner class FreeProxyCell(context: Context) : FrameLayout(context) {
+        private val titleView = TextView(context)
+        private val subtitleView = TextView(context)
+        private val pingView = TextView(context)
+        private val scoreView = ScoreView(context)
+        private var needDivider = false
+
+        init {
+            titleView.textSize = 16f
+            titleView.setTextColor(if (isDark) 0xFFFFFFFF.toInt() else 0xFF1A1A2E.toInt())
+            titleView.typeface = AndroidUtilities.bold()
+            addView(titleView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP or Gravity.START, 72, 10, 80, 0))
+
+            subtitleView.textSize = 13f
+            subtitleView.setTextColor(if (isDark) 0xAAFFFFFF.toInt() else 0xAA1A1A2E.toInt())
+            addView(subtitleView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP or Gravity.START, 72, 32, 80, 0))
+
+            pingView.textSize = 12f
+            pingView.gravity = Gravity.END
+            addView(pingView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP or Gravity.END, 0, 32, 16, 0))
+
+            addView(scoreView, LayoutHelper.createFrame(40, 40, Gravity.TOP or Gravity.START, 16, 12, 0, 0))
+            
+            setPadding(0, 0, 0, dp(8))
+        }
+
+        fun setProxy(proxy: FreeProxy, ping: Long, divider: Boolean) {
+            val flag = LocaleController.getLanguageFlag(proxy.geolocation.country.lowercase()) ?: ""
+            titleView.text = "$flag ${proxy.geolocation.city}, ${proxy.geolocation.country}"
+            subtitleView.text = "${proxy.protocol.uppercase()} • ${proxy.ip}:${proxy.port} • ${proxy.anonymity}"
+            
+            if (ping > 0) {
+                pingView.text = "${ping}ms"
+                pingView.setTextColor(if (ping < 300) 0xFF4CAF50.toInt() else if (ping < 600) 0xFFFFC107.toInt() else 0xFFF44336.toInt())
+            } else {
+                pingView.text = "---"
+                pingView.setTextColor(if (isDark) 0x55FFFFFF.toInt() else 0x55000000.toInt())
+                // Trigger ping
+                ConnectionsManager.getInstance(currentAccount).checkProxy(proxy.ip, proxy.port, "", "", "", { time ->
+                    AndroidUtilities.runOnUIThread {
+                        pingMap[proxy.proxy] = time
+                        listAdapter?.notifyDataSetChanged()
+                    }
+                })
+            }
+            
+            scoreView.setScore(proxy.score)
+            needDivider = divider
+            invalidate()
+        }
+
+        override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+            super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(dp(64), MeasureSpec.EXACTLY))
+        }
+
+        override fun onDraw(canvas: Canvas) {
+            if (needDivider) {
+                canvas.drawLine(dp(72f).toFloat(), measuredHeight - 1f, measuredWidth.toFloat(), measuredHeight - 1f, Theme.dividerPaint)
+            }
+        }
+    }
+
+    private inner class ScoreView(context: Context) : View(context) {
+        private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+        private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+        private var score = 0
+        private val rect = RectF()
+
+        init {
+            paint.style = Paint.Style.STROKE
+            paint.strokeWidth = dp(3f).toFloat()
+            paint.strokeCap = Paint.Cap.ROUND
+            
+            textPaint.textSize = dp(10f).toFloat()
+            textPaint.textAlign = Paint.Align.CENTER
+            textPaint.typeface = AndroidUtilities.bold()
+        }
+
+        fun setScore(s: Int) {
+            score = s
+            invalidate()
+        }
+
+        override fun onDraw(canvas: Canvas) {
+            val w = measuredWidth.toFloat()
+            val h = measuredHeight.toFloat()
+            val r = Math.min(w, h) / 2f - paint.strokeWidth
+            rect.set(w / 2f - r, h / 2f - r, w / 2f + r, h / 2f + r)
+            
+            // Background circle
+            paint.color = if (isDark) 0x22FFFFFF.toInt() else 0x11000000.toInt()
+            canvas.drawCircle(w/2f, h/2f, r, paint)
+            
+            // Score arc
+            paint.color = when {
+                score > 80 -> 0xFF4CAF50.toInt()
+                score > 50 -> 0xFFFFC107.toInt()
+                else -> 0xFFF44336.toInt()
+            }
+            canvas.drawArc(rect, -90f, (score / 100f) * 360f, false, paint)
+            
+            // Text
+            textPaint.color = if (isDark) 0xFFFFFFFF.toInt() else 0xFF1A1A2E.toInt()
+            canvas.drawText(score.toString(), w/2f, h/2f + dp(4f), textPaint)
+        }
+    }
+
+    private inner class HorizontalCountryChips(context: Context) : FrameLayout(context) {
+        private val listView = RecyclerListView(context)
+        private var countryList: List<String> = emptyList()
+
+        init {
+            listView.layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
+            listView.adapter = object : RecyclerView.Adapter<RecyclerListView.Holder>() {
+                override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerListView.Holder {
+                    val textView = TextView(context)
+                    textView.textSize = 14f
+                    textView.setPadding(dp(16), dp(8), dp(16), dp(8))
+                    textView.gravity = Gravity.CENTER
+                    return RecyclerListView.Holder(textView)
+                }
+
+                override fun onBindViewHolder(holder: RecyclerListView.Holder, position: Int) {
+                    val textView = holder.itemView as TextView
+                    val country = if (position == 0) "All" else countryList[position - 1]
+                    val isSelected = (position == 0 && selectedCountry == null) || (country == selectedCountry)
+                    
+                    val flag = if (position == 0) "🌍" else LocaleController.getLanguageFlag(country.lowercase()) ?: "🏳️"
+                    textView.text = "$flag $country"
+                    
+                    val color = if (isSelected) (if (isDark) 0xFF33A1FF.toInt() else 0xFF007AFF.toInt()) else (if (isDark) 0x22FFFFFF.toInt() else 0x11000000.toInt())
+                    val bg = android.graphics.drawable.GradientDrawable()
+                    bg.setColor(color)
+                    bg.cornerRadius = dp(20f).toFloat()
+                    textView.background = bg
+                    textView.setTextColor(if (isSelected) 0xFFFFFFFF.toInt() else (if (isDark) 0xFFBBBBBB.toInt() else 0xFF333333.toInt()))
+                    
+                    textView.setOnClickListener {
+                        selectedCountry = if (position == 0) null else country
+                        filterProxies()
+                        updateRows()
+                        listAdapter?.notifyDataSetChanged()
+                        notifyDataSetChanged()
+                    }
+                }
+
+                override fun getItemCount(): Int = countryList.size + 1
+            }
+            listView.setPadding(dp(12), dp(8), dp(12), dp(8))
+            listView.setClipToPadding(false)
+            addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 56))
+        }
+
+        fun updateCountries(newCountries: List<String>) {
+            countryList = newCountries
+            listView.adapter?.notifyDataSetChanged()
+        }
+    }
+}

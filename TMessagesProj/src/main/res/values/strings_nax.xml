@@ -361,4 +361,12 @@
     <string name="VoiceChangerHexafluoride">Hexafluoride</string>
     <string name="VoiceChangerCave">Cave</string>
     <string name="ShowVoiceChangerInChatMenu">Show Voice Changer in Chat Menu</string>
+    <string name="FreeProxy">Free Proxy</string>
+    <string name="FreeProxyAuto">Auto Connect</string>
+    <string name="FreeProxySelectCountry">Select Country</string>
+    <string name="FreeProxyFetching">Fetching latest proxies...</string>
+    <string name="FreeProxyCount">Browsing %1$d free proxies</string>
+    <string name="FreeProxyUpdated">Updated %1$s ago</string>
+    <string name="FreeProxySearchHint">Search by country, city or IP</string>
+    <string name="FreeProxyPing">%1$d ms</string>
 </resources>
