@@ -373,10 +373,10 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
                 if (position == hiddenChatsRow) {
                     cell.setData("Hidden Chats", "Private conversations", R.drawable.msg_secret, 0xFF2196F3, v -> {
                         tw.nekomimi.nekogram.helpers.HiddenChatsController controller = tw.nekomimi.nekogram.helpers.HiddenChatsController.getInstance();
-                        if (controller.hasPasscode() && controller.isLocked()) {
-                            presentFragment(new tw.nekomimi.nekogram.ui.HiddenChatsPasscodeActivity(tw.nekomimi.nekogram.ui.HiddenChatsPasscodeActivity.MODE_UNLOCK_CHATS));
+                        if (controller.hasPasscode()) {
+                            presentFragment(new tw.nekomimi.nekogram.ui.HiddenChatsPasscodeActivity(tw.nekomimi.nekogram.ui.HiddenChatsPasscodeActivity.MODE_UNLOCK_SETTINGS));
                         } else {
-                            presentFragment(new tw.nekomimi.nekogram.ui.HiddenChatsActivity(new android.os.Bundle()));
+                            presentFragment(new HiddenChatsSettingsActivity());
                         }
                     }, true, false);
                 } else if (position == analyticsRow) {
