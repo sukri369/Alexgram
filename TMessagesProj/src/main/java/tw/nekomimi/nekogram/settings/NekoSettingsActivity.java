@@ -148,8 +148,9 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         final FrameLayout searchContainer = new FrameLayout(context);
         searchContainer.setVisibility(View.GONE);
         searchContainer.setAlpha(0.0f);
+        searchContainer.setBackgroundColor(isDark ? 0xFF1A1A1A : Color.WHITE);
         
-        org.telegram.ui.Components.BlurredRecyclerView searchListView = new org.telegram.ui.Components.BlurredRecyclerView(context);
+        org.telegram.ui.Components.RecyclerListView searchListView = new org.telegram.ui.Components.RecyclerListView(context);
         searchListView.setLayoutManager(new LinearLayoutManager(context));
         searchListView.setPadding(0, 0, 0, AndroidUtilities.dp(16));
         searchListView.setClipToPadding(false);
@@ -219,7 +220,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         });
         
         frameLayout.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
-        frameLayout.addView(searchContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        frameLayout.addView(searchContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.TOP | Gravity.LEFT, 0, 100, 0, 0));
         frameLayout.addView(actionBar, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
         return fragmentView;
@@ -772,7 +773,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
 
         @Override
         public int getItemCount() {
-            return results.isEmpty() ? 0 : results.size() + 1;
+            return results.size();
         }
 
         @Override
@@ -783,11 +784,6 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         @NonNull
         @Override
         public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            if (viewType == 0) {
-                View header = new View(mContext);
-                header.setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, AndroidUtilities.dp(100)));
-                return new RecyclerListView.Holder(header);
-            }
             SettingsSearchResultCell cell = new SettingsSearchResultCell(mContext);
             cell.setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
             return new RecyclerListView.Holder(cell);
@@ -795,11 +791,9 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
 
         @Override
         public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-            if (holder.getItemViewType() == 0) return;
-            
             SettingsSearchResultCell cell = (SettingsSearchResultCell) holder.itemView;
-            SettingsSearchManager.SearchItem item = results.get(position - 1);
-            cell.setData(item, position == results.size());
+            SettingsSearchManager.SearchItem item = results.get(position);
+            cell.setData(item, position == results.size() - 1);
             cell.setOnClickListener(v -> {
                 try {
                     if (item.fragmentClass == NekoSettingsActivity.class) {
@@ -820,7 +814,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
 
         @Override
         public int getItemViewType(int position) {
-            return position == 0 ? 0 : 1;
+            return 0;
         }
     }
 
