@@ -106,7 +106,24 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
             val matchesCountry = selectedCountry == null || proxy.geolocation.country == selectedCountry
             
             matchesSearch && matchesCountry
-        }.sortedByDescending { it.score }
+        }.sortedWith(Comparator { p1, p2 ->
+            val ping1 = pingMap[p1.proxy]
+            val ping2 = pingMap[p2.proxy]
+            
+            // Category 1: Working (ping > 0)
+            // Category 2: Untested (ping == null or 0)
+            // Category 3: Dead/Error (ping < 0)
+            val cat1 = if (ping1 != null && ping1 > 0) 1 else if (ping1 != null && ping1 < 0) 3 else 2
+            val cat2 = if (ping2 != null && ping2 > 0) 1 else if (ping2 != null && ping2 < 0) 3 else 2
+            
+            if (cat1 != cat2) {
+                cat1.compareTo(cat2) // 1 before 2 before 3
+            } else if (cat1 == 1 && ping1 != null && ping2 != null) {
+                ping1.compareTo(ping2) // Lowest ping wins
+            } else {
+                p2.score.compareTo(p1.score) // Fallback to Proxifly score
+            }
+        })
     }
 
     override fun createActionBar(context: Context): ActionBar {
@@ -281,6 +298,8 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
                 pendingPings.remove(it.proxy)
                 AndroidUtilities.runOnUIThread {
                     if (isPaused) return@runOnUIThread
+                    filterProxies()
+                    updateRows()
                     listAdapter?.notifyDataSetChanged()
                 }
             }
