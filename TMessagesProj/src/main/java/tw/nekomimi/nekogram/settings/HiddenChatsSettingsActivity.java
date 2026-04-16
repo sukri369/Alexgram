@@ -84,19 +84,27 @@ public class HiddenChatsSettingsActivity extends BaseFragment {
             showChangePasscodeDialog(context);
         }, false));
 
+        boolean hasFingerprint = false;
         if (android.os.Build.VERSION.SDK_INT >= 23) {
             try {
                 org.telegram.messenger.support.fingerprint.FingerprintManagerCompat fingerprintManager = org.telegram.messenger.support.fingerprint.FingerprintManagerCompat.from(org.telegram.messenger.ApplicationLoader.applicationContext);
-                if (fingerprintManager.isHardwareDetected()) {
-                    optionsCard.addView(createGlassDivider(context));
-                    optionsCard.addView(createSwitchItem(context, "Unlock with Fingerprint", "Use fingerprint to access Hidden Chats", R.drawable.fingerprint, 0xFF009688,
-                            HiddenChatsController.getInstance().isBiometricEnabled(), isChecked -> {
-                                HiddenChatsController.getInstance().setBiometricEnabled(isChecked);
-                            }));
-                }
+                hasFingerprint = fingerprintManager.isHardwareDetected();
             } catch (Throwable e) {
                 org.telegram.messenger.FileLog.e(e);
             }
+        }
+
+        if (hasFingerprint) {
+            optionsCard.addView(createGlassDivider(context));
+            optionsCard.addView(createSwitchItem(context, "Unlock with Fingerprint", "Use biometric scanning as secondary decryption.", R.drawable.fingerprint, 0xFF009688,
+                    HiddenChatsController.getInstance().isBiometricEnabled(), isChecked -> {
+                        HiddenChatsController.getInstance().setBiometricEnabled(isChecked);
+                    }));
+        } else {
+            optionsCard.addView(createGlassDivider(context));
+            optionsCard.addView(createSettingItem(context, "Fingerprint Scanning", "TERMINAL_STATUS: MODULE_OFFLINE", R.drawable.fingerprint, 0xFF607D8B, v -> {
+                BulletinFactory.of(this).createSimpleBulletin(R.raw.ic_ban, "BIOMETRIC MODULE NOT FOUND", "System scan failed. Hardware sensors are not detected on this terminal.").show();
+            }, false));
         }
 
         optionsCard.addView(createGlassDivider(context));
