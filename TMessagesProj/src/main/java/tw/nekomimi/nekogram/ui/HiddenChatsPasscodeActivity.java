@@ -52,9 +52,11 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.LinearGradient;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.RectF;
 import android.graphics.Shader;
 import android.view.HapticFeedbackConstants;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.OvershootInterpolator;
 import android.widget.ImageView;
 
@@ -81,11 +83,14 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
     private TextView titleView;
     private TextView subtitleView;
     private TextView errorView;
-    private FrameLayout containerView;
+    private HudContainerView containerView;
     private CodeFieldContainer codeFieldContainer;
     private CustomPhoneKeyboardView keyboardView;
-    private AnimatedBackgroundView backgroundView;
+    private CyberBackgroundView backgroundView;
     private ImageView fingerprintImage;
+
+    private String targetTitle;
+    private String targetSubtitle;
 
     public HiddenChatsPasscodeActivity(@Mode int mode) {
         this.mode = mode;
@@ -96,10 +101,10 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
         actionBar.setAllowOverlayTitle(false);
         actionBar.setCastShadows(false);
-        actionBar.setTitle("Hidden Chats");
+        actionBar.setTitle("HIDDEN_ACCESS");
         actionBar.setBackgroundColor(0);
         actionBar.setItemsBackgroundColor(Theme.getColor(Theme.key_actionBarDefaultSelector), false);
-        actionBar.setItemsColor(Theme.getColor(Theme.key_actionBarDefaultIcon), false);
+        actionBar.setItemsColor(Color.WHITE, false);
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
             public void onItemClick(int id) {
@@ -111,43 +116,31 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
 
         FrameLayout root = new FrameLayout(context);
         
-        backgroundView = new AnimatedBackgroundView(context);
+        backgroundView = new CyberBackgroundView(context);
         root.addView(backgroundView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
-        containerView = new FrameLayout(context) {
-            private Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-            private RectF rect = new RectF();
-            {
-                paint.setColor(Color.argb(Theme.isCurrentThemeDark() ? 40 : 20, 255, 255, 255));
-            }
-            @Override
-            protected void onDraw(Canvas canvas) {
-                rect.set(0, 0, getWidth(), getHeight());
-                canvas.drawRoundRect(rect, AndroidUtilities.dp(24), AndroidUtilities.dp(24), paint);
-                super.onDraw(canvas);
-            }
-        };
-        containerView.setWillNotDraw(false);
-        containerView.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(32), AndroidUtilities.dp(16), AndroidUtilities.dp(32));
-        root.addView(containerView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER, 24, 0, 24, 80));
+        containerView = new HudContainerView(context);
+        root.addView(containerView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER, 28, 0, 28, 80));
 
         LinearLayout content = new LinearLayout(context);
         content.setOrientation(LinearLayout.VERTICAL);
         content.setGravity(Gravity.CENTER_HORIZONTAL);
-        containerView.addView(content, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+        containerView.addView(content, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP, 0, 32, 0, 32));
 
         titleView = new TextView(context);
-        titleView.setTextColor(Color.WHITE);
-        titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 34);
+        titleView.setTextColor(0xFF00E5FF);
+        titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 32);
         titleView.setTypeface(AndroidUtilities.bold());
         titleView.setGravity(Gravity.CENTER_HORIZONTAL);
+        titleView.setLetterSpacing(0.05f);
         content.addView(titleView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL));
 
         subtitleView = new TextView(context);
-        subtitleView.setTextColor(Color.argb(180, 255, 255, 255));
-        subtitleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
+        subtitleView.setTextColor(Color.argb(200, 255, 255, 255));
+        subtitleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
         subtitleView.setGravity(Gravity.CENTER_HORIZONTAL);
-        subtitleView.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(12), AndroidUtilities.dp(24), 0);
+        subtitleView.setPadding(AndroidUtilities.dp(32), AndroidUtilities.dp(8), AndroidUtilities.dp(32), 0);
+        subtitleView.setAllCaps(true);
         content.addView(subtitleView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL));
 
         codeFieldContainer = new CodeFieldContainer(context) {
@@ -160,51 +153,53 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
         for (CodeNumberField f : codeFieldContainer.codeField) {
             f.setShowSoftInputOnFocusCompat(false);
             f.setTransformationMethod(PasswordTransformationMethod.getInstance());
-            f.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 28);
+            f.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 32);
             f.setTextColor(Color.WHITE);
-            f.setCursorColor(Color.WHITE);
-            f.setCursorWidth(2);
+            f.setCursorColor(0xFF00E5FF);
+            f.setCursorWidth(AndroidUtilities.dp(2));
+            f.setBackground(null);
+            f.setPadding(0, 0, 0, AndroidUtilities.dp(8));
             f.setOnFocusChangeListener((v, hasFocus) -> {
                 keyboardView.setEditText(f);
                 keyboardView.setDispatchBackWhenEmpty(true);
             });
         }
-        content.addView(codeFieldContainer, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 0, 40, 0, 0));
+        content.addView(codeFieldContainer, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 0, 48, 0, 0));
 
         errorView = new TextView(context);
-        errorView.setTextColor(0xFFff3b30);
-        errorView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
+        errorView.setTextColor(0xFFFF3D00);
+        errorView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
         errorView.setGravity(Gravity.CENTER_HORIZONTAL);
         errorView.setVisibility(View.INVISIBLE);
-        errorView.setPadding(0, AndroidUtilities.dp(16), 0, 0);
+        errorView.setPadding(0, AndroidUtilities.dp(20), 0, 0);
+        errorView.setAllCaps(true);
         content.addView(errorView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL));
 
         if (android.os.Build.VERSION.SDK_INT >= 23 && (mode == MODE_UNLOCK_CHATS || mode == MODE_UNLOCK_SETTINGS)) {
             fingerprintImage = new ImageView(context);
             fingerprintImage.setImageResource(R.drawable.fingerprint);
             fingerprintImage.setScaleType(ImageView.ScaleType.CENTER);
-            fingerprintImage.setColorFilter(new android.graphics.PorterDuffColorFilter(Color.WHITE, android.graphics.PorterDuff.Mode.SRC_IN));
-            fingerprintImage.setBackground(Theme.createSimpleSelectorCircleDrawable(AndroidUtilities.dp(56), Color.TRANSPARENT, Color.argb(40, 255, 255, 255)));
+            fingerprintImage.setColorFilter(new android.graphics.PorterDuffColorFilter(0xFF00E5FF, android.graphics.PorterDuff.Mode.SRC_IN));
+            fingerprintImage.setBackground(Theme.createSimpleSelectorCircleDrawable(AndroidUtilities.dp(64), Color.TRANSPARENT, Color.argb(40, 0, 229, 255)));
             fingerprintImage.setOnClickListener(v -> {
-                v.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+                v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
                 checkFingerprint();
             });
             fingerprintImage.setContentDescription(LocaleController.getString(R.string.AccDescrFingerprint));
             fingerprintImage.setVisibility(HiddenChatsController.getInstance().isBiometricEnabled() ? View.VISIBLE : View.GONE);
-            content.addView(fingerprintImage, LayoutHelper.createLinear(56, 56, Gravity.CENTER_HORIZONTAL, 0, 30, 0, 0));
+            content.addView(fingerprintImage, LayoutHelper.createLinear(64, 64, Gravity.CENTER_HORIZONTAL, 0, 36, 0, 0));
         }
 
         keyboardView = new CustomPhoneKeyboardView(context);
-        // Custom styling for keyboard
         keyboardView.setBackgroundColor(0);
-        root.addView(keyboardView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, CustomPhoneKeyboardView.KEYBOARD_HEIGHT_DP, Gravity.BOTTOM, 0, 0, 0, 12));
+        root.addView(keyboardView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, CustomPhoneKeyboardView.KEYBOARD_HEIGHT_DP, Gravity.BOTTOM, 8, 0, 8, 16));
 
         root.setOnClickListener(v -> focusFirstEmptyField());
 
         updateTexts();
         focusFirstEmptyField();
         
-        runEntranceAnimation();
+        runGodEntranceAnimation();
 
         fragmentView = root;
         return fragmentView;
@@ -280,27 +275,30 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
     private void updateTexts() {
         if (mode == MODE_SETUP_PASSCODE) {
             if (setupStep == 0) {
-                titleView.setText("Create Passcode");
-                subtitleView.setText("Create a 4-digit passcode for Hidden Chats.");
+                targetTitle = "INIT_NEW_KEY";
+                targetSubtitle = "Establish 4-digit security protocol.";
             } else {
-                titleView.setText("Confirm Passcode");
-                subtitleView.setText("Enter the same 4 digits again.");
+                targetTitle = "CONFIRM_KEY";
+                targetSubtitle = "Verify integrity of the new passcode.";
             }
         } else if (mode == MODE_CHANGE_PASSCODE) {
             if (changePasscodeStep == 0) {
-                titleView.setText("Enter Current Passcode");
-                subtitleView.setText("Verify your current passcode to change it.");
+                targetTitle = "VERIFY_CURRENT";
+                targetSubtitle = "Verification required for decryption change.";
             } else if (changePasscodeStep == 1) {
-                titleView.setText("Create New Passcode");
-                subtitleView.setText("Create a new 4-digit passcode.");
+                targetTitle = "GEN_NEW_PASS";
+                targetSubtitle = "Generate a new 4-digit access code.";
             } else {
-                titleView.setText("Confirm New Passcode");
-                subtitleView.setText("Enter the same 4 digits again.");
+                targetTitle = "VERIFY_NEW";
+                targetSubtitle = "Finalize the encryption update.";
             }
         } else {
-            titleView.setText("Enter Passcode");
-            subtitleView.setText("Use your Hidden Chats passcode to continue.");
+            targetTitle = "HIDDEN_ACCESS";
+            targetSubtitle = "Authentication needed to access secure chats.";
         }
+        
+        runDecryptionAnim(titleView, targetTitle);
+        runDecryptionAnim(subtitleView, targetSubtitle);
     }
 
     private void focusFirstEmptyField() {
@@ -440,107 +438,201 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
         }
     }
 
-    private void runEntranceAnimation() {
-        containerView.setAlpha(0);
-        containerView.setScaleX(0.9f);
-        containerView.setScaleY(0.9f);
-        keyboardView.setAlpha(0);
-        keyboardView.setTranslationY(AndroidUtilities.dp(100));
+    private void runDecryptionAnim(TextView view, String targetText) {
+        if (targetText == null) return;
+        ValueAnimator anim = ValueAnimator.ofFloat(0f, 1f);
+        anim.setDuration(800);
+        anim.addUpdateListener(animation -> {
+            float p = (float) animation.getAnimatedValue();
+            StringBuilder sb = new StringBuilder();
+            int charsToReveal = (int) (targetText.length() * p);
+            for (int i = 0; i < targetText.length(); i++) {
+                if (i < charsToReveal) {
+                    sb.append(targetText.charAt(i));
+                } else {
+                    char c = (char) ('!' + new Random().nextInt(90));
+                    sb.append(c);
+                }
+            }
+            view.setText(sb.toString());
+        });
+        anim.start();
+    }
 
-        titleView.setAlpha(0);
-        titleView.setTranslationY(AndroidUtilities.dp(20));
-        subtitleView.setAlpha(0);
-        subtitleView.setTranslationY(AndroidUtilities.dp(20));
-        codeFieldContainer.setAlpha(0);
-        codeFieldContainer.setTranslationY(AndroidUtilities.dp(20));
+    private void runGodEntranceAnimation() {
+        containerView.setAlpha(0);
+        containerView.setScaleX(1.2f);
+        containerView.setScaleY(1.2f);
+        keyboardView.setAlpha(0);
+        keyboardView.setTranslationY(AndroidUtilities.dp(150));
+
         if (fingerprintImage != null) {
-            fingerprintImage.setAlpha(0);
-            fingerprintImage.setScaleX(0.5f);
-            fingerprintImage.setScaleY(0.5f);
+            fingerprintImage.setAlpha(0f);
+            fingerprintImage.setScaleX(0f);
+            fingerprintImage.setScaleY(0f);
         }
 
         AndroidUtilities.runOnUIThread(() -> {
-            containerView.animate().alpha(1).scaleX(1).scaleY(1).setDuration(500).setInterpolator(new OvershootInterpolator(1.0f)).start();
-            keyboardView.animate().alpha(1).translationY(0).setDuration(600).setStartDelay(100).setInterpolator(AndroidUtilities.overshootInterpolator).start();
-
-            titleView.animate().alpha(1).translationY(0).setDuration(400).setStartDelay(200).start();
-            subtitleView.animate().alpha(1).translationY(0).setDuration(400).setStartDelay(300).start();
-            codeFieldContainer.animate().alpha(1).translationY(0).setDuration(400).setStartDelay(400).start();
+            containerView.animate().alpha(1).scaleX(1).scaleY(1).setDuration(800).setInterpolator(new OvershootInterpolator(0.8f)).start();
+            keyboardView.animate().alpha(1).translationY(0).setDuration(1000).setStartDelay(300).setInterpolator(AndroidUtilities.overshootInterpolator).start();
+            
             if (fingerprintImage != null) {
-                fingerprintImage.animate().alpha(1).scaleX(1).scaleY(1).setDuration(500).setStartDelay(500).setInterpolator(new OvershootInterpolator(1.5f)).start();
+                fingerprintImage.animate().alpha(1).scaleX(1).scaleY(1).setDuration(600).setStartDelay(800).setInterpolator(new OvershootInterpolator(1.4f)).start();
             }
         }, 100);
     }
 
-    private class AnimatedBackgroundView extends View {
+    private class CyberBackgroundView extends View {
         private Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         private ArrayList<Particle> particles = new ArrayList<>();
         private Random random = new Random();
         private long lastTime;
-        private LinearGradient gradient;
+        private LinearGradient bgGradient;
+        private float glitchOffset;
+        private int frameCount;
 
-        public AnimatedBackgroundView(Context context) {
+        public CyberBackgroundView(Context context) {
             super(context);
-            for (int i = 0; i < 30; i++) {
-                particles.add(new Particle());
-            }
-        }
-
-        @Override
-        protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-            super.onSizeChanged(w, h, oldw, oldh);
-            int color1 = Theme.isCurrentThemeDark() ? 0xFF061B3D : 0xFF1A237E;
-            int color2 = Theme.isCurrentThemeDark() ? 0xFF041430 : 0xFF0D47A1;
-            gradient = new LinearGradient(0, 0, 0, h, color1, color2, Shader.TileMode.CLAMP);
-            paint.setShader(gradient);
-            for (Particle p : particles) {
-                p.reset(w, h);
-            }
+            for (int i = 0; i < 40; i++) particles.add(new Particle());
         }
 
         @Override
         protected void onDraw(Canvas canvas) {
-            if (gradient == null) return;
-            canvas.drawRect(0, 0, getWidth(), getHeight(), paint);
-
-            long now = System.currentTimeMillis();
+            long now = SystemClock.elapsedRealtime();
             float dt = lastTime == 0 ? 0.016f : (now - lastTime) / 1000f;
             lastTime = now;
+            frameCount++;
 
-            for (Particle p : particles) {
-                p.update(dt, getWidth(), getHeight());
-                p.draw(canvas);
+            // Mesh Base
+            if (bgGradient == null) {
+                bgGradient = new LinearGradient(0, 0, 0, getHeight(), 0xFF00050A, 0xFF061B3D, Shader.TileMode.CLAMP);
             }
+            paint.setShader(bgGradient);
+            canvas.drawRect(0, 0, getWidth(), getHeight(), paint);
+            paint.setShader(null);
+
+            // Glitch Math
+            glitchOffset = 0;
+            if (frameCount % 120 == 0) glitchOffset = (random.nextFloat() - 0.5f) * AndroidUtilities.dp(8);
+            
+            canvas.save();
+            canvas.translate(glitchOffset, 0);
+
+            // Plexus Lines
+            paint.setStrokeWidth(AndroidUtilities.dp(0.5f));
+            for (int i = 0; i < particles.size(); i++) {
+                Particle p1 = particles.get(i);
+                p1.update(dt, getWidth(), getHeight());
+                for (int j = i + 1; j < particles.size(); j++) {
+                    Particle p2 = particles.get(j);
+                    float dist = (float) Math.hypot(p1.x - p2.x, p1.y - p2.y);
+                    if (dist < AndroidUtilities.dp(120)) {
+                        paint.setColor(0xFF00E5FF);
+                        paint.setAlpha((int) ((1f - dist / AndroidUtilities.dp(120)) * 60));
+                        canvas.drawLine(p1.x, p1.y, p2.x, p2.y, paint);
+                    }
+                }
+            }
+
+            // Particles
+            for (Particle p : particles) p.draw(canvas);
+
+            // Scanlines
+            paint.setColor(Color.WHITE);
+            paint.setAlpha(12);
+            paint.setStrokeWidth(AndroidUtilities.dp(1));
+            float scanPos = (now % 4000) / 4000f * getHeight();
+            canvas.drawLine(0, scanPos, getWidth(), scanPos, paint);
+
+            canvas.restore();
             invalidate();
         }
 
         private class Particle {
-            float x, y, radius, vx, vy, alpha;
-            Paint pPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-
+            float x, y, vx, vy, radius, alpha;
             void reset(int w, int h) {
-                x = random.nextFloat() * w;
-                y = random.nextFloat() * h;
-                radius = 2 + random.nextFloat() * 4;
-                vx = (random.nextFloat() - 0.5f) * 20;
-                vy = (random.nextFloat() - 0.5f) * 20;
-                alpha = 0.1f + random.nextFloat() * 0.3f;
-                pPaint.setColor(Color.WHITE);
+                x = random.nextFloat() * w; y = random.nextFloat() * h;
+                vx = (random.nextFloat() - 0.5f) * 40; vy = (random.nextFloat() - 0.5f) * 40;
+                radius = 1 + random.nextFloat() * 2; alpha = 0.2f + random.nextFloat() * 0.5f;
             }
-
             void update(float dt, int w, int h) {
-                x += vx * dt;
-                y += vy * dt;
-                if (x < 0) x = w;
-                if (x > w) x = 0;
-                if (y < 0) y = h;
-                if (y > h) y = 0;
+                if (x == 0) reset(w, h);
+                x += vx * dt; y += vy * dt;
+                if (x < 0) x = w; if (x > w) x = 0;
+                if (y < 0) y = h; if (y > h) y = 0;
+            }
+            void draw(Canvas canvas) {
+                paint.setColor(0xFF00E5FF);
+                paint.setAlpha((int) (alpha * 255));
+                canvas.drawCircle(x, y, AndroidUtilities.dp(radius), paint);
+            }
+        }
+    }
+
+    private class HudContainerView extends FrameLayout {
+        private Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private float scanLinePos = 0;
+        private boolean scanDown = true;
+
+        public HudContainerView(Context context) {
+            super(context);
+            setWillNotDraw(false);
+            setBackgroundColor(Color.argb(30, 0, 0, 0));
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            float w = getWidth(), h = getHeight();
+            // Glass Base
+            paint.setColor(Color.argb(40, 0, 229, 255));
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(AndroidUtilities.dp(1));
+            canvas.drawRect(AndroidUtilities.dp(2), AndroidUtilities.dp(2), w - AndroidUtilities.dp(2), h - AndroidUtilities.dp(2), paint);
+            
+            // Corners
+            paint.setStrokeWidth(AndroidUtilities.dp(3));
+            float len = AndroidUtilities.dp(20);
+            // TL
+            canvas.drawLine(0, 0, len, 0, paint); canvas.drawLine(0, 0, 0, len, paint);
+            // TR
+            canvas.drawLine(w, 0, w - len, 0, paint); canvas.drawLine(w, 0, w, len, paint);
+            // BL
+            canvas.drawLine(0, h, len, h, paint); canvas.drawLine(0, h, 0, h - len, paint);
+            // BR
+            canvas.drawLine(w, h, w - len, h, paint); canvas.drawLine(w, h, w, h - len, paint);
+
+            // Laser Scanner
+            paint.setStrokeWidth(AndroidUtilities.dp(2));
+            paint.setAlpha(100);
+            canvas.drawLine(AndroidUtilities.dp(4), scanLinePos, w - AndroidUtilities.dp(4), scanLinePos, paint);
+            
+            if (scanDown) {
+                scanLinePos += AndroidUtilities.dp(2);
+                if (scanLinePos > h) scanDown = false;
+            } else {
+                scanLinePos -= AndroidUtilities.dp(2);
+                if (scanLinePos < 0) scanDown = true;
             }
 
-            void draw(Canvas canvas) {
-                pPaint.setAlpha((int) (alpha * 255));
-                canvas.drawCircle(x, y, AndroidUtilities.dp(radius), pPaint);
+            // Tech Text Overlay (Decorative)
+            paint.setStyle(Paint.Style.FILL);
+            paint.setTextSize(AndroidUtilities.dp(8));
+            paint.setAlpha(120);
+            canvas.drawText("SEC_LEVEL: ALPHA", AndroidUtilities.dp(10), AndroidUtilities.dp(15), paint);
+            canvas.drawText("ENCR_MODE: AES_256", w - AndroidUtilities.dp(80), h - AndroidUtilities.dp(10), paint);
+
+            // Underlines for code fields
+            paint.setColor(0xFF00E5FF);
+            paint.setStrokeWidth(AndroidUtilities.dp(2));
+            float startX = (w - codeFieldContainer.getWidth()) / 2f;
+            float startY = codeFieldContainer.getTop() + codeFieldContainer.getHeight() - AndroidUtilities.dp(4);
+            for (int i = 0; i < 4; i++) {
+                float fieldW = codeFieldContainer.codeField[i].getWidth();
+                float x1 = startX + i * (fieldW + AndroidUtilities.dp(12)); // assuming margin
+                canvas.drawLine(x1, startY, x1 + fieldW, startY, paint);
             }
+
+            invalidate();
         }
     }
 }
