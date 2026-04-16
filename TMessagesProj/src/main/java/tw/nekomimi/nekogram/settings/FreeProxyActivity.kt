@@ -465,19 +465,22 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
                     textView.background = bg
                     textView.setTextColor(if (isSelected) 0xFFFFFFFF.toInt() else (if (isDark) 0xFFBBBBBB.toInt() else 0xFF333333.toInt()))
                     
-                    textView.setOnClickListener {
-                        selectedCountry = if (position == 0) null else country
-                        filterProxies()
-                        updateRows()
-                        listAdapter?.notifyDataSetChanged()
-                        notifyDataSetChanged()
-                    }
                 }
 
                 override fun getItemCount(): Int = countryList.size + 1
             }
             listView.setPadding(dp(12f), dp(8f), dp(12f), dp(8f))
             listView.setClipToPadding(false)
+            
+            listView.setOnItemClickListener { _, position ->
+                val country = if (position == 0) "All" else countryList[position - 1]
+                selectedCountry = if (position == 0) null else country
+                filterProxies()
+                updateRows()
+                this@FreeProxyActivity.listAdapter?.notifyDataSetChanged()
+                listView.adapter?.notifyDataSetChanged()
+            }
+
             addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 56f))
         }
 
