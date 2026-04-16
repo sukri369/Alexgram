@@ -183,7 +183,7 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
                     }
                 }
                 @Override public void setAlpha(int alpha) {}
-                @Override public void setColorFilter(android.graphics.PorterDuffColorFilter cf) {}
+                @Override public void setColorFilter(android.graphics.ColorFilter cf) {}
                 @Override public int getOpacity() { return android.graphics.PixelFormat.TRANSLUCENT; }
             });
 
