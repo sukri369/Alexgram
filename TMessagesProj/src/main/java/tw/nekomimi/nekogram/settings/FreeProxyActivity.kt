@@ -64,6 +64,7 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
         super.onFragmentDestroy()
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.proxyCheckDone)
         fetchJob?.cancel()
+        activityScope.cancel()
     }
 
     private fun loadData() {
@@ -497,12 +498,5 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
         } catch (e: Exception) {
             "🏳️"
         }
-    }
-
-    override fun onFragmentDestroy() {
-        super.onFragmentDestroy()
-        fetchJob?.cancel()
-        activityScope.cancel()
-        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.proxyCheckDone)
     }
 }
