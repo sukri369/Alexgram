@@ -117,28 +117,33 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
 
         FrameLayout root = new FrameLayout(context);
         
+        boolean isDark = Theme.isCurrentThemeDark();
+        int primaryColor = isDark ? 0xFF00E5FF : 0xFF00ACC1;
+        int textColor = isDark ? Color.WHITE : 0xFF212121;
+        int subTextColor = isDark ? Color.argb(200, 255, 255, 255) : Color.argb(200, 66, 66, 66);
+
         backgroundView = new CyberBackgroundView(context);
         root.addView(backgroundView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
         containerView = new HudContainerView(context);
-        root.addView(containerView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER, 28, 0, 28, 80));
+        root.addView(containerView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP, 28, 64, 28, 0));
 
         LinearLayout content = new LinearLayout(context);
         content.setOrientation(LinearLayout.VERTICAL);
         content.setGravity(Gravity.CENTER_HORIZONTAL);
-        containerView.addView(content, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP, 0, 32, 0, 32));
+        containerView.addView(content, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP, 0, 20, 0, 20));
 
         titleView = new TextView(context);
-        titleView.setTextColor(0xFF00E5FF);
-        titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 32);
+        titleView.setTextColor(primaryColor);
+        titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 28);
         titleView.setTypeface(AndroidUtilities.bold());
         titleView.setGravity(Gravity.CENTER_HORIZONTAL);
-        titleView.setLetterSpacing(0.05f);
+        titleView.setLetterSpacing(0.06f);
         content.addView(titleView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL));
 
         subtitleView = new TextView(context);
-        subtitleView.setTextColor(Color.argb(200, 255, 255, 255));
-        subtitleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
+        subtitleView.setTextColor(subTextColor);
+        subtitleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
         subtitleView.setGravity(Gravity.CENTER_HORIZONTAL);
         subtitleView.setPadding(AndroidUtilities.dp(32), AndroidUtilities.dp(8), AndroidUtilities.dp(32), 0);
         subtitleView.setAllCaps(true);
@@ -155,17 +160,20 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
             f.setShowSoftInputOnFocusCompat(false);
             f.setTransformationMethod(PasswordTransformationMethod.getInstance());
             f.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 32);
-            f.setTextColor(Color.WHITE);
-            f.setCursorColor(0xFF00E5FF);
+            f.setTextColor(textColor);
+            f.setCursorColor(primaryColor);
             f.setCursorWidth(AndroidUtilities.dp(2));
             f.setBackground(null);
             f.setPadding(0, 0, 0, AndroidUtilities.dp(8));
             f.setOnFocusChangeListener((v, hasFocus) -> {
                 keyboardView.setEditText(f);
                 keyboardView.setDispatchBackWhenEmpty(true);
+                if (hasFocus) {
+                    v.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK);
+                }
             });
         }
-        content.addView(codeFieldContainer, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 0, 48, 0, 0));
+        content.addView(codeFieldContainer, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 0, 40, 0, 0));
 
         errorView = new TextView(context);
         errorView.setTextColor(0xFFFF3D00);
@@ -180,15 +188,15 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
             fingerprintImage = new ImageView(context);
             fingerprintImage.setImageResource(R.drawable.fingerprint);
             fingerprintImage.setScaleType(ImageView.ScaleType.CENTER);
-            fingerprintImage.setColorFilter(new android.graphics.PorterDuffColorFilter(0xFF00E5FF, android.graphics.PorterDuff.Mode.SRC_IN));
-            fingerprintImage.setBackground(Theme.createSimpleSelectorCircleDrawable(AndroidUtilities.dp(64), Color.TRANSPARENT, Color.argb(40, 0, 229, 255)));
+            fingerprintImage.setColorFilter(new android.graphics.PorterDuffColorFilter(primaryColor, android.graphics.PorterDuff.Mode.SRC_IN));
+            fingerprintImage.setBackground(Theme.createSimpleSelectorCircleDrawable(AndroidUtilities.dp(64), Color.TRANSPARENT, Color.argb(isDark ? 40 : 20, 0, 229, 255)));
             fingerprintImage.setOnClickListener(v -> {
                 v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
                 checkFingerprint();
             });
             fingerprintImage.setContentDescription(LocaleController.getString(R.string.AccDescrFingerprint));
             fingerprintImage.setVisibility(HiddenChatsController.getInstance().isBiometricEnabled() ? View.VISIBLE : View.GONE);
-            content.addView(fingerprintImage, LayoutHelper.createLinear(64, 64, Gravity.CENTER_HORIZONTAL, 0, 36, 0, 0));
+            content.addView(fingerprintImage, LayoutHelper.createLinear(64, 64, Gravity.CENTER_HORIZONTAL, 0, 30, 0, 0));
         }
 
         keyboardView = new CustomPhoneKeyboardView(context);
@@ -504,17 +512,20 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
             lastTime = now;
             frameCount++;
 
+            boolean isDark = Theme.isCurrentThemeDark();
+            int color1 = isDark ? 0xFF00050A : 0xFFFAFAFA;
+            int color2 = isDark ? 0xFF061B3D : 0xFFECEFF1;
+            int accentColor = isDark ? 0xFF00E5FF : 0xFF00ACC1;
+
             // Mesh Base
-            if (bgGradient == null) {
-                bgGradient = new LinearGradient(0, 0, 0, getHeight(), 0xFF00050A, 0xFF061B3D, Shader.TileMode.CLAMP);
-            }
+            bgGradient = new LinearGradient(0, 0, 0, getHeight(), color1, color2, Shader.TileMode.CLAMP);
             paint.setShader(bgGradient);
             canvas.drawRect(0, 0, getWidth(), getHeight(), paint);
             paint.setShader(null);
 
             // Glitch Math
             glitchOffset = 0;
-            if (frameCount % 120 == 0) glitchOffset = (random.nextFloat() - 0.5f) * AndroidUtilities.dp(8);
+            if (frameCount % (isDark ? 120 : 240) == 0) glitchOffset = (random.nextFloat() - 0.5f) * AndroidUtilities.dp(8);
             
             canvas.save();
             canvas.translate(glitchOffset, 0);
@@ -528,19 +539,19 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
                     Particle p2 = particles.get(j);
                     float dist = (float) Math.hypot(p1.x - p2.x, p1.y - p2.y);
                     if (dist < AndroidUtilities.dp(120)) {
-                        paint.setColor(0xFF00E5FF);
-                        paint.setAlpha((int) ((1f - dist / AndroidUtilities.dp(120)) * 60));
+                        paint.setColor(accentColor);
+                        paint.setAlpha((int) ((1f - dist / AndroidUtilities.dp(120)) * (isDark ? 60 : 40)));
                         canvas.drawLine(p1.x, p1.y, p2.x, p2.y, paint);
                     }
                 }
             }
 
             // Particles
-            for (Particle p : particles) p.draw(canvas);
+            for (Particle p : particles) p.draw(canvas, accentColor, isDark);
 
             // Scanlines
-            paint.setColor(Color.WHITE);
-            paint.setAlpha(12);
+            paint.setColor(isDark ? Color.WHITE : Color.BLACK);
+            paint.setAlpha(isDark ? 12 : 6);
             paint.setStrokeWidth(AndroidUtilities.dp(1));
             float scanPos = (now % 4000) / 4000f * getHeight();
             canvas.drawLine(0, scanPos, getWidth(), scanPos, paint);
@@ -562,9 +573,9 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
                 if (x < 0) x = w; if (x > w) x = 0;
                 if (y < 0) y = h; if (y > h) y = 0;
             }
-            void draw(Canvas canvas) {
-                paint.setColor(0xFF00E5FF);
-                paint.setAlpha((int) (alpha * 255));
+            void draw(Canvas canvas, int color, boolean isDark) {
+                paint.setColor(color);
+                paint.setAlpha((int) (alpha * (isDark ? 255 : 180)));
                 canvas.drawCircle(x, y, AndroidUtilities.dp(radius), paint);
             }
         }
@@ -584,13 +595,17 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
         @Override
         protected void onDraw(Canvas canvas) {
             float w = getWidth(), h = getHeight();
+            boolean isDark = Theme.isCurrentThemeDark();
+            int primaryColor = isDark ? 0xFF00E5FF : 0xFF00ACC1;
+            
             // Glass Base
-            paint.setColor(Color.argb(40, 0, 229, 255));
+            paint.setColor(Color.argb(isDark ? 40 : 25, 0, 229, 255));
             paint.setStyle(Paint.Style.STROKE);
             paint.setStrokeWidth(AndroidUtilities.dp(1));
             canvas.drawRect(AndroidUtilities.dp(2), AndroidUtilities.dp(2), w - AndroidUtilities.dp(2), h - AndroidUtilities.dp(2), paint);
             
             // Corners
+            paint.setColor(primaryColor);
             paint.setStrokeWidth(AndroidUtilities.dp(3));
             float len = AndroidUtilities.dp(20);
             // TL
@@ -604,7 +619,7 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
 
             // Laser Scanner
             paint.setStrokeWidth(AndroidUtilities.dp(2));
-            paint.setAlpha(100);
+            paint.setAlpha(isDark ? 100 : 80);
             canvas.drawLine(AndroidUtilities.dp(4), scanLinePos, w - AndroidUtilities.dp(4), scanLinePos, paint);
             
             if (scanDown) {
@@ -618,12 +633,13 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
             // Tech Text Overlay (Decorative)
             paint.setStyle(Paint.Style.FILL);
             paint.setTextSize(AndroidUtilities.dp(8));
-            paint.setAlpha(120);
+            paint.setColor(isDark ? 0xFF00E5FF : 0xFF00ACC1);
+            paint.setAlpha(isDark ? 120 : 180);
             canvas.drawText("SEC_LEVEL: ALPHA", AndroidUtilities.dp(10), AndroidUtilities.dp(15), paint);
-            canvas.drawText("ENCR_MODE: AES_256", w - AndroidUtilities.dp(80), h - AndroidUtilities.dp(10), paint);
+            canvas.drawText("ENCR_MODE: AES_256", w - AndroidUtilities.dp(85), h - AndroidUtilities.dp(10), paint);
 
             // Underlines for code fields
-            paint.setColor(0xFF00E5FF);
+            paint.setColor(primaryColor);
             paint.setStrokeWidth(AndroidUtilities.dp(2));
             float startX = (w - codeFieldContainer.getWidth()) / 2f;
             float startY = codeFieldContainer.getTop() + codeFieldContainer.getHeight() - AndroidUtilities.dp(4);
