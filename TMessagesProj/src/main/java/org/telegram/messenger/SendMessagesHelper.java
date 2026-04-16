@@ -1801,27 +1801,15 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
 
             String path = null;
             boolean isVideo = false;
-            if (messageObject.messageOwner.media.photo instanceof TLRPC.TL_photo) {
-                TLRPC.TL_photo photo = (TLRPC.TL_photo) messageObject.messageOwner.media.photo;
-                TLRPC.PhotoSize closestSize = FileLoader.getClosestPhotoSizeWithSize(photo.sizes, AndroidUtilities.getPhotoSize());
-                if (closestSize != null) {
-                    File f = getFileLoader().getPathToAttach(closestSize, true);
-                    if (f != null && f.exists()) {
-                        path = f.getAbsolutePath();
-                    }
-                }
-                if (path == null) {
-                    path = messageObject.messageOwner.attachPath;
-                }
-            } else if (messageObject.messageOwner.media.document instanceof TLRPC.TL_document) {
+            File f = getFileLoader().getPathToMessage(messageObject.messageOwner);
+            if (f != null && f.exists()) {
+                path = f.getAbsolutePath();
+            }
+            if (path == null) {
+                path = messageObject.messageOwner.attachPath;
+            }
+            if (messageObject.messageOwner.media.document instanceof TLRPC.TL_document) {
                 TLRPC.TL_document document = (TLRPC.TL_document) messageObject.messageOwner.media.document;
-                File f = getFileLoader().getPathToAttach(document, true);
-                if (f != null && f.exists()) {
-                    path = f.getAbsolutePath();
-                }
-                if (path == null) {
-                    path = messageObject.messageOwner.attachPath;
-                }
                 isVideo = MessageObject.isVideoDocument(document) || messageObject.videoEditedInfo != null;
                 if (!isVideo) forceDocument = true;
             }
@@ -1864,19 +1852,12 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                 params.put("parentObject", "sent_" + messageObject.messageOwner.peer_id.channel_id + "_" + messageObject.getId() + "_" + messageObject.getDialogId() + "_" + messageObject.type + "_" + messageObject.getSize());
             }
             boolean isRestricted = NaConfig.INSTANCE.getAllowForwardingRestriction().Bool() && getMessagesController().isPeerNoForwards(messageObject.getDialogId(), true);
+
+            File f = getFileLoader().getPathToMessage(messageObject.messageOwner);
+            String path = (f != null && f.exists()) ? f.getAbsolutePath() : messageObject.messageOwner.attachPath;
+
             if (messageObject.messageOwner.media.photo instanceof TLRPC.TL_photo) {
                 TLRPC.TL_photo photo = (TLRPC.TL_photo) messageObject.messageOwner.media.photo;
-                String path = null;
-                TLRPC.PhotoSize closestSize = FileLoader.getClosestPhotoSizeWithSize(photo.sizes, AndroidUtilities.getPhotoSize());
-                if (closestSize != null) {
-                    File f = getFileLoader().getPathToAttach(closestSize, true);
-                    if (f != null && f.exists()) {
-                        path = f.getAbsolutePath();
-                    }
-                }
-                if (path == null) {
-                    path = messageObject.messageOwner.attachPath;
-                }
                 FileLog.d("NK_DEBUG: photo bypass path=" + path + " isRestricted=" + isRestricted + " did=" + did);
                 if (isRestricted && path != null) {
                     final String finalPath = path;
@@ -1893,11 +1874,6 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                 }
             } else if (messageObject.messageOwner.media.document instanceof TLRPC.TL_document) {
                 TLRPC.TL_document document = (TLRPC.TL_document) messageObject.messageOwner.media.document;
-                String path = messageObject.messageOwner.attachPath;
-                File f = getFileLoader().getPathToAttach(document, true);
-                if (f != null && f.exists()) {
-                    path = f.getAbsolutePath();
-                }
                 FileLog.d("NK_DEBUG: doc/video bypass path=" + path + " isRestricted=" + isRestricted + " isVideo=" + (MessageObject.isVideoDocument(document) || messageObject.videoEditedInfo != null));
                 if (isRestricted && path != null) {
                     final String finalPath = path;
@@ -1921,6 +1897,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                     fparams.suggestionParams = suggestionParams;
                     sendMessage(fparams);
                 }
+            }
             } else if (messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaVenue || messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaGeo) {
                 SendMessagesHelper.SendMessageParams fparams = SendMessagesHelper.SendMessageParams.of(messageObject.messageOwner.media, did, messageObject.replyMessageObject, null, null, null, true, 0, 0);
                 fparams.payStars = payStars;
@@ -8895,12 +8872,15 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         final long forcedPollGroupId = pollSendParams != null ? pollSendParams.groupId : 0;
 
         if ((path == null || path.length() == 0) && uri == null) {
+            FileLog.d("NK_DEBUG: prepareSendingDocumentInternal fail 1: path=" + path + " uri=" + uri);
             return ERROR_TYPE_UNSUPPORTED;
         }
         if (uri != null && AndroidUtilities.isInternalUri(uri)) {
+            FileLog.d("NK_DEBUG: prepareSendingDocumentInternal fail 2: internal uri=" + uri);
             return ERROR_TYPE_UNSUPPORTED;
         }
         if (path != null && AndroidUtilities.isInternalUri(Uri.fromFile(new File(path)))) {
+            FileLog.d("NK_DEBUG: prepareSendingDocumentInternal fail 3: internal path=" + path);
             return ERROR_TYPE_UNSUPPORTED;
         }
         MimeTypeMap myMime = MimeTypeMap.getSingleton();
@@ -8928,11 +8908,14 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
             }
         }
         final File f = new File(path);
+        FileLog.d("NK_DEBUG: prepareSendingDocumentInternal file check: path=" + path + " exists=" + f.exists() + " len=" + f.length() + " mime=" + mime);
         if (!f.exists() || f.length() == 0) {
+            FileLog.d("NK_DEBUG: prepareSendingDocumentInternal fail 4: file does not exist or empty");
             return ERROR_TYPE_UNSUPPORTED;
         }
 
         if (!FileLoader.checkUploadFileSize(accountInstance.getCurrentAccount(), f.length())) {
+            FileLog.d("NK_DEBUG: prepareSendingDocumentInternal fail 5: file too large for account: " + f.length());
             return ERROR_TYPE_FILE_TOO_LARGE;
         }
 
