@@ -156,14 +156,37 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
             }
         };
         codeFieldContainer.setNumbersCount(4, CodeFieldContainer.TYPE_PASSCODE);
-        for (CodeNumberField f : codeFieldContainer.codeField) {
+        for (int i = 0; i < codeFieldContainer.codeField.length; i++) {
+            final CodeNumberField f = codeFieldContainer.codeField[i];
             f.setShowSoftInputOnFocusCompat(false);
             f.setTransformationMethod(PasswordTransformationMethod.getInstance());
             f.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 32);
             f.setTextColor(textColor);
             f.setCursorColor(primaryColor);
             f.setCursorWidth(AndroidUtilities.dp(2));
-            f.setBackground(null);
+            
+            // Custom high-tech underline background
+            f.setBackground(new android.graphics.drawable.Drawable() {
+                private Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
+                @Override
+                public void draw(@NonNull Canvas canvas) {
+                    boolean focused = f.isFocused();
+                    p.setColor(primaryColor);
+                    p.setStrokeWidth(AndroidUtilities.dp(focused ? 3 : 1.5f));
+                    p.setAlpha(focused ? 255 : 100);
+                    float y = canvas.getHeight() - AndroidUtilities.dp(2);
+                    canvas.drawLine(0, y, canvas.getWidth(), y, p);
+                    
+                    if (focused) {
+                        p.setAlpha(40);
+                        canvas.drawRect(0, 0, canvas.getWidth(), canvas.getHeight(), p);
+                    }
+                }
+                @Override public void setAlpha(int alpha) {}
+                @Override public void setColorFilter(android.graphics.PorterDuffColorFilter cf) {}
+                @Override public int getOpacity() { return android.graphics.PixelFormat.TRANSLUCENT; }
+            });
+
             f.setPadding(0, 0, 0, AndroidUtilities.dp(8));
             f.setOnFocusChangeListener((v, hasFocus) -> {
                 keyboardView.setEditText(f);
@@ -171,6 +194,7 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
                 if (hasFocus) {
                     v.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK);
                 }
+                v.invalidate();
             });
         }
         content.addView(codeFieldContainer, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 0, 40, 0, 0));
@@ -637,17 +661,6 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
             paint.setAlpha(isDark ? 120 : 180);
             canvas.drawText("SEC_LEVEL: ALPHA", AndroidUtilities.dp(10), AndroidUtilities.dp(15), paint);
             canvas.drawText("ENCR_MODE: AES_256", w - AndroidUtilities.dp(85), h - AndroidUtilities.dp(10), paint);
-
-            // Underlines for code fields
-            paint.setColor(primaryColor);
-            paint.setStrokeWidth(AndroidUtilities.dp(2));
-            float startX = (w - codeFieldContainer.getWidth()) / 2f;
-            float startY = codeFieldContainer.getTop() + codeFieldContainer.getHeight() - AndroidUtilities.dp(4);
-            for (int i = 0; i < 4; i++) {
-                float fieldW = codeFieldContainer.codeField[i].getWidth();
-                float x1 = startX + i * (fieldW + AndroidUtilities.dp(12)); // assuming margin
-                canvas.drawLine(x1, startY, x1 + fieldW, startY, paint);
-            }
 
             invalidate();
         }
