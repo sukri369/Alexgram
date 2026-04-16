@@ -1752,9 +1752,10 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         try {
             SerializedData data = new SerializedData(photo.getObjectSize());
             photo.serializeToStream(data);
-            data.rewind();
-            TLRPC.TL_photo newPhoto = (TLRPC.TL_photo) TLRPC.TL_photo.TLdeserialize(data, data.readInt32(false), false);
+            SerializedData reader = new SerializedData(data.toByteArray());
+            TLRPC.TL_photo newPhoto = (TLRPC.TL_photo) TLRPC.TL_photo.TLdeserialize(reader, reader.readInt32(false), false);
             data.cleanup();
+            reader.cleanup();
             if (newPhoto != null) {
                 newPhoto.id = 0;
                 newPhoto.access_hash = 0;
@@ -1772,9 +1773,10 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         try {
             SerializedData data = new SerializedData(document.getObjectSize());
             document.serializeToStream(data);
-            data.rewind();
-            TLRPC.TL_document newDocument = (TLRPC.TL_document) TLRPC.TL_document.TLdeserialize(data, data.readInt32(false), false);
+            SerializedData reader = new SerializedData(data.toByteArray());
+            TLRPC.TL_document newDocument = (TLRPC.TL_document) TLRPC.TL_document.TLdeserialize(reader, reader.readInt32(false), false);
             data.cleanup();
+            reader.cleanup();
             if (newDocument != null) {
                 newDocument.id = 0;
                 newDocument.access_hash = 0;
