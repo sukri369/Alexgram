@@ -2868,7 +2868,6 @@ public class StoryViewer implements NotificationCenter.NotificationCenterDelegat
     }
 
     public void allowScreenshots(boolean allowScreenshots) {
-    public void allowScreenshots(boolean allowScreenshots) {
         if (xyz.nextalone.nagram.NaConfig.INSTANCE.getAllowForwardingRestriction().Bool()) {
             allowScreenshots = true;
         }
@@ -2910,7 +2909,6 @@ public class StoryViewer implements NotificationCenter.NotificationCenterDelegat
                 }
             }
         }
-    }
     }
 
     public void openFor(BaseFragment fragment, RecyclerListView recyclerListView, ChatActionCell cell) {
