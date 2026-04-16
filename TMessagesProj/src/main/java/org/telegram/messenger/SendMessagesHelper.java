@@ -1747,6 +1747,46 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         }
     }
 
+    private TLRPC.TL_photo cleanPhoto(TLRPC.TL_photo photo) {
+        if (photo == null) return null;
+        try {
+            SerializedData data = new SerializedData(photo.getObjectSize());
+            photo.serializeToStream(data);
+            data.rewind();
+            TLRPC.TL_photo newPhoto = (TLRPC.TL_photo) TLRPC.TL_photo.TLdeserialize(data, data.readInt32(false), false);
+            data.cleanup();
+            if (newPhoto != null) {
+                newPhoto.id = 0;
+                newPhoto.access_hash = 0;
+                newPhoto.file_reference = new byte[0];
+            }
+            return newPhoto;
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+        return photo;
+    }
+
+    private TLRPC.TL_document cleanDocument(TLRPC.TL_document document) {
+        if (document == null) return null;
+        try {
+            SerializedData data = new SerializedData(document.getObjectSize());
+            document.serializeToStream(data);
+            data.rewind();
+            TLRPC.TL_document newDocument = (TLRPC.TL_document) TLRPC.TL_document.TLdeserialize(data, data.readInt32(false), false);
+            data.cleanup();
+            if (newDocument != null) {
+                newDocument.id = 0;
+                newDocument.access_hash = 0;
+                newDocument.file_reference = new byte[0];
+            }
+            return newDocument;
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+        return document;
+    }
+
     public void processForwardFromMyName(MessageObject messageObject, long did, long payStars, long monoForumPeerId, MessageSuggestionParams suggestionParams) {
         if (messageObject == null) {
             return;
@@ -1757,14 +1797,23 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                 params = new HashMap<>();
                 params.put("parentObject", "sent_" + messageObject.messageOwner.peer_id.channel_id + "_" + messageObject.getId() + "_" + messageObject.getDialogId() + "_" + messageObject.type + "_" + messageObject.getSize());
             }
+            boolean isRestricted = NaConfig.INSTANCE.getAllowForwardingRestriction().Bool() && getMessagesController().isPeerNoForwards(messageObject.getDialogId(), true);
             if (messageObject.messageOwner.media.photo instanceof TLRPC.TL_photo) {
-                SendMessagesHelper.SendMessageParams fparams = SendMessagesHelper.SendMessageParams.of((TLRPC.TL_photo) messageObject.messageOwner.media.photo, null, did, messageObject.replyMessageObject, null, messageObject.messageOwner.message, messageObject.messageOwner.entities, null, params, true, 0, 0, messageObject.messageOwner.media.ttl_seconds, messageObject, false);
+                TLRPC.TL_photo photo = (TLRPC.TL_photo) messageObject.messageOwner.media.photo;
+                if (isRestricted) {
+                    photo = cleanPhoto(photo);
+                }
+                SendMessagesHelper.SendMessageParams fparams = SendMessagesHelper.SendMessageParams.of(photo, null, did, messageObject.replyMessageObject, null, messageObject.messageOwner.message, messageObject.messageOwner.entities, null, params, true, 0, 0, messageObject.messageOwner.media.ttl_seconds, messageObject, false);
                 fparams.payStars = payStars;
                 fparams.monoForumPeer = monoForumPeerId;
                 fparams.suggestionParams = suggestionParams;
                 sendMessage(fparams);
             } else if (messageObject.messageOwner.media.document instanceof TLRPC.TL_document) {
-                SendMessagesHelper.SendMessageParams fparams = SendMessagesHelper.SendMessageParams.of((TLRPC.TL_document) messageObject.messageOwner.media.document, null, messageObject.messageOwner.attachPath, did, messageObject.replyMessageObject, null, messageObject.messageOwner.message, messageObject.messageOwner.entities, null, params, true, 0, 0, messageObject.messageOwner.media.ttl_seconds, messageObject, null, false);
+                TLRPC.TL_document document = (TLRPC.TL_document) messageObject.messageOwner.media.document;
+                if (isRestricted) {
+                    document = cleanDocument(document);
+                }
+                SendMessagesHelper.SendMessageParams fparams = SendMessagesHelper.SendMessageParams.of(document, null, messageObject.messageOwner.attachPath, did, messageObject.replyMessageObject, null, messageObject.messageOwner.message, messageObject.messageOwner.entities, null, params, true, 0, 0, messageObject.messageOwner.media.ttl_seconds, messageObject, null, false);
                 fparams.payStars = payStars;
                 fparams.monoForumPeer = monoForumPeerId;
                 fparams.suggestionParams = suggestionParams;
