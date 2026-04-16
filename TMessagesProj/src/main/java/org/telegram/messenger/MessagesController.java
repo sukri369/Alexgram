@@ -6672,6 +6672,10 @@ public class MessagesController extends BaseController implements NotificationCe
         return isChatNoForwards(getChat(chatId));
     }
 
+    public boolean isChatNoForwards(long chatId, boolean ignoreBypass) {
+        return isChatNoForwards(getChat(chatId), ignoreBypass);
+    }
+
     public boolean isPeerNoForwards(long dialogId) {
         return isPeerNoForwards(dialogId, false);
     }
