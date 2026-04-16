@@ -39,7 +39,24 @@ import org.telegram.messenger.FileLog;
 import org.telegram.messenger.FingerprintController;
 import org.telegram.messenger.LocaleController;
 
+import java.util.ArrayList;
+import java.util.Random;
 import java.util.concurrent.Executor;
+
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.LinearGradient;
+import android.graphics.Paint;
+import android.graphics.RectF;
+import android.graphics.Shader;
+import android.view.HapticFeedbackConstants;
+import android.view.animation.OvershootInterpolator;
+import android.widget.ImageView;
 
 public class HiddenChatsPasscodeActivity extends BaseFragment {
 
@@ -64,8 +81,11 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
     private TextView titleView;
     private TextView subtitleView;
     private TextView errorView;
+    private FrameLayout containerView;
     private CodeFieldContainer codeFieldContainer;
     private CustomPhoneKeyboardView keyboardView;
+    private AnimatedBackgroundView backgroundView;
+    private ImageView fingerprintImage;
 
     public HiddenChatsPasscodeActivity(@Mode int mode) {
         this.mode = mode;
@@ -75,7 +95,11 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
     public View createView(Context context) {
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
         actionBar.setAllowOverlayTitle(false);
+        actionBar.setCastShadows(false);
         actionBar.setTitle("Hidden Chats");
+        actionBar.setBackgroundColor(0);
+        actionBar.setItemsBackgroundColor(Theme.getColor(Theme.key_actionBarDefaultSelector), false);
+        actionBar.setItemsColor(Theme.getColor(Theme.key_actionBarDefaultIcon), false);
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
             public void onItemClick(int id) {
@@ -86,25 +110,44 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
         });
 
         FrameLayout root = new FrameLayout(context);
-        root.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
+        
+        backgroundView = new AnimatedBackgroundView(context);
+        root.addView(backgroundView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+
+        containerView = new FrameLayout(context) {
+            private Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            private RectF rect = new RectF();
+            {
+                paint.setColor(Color.argb(Theme.isCurrentThemeDark() ? 40 : 20, 255, 255, 255));
+            }
+            @Override
+            protected void onDraw(Canvas canvas) {
+                rect.set(0, 0, getWidth(), getHeight());
+                canvas.drawRoundRect(rect, AndroidUtilities.dp(24), AndroidUtilities.dp(24), paint);
+                super.onDraw(canvas);
+            }
+        };
+        containerView.setWillNotDraw(false);
+        containerView.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(32), AndroidUtilities.dp(16), AndroidUtilities.dp(32));
+        root.addView(containerView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER, 24, 0, 24, 80));
 
         LinearLayout content = new LinearLayout(context);
         content.setOrientation(LinearLayout.VERTICAL);
-        content.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL);
-        root.addView(content, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, 42, 0, CustomPhoneKeyboardView.KEYBOARD_HEIGHT_DP));
+        content.setGravity(Gravity.CENTER_HORIZONTAL);
+        containerView.addView(content, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
         titleView = new TextView(context);
-        titleView.setTextColor(getThemedColor(Theme.key_windowBackgroundWhiteBlackText));
-        titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 32);
+        titleView.setTextColor(Color.WHITE);
+        titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 34);
         titleView.setTypeface(AndroidUtilities.bold());
         titleView.setGravity(Gravity.CENTER_HORIZONTAL);
         content.addView(titleView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL));
 
         subtitleView = new TextView(context);
-        subtitleView.setTextColor(getThemedColor(Theme.key_windowBackgroundWhiteGrayText));
+        subtitleView.setTextColor(Color.argb(180, 255, 255, 255));
         subtitleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
         subtitleView.setGravity(Gravity.CENTER_HORIZONTAL);
-        subtitleView.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(10), AndroidUtilities.dp(24), 0);
+        subtitleView.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(12), AndroidUtilities.dp(24), 0);
         content.addView(subtitleView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL));
 
         codeFieldContainer = new CodeFieldContainer(context) {
@@ -117,40 +160,51 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
         for (CodeNumberField f : codeFieldContainer.codeField) {
             f.setShowSoftInputOnFocusCompat(false);
             f.setTransformationMethod(PasswordTransformationMethod.getInstance());
-            f.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 24);
+            f.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 28);
+            f.setTextColor(Color.WHITE);
+            f.setCursorColor(Color.WHITE);
+            f.setCursorWidth(2);
             f.setOnFocusChangeListener((v, hasFocus) -> {
                 keyboardView.setEditText(f);
                 keyboardView.setDispatchBackWhenEmpty(true);
             });
         }
-        content.addView(codeFieldContainer, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 0, 30, 0, 0));
+        content.addView(codeFieldContainer, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 0, 40, 0, 0));
 
         errorView = new TextView(context);
-        errorView.setTextColor(getThemedColor(Theme.key_text_RedBold));
+        errorView.setTextColor(0xFFff3b30);
         errorView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
         errorView.setGravity(Gravity.CENTER_HORIZONTAL);
         errorView.setVisibility(View.INVISIBLE);
-        errorView.setPadding(0, AndroidUtilities.dp(14), 0, 0);
+        errorView.setPadding(0, AndroidUtilities.dp(16), 0, 0);
         content.addView(errorView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL));
 
         if (android.os.Build.VERSION.SDK_INT >= 23 && (mode == MODE_UNLOCK_CHATS || mode == MODE_UNLOCK_SETTINGS)) {
-            android.widget.ImageView fingerprintImage = new android.widget.ImageView(context);
+            fingerprintImage = new ImageView(context);
             fingerprintImage.setImageResource(R.drawable.fingerprint);
-            fingerprintImage.setScaleType(android.widget.ImageView.ScaleType.CENTER);
-            fingerprintImage.setBackgroundResource(R.drawable.bar_selector_lock);
-            fingerprintImage.setOnClickListener(v -> checkFingerprint());
+            fingerprintImage.setScaleType(ImageView.ScaleType.CENTER);
+            fingerprintImage.setColorFilter(new android.graphics.PorterDuffColorFilter(Color.WHITE, android.graphics.PorterDuff.Mode.SRC_IN));
+            fingerprintImage.setBackground(Theme.createSimpleSelectorCircleDrawable(AndroidUtilities.dp(56), Color.TRANSPARENT, Color.argb(40, 255, 255, 255)));
+            fingerprintImage.setOnClickListener(v -> {
+                v.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+                checkFingerprint();
+            });
             fingerprintImage.setContentDescription(LocaleController.getString(R.string.AccDescrFingerprint));
             fingerprintImage.setVisibility(HiddenChatsController.getInstance().isBiometricEnabled() ? View.VISIBLE : View.GONE);
-            content.addView(fingerprintImage, LayoutHelper.createLinear(56, 56, Gravity.CENTER_HORIZONTAL, 0, 20, 0, 0));
+            content.addView(fingerprintImage, LayoutHelper.createLinear(56, 56, Gravity.CENTER_HORIZONTAL, 0, 30, 0, 0));
         }
 
         keyboardView = new CustomPhoneKeyboardView(context);
-        root.addView(keyboardView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, CustomPhoneKeyboardView.KEYBOARD_HEIGHT_DP, Gravity.BOTTOM));
+        // Custom styling for keyboard
+        keyboardView.setBackgroundColor(0);
+        root.addView(keyboardView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, CustomPhoneKeyboardView.KEYBOARD_HEIGHT_DP, Gravity.BOTTOM, 0, 0, 0, 12));
 
         root.setOnClickListener(v -> focusFirstEmptyField());
 
         updateTexts();
         focusFirstEmptyField();
+        
+        runEntranceAnimation();
 
         fragmentView = root;
         return fragmentView;
@@ -283,6 +337,18 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
         errorView.setVisibility(View.VISIBLE);
         if (codeFieldContainer != null) {
             AndroidUtilities.shakeViewSpring(codeFieldContainer, 4f);
+            ValueAnimator colorAnim = ValueAnimator.ofArgb(Color.WHITE, 0xFFff3b30, Color.WHITE);
+            colorAnim.setDuration(400);
+            colorAnim.addUpdateListener(anim -> {
+                int color = (int) anim.getAnimatedValue();
+                for (CodeNumberField f : codeFieldContainer.codeField) {
+                    f.setTextColor(color);
+                }
+            });
+            colorAnim.start();
+        }
+        if (fragmentView != null) {
+            fragmentView.performHapticFeedback(HapticFeedbackConstants.CONFIRM);
         }
     }
 
@@ -364,10 +430,117 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
         }
 
         controller.unlock();
+        if (fragmentView != null) {
+            fragmentView.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+        }
         if (mode == MODE_UNLOCK_SETTINGS) {
             presentFragment(new HiddenChatsSettingsActivity(), true);
         } else {
             presentFragment(new HiddenChatsActivity(new Bundle()), true);
+        }
+    }
+
+    private void runEntranceAnimation() {
+        containerView.setAlpha(0);
+        containerView.setScaleX(0.9f);
+        containerView.setScaleY(0.9f);
+        keyboardView.setAlpha(0);
+        keyboardView.setTranslationY(AndroidUtilities.dp(100));
+
+        titleView.setAlpha(0);
+        titleView.setTranslationY(AndroidUtilities.dp(20));
+        subtitleView.setAlpha(0);
+        subtitleView.setTranslationY(AndroidUtilities.dp(20));
+        codeFieldContainer.setAlpha(0);
+        codeFieldContainer.setTranslationY(AndroidUtilities.dp(20));
+        if (fingerprintImage != null) {
+            fingerprintImage.setAlpha(0);
+            fingerprintImage.setScaleX(0.5f);
+            fingerprintImage.setScaleY(0.5f);
+        }
+
+        AndroidUtilities.runOnUIThread(() -> {
+            containerView.animate().alpha(1).scaleX(1).scaleY(1).setDuration(500).setInterpolator(new OvershootInterpolator(1.0f)).start();
+            keyboardView.animate().alpha(1).translationY(0).setDuration(600).setStartDelay(100).setInterpolator(AndroidUtilities.overshootInterpolator).start();
+
+            titleView.animate().alpha(1).translationY(0).setDuration(400).setStartDelay(200).start();
+            subtitleView.animate().alpha(1).translationY(0).setDuration(400).setStartDelay(300).start();
+            codeFieldContainer.animate().alpha(1).translationY(0).setDuration(400).setStartDelay(400).start();
+            if (fingerprintImage != null) {
+                fingerprintImage.animate().alpha(1).scaleX(1).scaleY(1).setDuration(500).setStartDelay(500).setInterpolator(new OvershootInterpolator(1.5f)).start();
+            }
+        }, 100);
+    }
+
+    private class AnimatedBackgroundView extends View {
+        private Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private ArrayList<Particle> particles = new ArrayList<>();
+        private Random random = new Random();
+        private long lastTime;
+        private LinearGradient gradient;
+
+        public AnimatedBackgroundView(Context context) {
+            super(context);
+            for (int i = 0; i < 30; i++) {
+                particles.add(new Particle());
+            }
+        }
+
+        @Override
+        protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+            super.onSizeChanged(w, h, oldw, oldh);
+            int color1 = Theme.isCurrentThemeDark() ? 0xFF061B3D : 0xFF1A237E;
+            int color2 = Theme.isCurrentThemeDark() ? 0xFF041430 : 0xFF0D47A1;
+            gradient = new LinearGradient(0, 0, 0, h, color1, color2, Shader.TileMode.CLAMP);
+            paint.setShader(gradient);
+            for (Particle p : particles) {
+                p.reset(w, h);
+            }
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            if (gradient == null) return;
+            canvas.drawRect(0, 0, getWidth(), getHeight(), paint);
+
+            long now = System.currentTimeMillis();
+            float dt = lastTime == 0 ? 0.016f : (now - lastTime) / 1000f;
+            lastTime = now;
+
+            for (Particle p : particles) {
+                p.update(dt, getWidth(), getHeight());
+                p.draw(canvas);
+            }
+            invalidate();
+        }
+
+        private class Particle {
+            float x, y, radius, vx, vy, alpha;
+            Paint pPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+
+            void reset(int w, int h) {
+                x = random.nextFloat() * w;
+                y = random.nextFloat() * h;
+                radius = 2 + random.nextFloat() * 4;
+                vx = (random.nextFloat() - 0.5f) * 20;
+                vy = (random.nextFloat() - 0.5f) * 20;
+                alpha = 0.1f + random.nextFloat() * 0.3f;
+                pPaint.setColor(Color.WHITE);
+            }
+
+            void update(float dt, int w, int h) {
+                x += vx * dt;
+                y += vy * dt;
+                if (x < 0) x = w;
+                if (x > w) x = 0;
+                if (y < 0) y = h;
+                if (y > h) y = 0;
+            }
+
+            void draw(Canvas canvas) {
+                pPaint.setAlpha((int) (alpha * 255));
+                canvas.drawCircle(x, y, AndroidUtilities.dp(radius), pPaint);
+            }
         }
     }
 }
