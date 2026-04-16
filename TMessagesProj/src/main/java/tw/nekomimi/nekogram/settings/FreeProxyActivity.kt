@@ -50,6 +50,7 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
     private var countries: List<String> = emptyList()
 
     private val pingMap = mutableMapOf<String, Long>()
+    private val pendingPings = mutableSetOf<String>()
     private var proxyStartRow = 0
     private var proxyEndRow = 0
 
@@ -268,11 +269,9 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
             val address = args[0] as String
             val port = args[1] as Int
             val ping = args[5] as Long
-            val key = "$address:$port"
-            // We need to find which proxy this belongs to
-            // Proxifly uses proxy string like "socks5://ip:port"
             proxies.find { it.ip == address && it.port == port }?.let {
                 pingMap[it.proxy] = ping
+                pendingPings.remove(it.proxy)
                 AndroidUtilities.runOnUIThread {
                     listAdapter?.notifyDataSetChanged()
                 }
@@ -340,19 +339,29 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
             titleView.text = "$flag ${if (isGlobal) "Global" else proxy.geolocation.city}, $countryCode"
             subtitleView.text = "${proxy.protocol.uppercase()} • ${proxy.ip}:${proxy.port} • ${proxy.anonymity}"
             
-            if (ping > 0) {
-                pingView.text = "${ping}ms"
-                pingView.setTextColor(if (ping < 300) 0xFF4CAF50.toInt() else if (ping < 600) 0xFFFFC107.toInt() else 0xFFF44336.toInt())
+            val hasPing = pingMap.containsKey(proxy.proxy)
+            if (hasPing) {
+                if (ping > 0) {
+                    pingView.text = "${ping}ms"
+                    pingView.setTextColor(if (ping < 300) 0xFF4CAF50.toInt() else if (ping < 600) 0xFFFFC107.toInt() else 0xFFF44336.toInt())
+                } else {
+                    pingView.text = "Error"
+                    pingView.setTextColor(0xFFF44336.toInt())
+                }
             } else {
                 pingView.text = "---"
                 pingView.setTextColor(if (isDark) 0x55FFFFFF.toInt() else 0x55000000.toInt())
-                // Trigger ping
-                ConnectionsManager.getInstance(currentAccount).checkProxy(proxy.ip, proxy.port, "", "", "", { time ->
-                    AndroidUtilities.runOnUIThread {
-                        pingMap[proxy.proxy] = time
-                        listAdapter?.notifyDataSetChanged()
-                    }
-                })
+                
+                if (!pendingPings.contains(proxy.proxy)) {
+                    pendingPings.add(proxy.proxy)
+                    ConnectionsManager.getInstance(currentAccount).checkProxy(proxy.ip, proxy.port, "", "", "", { time ->
+                        AndroidUtilities.runOnUIThread {
+                            pingMap[proxy.proxy] = time
+                            pendingPings.remove(proxy.proxy)
+                            listAdapter?.notifyDataSetChanged()
+                        }
+                    })
+                }
             }
             
             scoreView.setScore(proxy.score)
