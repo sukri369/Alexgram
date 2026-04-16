@@ -375,7 +375,7 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
                     pingView.text = "Error"
                     pingView.setTextColor(0xFFF44336.toInt())
             } else {
-                pingView.text = "Testing..."
+                pingView.text = "---"
                 pingView.setTextColor(if (isDark) 0x66FFFFFF.toInt() else 0x66000000.toInt())
                 
                 if (!pendingPings.contains(proxy.proxy)) {
