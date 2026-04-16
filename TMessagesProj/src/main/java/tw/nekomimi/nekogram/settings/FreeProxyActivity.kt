@@ -383,8 +383,11 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
                     pendingPings.add(proxy.proxy)
                     ConnectionsManager.getInstance(currentAccount).checkProxy(proxy.ip, proxy.port, "", "", "", { time ->
                         AndroidUtilities.runOnUIThread {
+                            if (isPaused) return@runOnUIThread
                             pingMap[proxy.proxy] = time
                             pendingPings.remove(proxy.proxy)
+                            filterProxies()
+                            updateRows()
                             listAdapter?.notifyDataSetChanged()
                         }
                     })
