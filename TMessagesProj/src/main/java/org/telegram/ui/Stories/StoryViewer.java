@@ -2868,7 +2868,11 @@ public class StoryViewer implements NotificationCenter.NotificationCenterDelegat
     }
 
     public void allowScreenshots(boolean allowScreenshots) {
-        /*if (BuildVars.DEBUG_PRIVATE_VERSION) {
+    public void allowScreenshots(boolean allowScreenshots) {
+        if (xyz.nextalone.nagram.NaConfig.INSTANCE.getAllowForwardingRestriction().Bool()) {
+            allowScreenshots = true;
+        }
+        if (BuildVars.DEBUG_PRIVATE_VERSION) {
             return;
         }
         allowScreenshots = !isShowing || allowScreenshots;
@@ -2905,7 +2909,8 @@ public class StoryViewer implements NotificationCenter.NotificationCenterDelegat
                     FileLog.e(e);
                 }
             }
-        }*/
+        }
+    }
     }
 
     public void openFor(BaseFragment fragment, RecyclerListView recyclerListView, ChatActionCell cell) {

@@ -971,7 +971,7 @@ public class TranslateAlert2 extends BottomSheet implements NotificationCenter.N
         if (textView != null) {
             textView.setTextIsSelectable(!noforwards);
         }
-        if (noforwards) {
+        if (noforwards && !xyz.nextalone.nagram.NaConfig.INSTANCE.getAllowForwardingRestriction().Bool()) {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
             AndroidUtilities.logFlagSecure();
         } else {
