@@ -1802,20 +1802,33 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
             boolean isRestricted = NaConfig.INSTANCE.getAllowForwardingRestriction().Bool() && getMessagesController().isPeerNoForwards(messageObject.getDialogId(), true);
             if (messageObject.messageOwner.media.photo instanceof TLRPC.TL_photo) {
                 TLRPC.TL_photo photo = (TLRPC.TL_photo) messageObject.messageOwner.media.photo;
+                String path = null;
                 if (isRestricted) {
+                    TLRPC.PhotoSize closestSize = FileLoader.getClosestPhotoSizeWithSize(photo.sizes, AndroidUtilities.getPhotoSize());
+                    if (closestSize != null) {
+                        File f = getFileLoader().getPathToAttach(closestSize, true);
+                        if (f != null && f.exists()) {
+                            path = f.getAbsolutePath();
+                        }
+                    }
                     photo = cleanPhoto(photo);
                 }
-                SendMessagesHelper.SendMessageParams fparams = SendMessagesHelper.SendMessageParams.of(photo, null, did, messageObject.replyMessageObject, null, messageObject.messageOwner.message, messageObject.messageOwner.entities, null, params, true, 0, 0, messageObject.messageOwner.media.ttl_seconds, messageObject, false);
+                SendMessagesHelper.SendMessageParams fparams = SendMessagesHelper.SendMessageParams.of(photo, path, did, messageObject.replyMessageObject, null, messageObject.messageOwner.message, messageObject.messageOwner.entities, null, params, true, 0, 0, messageObject.messageOwner.media.ttl_seconds, messageObject, false);
                 fparams.payStars = payStars;
                 fparams.monoForumPeer = monoForumPeerId;
                 fparams.suggestionParams = suggestionParams;
                 sendMessage(fparams);
             } else if (messageObject.messageOwner.media.document instanceof TLRPC.TL_document) {
                 TLRPC.TL_document document = (TLRPC.TL_document) messageObject.messageOwner.media.document;
+                String path = messageObject.messageOwner.attachPath;
                 if (isRestricted) {
+                    File f = getFileLoader().getPathToAttach(document, true);
+                    if (f != null && f.exists()) {
+                        path = f.getAbsolutePath();
+                    }
                     document = cleanDocument(document);
                 }
-                SendMessagesHelper.SendMessageParams fparams = SendMessagesHelper.SendMessageParams.of(document, null, messageObject.messageOwner.attachPath, did, messageObject.replyMessageObject, null, messageObject.messageOwner.message, messageObject.messageOwner.entities, null, params, true, 0, 0, messageObject.messageOwner.media.ttl_seconds, messageObject, null, false);
+                SendMessagesHelper.SendMessageParams fparams = SendMessagesHelper.SendMessageParams.of(document, null, path, did, messageObject.replyMessageObject, null, messageObject.messageOwner.message, messageObject.messageOwner.entities, null, params, true, 0, 0, messageObject.messageOwner.media.ttl_seconds, messageObject, null, false);
                 fparams.payStars = payStars;
                 fparams.monoForumPeer = monoForumPeerId;
                 fparams.suggestionParams = suggestionParams;
