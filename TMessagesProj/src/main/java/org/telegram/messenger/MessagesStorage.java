@@ -3307,18 +3307,34 @@ public class MessagesStorage extends BaseController {
                         filtersToDelete.remove(newFilter.id);
                         boolean changed = false;
                         boolean unreadChanged = false;
-                        if (!TextUtils.equals(filter.name, newFilter.title.text) || !MediaDataController.entitiesEqual(filter.entities, newFilter.title.entities)) {
-                            changed = true;
-                            filter.name = newFilter.title.text;
-                            filter.entities = newFilter.title.entities;
+                        boolean nameEqual = TextUtils.equals(filter.name, newFilter.title.text);
+                        boolean remoteEntitiesEmpty = newFilter.title.entities == null || newFilter.title.entities.isEmpty();
+                        boolean localEntitiesEmpty = filter.entities == null || filter.entities.isEmpty();
+                        boolean entitiesEqual = remoteEntitiesEmpty == localEntitiesEmpty;
+                        if (entitiesEqual && !remoteEntitiesEmpty) {
+                            entitiesEqual = MediaDataController.entitiesEqual(filter.entities, newFilter.title.entities);
+                        }
+
+                        if (!nameEqual || !entitiesEqual) {
+                            if (nameEqual && remoteEntitiesEmpty && !localEntitiesEmpty) {
+                                // keep local entities if server stripped them but name is same
+                            } else {
+                                changed = true;
+                                filter.name = newFilter.title.text;
+                                filter.entities = newFilter.title.entities;
+                            }
                         }
                         if (filter.title_noanimate != newFilter.title_noanimate) {
                             changed = true;
-                            filter.title_noanimate= newFilter.title_noanimate;
+                            filter.title_noanimate = newFilter.title_noanimate;
                         }
                         if (!TextUtils.equals(filter.emoticon, newFilter.emoticon)) {
-                            changed = true;
-                            filter.emoticon = newFilter.emoticon;
+                            if (newFilter.emoticon == null && filter.emoticon != null) {
+                                // keep local emoticon if server stripped it
+                            } else {
+                                changed = true;
+                                filter.emoticon = newFilter.emoticon;
+                            }
                         }
                         final int color = (newFilter.flags & 134217728) != 0 ? newFilter.color : -1;
                         if (filter.color != color) {

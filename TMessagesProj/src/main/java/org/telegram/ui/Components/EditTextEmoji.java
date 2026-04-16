@@ -382,7 +382,7 @@ public class EditTextEmoji extends FrameLayout implements NotificationCenter.Not
     }
 
     protected boolean allowEntities() {
-        return currentStyle == STYLE_STORY || currentStyle == STYLE_PHOTOVIEWER || currentStyle == STYLE_CALL;
+        return allowAnimatedEmoji || currentStyle == STYLE_STORY || currentStyle == STYLE_PHOTOVIEWER || currentStyle == STYLE_CALL;
     }
 
     public void setSuggestionsEnabled(boolean enabled) {
