@@ -26,6 +26,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import org.telegram.messenger.AndroidUtilities.dp
 import tw.nekomimi.nekogram.helpers.FreeProxyManager
 import tw.nekomimi.nekogram.helpers.FreeProxyManager.FreeProxy
+import tw.nekomimi.nekogram.ui.ProxyLoadingView
 import java.util.*
 import kotlinx.coroutines.*
 import org.telegram.messenger.NotificationCenter.NotificationCenterDelegate
@@ -54,6 +55,8 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
     private var proxyStartRow = 0
     private var proxyEndRow = 0
 
+    private var loadingOverlay: ProxyLoadingView? = null
+
     override fun onFragmentCreate(): Boolean {
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.proxyCheckDone)
         loadData()
@@ -69,6 +72,7 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
 
     private fun loadData(force: Boolean = false) {
         isLoading = true
+        loadingOverlay?.visibility = View.VISIBLE
         listAdapter?.notifyDataSetChanged()
         fetchJob = activityScope.launch {
             try {
@@ -83,6 +87,7 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
                 countries = proxies.map { it.geolocation.country }.distinct().sorted()
                 filterProxies()
                 isLoading = false
+                loadingOverlay?.visibility = View.GONE
                 updateRows()
                 listAdapter?.notifyDataSetChanged()
                 countryChips?.updateCountries(countries)
@@ -90,6 +95,7 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
                 FileLog.e(e)
                 showToast("Connection error. Please check your network.")
                 isLoading = false
+                loadingOverlay?.visibility = View.GONE
                 updateRows()
                 listAdapter?.notifyDataSetChanged()
             }
@@ -167,8 +173,19 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
     }
 
     override fun createView(context: Context): View {
-        val view = super.createView(context)
-        // Adjust list view if needed
+        val view = super.createView(context) as FrameLayout
+
+        // Overlay the custom loading animation on top of the list
+        loadingOverlay = ProxyLoadingView(context).also { overlay ->
+            overlay.visibility = if (isLoading) View.VISIBLE else View.GONE
+            view.addView(
+                overlay,
+                FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT
+                )
+            )
+        }
         return view
     }
 
