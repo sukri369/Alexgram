@@ -266,13 +266,20 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
 
     override fun didReceivedNotification(id: Int, account: Int, vararg args: Any?) {
         if (id == NotificationCenter.proxyCheckDone) {
-            val address = args[0] as String
-            val port = args[1] as Int
-            val ping = args[5] as Long
+            // Safety: Some parts of the app post proxyCheckDone with fewer arguments.
+            if (args.size < 6) return
+            
+            val address = args[0] as? String ?: return
+            val port = (args[1] as? Number)?.toInt() ?: return
+            
+            // Ping can be Integer or Long depending on where it was posted
+            val ping = (args[5] as? Number)?.toLong() ?: 0L
+            
             proxies.find { it.ip == address && it.port == port }?.let {
                 pingMap[it.proxy] = ping
                 pendingPings.remove(it.proxy)
                 AndroidUtilities.runOnUIThread {
+                    if (isPaused) return@runOnUIThread
                     listAdapter?.notifyDataSetChanged()
                 }
             }
@@ -490,5 +497,12 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
         } catch (e: Exception) {
             "🏳️"
         }
+    }
+
+    override fun onFragmentDestroy() {
+        super.onFragmentDestroy()
+        fetchJob?.cancel()
+        activityScope.cancel()
+        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.proxyCheckDone)
     }
 }
