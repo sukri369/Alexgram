@@ -50,18 +50,14 @@ public class LiteMode {
     public static final int FLAG_PARTICLES = 1 << 17;
 
     public static int PRESET_LOW = (
-        FLAG_ANIMATED_EMOJI_CHAT_PREMIUM |
-        FLAG_ANIMATED_EMOJI_KEYBOARD_PREMIUM |
-        FLAG_ANIMATED_EMOJI_REACTIONS_PREMIUM |
+        FLAGS_ANIMATED_EMOJI |
         FLAG_AUTOPLAY_GIFS |
         FLAG_CHAT_THANOS |
         FLAG_PARTICLES
     ); // 198684
     public static int PRESET_MEDIUM = (
         FLAGS_ANIMATED_STICKERS |
-        FLAG_ANIMATED_EMOJI_KEYBOARD_PREMIUM |
-        FLAG_ANIMATED_EMOJI_REACTIONS_PREMIUM |
-        FLAG_ANIMATED_EMOJI_CHAT |
+        FLAGS_ANIMATED_EMOJI |
         FLAG_CHAT_FORUM_TWOCOLUMN |
         FLAG_CALLS_ANIMATIONS |
         FLAG_AUTOPLAY_VIDEOS |
@@ -278,6 +274,10 @@ public class LiteMode {
 
         int prevValue = value;
         value = preferences.getInt("lite_mode6", defaultValue);
+        if (!preferences.getBoolean("lite_mode6_nax", false)) {
+            value |= FLAGS_ANIMATED_EMOJI;
+            preferences.edit().putInt("lite_mode6", value).putBoolean("lite_mode6_nax", true).apply();
+        }
         if (loaded) {
             onFlagsUpdate(prevValue, value);
         }
