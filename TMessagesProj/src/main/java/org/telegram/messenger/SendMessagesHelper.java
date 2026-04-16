@@ -1898,7 +1898,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                     sendMessage(fparams);
                 }
             }
-            } else if (messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaVenue || messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaGeo) {
+            else if (messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaVenue || messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaGeo) {
                 SendMessagesHelper.SendMessageParams fparams = SendMessagesHelper.SendMessageParams.of(messageObject.messageOwner.media, did, messageObject.replyMessageObject, null, null, null, true, 0, 0);
                 fparams.payStars = payStars;
                 fparams.monoForumPeer = monoForumPeerId;
