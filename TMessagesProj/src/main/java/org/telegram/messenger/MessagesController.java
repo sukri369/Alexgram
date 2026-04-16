@@ -6649,10 +6649,14 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     public boolean isChatNoForwards(TLRPC.Chat chat) {
+        return isChatNoForwards(chat, false);
+    }
+
+    public boolean isChatNoForwards(TLRPC.Chat chat, boolean ignoreBypass) {
         if (chat == null) {
             return false;
         }
-        if (NaConfig.INSTANCE.getAllowForwardingRestriction().Bool()) {
+        if (!ignoreBypass && NaConfig.INSTANCE.getAllowForwardingRestriction().Bool()) {
             return false;
         }
         if (chat.migrated_to != null) {
@@ -6669,18 +6673,30 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     public boolean isPeerNoForwards(long dialogId) {
-        return dialogId > 0 ? isUserNoForwards(dialogId) : isChatNoForwards(-dialogId);
+        return isPeerNoForwards(dialogId, false);
+    }
+
+    public boolean isPeerNoForwards(long dialogId, boolean ignoreBypass) {
+        return dialogId > 0 ? isUserNoForwards(dialogId, ignoreBypass) : isChatNoForwards(-dialogId, ignoreBypass);
     }
 
     public boolean isUserNoForwards(long userId) {
-        return isUserNoForwards(getUserFull(userId));
+        return isUserNoForwards(getUserFull(userId), false);
+    }
+
+    public boolean isUserNoForwards(long userId, boolean ignoreBypass) {
+        return isUserNoForwards(getUserFull(userId), ignoreBypass);
     }
 
     public boolean isUserNoForwards(TLRPC.UserFull userFull) {
+        return isUserNoForwards(userFull, false);
+    }
+
+    public boolean isUserNoForwards(TLRPC.UserFull userFull, boolean ignoreBypass) {
         if (userFull == null) {
             return false;
         }
-        if (NaConfig.INSTANCE.getAllowForwardingRestriction().Bool()) {
+        if (!ignoreBypass && NaConfig.INSTANCE.getAllowForwardingRestriction().Bool()) {
             return false;
         }
 

@@ -101,6 +101,7 @@ import org.telegram.ui.PaymentFormActivity;
 import org.telegram.ui.Stories.MessageMediaStoryFull;
 import org.telegram.ui.TwoStepVerificationActivity;
 import org.telegram.ui.TwoStepVerificationSetupActivity;
+import xyz.nextalone.nagram.NaConfig;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -1797,19 +1798,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
             }
             ArrayList<TLRPC.MessageEntity> entities;
             if (messageObject.messageOwner.entities != null && !messageObject.messageOwner.entities.isEmpty()) {
-                entities = new ArrayList<>();
-                for (int a = 0; a < messageObject.messageOwner.entities.size(); a++) {
-                    TLRPC.MessageEntity entity = messageObject.messageOwner.entities.get(a);
-                    if (entity instanceof TLRPC.TL_messageEntityBold ||
-                            entity instanceof TLRPC.TL_messageEntityItalic ||
-                            entity instanceof TLRPC.TL_messageEntityPre ||
-                            entity instanceof TLRPC.TL_messageEntityCode ||
-                            entity instanceof TLRPC.TL_messageEntityTextUrl ||
-                            entity instanceof TLRPC.TL_messageEntitySpoiler ||
-                            entity instanceof TLRPC.TL_messageEntityCustomEmoji) {
-                        entities.add(entity);
-                    }
-                }
+                entities = new ArrayList<>(messageObject.messageOwner.entities);
             } else {
                 entities = null;
             }
@@ -1818,7 +1807,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
             fparams.monoForumPeer = monoForumPeerId;
             fparams.suggestionParams = suggestionParams;
             sendMessage(fparams);
-        } else if (DialogObject.isEncryptedDialog(did)) {
+        } else if (DialogObject.isEncryptedDialog(did) || (NaConfig.INSTANCE.getAllowForwardingRestriction().Bool() && getMessagesController().isPeerNoForwards(messageObject.getDialogId(), true))) {
             ArrayList<MessageObject> arrayList = new ArrayList<>();
             arrayList.add(messageObject);
             sendMessage(arrayList, did, true, false, true, 0, 0, null, -1, payStars, monoForumPeerId, suggestionParams);
@@ -2046,8 +2035,26 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         }
         int sendResult = 0;
         long myId = getUserConfig().getClientUserId();
+        boolean forceCopySend = !forwardFromMyName && NaConfig.INSTANCE.getAllowForwardingRestriction().Bool();
+        if (forceCopySend) {
+            forceCopySend = false;
+            for (int a = 0, N = messages.size(); a < N; a++) {
+                if (getMessagesController().isPeerNoForwards(messages.get(a).getDialogId(), true)) {
+                    forceCopySend = true;
+                    break;
+                }
+            }
+        }
+        if (forceCopySend) {
+            for (int a = 0, N = messages.size(); a < N; a++) {
+                processForwardFromMyName(messages.get(a), peer, payStars, monoForumPeerId, suggestionParams);
+            }
+            return 0;
+        }
+
         boolean isChannel = false;
         if (!DialogObject.isEncryptedDialog(peer)) {
+
             final TLRPC.Peer peer_id = getMessagesController().getPeer(peer);
             boolean isSignature = false;
             boolean canSendStickers = true;
