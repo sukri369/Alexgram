@@ -2,6 +2,7 @@ package tw.nekomimi.nekogram.ui;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
