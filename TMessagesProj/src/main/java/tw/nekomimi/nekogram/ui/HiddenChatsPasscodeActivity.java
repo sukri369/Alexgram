@@ -105,7 +105,10 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
         actionBar.setTitle("HIDDEN CHATS");
         actionBar.setBackgroundColor(0);
         actionBar.setItemsBackgroundColor(Theme.getColor(Theme.key_actionBarDefaultSelector), false);
-        actionBar.setItemsColor(Color.WHITE, false);
+        boolean isDark = Theme.isCurrentThemeDark();
+        int color = isDark ? Color.WHITE : 0xFF1A1A2E;
+        actionBar.setItemsColor(color, false);
+        actionBar.setTitleColor(color);
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
             public void onItemClick(int id) {
