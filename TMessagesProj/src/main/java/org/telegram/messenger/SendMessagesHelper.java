@@ -1810,11 +1810,17 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                         path = f.getAbsolutePath();
                     }
                 }
+                if (path == null) {
+                    path = messageObject.messageOwner.attachPath;
+                }
             } else if (messageObject.messageOwner.media.document instanceof TLRPC.TL_document) {
                 TLRPC.TL_document document = (TLRPC.TL_document) messageObject.messageOwner.media.document;
                 File f = getFileLoader().getPathToAttach(document, true);
                 if (f != null && f.exists()) {
                     path = f.getAbsolutePath();
+                }
+                if (path == null) {
+                    path = messageObject.messageOwner.attachPath;
                 }
                 isVideo = MessageObject.isVideoDocument(document) || messageObject.videoEditedInfo != null;
                 if (!isVideo) forceDocument = true;
@@ -1838,8 +1844,9 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         if (!infos.isEmpty()) {
             MessageObject first = group.get(0);
             FileLog.d("NK_DEBUG: album bypass starting with " + infos.size() + " items, did=" + did);
+            final boolean finalForceDocument = forceDocument;
             AndroidUtilities.runOnUIThread(() -> {
-                prepareSendingMedia(AccountInstance.getInstance(currentAccount), infos, did, first.replyMessageObject, null, null, null, forceDocument, true, null, null, true, 0, 0, 0, false, null, null, 0, 0, false, payStars, monoForumPeerId, suggestionParams);
+                prepareSendingMedia(AccountInstance.getInstance(currentAccount), infos, did, first.replyMessageObject, null, null, null, finalForceDocument, true, null, null, true, 0, 0, 0, false, null, null, 0, 0, false, payStars, monoForumPeerId, suggestionParams);
             });
         } else {
             FileLog.d("NK_DEBUG: album bypass failed, no valid paths found in group of " + group.size());
@@ -1867,11 +1874,14 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                         path = f.getAbsolutePath();
                     }
                 }
+                if (path == null) {
+                    path = messageObject.messageOwner.attachPath;
+                }
                 FileLog.d("NK_DEBUG: photo bypass path=" + path + " isRestricted=" + isRestricted + " did=" + did);
                 if (isRestricted && path != null) {
                     final String finalPath = path;
                     AndroidUtilities.runOnUIThread(() -> {
-                        prepareSendingPhoto(AccountInstance.getInstance(currentAccount), finalPath, null, null, did, messageObject.replyMessageObject, null, null, null, messageObject.messageOwner.entities, null, null, messageObject.messageOwner.media.ttl_seconds, messageObject, messageObject.videoEditedInfo, true, 0, 0, 0, false, messageObject.messageOwner.message, null, 0, 0, payStars, monoForumPeerId, suggestionParams);
+                        prepareSendingPhoto(AccountInstance.getInstance(currentAccount), finalPath, null, null, did, messageObject.replyMessageObject, null, null, null, messageObject.messageOwner.entities, null, null, messageObject.messageOwner.media.ttl_seconds, null, messageObject.videoEditedInfo, true, 0, 0, 0, false, messageObject.messageOwner.message, null, 0, 0, payStars, monoForumPeerId, suggestionParams);
                     });
                 } else {
                     photo = isRestricted ? cleanPhoto(photo) : photo;
@@ -1893,13 +1903,14 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                     final String finalPath = path;
                     if (MessageObject.isVideoDocument(document) || messageObject.videoEditedInfo != null) {
                         AndroidUtilities.runOnUIThread(() -> {
-                            prepareSendingVideo(AccountInstance.getInstance(currentAccount), finalPath, messageObject.videoEditedInfo, null, null, did, messageObject.replyMessageObject, null, null, null, messageObject.messageOwner.entities, messageObject.messageOwner.media.ttl_seconds, messageObject, true, 0, 0, false, false, messageObject.messageOwner.message, null, 0, 0, payStars, monoForumPeerId, suggestionParams);
+                            prepareSendingVideo(AccountInstance.getInstance(currentAccount), finalPath, messageObject.videoEditedInfo, null, null, did, messageObject.replyMessageObject, null, null, null, messageObject.messageOwner.entities, messageObject.messageOwner.media.ttl_seconds, null, true, 0, 0, false, false, messageObject.messageOwner.message, null, 0, 0, payStars, monoForumPeerId, suggestionParams);
                         });
                     } else {
                         ArrayList<String> paths = new ArrayList<>();
                         paths.add(path);
+                        final TLRPC.TL_document finalDocument = document;
                         AndroidUtilities.runOnUIThread(() -> {
-                            prepareSendingDocuments(AccountInstance.getInstance(currentAccount), paths, paths, null, messageObject.messageOwner.message, messageObject.messageOwner.entities, document.mime_type, did, messageObject.replyMessageObject, null, null, null, messageObject, true, 0, 0, null, null, 0, 0, false, payStars, monoForumPeerId, suggestionParams);
+                            prepareSendingDocuments(AccountInstance.getInstance(currentAccount), paths, paths, null, messageObject.messageOwner.message, messageObject.messageOwner.entities, finalDocument.mime_type, did, messageObject.replyMessageObject, null, null, null, null, true, 0, 0, null, null, 0, 0, false, payStars, monoForumPeerId, suggestionParams);
                         });
                     }
                 } else {
@@ -2176,7 +2187,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         }
         int sendResult = 0;
         long myId = getUserConfig().getClientUserId();
-        boolean forceCopySend = !forwardFromMyName && NaConfig.INSTANCE.getAllowForwardingRestriction().Bool();
+        boolean forceCopySend = NaConfig.INSTANCE.getAllowForwardingRestriction().Bool();
         if (forceCopySend) {
             forceCopySend = false;
             for (int a = 0, N = messages.size(); a < N; a++) {
