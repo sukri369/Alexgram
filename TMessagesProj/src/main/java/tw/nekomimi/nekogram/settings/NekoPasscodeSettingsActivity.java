@@ -174,7 +174,12 @@ public class NekoPasscodeSettingsActivity extends BaseNekoSettingsActivity {
                 textCheckCell.setChecked(value);
             }
         } else if (position == hiddenChatsRow) {
-            presentFragment(new HiddenChatsSettingsActivity());
+            tw.nekomimi.nekogram.helpers.HiddenChatsController controller = tw.nekomimi.nekogram.helpers.HiddenChatsController.getInstance();
+            if (controller.hasPasscode()) {
+                presentFragment(new tw.nekomimi.nekogram.ui.HiddenChatsPasscodeActivity(tw.nekomimi.nekogram.ui.HiddenChatsPasscodeActivity.MODE_UNLOCK_SETTINGS));
+            } else {
+                presentFragment(new tw.nekomimi.nekogram.ui.HiddenChatsPasscodeActivity(tw.nekomimi.nekogram.ui.HiddenChatsPasscodeActivity.MODE_SETUP_PASSCODE));
+            }
         }
     }
 

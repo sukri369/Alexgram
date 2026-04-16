@@ -418,7 +418,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
                         if (controller.hasPasscode()) {
                             presentFragment(new tw.nekomimi.nekogram.ui.HiddenChatsPasscodeActivity(tw.nekomimi.nekogram.ui.HiddenChatsPasscodeActivity.MODE_UNLOCK_SETTINGS));
                         } else {
-                            presentFragment(new HiddenChatsSettingsActivity());
+                            presentFragment(new tw.nekomimi.nekogram.ui.HiddenChatsPasscodeActivity(tw.nekomimi.nekogram.ui.HiddenChatsPasscodeActivity.MODE_SETUP_PASSCODE));
                         }
                     }, true, false);
                 } else if (position == analyticsRow) {
