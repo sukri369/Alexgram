@@ -418,8 +418,6 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
                         pingMap[proxy.proxy] = -1L
                     }
                     
-                    // Post and update list
-                    NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.proxyCheckDone, proxy.ip, proxy.port, "", "", "", time)
                     if (!isPaused) {
                         filterProxies()
                         updateRows()
