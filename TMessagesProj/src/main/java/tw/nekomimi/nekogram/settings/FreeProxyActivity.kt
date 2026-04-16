@@ -67,13 +67,13 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
         activityScope.cancel()
     }
 
-    private fun loadData() {
+    private fun loadData(force: Boolean = false) {
         isLoading = true
         listAdapter?.notifyDataSetChanged()
         fetchJob = activityScope.launch {
             try {
-                proxies = FreeProxyManager.fetchProxies()
-                meta = FreeProxyManager.fetchMeta()
+                proxies = FreeProxyManager.fetchProxies(force)
+                meta = FreeProxyManager.fetchMeta(force)
                 FileLog.d("FreeProxyActivity: Loaded ${proxies.size} proxies")
                 if (proxies.isEmpty()) {
                     showToast("No proxies found. Trying mirrors...")
@@ -142,7 +142,7 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
                 if (id == -1) {
                     finishFragment()
                 } else if (id == 2) {
-                    loadData()
+                    loadData(force = true)
                 }
             }
         })

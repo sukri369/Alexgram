@@ -88,8 +88,8 @@ object FreeProxyManager {
         cachedProxies
     }
 
-    suspend fun fetchMeta(): FreeProxyMeta? = withContext(Dispatchers.IO) {
-        if (cachedMeta != null && System.currentTimeMillis() - lastFetchTime < 300000) {
+    suspend fun fetchMeta(force: Boolean = false): FreeProxyMeta? = withContext(Dispatchers.IO) {
+        if (!force && cachedMeta != null && System.currentTimeMillis() - lastFetchTime < 300000) {
             return@withContext cachedMeta
         }
 
