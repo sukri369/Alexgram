@@ -159,7 +159,7 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
             })
         }
         
-        menu.addItem(2, R.drawable.ic_ab_other)
+        menu.addItem(2, R.drawable.msg_retry_solar)
         actionBar.setActionBarMenuOnItemClick(object : ActionBar.ActionBarMenuOnItemClick() {
             override fun onItemClick(id: Int) {
                 if (id == -1) {
