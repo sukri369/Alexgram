@@ -120,7 +120,6 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
 
         FrameLayout root = new FrameLayout(context);
         
-        boolean isDark = Theme.isCurrentThemeDark();
         int primaryColor = isDark ? 0xFF00E5FF : 0xFF00ACC1;
         int textColor = isDark ? Color.WHITE : 0xFF212121;
         int subTextColor = isDark ? Color.argb(200, 255, 255, 255) : Color.argb(200, 66, 66, 66);
