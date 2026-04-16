@@ -333,8 +333,11 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
         }
 
         fun setProxy(proxy: FreeProxy, ping: Long, divider: Boolean) {
-            val flag = LocaleController.getLanguageFlag(proxy.geolocation.country.lowercase()) ?: ""
-            titleView.text = "$flag ${proxy.geolocation.city}, ${proxy.geolocation.country}"
+            val isGlobal = proxy.geolocation.country == "ZZ" || proxy.geolocation.country.equals("unknown", true)
+            val countryCode = if (isGlobal) "Global" else proxy.geolocation.country
+            val flag = if (isGlobal) "🌍" else getFlagEmoji(proxy.geolocation.country)
+            
+            titleView.text = "$flag ${if (isGlobal) "Global" else proxy.geolocation.city}, $countryCode"
             subtitleView.text = "${proxy.protocol.uppercase()} • ${proxy.ip}:${proxy.port} • ${proxy.anonymity}"
             
             if (ping > 0) {
@@ -358,7 +361,9 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
         }
 
         override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-            super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(dp(64f), MeasureSpec.EXACTLY))
+            super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED))
+            val height = maxOf(dp(64f), measuredHeight + dp(8f))
+            setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), height)
         }
 
         override fun onDraw(canvas: Canvas) {
@@ -433,7 +438,7 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
                     val country = if (position == 0) "All" else countryList[position - 1]
                     val isSelected = (position == 0 && selectedCountry == null) || (country == selectedCountry)
                     
-                    val flag = if (position == 0) "🌍" else LocaleController.getLanguageFlag(country.lowercase()) ?: "🏳️"
+                    val flag = if (position == 0) "🌍" else getFlagEmoji(country)
                     textView.text = "$flag $country"
                     
                     val color = if (isSelected) (if (isDark) 0xFF33A1FF.toInt() else 0xFF007AFF.toInt()) else (if (isDark) 0x22FFFFFF.toInt() else 0x11000000.toInt())
@@ -462,6 +467,19 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
         fun updateCountries(newCountries: List<String>) {
             countryList = newCountries
             listView.adapter?.notifyDataSetChanged()
+        }
+    }
+
+    private fun getFlagEmoji(countryCode: String?): String {
+        if (countryCode == null || countryCode.length != 2) return "🌐"
+        if (countryCode == "ZZ") return "🌍"
+        
+        return try {
+            val firstLetter = Character.codePointAt(countryCode, 0) - 0x41 + 0x1F1E6
+            val secondLetter = Character.codePointAt(countryCode, 1) - 0x41 + 0x1F1E6
+            String(Character.toChars(firstLetter)) + String(Character.toChars(secondLetter))
+        } catch (e: Exception) {
+            "🏳️"
         }
     }
 }
