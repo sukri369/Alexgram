@@ -467,6 +467,9 @@ public class EditTextEmoji extends FrameLayout implements NotificationCenter.Not
     private boolean allowEmojisForNonPremium;
     public void allowEmojisForNonPremium(boolean allow) {
         allowEmojisForNonPremium = allow;
+        if (emojiView != null) {
+            emojiView.allowEmojisForNonPremium(allow);
+        }
     }
 
     public EmojiView getEmojiView() {

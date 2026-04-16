@@ -98,6 +98,8 @@ public class EmojiTabsStrip extends ScrollableHorizontalScrollView {
     private int wasIndex = 0;
 
     public boolean animateAppear = true;
+    private boolean allowEmojisForNonPremium;
+
 
     private final boolean isGlassDesign;
     private final int accentColor;
@@ -496,9 +498,18 @@ public class EmojiTabsStrip extends ScrollableHorizontalScrollView {
 
     }
 
-    protected boolean allowEmojisForNonPremium() {
-        return false;
+    public void setAllowEmojisForNonPremium(boolean allow) {
+        if (allowEmojisForNonPremium != allow) {
+            allowEmojisForNonPremium = allow;
+            forceTabsShow = !UserConfig.getInstance(UserConfig.selectedAccount).isPremium() && !allowEmojisForNonPremium;
+            // updateEmojiPacks will be called when the dialog opens or when packs are loaded
+        }
     }
+
+    protected boolean allowEmojisForNonPremium() {
+        return allowEmojisForNonPremium;
+    }
+
 
     boolean first = true;
     private ValueAnimator appearAnimation;

@@ -281,6 +281,9 @@ public class EmojiView extends FrameLayout implements NotificationCenter.Notific
     private boolean allowEmojisForNonPremium;
     public void allowEmojisForNonPremium(boolean allow) {
         allowEmojisForNonPremium = allow;
+        if (emojiTabs != null) {
+            emojiTabs.setAllowEmojisForNonPremium(allow);
+        }
     }
 
     public void setShouldDrawBackground(boolean shouldDrawBackground) {

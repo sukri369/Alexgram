@@ -1484,6 +1484,7 @@ public class FilterCreateActivity extends BaseFragment {
                     }));
                     cell.setIcon(FolderIconHelper.getTabIcon(newFilterEmoticon), newFilterEmoticon);
                     cell.setAllowEntities(true);
+                    cell.editTextEmoji.allowEmojisForNonPremium(true);
                     cell.editTextEmoji.getEditText().setEmojiColor(getThemedColor(Theme.key_featuredStickers_addButton));
                     cell.editTextEmoji.setEmojiViewCacheType(AnimatedEmojiDrawable.CACHE_TYPE_TOGGLEABLE_EDIT);
                     cell.editTextEmoji.setText(newFilterName);
