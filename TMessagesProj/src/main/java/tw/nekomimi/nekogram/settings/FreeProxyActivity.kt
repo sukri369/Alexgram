@@ -362,17 +362,52 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
         bottomSheet.setCustomView(container)
         val dialog = bottomSheet.create()
 
+        val updateButtonStatus = {
+            val ping = pingMap[proxy.proxy]
+            if (ping != null) {
+                if (ping > 0) {
+                    button.text = "Working — ${ping}ms"
+                    button.background = Theme.createSimpleSelectorRoundRectDrawable(dp(8f), 0xFF4CAF50.toInt(), 0xFF43A047.toInt())
+                } else {
+                    button.text = "Unreachable"
+                    button.background = Theme.createSimpleSelectorRoundRectDrawable(dp(8f), 0xFFF44336.toInt(), 0xFFE53935.toInt())
+                }
+            }
+        }
+
+        // Initial check if result already exists from background
+        updateButtonStatus()
+
         var testRunning = false
+        var timeoutJob: Job? = null
+
         button.setOnClickListener {
             if (testRunning) return@setOnClickListener
+            
             testRunning = true
             button.text = "Testing Connection..."
             val disabledColor = Theme.getColor(Theme.key_windowBackgroundWhiteGrayText)
             button.background = Theme.createSimpleSelectorRoundRectDrawable(dp(8f), disabledColor, disabledColor)
             
-            ConnectionsManager.getInstance(currentAccount).checkProxy(proxy.ip, proxy.port, "", "", "", { time ->
-                AndroidUtilities.runOnUIThread {
+            // Start safety timeout
+            timeoutJob?.cancel()
+            timeoutJob = activityScope.launch {
+                delay(20000)
+                if (testRunning) {
                     testRunning = false
+                    button.text = "Unreachable (Timeout)"
+                    button.background = Theme.createSimpleSelectorRoundRectDrawable(dp(8f), 0xFFF44336.toInt(), 0xFFE53935.toInt())
+                    pingMap[proxy.proxy] = -1L
+                    listAdapter?.notifyDataSetChanged()
+                }
+            }
+
+            ConnectionsManager.getInstance(UserConfig.selectedAccount).checkProxy(proxy.ip, proxy.port, "", "", "", { time ->
+                AndroidUtilities.runOnUIThread {
+                    if (!testRunning) return@runOnUIThread
+                    testRunning = false
+                    timeoutJob?.cancel()
+                    
                     if (time > 0) {
                         button.text = "Working — ${time}ms"
                         button.background = Theme.createSimpleSelectorRoundRectDrawable(dp(8f), 0xFF4CAF50.toInt(), 0xFF43A047.toInt())
@@ -382,6 +417,9 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
                         button.background = Theme.createSimpleSelectorRoundRectDrawable(dp(8f), 0xFFF44336.toInt(), 0xFFE53935.toInt())
                         pingMap[proxy.proxy] = -1L
                     }
+                    
+                    // Post and update list
+                    NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.proxyCheckDone, proxy.ip, proxy.port, "", "", "", time)
                     if (!isPaused) {
                         filterProxies()
                         updateRows()
@@ -493,11 +531,14 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
                 pingView.text = "---"
                 pingView.setTextColor(if (isDark) 0x66FFFFFF.toInt() else 0x66000000.toInt())
                 
-                if (!pendingPings.contains(proxy.proxy)) {
+                if (!pendingPings.contains(proxy.proxy) && pendingPings.size < 5) {
                     pendingPings.add(proxy.proxy)
                     ConnectionsManager.getInstance(currentAccount).checkProxy(proxy.ip, proxy.port, "", "", "", { time ->
                         AndroidUtilities.runOnUIThread {
-                            if (isPaused) return@runOnUIThread
+                            if (isPaused) {
+                                pendingPings.remove(proxy.proxy)
+                                return@runOnUIThread
+                            }
                             pingMap[proxy.proxy] = time
                             pendingPings.remove(proxy.proxy)
                             filterProxies()
