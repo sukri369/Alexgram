@@ -1789,6 +1789,58 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         return document;
     }
 
+    public void processForwardFromMyName(ArrayList<MessageObject> group, long did, long payStars, long monoForumPeerId, MessageSuggestionParams suggestionParams) {
+        if (group == null || group.isEmpty()) {
+            return;
+        }
+        ArrayList<SendingMediaInfo> infos = new ArrayList<>();
+        boolean forceDocument = false;
+        for (int i = 0; i < group.size(); i++) {
+            MessageObject messageObject = group.get(i);
+            if (messageObject.messageOwner.media == null) continue;
+
+            String path = null;
+            boolean isVideo = false;
+            if (messageObject.messageOwner.media.photo instanceof TLRPC.TL_photo) {
+                TLRPC.TL_photo photo = (TLRPC.TL_photo) messageObject.messageOwner.media.photo;
+                TLRPC.PhotoSize closestSize = FileLoader.getClosestPhotoSizeWithSize(photo.sizes, AndroidUtilities.getPhotoSize());
+                if (closestSize != null) {
+                    File f = getFileLoader().getPathToAttach(closestSize, true);
+                    if (f != null && f.exists()) {
+                        path = f.getAbsolutePath();
+                    }
+                }
+            } else if (messageObject.messageOwner.media.document instanceof TLRPC.TL_document) {
+                TLRPC.TL_document document = (TLRPC.TL_document) messageObject.messageOwner.media.document;
+                File f = getFileLoader().getPathToAttach(document, true);
+                if (f != null && f.exists()) {
+                    path = f.getAbsolutePath();
+                }
+                isVideo = MessageObject.isVideoDocument(document) || messageObject.videoEditedInfo != null;
+                if (!isVideo) forceDocument = true;
+            }
+
+            if (path != null) {
+                SendingMediaInfo info = new SendingMediaInfo();
+                info.path = path;
+                info.isVideo = isVideo;
+                info.caption = messageObject.messageOwner.message;
+                info.entities = messageObject.messageOwner.entities;
+                if (messageObject.messageOwner.media != null) {
+                    info.ttl = messageObject.messageOwner.media.ttl_seconds;
+                    info.hasMediaSpoilers = messageObject.messageOwner.media.spoiler;
+                }
+                info.videoEditedInfo = messageObject.videoEditedInfo;
+                infos.add(info);
+            }
+        }
+
+        if (!infos.isEmpty()) {
+            MessageObject first = group.get(0);
+            prepareSendingMedia(AccountInstance.getInstance(currentAccount), infos, did, first.replyMessageObject, null, null, null, forceDocument, true, null, null, true, 0, 0, 0, false, null, null, 0, 0, false, payStars, monoForumPeerId, suggestionParams);
+        }
+    }
+
     public void processForwardFromMyName(MessageObject messageObject, long did, long payStars, long monoForumPeerId, MessageSuggestionParams suggestionParams) {
         if (messageObject == null) {
             return;
@@ -1803,36 +1855,46 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
             if (messageObject.messageOwner.media.photo instanceof TLRPC.TL_photo) {
                 TLRPC.TL_photo photo = (TLRPC.TL_photo) messageObject.messageOwner.media.photo;
                 String path = null;
-                if (isRestricted) {
-                    TLRPC.PhotoSize closestSize = FileLoader.getClosestPhotoSizeWithSize(photo.sizes, AndroidUtilities.getPhotoSize());
-                    if (closestSize != null) {
-                        File f = getFileLoader().getPathToAttach(closestSize, true);
-                        if (f != null && f.exists()) {
-                            path = f.getAbsolutePath();
-                        }
-                    }
-                    photo = cleanPhoto(photo);
-                }
-                SendMessagesHelper.SendMessageParams fparams = SendMessagesHelper.SendMessageParams.of(photo, path, did, messageObject.replyMessageObject, null, messageObject.messageOwner.message, messageObject.messageOwner.entities, null, params, true, 0, 0, messageObject.messageOwner.media.ttl_seconds, messageObject, false);
-                fparams.payStars = payStars;
-                fparams.monoForumPeer = monoForumPeerId;
-                fparams.suggestionParams = suggestionParams;
-                sendMessage(fparams);
-            } else if (messageObject.messageOwner.media.document instanceof TLRPC.TL_document) {
-                TLRPC.TL_document document = (TLRPC.TL_document) messageObject.messageOwner.media.document;
-                String path = messageObject.messageOwner.attachPath;
-                if (isRestricted) {
-                    File f = getFileLoader().getPathToAttach(document, true);
+                TLRPC.PhotoSize closestSize = FileLoader.getClosestPhotoSizeWithSize(photo.sizes, AndroidUtilities.getPhotoSize());
+                if (closestSize != null) {
+                    File f = getFileLoader().getPathToAttach(closestSize, true);
                     if (f != null && f.exists()) {
                         path = f.getAbsolutePath();
                     }
-                    document = cleanDocument(document);
                 }
-                SendMessagesHelper.SendMessageParams fparams = SendMessagesHelper.SendMessageParams.of(document, null, path, did, messageObject.replyMessageObject, null, messageObject.messageOwner.message, messageObject.messageOwner.entities, null, params, true, 0, 0, messageObject.messageOwner.media.ttl_seconds, messageObject, null, false);
-                fparams.payStars = payStars;
-                fparams.monoForumPeer = monoForumPeerId;
-                fparams.suggestionParams = suggestionParams;
-                sendMessage(fparams);
+                if (isRestricted && path != null) {
+                    prepareSendingPhoto(AccountInstance.getInstance(currentAccount), path, null, null, did, messageObject.replyMessageObject, null, null, null, messageObject.messageOwner.entities, null, null, messageObject.messageOwner.media.ttl_seconds, messageObject, messageObject.videoEditedInfo, true, 0, 0, 0, false, messageObject.messageOwner.message, null, 0, 0, payStars, monoForumPeerId, suggestionParams);
+                } else {
+                    photo = isRestricted ? cleanPhoto(photo) : photo;
+                    SendMessagesHelper.SendMessageParams fparams = SendMessagesHelper.SendMessageParams.of(photo, path, did, messageObject.replyMessageObject, null, messageObject.messageOwner.message, messageObject.messageOwner.entities, null, params, true, 0, 0, messageObject.messageOwner.media.ttl_seconds, messageObject, false);
+                    fparams.payStars = payStars;
+                    fparams.monoForumPeer = monoForumPeerId;
+                    fparams.suggestionParams = suggestionParams;
+                    sendMessage(fparams);
+                }
+            } else if (messageObject.messageOwner.media.document instanceof TLRPC.TL_document) {
+                TLRPC.TL_document document = (TLRPC.TL_document) messageObject.messageOwner.media.document;
+                String path = messageObject.messageOwner.attachPath;
+                File f = getFileLoader().getPathToAttach(document, true);
+                if (f != null && f.exists()) {
+                    path = f.getAbsolutePath();
+                }
+                if (isRestricted && path != null) {
+                    if (MessageObject.isVideoDocument(document) || messageObject.videoEditedInfo != null) {
+                        prepareSendingVideo(AccountInstance.getInstance(currentAccount), path, messageObject.videoEditedInfo, null, null, did, messageObject.replyMessageObject, null, null, null, messageObject.messageOwner.entities, messageObject.messageOwner.media.ttl_seconds, messageObject, true, 0, 0, false, false, messageObject.messageOwner.message, null, 0, 0, payStars, monoForumPeerId, suggestionParams);
+                    } else {
+                        ArrayList<String> paths = new ArrayList<>();
+                        paths.add(path);
+                        prepareSendingDocuments(AccountInstance.getInstance(currentAccount), paths, paths, null, messageObject.messageOwner.message, messageObject.messageOwner.entities, document.mime_type, did, messageObject.replyMessageObject, null, null, null, messageObject, true, 0, 0, null, null, 0, 0, false, payStars, monoForumPeerId, suggestionParams);
+                    }
+                } else {
+                    document = isRestricted ? cleanDocument(document) : document;
+                    SendMessagesHelper.SendMessageParams fparams = SendMessagesHelper.SendMessageParams.of(document, null, path, did, messageObject.replyMessageObject, null, messageObject.messageOwner.message, messageObject.messageOwner.entities, null, params, true, 0, 0, messageObject.messageOwner.media.ttl_seconds, messageObject, null, false);
+                    fparams.payStars = payStars;
+                    fparams.monoForumPeer = monoForumPeerId;
+                    fparams.suggestionParams = suggestionParams;
+                    sendMessage(fparams);
+                }
             } else if (messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaVenue || messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaGeo) {
                 SendMessagesHelper.SendMessageParams fparams = SendMessagesHelper.SendMessageParams.of(messageObject.messageOwner.media, did, messageObject.replyMessageObject, null, null, null, true, 0, 0);
                 fparams.payStars = payStars;
@@ -2111,7 +2173,22 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         }
         if (forceCopySend) {
             for (int a = 0, N = messages.size(); a < N; a++) {
-                processForwardFromMyName(messages.get(a), peer, payStars, monoForumPeerId, suggestionParams);
+                MessageObject message = messages.get(a);
+                long groupId = message.messageOwner.grouped_id;
+                if (groupId != 0) {
+                    ArrayList<MessageObject> group = new ArrayList<>();
+                    group.add(message);
+                    while (a + 1 < N && messages.get(a + 1).messageOwner.grouped_id != 0 && messages.get(a + 1).messageOwner.grouped_id == groupId) {
+                        group.add(messages.get(++a));
+                    }
+                    if (group.size() > 1) {
+                        processForwardFromMyName(group, peer, payStars, monoForumPeerId, suggestionParams);
+                    } else {
+                        processForwardFromMyName(message, peer, payStars, monoForumPeerId, suggestionParams);
+                    }
+                } else {
+                    processForwardFromMyName(message, peer, payStars, monoForumPeerId, suggestionParams);
+                }
             }
             return 0;
         }
