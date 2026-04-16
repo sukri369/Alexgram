@@ -280,6 +280,120 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
         }
     }
 
+    override fun onItemLongClick(view: View, position: Int, x: Float, y: Float): Boolean {
+        if (position in proxyStartRow until proxyEndRow) {
+            val proxyIndex = position - proxyStartRow
+            if (proxyIndex in filteredProxies.indices) {
+                val proxy = filteredProxies[proxyIndex]
+                showProxyTesterModal(proxy)
+                return true
+            }
+        }
+        return super.onItemLongClick(view, position, x, y)
+    }
+
+    private fun showProxyTesterModal(proxy: FreeProxy) {
+        val bottomSheet = BottomSheet.Builder(parentActivity, false)
+        val container = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(0, dp(16f), 0, dp(16f))
+            clipToPadding = false
+        }
+
+        // Header Title
+        val isGlobal = proxy.geolocation.country == "ZZ" || proxy.geolocation.country.equals("unknown", true)
+        val flag = if (isGlobal) "🌍" else getFlagEmoji(proxy.geolocation.country)
+        val titleView = TextView(context).apply {
+            text = "$flag Proxy Specs"
+            textSize = 20f
+            typeface = AndroidUtilities.bold()
+            setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText))
+            setPadding(dp(21f), dp(6f), dp(21f), dp(16f))
+        }
+        container.addView(titleView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT))
+
+        val addInfoCell = { title: String, value: String ->
+            val cell = LinearLayout(context).apply {
+                orientation = LinearLayout.HORIZONTAL
+                setPadding(dp(21f), dp(12f), dp(21f), dp(12f))
+                
+                val tView = TextView(context).apply {
+                    text = title
+                    textSize = 15f
+                    setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText))
+                }
+                addView(tView, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f))
+                
+                val vView = TextView(context).apply {
+                    text = value
+                    textSize = 15f
+                    typeface = AndroidUtilities.bold()
+                    setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText))
+                    gravity = Gravity.END
+                }
+                addView(vView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT))
+            }
+            container.addView(cell, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT))
+        }
+
+        addInfoCell("Address", "${proxy.ip}:${proxy.port}")
+        addInfoCell("Location", if (isGlobal) "Global" else "${proxy.geolocation.city}, ${proxy.geolocation.country}")
+        addInfoCell("Protocol", proxy.protocol.uppercase())
+        addInfoCell("Anonymity", proxy.anonymity.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() })
+        addInfoCell("Database Score", "${proxy.score}/100")
+
+        val buttonBgDefault = Theme.createSimpleSelectorRoundRectDrawable(dp(8f), Theme.getColor(Theme.key_featuredStickers_addButton), Theme.getColor(Theme.key_featuredStickers_addButtonPressed))
+        
+        val button = TextView(context).apply {
+            text = "Run Connectivity Test"
+            textSize = 15f
+            typeface = AndroidUtilities.bold()
+            setTextColor(0xFFFFFFFF.toInt())
+            gravity = Gravity.CENTER
+            background = buttonBgDefault
+        }
+        
+        val buttonWrapper = FrameLayout(context).apply {
+            setPadding(dp(21f), dp(24f), dp(21f), dp(16f))
+            addView(button, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 48f))
+        }
+        container.addView(buttonWrapper, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT))
+
+        bottomSheet.setCustomView(container)
+        val dialog = bottomSheet.create()
+
+        var testRunning = false
+        button.setOnClickListener {
+            if (testRunning) return@setOnClickListener
+            testRunning = true
+            button.text = "Testing Connection..."
+            val disabledColor = Theme.getColor(Theme.key_windowBackgroundWhiteGrayText)
+            button.background = Theme.createSimpleSelectorRoundRectDrawable(dp(8f), disabledColor, disabledColor)
+            
+            ConnectionsManager.getInstance(currentAccount).checkProxy(proxy.ip, proxy.port, "", "", "", { time ->
+                AndroidUtilities.runOnUIThread {
+                    testRunning = false
+                    if (time > 0) {
+                        button.text = "Working — ${time}ms"
+                        button.background = Theme.createSimpleSelectorRoundRectDrawable(dp(8f), 0xFF4CAF50.toInt(), 0xFF43A047.toInt())
+                        pingMap[proxy.proxy] = time
+                    } else {
+                        button.text = "Unreachable"
+                        button.background = Theme.createSimpleSelectorRoundRectDrawable(dp(8f), 0xFFF44336.toInt(), 0xFFE53935.toInt())
+                        pingMap[proxy.proxy] = -1L
+                    }
+                    if (!isPaused) {
+                        filterProxies()
+                        updateRows()
+                        listAdapter?.notifyDataSetChanged()
+                    }
+                }
+            })
+        }
+
+        showDialog(dialog)
+    }
+
     override fun getActionBarTitle(): String = LocaleController.getString("FreeProxy", R.string.FreeProxy)
 
     override fun didReceivedNotification(id: Int, account: Int, vararg args: Any?) {
@@ -374,6 +488,7 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
                 } else {
                     pingView.text = "Error"
                     pingView.setTextColor(0xFFF44336.toInt())
+                }
             } else {
                 pingView.text = "---"
                 pingView.setTextColor(if (isDark) 0x66FFFFFF.toInt() else 0x66000000.toInt())
