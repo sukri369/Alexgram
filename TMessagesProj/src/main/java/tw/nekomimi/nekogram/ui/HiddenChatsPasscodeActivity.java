@@ -102,7 +102,7 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
         actionBar.setAllowOverlayTitle(false);
         actionBar.setCastShadows(false);
-        actionBar.setTitle("HIDDEN_ACCESS");
+        actionBar.setTitle("HIDDEN CHATS");
         actionBar.setBackgroundColor(0);
         actionBar.setItemsBackgroundColor(Theme.getColor(Theme.key_actionBarDefaultSelector), false);
         actionBar.setItemsColor(Color.WHITE, false);
@@ -308,25 +308,25 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
     private void updateTexts() {
         if (mode == MODE_SETUP_PASSCODE) {
             if (setupStep == 0) {
-                targetTitle = "INIT_NEW_KEY";
+                targetTitle = "INIT NEW KEY";
                 targetSubtitle = "Establish 4-digit security protocol.";
             } else {
-                targetTitle = "CONFIRM_KEY";
+                targetTitle = "CONFIRM KEY";
                 targetSubtitle = "Verify integrity of the new passcode.";
             }
         } else if (mode == MODE_CHANGE_PASSCODE) {
             if (changePasscodeStep == 0) {
-                targetTitle = "VERIFY_CURRENT";
+                targetTitle = "VERIFY CURRENT";
                 targetSubtitle = "Verification required for decryption change.";
             } else if (changePasscodeStep == 1) {
-                targetTitle = "GEN_NEW_PASS";
+                targetTitle = "GEN NEW PASS";
                 targetSubtitle = "Generate a new 4-digit access code.";
             } else {
-                targetTitle = "VERIFY_NEW";
+                targetTitle = "VERIFY NEW";
                 targetSubtitle = "Finalize the encryption update.";
             }
         } else {
-            targetTitle = "HIDDEN_ACCESS";
+            targetTitle = "HIDDEN ACCESS";
             targetSubtitle = "Authentication needed to access secure chats.";
         }
         
