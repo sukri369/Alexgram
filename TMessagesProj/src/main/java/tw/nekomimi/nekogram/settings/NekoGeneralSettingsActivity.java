@@ -343,6 +343,13 @@ public class NekoGeneralSettingsActivity extends BaseNekoXSettingsActivity {
             } else if (key.equals(NaConfig.INSTANCE.getDisableCrashlyticsCollection().getKey())) {
                 tooltip.showWithAction(0, UndoView.ACTION_NEED_RESTART, null, null);
             } else if (key.equals(NaConfig.INSTANCE.getAllowForwardingRestriction().getKey())) {
+                if ((boolean) newValue && !NaConfig.INSTANCE.getAllowForwardingRestrictionOnboardingShown().Bool()) {
+                    showDialog(new AlertDialog.Builder(getParentActivity())
+                            .setTitle(getString(R.string.AllowForwardingRestrictionOnboardingTitle))
+                            .setMessage(getString(R.string.AllowForwardingRestrictionOnboardingMessage))
+                            .setPositiveButton(getString(R.string.OK), (dialogInterface, i) -> NaConfig.INSTANCE.getAllowForwardingRestrictionOnboardingShown().setConfigBool(true))
+                            .create());
+                }
                 tooltip.showWithAction(0, UndoView.ACTION_NEED_RESTART, null, null);
             } else if (key.equals(NaConfig.INSTANCE.getCustomTitleUserName().getKey())) {
                 checkCustomTitleRows();

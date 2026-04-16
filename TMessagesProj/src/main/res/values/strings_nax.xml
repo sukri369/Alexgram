@@ -371,5 +371,7 @@
     <string name="FreeProxyPing">%1$d ms</string>
     <string name="AllowForwardingRestriction">Allow forwarding/copying</string>
     <string name="AllowForwardingRestrictionDescription">Bypass restrictions in channels and groups that forbid copying and forwarding.</string>
+    <string name="AllowForwardingRestrictionOnboardingTitle">Media Bypass Instructions</string>
+    <string name="AllowForwardingRestrictionOnboardingMessage">To ensure a seamless experience when bypassing forwarding restrictions, please make sure the media is fully downloaded before forwarding. This allows the app to securely re-upload and deliver your content without server-side blocks.</string>
 
 </resources>
