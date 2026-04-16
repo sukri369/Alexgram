@@ -369,4 +369,7 @@
     <string name="FreeProxyUpdated">Updated %1$s ago</string>
     <string name="FreeProxySearchHint">Search by country, city or IP</string>
     <string name="FreeProxyPing">%1$d ms</string>
+    <string name="AllowForwardingRestriction">Allow forwarding/copying</string>
+    <string name="AllowForwardingRestrictionDescription">Bypass restrictions in channels and groups that forbid copying and forwarding.</string>
+
 </resources>

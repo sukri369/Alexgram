@@ -3840,7 +3840,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
         if (forwardItem == null) {
             return;
         }
-        boolean noforwards = profileActivity.getMessagesController().isPeerNoForwards(dialog_id);
+        boolean noforwards = profileActivity.getMessagesController().isPeerNoForwards(dialog_id) && !xyz.nextalone.nagram.NaConfig.INSTANCE.getAllowForwardingRestriction().Bool();
         forwardItem.setAlpha(noforwards ? 0.5f : 1f);
         forwardNoQuoteItem.setAlpha(noforwards ? 0.5f : 1f);
         if (noforwards) {
@@ -3861,7 +3861,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
             for (Integer id1 : ids) {
                 if (id1 > 0) {
                     MessageObject msg = selectedFiles[a].get(id1);
-                    if (msg != null && msg.messageOwner != null && msg.messageOwner.noforwards) {
+                    if (msg != null && msg.messageOwner != null && msg.messageOwner.noforwards && !xyz.nextalone.nagram.NaConfig.INSTANCE.getAllowForwardingRestriction().Bool()) {
                         hasNoforwardsMessage = true;
                         break;
                     }

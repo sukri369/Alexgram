@@ -6652,6 +6652,9 @@ public class MessagesController extends BaseController implements NotificationCe
         if (chat == null) {
             return false;
         }
+        if (NaConfig.INSTANCE.getAllowForwardingRestriction().Bool()) {
+            return false;
+        }
         if (chat.migrated_to != null) {
             TLRPC.Chat migratedTo = getChat(chat.migrated_to.channel_id);
             if (migratedTo != null) {
@@ -6675,6 +6678,9 @@ public class MessagesController extends BaseController implements NotificationCe
 
     public boolean isUserNoForwards(TLRPC.UserFull userFull) {
         if (userFull == null) {
+            return false;
+        }
+        if (NaConfig.INSTANCE.getAllowForwardingRestriction().Bool()) {
             return false;
         }
 

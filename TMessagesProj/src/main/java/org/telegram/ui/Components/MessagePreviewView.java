@@ -292,7 +292,7 @@ public class MessagePreviewView extends FrameLayout {
 
                 @Override
                 protected boolean canCopy() {
-                    return messagePreviewParams == null || !messagePreviewParams.noforwards;
+                    return messagePreviewParams == null || !messagePreviewParams.noforwards || xyz.nextalone.nagram.NaConfig.INSTANCE.getAllowForwardingRestriction().Bool();
                 }
 
                 @Override

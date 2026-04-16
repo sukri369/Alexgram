@@ -152,6 +152,9 @@ public class SearchDownloadsContainer extends FrameLayout implements Notificatio
                         if (chatTo != null) {
                             noforwards = chatTo.noforwards;
                         }
+                        if (xyz.nextalone.nagram.NaConfig.INSTANCE.getAllowForwardingRestriction().Bool()) {
+                            noforwards = false;
+                        }
                         openInPhotoViewer = openInPhotoViewer || noforwards;
                     }
                     if (openInPhotoViewer) {

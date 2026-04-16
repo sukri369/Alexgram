@@ -7188,13 +7188,13 @@ public class PeerStoriesView extends SizeNotifierFrameLayout implements Notifica
                 return uploadingStory.entry.allowScreenshots;
             }
             if (storyItem != null) {
-                if (storyItem.noforwards) {
+                if (storyItem.noforwards && !NaConfig.INSTANCE.getAllowForwardingRestriction().Bool()) {
                     return false;
                 }
                 if (storyItem.pinned) {
                     final long did = storyItem.dialogId;
                     final TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-did);
-                    if (chat != null && chat.noforwards) {
+                    if (chat != null && chat.noforwards && !NaConfig.INSTANCE.getAllowForwardingRestriction().Bool()) {
                         return false;
                     }
                 }

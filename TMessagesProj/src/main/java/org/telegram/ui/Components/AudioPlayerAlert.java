@@ -2398,7 +2398,7 @@ public class AudioPlayerAlert extends BottomSheet implements NotificationCenter.
                 dialogId < 0 && MessagesController.getInstance(currentAccount).isPeerNoForwards(dialogId) ||
                 MessagesController.getInstance(currentAccount).isPeerNoForwards(messageObject.getDialogId()) ||
                 messageObject.messageOwner.noforwards
-            );
+            ) && !xyz.nextalone.nagram.NaConfig.INSTANCE.getAllowForwardingRestriction().Bool();
             if (noforwards != this.noforwards) {
                 this.noforwards = noforwards;
 

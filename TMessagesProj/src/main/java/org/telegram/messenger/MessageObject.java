@@ -8030,7 +8030,7 @@ public class MessageObject {
             return false;
         } else if (searchType == ChatActivity.SEARCH_PUBLIC_POSTS) {
             return true;
-        } else if (messageOwner.noforwards) {
+        } else if (messageOwner.noforwards && !NaConfig.INSTANCE.getAllowForwardingRestriction().Bool()) {
             return false;
         } else if (messageOwner.fwd_from != null && !isOutOwner() && messageOwner.fwd_from.saved_from_peer != null && getDialogId() == UserConfig.getInstance(currentAccount).getClientUserId()) {
             return true;
@@ -8256,7 +8256,7 @@ public class MessageObject {
             return;
         }
         boolean hasUrls = applyEntities();
-        boolean noforwards = messageOwner != null && messageOwner.noforwards;
+        boolean noforwards = messageOwner != null && messageOwner.noforwards && !NaConfig.INSTANCE.getAllowForwardingRestriction().Bool();
         if (!noforwards) {
             final long dialogId = getDialogId();
             noforwards = MessagesController.getInstance(currentAccount).isPeerNoForwards(dialogId);

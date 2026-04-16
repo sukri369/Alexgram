@@ -579,6 +579,12 @@ object NaConfig {
             ConfigItem.configTypeBool,
             false
         )
+    val allowForwardingRestriction =
+        addConfig(
+            "AllowForwardingRestriction",
+            ConfigItem.configTypeBool,
+            false
+        )
     val accountOrder =
         addConfig(
             "AccountOrder",

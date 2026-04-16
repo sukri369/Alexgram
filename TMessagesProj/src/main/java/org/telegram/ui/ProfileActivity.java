@@ -2564,7 +2564,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             flagSecure = null;
         }
         if (layout != null && layout.getParentActivity() != null) {
-            flagSecure = new FlagSecureReason(layout.getParentActivity().getWindow(), () -> currentEncryptedChat != null || isPeerNoForwards());
+            flagSecure = new FlagSecureReason(layout.getParentActivity().getWindow(), () -> (currentEncryptedChat != null || isPeerNoForwards()) && !NaConfig.INSTANCE.getAllowForwardingRestriction().Bool());
         }
     }
 
@@ -3196,7 +3196,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     isPulledDown = true;
                     NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.needCheckSystemBarColors, true);
                     if (otherItem != null) {
-                        if (!isPeerNoForwards()) {
+                        if (!isPeerNoForwards() || NaConfig.INSTANCE.getAllowForwardingRestriction().Bool()) {
                             otherItem.showSubItem(gallery_menu_save);
                         } else {
                             otherItem.hideSubItem(gallery_menu_save);
