@@ -63,6 +63,7 @@ import org.telegram.ui.Components.AlertsCreator;
 import org.telegram.ui.Components.BlurredRecyclerView;
 import org.telegram.ui.Components.BulletinFactory;
 import org.telegram.ui.Components.LayoutHelper;
+import org.telegram.ui.Components.RLottieImageView;
 import org.telegram.ui.Components.RecyclerListView;
 import org.telegram.ui.Components.UndoView;
 
@@ -605,21 +606,126 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
                         int code = response.code();
                         AndroidUtilities.runOnUIThread(() -> {
                             progressDialog.dismiss();
-                            if (response.isSuccessful()) {
-                                BulletinFactory.of(NekoExperimentalSettingsActivity.this).createSimpleBulletin(R.raw.done, "API Test Success! (HTTP " + code + ")").show();
-                            } else {
-                                BulletinFactory.of(NekoExperimentalSettingsActivity.this).createSimpleBulletin(R.raw.error, "API Test Failed: HTTP " + code + "\n" + responseBody).show();
-                            }
+                            showTestResult(response.isSuccessful(), code, responseBody, isGeminiNative);
                         });
                     }
                 });
             } catch (Exception e) {
                 AndroidUtilities.runOnUIThread(() -> {
                     progressDialog.dismiss();
-                    BulletinFactory.of(this).createSimpleBulletin(R.raw.error, "API Test Error: " + e.getMessage()).show();
+                    showTestResult(false, 0, e.getMessage(), isGeminiNative);
                 });
             }
         });
+    }
+
+    private void showTestResult(boolean success, int code, String responseBody, boolean isGeminiNative) {
+        if (getParentActivity() == null) return;
+
+        String aiReply = null;
+        try {
+            JSONObject jsonResponse = new JSONObject(responseBody);
+            if (isGeminiNative) {
+                if (jsonResponse.has("candidates")) {
+                    JSONArray candidates = jsonResponse.getJSONArray("candidates");
+                    if (candidates.length() > 0) {
+                        JSONObject candidate = candidates.getJSONObject(0);
+                        if (candidate.has("content")) {
+                            JSONObject content = candidate.getJSONObject("content");
+                            JSONArray parts = content.getJSONArray("parts");
+                            if (parts.length() > 0) {
+                                aiReply = parts.getJSONObject(0).getString("text");
+                            }
+                        }
+                    }
+                }
+            } else {
+                if (jsonResponse.has("choices")) {
+                    JSONArray choices = jsonResponse.getJSONArray("choices");
+                    if (choices.length() > 0) {
+                        JSONObject message = choices.getJSONObject(0).getJSONObject("message");
+                        aiReply = message.getString("content");
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // ignore parsing error
+        }
+
+        LinearLayout root = new LinearLayout(getContext());
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(0, AndroidUtilities.dp(16), 0, 0);
+
+        // Lottie Animation
+        RLottieImageView animationView = new RLottieImageView(getContext());
+        animationView.setAnimation(success ? R.raw.done : R.raw.error, 80, 80);
+        animationView.setAutoRepeat(false);
+        root.addView(animationView, LayoutHelper.createLinear(80, 80, Gravity.CENTER, 0, 0, 0, 8));
+        AndroidUtilities.runOnUIThread(animationView::playAnimation, 200);
+
+        // Status Title
+        TextView titleView = new TextView(getContext());
+        titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 19);
+        titleView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+        titleView.setText(success ? "API Connect Successful" : "API Connect Failed");
+        titleView.setTextColor(Theme.getColor(success ? Theme.key_windowBackgroundWhiteGreenText : Theme.key_text_RedRegular));
+        titleView.setGravity(Gravity.CENTER);
+        root.addView(titleView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER, 24, 0, 24, 12));
+
+        android.text.SpannableStringBuilder infoText = new android.text.SpannableStringBuilder();
+
+        // Details
+        int start = infoText.length();
+        infoText.append("Status: ");
+        infoText.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD), start, infoText.length(), 0);
+        infoText.append(code == 200 ? "200 OK" : (code == 0 ? "Local Error" : "HTTP " + code)).append("\n");
+
+        start = infoText.length();
+        infoText.append("API Type: ");
+        infoText.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD), start, infoText.length(), 0);
+        infoText.append(isGeminiNative ? "Gemini Native" : "OpenAI Compatible").append("\n\n");
+
+        if (aiReply != null) {
+            start = infoText.length();
+            infoText.append("AI Response:").append("\n");
+            infoText.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD), start, infoText.length(), 0);
+            infoText.append(tw.nekomimi.nekogram.helpers.EntitiesHelper.parseMarkdown(aiReply)).append("\n\n");
+        }
+
+        start = infoText.length();
+        infoText.append("Raw Response Body:").append("\n");
+        infoText.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD), start, infoText.length(), 0);
+        infoText.append(responseBody);
+
+        android.widget.TextView textView = new android.widget.TextView(getContext());
+        textView.setText(infoText);
+        textView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
+        textView.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
+        textView.setPadding(AndroidUtilities.dp(24), 0, AndroidUtilities.dp(24), AndroidUtilities.dp(8));
+        textView.setTextIsSelectable(true);
+
+        android.widget.ScrollView scrollView = new android.widget.ScrollView(getContext());
+        scrollView.addView(textView);
+        root.addView(scrollView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, 1.0f));
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+        builder.setView(root);
+        builder.setPositiveButton("OK", null);
+        final String finalAiReply = aiReply != null ? aiReply : responseBody;
+        builder.setNeutralButton("Copy Result", (dialog, which) -> {
+            android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getParentActivity().getSystemService(Context.CLIPBOARD_SERVICE);
+            android.content.ClipData clip = android.content.ClipData.newPlainText("AI Test Result", finalAiReply);
+            clipboard.setPrimaryClip(clip);
+            BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Copied to clipboard").show();
+        });
+        
+        AlertDialog dialog = builder.create();
+        showDialog(dialog);
+        
+        // Haptic Feedback
+        try {
+            root.performHapticFeedback(success ? android.view.HapticFeedbackConstants.VIRTUAL_KEY : android.view.HapticFeedbackConstants.LONG_PRESS);
+        } catch (Exception ignore) {}
     }
 
     private void showBottomSheet() {
