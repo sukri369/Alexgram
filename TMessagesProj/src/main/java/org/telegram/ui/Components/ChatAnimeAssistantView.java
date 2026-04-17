@@ -39,6 +39,7 @@ import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.ui.ActionBar.Theme;
+import org.telegram.ui.Components.chat.MiniChatAssistantView;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -130,6 +131,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
     private Runnable typingRunnable;
     private final Rect visibleFrame = new Rect();
     private GestureDetector gestureDetector;
+    private MiniChatAssistantView miniChatAssistantView;
 
     public ChatAnimeAssistantView(@NonNull Context context, @Nullable SizeNotifierFrameLayout blurParent, long dialogId) {
         this(context, blurParent, dialogId, true, true, "This feature only works in chats.", 92, 86);
@@ -618,7 +620,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
                 .start();
     }
 
-    private void showPanel() {
+    public void showPanel() {
         if (panelOpened) {
             clampPanelBaseToBounds();
             animateLinkedToCurrent();
@@ -638,6 +640,10 @@ public class ChatAnimeAssistantView extends FrameLayout {
         panelContainer.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(220).setInterpolator(org.telegram.ui.Components.CubicBezierInterpolator.EASE_OUT_QUINT).start();
         characterView.onOpenPanel();
         showReactionBubble("💬");
+    }
+
+    public void setMiniView(MiniChatAssistantView miniView) {
+        this.miniChatAssistantView = miniView;
     }
 
     private void hidePanel() {
