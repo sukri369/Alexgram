@@ -50174,7 +50174,7 @@ public class ChatActivity extends BaseFragment implements
             // but for now we follow the same pattern of building context.
             // Actually, AIAssistanceHelper.buildContext currently takes a list of messages.
             
-            String context = AIAssistanceHelper.buildContext(this, currentAccount, dialog_id, java.util.Collections.singletonList(originalMessage));
+            String context = AIAssistanceHelper.buildContext(this, currentAccount, dialog_id, originalMessage != null ? new java.util.ArrayList<>(java.util.Collections.singletonList(originalMessage)) : null);
             AIAssistanceHelper.requestReply(currentAccount, userPrompt, context, callback);
         } catch (Throwable e) {
             callback.onError("Start Gen Crash: " + e.getMessage());

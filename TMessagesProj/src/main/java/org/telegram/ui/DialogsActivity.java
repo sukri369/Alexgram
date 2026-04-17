@@ -325,6 +325,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private final BoolAnimator animatorSearchFilterTabsVisible = new BoolAnimator(ANIMATOR_ID_SEARCH_FILTER_TABS_VISIBLE,
             this, CubicBezierInterpolator.EASE_OUT_QUINT, 350);
 
+    private ChatAnimeAssistantView chatAnimeAssistantView;
+    private MiniChatAssistantView miniChatAssistantView;
+
 
     private final WindowInsetsStateHolder windowInsetsStateHolder = new WindowInsetsStateHolder(this::checkInsets);
 
@@ -4164,7 +4167,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             chatAnimeAssistantView = new ChatAnimeAssistantView(context, contentView, 0);
             chatAnimeAssistantView.setAssistantRequestDelegate(new ChatAnimeAssistantView.AssistantRequestDelegate() {
                 @Override
-                public void onAssistantRequest(String prompt, ChatAnimeAssistantView.AssistantRequestCallback callback) {
+                public void onRequest(String prompt, ChatAnimeAssistantView.AssistantRequestCallback callback) {
                     String context = AIAssistanceHelper.buildContext(DialogsActivity.this, currentAccount, 0, null);
                     AIAssistanceHelper.requestReply(currentAccount, prompt, context, callback);
                 }
