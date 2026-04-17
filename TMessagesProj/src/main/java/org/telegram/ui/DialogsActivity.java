@@ -327,6 +327,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     private ChatAnimeAssistantView chatAnimeAssistantView;
     private MiniChatAssistantView miniChatAssistantView;
+    private SharedPreferences.OnSharedPreferenceChangeListener aiPreferenceListener;
 
 
     private final WindowInsetsStateHolder windowInsetsStateHolder = new WindowInsetsStateHolder(this::checkInsets);
@@ -3073,6 +3074,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         if (chatAnimeAssistantView != null) {
             chatAnimeAssistantView.onDestroy();
         }
+        if (aiPreferenceListener != null && getParentActivity() != null) {
+            SharedPreferences aiPrefs = getParentActivity().getSharedPreferences("ai_assistant_prefs", Context.MODE_PRIVATE);
+            aiPrefs.unregisterOnSharedPreferenceChangeListener(aiPreferenceListener);
+            aiPreferenceListener = null;
+        }
         if (searchString == null) {
             getNotificationCenter().removeObserver(this, NotificationCenter.dialogsNeedReload);
             NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.emojiLoaded);
@@ -3139,6 +3145,69 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         notificationsLocker.unlock();
         delegate = null;
         SuggestClearDatabaseBottomSheet.dismissDialog();
+    }
+
+    private void initAIAssistance() {
+        if (getParentActivity() == null || fragmentView == null) {
+            return;
+        }
+        SharedPreferences aiPrefs = getParentActivity().getSharedPreferences("ai_assistant_prefs", Context.MODE_PRIVATE);
+        boolean enabled = aiPrefs.getBoolean("assistant_enabled", true);
+        updateAIAssistanceVisibility(enabled);
+        
+        if (aiPreferenceListener == null) {
+            aiPreferenceListener = (prefs, key) -> {
+                if ("assistant_enabled".equals(key)) {
+                    AndroidUtilities.runOnUIThread(() -> updateAIAssistanceVisibility(prefs.getBoolean(key, true)));
+                }
+            };
+            aiPrefs.registerOnSharedPreferenceChangeListener(aiPreferenceListener);
+        }
+    }
+
+    private void updateAIAssistanceVisibility(boolean enabled) {
+        if (enabled) {
+            if (chatAnimeAssistantView == null) {
+                Context context = getParentActivity();
+                if (context == null) return;
+                chatAnimeAssistantView = new ChatAnimeAssistantView(context, (SizeNotifierFrameLayout) fragmentView, 0);
+                chatAnimeAssistantView.setAssistantRequestDelegate(new ChatAnimeAssistantView.AssistantRequestDelegate() {
+                    @Override
+                    public void onRequest(String prompt, ChatAnimeAssistantView.AssistantRequestCallback callback) {
+                        String contextString = AIAssistanceHelper.buildContext(DialogsActivity.this, currentAccount, 0, null);
+                        AIAssistanceHelper.requestReply(currentAccount, prompt, contextString, callback);
+                    }
+                    @Override
+                    public void onAutoReplyToggleChanged(long dialogId, boolean enabled) { }
+                });
+                miniChatAssistantView = new MiniChatAssistantView(context);
+                miniChatAssistantView.setOnClickListener(v -> chatAnimeAssistantView.showPanel());
+                chatAnimeAssistantView.setMiniView(miniChatAssistantView);
+            }
+            if (chatAnimeAssistantView.getParent() == null) {
+                ((FrameLayout) fragmentView).addView(chatAnimeAssistantView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+            }
+            if (miniChatAssistantView.getParent() == null) {
+                ((FrameLayout) fragmentView).addView(miniChatAssistantView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM | Gravity.RIGHT, 0, 0, 16, 16 + (additionNavigationBarHeight / AndroidUtilities.density)));
+            }
+            chatAnimeAssistantView.setVisibility(View.VISIBLE);
+            miniChatAssistantView.setVisibility(View.VISIBLE);
+            chatAnimeAssistantView.bringToFront();
+            miniChatAssistantView.bringToFront();
+        } else {
+            if (chatAnimeAssistantView != null) {
+                chatAnimeAssistantView.setVisibility(View.GONE);
+                if (chatAnimeAssistantView.getParent() != null) {
+                    ((FrameLayout) fragmentView).removeView(chatAnimeAssistantView);
+                }
+            }
+            if (miniChatAssistantView != null) {
+                miniChatAssistantView.setVisibility(View.GONE);
+                if (miniChatAssistantView.getParent() != null) {
+                    ((FrameLayout) fragmentView).removeView(miniChatAssistantView);
+                }
+            }
+        }
     }
 
     @Override
@@ -4161,29 +4230,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
         ContentView contentView = new ContentView(context);
         fragmentView = contentView;
-
-        SharedPreferences aiPrefs = context.getSharedPreferences("ai_assistant_prefs", Context.MODE_PRIVATE);
-        if (aiPrefs.getBoolean("assistant_enabled", true)) {
-            chatAnimeAssistantView = new ChatAnimeAssistantView(context, contentView, 0);
-            chatAnimeAssistantView.setAssistantRequestDelegate(new ChatAnimeAssistantView.AssistantRequestDelegate() {
-                @Override
-                public void onRequest(String prompt, ChatAnimeAssistantView.AssistantRequestCallback callback) {
-                    String context = AIAssistanceHelper.buildContext(DialogsActivity.this, currentAccount, 0, null);
-                    AIAssistanceHelper.requestReply(currentAccount, prompt, context, callback);
-                }
-
-                @Override
-                public void onAutoReplyToggleChanged(long dialogId, boolean enabled) {
-                }
-            });
-            contentView.addView(chatAnimeAssistantView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
-
-            miniChatAssistantView = new MiniChatAssistantView(context);
-            miniChatAssistantView.setOnClickListener(v -> chatAnimeAssistantView.showPanel());
-            contentView.addView(miniChatAssistantView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM | Gravity.RIGHT, 0, 0, 16, 16 + (additionNavigationBarHeight / AndroidUtilities.density)));
-            
-            chatAnimeAssistantView.setMiniView(miniChatAssistantView);
-        }
 
         viewPositionWatcher = new ViewPositionWatcher(contentView);
         iBlur3FactoryFrostedLiquidGlass.setSourceRootView(viewPositionWatcher, contentView);
@@ -5756,6 +5802,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         checkUi_searchFieldStyle();
 
         ViewCompat.setOnApplyWindowInsetsListener(fragmentView, this::onApplyWindowInsets);
+        initAIAssistance();
         return fragmentView;
     }
 
