@@ -3074,8 +3074,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         if (chatAnimeAssistantView != null) {
             chatAnimeAssistantView.onDestroy();
         }
-        if (aiPreferenceListener != null && getParentActivity() != null) {
-            SharedPreferences aiPrefs = getParentActivity().getSharedPreferences("ai_assistant_prefs", Context.MODE_PRIVATE);
+        if (aiPreferenceListener != null) {
+            SharedPreferences aiPrefs = ApplicationLoader.applicationContext.getSharedPreferences("ai_assistant_prefs", Context.MODE_PRIVATE);
             aiPrefs.unregisterOnSharedPreferenceChangeListener(aiPreferenceListener);
             aiPreferenceListener = null;
         }
@@ -3151,11 +3151,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         if (fragmentView == null) {
             return;
         }
-        Context context = getParentActivity();
-        if (context == null) context = getContext();
-        if (context == null) return;
 
-        SharedPreferences aiPrefs = context.getSharedPreferences("ai_assistant_prefs", Context.MODE_PRIVATE);
+        SharedPreferences aiPrefs = ApplicationLoader.applicationContext.getSharedPreferences("ai_assistant_prefs", Context.MODE_PRIVATE);
         boolean enabled = aiPrefs.getBoolean("assistant_enabled", true);
         updateAIAssistanceVisibility(enabled);
         
@@ -7184,9 +7181,13 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     @Override
     public void onResume() {
         super.onResume();
-        initAIAssistance();
-        if (chatAnimeAssistantView != null) {
-            chatAnimeAssistantView.onResume();
+        if (fragmentView != null) {
+            fragmentView.post(() -> {
+                initAIAssistance();
+                if (chatAnimeAssistantView != null) {
+                    chatAnimeAssistantView.onResume();
+                }
+            });
         }
         if (dialogStoriesCell != null) {
             dialogStoriesCell.onResume();
