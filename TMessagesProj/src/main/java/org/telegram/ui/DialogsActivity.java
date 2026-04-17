@@ -3189,7 +3189,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 ((FrameLayout) fragmentView).addView(chatAnimeAssistantView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
             }
             if (miniChatAssistantView.getParent() == null) {
-                ((FrameLayout) fragmentView).addView(miniChatAssistantView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM | Gravity.RIGHT, 0, 0, 16, 16 + (additionNavigationBarHeight / AndroidUtilities.density)));
+                ((FrameLayout) fragmentView).addView(miniChatAssistantView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_VERTICAL | Gravity.RIGHT, 0, 0, 16, 0));
             }
             chatAnimeAssistantView.setVisibility(View.VISIBLE);
             miniChatAssistantView.setVisibility(View.VISIBLE);

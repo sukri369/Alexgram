@@ -181,7 +181,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
         reactionBubble.setVisibility(GONE);
         characterContainer.addView(reactionBubble, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, -8, 0, 0));
 
-        addView(characterContainer, LayoutHelper.createFrame(100, 122, Gravity.BOTTOM | Gravity.RIGHT, 0, 0, 12, characterBottomMarginDp));
+        addView(characterContainer, LayoutHelper.createFrame(100, 122, Gravity.CENTER_VERTICAL | Gravity.RIGHT, 0, 0, 12, 0));
 
         panelContainer = blurParent != null ? new BlurredFrameLayout(context, blurParent) : new FrameLayout(context);
         if (panelContainer instanceof BlurredFrameLayout) {
@@ -256,7 +256,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
         sendButton.setPadding(AndroidUtilities.dp(9), AndroidUtilities.dp(9), AndroidUtilities.dp(9), AndroidUtilities.dp(9));
         composer.addView(sendButton, LayoutHelper.createLinear(40, 40, Gravity.CENTER_VERTICAL));
 
-        addView(panelContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 272, Gravity.BOTTOM | Gravity.RIGHT, 44, 0, 14, panelBottomMarginDp));
+        addView(panelContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 272, Gravity.CENTER_VERTICAL | Gravity.RIGHT, 44, 0, 14, 0));
 
         setupPanelDragging();
         setupKeyboardListener();
@@ -609,7 +609,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
 
     private void snapToBounds() {
         final float maxX = Math.max(0, getWidth() - characterContainer.getWidth() - AndroidUtilities.dp(4));
-        final float maxY = Math.max(0, getHeight() - characterContainer.getHeight() - AndroidUtilities.dp(84));
+        final float maxY = Math.max(0, getHeight() - characterContainer.getHeight() - AndroidUtilities.dp(16));
         final float targetX = characterContainer.getX() + characterContainer.getTranslationX() > getWidth() * 0.5f ? maxX - characterContainer.getLeft() : -characterContainer.getLeft();
         final float clampedY = Math.max(-characterContainer.getTop(), Math.min(maxY - characterContainer.getTop(), characterContainer.getTranslationY()));
         characterContainer.animate()
@@ -675,25 +675,16 @@ public class ChatAnimeAssistantView extends FrameLayout {
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
         
-        if (customBottomOffset > 0) {
+        if (customBottomOffset > 0 && !panelOpened) {
             int parentHeight = bottom - top;
-            
-            if (characterContainer != null) {
+            int cHeight = characterContainer.getMeasuredHeight();
+            int currentTop = characterContainer.getTop();
+            int targetBottom = parentHeight - (customBottomOffset + AndroidUtilities.dp(16));
+            if (currentTop + cHeight > targetBottom) {
                 int cWidth = characterContainer.getMeasuredWidth();
-                int cHeight = characterContainer.getMeasuredHeight();
                 int cLeft = characterContainer.getLeft();
-                int cBottom = parentHeight - customBottomOffset;
-                int cTop = cBottom - cHeight;
-                characterContainer.layout(cLeft, cTop, cLeft + cWidth, cBottom);
-            }
-            
-            if (panelContainer != null) {
-                int pWidth = panelContainer.getMeasuredWidth();
-                int pHeight = panelContainer.getMeasuredHeight();
-                int pLeft = panelContainer.getLeft();
-                int pBottom = parentHeight - (customBottomOffset - AndroidUtilities.dp(6));
-                int pTop = pBottom - pHeight;
-                panelContainer.layout(pLeft, pTop, pLeft + pWidth, pBottom);
+                int cTop = targetBottom - cHeight;
+                characterContainer.layout(cLeft, cTop, cLeft + cWidth, targetBottom);
             }
         }
     }
