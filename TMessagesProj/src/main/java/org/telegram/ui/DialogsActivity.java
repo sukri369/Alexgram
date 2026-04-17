@@ -3148,10 +3148,14 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     }
 
     private void initAIAssistance() {
-        if (getParentActivity() == null || fragmentView == null) {
+        if (fragmentView == null) {
             return;
         }
-        SharedPreferences aiPrefs = getParentActivity().getSharedPreferences("ai_assistant_prefs", Context.MODE_PRIVATE);
+        Context context = getParentActivity();
+        if (context == null) context = getContext();
+        if (context == null) return;
+
+        SharedPreferences aiPrefs = context.getSharedPreferences("ai_assistant_prefs", Context.MODE_PRIVATE);
         boolean enabled = aiPrefs.getBoolean("assistant_enabled", true);
         updateAIAssistanceVisibility(enabled);
         
@@ -7180,6 +7184,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     @Override
     public void onResume() {
         super.onResume();
+        initAIAssistance();
         if (chatAnimeAssistantView != null) {
             chatAnimeAssistantView.onResume();
         }
