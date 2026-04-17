@@ -2,26 +2,13 @@ package org.telegram.ui.Components;
 
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.audio.AudioProcessor;
-import com.google.android.exoplayer2.audio.AudioProcessor.AudioFormat;
-import com.google.android.exoplayer2.audio.AudioProcessor.UnhandledAudioFormatException;
+import com.google.android.exoplayer2.audio.BaseAudioProcessor;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import xyz.nextalone.nagram.NaConfig;
 
-public class V8DAudioProcessor implements AudioProcessor {
-
-    private int sampleRateHz = -1;
-    private int channelCount = -1;
-    @C.PcmEncoding
-    private int encoding = C.ENCODING_INVALID;
-
-    private boolean isActive;
-    private ByteBuffer buffer;
-    private ByteBuffer outputBuffer;
-    private boolean inputEnded;
+public class V8DAudioProcessor extends BaseAudioProcessor {
 
     private float angle = 0;
-    private final float angleStep = (float) (2 * Math.PI / (10.0 * 48000.0)); // 10 seconds per cycle at 48kHz
     private float lastAngleStep = 0;
 
     // Simple Delay for Reverb
@@ -29,50 +16,31 @@ public class V8DAudioProcessor implements AudioProcessor {
     private int reverbPos = 0;
     private final int REVERB_SIZE = 4800; // ~100ms at 48kHz
 
-    public V8DAudioProcessor() {
-        buffer = EMPTY_BUFFER;
-        outputBuffer = EMPTY_BUFFER;
-    }
-
     @Override
-    public AudioFormat configure(AudioFormat inputAudioFormat) throws UnhandledAudioFormatException {
+    protected AudioFormat onConfigure(AudioFormat inputAudioFormat) throws UnhandledAudioFormatException {
         if (inputAudioFormat.encoding != C.ENCODING_PCM_16BIT) {
             throw new UnhandledAudioFormatException(inputAudioFormat);
         }
-        sampleRateHz = inputAudioFormat.sampleRate;
-        channelCount = inputAudioFormat.channelCount;
-        encoding = inputAudioFormat.encoding;
-
-        isActive = NaConfig.INSTANCE.getV8dAudio().Bool() && channelCount == 2;
         
-        if (isActive) {
-            reverbBuffer = new short[REVERB_SIZE * channelCount];
-            lastAngleStep = (float) (2 * Math.PI / (12.0 * sampleRateHz)); // Adjust speed for sample rate
+        boolean active = NaConfig.INSTANCE.getV8dAudio().Bool() && inputAudioFormat.channelCount == 2;
+        
+        if (active) {
+            reverbBuffer = new short[REVERB_SIZE * inputAudioFormat.channelCount];
+            lastAngleStep = (float) (2 * Math.PI / (12.0 * inputAudioFormat.sampleRate));
+            return inputAudioFormat;
         }
         
-        return isActive ? inputAudioFormat : AudioFormat.NOT_CONFIGURED;
-    }
-
-    @Override
-    public boolean isActive() {
-        return isActive;
+        return AudioFormat.NOT_SET;
     }
 
     @Override
     public void queueInput(ByteBuffer inputBuffer) {
-        if (!isActive) {
+        if (!isActive()) {
             return;
         }
 
-        int position = inputBuffer.position();
-        int limit = inputBuffer.limit();
-        int remaining = limit - position;
-
-        if (buffer.capacity() < remaining) {
-            buffer = ByteBuffer.allocateDirect(remaining).order(ByteOrder.nativeOrder());
-        } else {
-            buffer.clear();
-        }
+        int remaining = inputBuffer.remaining();
+        ByteBuffer buffer = replaceOutputBuffer(remaining);
 
         while (inputBuffer.hasRemaining()) {
             // Process stereo PCM 16-bit
@@ -83,13 +51,10 @@ public class V8DAudioProcessor implements AudioProcessor {
             float cos = (float) Math.cos(angle);
             float sin = (float) Math.sin(angle);
 
-            // 8D Panning Logic: 
-            // Left channel gain moves from 0 to 1 and back
-            // Right channel gain moves from 0 to 1 and back out of phase
+            // 8D Panning Logic
             float leftGain = (cos + 1.0f) * 0.5f; 
             float rightGain = (1.0f - cos) * 0.5f;
             
-            // Apply slight volume modulation for "distance" effect
             float distanceMod = 0.8f + 0.2f * (float) Math.abs(sin);
             leftGain *= distanceMod;
             rightGain *= distanceMod;
@@ -120,36 +85,14 @@ public class V8DAudioProcessor implements AudioProcessor {
             // Update Angle
             angle += lastAngleStep;
             if (angle > 2 * Math.PI) {
-                angle -= 2 * Math.PI;
+                angle -= (float) (2 * Math.PI);
             }
         }
-
-        inputBuffer.position(limit);
         buffer.flip();
-        outputBuffer = buffer;
     }
 
     @Override
-    public void queueEndOfStream() {
-        inputEnded = true;
-    }
-
-    @Override
-    public ByteBuffer getOutput() {
-        ByteBuffer outputBuffer = this.outputBuffer;
-        this.outputBuffer = EMPTY_BUFFER;
-        return outputBuffer;
-    }
-
-    @Override
-    public boolean isEnded() {
-        return inputEnded && outputBuffer == EMPTY_BUFFER;
-    }
-
-    @Override
-    public void flush() {
-        outputBuffer = EMPTY_BUFFER;
-        inputEnded = false;
+    protected void onFlush() {
         angle = 0;
         reverbPos = 0;
         if (reverbBuffer != null) {
@@ -158,13 +101,7 @@ public class V8DAudioProcessor implements AudioProcessor {
     }
 
     @Override
-    public void reset() {
-        flush();
-        buffer = EMPTY_BUFFER;
-        sampleRateHz = -1;
-        channelCount = -1;
-        encoding = C.ENCODING_INVALID;
-        isActive = false;
+    protected void onReset() {
         reverbBuffer = null;
     }
 }
