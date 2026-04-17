@@ -268,7 +268,7 @@ public class VideoPlayer implements Player.Listener, VideoListener, AnalyticsLis
         }
         if (player == null) {
             DefaultRenderersFactory factory;
-            if (audioVisualizerDelegate != null) {
+            if (audioVisualizerDelegate != null || NaConfig.INSTANCE.getV8dAudio().Bool()) {
                 factory = new AudioVisualizerRenderersFactory(ApplicationLoader.applicationContext);
             } else {
                 factory = new DefaultRenderersFactory(ApplicationLoader.applicationContext);
@@ -1862,11 +1862,18 @@ public class VideoPlayer implements Player.Listener, VideoListener, AnalyticsLis
         @Nullable
         @Override
         protected AudioSink buildAudioSink(Context context, boolean enableFloatOutput, boolean enableAudioTrackPlaybackParams, boolean enableOffload) {
+            ArrayList<AudioProcessor> processors = new ArrayList<>();
+            if (NaConfig.INSTANCE.getV8dAudio().Bool()) {
+                processors.add(new V8DAudioProcessor());
+            }
+            if (audioVisualizerDelegate != null) {
+                processors.add(new TeeAudioProcessor(new VisualizerBufferSink()));
+            }
             return new DefaultAudioSink.Builder()
                     .setAudioCapabilities(AudioCapabilities.getCapabilities(context))
                     .setEnableFloatOutput(enableFloatOutput)
                     .setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams)
-                    .setAudioProcessors(new AudioProcessor[] {new TeeAudioProcessor(new VisualizerBufferSink())})
+                    .setAudioProcessors(processors.toArray(new AudioProcessor[0]))
                     .setOffloadMode(
                             enableOffload
                                     ? DefaultAudioSink.OFFLOAD_MODE_ENABLED_GAPLESS_REQUIRED

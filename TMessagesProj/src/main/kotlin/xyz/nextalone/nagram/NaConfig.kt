@@ -141,6 +141,12 @@ object NaConfig {
             ConfigItem.configTypeBool,
             false
         )
+    val v8dAudio =
+        addConfig(
+            "V8DAudio",
+            ConfigItem.configTypeBool,
+            false
+        )
     val musicGraph =
         addConfig(
             "MusicGraph",
