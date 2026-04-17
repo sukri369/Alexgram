@@ -549,6 +549,7 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
         progressDialog.setCanCancel(false);
         progressDialog.show();
 
+        final String requestUrl = finalUrl;
         Utilities.globalQueue.postRunnable(() -> {
             try {
                 OkHttpClient client = new OkHttpClient.Builder()
@@ -580,7 +581,7 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
                 }
 
                 Request.Builder requestBuilder = new Request.Builder()
-                        .url(finalUrl)
+                        .url(requestUrl)
                         .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), jsonBody.toString()));
 
                 if (isGeminiNative) {
