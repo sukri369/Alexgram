@@ -48068,13 +48068,13 @@ public class ChatActivity extends BaseFragment implements
                         if (showTranslate && (isOutgoingOrNotTranslatingDialog || isLLMDefault)) {
                             items.add(canUndoTranslate ? getString(R.string.UndoTranslate) : getString(R.string.Translate));
                             options.add(nkbtn_translate);
-                            icons.add(isLLMDefault ? R.drawable.magic_stick_solar : R.drawable.msg_translate);
+                            icons.add(isLLMDefault ? IconsResources.getConversion(R.drawable.magic_stick_solar) : IconsResources.getConversion(R.drawable.msg_translate));
                         }
                         boolean shouldShowLLM = !showTranslate || !isTranslated || !isOutgoingOrNotTranslatingDialog;
                         if (showTranslateLLM && shouldShowLLM) {
                             items.add(canUndoTranslate ? getString(R.string.UndoTranslate) : getString(R.string.TranslateMessageLLM));
                             options.add(nkbtn_translate_llm);
-                            icons.add(R.drawable.magic_stick_solar);
+                            icons.add(IconsResources.getConversion(R.drawable.magic_stick_solar));
                         }
                     }
                     if (NekoConfig.showShareMessages.Bool() && msg != null) {
@@ -48091,12 +48091,12 @@ public class ChatActivity extends BaseFragment implements
                 if (NaConfig.INSTANCE.getEnableAIReply().Bool()) {
                     items.add("Reply with AI");
                     options.add(nkbtn_ai_reply);
-                    icons.add(R.drawable.magic_stick_solar);
+                    icons.add(IconsResources.getConversion(R.drawable.magic_stick_solar));
                 }
                 if (NaConfig.INSTANCE.getEnableSummarizeChat().Bool()) {
                     items.add("Summarize");
                     options.add(nkbtn_ai_summarize);
-                    icons.add(R.drawable.msg_edit);
+                    icons.add(IconsResources.getConversion(R.drawable.msg_info_solar));
                 }
                 boolean canViewStats = false;
                 if (message.messageOwner.views > 0 || message.messageOwner.forwards > 0) {
