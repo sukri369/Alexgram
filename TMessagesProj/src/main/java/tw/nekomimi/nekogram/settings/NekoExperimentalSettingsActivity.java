@@ -21,6 +21,17 @@ import android.widget.TextView;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.concurrent.TimeUnit;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -521,33 +532,84 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
             BulletinFactory.of(this).createSimpleBulletin(R.raw.error, "URL and API Key cannot be empty").show();
             return;
         }
+
+        // Detect Gemini Native API vs OpenAI Compatible API
+        final boolean isGeminiNative = (url.contains("generativelanguage.googleapis.com") || url.contains("googleapis.com")) && !url.contains("openai");
+        String finalUrl = url;
+
+        if (isGeminiNative && !url.contains(":generateContent")) {
+            if (url.endsWith("/")) {
+                finalUrl = url.substring(0, url.length() - 1) + ":generateContent";
+            } else {
+                finalUrl = url + ":generateContent";
+            }
+        }
+
         AlertDialog progressDialog = new AlertDialog(getParentActivity(), 3);
         progressDialog.setCanCancel(false);
         progressDialog.show();
+
         Utilities.globalQueue.postRunnable(() -> {
             try {
-                java.net.URL requestUrl = new java.net.URL(url);
-                java.net.HttpURLConnection conn = (java.net.HttpURLConnection) requestUrl.openConnection();
-                conn.setRequestMethod("POST");
-                conn.setRequestProperty("Content-Type", "application/json");
-                conn.setRequestProperty("Authorization", "Bearer " + key);
-                conn.setDoOutput(true);
-                conn.setConnectTimeout(10000);
-                conn.setReadTimeout(10000);
+                OkHttpClient client = new OkHttpClient.Builder()
+                        .connectTimeout(15, TimeUnit.SECONDS)
+                        .readTimeout(15, TimeUnit.SECONDS)
+                        .build();
 
-                String jsonBody = "{\"model\": \"gpt-3.5-turbo\", \"messages\": [{\"role\": \"user\", \"content\": \"Say ping\"}], \"max_tokens\": 5}";
-                try (java.io.OutputStream os = conn.getOutputStream()) {
-                    byte[] input = jsonBody.getBytes("utf-8");
-                    os.write(input, 0, input.length);
+                JSONObject jsonBody = new JSONObject();
+
+                if (isGeminiNative) {
+                    JSONArray contents = new JSONArray();
+                    JSONObject contentObj = new JSONObject();
+                    JSONArray parts = new JSONArray();
+                    JSONObject textPart = new JSONObject();
+                    textPart.put("text", "Say ping");
+                    parts.put(textPart);
+                    contentObj.put("parts", parts);
+                    contents.put(contentObj);
+                    jsonBody.put("contents", contents);
+                } else {
+                    jsonBody.put("model", "gpt-3.5-turbo");
+                    JSONArray messages = new JSONArray();
+                    JSONObject userMsg = new JSONObject();
+                    userMsg.put("role", "user");
+                    userMsg.put("content", "Say ping");
+                    messages.put(userMsg);
+                    jsonBody.put("messages", messages);
+                    jsonBody.put("max_tokens", 5);
                 }
 
-                int code = conn.getResponseCode();
-                AndroidUtilities.runOnUIThread(() -> {
-                    progressDialog.dismiss();
-                    if (code == 200) {
-                        BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "API Test Success! (HTTP 200)").show();
-                    } else {
-                        BulletinFactory.of(this).createSimpleBulletin(R.raw.error, "API Test Failed: HTTP " + code).show();
+                Request.Builder requestBuilder = new Request.Builder()
+                        .url(finalUrl)
+                        .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), jsonBody.toString()));
+
+                if (isGeminiNative) {
+                    requestBuilder.addHeader("x-goog-api-key", key);
+                } else {
+                    requestBuilder.addHeader("Authorization", "Bearer " + key);
+                }
+
+                client.newCall(requestBuilder.build()).enqueue(new Callback() {
+                    @Override
+                    public void onFailure(Call call, java.io.IOException e) {
+                        AndroidUtilities.runOnUIThread(() -> {
+                            progressDialog.dismiss();
+                            BulletinFactory.of(NekoExperimentalSettingsActivity.this).createSimpleBulletin(R.raw.error, "API Test Error: " + e.getMessage()).show();
+                        });
+                    }
+
+                    @Override
+                    public void onResponse(Call call, Response response) throws java.io.IOException {
+                        String responseBody = response.body().string();
+                        int code = response.code();
+                        AndroidUtilities.runOnUIThread(() -> {
+                            progressDialog.dismiss();
+                            if (response.isSuccessful()) {
+                                BulletinFactory.of(NekoExperimentalSettingsActivity.this).createSimpleBulletin(R.raw.done, "API Test Success! (HTTP " + code + ")").show();
+                            } else {
+                                BulletinFactory.of(NekoExperimentalSettingsActivity.this).createSimpleBulletin(R.raw.error, "API Test Failed: HTTP " + code + "\n" + responseBody).show();
+                            }
+                        });
                     }
                 });
             } catch (Exception e) {
