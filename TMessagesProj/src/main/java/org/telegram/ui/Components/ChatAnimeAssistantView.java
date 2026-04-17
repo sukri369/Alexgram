@@ -514,7 +514,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
     private void showLongPressMenu(View anchor) {
         PopupMenu popupMenu = new PopupMenu(getContext(), anchor);
         int order = 0;
-        if (showAutoReplyOption) {
+        if (showAutoReplyOption && assistantDialogId != 0) {
             popupMenu.getMenu().add(Menu.NONE, 1, order++, autoReplyEnabled ? "Auto Reply Mode: ON" : "Auto Reply Mode: OFF");
         }
         popupMenu.getMenu().add(Menu.NONE, 2, order++, "Switch Style");

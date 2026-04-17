@@ -139,6 +139,9 @@ import org.telegram.tgnet.tl.TL_account;
 import org.telegram.tgnet.tl.TL_chatlists;
 import org.telegram.tgnet.tl.TL_stars;
 import org.telegram.tgnet.tl.TL_stories;
+import org.telegram.ui.Components.ChatAnimeAssistantView;
+import org.telegram.ui.Components.MiniChatAssistantView;
+import org.telegram.ui.Helpers.AIAssistanceHelper;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.ActionBarMenu;
 import org.telegram.ui.ActionBar.ActionBarMenuItem;
@@ -3064,6 +3067,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     @Override
     public void onFragmentDestroy() {
         super.onFragmentDestroy();
+        if (chatAnimeAssistantView != null) {
+            chatAnimeAssistantView.onDestroy();
+        }
         if (searchString == null) {
             getNotificationCenter().removeObserver(this, NotificationCenter.dialogsNeedReload);
             NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.emojiLoaded);
@@ -4153,6 +4159,29 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         ContentView contentView = new ContentView(context);
         fragmentView = contentView;
 
+        SharedPreferences aiPrefs = context.getSharedPreferences("ai_assistant_prefs", Context.MODE_PRIVATE);
+        if (aiPrefs.getBoolean("assistant_enabled", true)) {
+            chatAnimeAssistantView = new ChatAnimeAssistantView(context, contentView, 0);
+            chatAnimeAssistantView.setAssistantRequestDelegate(new ChatAnimeAssistantView.AssistantRequestDelegate() {
+                @Override
+                public void onAssistantRequest(String prompt, ChatAnimeAssistantView.AssistantRequestCallback callback) {
+                    String context = AIAssistanceHelper.buildContext(DialogsActivity.this, currentAccount, 0, null);
+                    AIAssistanceHelper.requestReply(currentAccount, prompt, context, callback);
+                }
+
+                @Override
+                public void onAutoReplyToggleChanged(long dialogId, boolean enabled) {
+                }
+            });
+            contentView.addView(chatAnimeAssistantView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+
+            miniChatAssistantView = new MiniChatAssistantView(context);
+            miniChatAssistantView.setOnClickListener(v -> chatAnimeAssistantView.showPanel());
+            contentView.addView(miniChatAssistantView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM | Gravity.RIGHT, 0, 0, 16, 16 + (additionNavigationBarHeight / AndroidUtilities.density)));
+            
+            chatAnimeAssistantView.setMiniView(miniChatAssistantView);
+        }
+
         viewPositionWatcher = new ViewPositionWatcher(contentView);
         iBlur3FactoryFrostedLiquidGlass.setSourceRootView(viewPositionWatcher, contentView);
         iBlur3FactoryLiquidGlass.setSourceRootView(viewPositionWatcher, contentView);
@@ -4297,6 +4326,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
                 @Override
                 public int scrollVerticallyBy(int dy, RecyclerView.Recycler recycler, RecyclerView.State state) {
+                    if (chatAnimeAssistantView != null) {
+                        chatAnimeAssistantView.onChatScrolled(dy);
+                    }
                     if (viewPage.listView.fastScrollAnimationRunning) {
                         return 0;
                     }
@@ -7098,6 +7130,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     @Override
     public void onResume() {
         super.onResume();
+        if (chatAnimeAssistantView != null) {
+            chatAnimeAssistantView.onResume();
+        }
         if (dialogStoriesCell != null) {
             dialogStoriesCell.onResume();
         }
@@ -7318,6 +7353,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     @Override
     public void onPause() {
         super.onPause();
+        if (chatAnimeAssistantView != null) {
+            chatAnimeAssistantView.onPause();
+        }
         if (storiesBulletin != null) {
             storiesBulletin.hide();
             storiesBulletin = null;
