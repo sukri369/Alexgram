@@ -49552,7 +49552,7 @@ public class ChatActivity extends BaseFragment implements
                     inputField.setEnabled(false);
                     dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
 
-                    startAiGeneration(prompt, messageToSummarize, new AiGenerationCallback() {
+                    startAiGeneration(prompt, messageToSummarize, new ChatAnimeAssistantView.AssistantRequestCallback() {
                         @Override
                         public void onSuccess(String result) {
                             AndroidUtilities.runOnUIThread(() -> {
@@ -49687,7 +49687,7 @@ public class ChatActivity extends BaseFragment implements
                     inputField.setEnabled(false);
                     dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
 
-                    startAiGeneration(prompt, messageToReply, new AiGenerationCallback() {
+                    startAiGeneration(prompt, messageToReply, new ChatAnimeAssistantView.AssistantRequestCallback() {
                         @Override
                         public void onSuccess(String result) {
                             AndroidUtilities.runOnUIThread(() -> {
@@ -50162,7 +50162,7 @@ public class ChatActivity extends BaseFragment implements
     }
 
 
-    private void startAiGeneration(String userPrompt, MessageObject originalMessage, AiGenerationCallback callback) {
+    private void startAiGeneration(String userPrompt, MessageObject originalMessage, ChatAnimeAssistantView.AssistantRequestCallback callback) {
         try {
             // 1. Get Text Context
             String messageText = originalMessage.messageText != null ? originalMessage.messageText.toString() : "";
@@ -50170,60 +50170,12 @@ public class ChatActivity extends BaseFragment implements
                 messageText = originalMessage.caption.toString();
             }
 
-            // 2. Get Image Context (if available)
-            File imageFile = null;
-            if (originalMessage.type == MessageObject.TYPE_PHOTO && originalMessage.messageOwner.media != null && originalMessage.messageOwner.media.photo != null) {
-                 try {
-                     TLRPC.PhotoSize photoSize = FileLoader.getClosestPhotoSizeWithSize(originalMessage.messageOwner.media.photo.sizes, 10000);
-                     if (photoSize != null) {
-                         imageFile = FileLoader.getInstance(currentAccount).getPathToAttach(photoSize, true);
-                         if (imageFile == null || !imageFile.exists()) {
-                             imageFile = FileLoader.getInstance(currentAccount).getPathToAttach(photoSize, false);
-                         }
-                     }
-                 } catch (Throwable e) {
-                     e.printStackTrace();
-                 }
-            }
+            // 2. Get Image Context (if available) - This part is not fully implemented in Helper yet for multi-modal,
+            // but for now we follow the same pattern of building context.
+            // Actually, AIAssistanceHelper.buildContext currently takes a list of messages.
             
-            final String finalMessageText = messageText;
-            final File finalImageFile = (imageFile != null && imageFile.exists()) ? imageFile : null;
-
-            // 3. Try API 1
-            String url1 = "";
-            String key1 = "";
-            try {
-                 url1 = NaConfig.INSTANCE.getAiModelUrl().String(); 
-                 key1 = NaConfig.INSTANCE.getAiApiKey().String(); 
-            } catch (Throwable e) {
-                 callback.onError("Config loading failed: " + e.getMessage());
-                 return;
-            }
-
-            callAiApi(url1, key1, userPrompt, finalMessageText, finalImageFile, new AiGenerationCallback() {
-                @Override
-                public void onSuccess(String result) {
-                    callback.onSuccess(result);
-                }
-
-                @Override
-                public void onError(String error) {
-                    try {
-                        // 4. Failover to API 2
-                        String url2 = NaConfig.INSTANCE.getAiModelUrl2().String();
-                        String key2 = NaConfig.INSTANCE.getAiApiKey2().String();
-                        
-                        if (android.text.TextUtils.isEmpty(url2)) {
-                            callback.onError(error + "\n(Failover skipped: No API 2 configured)");
-                            return;
-                        }
-
-                        callAiApi(url2, key2, userPrompt, finalMessageText, finalImageFile, callback);
-                    } catch (Throwable e) {
-                        callback.onError(error + "\n(Failover crash: " + e.getMessage() + ")");
-                    }
-                }
-            });
+            String context = AIAssistanceHelper.buildContext(this, currentAccount, dialog_id, java.util.Collections.singletonList(originalMessage));
+            AIAssistanceHelper.requestReply(currentAccount, userPrompt, context, callback);
         } catch (Throwable e) {
             callback.onError("Start Gen Crash: " + e.getMessage());
         }

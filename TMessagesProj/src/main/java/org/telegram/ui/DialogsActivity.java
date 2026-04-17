@@ -140,7 +140,7 @@ import org.telegram.tgnet.tl.TL_chatlists;
 import org.telegram.tgnet.tl.TL_stars;
 import org.telegram.tgnet.tl.TL_stories;
 import org.telegram.ui.Components.ChatAnimeAssistantView;
-import org.telegram.ui.Components.MiniChatAssistantView;
+import org.telegram.ui.Components.chat.MiniChatAssistantView;
 import org.telegram.ui.Helpers.AIAssistanceHelper;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.ActionBarMenu;
