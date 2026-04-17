@@ -12,6 +12,7 @@ import xyz.nextalone.nagram.NaConfig;
 public class IconsResources extends Resources {
 
     public static final int ICON_REPLACE_SOLAR = 1;
+    public static final int ICON_REPLACE_REMIX = 2;
     private int _iconsType = -1;
 
     public IconsResources(Resources resources) {
@@ -53,6 +54,8 @@ public class IconsResources extends Resources {
 
         if (consideredIconsType == ICON_REPLACE_SOLAR) {
             return SolarIcons.Companion.getConversion(icon);
+        } else if (consideredIconsType == ICON_REPLACE_REMIX) {
+            return RemixIcons.Companion.getConversion(icon);
         }
 
         return icon;
