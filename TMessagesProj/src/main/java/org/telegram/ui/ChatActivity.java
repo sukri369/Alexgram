@@ -499,6 +499,7 @@ public class ChatActivity extends BaseFragment implements
     private final static int nkbtn_ai_reply = 2102;
     private final static int nkbtn_ai_summarize = 2103;
     private final static int nkbtn_voice_changer = 2104;
+    private final static int nkbtn_advanced_tool = 2106;
     private final static int send_video_as_round = 1846;
 
     public int shareAlertDebugMode = DEBUG_SHARE_ALERT_MODE_NORMAL;
@@ -4987,7 +4988,31 @@ public class ChatActivity extends BaseFragment implements
             hideTitleItem = NaConfig.INSTANCE.getChatMenuItemHideTitle().Bool() ? headerItem.lazilyAddSubItem(nkheaderbtn_hide_title, R.drawable.hide_title, getString(R.string.HideTitle)) : null;
             if (NaConfig.INSTANCE.getChatMenuItemViewDeleted().Bool() && NaConfig.INSTANCE.getEnableSaveDeletedMessages().Bool()) headerItem.lazilyAddSubItem(nkbtn_viewDeleted, R.drawable.msg_view_file, getString(R.string.ViewDeleted));
             if (NaConfig.INSTANCE.getChatMenuItemClearDeleted().Bool() && NaConfig.INSTANCE.getEnableSaveDeletedMessages().Bool()) headerItem.lazilyAddSubItem(nkbtn_clearDeleted, R.drawable.msg_clear, getString(R.string.ClearDeleted));
-            headerItem.lazilyAddSubItem(nkbtn_voice_changer, R.drawable.ic_voice_changer_na, LocaleController.getString("VoiceChanger", R.string.VoiceChanger));
+            
+            ActionBarPopupWindow.ActionBarPopupWindowLayout advancedToolsLayout = new ActionBarPopupWindow.ActionBarPopupWindowLayout(context, R.drawable.popup_fixed_alert4, getResourceProvider(), ActionBarPopupWindow.ActionBarPopupWindowLayout.FLAG_USE_SWIPEBACK);
+            advancedToolsLayout.setSwipeBackGravityRight(true);
+            ActionBarMenuSubItem backItem = ActionBarMenuItem.addItem(advancedToolsLayout, R.drawable.msg_arrow_back, LocaleController.getString(R.string.Back), false, getResourceProvider());
+            backItem.setOnClickListener(v -> advancedToolsLayout.getSwipeBack().closeForeground());
+            ActionBarMenuItem.addColoredGap(advancedToolsLayout, getResourceProvider());
+            ActionBarMenuSubItem voiceChangerItem = ActionBarMenuItem.addItem(advancedToolsLayout, R.drawable.ic_voice_changer_na, LocaleController.getString("VoiceChanger", R.string.VoiceChanger), false, getResourceProvider());
+            voiceChangerItem.setOnClickListener(v -> {
+                headerItem.closeSubMenu();
+                onItemClick(nkbtn_voice_changer);
+            });
+            if (chatMode == 0 && (!isThreadChat() || isTopic) && !isReport()) {
+                ActionBarMenuSubItem exportItem = ActionBarMenuItem.addItem(advancedToolsLayout, R.drawable.ic_export_chat_na, LocaleController.getString(R.string.ExportChat), false, getResourceProvider());
+                exportItem.setOnClickListener(v -> {
+                    headerItem.closeSubMenu();
+                    onItemClick(export_chat);
+                });
+                ActionBarMenuSubItem importItem = ActionBarMenuItem.addItem(advancedToolsLayout, R.drawable.ic_import_chat_na, LocaleController.getString(R.string.ImportChat), false, getResourceProvider());
+                importItem.setOnClickListener(v -> {
+                    headerItem.closeSubMenu();
+                    onItemClick(import_chat);
+                });
+            }
+            headerItem.lazilyAddSwipeBackItem(R.drawable.ic_advanced_tool_na, null, "Advanced Tool", advancedToolsLayout);
+
             if (!isTopic) {
                 if (NaConfig.INSTANCE.getChatMenuItemDeleteOwnMessages().Bool() && (ChatObject.isMegagroup(currentChat) || currentChat != null && !ChatObject.isChannel(currentChat))) {
                     headerItem.lazilyAddSubItem(nkheaderbtn_zibi, R.drawable.msg_delete, LocaleController.getString(R.string.DeleteAllFromSelf));
@@ -5059,10 +5084,7 @@ public class ChatActivity extends BaseFragment implements
             closeTopicItem.setVisibility(currentChat != null && ChatObject.canManageTopic(currentAccount, currentChat, forumTopic) && forumTopic != null && !forumTopic.closed ? View.VISIBLE : View.GONE);
         }
 
-        if (chatMode == 0 && (!isThreadChat() || isTopic) && !isReport()) {
-            headerItem.lazilyAddSubItem(export_chat, R.drawable.ic_export_chat_na, LocaleController.getString(R.string.ExportChat));
-            headerItem.lazilyAddSubItem(import_chat, R.drawable.ic_import_chat_na, LocaleController.getString(R.string.ImportChat));
-        }
+
         menu.setVisibility(inMenuMode ? View.GONE : View.VISIBLE);
 
         updateTitle(false);
