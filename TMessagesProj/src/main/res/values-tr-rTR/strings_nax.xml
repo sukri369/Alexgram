@@ -115,6 +115,7 @@
     <string name="ChatMenu">Sohbet Menüsü</string>
     <string name="MediaViewerMenu">Medya Görüntüleyici Menüsü</string>
     <string name="MenuAndButtons">Menü ve Butonlar</string>
+    <string name="ASettings">A-Ayarlar</string>
     <string name="SettingsNax">Ayarlar</string>
     <string name="AccountSettingsNax">Hesap Ayarları</string>
     <string name="HideReactions">Tepkileri Gizle</string>

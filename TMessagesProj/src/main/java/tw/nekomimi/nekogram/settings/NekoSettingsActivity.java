@@ -136,7 +136,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         frameLayout.addView(backgroundView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
-        actionBar.setTitle("A-Settings");
+        actionBar.setTitle(LocaleController.getString("ASettings", R.string.ASettings));
         actionBar.setBackgroundColor(Color.TRANSPARENT);
         actionBar.setCastShadows(false);
         actionBar.setAddToContainer(false);
@@ -309,7 +309,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
 
     @Override
     protected String getActionBarTitle() {
-        return "A-Settings";
+        return LocaleController.getString("ASettings", R.string.ASettings);
     }
 
     private class ListAdapter extends BaseListAdapter {

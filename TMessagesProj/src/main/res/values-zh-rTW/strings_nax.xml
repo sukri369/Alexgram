@@ -115,6 +115,7 @@
     <string name="ChatMenu">聊天選單</string>
     <string name="MediaViewerMenu">媒體檢視器選單</string>
     <string name="MenuAndButtons">菜單和按鈕</string>
+    <string name="ASettings">A-設定</string>
     <string name="SettingsNax">設定</string>
     <string name="AccountSettingsNax">帳號設定</string>
     <string name="HideReactions">隱藏表情回應</string>
