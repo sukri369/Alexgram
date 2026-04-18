@@ -4987,7 +4987,7 @@ public class ChatActivity extends BaseFragment implements
             hideTitleItem = NaConfig.INSTANCE.getChatMenuItemHideTitle().Bool() ? headerItem.lazilyAddSubItem(nkheaderbtn_hide_title, R.drawable.hide_title, getString(R.string.HideTitle)) : null;
             if (NaConfig.INSTANCE.getChatMenuItemViewDeleted().Bool() && NaConfig.INSTANCE.getEnableSaveDeletedMessages().Bool()) headerItem.lazilyAddSubItem(nkbtn_viewDeleted, R.drawable.msg_view_file, getString(R.string.ViewDeleted));
             if (NaConfig.INSTANCE.getChatMenuItemClearDeleted().Bool() && NaConfig.INSTANCE.getEnableSaveDeletedMessages().Bool()) headerItem.lazilyAddSubItem(nkbtn_clearDeleted, R.drawable.msg_clear, getString(R.string.ClearDeleted));
-            headerItem.lazilyAddSubItem(nkbtn_voice_changer, IconsResources.getConversion(R.drawable.msg_calls_regular), LocaleController.getString("VoiceChanger", R.string.VoiceChanger));
+            headerItem.lazilyAddSubItem(nkbtn_voice_changer, R.drawable.ic_voice_changer_na, LocaleController.getString("VoiceChanger", R.string.VoiceChanger));
             if (!isTopic) {
                 if (NaConfig.INSTANCE.getChatMenuItemDeleteOwnMessages().Bool() && (ChatObject.isMegagroup(currentChat) || currentChat != null && !ChatObject.isChannel(currentChat))) {
                     headerItem.lazilyAddSubItem(nkheaderbtn_zibi, R.drawable.msg_delete, LocaleController.getString(R.string.DeleteAllFromSelf));
@@ -5060,8 +5060,8 @@ public class ChatActivity extends BaseFragment implements
         }
 
         if (chatMode == 0 && (!isThreadChat() || isTopic) && !isReport()) {
-            headerItem.lazilyAddSubItem(export_chat, R.drawable.msg_filehq_solar, LocaleController.getString(R.string.ExportChat));
-            headerItem.lazilyAddSubItem(import_chat, R.drawable.msg_download_solar, LocaleController.getString(R.string.ImportChat));
+            headerItem.lazilyAddSubItem(export_chat, R.drawable.ic_export_chat_na, LocaleController.getString(R.string.ExportChat));
+            headerItem.lazilyAddSubItem(import_chat, R.drawable.ic_import_chat_na, LocaleController.getString(R.string.ImportChat));
         }
         menu.setVisibility(inMenuMode ? View.GONE : View.VISIBLE);
 
@@ -5090,7 +5090,7 @@ public class ChatActivity extends BaseFragment implements
 
         if (BuildConfig.DEBUG && headerItem != null) {
             headerItem.addSubItem(888, R.drawable.menu_download_round, "Dump Canvas");
-            headerItem.addSubItem(889, R.drawable.magic_stick_solar, "AI Assistance Settings");
+            headerItem.addSubItem(889, R.drawable.ic_ai_reply_na, "AI Assistance Settings");
         }
 
         actionModeViews.clear();
@@ -48091,12 +48091,12 @@ public class ChatActivity extends BaseFragment implements
                 if (NaConfig.INSTANCE.getEnableAIReply().Bool()) {
                     items.add("Reply with AI");
                     options.add(nkbtn_ai_reply);
-                    icons.add(IconsResources.getConversion(R.drawable.magic_stick_solar));
+                    icons.add(R.drawable.ic_ai_reply_na);
                 }
                 if (NaConfig.INSTANCE.getEnableSummarizeChat().Bool()) {
                     items.add("Summarize");
                     options.add(nkbtn_ai_summarize);
-                    icons.add(IconsResources.getConversion(R.drawable.msg_info_solar));
+                    icons.add(R.drawable.ic_ai_summarize_na);
                 }
                 boolean canViewStats = false;
                 if (message.messageOwner.views > 0 || message.messageOwner.forwards > 0) {
