@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="NekoSettings">Ustawienia Nagram X</string>
+    <string name="NekoSettings">A-Ustawienia</string>
     <string name="IPv6">Preferuj IPv6</string>
     <string name="MessageMenu">Menu Wiadomości</string>
     <string name="HidePhone">Ukryj numer telefonu</string>
@@ -112,10 +112,10 @@
     <string name="enhancedFileLoader">Zwiększ prędkość pobierania</string>
     <string name="mapDriftingFixForGoogleMaps">Napraw dryfujące mapy Google w Chinach</string>
     <string name="useOSMDroidMap">Użyj mapy OSMDroid</string>
-    <string name="UnknownNekoSettingsOption">Nie ma takiej opcji w ustawieniach Nagram</string>
+    <string name="UnknownNekoSettingsOption">Nie ma takiej opcji w A-Ustawieniach</string>
     <string name="PasscodeNeeded">Najpierw musisz włączyć blokadę hasłem</string>
     <string name="PasscodeNeko">Hasło</string>
-    <string name="PasscodeShowInSettings">Pokaż w ustawieniach Nagram</string>
+    <string name="PasscodeShowInSettings">Pokaż w A-Ustawieniach</string>
     <string name="PasscodeShowInSettingsAbout">Po ukryciu możesz otworzyć tę stronę **TYLKO** za pomocą linku:</string>
     <string name="PasscodeSet">Ustaw hasło</string>
     <string name="PasscodeEdit">Zmień hasło</string>
@@ -153,7 +153,7 @@
     <string name="ClearRecentChats">Wyczyść ostatnie czaty</string>
     <string name="ClearRecentChatAlert">Czy chcesz wyczyścić ostatnie czaty?</string>
     <string name="CloudConfig">Ustawienia chmury</string>
-    <string name="CloudConfigDesc">Zapisz swoje ustawienia N w chmurze Telegramu.</string>
+    <string name="CloudConfigDesc">Zapisz swoje A-Ustawienia w chmurze Telegramu.</string>
     <string name="CloudConfigSyncDate">Ostatnia synchronizacja: %s, chmura: %s</string>
     <string name="CloudConfigSyncDateNever">nigdy</string>
     <string name="CloudConfigSync">Synchronizuj z chmurą</string>
@@ -162,7 +162,7 @@
     <string name="CloudConfigRestoreShort">Przywrócić</string>
     <string name="CloudConfigSyncing">Synchronizowanie...</string>
     <string name="CloudConfigAutoSync">Automatyczna synchronizacja</string>
-    <string name="CloudConfigAutoSyncDesc">Automatyczna synchronizacja z chmurą po wprowadzeniu zmian w Ustawieniach-N.</string>
+    <string name="CloudConfigAutoSyncDesc">Automatyczna synchronizacja z chmurą po wprowadzeniu zmian w A-Ustawieniach.</string>
     <string name="CloudConfigSyncFailed">Nie udało się zsynchronizować ustawień z chmurą</string>
     <string name="CloudConfigRestoreFailed">Nie udało się przywrócić ustawień z chmury</string>
     <string name="CopyCallback">Skopiuj dane wywołania zwrotnego</string>

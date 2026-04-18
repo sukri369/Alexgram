@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="N_Config">پیکربندی N</string>
+    <string name="N_Config">تنظیمات-A</string>
     <string name="CombineMessage">ترکیب پیام‌ها</string>
     <string name="TextStyle">حالت متن</string>
     <string name="NoiseSuppressAndVoiceEnhance">بهبود صدا</string>
@@ -49,7 +49,7 @@
     <string name="CheckAllForum">افزودن انجمن</string>
     <string name="DecorationNone">هیچ</string>
     <string name="ChatDecoration">تزئین چت</string>
-    <string name="NeedChangeNekoSettings">بهتر است تنظیمات N را تغییر دهید</string>
+    <string name="NeedChangeNekoSettings">بهتر است تنظیمات-A را تغییر دهید</string>
     <string name="DoNotUnarchiveBySwipe">غیرفعال کردن سوایپ برای بازگردانی از آرشیو</string>
     <string name="DefaultDeleteMenu">منوی حذف پیش‌فرض</string>
     <string name="DisableStories">استوری‌ها را غیرفعال کنید</string>

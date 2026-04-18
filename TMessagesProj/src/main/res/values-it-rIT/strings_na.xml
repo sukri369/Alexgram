@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="N_Config">N-Config</string>
+    <string name="N_Config">A-Config</string>
     <string name="CombineMessage">Unisci Messaggi</string>
     <string name="TextStyle">Stile Testo</string>
     <string name="NoiseSuppressAndVoiceEnhance">Miglioramento Voce</string>
@@ -49,7 +49,7 @@
     <string name="CheckAllForum">Aggiungi forum</string>
     <string name="DecorationNone">Nessuno</string>
     <string name="ChatDecoration">Decorazioni Chat</string>
-    <string name="NeedChangeNekoSettings">Hai bisogno di cambiare le N-Config</string>
+    <string name="NeedChangeNekoSettings">Hai bisogno di cambiare le A-Config</string>
     <string name="DoNotUnarchiveBySwipe">Disabilita scorri per togliere dall\'archivio</string>
     <string name="DefaultDeleteMenu">Menù di Eliminazione Predefinito</string>
     <string name="DisableStories">Disabilita le Storie</string>

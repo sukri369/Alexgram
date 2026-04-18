@@ -3,7 +3,7 @@
     <string name="RunInBackground">Run in Background</string>
     <string name="RunInBackgroundInfo">Keep the app running in the background to ensure reliable notifications.</string>
     <string name="NagramXPushService">Alexgram Push Service</string>
-    <string name="N_Config">N-Config</string>
+    <string name="N_Config">A-Settings</string>
     <string name="CombineMessage">Combine Messages</string>
     <string name="TextStyle">Text Style</string>
     <string name="NoiseSuppressAndVoiceEnhance">Voice Enhancements</string>
@@ -60,7 +60,7 @@
     <string name="CheckAllForum">Add forum</string>
     <string name="DecorationNone">None</string>
     <string name="ChatDecoration">Chat Decoration</string>
-    <string name="NeedChangeNekoSettings">You need to change N-Settings</string>
+    <string name="NeedChangeNekoSettings">You need to change A-Settings</string>
     <string name="DoNotUnarchiveBySwipe">Disable Swipe to Unarchive</string>
     <string name="DefaultDeleteMenu">Default Delete Menu</string>
     <string name="DisableStories">Disable Stories</string>

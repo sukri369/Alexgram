@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="N_Config">Konfig-N</string>
+    <string name="N_Config">Konfig-A</string>
     <string name="CombineMessage">Gabungkan Pesan</string>
     <string name="TextStyle">Gaya Teks</string>
     <string name="NoiseSuppressAndVoiceEnhance">Peningkatan Suara</string>
@@ -49,7 +49,7 @@
     <string name="CheckAllForum">Tambah forum</string>
     <string name="DecorationNone">Tidak ada</string>
     <string name="ChatDecoration">Dekorasi Obrolan</string>
-    <string name="NeedChangeNekoSettings">Anda perlu mengubah Pengaturan-N</string>
+    <string name="NeedChangeNekoSettings">Anda perlu mengubah Pengaturan-A</string>
     <string name="DoNotUnarchiveBySwipe">Nonaktifkan Geser untuk Membatalkan Arsip</string>
     <string name="DefaultDeleteMenu">Menu Hapus Default</string>
     <string name="DisableStories">Nonaktifkan Cerita</string>

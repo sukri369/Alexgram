@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="N_Config">N-Ayarları</string>
+    <string name="N_Config">A-Ayarlar</string>
     <string name="CombineMessage">Mesajları Birleştir</string>
     <string name="TextStyle">Metin Stili</string>
     <string name="NoiseSuppressAndVoiceEnhance">Ses İyileştirmeleri</string>
@@ -49,7 +49,7 @@
     <string name="CheckAllForum">Forum ekle</string>
     <string name="DecorationNone">Yok</string>
     <string name="ChatDecoration">Sohbet Dekorasyonu</string>
-    <string name="NeedChangeNekoSettings">N-Ayarlarını değiştirmeniz gerekiyor</string>
+    <string name="NeedChangeNekoSettings">A-Ayarlarını değiştirmeniz gerekiyor</string>
     <string name="DoNotUnarchiveBySwipe">Arşivden Çıkarmak İçin Kaydırmayı Devre Dışı Bırak</string>
     <string name="DefaultDeleteMenu">Varsayılan Silme Menüsü</string>
     <string name="DisableStories">Hikayeleri Devre Dışı Bırak</string>
