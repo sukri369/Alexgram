@@ -2490,12 +2490,18 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                     break;
                 case TYPE_APP_ICON:
                     view = new AppIconsSelectorCell(mContext, ThemeActivity.this, currentAccount);
+                    // Fixed height avoids expensive WRAP_CONTENT re-measure on each scroll frame
+                    view.setLayoutParams(new RecyclerView.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT, AndroidUtilities.dp(100)));
                     break;
                 case TYPE_CHOOSE_COLOR:
                     view = new PeerColorActivity.ChangeNameColorCell(currentAccount, 0, mContext, getResourceProvider());
                     break;
                 case TYPE_NOTIFICATION_ICON:
                     view = new org.telegram.ui.Cells.NotificationIconsSelectorCell(mContext, ThemeActivity.this, currentAccount);
+                    // Fixed height avoids expensive WRAP_CONTENT re-measure on each scroll frame
+                    view.setLayoutParams(new RecyclerView.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT, AndroidUtilities.dp(100)));
                     break;
             }
             return new RecyclerListView.Holder(view);
