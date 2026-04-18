@@ -115,6 +115,10 @@ public class EditTextCaption extends EditTextBoldCursor {
     private final Theme.ResourcesProvider resourcesProvider;
     private AlertDialog creationLinkDialog;
     public boolean adaptiveCreateLinkDialog;
+    private int currentFontStyle = -1;
+    private boolean isTransforming = false;
+    private int fontTransformStart = -1;
+    private int fontTransformCount = 0;
 
     public interface EditTextCaptionDelegate {
         void onSpansChanged();
@@ -134,11 +138,27 @@ public class EditTextCaption extends EditTextBoldCursor {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-
+                if (!isTransforming && currentFontStyle != -1 && count > 0) {
+                    fontTransformStart = start;
+                    fontTransformCount = count;
+                }
             }
 
             @Override
             public void afterTextChanged(Editable s) {
+                if (currentFontStyle != -1 && fontTransformStart != -1 && !isTransforming) {
+                    isTransforming = true;
+                    int start = fontTransformStart;
+                    int count = fontTransformCount;
+                    fontTransformStart = -1;
+                    fontTransformCount = 0;
+                    String source = s.subSequence(start, start + count).toString();
+                    String styled = applyFontStyle(source, currentFontStyle);
+                    if (!TextUtils.equals(source, styled)) {
+                        s.replace(start, start + count, styled);
+                    }
+                    isTransforming = false;
+                }
                 if (lineCount != getLineCount()) {
                     if (!isInitLineCount && getMeasuredWidth() > 0) {
                         onLineCountChanged(lineCount, getLineCount());
@@ -600,9 +620,6 @@ public class EditTextCaption extends EditTextBoldCursor {
 
     public void makeSelectedChangeFont() {
         Editable editable = getText();
-        if (editable == null || TextUtils.isEmpty(editable)) {
-            return;
-        }
 
         final int start;
         final int end;
@@ -614,11 +631,9 @@ public class EditTextCaption extends EditTextBoldCursor {
             start = Math.min(getSelectionStart(), getSelectionEnd());
             end = Math.max(getSelectionStart(), getSelectionEnd());
         }
-        if (start < 0 || end < 0 || start == end || end > editable.length()) {
-            return;
-        }
 
         CharSequence[] options = new CharSequence[]{
+                LocaleController.getString(R.string.Regular),
                 "Bold Serif Font  (\uD835\uDC07\uD835\uDC1E\uD835\uDC25\uD835\uDC25\uD835\uDC28)",
                 "Fancy Script Font  (\uD835\uDCE7\uD835\uDCEE\uD835\uDCF5\uD835\uDCF5\uD835\uDCF8)",
                 "Double Struck Font  (\u210D\uD835\uDD56\uD835\uDD5D\uD835\uDD5D\uD835\uDD60)",
@@ -637,12 +652,17 @@ public class EditTextCaption extends EditTextBoldCursor {
         }
         builder.setTitle(LocaleController.getString(R.string.ChangeFont));
         builder.setItems(options, (dialog, which) -> {
-            Editable current = getText();
-            if (current == null || start < 0 || end > current.length() || start >= end) {
+            int style = which - 1;
+            if (start < 0 || end < 0 || start == end || editable == null || end > (editable != null ? editable.length() : 0)) {
+                currentFontStyle = style;
                 return;
             }
-            String source = current.subSequence(start, end).toString();
-            String styled = applyFontStyle(source, which);
+            if (style == -1) {
+                currentFontStyle = -1;
+                return;
+            }
+            String source = editable.subSequence(start, end).toString();
+            String styled = applyFontStyle(source, style);
             if (!TextUtils.isEmpty(styled) && !TextUtils.equals(source, styled)) {
                 replaceTextInternal(start, end, styled);
             }

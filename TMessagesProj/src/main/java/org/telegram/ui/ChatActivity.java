@@ -500,6 +500,7 @@ public class ChatActivity extends BaseFragment implements
     private final static int nkbtn_ai_summarize = 2103;
     private final static int nkbtn_voice_changer = 2104;
     private final static int nkbtn_advanced_tool = 2106;
+    private final static int nkbtn_change_font = 2107;
     private final static int send_video_as_round = 1846;
 
     public int shareAlertDebugMode = DEBUG_SHARE_ALERT_MODE_NORMAL;
@@ -4887,6 +4888,11 @@ public class ChatActivity extends BaseFragment implements
             voiceChangerItem.setOnClickListener(v -> {
                 headerItem.closeSubMenu();
                 actionBar.actionBarMenuOnItemClick.onItemClick(nkbtn_voice_changer);
+            });
+            ActionBarMenuSubItem changeFontItem = ActionBarMenuItem.addItem(advancedToolsLayout, R.drawable.nk_change_font_na, LocaleController.getString(R.string.ChangeFont), false, getResourceProvider());
+            changeFontItem.setOnClickListener(v -> {
+                headerItem.closeSubMenu();
+                actionBar.actionBarMenuOnItemClick.onItemClick(nkbtn_change_font);
             });
             if (chatMode == 0 && (!isThreadChat() || isTopic) && !isReport()) {
                 ActionBarMenuSubItem exportItem = ActionBarMenuItem.addItem(advancedToolsLayout, R.drawable.ic_export_chat_na, LocaleController.getString(R.string.ExportChat), false, getResourceProvider());
@@ -45540,6 +45546,8 @@ public class ChatActivity extends BaseFragment implements
                 messagePreviewParams.hideCaption = noForwardCaption;
             }
             openForward(true);
+        } else if (id == nkbtn_change_font) {
+            chatActivityEnterView.getEditField().makeSelectedChangeFont();
         } else if (id == nkactionbarbtn_reply) {
             MessageObject messageObject = null;
             for (int a = 1; a >= 0; a--) {
