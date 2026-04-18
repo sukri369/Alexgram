@@ -769,27 +769,33 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                 if (notify || previousUpdatedType == -1) {
                     listAdapter.notifyDataSetChanged();
                 } else {
-                    if (prevThemeAccentListRow == -1 && themeAccentListRow != -1) {
-                        listAdapter.notifyItemInserted(themeAccentListRow);
-                    } else if (prevThemeAccentListRow != -1 && themeAccentListRow == -1) {
-                        listAdapter.notifyItemRemoved(prevThemeAccentListRow);
-                        if (prevEditThemeRow != -1) {
-                            prevEditThemeRow--;
+                    // Guard against calling notifyItem* while RecyclerView is computing a layout
+                    // (e.g. during fast fling). Fall back to notifyDataSetChanged which is safe.
+                    if (listView != null && listView.isComputingLayout()) {
+                        listAdapter.notifyDataSetChanged();
+                    } else {
+                        if (prevThemeAccentListRow == -1 && themeAccentListRow != -1) {
+                            listAdapter.notifyItemInserted(themeAccentListRow);
+                        } else if (prevThemeAccentListRow != -1 && themeAccentListRow == -1) {
+                            listAdapter.notifyItemRemoved(prevThemeAccentListRow);
+                            if (prevEditThemeRow != -1) {
+                                prevEditThemeRow--;
+                            }
+                        } else if (themeAccentListRow != -1) {
+                            listAdapter.notifyItemChanged(themeAccentListRow);
                         }
-                    } else if (themeAccentListRow != -1) {
-                        listAdapter.notifyItemChanged(themeAccentListRow);
-                    }
 
-                    if (prevEditThemeRow == -1 && editThemeRow != -1) {
-                        listAdapter.notifyItemInserted(editThemeRow);
-                    } else if (prevEditThemeRow != -1 && editThemeRow == -1) {
-                        listAdapter.notifyItemRemoved(prevEditThemeRow);
-                    }
+                        if (prevEditThemeRow == -1 && editThemeRow != -1) {
+                            listAdapter.notifyItemInserted(editThemeRow);
+                        } else if (prevEditThemeRow != -1 && editThemeRow == -1) {
+                            listAdapter.notifyItemRemoved(prevEditThemeRow);
+                        }
 
-                    if (prevRaiseToSpeakRow == -1 && raiseToSpeakRow != -1) {
-                        listAdapter.notifyItemInserted(raiseToSpeakRow);
-                    } else if (prevRaiseToSpeakRow != -1 && raiseToSpeakRow == -1) {
-                        listAdapter.notifyItemRemoved(prevRaiseToSpeakRow);
+                        if (prevRaiseToSpeakRow == -1 && raiseToSpeakRow != -1) {
+                            listAdapter.notifyItemInserted(raiseToSpeakRow);
+                        } else if (prevRaiseToSpeakRow != -1 && raiseToSpeakRow == -1) {
+                            listAdapter.notifyItemRemoved(prevRaiseToSpeakRow);
+                        }
                     }
                 }
             } else {
@@ -1508,11 +1514,18 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
             }
         });
         if (currentType == THEME_TYPE_BASIC) {
+            // Use a minimal animator only for insert/remove (raiseToSpeakRow visibility toggle).
+            // Avoid heavy DefaultItemAnimator during fast fling — it causes excessive GC pressure
+            // and frame drops that can trigger crashes on some devices (e.g. Realme/ColorOS).
             DefaultItemAnimator itemAnimator = new DefaultItemAnimator();
-            itemAnimator.setDurations(350);
+            itemAnimator.setDurations(150);
             itemAnimator.setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT);
             itemAnimator.setDelayAnimations(false);
             itemAnimator.setSupportsChangeAnimations(false);
+            itemAnimator.setAddDuration(150);
+            itemAnimator.setRemoveDuration(150);
+            itemAnimator.setMoveDuration(0);
+            itemAnimator.setChangeDuration(0);
             listView.setItemAnimator(itemAnimator);
         }
 
@@ -2100,7 +2113,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
             int type = holder.getItemViewType();
             return type == 0 || type == TYPE_TEXT_SETTING || type == TYPE_THEME_TYPE || type == TYPE_TEXT_CHECK ||
                     type == TYPE_NIGHT_THEME || type == TYPE_THEME_LIST || type == TYPE_THEME_ACCENT_LIST ||
-                    type == TYPE_TEXT_PREFERENCE || type == 18 || type == TYPE_APP_ICON || type == TYPE_CHOOSE_COLOR || type == TYPE_NOTIFICATION_ICON;
+                    type == TYPE_TEXT_PREFERENCE || type == TYPE_APP_ICON || type == TYPE_CHOOSE_COLOR || type == TYPE_NOTIFICATION_ICON;
         }
 
         private void showOptionsForTheme(Theme.ThemeInfo themeInfo) {
