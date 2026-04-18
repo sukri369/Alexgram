@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "482033834017",
+    "firebase_url": "https://alexgram-6e860-default-rtdb.firebaseio.com",
     "project_id": "alexgram-6e860",
     "storage_bucket": "alexgram-6e860.firebasestorage.app"
   },
@@ -21,6 +22,12 @@
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": []
+        },
+        "analytics_service": {
+          "status": 1
+        },
+        "crashlytics_kit": {
+          "settings_url": "https://firebase.googleapis.com/v1beta1/projects/alexgram-6e860/androidApps/1:482033834017:android:66b1d11ea4bb803408eb60/config"
         }
       }
     }
