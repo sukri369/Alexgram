@@ -4874,10 +4874,14 @@ public class ChatActivity extends BaseFragment implements
                 muteItemGap = headerItem.lazilyAddColoredGap();
             }
 
-            ActionBarPopupWindow.ActionBarPopupWindowLayout advancedToolsLayout = new ActionBarPopupWindow.ActionBarPopupWindowLayout(context, R.drawable.popup_fixed_alert4, getResourceProvider(), ActionBarPopupWindow.ActionBarPopupWindowLayout.FLAG_USE_SWIPEBACK);
-            advancedToolsLayout.swipeBackGravityRight = true;
+            ActionBarPopupWindow.ActionBarPopupWindowLayout advancedToolsLayout = new ActionBarPopupWindow.ActionBarPopupWindowLayout(context, 0, getResourceProvider());
+            advancedToolsLayout.setFitItems(true);
             ActionBarMenuSubItem backItem = ActionBarMenuItem.addItem(advancedToolsLayout, R.drawable.msg_arrow_back, LocaleController.getString(R.string.Back), false, getResourceProvider());
-            backItem.setOnClickListener(v -> advancedToolsLayout.getSwipeBack().closeForeground());
+            backItem.setOnClickListener(v -> {
+                if (headerItem.getPopupLayout() != null && headerItem.getPopupLayout().getSwipeBack() != null) {
+                    headerItem.getPopupLayout().getSwipeBack().closeForeground();
+                }
+            });
             ActionBarMenuItem.addColoredGap(advancedToolsLayout, getResourceProvider());
             ActionBarMenuSubItem voiceChangerItem = ActionBarMenuItem.addItem(advancedToolsLayout, R.drawable.ic_voice_changer_na, LocaleController.getString("VoiceChanger", R.string.VoiceChanger), false, getResourceProvider());
             voiceChangerItem.setOnClickListener(v -> {
@@ -4896,7 +4900,6 @@ public class ChatActivity extends BaseFragment implements
                     actionBar.actionBarMenuOnItemClick.onItemClick(import_chat);
                 });
             }
-            headerItem.lazilyAddColoredGap();
             headerItem.lazilyAddSwipeBackItem(R.drawable.ic_advanced_tool_na, null, "Advanced Tool", advancedToolsLayout);
             headerItem.lazilyAddColoredGap();
 
