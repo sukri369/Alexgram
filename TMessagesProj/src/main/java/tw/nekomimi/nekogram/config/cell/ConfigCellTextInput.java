@@ -83,7 +83,7 @@ public class ConfigCellTextInput extends AbstractConfigCell implements WithBindC
     public void onBindViewHolder(RecyclerView.ViewHolder holder) {
         TextSettingsCell cell = (TextSettingsCell) holder.itemView;
         this.cell = cell;
-        cell.setTextAndValue(title, bindConfig.String(), cellGroup.needSetDivider(this));
+        cell.setTextAndValue(title, bindConfig.String(), false, cellGroup.needSetDivider(this), true);
         cell.setCanDisable(true);
         cell.setEnabled(enabled, null);
     }

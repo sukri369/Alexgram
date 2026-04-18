@@ -183,7 +183,7 @@ public class TextCheckCell extends FrameLayout {
             textView.setMaxLines(5);
             textView.setSingleLine(false);
         }
-        isMultiline = false;
+        isMultiline = isNekoCell;
         if (checkBox != null) {
             checkBox.setVisibility(View.VISIBLE);
             checkBox.setChecked(checked, attached);
@@ -194,8 +194,9 @@ public class TextCheckCell extends FrameLayout {
         needDivider = divider;
         valueTextView.setVisibility(GONE);
         LayoutParams layoutParams = (LayoutParams) textView.getLayoutParams();
-        layoutParams.height = LayoutParams.MATCH_PARENT;
-        layoutParams.topMargin = 0;
+        layoutParams.height = LayoutParams.WRAP_CONTENT;
+        layoutParams.topMargin = isNekoCell ? AndroidUtilities.dp(10) : 0;
+        layoutParams.bottomMargin = isNekoCell ? AndroidUtilities.dp(10) : 0;
         textView.setLayoutParams(layoutParams);
         setWillNotDraw(!divider);
     }
@@ -265,7 +266,7 @@ public class TextCheckCell extends FrameLayout {
         if (multiline) {
             if (isNekoCell) {
                 if (!TextUtils.isEmpty(value)) {
-                    textView.setMaxLines(1);
+                    textView.setMaxLines(3);
                     textView.setEllipsize(TextUtils.TruncateAt.END);
                 }
                 valueTextView.setMaxLines(5);

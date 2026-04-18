@@ -46,7 +46,7 @@ public class ConfigCellText extends AbstractConfigCell implements WithKey, WithO
         TextSettingsCell cell = (TextSettingsCell) holder.itemView;
         this.cell = cell;
         String title = getString(key);
-        cell.setTextAndValue(title, value, cellGroup.needSetDivider(this));
+        cell.setTextAndValue(title, value, false, cellGroup.needSetDivider(this), true);
         cell.setEnabled(enabled);
     }
 

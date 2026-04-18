@@ -51,6 +51,7 @@ public class TextSettingsCell extends FrameLayout {
     private boolean canDisable;
     private boolean drawLoading;
     private int padding;
+    private boolean isMultiline;
 
     private boolean incrementLoadingProgress;
     private float loadingProgress;
@@ -160,7 +161,18 @@ public class TextSettingsCell extends FrameLayout {
         } else {
             width = availableWidth;
         }
-        textView.measure(MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(getMeasuredHeight(), MeasureSpec.EXACTLY));
+        if (isMultiline) {
+            textView.measure(MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
+            int h = Math.max(AndroidUtilities.dp(50), textView.getMeasuredHeight() + AndroidUtilities.dp(16));
+            if (h + (needDivider ? 1 : 0) != getMeasuredHeight()) {
+                setMeasuredDimension(getMeasuredWidth(), h + (needDivider ? 1 : 0));
+                if (valueTextView.getVisibility() == VISIBLE) {
+                    valueTextView.measure(MeasureSpec.makeMeasureSpec(availableWidth, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(getMeasuredHeight(), MeasureSpec.EXACTLY));
+                }
+            }
+        } else {
+            textView.measure(MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(getMeasuredHeight(), MeasureSpec.EXACTLY));
+        }
     }
 
     @Override
@@ -209,10 +221,25 @@ public class TextSettingsCell extends FrameLayout {
 
     public void setTextAndValue(CharSequence text, CharSequence value, boolean animated, boolean divider, boolean isNekoCell) {
         textView.setText(text);
+        isMultiline = isNekoCell;
         if (isNekoCell) {
             textView.setLines(0);
-            textView.setMaxLines(0);
+            textView.setMaxLines(3);
             textView.setSingleLine(false);
+            LayoutParams layoutParams = (LayoutParams) textView.getLayoutParams();
+            layoutParams.height = LayoutHelper.WRAP_CONTENT;
+            layoutParams.topMargin = AndroidUtilities.dp(10);
+            layoutParams.bottomMargin = AndroidUtilities.dp(10);
+            textView.setLayoutParams(layoutParams);
+        } else {
+            textView.setLines(1);
+            textView.setMaxLines(1);
+            textView.setSingleLine(true);
+            LayoutParams layoutParams = (LayoutParams) textView.getLayoutParams();
+            layoutParams.height = LayoutHelper.MATCH_PARENT;
+            layoutParams.topMargin = 0;
+            layoutParams.bottomMargin = 0;
+            textView.setLayoutParams(layoutParams);
         }
         valueImageView.setVisibility(INVISIBLE);
         if (value != null) {
