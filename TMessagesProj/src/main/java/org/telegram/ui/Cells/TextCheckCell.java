@@ -293,8 +293,8 @@ public class TextCheckCell extends FrameLayout {
             valueTextView.setEllipsize(TextUtils.TruncateAt.END);
             valueTextView.setPadding(0, 0, 0, 0);
         }
-        LayoutParams layoutParams = (LayoutParams) textView.getLayoutParams();
-        layoutParams.height = LayoutParams.WRAP_CONTENT;
+        LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) textView.getLayoutParams();
+        layoutParams.height = LinearLayout.LayoutParams.WRAP_CONTENT;
         layoutParams.topMargin = AndroidUtilities.dp(10);
         textView.setLayoutParams(layoutParams);
         setWillNotDraw(!divider);
@@ -321,8 +321,8 @@ public class TextCheckCell extends FrameLayout {
             valueTextView.setEllipsize(TextUtils.TruncateAt.END);
             valueTextView.setPadding(0, 0, 0, 0);
         }
-        LayoutParams layoutParams = (LayoutParams) textView.getLayoutParams();
-        layoutParams.height = LayoutParams.WRAP_CONTENT;
+        LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) textView.getLayoutParams();
+        layoutParams.height = LinearLayout.LayoutParams.WRAP_CONTENT;
         layoutParams.topMargin = AndroidUtilities.dp(10);
         textView.setLayoutParams(layoutParams);
         setWillNotDraw(!divider);
