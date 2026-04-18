@@ -160,6 +160,23 @@ public class AyuGhostUtils {
         // Block read receipts if disabled
         if (!NekoConfig.sendReadMessagePackets.Bool() && (isReadMessageRequest(object))) {
             if (!AyuState.getAllowReadPacket() && !readExcluded) {
+                // TL_messages_getMessagesViews expects TL_messages_messageViews in its callback.
+                // Sending TL_messages_affectedMessages (the generic fake) causes ClassCastException
+                // in MessagesController.updateTimerProc. Instead, call with null — the callback
+                // already guards with `if (response != null)` before the unsafe cast.
+                if (isViewsIncrementRequest(object)) {
+                    FileLog.d("GhostMode: Blocking read status request and sending null response for getMessagesViews.");
+                    if (onCompleteOrig != null) {
+                        Utilities.stageQueue.postRunnable(() -> {
+                            try {
+                                onCompleteOrig.run(null, null);
+                            } catch (Exception e) {
+                                FileLog.e(e);
+                            }
+                        });
+                    }
+                    return InterceptResult.Blocked(onCompleteOrig);
+                }
                 FileLog.d("GhostMode: Blocking read status request and sending fake response.");
                 sendFakeReadResponse(onCompleteOrig);
                 return InterceptResult.Blocked(onCompleteOrig);
@@ -289,7 +306,18 @@ public class AyuGhostUtils {
                 object instanceof TLRPC.TL_messages_readMessageContents ||
                 object instanceof TLRPC.TL_channels_readMessageContents ||
                 object instanceof TLRPC.TL_channels_readHistory ||
+                // NOTE: TL_messages_getMessagesViews is handled separately below
+                // to avoid sending the wrong fake response type (its callback
+                // expects TL_messages_messageViews, not TL_messages_affectedMessages)
                 object instanceof TLRPC.TL_messages_getMessagesViews obj && obj.increment;
+    }
+
+    /**
+     * Returns true if the request is a "view increment" request that must be intercepted
+     * without sending ANY fake response (the callback checks `if (response != null)` first).
+     */
+    private static boolean isViewsIncrementRequest(TLObject object) {
+        return object instanceof TLRPC.TL_messages_getMessagesViews obj && obj.increment;
     }
 
     private static boolean isReadStoriesRequest(TLObject object) {
