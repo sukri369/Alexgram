@@ -1136,7 +1136,7 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
             int widthOffset = overrideWidthOffset != -1 ? overrideWidthOffset : width - translationX;
             int top = getTop(widthOffset, (float) width);
             if (child == containerView) {
-                final int alpha = USE_SPRING_ANIMATION ? MathUtils.clamp(255 * widthOffset / width, 0, 255) : MathUtils.clamp(255 * widthOffset / dp(20), 0, 255);
+                final int alpha = MathUtils.clamp(255 * widthOffset / width, 0, 255);
                 if (alpha > 0) {
                     final int tabsHeight = getBottomTabsHeight(false);
                     final int additionalHeight;
@@ -1159,7 +1159,7 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                 }
             } else if (child == containerViewBack) {
                 float opacity = MathUtils.clamp(widthOffset / (float) width, 0, 0.8f);
-                scrimPaint.setColor(Color.argb((int) ((USE_SPRING_ANIMATION ? USE_ACTIONBAR_CROSSFADE ? 0x29 : 0x7a : 120) * opacity), 0x00, 0x00, 0x00));
+                scrimPaint.setColor(Color.argb((int) ((USE_SPRING_ANIMATION ? (USE_ACTIONBAR_CROSSFADE ? 0x29 : 0x7a) : 100) * opacity), 0x00, 0x00, 0x00));
                 if (overrideWidthOffset != -1) {
                     canvas.drawRect(0, top, getWidth(), getHeight() * 1.5f, scrimPaint);
                 } else {
@@ -1425,11 +1425,12 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                             setInnerTranslationX(dx / (float) getWidth() * (5 * dp(56)));
                         } else {
                             containerView.setTranslationX(dx);
-                            if (USE_SPRING_ANIMATION) {
-                                containerViewBack.setTranslationX(-(containerView.getMeasuredWidth() - dx) * 0.35f);
-                                if (USE_ACTIONBAR_CROSSFADE) {
-                                    swipeProgress = MathUtils.clamp((float) dx / containerView.getMeasuredWidth(), 0f, 1f);
-                                }
+                            float progress = (float) dx / containerView.getMeasuredWidth();
+                            containerViewBack.setTranslationX(-(containerView.getMeasuredWidth() - dx) * 0.35f);
+                            containerViewBack.setScaleX(0.95f + 0.05f * progress);
+                            containerViewBack.setScaleY(0.95f + 0.05f * progress);
+                            if (USE_ACTIONBAR_CROSSFADE) {
+                                swipeProgress = MathUtils.clamp(progress, 0f, 1f);
                             }
                             setInnerTranslationX(dx);
                         }
@@ -1897,6 +1898,8 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                     } else {
                         containerView.setTranslationX((1.0f - interpolated) * widthNoPaddings);
                         containerViewBack.setTranslationX(-interpolated * 0.35f * widthNoPaddings);
+                        containerViewBack.setScaleX(0.95f + 0.05f * (1.0f - interpolated));
+                        containerViewBack.setScaleY(0.95f + 0.05f * (1.0f - interpolated));
                         setInnerTranslationX((1.0f - interpolated) * widthNoPaddings);
                     }
                 } else {
@@ -1918,6 +1921,8 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                     } else {
                         containerViewBack.setTranslationX(interpolated * widthNoPaddings);
                         containerView.setTranslationX(-(1f - interpolated) * 0.35f * widthNoPaddings);
+                        containerView.setScaleX(0.95f + 0.05f * interpolated);
+                        containerView.setScaleY(0.95f + 0.05f * interpolated);
                         setInnerTranslationX(interpolated * widthNoPaddings);
                     }
                 }
@@ -2009,7 +2014,12 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                         containerView.invalidate();
                         invalidate();
                     } else {
-                        containerView.setTranslationX(dp(48) * (1.0f - interpolated));
+                        float widthNoPaddings = getWidth() - getPaddingLeft() - getPaddingRight();
+                        containerView.setTranslationX(widthNoPaddings * (1.0f - interpolated));
+                        containerViewBack.setTranslationX(-interpolated * 0.35f * widthNoPaddings);
+                        containerViewBack.setScaleX(0.95f + 0.05f * (1.0f - interpolated));
+                        containerViewBack.setScaleY(0.95f + 0.05f * (1.0f - interpolated));
+                        setInnerTranslationX(widthNoPaddings * (1.0f - interpolated));
                     }
                 } else {
                     float clampedReverseInterpolated = MathUtils.clamp(1f - interpolated, 0, 1);
@@ -2024,7 +2034,12 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                         containerView.invalidate();
                         invalidate();
                     } else {
-                        containerViewBack.setTranslationX(dp(48) * interpolated);
+                        float widthNoPaddings = getWidth() - getPaddingLeft() - getPaddingRight();
+                        containerViewBack.setTranslationX(widthNoPaddings * interpolated);
+                        containerView.setTranslationX(-(1.0f - interpolated) * 0.35f * widthNoPaddings);
+                        containerView.setScaleX(0.95f + 0.05f * interpolated);
+                        containerView.setScaleY(0.95f + 0.05f * interpolated);
+                        setInnerTranslationX(widthNoPaddings * interpolated);
                     }
                 }
                 if (animationProgress < 1) {

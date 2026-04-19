@@ -1455,7 +1455,7 @@ object NaConfig {
         addConfig(
             "BackAnimationStyle",
             ConfigItem.configTypeInt,
-            0 // 0: Classic, 1: Spring, 2: Predictive Back
+            1 // 0: Classic, 1: Spring, 2: Predictive Back
         )
     val mainTabsHideTitles =
         addConfig(
