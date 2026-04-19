@@ -264,8 +264,7 @@
     <string name="AllowForwardingRestrictionOnboardingMessage">برای اطمینان از تجربه‌ای یکپارچه هنگام دور زدن محدودیت‌های هدایت، لطفاً قبل از هدایت مطمئن شوید که رسانه به طور کامل دانلود شده است. این به برنامه اجازه می‌دهد تا محتوای شما را به طور ایمن دوباره بارگذاری و بدون مسدود شدن توسط سرور تحویل دهد.</string>
     <string name="V8DAudio">توهم صوتی فضایی ۳۶۰ درجه</string>
     <string name="V8DAudioAbout">جلوه صوتی Dolby 8D</string>
-    <string name="PillChatTitle">Pill Stack</string>
-    <string name="PillChatTitleDescription">نمایش چرخ‌وفلک عمودی چت‌ها در نوار جستجو.</string>
+
     <string name="StarFallInChat">جلوه بارش ستاره</string>
     <string name="StarFallInChatDescription">نمایش انیمیشن شهاب سنگ در چت‌ها.</string>
     <string name="NekoX">تنظیمات NekoX</string>

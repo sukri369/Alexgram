@@ -273,8 +273,7 @@
     <string name="EmojiUseDefault">Use system emoji</string>
     <string name="Chat">Chats</string>
     <string name="Appearance">Appearance</string>
-    <string name="PillChatTitle">Pill Chat Title</string>
-    <string name="PillChatTitleDescription">Shows centered chat title with translucent background (iOS Style)</string>
+
     <string name="StarFallInChat">Starfall Chat Decoration</string>
     <string name="StarFallInChatDescription">Animated falling stars in the chat background</string>
 </resources>

@@ -38,8 +38,7 @@
     <string name="AllowForwardingRestrictionOnboardingMessage">لضمان تجربة سلسة عند تجاوز قيود التوجيه، يرجى التأكد من تنزيل الوسائط بالكامل قبل التوجيه. يسمح هذا للتطبيق بإعادة رفع المحتوى الخاص بك وتسليمه بأمان دون حظر من جهة الخادم.</string>
     <string name="V8DAudio">خداع صوتي مكاني 360 درجة</string>
     <string name="V8DAudioAbout">تأثير الصوت Dolby 8D</string>
-    <string name="PillChatTitle">Pill Stack</string>
-    <string name="PillChatTitleDescription">عرض دائري عمودي للدردشات في شريط البحث.</string>
+
     <string name="StarFallInChat">تأثير النجوم المتساقطة</string>
     <string name="StarFallInChatDescription">إظهار الرسوم المتحركة للنجوم المتساقطة في الدردشات.</string>
     <string name="NekoX">إعدادات NekoX</string>

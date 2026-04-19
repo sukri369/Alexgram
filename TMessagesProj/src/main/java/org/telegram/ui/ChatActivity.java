@@ -4649,9 +4649,8 @@ public class ChatActivity extends BaseFragment implements
                 return super.onAvatarClick();
             }
 
-            @Override
             protected boolean isCentered() {
-                return isPillChatHeaderEnabled() || isTitleCentered();
+                return isTitleCentered();
             }
 
             @Override
@@ -5156,10 +5155,7 @@ public class ChatActivity extends BaseFragment implements
             starFallView.setClickable(false);
             starFallView.setFocusable(false);
         }
-        if (isPillChatHeaderEnabled()) {
-            contentView.backgroundImageUnderActionBar = true;
-            contentView.setBackgroundColor(Color.TRANSPARENT);
-        }
+
 
         fadeDrawable = new BlurredBackgroundWithFadeDrawable(
                 navbarContentDrawableFactory.create(chatInputViewsContainer, null));
@@ -12786,9 +12782,7 @@ public class ChatActivity extends BaseFragment implements
         float oldPadding = chatListViewPaddingTop;
         chatListViewPaddingTop = dp(4) + contentPaddingTop + (paddingTopHeight = topPanelViewH + pinnedViewH)
             + getTopicTabsSideSize(TopicsTabsView.Position.TOP);
-        if (isPillChatHeaderEnabled()) {
-            chatListViewPaddingTop += dp(44);
-        }
+
         chatListViewPaddingTop += blurredViewTopOffset;
         chatListViewPaddingVisibleOffset = 0;
         chatListViewPaddingTop += contentPanTranslation;
@@ -19141,11 +19135,8 @@ public class ChatActivity extends BaseFragment implements
             }
             measureChildWithMargins(actionBar, widthMeasureSpec, 0, heightMeasureSpec, 0);
             int actionBarHeight = actionBar.getMeasuredHeight();
-            final boolean pillHeaderEnabled = isPillChatHeaderEnabled();
-            if (pillHeaderEnabled) {
-                actionBarHeight = 0;
-            }
-            if (actionBar.getVisibility() == VISIBLE && !pillHeaderEnabled) {
+
+            if (actionBar.getVisibility() == VISIBLE) {
                 heightSize -= actionBarHeight;
             }
             int keyboardHeightOld = keyboardHeight + chatEmojiViewPadding;
@@ -19401,15 +19392,9 @@ public class ChatActivity extends BaseFragment implements
                     case Gravity.TOP:
                         childTop = lp.topMargin + getPaddingTop();
                         if (child != actionBar && actionBar.getVisibility() == VISIBLE) {
-                            if (isPillChatHeaderEnabled()) {
-                                childTop += ActionBar.getCurrentActionBarHeight() + AndroidUtilities.dp(16);
-                            } else {
-                                childTop += actionBar.getMeasuredHeight();
-                            }
+                            childTop += actionBar.getMeasuredHeight();
                         }
-                        if (isPillChatHeaderEnabled() && (child == topPanelLayout || child == topPanelLayoutFade || child == mentionContainer)) {
-                            childTop = getPaddingTop() + ActionBar.getCurrentActionBarHeight() + AndroidUtilities.dp(38);
-                        }
+
                         break;
                     case Gravity.CENTER_VERTICAL:
                         childTop = ((b - paddingBottom) - t - height) / 2 + lp.topMargin - lp.bottomMargin;
@@ -19451,7 +19436,7 @@ public class ChatActivity extends BaseFragment implements
                 } else if (child == actionBar) {
                     childTop -= getPaddingTop();
                 } else if (child == videoPlayerContainer) {
-                    childTop = isPillChatHeaderEnabled() ? (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) : actionBar.getMeasuredHeight();
+                    childTop = actionBar.getMeasuredHeight();
                 } else if (child == instantCameraView || child == overlayView || child == animatingImageView) {
                     childTop = 0;
                 } else if (child == textSelectionHelper.getOverlayView(getContext())) {
@@ -30787,7 +30772,7 @@ public class ChatActivity extends BaseFragment implements
         }
         if (contentView != null) {
             contentView.setOccupyStatusBar(!inBubbleMode && !isInsideContainer && !inPreviewMode);
-            contentView.setTag(TAG_LAYOUT_NO_ACTIONBAR_OFFSET, isPillChatHeaderEnabled() ? Boolean.TRUE : null);
+            contentView.setTag(TAG_LAYOUT_NO_ACTIONBAR_OFFSET, null);
         }
     }
 
@@ -30819,7 +30804,7 @@ public class ChatActivity extends BaseFragment implements
         if (chatAnimeAssistantView != null) {
             chatAnimeAssistantView.onResume();
         }
-        applyPillHeaderAppearance();
+
         cachedIsGestureNavigation = AndroidUtil.isGestureNavigation(getContext());
         checkShowBlur(false);
         activityResumeTime = System.currentTimeMillis();
@@ -30843,8 +30828,7 @@ public class ChatActivity extends BaseFragment implements
         if (contentView != null) {
             contentView.onResume();
         }
-        applyPillHeaderAppearance();
-        checkPillOnboardingTooltip();
+
         checkChecksHint();
 
         Bulletin.addDelegate(this, bulletinDelegate = new Bulletin.Delegate() {
@@ -39705,7 +39689,7 @@ public class ChatActivity extends BaseFragment implements
 			searchItem.setSearchFieldHint(isSupportedTags() ? LocaleController.getString(R.string.SavedTagSearchHint) : LocaleController.getString(R.string.Search));
             searchItem.setSearchFieldCaption(null);
             AndroidUtilities.updateViewVisibilityAnimated(avatarContainer, true, 0.95f, true);
-            applyPillHeaderAppearance();
+
             if (editTextItem != null && editTextItem.getTag() != null) {
                 if (headerItem != null) {
                     headerItem.setVisibility(View.GONE);
@@ -39824,7 +39808,7 @@ public class ChatActivity extends BaseFragment implements
         @Override
         public void onSearchExpand() {
             searching = true;
-            applyPillHeaderAppearance();
+
             updatePagedownButtonVisibility(true);
             updateSearchUpDownButtonVisibility(true);
             if ((threadMessageId != 0 && chatMode != MODE_SAVED || UserObject.isReplyUser(currentUser)) && !preventReopenSearchWithText) {
@@ -48638,9 +48622,9 @@ public class ChatActivity extends BaseFragment implements
         final float alpha = 1f - fadeAlphaInv;
         topPanelLayoutFade.setFadeHeight((int) fadeHeight);
         topPanelLayoutFade.setAlpha(alpha);
-        topPanelLayoutFade.setTranslationY(isPillChatHeaderEnabled() ? contentPaddingTop : 0);
+        topPanelLayoutFade.setTranslationY(0);
         if (topPanelLayout != null) {
-            topPanelLayout.setTranslationY(isPillChatHeaderEnabled() ? contentPaddingTop : 0);
+            topPanelLayout.setTranslationY(0);
         }
         topPanelLayoutFade.setVisibility(alpha > 0 ? View.VISIBLE : View.INVISIBLE);
     }
@@ -49239,7 +49223,7 @@ public class ChatActivity extends BaseFragment implements
         }
 
         final int topClip;
-        if (isPillChatHeaderEnabled() || isInsideContainer) {
+        if (isInsideContainer) {
             topClip = 0;
         } else {
             topClip = ActionBar.getCurrentActionBarHeight() + windowInsetsStateHolder.getInsets(WindowInsetsCompat.Type.statusBars()).top;
@@ -49280,286 +49264,7 @@ public class ChatActivity extends BaseFragment implements
         abstract void drawChatForegroundElements(Canvas canvas, @Nullable RectF position);
     }
 
-    public boolean isPillChatHeaderEnabled() {
-        if (!NaConfig.INSTANCE.getPillChatTitle().Bool()) {
-            return false;
-        }
-        if (isReplyChatComment() || isReport() || isComments) {
-            return false;
-        }
-        return getChatMode() != ChatActivity.MODE_SEARCH && getChatMode() != ChatActivity.MODE_SAVED && !searching;
-    }
 
-    public boolean isPillChatHeaderLayoutEnabled() {
-        return isPillChatHeaderEnabled();
-    }
-
-    private void applyPillHeaderAppearance() {
-        if (actionBar == null) {
-            return;
-        }
-        boolean enabled = isPillChatHeaderEnabled();
-        actionBar.setForceTransparentBackground(enabled);
-
-        View backButton = actionBar.getBackButton();
-        if (!enabled) {
-            actionBar.setCastShadows(true);
-            actionBar.setShadowAlpha(255);
-            actionBar.setOccupyStatusBar(!inPreviewMode);
-            int color = getThemedColor(Theme.key_actionBarDefaultIcon);
-            actionBar.setItemsColor(color, false);
-            actionBar.setItemsColor(color, true);
-            actionBar.setItemsBackgroundColor(getThemedColor(Theme.key_actionBarDefaultSelector), false);
-            actionBar.setItemsBackgroundColor(getThemedColor(Theme.key_actionBarDefaultSelector), true);
-            if (backButton != null) {
-                backButton.setBackground(Theme.createSelectorDrawable(getThemedColor(Theme.key_actionBarDefaultSelector)));
-                FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) backButton.getLayoutParams();
-                lp.width = lp.height = AndroidUtilities.dp(54);
-                lp.leftMargin = 0;
-                lp.topMargin = (Build.VERSION.SDK_INT >= 21 && actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0);
-                backButton.setLayoutParams(lp);
-            }
-            return;
-        }
-
-        actionBar.setBackground(null);
-        actionBar.setBackgroundColor(Color.TRANSPARENT);
-        actionBar.setCastShadows(false);
-        actionBar.setShadowAlpha(0);
-        actionBar.setOccupyStatusBar(!inPreviewMode);
-        actionBar.setClipChildren(false);
-        actionBar.setClipToPadding(false);
-        actionBar.setTranslationY(0);
-        
-        if (contentView != null) {
-            contentView.setClipChildren(false);
-            contentView.setClipToPadding(false);
-        }
-        final boolean darkTheme = Theme.isCurrentThemeDark();
-        final int pillForegroundColor = darkTheme ? 0xFFF4F5F7 : 0xFF1A1A1A;
-        final int pillSubtitleColor = darkTheme ? 0xB8F4F5F7 : 0xFF6F6F76;
-        final int pillSelectorColor = darkTheme ? 0x16FFFFFF : 0x14000000;
-        actionBar.setItemsColor(pillForegroundColor, false);
-        actionBar.setItemsColor(pillForegroundColor, true);
-        actionBar.setItemsBackgroundColor(pillSelectorColor, false);
-        actionBar.setItemsBackgroundColor(pillSelectorColor, true);
-
-        if (backButton != null) {
-            GradientDrawable backPillDrawable = new GradientDrawable();
-            backPillDrawable.setShape(GradientDrawable.OVAL);
-            int pillBgColor = getThemedColor(Theme.key_actionBarDefault);
-            backPillDrawable.setColor(pillBgColor | 0xFF000000);
-            backPillDrawable.setStroke(AndroidUtilities.dp(1), darkTheme ? 0x20FFFFFF : 0x14000000);
-            backButton.setBackground(backPillDrawable);
-            backButton.setPadding(AndroidUtilities.dp(4), AndroidUtilities.dp(4), AndroidUtilities.dp(4), AndroidUtilities.dp(4));
-
-            FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) backButton.getLayoutParams();
-            lp.width = lp.height = AndroidUtilities.dp(32);
-            lp.leftMargin = AndroidUtilities.dp(18);
-            lp.gravity = Gravity.LEFT | Gravity.TOP;
-            int actionBarH = ActionBar.getCurrentActionBarHeight();
-            int statusBarH = (Build.VERSION.SDK_INT >= 21 && actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0);
-            lp.topMargin = (actionBarH - lp.height) / 2 + statusBarH;
-            backButton.setTranslationX(0); // Reset any previous translation
-            backButton.setLayoutParams(lp);
-            if (backButton instanceof ImageView) {
-                ((ImageView) backButton).setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-            }
-        }
-
-        if (avatarContainer != null) {
-            avatarContainer.setOccupyStatusBar(!inPreviewMode);
-            avatarContainer.setTitleColors(pillForegroundColor, pillSubtitleColor);
-        }
-        if (contentView != null) {
-            contentView.setTag(TAG_LAYOUT_NO_ACTIONBAR_OFFSET, Boolean.TRUE);
-            contentView.backgroundImageUnderActionBar = true;
-            contentView.setBackgroundColor(Color.TRANSPARENT); // Override ActionBarLayout's default windowBackgroundWhite
-            final int headerHeight = ActionBar.getCurrentActionBarHeight();
-            final int statusBarHeight = (!inPreviewMode && actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0);
-            final int targetTopPadding = headerHeight + statusBarHeight;
-            
-            if (contentView.getPaddingTop() != targetTopPadding) {
-                contentView.setPadding(contentView.getPaddingLeft(), targetTopPadding, contentView.getPaddingRight(), contentView.getPaddingBottom());
-            }
-            contentView.requestLayout();
-        }
-        if (contentView != null) {
-            contentView.setClipToPadding(false);
-            contentView.invalidateBackground();
-        }
-    }
-
-    private void checkPillOnboardingTooltip() {
-        if (!isPillChatHeaderEnabled()) {
-            return;
-        }
-        if (NaConfig.INSTANCE.getPillChatTitleOnboardingShown().Bool()) {
-            return;
-        }
-        NaConfig.INSTANCE.getPillChatTitleOnboardingShown().setConfigBool(true);
-
-        AndroidUtilities.runOnUIThread(() -> {
-            if (avatarContainer == null || contentView == null || getParentActivity() == null) {
-                return;
-            }
-
-            avatarContainer.playPillTitleOnboardingHighlight();
-
-            RectF pill = avatarContainer.getPillRect();
-            if (pill == null || pill.isEmpty()) {
-                return;
-            }
-
-            // Compute pill center in contentView coordinates
-            int[] avatarLoc = new int[2];
-            avatarContainer.getLocationInWindow(avatarLoc);
-            int[] contentLoc = new int[2];
-            contentView.getLocationInWindow(contentLoc);
-
-            float pillCenterX = avatarLoc[0] - contentLoc[0] + pill.centerX();
-            float pillBottom = avatarLoc[1] - contentLoc[1] + pill.bottom;
-
-            Context ctx = getParentActivity();
-
-            // === Arrow View (triangle pointing up) ===
-            int arrowW = AndroidUtilities.dp(14);
-            int arrowH = AndroidUtilities.dp(7);
-            View arrowView = new View(ctx) {
-                private final Paint arrowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-                private final Path arrowPath = new Path();
-                {
-                    arrowPaint.setColor(0xE6222328);
-                    arrowPaint.setStyle(Paint.Style.FILL);
-                }
-                @Override
-                protected void onDraw(Canvas canvas) {
-                    arrowPath.rewind();
-                    float w = getWidth();
-                    float h = getHeight();
-                    arrowPath.moveTo(w / 2f, 0);
-                    arrowPath.lineTo(w, h);
-                    arrowPath.lineTo(0, h);
-                    arrowPath.close();
-                    canvas.drawPath(arrowPath, arrowPaint);
-                }
-            };
-
-            // === Bubble container ===
-            LinearLayout bubble = new LinearLayout(ctx);
-            bubble.setOrientation(LinearLayout.VERTICAL);
-            bubble.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(14), AndroidUtilities.dp(16), AndroidUtilities.dp(14));
-            GradientDrawable bubbleBg = new GradientDrawable();
-            bubbleBg.setColor(0xE6222328);
-            bubbleBg.setCornerRadius(AndroidUtilities.dp(14));
-            bubble.setBackground(bubbleBg);
-
-            // Message text
-            TextView msgText = new TextView(ctx);
-            msgText.setText("This is your new header\nIf you don't like it, you can switch it off");
-            msgText.setGravity(Gravity.CENTER);
-            msgText.setTextColor(0xFFFFFFFF);
-            msgText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
-            msgText.setLineSpacing(AndroidUtilities.dp(2), 1f);
-            bubble.addView(msgText, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER, 0, 0, 0, 10));
-
-            // Buttons Row
-            LinearLayout buttonsRow = new LinearLayout(ctx);
-            buttonsRow.setOrientation(LinearLayout.HORIZONTAL);
-
-            // Skip button
-            TextView skipBtn = new TextView(ctx);
-            skipBtn.setText("Skip");
-            skipBtn.setTextColor(0xFFFFFFFF);
-            skipBtn.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
-            skipBtn.setTypeface(AndroidUtilities.bold());
-            skipBtn.setGravity(Gravity.CENTER);
-            skipBtn.setPadding(AndroidUtilities.dp(20), AndroidUtilities.dp(8), AndroidUtilities.dp(20), AndroidUtilities.dp(8));
-            GradientDrawable skipBg = new GradientDrawable();
-            skipBg.setColor(0x20FFFFFF);
-            skipBg.setCornerRadius(AndroidUtilities.dp(20));
-            skipBtn.setBackground(skipBg);
-
-            // Turn off button
-            TextView turnOffBtn = new TextView(ctx);
-            turnOffBtn.setText("Turn off");
-            turnOffBtn.setTextColor(0xFF222328);
-            turnOffBtn.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
-            turnOffBtn.setTypeface(AndroidUtilities.bold());
-            turnOffBtn.setGravity(Gravity.CENTER);
-            turnOffBtn.setPadding(AndroidUtilities.dp(20), AndroidUtilities.dp(8), AndroidUtilities.dp(20), AndroidUtilities.dp(8));
-            GradientDrawable btnBg = new GradientDrawable();
-            btnBg.setColor(0xFFFFFFFF);
-            btnBg.setCornerRadius(AndroidUtilities.dp(20));
-            turnOffBtn.setBackground(btnBg);
-
-            buttonsRow.addView(skipBtn, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f, 0, 0, 8, 0));
-            buttonsRow.addView(turnOffBtn, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.5f, 0, 0, 0, 0));
-
-            bubble.addView(buttonsRow, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER));
-
-            // === Wrapper holding arrow + bubble ===
-            LinearLayout wrapper = new LinearLayout(ctx);
-            wrapper.setOrientation(LinearLayout.VERTICAL);
-            wrapper.setGravity(Gravity.CENTER_HORIZONTAL);
-            wrapper.addView(arrowView, new LinearLayout.LayoutParams(arrowW, arrowH));
-            wrapper.addView(bubble, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER, 0, -1, 0, 0));
-
-            // Measure to get width for centering
-            wrapper.measure(
-                    View.MeasureSpec.makeMeasureSpec(AndroidUtilities.displaySize.x, View.MeasureSpec.AT_MOST),
-                    View.MeasureSpec.makeMeasureSpec(AndroidUtilities.displaySize.y, View.MeasureSpec.AT_MOST)
-            );
-            int wrapperW = wrapper.getMeasuredWidth();
-
-            // Position: centered on pill, just below pill bottom
-            FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
-                    FrameLayout.LayoutParams.WRAP_CONTENT,
-                    FrameLayout.LayoutParams.WRAP_CONTENT
-            );
-            lp.gravity = Gravity.TOP | Gravity.LEFT;
-            float tooltipX = pillCenterX - wrapperW / 2f;
-            // Clamp to screen edges with padding
-            tooltipX = Math.max(AndroidUtilities.dp(12), Math.min(tooltipX, AndroidUtilities.displaySize.x - wrapperW - AndroidUtilities.dp(12)));
-            lp.leftMargin = (int) tooltipX;
-            lp.topMargin = (int) (pillBottom + AndroidUtilities.dp(4));
-
-            // Animate in
-            wrapper.setAlpha(0f);
-            wrapper.setScaleX(0.85f);
-            wrapper.setScaleY(0.85f);
-            wrapper.setPivotX(wrapperW / 2f);
-            wrapper.setPivotY(0);
-
-            contentView.addView(wrapper, lp);
-
-            wrapper.animate()
-                    .alpha(1f)
-                    .scaleX(1f)
-                    .scaleY(1f)
-                    .setDuration(350)
-                    .setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT)
-                    .start();
-
-            Runnable dismiss = () -> {
-                wrapper.animate()
-                        .alpha(0f)
-                        .scaleX(0.85f)
-                        .scaleY(0.85f)
-                        .setDuration(250)
-                        .setInterpolator(CubicBezierInterpolator.EASE_OUT)
-                        .withEndAction(() -> contentView.removeView(wrapper))
-                        .start();
-            };
-
-            skipBtn.setOnClickListener(v3 -> dismiss.run());
-            turnOffBtn.setOnClickListener(v3 -> {
-                NaConfig.INSTANCE.getPillChatTitle().setConfigBool(false);
-                applyPillHeaderAppearance();
-                dismiss.run();
-            });
-        }, 800);
-    }
 
     private void showSummarizeDialog() {
         try {

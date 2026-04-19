@@ -271,8 +271,7 @@
     <string name="EmojiUseDefault">Использовать системные эмодзи</string>
     <string name="Chat">Чаты</string>
     <string name="Appearance">Внешний вид</string>
-    <string name="PillChatTitle">Pill Stack</string>
-    <string name="PillChatTitleDescription">Отображение вертикальной карусели чатов в строке поиска.</string>
+
     <string name="StarFallInChat">Эффект звездопада</string>
     <string name="StarFallInChatDescription">Показывать анимацию падающих звезд в чатах.</string>
     <string name="NekoX">Настройки NekoX</string>

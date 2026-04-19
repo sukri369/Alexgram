@@ -270,8 +270,7 @@
     <string name="EmojiUseDefault">Usa le Emoji di Sistema</string>
     <string name="Chat">Chats</string>
     <string name="Appearance">Aspetto</string>
-    <string name="PillChatTitle">Pill Stack</string>
-    <string name="PillChatTitleDescription">Mostra un carosello verticale di chat nella barra di ricerca.</string>
+
     <string name="StarFallInChat">Effetto Pioggia di Stelle</string>
     <string name="StarFallInChatDescription">Mostra l\'animazione delle stelle cadenti nelle chat.</string>
     <string name="NekoX">Impostazioni NekoX</string>

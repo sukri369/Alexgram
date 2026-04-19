@@ -112,209 +112,12 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
     private int lastWidth = -1;
     private int largerWidth = -1;
 
-    private final Paint pillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Paint pillStrokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final RectF pillRect = new RectF();
-    private final Rect pillBlurRect = new Rect();
-    private final Rect headerBlurRect = new Rect();
-    private final Path pillClipPath = new Path();
-    private final Paint pillHighlightPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private boolean pillTitleOverflowing;
-    private boolean pillSubtitleOverflowing;
-    private long pillOnboardingHighlightStart;
-    private boolean pillOnboardingHighlightRunning;
     private LinearGradient fadeGradient;
     private Paint fadeGradientPaint;
     private Matrix fadeMatrix;
     private final Paint voiceChangerPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
-    private final Runnable pillOnboardingHighlightRunnable = new Runnable() {
-        @Override
-        public void run() {
-            if (!pillOnboardingHighlightRunning) {
-                return;
-            }
-            long elapsed = SystemClock.elapsedRealtime() - pillOnboardingHighlightStart;
-            if (elapsed >= 1850) {
-                pillOnboardingHighlightRunning = false;
-                invalidate();
-                return;
-            }
-            invalidate();
-            AndroidUtilities.runOnUIThread(this, 16);
-        }
-    };
 
-    private boolean isPillChatTitleEnabled() {
-        if (parentFragment == null || !parentFragment.isPillChatHeaderEnabled()) {
-            return false;
-        }
-        ActionBar actionBar = parentFragment.getActionBar();
-        if (actionBar != null && actionBar.isSearchFieldVisible()) {
-            return false;
-        }
-        return true;
-    }
-
-    public void playPillTitleOnboardingHighlight() {
-        if (!isPillChatTitleEnabled()) {
-            return;
-        }
-        pillOnboardingHighlightRunning = true;
-        pillOnboardingHighlightStart = SystemClock.elapsedRealtime();
-        invalidate();
-        AndroidUtilities.runOnUIThread(pillOnboardingHighlightRunnable, 16);
-    }
-
-    public RectF getPillRect() {
-        return pillRect;
-    }
-
-    private int getPillHorizontalPadding() {
-        return dp(32);
-    }
-
-    private int getPillVerticalPadding() {
-        return dp(8);
-    }
-
-    private int getPillMinimumWidth() {
-        return dp(100);
-    }
-
-    private int getPillMinimumContentWidth() {
-        return dp(72);
-    }
-
-    private int getPillMaxWidth(int containerWidth) {
-        return Math.max(getPillMinimumWidth(), containerWidth - getPillCenteredSideSafeInset() * 2);
-    }
-
-    private int getPillMaxContentWidth(int containerWidth) {
-        return Math.max(getPillMinimumContentWidth(), getPillMaxWidth(containerWidth) - getPillHorizontalPadding() * 2);
-    }
-
-    private float getPillTitleContentWidth() {
-        float width = Math.min(titleTextView.getTextWidth(), titleTextView.getMeasuredWidth());
-        Drawable leftDrawable = titleTextView.getLeftDrawable();
-        Drawable rightDrawable = titleTextView.getRightDrawable();
-        Drawable rightDrawable2 = titleTextView.getRightDrawable2();
-        if (leftDrawable != null) {
-            width += Math.max(0, leftDrawable.getIntrinsicWidth()) + dp(4);
-        }
-        if (rightDrawable != null) {
-            width += Math.max(0, rightDrawable.getIntrinsicWidth()) + dp(4);
-        }
-        if (rightDrawable2 != null) {
-            width += Math.max(0, rightDrawable2.getIntrinsicWidth()) + dp(4);
-        }
-        return Math.min(width, titleTextView.getMeasuredWidth());
-    }
-
-    private boolean useDarkPillSurface() {
-        return titleTextView != null && AndroidUtilities.computePerceivedBrightness(titleTextView.getTextColor()) > 0.7f;
-    }
-
-    private float getViewContentWidth(View view) {
-        if (view instanceof SimpleTextView) {
-            SimpleTextView stv = (SimpleTextView) view;
-            float w = stv.getTextWidth();
-            CharSequence text = stv.getText();
-            if (!TextUtils.isEmpty(text)) {
-                w = Math.max(w, stv.getPaint().measureText(text, 0, text.length()));
-            }
-            Drawable ld = stv.getLeftDrawable();
-            Drawable rd = stv.getRightDrawable();
-            Drawable rd2 = stv.getRightDrawable2();
-            if (ld != null) w += ld.getIntrinsicWidth() + dp(4);
-            if (rd != null) w += rd.getIntrinsicWidth() + dp(4);
-            if (rd2 != null) w += rd2.getIntrinsicWidth() + dp(4);
-            return w;
-        } else if (view instanceof AnimatedTextView) {
-            AnimatedTextView atv = (AnimatedTextView) view;
-            float w = 0;
-            CharSequence text = atv.getText();
-            if (!TextUtils.isEmpty(text)) {
-                w = atv.getPaint().measureText(text, 0, text.length());
-            }
-            if (atv.getDrawable() != null) {
-                w = Math.max(w, atv.getDrawable().getCurrentWidth());
-            }
-            return w;
-        }
-        return view.getMeasuredWidth();
-    }
-
-    private float getRawViewContentWidth(View view) {
-        if (view instanceof SimpleTextView) {
-            SimpleTextView stv = (SimpleTextView) view;
-            float w = 0;
-            CharSequence text = stv.getText();
-            if (!TextUtils.isEmpty(text)) {
-                w = stv.getPaint().measureText(text, 0, text.length());
-            }
-            Drawable ld = stv.getLeftDrawable();
-            Drawable rd = stv.getRightDrawable();
-            Drawable rd2 = stv.getRightDrawable2();
-            if (ld != null) w += ld.getIntrinsicWidth() + dp(4);
-            if (rd != null) w += rd.getIntrinsicWidth() + dp(4);
-            if (rd2 != null) w += rd2.getIntrinsicWidth() + dp(4);
-            return w;
-        } else if (view instanceof AnimatedTextView) {
-            AnimatedTextView atv = (AnimatedTextView) view;
-            float w = 0;
-            CharSequence text = atv.getText();
-            if (!TextUtils.isEmpty(text)) {
-                w = atv.getPaint().measureText(text, 0, text.length());
-            }
-            if (atv.getDrawable() != null) {
-                w = Math.max(w, atv.getDrawable().getCurrentWidth());
-            }
-            return w;
-        }
-        return view.getMeasuredWidth();
-    }
-
-    private int getPillCenteredSideSafeInset() {
-        int baseInset = dp(isPreviewMode() ? 70 : 56);
-        int avatarInset = avatarImageView != null && avatarImageView.getVisibility() == VISIBLE
-                ? leftPadding + dp(50)
-                : 0;
-        return Math.max(baseInset, avatarInset);
-    }
-
-    private int getPillCenteredSafeLeft() {
-        return getPillCenteredSideSafeInset();
-    }
-
-    private int getPillCenteredSafeRight() {
-        return getWidth() - getPillCenteredSideSafeInset();
-    }
-
-    private int getPillCenteredTextLeft(int viewWidth) {
-        int safeLeft = getPillCenteredSafeLeft();
-        int safeRight = getPillCenteredSafeRight();
-        int centeredLeft = Math.round((safeLeft + safeRight - viewWidth) / 2f);
-        int minLeft = safeLeft;
-        int maxLeft = Math.max(minLeft, safeRight - viewWidth);
-        return Math.min(maxLeft, Math.max(minLeft, centeredLeft));
-    }
-
-    private int getPillContentLeft(int contentWidth) {
-        int safeLeft = getPillCenteredSafeLeft();
-        int safeRight = getPillCenteredSafeRight();
-        int centeredLeft = Math.round((safeLeft + safeRight - contentWidth) / 2f);
-        int minLeft = safeLeft;
-        int maxLeft = Math.max(minLeft, safeRight - contentWidth);
-        return Math.min(maxLeft, Math.max(minLeft, centeredLeft));
-    }
-
-    private int clampInsidePillContent(int candidateLeft, int viewWidth, int contentWidth) {
-        int contentLeft = getPillContentLeft(contentWidth);
-        int minLeft = contentLeft;
-        int maxLeft = Math.max(minLeft, contentLeft + contentWidth - viewWidth);
-        return Math.min(maxLeft, Math.max(minLeft, candidateLeft));
-    }
 
 
     private AnimatorSet titleAnimation;
@@ -719,157 +522,14 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
     }
 
     @Override
+    @Override
     protected void dispatchDraw(Canvas canvas) {
         canvas.save();
         final float s = bounce.getScale(.02f);
         canvas.scale(s, s, getWidth() / 2f, getHeight() / 2f);
 
         if (NaConfig.getVoiceChangerEffectValue() != 0) {
-            float x, y;
-            if (isPillChatTitleEnabled()) {
-                x = pillRect.right - dp(12);
-                y = pillRect.top + dp(12);
-            } else {
-                x = titleTextView.getRight() + dp(4);
-                y = titleTextView.getTop() + dp(12);
-            }
-            canvas.drawCircle(x, y, dp(3), voiceChangerPaint);
-        }
-
-        if (isPillChatTitleEnabled() && titleTextView != null) {
-            int actionBarHeight = ActionBar.getCurrentActionBarHeight();
-            int statusBarH = (Build.VERSION.SDK_INT >= 21 && occupyStatusBar ? AndroidUtilities.statusBarHeight : 0);
-
-            // Adjust viewTop to be lower if it's too high up into status bar
-            int viewTop = (actionBarHeight - dp(42)) / 2 + statusBarH;
-            if (statusBarH > 0 && viewTop < statusBarH + dp(8)) {
-                viewTop = statusBarH + dp(8);
-            }
-
-            float titleContentW = getViewContentWidth(titleTextView);
-            View subView = getSubtitleTextView();
-            float subtitleContentW = subView != null && subView.getVisibility() != GONE ? getViewContentWidth(subView) : 0;
-            float contentW = Math.max(titleContentW, subtitleContentW);
-
-            float paddingH = getPillHorizontalPadding();
-            float paddingV = getPillVerticalPadding();
-            
-            float avatarW = (avatarImageView.getVisibility() == VISIBLE && !isCentered() ? dp(42) + dp(8) : 0);
-            float pillW = contentW + paddingH * 2 + (isCentered() ? dp(16) : 0); // Add safety margin for centering
-
-            final float hardLeft = isCentered() ? getPillCenteredSafeLeft() : dp(8);
-            final float hardRight = isCentered() ? getPillCenteredSafeRight() : getWidth() - dp(8);
-            float maxPillW = hardRight - hardLeft;
-            pillW = Math.min(pillW, maxPillW);
-            pillW = Math.max(pillW, getPillMinimumWidth());
-
-            float cx;
-            if (isCentered()) {
-                cx = getWidth() / 2f;
-            } else {
-                cx = titleTextView.getX() + titleTextView.getMeasuredWidth() / 2f;
-            }
-
-            float pillLeft = cx - pillW / 2f;
-            float pillRight = cx + pillW / 2f;
-            if (pillLeft < hardLeft) {
-                pillLeft = hardLeft;
-                pillRight = pillLeft + pillW;
-            }
-            if (pillRight > hardRight) {
-                pillRight = hardRight;
-                pillLeft = pillRight - pillW;
-            }
-
-            float pillTop = viewTop + dp(1) - paddingV;
-            float pillBottom;
-            if (subView != null && subView.getVisibility() != GONE) {
-                pillBottom = viewTop + dp(24) + dp(16) + paddingV;
-            } else {
-                pillBottom = viewTop + dp(24) + paddingV;
-            }
-            pillRect.set(pillLeft, pillTop, pillRight, pillBottom);
-
-            boolean darkPillSurface = useDarkPillSurface();
-            int pillBgColor = getThemedColor(Theme.key_actionBarDefault);
-            pillPaint.setColor((pillBgColor & 0x00FFFFFF) | (darkPillSurface ? 0xB2000000 : 0xCF000000));
-            pillStrokePaint.setStyle(Paint.Style.STROKE);
-            pillStrokePaint.setStrokeWidth(dpf2(0.66f));
-            pillStrokePaint.setColor(darkPillSurface ? 0x20FFFFFF : 0x14000000);
-            float radius = pillRect.height() / 2f;
-
-            boolean drewBlur = false;
-            if (parentFragment != null && parentFragment.getContentView() != null) {
-                // DECISIVE FIX: Use absolute location to hit the status bar exactly
-                int[] loc = new int[2];
-                getLocationOnScreen(loc);
-                int viewY = loc[1]; 
-                float blurY = viewY; 
-
-                // Draw full-width header blur
-                if (getParent() instanceof View) {
-                    View parentView = (View) getParent();
-                    int pWidth = parentView.getWidth();
-                    if (parentFragment.getActionBar() != null) {
-                        pWidth = parentFragment.getActionBar().getMeasuredWidth();
-                    }
-                    
-                    int[] screenLoc = new int[2];
-                    getLocationOnScreen(screenLoc);
-                    int[] parentLoc = new int[2];
-                    parentFragment.getContentView().getLocationOnScreen(parentLoc);
-                    
-                    // Root coordinate system: (0,0) is screen top-left.
-                    // We want to blur the area from Y=0 to Y=statusBarHeight in screen space.
-                    // In ChatAvatarContainer's coordinate system, screen Y=0 is at -screenLoc[1].
-                    int statusBarHeight = occupyStatusBar ? AndroidUtilities.statusBarHeight : 0;
-                    headerBlurRect.set(-screenLoc[0], -screenLoc[1], pWidth - screenLoc[0], statusBarHeight - screenLoc[1]);
-                    
-                    if (!headerBlurRect.isEmpty() && statusBarHeight > 0) {
-                        pillPaint.setColor(0);
-                        final int glassBlurAlpha = darkPillSurface ? 60 : 25; 
-                        final int glassSourceAlpha = 245; 
-                        
-                        // We pass the layout Y of this view relative to the content view for parallax alignment
-                        int relativeY = screenLoc[1] - parentLoc[1];
-                        parentFragment.getContentView().drawBlurRect(canvas, relativeY, headerBlurRect, pillPaint, true, glassBlurAlpha, glassSourceAlpha);
-                    }
-                }
-
-
-                // Draw pill background ON TOP
-                if (!pillRect.isEmpty()) {
-                    pillBlurRect.set((int) pillRect.left, (int) pillRect.top, (int) Math.ceil(pillRect.right), (int) Math.ceil(pillRect.bottom));
-                    pillClipPath.rewind();
-                    pillClipPath.addRoundRect(pillRect, radius, radius, Path.Direction.CW);
-                    canvas.save();
-                    canvas.clipPath(pillClipPath);
-                    pillPaint.setColor(pillBgColor | 0xFF000000);
-                    final int pillOverlayAlpha = darkPillSurface ? 180 : 252;
-                    final int pillSourceAlpha = 255;
-                    parentFragment.getContentView().drawBlurRect(canvas, blurY, pillBlurRect, pillPaint, true, pillOverlayAlpha, pillSourceAlpha);
-                    canvas.restore();
-                    drewBlur = true;
-                }
-            }
-            if (!drewBlur) {
-                pillPaint.setColor((pillBgColor & 0x00FFFFFF) | (darkPillSurface ? 0x28000000 : 0x1E000000));
-                canvas.drawRoundRect(pillRect, radius, radius, pillPaint);
-            }
-            canvas.drawRoundRect(pillRect, radius, radius, pillStrokePaint);
-
-            if (pillOnboardingHighlightRunning) {
-                float elapsed = SystemClock.elapsedRealtime() - pillOnboardingHighlightStart;
-                float t = Math.min(1f, elapsed / 1850f);
-                float pulse = (float) ((Math.sin(t * Math.PI * 3.0f) + 1f) * 0.5f);
-                float alpha = (1f - t) * (0.22f + 0.5f * pulse);
-                float extra = dpf2(1.25f + 2.5f * pulse);
-                pillHighlightPaint.setStyle(Paint.Style.STROKE);
-                pillHighlightPaint.setStrokeWidth(extra);
-                pillHighlightPaint.setColor(darkPillSurface ? 0xFFFFFFFF : 0xFF3C76FF);
-                pillHighlightPaint.setAlpha((int) (255 * alpha));
-                canvas.drawRoundRect(pillRect, radius, radius, pillHighlightPaint);
-            }
+            canvas.drawCircle(titleTextView.getRight() + dp(4), titleTextView.getTop() + dp(12), dp(3), voiceChangerPaint);
         }
 
         super.dispatchDraw(canvas);
@@ -878,20 +538,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
 
     @Override
     protected boolean drawChild(@NonNull Canvas canvas, View child, long drawingTime) {
-        SimpleTextView titleTextLargerCopyView = this.titleTextLargerCopyView.get();
-        SimpleTextView subtitleTextLargerCopyView = this.subtitleTextLargerCopyView.get();
-        boolean isPillTextChild = child == titleTextView || child == subtitleTextView || child == animatedSubtitleTextView
-                || child == titleTextLargerCopyView || child == subtitleTextLargerCopyView;
-        if (isPillChatTitleEnabled() && isCentered() && isPillTextChild && !pillRect.isEmpty()) {
-            float radius = pillRect.height() / 2f;
-            pillClipPath.rewind();
-            pillClipPath.addRoundRect(pillRect, radius, radius, Path.Direction.CW);
-            canvas.save();
-            canvas.clipPath(pillClipPath);
-            boolean drew = super.drawChild(canvas, child, drawingTime);
-            canvas.restore();
-            return drew;
-        }
+        boolean drew = super.drawChild(canvas, child, drawingTime);
         if (child == avatarImageView && timeItem != null && timeItem.getVisibility() == VISIBLE) {
             AndroidUtilities.rectTmp.set(child.getX(), child.getY(), child.getX() + child.getWidth(), child.getY() + child.getHeight());
             canvas.saveLayer(AndroidUtilities.rectTmp, null);
@@ -914,7 +561,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
     }
 
     protected boolean isCentered() {
-        return isPillChatTitleEnabled();
+        return NaConfig.INSTANCE.getCenterActionBarTitle().Bool();
     }
 
     protected boolean isPreviewMode() {
@@ -1140,80 +787,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         invalidate();
     }
 
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        boolean pillCentered = isPillChatTitleEnabled() && isCentered();
-        if (pillCentered) {
-            titleTextView.setGravity(Gravity.CENTER_HORIZONTAL);
-            titleTextView.setEllipsizeByGradient(false);
-            titleTextView.setEllipsizeByGradientCentered(false);
-            titleTextView.setEllipsizeMiddle(false);
-            titleTextView.setScrollNonFitText(false);
-            if (subtitleTextView != null) subtitleTextView.setGravity(Gravity.CENTER_HORIZONTAL);
-            if (subtitleTextView != null) subtitleTextView.setEllipsizeByGradient(false);
-            if (subtitleTextView != null) subtitleTextView.setEllipsizeByGradientCentered(false);
-            if (subtitleTextView != null) subtitleTextView.setEllipsizeMiddle(false);
-            if (subtitleTextView != null) subtitleTextView.setScrollNonFitText(false);
-            if (animatedSubtitleTextView != null) {
-                animatedSubtitleTextView.setGravity(Gravity.CENTER_HORIZONTAL);
-                animatedSubtitleTextView.setEllipsizeByGradient(false);
-                animatedSubtitleTextView.setEllipsizeByGradientCentered(false);
-                animatedSubtitleTextView.setEllipsizeMiddle(false);
-            }
-
-            int width = MeasureSpec.getSize(widthMeasureSpec);
-            int height = MeasureSpec.getSize(heightMeasureSpec);
-
-            // Calculate content-based width for the pill
-            float titleContentW = getViewContentWidth(titleTextView);
-            View subView = getSubtitleTextView();
-            float subtitleContentW = subView != null && subView.getVisibility() != GONE ? getViewContentWidth(subView) : 0;
-            float contentW = Math.max(titleContentW, subtitleContentW);
-            
-            int paddingH = getPillHorizontalPadding();
-            int avatarW = 0; // Avatar is on the extreme right, not impacting pill width directly now
-            
-            // Re-check for overflowing alignment
-            float availableWidthForText = Math.max(getPillMinimumContentWidth(), width - paddingH * 2 - dp(64));
-            pillTitleOverflowing = contentW > availableWidthForText + 0.5f;
-
-            if (pillTitleOverflowing) {
-                titleTextView.setGravity(Gravity.LEFT);
-                titleTextView.setEllipsizeByGradient(true);
-                if (subtitleTextView != null) {
-                    subtitleTextView.setGravity(Gravity.LEFT);
-                    subtitleTextView.setEllipsizeByGradient(true);
-                } else if (animatedSubtitleTextView != null) {
-                    animatedSubtitleTextView.setGravity(Gravity.LEFT);
-                    animatedSubtitleTextView.setEllipsizeByGradient(true);
-                }
-            } else {
-                titleTextView.setGravity(Gravity.CENTER_HORIZONTAL);
-                titleTextView.setEllipsizeByGradient(false);
-                if (subtitleTextView != null) {
-                    subtitleTextView.setGravity(Gravity.CENTER_HORIZONTAL);
-                    subtitleTextView.setEllipsizeByGradient(false);
-                } else if (animatedSubtitleTextView != null) {
-                    animatedSubtitleTextView.setGravity(Gravity.CENTER_HORIZONTAL);
-                    animatedSubtitleTextView.setEllipsizeByGradient(false);
-                }
-            }
-
-            // Now measure children
-            avatarImageView.measure(MeasureSpec.makeMeasureSpec(dp(42), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(dp(42), MeasureSpec.EXACTLY));
-            int textMaxWidth = (int) availableWidthForText;
-            titleTextView.measure(MeasureSpec.makeMeasureSpec(textMaxWidth, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(height, MeasureSpec.AT_MOST));
-            if (subView != null) {
-                subView.measure(MeasureSpec.makeMeasureSpec(textMaxWidth, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(height, MeasureSpec.AT_MOST));
-            }
-            if (timeItem != null) {
-                timeItem.measure(MeasureSpec.makeMeasureSpec(dp(34), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(dp(34), MeasureSpec.EXACTLY));
-            }
-            setMeasuredDimension(width, height);
-            lastWidth = width;
-        } else {
-            pillTitleOverflowing = false;
-            pillSubtitleOverflowing = false;
+        {
             titleTextView.setEllipsizeByGradient(true);
             titleTextView.setEllipsizeByGradientCentered(false);
             titleTextView.setEllipsizeMiddle(false);
@@ -1344,15 +918,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             l += dp(AndroidUtilities.isTablet() ? 80 : 72) / 2;
         }
 
-        if (isPillChatTitleEnabled() && isCentered()) {
-            int pillContentWidth = Math.max(titleTextView.getMeasuredWidth(), getSubtitleTextView() != null ? getSubtitleTextView().getMeasuredWidth() : 0);
-            boolean titleLeftAligned = pillTitleOverflowing;
-            if (titleLeftAligned) {
-                l = getPillContentLeft(pillContentWidth);
-            } else {
-                l = clampInsidePillContent(getPillCenteredTextLeft(titleTextView.getMeasuredWidth()), titleTextView.getMeasuredWidth(), pillContentWidth);
-            }
-        }
+
 
         SimpleTextView titleTextLargerCopyView = this.titleTextLargerCopyView.get();
         if (getSubtitleTextView().getVisibility() != GONE) {
@@ -1385,41 +951,16 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         }
         if (subtitleTextView != null) {
             int subtitleLeft = l;
-            if (isPillChatTitleEnabled() && isCentered()) {
-                int pillContentWidth = Math.max(titleTextView.getMeasuredWidth(), subtitleTextView.getMeasuredWidth());
-                boolean subtitleIsLeftAligned = pillSubtitleOverflowing;
-                if (subtitleIsLeftAligned) {
-                    subtitleLeft = getPillContentLeft(pillContentWidth);
-                } else {
-                    subtitleLeft = clampInsidePillContent(getPillCenteredTextLeft(subtitleTextView.getMeasuredWidth()), subtitleTextView.getMeasuredWidth(), pillContentWidth);
-                }
-            }
+
             subtitleTextView.layout(subtitleLeft, viewTop + dp(24), subtitleLeft + subtitleTextView.getMeasuredWidth(), viewTop + subtitleTextView.getTextHeight() + dp(24));
         } else if (animatedSubtitleTextView != null) {
             int subtitleLeft = l;
-            if (isPillChatTitleEnabled() && isCentered()) {
-                int pillContentWidth = Math.max(titleTextView.getMeasuredWidth(), animatedSubtitleTextView.getMeasuredWidth());
-                boolean subtitleIsLeftAligned = pillSubtitleOverflowing;
-                if (subtitleIsLeftAligned) {
-                    subtitleLeft = getPillContentLeft(pillContentWidth);
-                } else {
-                    subtitleLeft = clampInsidePillContent(getPillCenteredTextLeft(animatedSubtitleTextView.getMeasuredWidth()), animatedSubtitleTextView.getMeasuredWidth(), pillContentWidth);
-                }
-            }
             animatedSubtitleTextView.layout(subtitleLeft, viewTop + dp(24), subtitleLeft + animatedSubtitleTextView.getMeasuredWidth(), viewTop + animatedSubtitleTextView.getTextHeight() + dp(24));
         }
         SimpleTextView subtitleTextLargerCopyView = this.subtitleTextLargerCopyView.get();
         if (subtitleTextLargerCopyView != null) {
             int subtitleCopyLeft = l;
-            if (isPillChatTitleEnabled() && isCentered()) {
-                int pillContentWidth = Math.max(titleTextView.getMeasuredWidth(), subtitleTextLargerCopyView.getMeasuredWidth());
-                boolean subtitleCopyIsLeftAligned = pillSubtitleOverflowing;
-                if (subtitleCopyIsLeftAligned) {
-                    subtitleCopyLeft = getPillContentLeft(pillContentWidth);
-                } else {
-                    subtitleCopyLeft = clampInsidePillContent(getPillCenteredTextLeft(subtitleTextLargerCopyView.getMeasuredWidth()), subtitleTextLargerCopyView.getMeasuredWidth(), pillContentWidth);
-                }
-            }
+
             subtitleTextLargerCopyView.layout(subtitleCopyLeft, viewTop + dp(24), subtitleCopyLeft + subtitleTextLargerCopyView.getMeasuredWidth(), viewTop + subtitleTextLargerCopyView.getTextHeight() + dp(24));
         }
     }

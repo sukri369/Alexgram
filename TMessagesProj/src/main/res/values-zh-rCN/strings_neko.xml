@@ -272,8 +272,7 @@
     <string name="EmojiUseDefault">使用系统 Emoji</string>
     <string name="Chat">聊天</string>
     <string name="Appearance">外观</string>
-    <string name="PillChatTitle">Pill Stack</string>
-    <string name="PillChatTitleDescription">在搜索栏中显示垂直聊天的轮播。</string>
+
     <string name="StarFallInChat">流星效果</string>
     <string name="StarFallInChatDescription">在聊天中显示流星动画。</string>
     <string name="NekoX">NekoX 设置</string>

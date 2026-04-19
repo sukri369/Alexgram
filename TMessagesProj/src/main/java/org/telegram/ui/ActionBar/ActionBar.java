@@ -1327,14 +1327,8 @@ public class ActionBar extends FrameLayout implements Theme.Colorable {
 
         int textLeft;
         if (backButtonImageView != null && backButtonImageView.getVisibility() != GONE) {
-            if (NaConfig.INSTANCE.getPillChatTitle().Bool()) {
-                ViewGroup.LayoutParams lp = backButtonImageView.getLayoutParams();
-                backButtonImageView.measure(MeasureSpec.makeMeasureSpec(lp.width, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(lp.height, MeasureSpec.EXACTLY));
-                textLeft = dp(AndroidUtilities.isTablet() ? 80 : 72); // Keep standard title offset
-            } else {
-                backButtonImageView.measure(MeasureSpec.makeMeasureSpec(dp(54), MeasureSpec.EXACTLY), actionBarHeightSpec);
-                textLeft = dp(AndroidUtilities.isTablet() ? 80 : 72);
-            }
+            backButtonImageView.measure(MeasureSpec.makeMeasureSpec(dp(54), MeasureSpec.EXACTLY), actionBarHeightSpec);
+            textLeft = dp(AndroidUtilities.isTablet() ? 80 : 72);
         } else {
             textLeft = dp(AndroidUtilities.isTablet() ? 26 : 18);
         }
@@ -1443,14 +1437,7 @@ public class ActionBar extends FrameLayout implements Theme.Colorable {
 
         int textLeft;
         if (backButtonImageView != null && backButtonImageView.getVisibility() != GONE) {
-            if (NaConfig.INSTANCE.getPillChatTitle().Bool()) {
-                FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) backButtonImageView.getLayoutParams();
-                int actionBarHeight = getMeasuredHeight() - additionalTop;
-                int y = additionalTop + (actionBarHeight - backButtonImageView.getMeasuredHeight()) / 2;
-                backButtonImageView.layout(lp.leftMargin, y, lp.leftMargin + backButtonImageView.getMeasuredWidth(), y + backButtonImageView.getMeasuredHeight());
-            } else {
-                backButtonImageView.layout(0, additionalTop, backButtonImageView.getMeasuredWidth(), additionalTop + backButtonImageView.getMeasuredHeight());
-            }
+            backButtonImageView.layout(0, additionalTop, backButtonImageView.getMeasuredWidth(), additionalTop + backButtonImageView.getMeasuredHeight());
             textLeft = dp(AndroidUtilities.isTablet() ? 80 : 72);
         } else {
             textLeft = dp(AndroidUtilities.isTablet() ? 26 : 18);
@@ -2295,7 +2282,7 @@ public class ActionBar extends FrameLayout implements Theme.Colorable {
     }
 
     private boolean isCentered() {
-        return (NaConfig.INSTANCE.getCenterActionBarTitle().Bool() && NaConfig.INSTANCE.getCenterActionBarTitleType().Int() != 3) || NaConfig.INSTANCE.getPillChatTitle().Bool();
+        return (NaConfig.INSTANCE.getCenterActionBarTitle().Bool() && NaConfig.INSTANCE.getCenterActionBarTitleType().Int() != 3);
     }
 
     // --- Spring Animation ---

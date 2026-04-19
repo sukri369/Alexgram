@@ -337,24 +337,14 @@ object NaConfig {
             ConfigItem.configTypeBool,
             false
         )
-    val pillChatTitle =
-        addConfig(
-            "PillChatTitle",
-            ConfigItem.configTypeBool,
-            true
-        )
+
     val starFallInChat =
         addConfig(
             "StarFallInChat",
             ConfigItem.configTypeBool,
             false
         )
-    val pillChatTitleOnboardingShown =
-        addConfig(
-            "PillChatTitleOnboardingShown",
-            ConfigItem.configTypeBool,
-            false
-        )
+
     val useLocalQuoteColorData =
         addConfig(
             "useLocalQuoteColorData",
