@@ -52,7 +52,7 @@ import java.util.Set;
 import tw.nekomimi.nekogram.config.ConfigItem;
 import xyz.nextalone.nagram.NaConfig;
 
-public class ChatAnimeAssistantView extends FrameLayout implements SizeNotifierFrameLayout.SizeNotifierFrameLayoutDelegate {
+public class ChatAnimeAssistantView extends FrameLayout {
 
     public interface AssistantRequestCallback {
         void onSuccess(String response);
@@ -157,10 +157,6 @@ public class ChatAnimeAssistantView extends FrameLayout implements SizeNotifierF
         this.autoReplyUnsupportedMessage = TextUtils.isEmpty(autoReplyUnsupportedMessage) ? "This feature only works in chats." : autoReplyUnsupportedMessage;
         autoReplyEnabled = autoReplySupported && preferences.getBoolean(getAutoReplyPreferenceKey(), false);
         this.blurParent = blurParent;
-        if (blurParent != null) {
-            blurParent.addDelegate(this);
-            this.keyboardShiftY = -blurParent.getKeyboardHeight();
-        }
 
         panelScrim = new View(context);
         panelScrim.setBackgroundColor(0x33000000);
@@ -370,21 +366,7 @@ public class ChatAnimeAssistantView extends FrameLayout implements SizeNotifierF
     }
 
     private void setupKeyboardListener() {
-        // Now handled by onSizeChanged() which is a delegate of SizeNotifierFrameLayout
-    }
-
-    @Override
-    public void onSizeChanged(int keyboardHeight, boolean isWidthGreater) {
-        float oldShift = keyboardShiftY;
-        this.keyboardShiftY = -keyboardHeight;
-        
-        if (oldShift != keyboardShiftY) {
-            if (panelOpened) {
-                applyLinkedPositions(true);
-            } else {
-                snapToBounds();
-            }
-        }
+        // Now handled by Activity-level translation in ChatActivity/DialogsActivity
     }
 
     private void setupPanelDragging() {
@@ -445,7 +427,7 @@ public class ChatAnimeAssistantView extends FrameLayout implements SizeNotifierF
 
     private void applyLinkedPositions(boolean animated) {
         float panelTx = panelBaseTx;
-        float panelTy = panelBaseTy + keyboardShiftY;
+        float panelTy = panelBaseTy;
         float panelLeft = panelContainer.getLeft() + panelTx;
         float panelTop = panelContainer.getTop() + panelTy;
         float characterTx = panelLeft + getCharacterLinkedOffsetX() - characterContainer.getLeft();
@@ -604,9 +586,6 @@ public class ChatAnimeAssistantView extends FrameLayout implements SizeNotifierF
     }
 
     public void onDestroy() {
-        if (blurParent != null) {
-            blurParent.removeDelegate(this);
-        }
         paused = true;
         removeCallbacks(frameRunnable);
         if (typingRunnable != null) {
@@ -635,9 +614,8 @@ public class ChatAnimeAssistantView extends FrameLayout implements SizeNotifierF
     }
 
     private void snapToBounds() {
-        int bottomOffset = (int) -keyboardShiftY + AndroidUtilities.dp(16);
         final float maxX = Math.max(0, getWidth() - characterContainer.getWidth() - AndroidUtilities.dp(4));
-        final float maxY = Math.max(0, getHeight() - characterContainer.getHeight() - bottomOffset);
+        final float maxY = Math.max(0, getHeight() - characterContainer.getHeight() - AndroidUtilities.dp(16));
         final float targetX = characterContainer.getX() + characterContainer.getTranslationX() > getWidth() * 0.5f ? maxX - characterContainer.getLeft() : -characterContainer.getLeft();
         final float clampedY = Math.max(-characterContainer.getTop(), Math.min(maxY - characterContainer.getTop(), characterContainer.getTranslationY()));
         characterContainer.animate()

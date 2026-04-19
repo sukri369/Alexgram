@@ -11665,6 +11665,21 @@ public class ChatActivity extends BaseFragment implements
                 - dp(ChatInputViewsContainer.INPUT_BUBBLE_BOTTOM + 7);
             suggestEmojiPanel.setTranslationY(baseTranslationY2);
         }
+
+        if (chatAnimeAssistantView != null) {
+            float baseTranslationY2 = -windowInsetsStateHolder.getAnimatedMaxBottomInset()
+                - (hideBottomForGesture ? 0 : chatInputViewsContainer.getInputBubbleHeight())
+                - getTopicTabsSideSize(TopicsTabsView.Position.BOTTOM)
+                - dp(ChatInputViewsContainer.INPUT_BUBBLE_BOTTOM + 4);
+            chatAnimeAssistantView.setTranslationY(baseTranslationY2);
+        }
+        if (miniChatAssistantView != null) {
+            float baseTranslationY2 = -windowInsetsStateHolder.getAnimatedMaxBottomInset()
+                - (hideBottomForGesture ? 0 : chatInputViewsContainer.getInputBubbleHeight())
+                - getTopicTabsSideSize(TopicsTabsView.Position.BOTTOM)
+                - dp(ChatInputViewsContainer.INPUT_BUBBLE_BOTTOM + 4);
+            miniChatAssistantView.setTranslationY(baseTranslationY2);
+        }
     }
 
     private void updateReactionsMentionButton(boolean animated) {

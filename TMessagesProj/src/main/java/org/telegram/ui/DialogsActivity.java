@@ -8980,6 +8980,12 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 storyHint.setTranslationY(baseTranslationY - dp(52));
             }
         }
+        if (chatAnimeAssistantView != null) {
+            chatAnimeAssistantView.setTranslationY(baseTranslationY);
+        }
+        if (miniChatAssistantView != null) {
+            miniChatAssistantView.setTranslationY(baseTranslationY);
+        }
     }
 
     public boolean storiesEnabled = !NaConfig.INSTANCE.getDisableStories().Bool();
