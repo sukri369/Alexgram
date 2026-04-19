@@ -81,7 +81,9 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
     protected int dividerColor;
 
     protected BlurredRecyclerView createListView(Context context) {
-        return new BlurredRecyclerView(context);
+        BlurredRecyclerView rv = new BlurredRecyclerView(context);
+        rv.disableBlurTopPadding = true;
+        return rv;
     }
 
     @Override

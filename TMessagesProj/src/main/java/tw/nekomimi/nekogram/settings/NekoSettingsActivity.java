@@ -238,6 +238,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         actionBar.getTitleTextView().setAlpha(0.0f);
         
         listView = new org.telegram.ui.Components.BlurredRecyclerView(context);
+        listView.disableBlurTopPadding = true;
         listView.setLayoutManager(layoutManager = new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
         listView.setVerticalScrollBarEnabled(false);
         listView.setPadding(0, AndroidUtilities.dp(40) + (AndroidUtilities.isTablet() ? 0 : AndroidUtilities.statusBarHeight), 0, AndroidUtilities.dp(40));

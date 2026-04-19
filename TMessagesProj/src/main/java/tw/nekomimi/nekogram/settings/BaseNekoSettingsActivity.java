@@ -171,6 +171,7 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
         }
 
         listView = new BlurredRecyclerView(context);
+        listView.disableBlurTopPadding = true;
         listView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
