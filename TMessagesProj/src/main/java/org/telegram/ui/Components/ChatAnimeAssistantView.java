@@ -52,7 +52,7 @@ import java.util.Set;
 import tw.nekomimi.nekogram.config.ConfigItem;
 import xyz.nextalone.nagram.NaConfig;
 
-public class ChatAnimeAssistantView extends FrameLayout {
+public class ChatAnimeAssistantView extends FrameLayout implements SizeNotifierFrameLayout.SizeNotifierFrameLayoutDelegate {
 
     public interface AssistantRequestCallback {
         void onSuccess(String response);
@@ -131,7 +131,8 @@ public class ChatAnimeAssistantView extends FrameLayout {
     private Runnable typingRunnable;
     private final Rect visibleFrame = new Rect();
     private GestureDetector gestureDetector;
-    private MiniChatAssistantView miniChatAssistantView;
+    private MiniChatAssistantView miniView;
+    private SizeNotifierFrameLayout blurParent;
 
     public ChatAnimeAssistantView(@NonNull Context context, @Nullable SizeNotifierFrameLayout blurParent, long dialogId) {
         this(context, blurParent, dialogId, true, true, "This feature only works in chats.", 92, 86);
@@ -155,6 +156,10 @@ public class ChatAnimeAssistantView extends FrameLayout {
         this.autoReplySupported = autoReplySupported;
         this.autoReplyUnsupportedMessage = TextUtils.isEmpty(autoReplyUnsupportedMessage) ? "This feature only works in chats." : autoReplyUnsupportedMessage;
         autoReplyEnabled = autoReplySupported && preferences.getBoolean(getAutoReplyPreferenceKey(), false);
+        this.blurParent = blurParent;
+        if (blurParent != null) {
+            blurParent.addDelegate(this);
+        }
 
         panelScrim = new View(context);
         panelScrim.setBackgroundColor(0x33000000);
@@ -364,8 +369,21 @@ public class ChatAnimeAssistantView extends FrameLayout {
     }
 
     private void setupKeyboardListener() {
-        // Disabled internal keyboard listener: ChatActivity now translates the entire ChatAnimeAssistantView 
-        // using updatePagedownButtonsPosition(), meaning it perfectly tracks the keyboard natively.
+        // Now handled by onSizeChanged() which is a delegate of SizeNotifierFrameLayout
+    }
+
+    @Override
+    public void onSizeChanged(int keyboardHeight, boolean isWidthGreater) {
+        float oldShift = keyboardShiftY;
+        this.keyboardShiftY = -keyboardHeight;
+        
+        if (oldShift != keyboardShiftY) {
+            if (panelOpened) {
+                applyLinkedPositions(true);
+            } else {
+                snapToBounds();
+            }
+        }
     }
 
     private void setupPanelDragging() {
@@ -440,6 +458,10 @@ public class ChatAnimeAssistantView extends FrameLayout {
             panelContainer.setTranslationY(panelTy);
             characterContainer.setTranslationX(characterTx);
             characterContainer.setTranslationY(characterTy);
+        }
+        if (miniView != null) {
+            miniView.setTranslationX(characterContainer.getTranslationX());
+            miniView.setTranslationY(characterContainer.getTranslationY());
         }
     }
 
@@ -581,6 +603,10 @@ public class ChatAnimeAssistantView extends FrameLayout {
     }
 
     public void onDestroy() {
+        if (blurParent != null) {
+            blurParent.removeDelegate(this);
+        }
+        paused = true;
         removeCallbacks(frameRunnable);
         if (typingRunnable != null) {
             AndroidUtilities.cancelRunOnUIThread(typingRunnable);
@@ -608,13 +634,20 @@ public class ChatAnimeAssistantView extends FrameLayout {
     }
 
     private void snapToBounds() {
+        int bottomOffset = (int) -keyboardShiftY + AndroidUtilities.dp(16);
         final float maxX = Math.max(0, getWidth() - characterContainer.getWidth() - AndroidUtilities.dp(4));
-        final float maxY = Math.max(0, getHeight() - characterContainer.getHeight() - AndroidUtilities.dp(16));
+        final float maxY = Math.max(0, getHeight() - characterContainer.getHeight() - bottomOffset);
         final float targetX = characterContainer.getX() + characterContainer.getTranslationX() > getWidth() * 0.5f ? maxX - characterContainer.getLeft() : -characterContainer.getLeft();
         final float clampedY = Math.max(-characterContainer.getTop(), Math.min(maxY - characterContainer.getTop(), characterContainer.getTranslationY()));
         characterContainer.animate()
                 .translationX(targetX)
                 .translationY(clampedY)
+                .setUpdateListener(animation -> {
+                    if (miniView != null) {
+                        miniView.setTranslationX(characterContainer.getTranslationX());
+                        miniView.setTranslationY(characterContainer.getTranslationY());
+                    }
+                })
                 .setDuration(280)
                 .setInterpolator(org.telegram.ui.Components.CubicBezierInterpolator.EASE_OUT_QUINT)
                 .start();
@@ -643,7 +676,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
     }
 
     public void setMiniView(MiniChatAssistantView miniView) {
-        this.miniChatAssistantView = miniView;
+        this.miniView = miniView;
     }
 
     private void hidePanel() {
