@@ -306,13 +306,13 @@ public class UpdateAppAlertDialog extends BottomSheet {
             textPaint.setTypeface(AndroidUtilities.bold());
             textPaint.setTextSize(AndroidUtilities.dp(26));
             textPaint.setShadowLayer(AndroidUtilities.dp(8), 0, AndroidUtilities.dp(2), 0x40000000);
-            canvas.drawText("Alexgram", w / 2f, h * 0.32f, textPaint);
+            canvas.drawText("Alexgram", w / 2f, h * 0.37f, textPaint);
             textPaint.clearShadowLayer();
 
             textPaint.setTextSize(AndroidUtilities.dp(12.5f));
             textPaint.setTypeface(Typeface.DEFAULT);
             textPaint.setColor(0xCCFFFFFF);
-            canvas.drawText("Update Available", w / 2f, h * 0.47f, textPaint);
+            canvas.drawText("Update Available", w / 2f, h * 0.54f, textPaint);
 
             String vLabel = "v " + appUpdate.version;
             textPaint.setTextSize(AndroidUtilities.dp(13));
@@ -321,7 +321,7 @@ public class UpdateAppAlertDialog extends BottomSheet {
             float tw = textPaint.measureText(vLabel);
             float padH = AndroidUtilities.dp(14), padV = AndroidUtilities.dp(6);
             float bw = tw + padH * 2, bh = AndroidUtilities.dp(13) + padV * 2;
-            float cx = w / 2f, cy = h * 0.70f, br = bh / 2f;
+            float cx = w / 2f, cy = h * 0.775f, br = bh / 2f;
             badgeRect.set(cx - bw/2, cy - bh/2, cx + bw/2, cy + bh/2);
 
             float glowR = bw * 0.55f * (1f + pulseProgress * 0.35f);
