@@ -159,6 +159,7 @@ public class ChatAnimeAssistantView extends FrameLayout implements SizeNotifierF
         this.blurParent = blurParent;
         if (blurParent != null) {
             blurParent.addDelegate(this);
+            this.keyboardShiftY = -blurParent.getKeyboardHeight();
         }
 
         panelScrim = new View(context);
@@ -661,7 +662,6 @@ public class ChatAnimeAssistantView extends FrameLayout implements SizeNotifierF
             return;
         }
         panelOpened = true;
-        keyboardShiftY = 0f;
         panelBaseTx = panelContainer.getTranslationX();
         panelBaseTy = panelContainer.getTranslationY();
         panelScrim.setVisibility(VISIBLE);
@@ -690,7 +690,6 @@ public class ChatAnimeAssistantView extends FrameLayout implements SizeNotifierF
             public void onAnimationEnd(Animator animation) {
                 panelContainer.setVisibility(GONE);
                 panelContainer.animate().setListener(null);
-                keyboardShiftY = 0f;
             }
         }).start();
     }
