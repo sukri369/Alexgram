@@ -545,7 +545,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
                 });
                 logoView.setClipToOutline(true);
             }
-            logoView.setImageResource(R.drawable.ic_launcher_alexgram_white);
+            logoView.setImageResource(isDark ? R.drawable.ic_launcher_alexgram_dark : R.drawable.ic_launcher_alexgram_blue);
             logoView.setScaleType(ImageView.ScaleType.CENTER_CROP);
             logoContainer.addView(logoView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
@@ -568,6 +568,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         public void update() {
             nameView.setTextColor(isDark ? Color.WHITE : 0xFF1A1A2E);
             versionView.setTextColor(isDark ? 0xAAFFFFFF : 0xAA5C6B7F);
+            logoView.setImageResource(isDark ? R.drawable.ic_launcher_alexgram_dark : R.drawable.ic_launcher_alexgram_blue);
         }
     }
 
