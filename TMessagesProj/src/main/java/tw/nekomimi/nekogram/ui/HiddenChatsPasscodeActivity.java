@@ -104,24 +104,12 @@ public class HiddenChatsPasscodeActivity extends BaseFragment implements Notific
     @Override
     public boolean onFragmentCreate() {
         stableIsDark = Theme.isCurrentThemeDark();
-        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.didSetNewTheme);
         return super.onFragmentCreate();
     }
 
     @Override
     public void onFragmentDestroy() {
         super.onFragmentDestroy();
-        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.didSetNewTheme);
-    }
-
-    @Override
-    public void didReceivedNotification(int id, int account, Object... args) {
-        if (id == NotificationCenter.didSetNewTheme) {
-            updateThemeColors();
-            if (fragmentView != null) {
-                fragmentView.invalidate();
-            }
-        }
     }
 
     private void updateThemeColors() {
@@ -136,6 +124,10 @@ public class HiddenChatsPasscodeActivity extends BaseFragment implements Notific
         actionBar.setItemsBackgroundColor(Theme.getColor(Theme.key_actionBarDefaultSelector), false);
         actionBar.setItemsColor(color, false);
         actionBar.setTitleColor(color);
+
+        if (rootView != null) {
+            rootView.setBackgroundColor(isDark ? 0xFF000205 : 0xFFFAFAFA);
+        }
 
         if (titleView != null) titleView.setTextColor(primaryColor);
         if (subtitleView != null) subtitleView.setTextColor(subTextColor);
@@ -180,6 +172,8 @@ public class HiddenChatsPasscodeActivity extends BaseFragment implements Notific
         });
 
         FrameLayout root = new FrameLayout(context);
+        rootView = root;
+        root.setBackgroundColor(isDark ? 0xFF000205 : 0xFFFAFAFA);
 
         boolean isDark = stableIsDark;
         int primaryColor = isDark ? 0xFF00E5FF : 0xFF00ACC1;
@@ -302,6 +296,20 @@ public class HiddenChatsPasscodeActivity extends BaseFragment implements Notific
 
         fragmentView = root;
         return fragmentView;
+    }
+
+    private FrameLayout rootView;
+
+    @Override
+    public ArrayList<ThemeDescription> getThemeDescriptions() {
+        ArrayList<ThemeDescription> themeDescriptions = new ArrayList<>();
+        
+        // Use a delegate to force re-application of our stable colors whenever the global theme changes
+        // This prevents the ActionBarLayout from overriding our transparent header with white
+        themeDescriptions.add(new ThemeDescription(null, 0, null, null, null, this::updateThemeColors, Theme.key_actionBarDefault));
+        themeDescriptions.add(new ThemeDescription(null, 0, null, null, null, null, Theme.key_windowBackgroundWhite));
+        
+        return themeDescriptions;
     }
 
     @Override
