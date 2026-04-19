@@ -557,7 +557,7 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
         btn.setTag(account);
 
         ImageView reorderBtn = new ImageView(getContext());
-        reorderBtn.setImageResource(R.drawable.tabs_reorder_solar);
+        reorderBtn.setImageResource(R.drawable.ic_reorder_equal);
         reorderBtn.setScaleType(ImageView.ScaleType.CENTER);
         reorderBtn.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_dialogTextGray2), PorterDuff.Mode.SRC_IN));
         btn.addView(reorderBtn, LayoutHelper.createLinear(48, 48, Gravity.CENTER_VERTICAL));
