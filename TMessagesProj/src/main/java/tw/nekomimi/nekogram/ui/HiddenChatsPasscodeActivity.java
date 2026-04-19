@@ -114,21 +114,51 @@ public class HiddenChatsPasscodeActivity extends BaseFragment implements Notific
     @Override
     public void didReceivedNotification(int id, int account, Object... args) {
         if (id == NotificationCenter.didSetNewTheme) {
-            updateActionBarStyle();
+            updateThemeColors();
             if (fragmentView != null) {
                 fragmentView.invalidate();
             }
         }
     }
 
-    private void updateActionBarStyle() {
+    private void updateThemeColors() {
         if (actionBar == null) return;
-        actionBar.setBackgroundColor(0);
-        actionBar.setItemsBackgroundColor(Theme.getColor(Theme.key_actionBarDefaultSelector), false);
         boolean isDark = Theme.isCurrentThemeDark();
         int color = isDark ? Color.WHITE : 0xFF1A1A2E;
+        int primaryColor = isDark ? 0xFF00E5FF : 0xFF00ACC1;
+        int textColor = isDark ? Color.WHITE : 0xFF212121;
+        int subTextColor = isDark ? Color.argb(200, 255, 255, 255) : Color.argb(200, 66, 66, 66);
+
+        actionBar.setBackgroundColor(0);
+        actionBar.setItemsBackgroundColor(Theme.getColor(Theme.key_actionBarDefaultSelector), false);
         actionBar.setItemsColor(color, false);
         actionBar.setTitleColor(color);
+
+        if (titleView != null) titleView.setTextColor(primaryColor);
+        if (subtitleView != null) subtitleView.setTextColor(subTextColor);
+
+        if (codeFieldContainer != null) {
+            for (int i = 0; i < codeFieldContainer.codeField.length; i++) {
+                CodeNumberField f = codeFieldContainer.codeField[i];
+                if (f != null) {
+                    f.setTextColor(textColor);
+                    f.setCursorColor(primaryColor);
+                    f.invalidate();
+                }
+            }
+        }
+
+        if (fingerprintImage != null) {
+            fingerprintImage.setColorFilter(new android.graphics.PorterDuffColorFilter(primaryColor, android.graphics.PorterDuff.Mode.SRC_IN));
+            fingerprintImage.setBackground(Theme.createSimpleSelectorCircleDrawable(AndroidUtilities.dp(64), Color.TRANSPARENT, Color.argb(isDark ? 40 : 20, 0, 229, 255)));
+        }
+
+        if (backgroundView != null) backgroundView.invalidate();
+        if (containerView != null) containerView.invalidate();
+
+        if (getParentActivity() != null) {
+            AndroidUtilities.setLightStatusBar(getParentActivity().getWindow(), !isDark);
+        }
     }
 
     @Override
@@ -137,8 +167,6 @@ public class HiddenChatsPasscodeActivity extends BaseFragment implements Notific
         actionBar.setAllowOverlayTitle(false);
         actionBar.setCastShadows(false);
         actionBar.setTitle("HIDDEN CHATS");
-        boolean isDark = Theme.isCurrentThemeDark();
-        updateActionBarStyle();
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
             public void onItemClick(int id) {
@@ -149,7 +177,8 @@ public class HiddenChatsPasscodeActivity extends BaseFragment implements Notific
         });
 
         FrameLayout root = new FrameLayout(context);
-        
+
+        boolean isDark = Theme.isCurrentThemeDark();
         int primaryColor = isDark ? 0xFF00E5FF : 0xFF00ACC1;
         int textColor = isDark ? Color.WHITE : 0xFF212121;
         int subTextColor = isDark ? Color.argb(200, 255, 255, 255) : Color.argb(200, 66, 66, 66);
@@ -263,6 +292,8 @@ public class HiddenChatsPasscodeActivity extends BaseFragment implements Notific
 
         updateTexts();
         focusFirstEmptyField();
+
+        updateThemeColors();
         
         runGodEntranceAnimation();
 
@@ -275,7 +306,7 @@ public class HiddenChatsPasscodeActivity extends BaseFragment implements Notific
         super.onResume();
         AndroidUtilities.requestAltFocusable(getParentActivity(), classGuid);
         AndroidUtilities.hideKeyboard(fragmentView);
-        updateActionBarStyle();
+        updateThemeColors();
         if (mode == MODE_UNLOCK_CHATS || mode == MODE_UNLOCK_SETTINGS) {
             checkFingerprint();
         }
