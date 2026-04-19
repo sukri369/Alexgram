@@ -23,6 +23,7 @@ import org.telegram.ui.Components.TypefaceSpan;
 import java.util.List;
 
 import xyz.nextalone.nagram.NaConfig;
+import tw.nekomimi.nekogram.NekoConfig;
 
 public class TypefaceHelper {
 
@@ -122,6 +123,15 @@ public class TypefaceHelper {
     }
 
     public static Typeface createTypeface(int weight, boolean italic) {
+        if (!NekoConfig.typeface.Bool()) {
+            if (italic) {
+                if (weight >= 500) return createTypeface(AndroidUtilities.TYPEFACE_ROBOTO_MEDIUM_ITALIC);
+                return createTypeface(AndroidUtilities.TYPEFACE_RITALIC);
+            } else {
+                if (weight >= 800) return createTypeface(AndroidUtilities.TYPEFACE_ROBOTO_EXTRA_BOLD);
+                if (weight >= 500) return createTypeface(AndroidUtilities.TYPEFACE_ROBOTO_MEDIUM);
+            }
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             return Typeface.create(null, weight, italic);
         }
