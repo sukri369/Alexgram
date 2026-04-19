@@ -281,11 +281,26 @@ class FreeProxyActivity : BaseNekoSettingsActivity(), NotificationCenterDelegate
     override fun onItemClick(view: View, position: Int, x: Float, y: Float) {
         when (position) {
             rowMap["auto_connect"] -> {
-                val best = FreeProxyManager.getAutoProxy()
-                if (best != null) {
-                    FreeProxyManager.applyProxy(best)
-                    finishFragment()
-                    showToast("Connected to best proxy: ${best.geolocation.city}, ${best.geolocation.country}")
+                val progressDialog = AlertDialog(parentActivity, 3)
+                progressDialog.setCanCancel(false)
+                showDialog(progressDialog)
+                
+                activityScope.launch {
+                    val best = FreeProxyManager.findBestWorkingProxy()
+                    withContext(Dispatchers.Main) {
+                        try {
+                            progressDialog.dismiss()
+                        } catch (e: Exception) {
+                            FileLog.e(e)
+                        }
+                        if (best != null) {
+                            FreeProxyManager.applyProxy(best)
+                            finishFragment()
+                            showToast("Connected to best proxy: ${best.geolocation.city}, ${best.geolocation.country}")
+                        } else {
+                            showToast("No working proxies found. Try manual selection.")
+                        }
+                    }
                 }
             }
             in proxyStartRow until proxyEndRow -> {

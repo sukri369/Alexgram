@@ -6,11 +6,15 @@ import com.google.gson.annotations.SerializedName
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import okhttp3.Request
 import org.telegram.messenger.FileLog
 import org.telegram.messenger.SharedConfig
+import org.telegram.messenger.UserConfig
+import org.telegram.tgnet.ConnectionsManager
 import tw.nekomimi.nekogram.utils.HttpClient
 import java.util.*
+import kotlin.coroutines.resume
 
 object FreeProxyManager {
     private val MIRRORS_PROXIES = listOf(
@@ -23,6 +27,8 @@ object FreeProxyManager {
         "https://raw.githubusercontent.com/proxifly/free-proxy-list/main/proxies/meta/data.json",
         "https://proxifly.dev/proxies/meta/data.json"
     )
+
+    private val PRIORITY_COUNTRIES = listOf("SG", "US", "FI", "DE", "ES")
 
     private val gson = Gson()
     private var cachedProxies: List<FreeProxy> = emptyList()
@@ -116,6 +122,57 @@ object FreeProxyManager {
 
     fun getAutoProxy(): FreeProxy? {
         return cachedProxies.maxByOrNull { it.score }
+    }
+
+    suspend fun findBestWorkingProxy(maxToTest: Int = 15): FreeProxy? = withContext(Dispatchers.IO) {
+        if (cachedProxies.isEmpty()) fetchProxies()
+        
+        val sorted = cachedProxies.sortedWith { p1, p2 ->
+            val p1Priority = PRIORITY_COUNTRIES.contains(p1.geolocation.country.uppercase())
+            val p2Priority = PRIORITY_COUNTRIES.contains(p2.geolocation.country.uppercase())
+            
+            if (p1Priority != p2Priority) {
+                if (p1Priority) -1 else 1
+            } else {
+                p2.score.compareTo(p1.score)
+            }
+        }
+
+        if (sorted.isEmpty()) return@withContext null
+
+        // Test in small batches to speed up finding a working one
+        val batchSize = 3
+        for (i in 0 until minOf(sorted.size, maxToTest) step batchSize) {
+            val batch = sorted.subList(i, minOf(i + batchSize, minOf(sorted.size, maxToTest)))
+            val results = batch.map { proxy ->
+                async {
+                    if (checkWorking(proxy)) proxy else null
+                }
+            }.awaitAll()
+            
+            val firstWorking = results.filterNotNull().firstOrNull()
+            if (firstWorking != null) {
+                FileLog.d("FreeProxyManager: Found working proxy in batch ${i/batchSize}: ${firstWorking.ip}")
+                return@withContext firstWorking
+            }
+        }
+
+        FileLog.d("FreeProxyManager: No working proxy found in top $maxToTest, falling back to highest score")
+        return@withContext sorted.firstOrNull()
+    }
+
+    private suspend fun checkWorking(proxy: FreeProxy): Boolean = try {
+        withTimeout(4000) {
+            suspendCancellableCoroutine { continuation ->
+                ConnectionsManager.getInstance(UserConfig.selectedAccount).checkProxy(proxy.ip, proxy.port, "", "", "", { time ->
+                    if (continuation.isActive) {
+                        continuation.resume(time > 0)
+                    }
+                })
+            }
+        }
+    } catch (e: Exception) {
+        false
     }
 
     fun applyProxy(proxy: FreeProxy) {
