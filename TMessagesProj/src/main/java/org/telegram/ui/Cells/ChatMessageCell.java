@@ -10737,7 +10737,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                                 buttonText = getString(R.string.PaymentReceipt);
                             } else {
                                 buttonText = inlineButton.getText();
-                                if (messageObject.messageOwner.translatedButtons != null && !TextUtils.isEmpty(buttonText)) {
+                                if (messageObject.translated && messageObject.messageOwner.translatedButtons != null && !TextUtils.isEmpty(buttonText)) {
                                     String translated = messageObject.messageOwner.translatedButtons.get(buttonText.toString());
                                     if (!TextUtils.isEmpty(translated)) {
                                         buttonText = translated;

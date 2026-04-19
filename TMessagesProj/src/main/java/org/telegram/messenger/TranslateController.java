@@ -2547,6 +2547,14 @@ public class TranslateController extends BaseController {
         if (message == null || message.messageOwner == null || message.messageOwner.reply_markup == null || !(message.messageOwner.reply_markup instanceof TLRPC.TL_replyInlineMarkup)) {
             return;
         }
+
+        if (message.messageOwner.translatedButtons != null && TextUtils.equals(message.messageOwner.translatedButtonsLanguage, toLanguage)) {
+            AndroidUtilities.runOnUIThread(() -> {
+                NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.updateInterfaces, 0);
+            });
+            return;
+        }
+
         TLRPC.TL_replyInlineMarkup inlineMarkup = (TLRPC.TL_replyInlineMarkup) message.messageOwner.reply_markup;
         ArrayList<String> textsToTranslate = new ArrayList<>();
         for (int i = 0; i < inlineMarkup.rows.size(); i++) {
@@ -2572,6 +2580,7 @@ public class TranslateController extends BaseController {
             if (result != null) {
                 String[] translated = result.split("\n---\n");
                 message.messageOwner.translatedButtons = new HashMap<>();
+                message.messageOwner.translatedButtonsLanguage = toLanguage;
                 for (int i = 0; i < Math.min(textsToTranslate.size(), translated.length); i++) {
                     message.messageOwner.translatedButtons.put(textsToTranslate.get(i), translated[i].trim());
                 }
