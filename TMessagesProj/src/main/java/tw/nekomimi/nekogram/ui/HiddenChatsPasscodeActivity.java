@@ -95,12 +95,15 @@ public class HiddenChatsPasscodeActivity extends BaseFragment implements Notific
     private String targetTitle;
     private String targetSubtitle;
 
+    private boolean stableIsDark;
+
     public HiddenChatsPasscodeActivity(@Mode int mode) {
         this.mode = mode;
     }
 
     @Override
     public boolean onFragmentCreate() {
+        stableIsDark = Theme.isCurrentThemeDark();
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.didSetNewTheme);
         return super.onFragmentCreate();
     }
@@ -123,7 +126,7 @@ public class HiddenChatsPasscodeActivity extends BaseFragment implements Notific
 
     private void updateThemeColors() {
         if (actionBar == null) return;
-        boolean isDark = Theme.isCurrentThemeDark();
+        boolean isDark = stableIsDark;
         int color = isDark ? Color.WHITE : 0xFF1A1A2E;
         int primaryColor = isDark ? 0xFF00E5FF : 0xFF00ACC1;
         int textColor = isDark ? Color.WHITE : 0xFF212121;
@@ -178,7 +181,7 @@ public class HiddenChatsPasscodeActivity extends BaseFragment implements Notific
 
         FrameLayout root = new FrameLayout(context);
 
-        boolean isDark = Theme.isCurrentThemeDark();
+        boolean isDark = stableIsDark;
         int primaryColor = isDark ? 0xFF00E5FF : 0xFF00ACC1;
         int textColor = isDark ? Color.WHITE : 0xFF212121;
         int subTextColor = isDark ? Color.argb(200, 255, 255, 255) : Color.argb(200, 66, 66, 66);
@@ -599,8 +602,8 @@ public class HiddenChatsPasscodeActivity extends BaseFragment implements Notific
             float dt = lastTime == 0 ? 0.016f : (now - lastTime) / 1000f;
             lastTime = now;
             frameCount++;
-
-            boolean isDark = Theme.isCurrentThemeDark();
+            
+            boolean isDark = stableIsDark;
             int color1 = isDark ? 0xFF00050A : 0xFFFAFAFA;
             int color2 = isDark ? 0xFF061B3D : 0xFFECEFF1;
             int accentColor = isDark ? 0xFF00E5FF : 0xFF00ACC1;
@@ -683,7 +686,7 @@ public class HiddenChatsPasscodeActivity extends BaseFragment implements Notific
         @Override
         protected void onDraw(Canvas canvas) {
             float w = getWidth(), h = getHeight();
-            boolean isDark = Theme.isCurrentThemeDark();
+            boolean isDark = stableIsDark;
             int primaryColor = isDark ? 0xFF00E5FF : 0xFF00ACC1;
             
             // Glass Base
