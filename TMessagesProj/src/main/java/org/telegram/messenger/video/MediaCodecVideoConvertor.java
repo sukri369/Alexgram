@@ -684,8 +684,12 @@ public class MediaCodecVideoConvertor {
                                                 }
                                             }
                                         }
-                                    } else if (index == -1) {
-                                        eof = true;
+                                    } else {
+                                        if (index != -1) {
+                                            extractor.advance();
+                                        } else {
+                                            eof = true;
+                                        }
                                     }
                                     if (eof) {
                                         int inputBufIndex = decoder.dequeueInputBuffer(MEDIACODEC_TIMEOUT_DEFAULT);
