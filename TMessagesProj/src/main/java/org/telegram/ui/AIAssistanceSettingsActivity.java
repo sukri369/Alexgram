@@ -228,7 +228,7 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
             gotoBtn.setBackground(btnBg);
             gotoBtn.setOnClickListener(vv -> {
                 try {
-                    android.net.Uri uri = android.net.Uri.parse("https://t.me/nasettings/experimental?r=aiModelUrl");
+                    android.net.Uri uri = android.net.Uri.parse("https://t.me/alexsettings/experimental?r=aiModelUrl");
                     android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_VIEW, uri);
                     ctx.startActivity(intent);
                 } catch (Exception e) {
@@ -481,8 +481,8 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
 
     private void showSettingLinkDialog(Context context, String key, String value) {
         String prefix = "ai_assistance";
-        String baseLink = String.format(Locale.getDefault(), "https://%s/nasettings/%s?r=%s", getMessagesController().linkPrefix, prefix, key);
-        String valueLink = String.format(Locale.getDefault(), "https://%s/nasettings/%s?r=%s&v=%s", getMessagesController().linkPrefix, prefix, key, value);
+        String baseLink = String.format(Locale.getDefault(), "https://%s/alexsettings/%s?r=%s", getMessagesController().linkPrefix, prefix, key);
+        String valueLink = String.format(Locale.getDefault(), "https://%s/alexsettings/%s?r=%s&v=%s", getMessagesController().linkPrefix, prefix, key, value);
         CharSequence[] items = new CharSequence[]{LocaleController.getString(R.string.CopyLink), LocaleController.getString(R.string.BackupSettings)};
         showDialog(new AlertDialog.Builder(context)
             .setItems(items, (dialog, which) -> {
