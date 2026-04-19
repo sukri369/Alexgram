@@ -411,7 +411,8 @@ public class ApplicationLoader extends Application {
     }
 
     private static void startPushServiceInternal() {
-        if (PushListenerController.getProvider().hasServices()) {
+        // Only skip the local push service if GMS provides push AND RunInBackground is NOT explicitly enabled
+        if (PushListenerController.getProvider().hasServices() && !NaConfig.INSTANCE.getRunInBackground().Bool()) {
             return;
         }
         SharedPreferences preferences = MessagesController.getNotificationsSettings(UserConfig.selectedAccount);
@@ -426,11 +427,15 @@ public class ApplicationLoader extends Application {
             editor.apply();
             ConnectionsManager.getInstance(UserConfig.selectedAccount).setPushConnectionEnabled(enabled);
         }
+        // If RunInBackground is enabled, always force the service on regardless of the pref state
+        if (!enabled && NaConfig.INSTANCE.getRunInBackground().Bool()) {
+            enabled = true;
+        }
         if (enabled) {
             AndroidUtilities.runOnUIThread(() -> {
                 try {
                     Log.d("TFOSS", "Starting push service...");
-                    if (NaConfig.INSTANCE.getPushServiceTypeInAppDialog().Bool()) {
+                    if (NaConfig.INSTANCE.getPushServiceTypeInAppDialog().Bool() || NaConfig.INSTANCE.getRunInBackground().Bool()) {
                         applicationContext.startForegroundService(new Intent(applicationContext, NotificationsService.class));
                     } else {
                         applicationContext.startService(new Intent(applicationContext, NotificationsService.class));

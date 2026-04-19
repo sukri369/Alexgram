@@ -69,7 +69,9 @@ public class NotificationsService extends Service {
         } catch (Throwable ignore) {
         }
         SharedPreferences preferences = MessagesController.getGlobalNotificationsSettings();
-        if (preferences.getBoolean("pushService", true)) {
+        boolean shouldRestart = preferences.getBoolean("pushService", true)
+                || NaConfig.INSTANCE.getRunInBackground().Bool();
+        if (shouldRestart) {
             Intent intent = new Intent("org.telegram.start");
             intent.setPackage(getPackageName());
             try {
