@@ -261,7 +261,7 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
 
     @Override
     protected BlurredRecyclerView createListView(Context context) {
-        return new BlurredRecyclerView(context) {
+        BlurredRecyclerView rv = new BlurredRecyclerView(context) {
             @Override
             public Integer getSelectorColor(int position) {
                 if (position == cellGroup.rows.indexOf(clearMessageDatabaseRow)) {
@@ -270,6 +270,8 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
                 return getThemedColor(Theme.key_listSelector);
             }
         };
+        rv.disableBlurTopPadding = true;
+        return rv;
     }
 
     @SuppressLint("NewApi")
