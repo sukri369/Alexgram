@@ -787,7 +787,8 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         invalidate();
     }
 
-        {
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
             titleTextView.setEllipsizeByGradient(true);
             titleTextView.setEllipsizeByGradientCentered(false);
             titleTextView.setEllipsizeMiddle(false);
@@ -826,7 +827,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             }
             lastWidth = width;
         }
-    }
+
 
     private void fadeOutToLessWidth(int largerWidth) {
         this.largerWidth = largerWidth;
