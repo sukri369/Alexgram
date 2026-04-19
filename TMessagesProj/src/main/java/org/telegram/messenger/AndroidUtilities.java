@@ -2909,8 +2909,8 @@ public class AndroidUtilities {
         if (wm == null) return;
         WindowManager.LayoutParams params = window.getAttributes();
         boolean force = NaConfig.INSTANCE.getForceMaxRefreshRate().Bool();
-        params.preferredRefreshRate = force ? screenMaxRefreshRate : rate;
         if (force) {
+            params.preferredRefreshRate = screenMaxRefreshRate;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 try {
                     Object decorView = window.getDecorView();
@@ -2951,6 +2951,8 @@ public class AndroidUtilities {
                 }
             }
         } else {
+            // Force Max FPS is OFF — reset to system default (0 = no preference)
+            params.preferredRefreshRate = 0f;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 try {
                     Object decorView = window.getDecorView();
