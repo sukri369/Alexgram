@@ -94,9 +94,12 @@ public class UpdateHelper extends BaseRemoteHelper {
                 long remoteBuildTimestamp = string.optLong("build_timestamp", 0L);
                 boolean shouldUpdate;
                 if (remoteVersion == 0) {
-                    // No version_code provided → always show the update.
-                    // User controls visibility by posting / deleting the JSON message.
-                    shouldUpdate = true;
+                    // No version_code: compare the version NAME string against what's installed.
+                    // Shows update if version string differs from installed → stops after update.
+                    String remoteVersionName = string.optString("version", "");
+                    boolean alreadyInstalled = !TextUtils.isEmpty(remoteVersionName)
+                            && remoteVersionName.trim().equals(BuildConfig.VERSION_NAME.trim());
+                    shouldUpdate = !alreadyInstalled;
                 } else if (remoteVersion > currentVersion) {
                     shouldUpdate = true;
                 } else {
