@@ -1364,6 +1364,7 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
         }
 
         containerView.setLayerType(LAYER_TYPE_HARDWARE, null);
+        containerViewBack.setLayerType(LAYER_TYPE_HARDWARE, null);
 
         BaseFragment currentFragment = fragmentsStack.get(fragmentsStack.size() - 1);
         currentFragment.prepareFragmentToSlide(true, true);
@@ -1540,15 +1541,21 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
 
     public void onBackProgress(float t) {
         if (!predictiveInput) return;
+        final float width = (float) getWidth();
         final float dx = dp(56) * t;
         predictiveBackHasProgress = t > 0;
         containerView.setTranslationX(dx);
+        containerViewBack.setTranslationX(-(width - dx) * 0.35f * (dx / width));
+        containerViewBack.setScaleX(0.97f + 0.03f * t);
+        containerViewBack.setScaleY(0.97f + 0.03f * t);
         setInnerTranslationX(dx);
     }
 
     public void onBackCancelled() {
         if (!predictiveInput) return;
         predictiveInput = false;
+        containerView.setLayerType(LAYER_TYPE_HARDWARE, null);
+        containerViewBack.setLayerType(LAYER_TYPE_HARDWARE, null);
         animateBackEndAnimation(true, 0f);
     }
 
@@ -1558,6 +1565,8 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
             return;
         }
         predictiveInput = false;
+        containerView.setLayerType(LAYER_TYPE_HARDWARE, null);
+        containerViewBack.setLayerType(LAYER_TYPE_HARDWARE, null);
         animateBackEndAnimation(false, 0f);
     }
 
@@ -1596,6 +1605,8 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                 var progress = value / SPRING_MULTIPLIER;
                 containerView.setTranslationX(progress * containerView.getMeasuredWidth());
                 containerViewBack.setTranslationX(-(containerView.getMeasuredWidth() - progress * containerView.getMeasuredWidth()) * 0.35f);
+                containerViewBack.setScaleX(0.95f + 0.05f * progress);
+                containerViewBack.setScaleY(0.95f + 0.05f * progress);
                 setInnerTranslationX(progress * containerView.getMeasuredWidth());
                 if (USE_ACTIONBAR_CROSSFADE) {
                     swipeProgress = progress;
@@ -1621,6 +1632,7 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                 velocityTracker.recycle();
                 velocityTracker = null;
             }
+            AndroidUtilities.setPreferredMaxRefreshRate(parentActivity.getWindow());
             return;
         }
 
@@ -1753,6 +1765,8 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
         containerViewBack.setScaleY(1.0f);
         containerViewBack.setTranslationX(0);
         containerViewBack.setTranslationY(0);
+        containerView.setLayerType(LAYER_TYPE_NONE, null);
+        containerViewBack.setLayerType(LAYER_TYPE_NONE, null);
         if (USE_ACTIONBAR_CROSSFADE) {
             invalidateActionBars();
         }
@@ -1842,6 +1856,9 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
         if (first) {
             animationProgress = 0.0f;
             lastFrameTime = System.nanoTime() / 1000000;
+            containerView.setLayerType(LAYER_TYPE_HARDWARE, null);
+            containerViewBack.setLayerType(LAYER_TYPE_HARDWARE, null);
+            AndroidUtilities.setPreferredMaxRefreshRate(parentActivity.getWindow());
         }
         if (USE_SPRING_ANIMATION) {
             if (USE_ACTIONBAR_CROSSFADE) {
@@ -3753,10 +3770,10 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
     public static final int BACK_ANIMATION_PREDICTIVE = 2;
     private static final boolean USE_SPRING_ANIMATION = NaConfig.INSTANCE.getBackAnimationStyle().Int() == BACK_ANIMATION_SPRING;
     private static final boolean USE_ACTIONBAR_CROSSFADE = USE_SPRING_ANIMATION && NaConfig.INSTANCE.getSpringAnimationCrossfade().Bool();
-    private static final float SPRING_STIFFNESS = 700f;
-    private static final float SPRING_STIFFNESS_PREVIEW = 650f;
-    private static final float SPRING_STIFFNESS_PREVIEW_OUT = 800f;
-    private static final float SPRING_STIFFNESS_PREVIEW_EXPAND = 750f;
+    private static final float SPRING_STIFFNESS = 1000f;
+    private static final float SPRING_STIFFNESS_PREVIEW = 800f;
+    private static final float SPRING_STIFFNESS_PREVIEW_OUT = 1000f;
+    private static final float SPRING_STIFFNESS_PREVIEW_EXPAND = 1000f;
     private static final float SPRING_MULTIPLIER = 1000f;
     private float swipeProgress;
     private SpringAnimation currentSpringAnimation;

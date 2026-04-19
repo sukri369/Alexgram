@@ -22,6 +22,7 @@ import android.widget.TextView;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
+import org.telegram.messenger.browser.Browser;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.ui.ActionBar.ActionBar;
@@ -227,17 +228,7 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
             btnBg.setCornerRadius(AndroidUtilities.dp(8));
             gotoBtn.setBackground(btnBg);
             gotoBtn.setOnClickListener(vv -> {
-                try {
-                    android.net.Uri uri = android.net.Uri.parse("https://t.me/alexsettings/experimental?r=aiModelUrl");
-                    android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_VIEW, uri);
-                    ctx.startActivity(intent);
-                } catch (Exception e) {
-                    new AlertDialog.Builder(ctx)
-                        .setTitle("Navigation Failed")
-                        .setMessage("Please open Experimental Settings manually and scroll to the AI Reply section.")
-                        .setPositiveButton("OK", null)
-                        .show();
-                }
+                Browser.openUrl(ctx, "https://t.me/alexsettings/experimental?r=aiModelUrl");
                 alert.dismiss();
             });
             LinearLayout.LayoutParams gotoLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
