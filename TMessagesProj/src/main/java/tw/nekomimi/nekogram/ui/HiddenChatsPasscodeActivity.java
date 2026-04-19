@@ -62,9 +62,7 @@ import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.OvershootInterpolator;
 import android.widget.ImageView;
 
-import org.telegram.messenger.NotificationCenter;
-
-public class HiddenChatsPasscodeActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate {
+public class HiddenChatsPasscodeActivity extends BaseFragment {
 
     public static final int MODE_UNLOCK_CHATS = 0;
     public static final int MODE_UNLOCK_SETTINGS = 1;
@@ -172,11 +170,11 @@ public class HiddenChatsPasscodeActivity extends BaseFragment implements Notific
             }
         });
 
+        boolean isDark = stableIsDark;
         FrameLayout root = new FrameLayout(context);
         rootView = root;
         root.setBackgroundColor(isDark ? 0xFF000205 : 0xFFFAFAFA);
 
-        boolean isDark = stableIsDark;
         int primaryColor = isDark ? 0xFF00E5FF : 0xFF00ACC1;
         int textColor = isDark ? Color.WHITE : 0xFF212121;
         int subTextColor = isDark ? Color.argb(200, 255, 255, 255) : Color.argb(200, 66, 66, 66);
