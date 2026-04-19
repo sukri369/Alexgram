@@ -748,7 +748,6 @@ public class TranslateController extends BaseController {
                         }
 
                         getMessagesStorage().updateMessageCustomParams(dialogId, finalMessageObject.messageOwner);
-                        translateButtonsIfNeeded(finalMessageObject, lang);
                         NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.messageTranslated, finalMessageObject);
 
                         ArrayList<MessageObject> dialogMessages = messagesController.dialogMessage.get(dialogId);
@@ -1048,18 +1047,54 @@ public class TranslateController extends BaseController {
             return;
         }
 
+        final ArrayList<String> buttonsToTranslate = new ArrayList<>();
+        if (message.messageOwner.reply_markup instanceof TLRPC.TL_replyInlineMarkup) {
+            TLRPC.TL_replyInlineMarkup inlineMarkup = (TLRPC.TL_replyInlineMarkup) message.messageOwner.reply_markup;
+            for (int i = 0; i < inlineMarkup.rows.size(); i++) {
+                TLRPC.TL_keyboardButtonRow row = inlineMarkup.rows.get(i);
+                for (int j = 0; j < row.buttons.size(); j++) {
+                    TLRPC.KeyboardButton button = row.buttons.get(j);
+                    if (!TextUtils.isEmpty(button.text)) {
+                        buttonsToTranslate.add(button.text);
+                    }
+                }
+            }
+        }
+
         if (NekoConfig.translationProvider.Int() != Translator.providerTelegram) {
             synchronized (this) {
                 loadingTranslations.add(message.getId());
             }
 
+            final String query;
+            if (buttonsToTranslate.isEmpty()) {
+                query = message.messageOwner.message;
+            } else {
+                StringBuilder sb = new StringBuilder(message.messageOwner.message);
+                for (String btn : buttonsToTranslate) {
+                    sb.append("\n<<<<\n").append(btn);
+                }
+                query = sb.toString();
+            }
+
             final String llmContext = buildLlmAutoTranslateContext(message);
-            Translator.translateWithContext(TranslatorKt.getCode2Locale(language), message.messageOwner.message, message.messageOwner.entities, llmContext, new Translator.Companion.TranslateCallBack2() {
+            Translator.translateWithContext(TranslatorKt.getCode2Locale(language), query, message.messageOwner.entities, llmContext, new Translator.Companion.TranslateCallBack2() {
                 @Override
                 public void onSuccess(@NonNull TLRPC.TL_textWithEntities finalText) {
                     synchronized (TranslateController.this) {
                         loadingTranslations.remove(message.getId());
                     }
+                    
+                    if (!buttonsToTranslate.isEmpty() && finalText.text != null) {
+                        String[] parts = finalText.text.split("\n<<<<\n");
+                        finalText.text = parts[0];
+                        message.messageOwner.translatedButtons = new HashMap<>();
+                        message.messageOwner.translatedButtonsLanguage = language;
+                        for (int i = 0; i < Math.min(buttonsToTranslate.size(), parts.length - 1); i++) {
+                            message.messageOwner.translatedButtons.put(buttonsToTranslate.get(i), parts[i + 1].trim());
+                        }
+                    }
+
                     callback.run(isTranscription, message.getId(), finalText, language);
                 }
 
@@ -1072,9 +1107,7 @@ public class TranslateController extends BaseController {
                         if (unsupported) {
                             toggleTranslatingDialog(dialogId, false);
                             NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.showBulletin, Bulletin.TYPE_ERROR, LocaleController.getString(R.string.TranslationFailedAlert2) + " " + error);
-                        }/* else {
-                            NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.showBulletin, Bulletin.TYPE_ERROR, LocaleController.getString(R.string.TranslationFailedAlert1) + " " + error);
-                        }*/
+                        }
                         callback.run(isTranscription, message.getId(), null, language);
                     });
                 }
@@ -2543,51 +2576,4 @@ public class TranslateController extends BaseController {
         return sb.toString();
     }
 
-    public void translateButtonsIfNeeded(MessageObject message, String toLanguage) {
-        if (message == null || message.messageOwner == null || message.messageOwner.reply_markup == null || !(message.messageOwner.reply_markup instanceof TLRPC.TL_replyInlineMarkup)) {
-            return;
-        }
-
-        if (message.messageOwner.translatedButtons != null && TextUtils.equals(message.messageOwner.translatedButtonsLanguage, toLanguage)) {
-            AndroidUtilities.runOnUIThread(() -> {
-                NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.updateInterfaces, 0);
-            });
-            return;
-        }
-
-        TLRPC.TL_replyInlineMarkup inlineMarkup = (TLRPC.TL_replyInlineMarkup) message.messageOwner.reply_markup;
-        ArrayList<String> textsToTranslate = new ArrayList<>();
-        for (int i = 0; i < inlineMarkup.rows.size(); i++) {
-            TLRPC.TL_keyboardButtonRow row = inlineMarkup.rows.get(i);
-            for (int j = 0; j < row.buttons.size(); j++) {
-                TLRPC.KeyboardButton button = row.buttons.get(j);
-                if (!TextUtils.isEmpty(button.text)) {
-                    textsToTranslate.add(button.text);
-                }
-            }
-        }
-        if (textsToTranslate.isEmpty()) {
-            return;
-        }
-
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < textsToTranslate.size(); i++) {
-            if (i > 0) sb.append("\n---\n");
-            sb.append(textsToTranslate.get(i));
-        }
-
-        TranslateAlert2.alternativeTranslate(sb.toString(), null, toLanguage, (result, rateLimit) -> {
-            if (result != null) {
-                String[] translated = result.split("\n---\n");
-                message.messageOwner.translatedButtons = new HashMap<>();
-                message.messageOwner.translatedButtonsLanguage = toLanguage;
-                for (int i = 0; i < Math.min(textsToTranslate.size(), translated.length); i++) {
-                    message.messageOwner.translatedButtons.put(textsToTranslate.get(i), translated[i].trim());
-                }
-                AndroidUtilities.runOnUIThread(() -> {
-                    NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.updateInterfaces, 0);
-                });
-            }
-        });
-    }
 }
