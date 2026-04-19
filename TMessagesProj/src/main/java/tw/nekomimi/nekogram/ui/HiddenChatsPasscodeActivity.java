@@ -137,6 +137,7 @@ public class HiddenChatsPasscodeActivity extends BaseFragment implements Notific
         actionBar.setAllowOverlayTitle(false);
         actionBar.setCastShadows(false);
         actionBar.setTitle("HIDDEN CHATS");
+        boolean isDark = Theme.isCurrentThemeDark();
         updateActionBarStyle();
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
