@@ -222,10 +222,35 @@ private suspend fun ChatActivity.translateMessageContent(
     translatorMode: Int,
     llmContext: String?
 ): Boolean {
+    val buttonsToTranslate = ArrayList<String>()
+    if (msg.messageOwner.reply_markup is TLRPC.TL_replyInlineMarkup) {
+        val inlineMarkup = msg.messageOwner.reply_markup as TLRPC.TL_replyInlineMarkup
+        for (i in inlineMarkup.rows.indices) {
+            val row = inlineMarkup.rows[i]
+            for (j in row.buttons.indices) {
+                val button = row.buttons[j]
+                if (!button.text.isNullOrEmpty()) {
+                    buttonsToTranslate.add(button.text)
+                }
+            }
+        }
+    }
+
+    val query = if (buttonsToTranslate.isEmpty()) {
+        msg.messageOwner.message
+    } else {
+        buildString {
+            append(msg.messageOwner.message)
+            for (btn in buttonsToTranslate) {
+                append("\n<<<<\n").append(btn)
+            }
+        }
+    }
+
     val result = runCatching {
         translateText(
             target,
-            msg.messageOwner.message,
+            query,
             msg.messageOwner.entities,
             provider,
             llmContext
@@ -235,6 +260,17 @@ private suspend fun ChatActivity.translateMessageContent(
             translateMessages(target, provider, listOf(msg))
         }
         return false
+    }
+
+    if (buttonsToTranslate.isNotEmpty() && result.text != null) {
+        val parts = result.text.toString().split("\n<<<<\n")
+        val mainText = parts[0]
+        result.text = mainText
+        msg.messageOwner.translatedButtons = HashMap()
+        msg.messageOwner.translatedButtonsLanguage = target.locale2code.lowercase(Locale.getDefault())
+        for (i in 0 until minOf(buttonsToTranslate.size, parts.size - 1)) {
+            msg.messageOwner.translatedButtons[buttonsToTranslate[i]] = parts[i + 1].trim()
+        }
     }
 
     val keepOriginal = MessageHelper.shouldKeepOriginalForManualTranslation(translatorMode)
