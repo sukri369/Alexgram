@@ -522,7 +522,6 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
     }
 
     @Override
-    @Override
     protected void dispatchDraw(Canvas canvas) {
         canvas.save();
         final float s = bounce.getScale(.02f);
