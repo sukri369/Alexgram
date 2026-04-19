@@ -22,8 +22,18 @@ public class HiddenChatsActivity extends DialogsActivity {
     @Override
     public View createView(android.content.Context context) {
         hasStories = false;
+        hasOnlySlefStories = false;
+        dialogStoriesCellVisible = false;
+        progressToDialogStoriesCell = 0f;
+        progressToShowStories = 0f;
         canShowFilterTabsView = false;
         View view = super.createView(context);
+
+        hasStories = false;
+        hasOnlySlefStories = false;
+        dialogStoriesCellVisible = false;
+        progressToDialogStoriesCell = 0f;
+        progressToShowStories = 0f;
         
         if (filterTabsView != null) {
             filterTabsView.setVisibility(View.GONE);
@@ -101,6 +111,18 @@ public class HiddenChatsActivity extends DialogsActivity {
     public boolean hasHiddenArchive() {
         // Hidden chats list is a custom subset and must not reserve archive pull space.
         return false;
+    }
+
+    @Override
+    public void updateStoriesVisibility(boolean animated) {
+        hasStories = false;
+        hasOnlySlefStories = false;
+        dialogStoriesCellVisible = false;
+        progressToDialogStoriesCell = 0f;
+        progressToShowStories = 0f;
+        if (dialogStoriesCell != null) {
+            dialogStoriesCell.setVisibility(View.GONE);
+        }
     }
 
     @Override
