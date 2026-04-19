@@ -748,6 +748,7 @@ public class TranslateController extends BaseController {
                         }
 
                         getMessagesStorage().updateMessageCustomParams(dialogId, finalMessageObject.messageOwner);
+                        translateButtonsIfNeeded(finalMessageObject, lang);
                         NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.messageTranslated, finalMessageObject);
 
                         ArrayList<MessageObject> dialogMessages = messagesController.dialogMessage.get(dialogId);
@@ -2540,5 +2541,44 @@ public class TranslateController extends BaseController {
             sb.append(texts.get(i));
         }
         return sb.toString();
+    }
+
+    public void translateButtonsIfNeeded(MessageObject message, String toLanguage) {
+        if (message == null || message.messageOwner == null || message.messageOwner.reply_markup == null || !(message.messageOwner.reply_markup instanceof TLRPC.TL_replyInlineMarkup)) {
+            return;
+        }
+        TLRPC.TL_replyInlineMarkup inlineMarkup = (TLRPC.TL_replyInlineMarkup) message.messageOwner.reply_markup;
+        ArrayList<String> textsToTranslate = new ArrayList<>();
+        for (int i = 0; i < inlineMarkup.rows.size(); i++) {
+            TLRPC.TL_keyboardButtonRow row = inlineMarkup.rows.get(i);
+            for (int j = 0; j < row.buttons.size(); j++) {
+                TLRPC.KeyboardButton button = row.buttons.get(j);
+                if (!TextUtils.isEmpty(button.text)) {
+                    textsToTranslate.add(button.text);
+                }
+            }
+        }
+        if (textsToTranslate.isEmpty()) {
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < textsToTranslate.size(); i++) {
+            if (i > 0) sb.append("\n---\n");
+            sb.append(textsToTranslate.get(i));
+        }
+
+        TranslateAlert2.alternativeTranslate(sb.toString(), null, toLanguage, (result, rateLimit) -> {
+            if (result != null) {
+                String[] translated = result.split("\n---\n");
+                message.messageOwner.translatedButtons = new HashMap<>();
+                for (int i = 0; i < Math.min(textsToTranslate.size(), translated.length); i++) {
+                    message.messageOwner.translatedButtons.put(textsToTranslate.get(i), translated[i].trim());
+                }
+                AndroidUtilities.runOnUIThread(() -> {
+                    NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.updateInterfaces, 0);
+                });
+            }
+        });
     }
 }

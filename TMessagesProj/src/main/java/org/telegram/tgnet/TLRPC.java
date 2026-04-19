@@ -62549,6 +62549,7 @@ public class TLRPC {
         public TL_textWithEntities summaryText; //custom
         public String translatedSummaryLanguage; //custom
         public TL_textWithEntities translatedSummaryText; //custom
+        public HashMap<String, String> translatedButtons; //custom
 
         // NekoX Customs
         public String translatedMessage; //custom

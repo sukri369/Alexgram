@@ -26,6 +26,7 @@ public class MessageCustomParamsHelper {
             message.translatedToLanguage == null &&
             message.translatedPoll == null &&
             message.translatedText == null &&
+            message.translatedButtons == null &&
             message.errorAllowedPriceStars == 0 &&
             message.errorNewPriceStars == 0
         );
@@ -50,6 +51,7 @@ public class MessageCustomParamsHelper {
         toMessage.summaryText = fromMessage.summaryText;
         toMessage.translatedSummaryText = fromMessage.translatedSummaryText;
         toMessage.translatedSummaryLanguage = fromMessage.translatedSummaryLanguage;
+        toMessage.translatedButtons = fromMessage.translatedButtons;
     }
 
 
