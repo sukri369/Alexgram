@@ -143,9 +143,13 @@ public class TextCheckCell2 extends FrameLayout {
         super.onLayout(changed, left, top, right, bottom);
         if (collapseViewContainer != null) {
             if (LocaleController.isRTL) {
-                collapseViewContainer.setTranslationX(textView.getLeft() - collapseViewContainer.getMeasuredWidth() - dp(8));
+                int minX = dp(64); // don't overlap the toggle on the right (for RTL, left side holds toggle)
+                float desiredX = textView.getLeft() - collapseViewContainer.getMeasuredWidth() - dp(8);
+                collapseViewContainer.setTranslationX(Math.max(desiredX, minX));
             } else {
-                collapseViewContainer.setTranslationX(textView.getRight() + dp(8));
+                int maxX = getMeasuredWidth() - dp(64) - collapseViewContainer.getMeasuredWidth();
+                float desiredX = textView.getRight() + dp(8);
+                collapseViewContainer.setTranslationX(Math.min(desiredX, maxX));
             }
         }
     }
