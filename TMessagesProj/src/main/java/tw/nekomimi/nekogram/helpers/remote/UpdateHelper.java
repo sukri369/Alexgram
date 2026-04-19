@@ -90,13 +90,17 @@ public class UpdateHelper extends BaseRemoteHelper {
         Update ref = null;
         for (var string : responses) {
             try {
-                int remoteVersion = string.getInt("version_code");
+                int remoteVersion = string.optInt("version_code", 0);
                 long remoteBuildTimestamp = string.optLong("build_timestamp", 0L);
-                boolean shouldUpdate = false;
-                if (remoteVersion > currentVersion) {
+                boolean shouldUpdate;
+                if (remoteVersion == 0) {
+                    // No version_code provided → always show the update.
+                    // User controls visibility by posting / deleting the JSON message.
                     shouldUpdate = true;
-                } else if (remoteVersion == currentVersion && remoteBuildTimestamp > buildTimestamp) {
+                } else if (remoteVersion > currentVersion) {
                     shouldUpdate = true;
+                } else {
+                    shouldUpdate = (remoteVersion == currentVersion && remoteBuildTimestamp > buildTimestamp);
                 }
                 if (shouldUpdate || updateAlways) {
                     if (updateAlways) {
@@ -105,7 +109,7 @@ public class UpdateHelper extends BaseRemoteHelper {
                     JSONObject docObj = string.optJSONObject("document");
                     ref = new Update(
                             string.optBoolean("can_not_skip", false),
-                            string.getString("version"),
+                            string.optString("version", ""),
                             remoteVersion,
                             string.optInt("sticker", 0),
                             string.optInt("message", 0),
