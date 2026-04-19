@@ -352,6 +352,7 @@ public class ActionBar extends FrameLayout implements Theme.Colorable {
                 if (snowflakesEffect == null) {
                     snowflakesEffect = new SnowflakesEffect(0);
                 }
+                snowflakesEffect.setForce(NekoConfig.actionBarDecoration.Int() == 1);
             } else if (!manualStart) {
                 if (snowflakesEffect != null) {
                     snowflakesEffect = null;

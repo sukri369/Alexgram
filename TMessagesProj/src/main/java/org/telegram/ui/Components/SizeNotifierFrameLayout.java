@@ -797,6 +797,7 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
                 snowflakesEffect = new SnowflakesEffect(1);
                 snowflakesEffect.setForcedColor(0xFFFFFFFF);
             }
+            snowflakesEffect.setForce(NaConfig.INSTANCE.getChatDecoration().Int() == 1);
             snowflakesEffect.onDraw(backgroundView, canvas);
         }
     }
