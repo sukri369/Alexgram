@@ -4,31 +4,35 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffColorFilter;
-import android.graphics.drawable.Drawable;
+import android.graphics.Color;
+import android.graphics.LinearGradient;
+import android.graphics.Paint;
+import android.graphics.Path;
+import android.graphics.RadialGradient;
+import android.graphics.RectF;
+import android.graphics.Shader;
+import android.graphics.Typeface;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
-import androidx.core.widget.NestedScrollView;
-
 import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.DocumentObject;
 import org.telegram.messenger.FileLoader;
-import org.telegram.messenger.ImageLocation;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.R;
-import org.telegram.messenger.SvgHelper;
+import org.telegram.messenger.browser.Browser;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.BottomSheet;
 import org.telegram.ui.ActionBar.Theme;
@@ -39,323 +43,326 @@ public class UpdateAppAlertDialog extends BottomSheet {
 
     private TLRPC.TL_help_appUpdate appUpdate;
     private int accountNum;
-    private RadialProgress radialProgress;
-    private FrameLayout radialProgressView;
-    private AnimatorSet progressAnimation;
+    private ValueAnimator pulseAnimator;
+    private float pulseProgress = 0f;
+    private GradientHeaderView headerView;
 
-    private Drawable shadowDrawable;
-    private TextView textView;
-    private TextView messageTextView;
-    private NestedScrollView scrollView;
-
-    private AnimatorSet shadowAnimation;
-
-    private View shadow;
-
-    private boolean ignoreLayout;
-
-    private LinearLayout linearLayout;
-
-    private int scrollOffsetY;
-
-    private int[] location = new int[2];
-
-    private boolean animationInProgress;
-
-    public class BottomSheetCell extends FrameLayout {
-
-        private View background;
-        private TextView[] textView = new TextView[2];
-        private boolean hasBackground;
-
-        public BottomSheetCell(Context context, boolean withoutBackground) {
-            super(context);
-
-            hasBackground = !withoutBackground;
-            setBackground(null);
-
-            background = new View(context);
-            if (hasBackground) {
-                background.setBackground(Theme.AdaptiveRipple.filledRectByKey(Theme.key_featuredStickers_addButton, 4));
-            }
-            addView(background, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, 0, 16, withoutBackground ? 0 : 16, 16, 16));
-
-            for (int a = 0; a < 2; a++) {
-                textView[a] = new TextView(context);
-                textView[a].setLines(1);
-                textView[a].setSingleLine(true);
-                textView[a].setGravity(Gravity.CENTER_HORIZONTAL);
-                textView[a].setEllipsize(TextUtils.TruncateAt.END);
-                textView[a].setGravity(Gravity.CENTER);
-                if (hasBackground) {
-                    textView[a].setTextColor(Theme.getColor(Theme.key_featuredStickers_buttonText));
-                    textView[a].setTypeface(AndroidUtilities.bold());
-                } else {
-                    textView[a].setTextColor(Theme.getColor(Theme.key_featuredStickers_addButton));
-                }
-                textView[a].setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
-                textView[a].setPadding(0, 0, 0, hasBackground ? 0 : AndroidUtilities.dp(13));
-                addView(textView[a], LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER));
-                if (a == 1) {
-                    textView[a].setAlpha(0.0f);
-                }
-            }
-        }
-
-        @Override
-        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-            super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(hasBackground ? 80 : 50), MeasureSpec.EXACTLY));
-        }
-
-        public void setText(CharSequence text, boolean animated) {
-            if (!animated) {
-                textView[0].setText(text);
-            } else {
-                textView[1].setText(text);
-                animationInProgress = true;
-                AnimatorSet animatorSet = new AnimatorSet();
-                animatorSet.setDuration(180);
-                animatorSet.setInterpolator(CubicBezierInterpolator.EASE_OUT);
-                animatorSet.playTogether(
-                        ObjectAnimator.ofFloat(textView[0], View.ALPHA, 1.0f, 0.0f),
-                        ObjectAnimator.ofFloat(textView[0], View.TRANSLATION_Y, 0, -AndroidUtilities.dp(10)),
-                        ObjectAnimator.ofFloat(textView[1], View.ALPHA, 0.0f, 1.0f),
-                        ObjectAnimator.ofFloat(textView[1], View.TRANSLATION_Y, AndroidUtilities.dp(10), 0)
-                );
-                animatorSet.addListener(new AnimatorListenerAdapter() {
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        animationInProgress = false;
-                        TextView temp = textView[0];
-                        textView[0] = textView[1];
-                        textView[1] = temp;
-                    }
-                });
-                animatorSet.start();
-            }
-        }
-    }
+    // Brand gradient: Alexgram blue → purple
+    private static final int COLOR_A = 0xFF0F62FE;
+    private static final int COLOR_B = 0xFF8434F7;
+    private static final int COLOR_C = 0xFFAA20FF;
 
     public UpdateAppAlertDialog(Context context, TLRPC.TL_help_appUpdate update, int account) {
         super(context, false);
         appUpdate = update;
         accountNum = account;
         setCanceledOnTouchOutside(false);
-
         setApplyTopPadding(false);
         setApplyBottomPadding(false);
 
-        shadowDrawable = context.getResources().getDrawable(R.drawable.sheet_shadow_round).mutate();
-        shadowDrawable.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_dialogBackground), PorterDuff.Mode.MULTIPLY));
+        // Root container
+        FrameLayout root = new FrameLayout(context);
+        containerView = root;
 
-        FrameLayout container = new FrameLayout(context) {
-            @Override
-            public void setTranslationY(float translationY) {
-                super.setTranslationY(translationY);
-                updateLayout();
-            }
+        LinearLayout card = new LinearLayout(context);
+        card.setOrientation(LinearLayout.VERTICAL);
+        card.setBackgroundColor(Theme.getColor(Theme.key_dialogBackground));
+        root.addView(card, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
-            @Override
-            public boolean onInterceptTouchEvent(MotionEvent ev) {
-                if (ev.getAction() == MotionEvent.ACTION_DOWN && scrollOffsetY != 0 && ev.getY() < scrollOffsetY) {
-                    dismiss();
-                    return true;
+        // ── Gradient Header ──────────────────────────────────────────
+        headerView = new GradientHeaderView(context);
+        card.addView(headerView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 195));
+
+        // ── Changelog ────────────────────────────────────────────────
+        boolean hasLog = !TextUtils.isEmpty(appUpdate.text);
+        if (hasLog) {
+            TextView label = new TextView(context);
+            label.setText("WHAT'S NEW");
+            label.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 10.5f);
+            label.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText2));
+            label.setTypeface(AndroidUtilities.bold());
+            label.setLetterSpacing(0.13f);
+            card.addView(label, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 20, 18, 20, 6));
+
+            // thin accent line
+            View accentLine = new View(context) {
+                final Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
+                @Override protected void onSizeChanged(int w, int h, int ow, int oh) {
+                    p.setShader(new LinearGradient(0, 0, w, 0,
+                        new int[]{COLOR_A, COLOR_C, 0x00000000},
+                        new float[]{0f, 0.5f, 1f}, Shader.TileMode.CLAMP));
                 }
-                return super.onInterceptTouchEvent(ev);
-            }
+                @Override protected void onDraw(Canvas c) { c.drawRect(0, 0, getWidth(), getHeight(), p); }
+            };
+            accentLine.setWillNotDraw(false);
+            card.addView(accentLine, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 2, 20, 0, 0, 0));
 
-            @Override
-            public boolean onTouchEvent(MotionEvent e) {
-                return !isDismissed() && super.onTouchEvent(e);
-            }
-
-            @Override
-            protected void onDraw(Canvas canvas) {
-                int top = (int) (scrollOffsetY - backgroundPaddingTop - getTranslationY());
-                shadowDrawable.setBounds(0, top, getMeasuredWidth(), getMeasuredHeight());
-                shadowDrawable.draw(canvas);
-            }
-        };
-        container.setWillNotDraw(false);
-        containerView = container;
-
-        scrollView = new NestedScrollView(context) {
-
-            private boolean ignoreLayout;
-
-            @Override
-            protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-                int height = MeasureSpec.getSize(heightMeasureSpec);
-                measureChildWithMargins(linearLayout, widthMeasureSpec, 0, heightMeasureSpec, 0);
-                int contentHeight = linearLayout.getMeasuredHeight();
-                int padding = (height / 5 * 2);
-                int visiblePart = height - padding;
-                if (contentHeight - visiblePart < AndroidUtilities.dp(90) || contentHeight < height / 2 + AndroidUtilities.dp(90)) {
-                    padding = height - contentHeight;
+            ScrollView sv = new ScrollView(context) {
+                @Override protected void onMeasure(int ws, int hs) {
+                    super.onMeasure(ws, MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(170), MeasureSpec.AT_MOST));
                 }
-                if (padding < 0) {
-                    padding = 0;
-                }
-                if (getPaddingTop() != padding) {
-                    ignoreLayout = true;
-                    setPadding(0, padding, 0, 0);
-                    ignoreLayout = false;
-                }
-                super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY));
+            };
+            sv.setVerticalScrollBarEnabled(false);
+            sv.setClipToPadding(false);
+
+            TextView log = new TextViewEffects(context);
+            log.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
+            log.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
+            log.setLineSpacing(AndroidUtilities.dp(4), 1f);
+
+            SpannableStringBuilder ssb = new SpannableStringBuilder(appUpdate.text);
+            if (appUpdate.entities != null && !appUpdate.entities.isEmpty()) {
+                MessageObject.addEntitiesToText(ssb, appUpdate.entities, false, false, false, false);
             }
+            log.setText(ssb);
 
-            @Override
-            protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-                super.onLayout(changed, left, top, right, bottom);
-                updateLayout();
-            }
-
-            @Override
-            public void requestLayout() {
-                if (ignoreLayout) {
-                    return;
-                }
-                super.requestLayout();
-            }
-
-            @Override
-            protected void onScrollChanged(int l, int t, int oldl, int oldt) {
-                super.onScrollChanged(l, t, oldl, oldt);
-                updateLayout();
-            }
-        };
-        scrollView.setFillViewport(true);
-        scrollView.setWillNotDraw(false);
-        scrollView.setClipToPadding(false);
-        scrollView.setVerticalScrollBarEnabled(false);
-        container.addView(scrollView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.LEFT | Gravity.TOP, 0, 0, 0, 130));
-
-        linearLayout = new LinearLayout(context);
-        linearLayout.setOrientation(LinearLayout.VERTICAL);
-        scrollView.addView(linearLayout, LayoutHelper.createScroll(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP));
-
-        if (appUpdate.sticker != null) {
-            BackupImageView imageView = new BackupImageView(context);
-            SvgHelper.SvgDrawable svgThumb = DocumentObject.getSvgThumb(appUpdate.sticker.thumbs, Theme.key_windowBackgroundGray, 1.0f);
-            TLRPC.PhotoSize thumb = FileLoader.getClosestPhotoSizeWithSize(appUpdate.sticker.thumbs, 90);
-            ImageLocation imageLocation = ImageLocation.getForDocument(thumb, appUpdate.sticker);
-
-            if (svgThumb != null) {
-                imageView.setImage(ImageLocation.getForDocument(appUpdate.sticker), "250_250", svgThumb, 0, "update");
-            } else {
-                imageView.setImage(ImageLocation.getForDocument(appUpdate.sticker), "250_250", imageLocation, null, 0, "update");
-            }
-            linearLayout.addView(imageView, LayoutHelper.createLinear(160, 160, Gravity.CENTER_HORIZONTAL | Gravity.TOP, 17, 8, 17, 0));
+            sv.addView(log, LayoutHelper.createScroll(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT, 20, 10, 20, 8));
+            card.addView(sv, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
         }
 
-        TextView textView = new TextView(context);
-        textView.setTypeface(AndroidUtilities.bold());
-        textView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 20);
-        textView.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
-        textView.setSingleLine(true);
-        textView.setEllipsize(TextUtils.TruncateAt.END);
-        textView.setText(LocaleController.getString(R.string.UpdateTelegram).replace("Telegram", LocaleController.getString(R.string.NagramX)));
-        linearLayout.addView(textView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP | Gravity.CENTER_HORIZONTAL, 23, 16, 23, 0));
+        // ── Spacer ───────────────────────────────────────────────────
+        card.addView(new View(context), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, hasLog ? 16 : 26));
 
-        TextView messageTextView = new TextView(getContext());
-        messageTextView.setTextColor(Theme.getColor(Theme.key_dialogTextGray3));
-        messageTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
-        messageTextView.setMovementMethod(new AndroidUtilities.LinkMovementMethodMy());
-        messageTextView.setLinkTextColor(Theme.getColor(Theme.key_dialogTextLink));
-        messageTextView.setText(LocaleController.formatString("AppUpdateVersionAndSize", R.string.AppUpdateVersionAndSize, appUpdate.version, AndroidUtilities.formatFileSize(appUpdate.document.size)));
-        messageTextView.setGravity(Gravity.CENTER_HORIZONTAL | Gravity.TOP);
-        linearLayout.addView(messageTextView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP | Gravity.CENTER_HORIZONTAL, 23, 0, 23, 5));
-
-        TextView changelogTextView = new TextViewEffects(getContext());
-        changelogTextView.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
-        changelogTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
-        changelogTextView.setMovementMethod(new AndroidUtilities.LinkMovementMethodMy());
-        changelogTextView.setLinkTextColor(Theme.getColor(Theme.key_dialogTextLink));
-        if (TextUtils.isEmpty(appUpdate.text)) {
-            changelogTextView.setText(AndroidUtilities.replaceTags(LocaleController.getString(R.string.AppUpdateChangelogEmpty)));
-        } else {
-            SpannableStringBuilder builder = new SpannableStringBuilder(appUpdate.text);
-            MessageObject.addEntitiesToText(builder, update.entities, false, false, false, false);
-            MessageObject.replaceAnimatedEmoji(builder, update.entities, changelogTextView.getPaint().getFontMetricsInt());
-            changelogTextView.setText(builder);
-        }
-        changelogTextView.setGravity(Gravity.LEFT | Gravity.TOP);
-        linearLayout.addView(changelogTextView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 23, 15, 23, 0));
-
-        FrameLayout.LayoutParams frameLayoutParams = new FrameLayout.LayoutParams(LayoutHelper.MATCH_PARENT, AndroidUtilities.getShadowHeight(), Gravity.BOTTOM | Gravity.LEFT);
-        frameLayoutParams.bottomMargin = AndroidUtilities.dp(130);
-        shadow = new View(context);
-        shadow.setBackgroundColor(Theme.getColor(Theme.key_dialogShadowLine));
-        shadow.setAlpha(0.0f);
-        shadow.setTag(1);
-        container.addView(shadow, frameLayoutParams);
-
-        BottomSheetCell doneButton = new BottomSheetCell(context, false);
-        doneButton.setText(LocaleController.formatString("AppUpdateDownloadNow", R.string.AppUpdateDownloadNow), false);
-        doneButton.background.setOnClickListener(v -> {
-            FileLoader.getInstance(accountNum).loadFile(appUpdate.document, "update", FileLoader.PRIORITY_NORMAL, 1);
+        // ── Gradient Download Button ──────────────────────────────────
+        GradientButton dlBtn = new GradientButton(context,
+            LocaleController.getString(R.string.AppUpdateDownloadNow));
+        dlBtn.setOnClickListener(v -> {
+            if ((appUpdate.flags & 2) != 0 && appUpdate.document != null) {
+                FileLoader.getInstance(accountNum).loadFile(
+                    appUpdate.document, "update", FileLoader.PRIORITY_NORMAL, 1);
+            } else if (!TextUtils.isEmpty(appUpdate.url)) {
+                Browser.openUrl(context, appUpdate.url);
+            }
             dismiss();
         });
-        container.addView(doneButton, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 50, Gravity.LEFT | Gravity.BOTTOM, 0, 0, 0, 50));
+        card.addView(dlBtn, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 54, 20, 0, 20, 0));
 
-        BottomSheetCell scheduleButton = new BottomSheetCell(context, true);
-        scheduleButton.setText(LocaleController.getString(R.string.AppUpdateRemindMeLater), false);
-        scheduleButton.background.setOnClickListener(v -> dismiss());
-        container.addView(scheduleButton, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 50, Gravity.LEFT | Gravity.BOTTOM, 0, 0, 0, 0));
+        // ── Remind Later Button ───────────────────────────────────────
+        TextView laterBtn = new TextView(context);
+        laterBtn.setText(LocaleController.getString(R.string.AppUpdateRemindMeLater));
+        laterBtn.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
+        laterBtn.setTextColor(0x99000000 | (Theme.getColor(Theme.key_featuredStickers_addButton) & 0xFFFFFF));
+        laterBtn.setGravity(Gravity.CENTER);
+        laterBtn.setPadding(0, AndroidUtilities.dp(4), 0, 0);
+        laterBtn.setOnClickListener(v -> dismiss());
+        card.addView(laterBtn, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 48, 20, 8, 20, 20));
+
+        // Start animations
+        startPulseAnimation();
+        animateIn(card);
     }
 
-    private void runShadowAnimation(final int num, final boolean show) {
-        if (show && shadow.getTag() != null || !show && shadow.getTag() == null) {
-            shadow.setTag(show ? null : 1);
-            if (show) {
-                shadow.setVisibility(View.VISIBLE);
-            }
-            if (shadowAnimation != null) {
-                shadowAnimation.cancel();
-            }
-            shadowAnimation = new AnimatorSet();
-            shadowAnimation.playTogether(ObjectAnimator.ofFloat(shadow, View.ALPHA, show ? 1.0f : 0.0f));
-            shadowAnimation.setDuration(150);
-            shadowAnimation.addListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    if (shadowAnimation != null && shadowAnimation.equals(animation)) {
-                        if (!show) {
-                            shadow.setVisibility(View.INVISIBLE);
-                        }
-                        shadowAnimation = null;
-                    }
-                }
-
-                @Override
-                public void onAnimationCancel(Animator animation) {
-                    if (shadowAnimation != null && shadowAnimation.equals(animation)) {
-                        shadowAnimation = null;
-                    }
-                }
-            });
-            shadowAnimation.start();
-        }
+    // ── Pulse animation for badge glow ────────────────────────────────
+    private void startPulseAnimation() {
+        pulseAnimator = ValueAnimator.ofFloat(0f, 1f);
+        pulseAnimator.setDuration(1800);
+        pulseAnimator.setRepeatMode(ValueAnimator.REVERSE);
+        pulseAnimator.setRepeatCount(ValueAnimator.INFINITE);
+        pulseAnimator.setInterpolator(new AccelerateDecelerateInterpolator());
+        pulseAnimator.addUpdateListener(a -> {
+            pulseProgress = (float) a.getAnimatedValue();
+            if (headerView != null) headerView.invalidate();
+        });
+        pulseAnimator.start();
     }
 
-    private void updateLayout() {
-        View child = linearLayout.getChildAt(0);
-        child.getLocationInWindow(location);
-        int top = location[1] - AndroidUtilities.dp(24);
-        int newOffset = Math.max(top, 0);
-        if (location[1] + linearLayout.getMeasuredHeight() <= container.getMeasuredHeight() - AndroidUtilities.dp(113) + containerView.getTranslationY()) {
-            runShadowAnimation(0, false);
-        } else {
-            runShadowAnimation(0, true);
-        }
-        if (scrollOffsetY != newOffset) {
-            scrollOffsetY = newOffset;
-            scrollView.invalidate();
-        }
+    // ── Entrance animation ────────────────────────────────────────────
+    private void animateIn(View v) {
+        v.setAlpha(0f);
+        v.setTranslationY(AndroidUtilities.dp(40));
+        AnimatorSet set = new AnimatorSet();
+        set.playTogether(
+            ObjectAnimator.ofFloat(v, View.ALPHA, 0f, 1f),
+            ObjectAnimator.ofFloat(v, View.TRANSLATION_Y, AndroidUtilities.dp(40), 0f)
+        );
+        set.setDuration(350);
+        set.setInterpolator(new AccelerateDecelerateInterpolator());
+        set.start();
     }
 
     @Override
-    protected boolean canDismissWithSwipe() {
-        return false;
+    protected boolean canDismissWithSwipe() { return false; }
+
+    @Override
+    public void dismiss() {
+        if (pulseAnimator != null) { pulseAnimator.cancel(); pulseAnimator = null; }
+        super.dismiss();
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // INNER: Premium Gradient Header
+    // ══════════════════════════════════════════════════════════════════
+    private class GradientHeaderView extends View {
+        private final Paint bgPaint    = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Paint textPaint  = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Paint badgePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Paint glowPaint  = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Paint decorPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final RectF badgeRect  = new RectF();
+        private final Path  clipPath   = new Path();
+        private int lastW = 0, lastH = 0;
+
+        GradientHeaderView(Context ctx) {
+            super(ctx);
+            setWillNotDraw(false);
+        }
+
+        @Override
+        protected void onSizeChanged(int w, int h, int ow, int oh) {
+            if (w == lastW && h == lastH) return;
+            lastW = w; lastH = h;
+
+            bgPaint.setShader(new LinearGradient(0, 0, w, h,
+                new int[]{COLOR_A, COLOR_B, COLOR_C},
+                new float[]{0f, 0.55f, 1f},
+                Shader.TileMode.CLAMP));
+
+            clipPath.reset();
+            float r = AndroidUtilities.dp(20);
+            clipPath.addRoundRect(new RectF(0, 0, w, h),
+                new float[]{r, r, r, r, 0, 0, 0, 0}, Path.Direction.CW);
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            int w = getWidth(), h = getHeight();
+
+            // Gradient bg with rounded top corners
+            canvas.save();
+            canvas.clipPath(clipPath);
+            canvas.drawRect(0, 0, w, h, bgPaint);
+
+            // Glassmorphism decorative circles
+            decorPaint.setColor(0x14FFFFFF);
+            canvas.drawCircle(w * 0.86f, h * 0.14f, AndroidUtilities.dp(68), decorPaint);
+            decorPaint.setColor(0x0CFFFFFF);
+            canvas.drawCircle(w * 0.08f, h * 0.82f, AndroidUtilities.dp(90), decorPaint);
+            decorPaint.setColor(0x10FFFFFF);
+            canvas.drawCircle(w * 0.5f, h * -0.1f, AndroidUtilities.dp(80), decorPaint);
+            canvas.restore();
+
+            // ── App name ─────────────────────────────────────────────
+            textPaint.setTextAlign(Paint.Align.CENTER);
+            textPaint.setColor(Color.WHITE);
+            textPaint.setTypeface(AndroidUtilities.bold());
+            textPaint.setTextSize(AndroidUtilities.dp(26));
+            textPaint.setShadowLayer(AndroidUtilities.dp(8), 0, AndroidUtilities.dp(2), 0x40000000);
+            canvas.drawText("Alexgram", w / 2f, h * 0.37f, textPaint);
+            textPaint.clearShadowLayer();
+
+            // ── "Update Available" subtitle ───────────────────────────
+            textPaint.setTextSize(AndroidUtilities.dp(12.5f));
+            textPaint.setTypeface(Typeface.DEFAULT);
+            textPaint.setColor(0xCCFFFFFF);
+            canvas.drawText("Update Available", w / 2f, h * 0.54f, textPaint);
+
+            // ── Version badge with pulsing glow ───────────────────────
+            String vLabel = "v " + appUpdate.version;
+            textPaint.setTextSize(AndroidUtilities.dp(13));
+            textPaint.setTypeface(AndroidUtilities.bold());
+            textPaint.setColor(Color.WHITE);
+
+            float tw   = textPaint.measureText(vLabel);
+            float padH = AndroidUtilities.dp(14);
+            float padV = AndroidUtilities.dp(6);
+            float bw   = tw + padH * 2;
+            float bh   = AndroidUtilities.dp(13) + padV * 2;
+            float cx   = w / 2f;
+            float cy   = h * 0.775f;
+            float br   = bh / 2f;
+
+            badgeRect.set(cx - bw / 2, cy - bh / 2, cx + bw / 2, cy + bh / 2);
+
+            // Glow pulse
+            float glowRadius = bw * 0.55f * (1f + pulseProgress * 0.35f);
+            int   glowA      = (int) (50 + pulseProgress * 110);
+            glowPaint.setShader(new RadialGradient(cx, cy, glowRadius,
+                new int[]{Color.argb(glowA, 140, 60, 255), 0x00FFFFFF},
+                null, Shader.TileMode.CLAMP));
+            canvas.drawCircle(cx, cy, glowRadius, glowPaint);
+
+            // Badge fill
+            badgePaint.setStyle(Paint.Style.FILL);
+            badgePaint.setColor(0x28FFFFFF);
+            canvas.drawRoundRect(badgeRect, br, br, badgePaint);
+
+            // Badge border (animated opacity)
+            int borderA = (int) (140 + pulseProgress * 115);
+            badgePaint.setStyle(Paint.Style.STROKE);
+            badgePaint.setStrokeWidth(AndroidUtilities.dp(1.3f));
+            badgePaint.setColor(Color.argb(borderA, 255, 255, 255));
+            canvas.drawRoundRect(badgeRect, br, br, badgePaint);
+            badgePaint.setStyle(Paint.Style.FILL);
+
+            // Badge text
+            float textY = cy + AndroidUtilities.dp(4.5f);
+            canvas.drawText(vLabel, cx, textY, textPaint);
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // INNER: Gradient Download Button
+    // ══════════════════════════════════════════════════════════════════
+    private static class GradientButton extends FrameLayout {
+        private final Paint bgPaint   = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Paint txtPaint  = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final RectF btnRect   = new RectF();
+        private boolean isPressed     = false;
+        private float   pressScale    = 1f;
+        private final String text;
+        private ValueAnimator pressAnim;
+
+        GradientButton(Context ctx, String txt) {
+            super(ctx);
+            this.text = txt;
+            setWillNotDraw(false);
+            setClickable(true);
+
+            txtPaint.setTextAlign(Paint.Align.CENTER);
+            txtPaint.setColor(Color.WHITE);
+            txtPaint.setTypeface(AndroidUtilities.bold());
+            txtPaint.setTextSize(AndroidUtilities.dp(15));
+            txtPaint.setShadowLayer(AndroidUtilities.dp(4), 0, AndroidUtilities.dp(1), 0x30000000);
+        }
+
+        @Override
+        protected void onSizeChanged(int w, int h, int ow, int oh) {
+            bgPaint.setShader(new LinearGradient(0, 0, w, 0,
+                new int[]{COLOR_A, COLOR_B, COLOR_C},
+                new float[]{0f, 0.55f, 1f},
+                Shader.TileMode.CLAMP));
+            btnRect.set(0, 0, w, h);
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            int w = getWidth(), h = getHeight();
+            canvas.save();
+            canvas.scale(pressScale, pressScale, w / 2f, h / 2f);
+            canvas.drawRoundRect(btnRect, h / 2f, h / 2f, bgPaint);
+            canvas.drawText(text, w / 2f, h / 2f + AndroidUtilities.dp(5.5f), txtPaint);
+            canvas.restore();
+        }
+
+        @Override
+        public boolean onTouchEvent(MotionEvent ev) {
+            switch (ev.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    animatePress(true);  break;
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    animatePress(false); break;
+            }
+            return super.onTouchEvent(ev);
+        }
+
+        private void animatePress(boolean down) {
+            if (pressAnim != null) pressAnim.cancel();
+            float target = down ? 0.95f : 1f;
+            pressAnim = ValueAnimator.ofFloat(pressScale, target);
+            pressAnim.setDuration(120);
+            pressAnim.addUpdateListener(a -> { pressScale = (float) a.getAnimatedValue(); invalidate(); });
+            pressAnim.start();
+        }
     }
 }

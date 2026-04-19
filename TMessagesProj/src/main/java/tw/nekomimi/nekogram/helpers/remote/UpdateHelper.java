@@ -1,6 +1,7 @@
 package tw.nekomimi.nekogram.helpers.remote;
 
 import android.os.Build;
+import android.text.TextUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -101,14 +102,16 @@ public class UpdateHelper extends BaseRemoteHelper {
                     if (updateAlways) {
                         updateAlways = false;
                     }
+                    JSONObject docObj = string.optJSONObject("document");
                     ref = new Update(
-                            string.getBoolean("can_not_skip"),
+                            string.optBoolean("can_not_skip", false),
                             string.getString("version"),
                             remoteVersion,
-                            string.getInt("sticker"),
-                            string.getInt("message"),
-                            jsonToMap(string.getJSONObject("document")),
-                            string.getString("url")
+                            string.optInt("sticker", 0),
+                            string.optInt("message", 0),
+                            (docObj != null && docObj.length() > 0) ? jsonToMap(docObj) : null,
+                            string.optString("url", null),
+                            string.optString("changelog", null)
                     );
                     break;
                 }
@@ -158,6 +161,10 @@ public class UpdateHelper extends BaseRemoteHelper {
                     update.flags |= 2;
                 }
             }
+        }
+        // Use inline changelog text if no channel message was fetched
+        if (TextUtils.isEmpty(update.text) && !TextUtils.isEmpty(json.changelog)) {
+            update.text = json.changelog;
         }
         delegate.onTLResponse(update, null);
     }
@@ -216,8 +223,9 @@ public class UpdateHelper extends BaseRemoteHelper {
         public Integer message;
         public Map<String, Integer> document;
         public String url;
+        public String changelog;
 
-        public Update(Boolean canNotSkip, String version, int versionCode, int sticker, int message, Map<String, Integer> document, String url) {
+        public Update(Boolean canNotSkip, String version, int versionCode, int sticker, int message, Map<String, Integer> document, String url, String changelog) {
             this.canNotSkip = canNotSkip;
             this.version = version;
             this.versionCode = versionCode;
@@ -225,6 +233,7 @@ public class UpdateHelper extends BaseRemoteHelper {
             this.message = message;
             this.document = document;
             this.url = url;
+            this.changelog = changelog;
         }
     }
 }
