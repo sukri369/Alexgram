@@ -61,7 +61,9 @@ import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.OvershootInterpolator;
 import android.widget.ImageView;
 
-public class HiddenChatsPasscodeActivity extends BaseFragment {
+import org.telegram.messenger.NotificationCenter;
+
+public class HiddenChatsPasscodeActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate {
 
     public static final int MODE_UNLOCK_CHATS = 0;
     public static final int MODE_UNLOCK_SETTINGS = 1;
@@ -98,17 +100,44 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
     }
 
     @Override
-    public View createView(Context context) {
-        actionBar.setBackButtonImage(R.drawable.ic_ab_back);
-        actionBar.setAllowOverlayTitle(false);
-        actionBar.setCastShadows(false);
-        actionBar.setTitle("HIDDEN CHATS");
+    public boolean onFragmentCreate() {
+        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.didSetNewTheme);
+        return super.onFragmentCreate();
+    }
+
+    @Override
+    public void onFragmentDestroy() {
+        super.onFragmentDestroy();
+        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.didSetNewTheme);
+    }
+
+    @Override
+    public void didReceivedNotification(int id, int account, Object... args) {
+        if (id == NotificationCenter.didSetNewTheme) {
+            updateActionBarStyle();
+            if (fragmentView != null) {
+                fragmentView.invalidate();
+            }
+        }
+    }
+
+    private void updateActionBarStyle() {
+        if (actionBar == null) return;
         actionBar.setBackgroundColor(0);
         actionBar.setItemsBackgroundColor(Theme.getColor(Theme.key_actionBarDefaultSelector), false);
         boolean isDark = Theme.isCurrentThemeDark();
         int color = isDark ? Color.WHITE : 0xFF1A1A2E;
         actionBar.setItemsColor(color, false);
         actionBar.setTitleColor(color);
+    }
+
+    @Override
+    public View createView(Context context) {
+        actionBar.setBackButtonImage(R.drawable.ic_ab_back);
+        actionBar.setAllowOverlayTitle(false);
+        actionBar.setCastShadows(false);
+        actionBar.setTitle("HIDDEN CHATS");
+        updateActionBarStyle();
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
             public void onItemClick(int id) {
@@ -245,6 +274,7 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
         super.onResume();
         AndroidUtilities.requestAltFocusable(getParentActivity(), classGuid);
         AndroidUtilities.hideKeyboard(fragmentView);
+        updateActionBarStyle();
         if (mode == MODE_UNLOCK_CHATS || mode == MODE_UNLOCK_SETTINGS) {
             checkFingerprint();
         }
