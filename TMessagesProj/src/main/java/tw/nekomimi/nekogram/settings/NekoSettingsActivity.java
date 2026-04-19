@@ -619,7 +619,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
             texts.addView(subtitleView);
             container.addView(texts, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f));
             switchView = new Switch(context);
-            container.addView(switchView, LayoutHelper.createLinear(38, 20, Gravity.CENTER_VERTICAL, 0, 0, 0, 0));
+            container.addView(switchView, LayoutHelper.createLinear(44, 30, Gravity.CENTER_VERTICAL, 0, 0, 0, 0));
             addView(container, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
             divider = new View(context);
             addView(divider, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 1, Gravity.BOTTOM, 54, 0, 14, 0));
