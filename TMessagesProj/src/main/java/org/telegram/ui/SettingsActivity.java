@@ -1175,7 +1175,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             arrowView.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_windowBackgroundWhiteGrayIcon, resourcesProvider), PorterDuff.Mode.SRC_IN));
 
             reorderView = new ImageView(context);
-            reorderView.setImageResource(R.drawable.tabs_reorder_solar);
+            reorderView.setImageResource(R.drawable.ic_reorder_equal);
             reorderView.setScaleType(ImageView.ScaleType.CENTER);
             reorderView.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_windowBackgroundWhiteGrayIcon, resourcesProvider), PorterDuff.Mode.SRC_IN));
 
