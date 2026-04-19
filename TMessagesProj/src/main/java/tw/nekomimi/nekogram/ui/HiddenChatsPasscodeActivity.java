@@ -106,7 +106,7 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
         setResourceProvider(new Theme.ResourcesProvider() {
             @Override
             public int getColor(int key) {
-                if (key == Theme.key_actionBarDefault) return 0;
+                if (key == Theme.key_actionBarDefault) return stableIsDark ? 0xFF000205 : 0xFFFAFAFA;
                 if (key == Theme.key_actionBarDefaultIcon || key == Theme.key_actionBarDefaultTitle) return Color.WHITE;
                 if (key == Theme.key_actionBarDefaultSelector) return 0x20FFFFFF;
                 if (key == Theme.key_windowBackgroundWhite) return stableIsDark ? 0xFF000205 : 0xFFFAFAFA;
@@ -142,13 +142,15 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
         int textColor = isDark ? Color.WHITE : 0xFF212121;
         int subTextColor = isDark ? Color.argb(200, 255, 255, 255) : Color.argb(200, 66, 66, 66);
 
-        actionBar.setBackgroundColor(0);
+        int backgroundColor = isDark ? 0xFF000205 : 0xFFFAFAFA;
+
+        actionBar.setBackgroundColor(backgroundColor);
         actionBar.setItemsBackgroundColor(getThemedColor(Theme.key_actionBarDefaultSelector), false);
         actionBar.setItemsColor(color, false);
         actionBar.setTitleColor(color);
 
         if (rootView != null) {
-            rootView.setBackgroundColor(isDark ? 0xFF000205 : 0xFFFAFAFA);
+            rootView.setBackgroundColor(backgroundColor);
         }
 
         if (titleView != null) titleView.setTextColor(primaryColor);
@@ -174,6 +176,7 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
         if (containerView != null) containerView.invalidate();
 
         if (getParentActivity() != null) {
+            getParentActivity().getWindow().setStatusBarColor(backgroundColor);
             AndroidUtilities.setLightStatusBar(getParentActivity().getWindow(), !isDark);
         }
     }
