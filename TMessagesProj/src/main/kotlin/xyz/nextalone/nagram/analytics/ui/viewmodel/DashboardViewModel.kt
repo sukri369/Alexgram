@@ -86,7 +86,7 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             combine(
                 dao.getAppUsageFlow(universalAccount, 30),      // UNIVERSAL
-                dao.getTopChatsAllTimeFlow(activeAccount, 20),  // ISOLATED
+                dao.getTopChatsAllTimeFlow(activeAccount, 500),  // ISOLATED - Increased limit to ensure better coverage
                 dao.getLimitsByTypeFlow(universalAccount, 0),   // UNIVERSAL App Limits
                 dao.getLimitsByTypeFlow(activeAccount, 1),      // ISOLATED Chat Limits
                 dao.getBlockedChatsFlow(activeAccount),          // ISOLATED
@@ -131,12 +131,35 @@ class DashboardViewModel @Inject constructor(
                 
                 val lockedIds     = blockedChats.map { it.chatId }.toSet()
                 
-                // Enrich chats and inject live chat duration
-                val enriched = dbTopChats.map { agg -> 
+                // 1. Process usage-based chats
+                val usageChats = dbTopChats.map { agg -> 
                     val chatInfo = resolveChatInfo(agg, lockedIds)
                     val liveChatSecs = analyticsManager.getLiveChatSeconds(agg.chatId)
                     chatInfo.copy(timeSpentSeconds = chatInfo.timeSpentSeconds + liveChatSecs)
                 }
+
+                // 2. Inject missing locked chats (those with zero or very low usage)
+                val usageIds = usageChats.map { it.chatId }.toSet()
+                val lockedButMissing = blockedChats.filter { it.chatId !in usageIds }.map { blocked ->
+                    resolveChatInfo(
+                        ChatUsageAggregate(
+                            accountIndex = activeAccount,
+                            chatId = blocked.chatId,
+                            timeSpentSeconds = 0,
+                            messagesSent = 0,
+                            messagesReceived = 0,
+                            textCount = 0,
+                            mediaCount = 0
+                        ), 
+                        lockedIds
+                    )
+                }
+
+                // 3. Combine and sort: Locked chats pinned to top, then by usage duration
+                val enriched = (usageChats + lockedButMissing).sortedWith(
+                    compareByDescending<ChatUsageInfo> { it.isLocked }
+                        .thenByDescending { it.timeSpentSeconds }
+                )
 
                 _uiState.value = DashboardUiState(
                     messageHistoryPulse  = messagePulse, 
