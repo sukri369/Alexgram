@@ -60,6 +60,39 @@ import java.util.List;
 
 public class NekoSettingsActivity extends BaseNekoSettingsActivity {
 
+    private final List<String> recentSearchKeys = new ArrayList<>();
+    
+    private void loadRecentSearches() {
+        android.content.SharedPreferences prefs = ApplicationLoader.applicationContext.getSharedPreferences("alexgram_settings_search", Context.MODE_PRIVATE);
+        String data = prefs.getString("history", "");
+        recentSearchKeys.clear();
+        if (!data.isEmpty()) {
+            String[] keys = data.split(",");
+            for (String k : keys) {
+                if (!k.trim().isEmpty()) recentSearchKeys.add(k.trim());
+            }
+        }
+    }
+
+    private void saveRecentSearches() {
+        android.content.SharedPreferences prefs = ApplicationLoader.applicationContext.getSharedPreferences("alexgram_settings_search", Context.MODE_PRIVATE);
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < recentSearchKeys.size(); i++) {
+            if (i > 0) sb.append(",");
+            sb.append(recentSearchKeys.get(i));
+        }
+        prefs.edit().putString("history", sb.toString()).apply();
+    }
+
+    private void addToRecentSearches(String key) {
+        recentSearchKeys.remove(key);
+        recentSearchKeys.add(0, key);
+        while (recentSearchKeys.size() > 10) {
+            recentSearchKeys.remove(recentSearchKeys.size() - 1);
+        }
+        saveRecentSearches();
+    }
+
     private boolean isDark;
     private int cardBg;
     private int cardBorder;
@@ -169,6 +202,8 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
                 searchContainer.setVisibility(View.VISIBLE);
                 searchContainer.animate().alpha(1.0f).setDuration(200).start();
                 listView.animate().alpha(0.0f).setDuration(200).start();
+                loadRecentSearches();
+                searchAdapter.search("");
             }
             @Override
             public void onSearchCollapse() {
@@ -775,69 +810,137 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         }
     }
 
+    private class ClearRecentSearchCell extends FrameLayout {
+        public ClearRecentSearchCell(Context context) {
+            super(context);
+            TextView textView = new TextView(context);
+            textView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
+            textView.setTextColor(0xFFF44336);
+            textView.setGravity(Gravity.CENTER);
+            textView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+            textView.setText("Clear All Recent Searches");
+            textView.setPadding(0, dp(16), 0, dp(16));
+            addView(textView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+            
+            View divider = new View(context);
+            divider.setBackgroundColor(isDark ? 0x10FFFFFF : 0x10000000);
+            addView(divider, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 1, Gravity.TOP, 16, 0, 16, 0));
+            
+            setBackground(Theme.getSelectorDrawable(false));
+        }
+    }
+
     private class SearchAdapter extends RecyclerListView.SelectionAdapter {
         private final Context mContext;
         private final List<SettingsSearchManager.SearchItem> results = new ArrayList<>();
+        private boolean isSearching = false;
+
+        private static final int VIEW_TYPE_HEADER = 0;
+        private static final int VIEW_TYPE_ITEM = 1;
+        private static final int VIEW_TYPE_CLEAR = 2;
 
         public SearchAdapter(Context context) {
             mContext = context;
         }
 
         public void search(String query) {
+            isSearching = !query.isEmpty();
             results.clear();
-            results.addAll(SettingsSearchManager.getInstance().search(query));
+            if (isSearching) {
+                results.addAll(SettingsSearchManager.getInstance().search(query));
+            } else {
+                for (String key : recentSearchKeys) {
+                    SettingsSearchManager.SearchItem item = SettingsSearchManager.getInstance().getItem(key);
+                    if (item != null) results.add(item);
+                }
+            }
             notifyDataSetChanged();
         }
 
         public void clear() {
             results.clear();
+            isSearching = false;
             notifyDataSetChanged();
         }
 
         @Override
         public int getItemCount() {
-            return results.size();
+            if (isSearching) return results.size();
+            return results.isEmpty() ? 0 : results.size() + 2;
+        }
+
+        @Override
+        public int getItemViewType(int position) {
+            if (isSearching) return VIEW_TYPE_ITEM;
+            if (position == 0) return VIEW_TYPE_HEADER;
+            if (position == results.size() + 1) return VIEW_TYPE_CLEAR;
+            return VIEW_TYPE_ITEM;
         }
 
         @Override
         public boolean isEnabled(RecyclerView.ViewHolder holder) {
-            return true;
+            return holder.getItemViewType() == VIEW_TYPE_ITEM || holder.getItemViewType() == VIEW_TYPE_CLEAR;
         }
 
         @NonNull
         @Override
         public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            SettingsSearchResultCell cell = new SettingsSearchResultCell(mContext);
-            cell.setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
-            return new RecyclerListView.Holder(cell);
+            View view;
+            if (viewType == VIEW_TYPE_HEADER) {
+                view = new SectionHeaderCell(mContext);
+            } else if (viewType == VIEW_TYPE_CLEAR) {
+                view = new ClearRecentSearchCell(mContext);
+            } else {
+                view = new SettingsSearchResultCell(mContext);
+            }
+            view.setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
+            return new RecyclerListView.Holder(view);
         }
 
         @Override
         public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-            SettingsSearchResultCell cell = (SettingsSearchResultCell) holder.itemView;
-            SettingsSearchManager.SearchItem item = results.get(position);
-            cell.setData(item, position == results.size() - 1);
-            cell.setOnClickListener(v -> {
-                try {
-                    if (item.fragmentClass == NekoSettingsActivity.class) {
-                        actionBar.closeSearchField();
-                        scrollToRow(item.key, null);
-                    } else {
-                        BaseFragment fragment = item.fragmentClass.getConstructor().newInstance();
-                        android.os.Bundle args = new android.os.Bundle();
-                        args.putString("scrollToKey", item.key);
-                        fragment.setArguments(args);
-                        presentFragment(fragment);
-                    }
-                } catch (Exception e) {
-                    org.telegram.messenger.FileLog.e(e);
+            if (holder.getItemViewType() == VIEW_TYPE_HEADER) {
+                ((SectionHeaderCell) holder.itemView).setText("RECENT SEARCHES");
+            } else if (holder.getItemViewType() == VIEW_TYPE_CLEAR) {
+                holder.itemView.setOnClickListener(v -> {
+                    recentSearchKeys.clear();
+                    saveRecentSearches();
+                    search("");
+                });
+            } else {
+                SettingsSearchResultCell cell = (SettingsSearchResultCell) holder.itemView;
+                int idx = isSearching ? position : position - 1;
+                SettingsSearchManager.SearchItem item = results.get(idx);
+                cell.setData(item, idx == results.size() - 1);
+                
+                if (!isSearching) {
+                    cell.setCanDelete(() -> {
+                        recentSearchKeys.remove(item.key);
+                        saveRecentSearches();
+                        search("");
+                    });
+                } else {
+                    cell.setCanDelete(null);
                 }
-            });
-        }
-
-        @Override
-        public int getItemViewType(int position) {
-            return 0;
+                
+                cell.setOnClickListener(v -> {
+                    addToRecentSearches(item.key);
+                    try {
+                        if (item.fragmentClass == NekoSettingsActivity.class) {
+                            actionBar.closeSearchField();
+                            scrollToRow(item.key, null);
+                        } else {
+                            BaseFragment fragment = item.fragmentClass.getConstructor().newInstance();
+                            android.os.Bundle args = new android.os.Bundle();
+                            args.putString("scrollToKey", item.key);
+                            fragment.setArguments(args);
+                            presentFragment(fragment);
+                        }
+                    } catch (Exception e) {
+                        org.telegram.messenger.FileLog.e(e);
+                    }
+                });
+            }
         }
     }
 

@@ -169,4 +169,12 @@ public class SettingsSearchManager {
         }
         return results;
     }
+
+    public SearchItem getItem(String key) {
+        if (key == null || isIndexing) return null;
+        for (SearchItem item : index) {
+            if (key.equals(item.key)) return item;
+        }
+        return null;
+    }
 }

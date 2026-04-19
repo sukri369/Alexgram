@@ -29,6 +29,7 @@ public class SettingsSearchResultCell extends FrameLayout {
     private final TextView titleView;
     private final TextView subtitleView;
     private final TextView categoryView;
+    private final ImageView deleteButton;
     private final View divider;
     private final FrameLayout iconBackground;
 
@@ -83,6 +84,14 @@ public class SettingsSearchResultCell extends FrameLayout {
         categoryView.setBackground(catBg);
         addView(categoryView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_VERTICAL | Gravity.RIGHT));
 
+        deleteButton = new ImageView(context);
+        deleteButton.setScaleType(ImageView.ScaleType.CENTER);
+        deleteButton.setImageResource(R.drawable.ic_close_white);
+        deleteButton.setColorFilter(new PorterDuffColorFilter(isDark ? 0x44FFFFFF : 0x44000000, PorterDuff.Mode.SRC_IN));
+        deleteButton.setBackground(Theme.createSelectorSimpleDrawable(context, isDark ? 0x22FFFFFF : 0x11000000, 0x00000000));
+        deleteButton.setVisibility(GONE);
+        addView(deleteButton, LayoutHelper.createFrame(32, 32, Gravity.CENTER_VERTICAL | Gravity.RIGHT, 0, 0, 4, 0));
+
         divider = new View(context);
         divider.setBackgroundColor(isDark ? 0x10FFFFFF : 0x10000000);
         addView(divider, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 1, Gravity.BOTTOM, 56, 0, 0, 0));
@@ -96,6 +105,20 @@ public class SettingsSearchResultCell extends FrameLayout {
         categoryView.setText(item.category.toUpperCase());
         iconView.setImageResource(item.iconRes);
         divider.setVisibility(last ? GONE : VISIBLE);
+        deleteButton.setVisibility(GONE);
+        categoryView.setVisibility(VISIBLE);
+    }
+
+    public void setCanDelete(Runnable onDelete) {
+        if (onDelete == null) {
+            deleteButton.setVisibility(GONE);
+            categoryView.setVisibility(VISIBLE);
+            deleteButton.setOnClickListener(null);
+        } else {
+            deleteButton.setVisibility(VISIBLE);
+            categoryView.setVisibility(GONE);
+            deleteButton.setOnClickListener(v -> onDelete.run());
+        }
     }
 
     @Override
