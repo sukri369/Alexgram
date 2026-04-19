@@ -356,8 +356,8 @@
     <string name="AllowForwardingRestrictionDescription">Kopyalamayı ve yönlendirmeyi yasaklayan kanal ve gruplardaki kısıtlamaları atlayın.</string>
     <string name="AllowForwardingRestrictionOnboardingTitle">Medya Atlatma Talimatları</string>
     <string name="AllowForwardingRestrictionOnboardingMessage">Yönlendirme kısıtlamalarını atlarken sorunsuz bir deneyim sağlamak için lütfen yönlendirmeden önce medyanın tamamen indirildiğinden emin olun. Bu, uygulamanın içeriğinizi sunucu tarafı blokları olmadan güvenli bir şekilde yeniden yüklemesine ve teslim etmesine olanak tanır.</string>
-    <string name="V8DAudio">Dolby 8D Ses Efekti</string>
-    <string name="V8DAudioAbout">360 Derece Mekansal Ses İllüzyonu</string>
+    <string name="V8DAudio">360 Derece Mekansal Ses İllüzyonu</string>
+    <string name="V8DAudioAbout">Dolby 8D Ses Efekti</string>
     <string name="PillChatTitle">Pill Stack</string>
     <string name="PillChatTitleDescription">Arama çubuğunda dikey bir sohbet döngüsü görüntüleyin.</string>
     <string name="StarFallInChat">Yıldız Yağmuru Efekti</string>

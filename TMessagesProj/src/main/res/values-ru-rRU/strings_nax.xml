@@ -360,6 +360,6 @@
     <string name="AllowForwardingRestrictionDescription">Обход ограничений в каналах и группах, запрещающих копирование и пересылку.</string>
     <string name="AllowForwardingRestrictionOnboardingTitle">Инструкции по обходу медиа</string>
     <string name="AllowForwardingRestrictionOnboardingMessage">Чтобы обеспечить беспрепятственный обход ограничений на пересылку, убедитесь, что медиафайл полностью загружен перед пересылкой. Это позволяет приложению безопасно повторно загрузить и доставить ваш контент без блокировок со стороны сервера.</string>
-    <string name="V8DAudio">Звуковой эффект Dolby 8D</string>
-    <string name="V8DAudioAbout">Пространственная иллюзия звука на 360 градусов</string>
+    <string name="V8DAudio">Пространственная иллюзия звука на 360 градусов</string>
+    <string name="V8DAudioAbout">Звуковой эффект Dolby 8D</string>
 </resources>

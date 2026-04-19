@@ -359,6 +359,6 @@ Non possiamo aiutarti in questo caso; se hai problemi di accesso, contatta il Su
     <string name="AllowForwardingRestrictionDescription">Bypassa le restrizioni in canali e gruppi che vietano la copia e l\'inoltro.</string>
     <string name="AllowForwardingRestrictionOnboardingTitle">Istruzioni Bypass Media</string>
     <string name="AllowForwardingRestrictionOnboardingMessage">Per garantire un\'esperienza fluida durante il bypass delle restrizioni di inoltro, assicurati che il file multimediale sia completamente scaricato prima dell\'inoltro. Ciò consente all\'app di ricaricare e consegnare in modo sicuro i tuoi contenuti senza blocchi lato server.</string>
-    <string name="V8DAudio">Effetto sonoro Dolby 8D</string>
-    <string name="V8DAudioAbout">Illusione sonora spaziale a 360 gradi</string>
+    <string name="V8DAudio">Illusione sonora spaziale a 360 gradi</string>
+    <string name="V8DAudioAbout">Effetto sonoro Dolby 8D</string>
 </resources>

@@ -353,6 +353,6 @@
     <string name="AllowForwardingRestrictionDescription">Omitir restricciones en canales y grupos que prohíben copiar y reenviar.</string>
     <string name="AllowForwardingRestrictionOnboardingTitle">Instrucciones de desvío de medios</string>
     <string name="AllowForwardingRestrictionOnboardingMessage">Para garantizar una experiencia fluida al eludir las restricciones de reenvío, asegúrese de que el medio se haya descargado por completo antes de reenviarlo. Esto permite que la aplicación vuelva a cargar y entregue su contenido de forma segura sin bloqueos por parte del servidor.</string>
-    <string name="V8DAudio">Efecto de sonido Dolby 8D</string>
-    <string name="V8DAudioAbout">Ilusión sonora espacial de 360 grados</string>
+    <string name="V8DAudio">Ilusión sonora espacial de 360 grados</string>
+    <string name="V8DAudioAbout">Efecto de sonido Dolby 8D</string>
 </resources>

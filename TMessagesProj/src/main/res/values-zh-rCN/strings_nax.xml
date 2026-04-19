@@ -360,6 +360,6 @@
     <string name="AllowForwardingRestrictionDescription">绕过禁止复制和转发的频道和群组中的限制。</string>
     <string name="AllowForwardingRestrictionOnboardingTitle">媒体绕过说明</string>
     <string name="AllowForwardingRestrictionOnboardingMessage">为了确保在绕过转发限制时获得无缝体验，请确保在转发前已完全下载媒体文件。这允许应用程序安全地重新上传并分发您的内容，而不会受到服务器端拦截。</string>
-    <string name="V8DAudio">Dolby 8D 音效</string>
-    <string name="V8DAudioAbout">360 度空间声场错觉</string>
+    <string name="V8DAudio">360 度空间声场错觉</string>
+    <string name="V8DAudioAbout">Dolby 8D 音效</string>
 </resources>

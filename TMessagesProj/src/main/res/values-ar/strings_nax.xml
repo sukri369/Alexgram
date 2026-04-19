@@ -36,8 +36,8 @@
     <string name="AllowForwardingRestrictionDescription">تجاوز القيود في القنوات والمجموعات التي تمنع النسخ والتوجيه.</string>
     <string name="AllowForwardingRestrictionOnboardingTitle">تعليمات تجاوز الوسائط</string>
     <string name="AllowForwardingRestrictionOnboardingMessage">لضمان تجربة سلسة عند تجاوز قيود التوجيه، يرجى التأكد من تنزيل الوسائط بالكامل قبل التوجيه. يسمح هذا للتطبيق بإعادة رفع المحتوى الخاص بك وتسليمه بأمان دون حظر من جهة الخادم.</string>
-    <string name="V8DAudio">تأثير الصوت Dolby 8D</string>
-    <string name="V8DAudioAbout">خداع صوتي مكاني 360 درجة</string>
+    <string name="V8DAudio">خداع صوتي مكاني 360 درجة</string>
+    <string name="V8DAudioAbout">تأثير الصوت Dolby 8D</string>
     <string name="PillChatTitle">Pill Stack</string>
     <string name="PillChatTitleDescription">عرض دائري عمودي للدردشات في شريط البحث.</string>
     <string name="StarFallInChat">تأثير النجوم المتساقطة</string>
