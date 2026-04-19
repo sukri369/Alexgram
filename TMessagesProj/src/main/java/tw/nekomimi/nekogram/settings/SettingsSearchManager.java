@@ -51,6 +51,8 @@ public class SettingsSearchManager {
     }
 
     private SettingsSearchManager() {
+        // Perform fast indexing synchronously so history works immediately
+        fastIndex(index);
         reloadIndex();
     }
 
@@ -70,20 +72,23 @@ public class SettingsSearchManager {
         });
     }
 
+    private void fastIndex(List<SearchItem> target) {
+        add(target, "Ghost Mode", "Read messages without sending read receipts", "ghost_mode", NekoSettingsActivity.class, "Privacy", R.drawable.msg_secret);
+        add(target, "Hide Contacts", "Remove the contacts tab from the main drawer", "hide_contacts", NekoSettingsActivity.class, "Privacy", R.drawable.msg_contacts);
+        add(target, "Save Deleted Messages", "Automatically keep copies of deleted messages", "save_deleted", NekoSettingsActivity.class, "Privacy", R.drawable.msg_delete_solar);
+        add(target, "Hidden Chats", "Secure your private conversations with a passcode", "hidden_chats", NekoSettingsActivity.class, "Privacy", R.drawable.msg_permissions);
+        add(target, "Enable AI Assistant", "Activate the floating Alexgram AI companion", "assistant_enabled", AIAssistanceSettingsActivity.class, "AI", R.drawable.settings_chat);
+        add(target, "AI Character Skin", "Change the visual appearance of the AI assistant", "character_skin", AIAssistanceSettingsActivity.class, "AI", R.drawable.msg_theme);
+        add(target, "Assistant Persona", "Choose between different AI personalities", "persona_preset", AIAssistanceSettingsActivity.class, "AI", R.drawable.msg_contacts);
+        add(target, "AI Background Animation", "Toggle the animated background in AI settings", "background_animation", AIAssistanceSettingsActivity.class, "AI", R.drawable.msg_sticker);
+        add(target, "Particle Effects", "Show dynamic particles on AI interaction", "particle_effects", AIAssistanceSettingsActivity.class, "AI", R.drawable.msg_info);
+    }
+
     private void loadIndex() {
         List<SearchItem> nextIndex = new ArrayList<>();
         
-        // --- MANUAL INDEXING (Standard UI & AI) ---
-        // We do manual first because it's fast and critical
-        add(nextIndex, "Ghost Mode", "Read messages without sending read receipts", "ghost_mode", NekoSettingsActivity.class, "Privacy", R.drawable.msg_secret);
-        add(nextIndex, "Hide Contacts", "Remove the contacts tab from the main drawer", "hide_contacts", NekoSettingsActivity.class, "Privacy", R.drawable.msg_contacts);
-        add(nextIndex, "Save Deleted Messages", "Automatically keep copies of deleted messages", "save_deleted", NekoSettingsActivity.class, "Privacy", R.drawable.msg_delete_solar);
-        add(nextIndex, "Hidden Chats", "Secure your private conversations with a passcode", "hidden_chats", NekoSettingsActivity.class, "Privacy", R.drawable.msg_permissions);
-        add(nextIndex, "Enable AI Assistant", "Activate the floating Alexgram AI companion", "assistant_enabled", AIAssistanceSettingsActivity.class, "AI", R.drawable.settings_chat);
-        add(nextIndex, "AI Character Skin", "Change the visual appearance of the AI assistant", "character_skin", AIAssistanceSettingsActivity.class, "AI", R.drawable.msg_theme);
-        add(nextIndex, "Assistant Persona", "Choose between different AI personalities", "persona_preset", AIAssistanceSettingsActivity.class, "AI", R.drawable.msg_contacts);
-        add(nextIndex, "AI Background Animation", "Toggle the animated background in AI settings", "background_animation", AIAssistanceSettingsActivity.class, "AI", R.drawable.msg_sticker);
-        add(nextIndex, "Particle Effects", "Show dynamic particles on AI interaction", "particle_effects", AIAssistanceSettingsActivity.class, "AI", R.drawable.msg_info);
+        // --- MANUAL INDEXING ---
+        fastIndex(nextIndex);
 
         // --- AUTOMATIC INDEXING (NAGRAM SETTINGS) ---
         registerActivity(nextIndex, NekoGeneralSettingsActivity.class, "General", R.drawable.msg_edit);
@@ -91,8 +96,10 @@ public class SettingsSearchManager {
         registerActivity(nextIndex, NekoTranslatorSettingsActivity.class, "Translator", R.drawable.ic_translate);
         registerActivity(nextIndex, NekoExperimentalSettingsActivity.class, "Experimental", R.drawable.msg_fave);
 
-        index.clear();
-        index.addAll(nextIndex);
+        synchronized (index) {
+            index.clear();
+            index.addAll(nextIndex);
+        }
     }
 
     private void registerActivity(List<SearchItem> target, Class<? extends BaseNekoXSettingsActivity> clazz, String category, int defaultIcon) {
