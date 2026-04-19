@@ -119,7 +119,7 @@ public class UpdateHelper extends BaseRemoteHelper {
                     );
                     break;
                 }
-            } catch (JSONException ignored) {
+            } catch (Exception ignored) {
             }
         }
         return ref;
