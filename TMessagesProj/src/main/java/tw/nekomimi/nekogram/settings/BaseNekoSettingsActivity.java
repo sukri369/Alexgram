@@ -166,7 +166,9 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
             frameLayout.addView(backgroundView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
         }
 
-        actionBar.setDrawBlurBackground(frameLayout);
+        if (!isAlexgramTheme()) {
+            actionBar.setDrawBlurBackground(frameLayout);
+        }
 
         listView = new BlurredRecyclerView(context);
         listView.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -414,7 +416,7 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
 
         public BlurContentView(Context context) {
             super(context);
-            needBlur = hasWhiteActionBar();
+            needBlur = hasWhiteActionBar() && !isAlexgramTheme();
             blurBehindViews.add(this);
         }
 
