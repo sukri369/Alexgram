@@ -88,7 +88,7 @@ public class SettingsSearchResultCell extends FrameLayout {
         deleteButton.setScaleType(ImageView.ScaleType.CENTER);
         deleteButton.setImageResource(R.drawable.ic_close_white);
         deleteButton.setColorFilter(new PorterDuffColorFilter(isDark ? 0x44FFFFFF : 0x44000000, PorterDuff.Mode.SRC_IN));
-        deleteButton.setBackground(Theme.createSelectorSimpleDrawable(context, isDark ? 0x22FFFFFF : 0x11000000, 0x00000000));
+        deleteButton.setBackground(Theme.createSelectorDrawable(isDark ? 0x22FFFFFF : 0x11000000, 1));
         deleteButton.setVisibility(GONE);
         addView(deleteButton, LayoutHelper.createFrame(32, 32, Gravity.CENTER_VERTICAL | Gravity.RIGHT, 0, 0, 4, 0));
 
