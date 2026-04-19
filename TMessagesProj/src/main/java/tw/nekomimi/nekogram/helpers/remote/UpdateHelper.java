@@ -170,10 +170,10 @@ public class UpdateHelper extends BaseRemoteHelper {
             return;
         }
         var ids = new HashMap<String, Integer>();
-        if (update.sticker != null) {
+        if (update.sticker != null && update.sticker != 0) {
             ids.put("sticker", update.sticker);
         }
-        if (update.message != null) {
+        if (update.message != null && update.message != 0) {
             ids.put("message", update.message);
         }
         if (update.document != null) {
