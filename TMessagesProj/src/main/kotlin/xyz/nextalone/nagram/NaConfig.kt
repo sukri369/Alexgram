@@ -1522,7 +1522,7 @@ object NaConfig {
         addConfig(
             "aiModelUrl",
             ConfigItem.configTypeString,
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash"
+            ""
         )
     val aiApiKey =
         addConfig(
@@ -1534,7 +1534,7 @@ object NaConfig {
         addConfig(
             "aiModelUrl2",
             ConfigItem.configTypeString,
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash"
+            ""
         )
     val aiApiKey2 =
         addConfig(

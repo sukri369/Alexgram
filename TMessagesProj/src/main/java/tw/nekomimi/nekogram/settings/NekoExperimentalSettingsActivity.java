@@ -226,8 +226,8 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
         String key = NaConfig.INSTANCE.getAiApiKey().String();
         testAiApi(url != null ? url : "", key != null ? key : "");
     }));
-    private final AbstractConfigCell aiModelUrl2Row = cellGroup.appendCell(new ConfigCellTextInput("AI Model URL 2", NaConfig.INSTANCE.getAiModelUrl2(), "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash", null));
-    private final AbstractConfigCell aiApiKey2Row = cellGroup.appendCell(new ConfigCellTextInput("AI API Key 2", NaConfig.INSTANCE.getAiApiKey2(), "Api Key", null));
+    private final AbstractConfigCell aiModelUrl2Row = cellGroup.appendCell(new ConfigCellTextInput("AI Model URL 2", NaConfig.INSTANCE.getAiModelUrl2(), "https://api.openai.com/v1/chat/completions", null));
+    private final AbstractConfigCell aiApiKey2Row = cellGroup.appendCell(new ConfigCellTextInput("AI API Key 2", NaConfig.INSTANCE.getAiApiKey2(), "sk-...", null));
     private final AbstractConfigCell testAiApi2Row = cellGroup.appendCell(new ConfigCellText("TestAiApi2", () -> {
         String url = NaConfig.INSTANCE.getAiModelUrl2().String();
         String key = NaConfig.INSTANCE.getAiApiKey2().String();
