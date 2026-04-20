@@ -1017,23 +1017,8 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                 if (insets != null) {
                     AndroidUtilities.rectTmp.set(translationX, 0, translationX + child.getWidth(), getHeight());
                     if (newBackTransitions()) {
-                        final float scale;
-                        if (predictiveBackInProgress) {
-                            scale = lerp(1.00f, lerp(0.90f, 0.85f, 1.0f - containerView.getAlpha()), clamp01(translationX / dpf2(56)));
-                        } else {
-                            scale = 1.00f - Math.min(0.25f, 0.05f * translationX / dpf2(56));
-                        }
-                        float dx = translationX > dp(56) && !animationInProgress && predictiveBackInProgress ? translationX : Utilities.clamp(translationX, dp(56), 0);
-                        if (!predictiveBackInProgress || predictiveBackLeft) {
-                            canvas.translate(-dx, 0);
-                            clipRight += dx;
-                            backOffset += dx;
-                        } else {
-                            canvas.translate(-dx, 0);
-                            clipRight += dx;
-                            AndroidUtilities.rectTmp.set(translationX, 0, translationX + child.getWidth(), getHeight());
-                        }
-                        canvas.scale(scale, scale, predictiveBackLeft ? AndroidUtilities.rectTmp.right - dp(82) : AndroidUtilities.rectTmp.left + dp(82), predictiveBackInProgress ? predictiveBackY : AndroidUtilities.rectTmp.centerY());
+                        // Skip system-level scaling and translation to use our custom 'God Level' animation
+                        AndroidUtilities.rectTmp.set(translationX, 0, translationX + child.getWidth(), getHeight());
                     }
 
                     final RoundedCorner topLeft = insets.getRoundedCorner(android.view.RoundedCorner.POSITION_TOP_LEFT);
@@ -1542,12 +1527,12 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
     public void onBackProgress(float t) {
         if (!predictiveInput) return;
         final float width = (float) getWidth();
-        final float dx = dp(56) * t;
+        final float dx = width * 0.40f * t;
         predictiveBackHasProgress = t > 0;
         containerView.setTranslationX(dx);
         containerViewBack.setTranslationX(-(width - dx) * 0.35f * (dx / width));
-        containerViewBack.setScaleX(0.97f + 0.03f * t);
-        containerViewBack.setScaleY(0.97f + 0.03f * t);
+        containerViewBack.setScaleX(0.95f + 0.05f * t);
+        containerViewBack.setScaleY(0.95f + 0.05f * t);
         setInnerTranslationX(dx);
     }
 
