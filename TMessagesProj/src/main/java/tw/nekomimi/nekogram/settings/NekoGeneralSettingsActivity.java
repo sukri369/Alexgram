@@ -41,6 +41,7 @@ import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
 import org.telegram.ui.Components.SeekBarView;
 import org.telegram.ui.Components.UndoView;
+import org.telegram.ui.LaunchActivity;
 
 import java.io.File;
 import java.util.Locale;
@@ -56,6 +57,7 @@ import tw.nekomimi.nekogram.config.cell.ConfigCellTextCheck;
 import tw.nekomimi.nekogram.config.cell.ConfigCellTextDetail;
 import tw.nekomimi.nekogram.config.cell.ConfigCellTextInput;
 import tw.nekomimi.nekogram.config.cell.ConfigCellTextInput2;
+import tw.nekomimi.nekogram.helpers.AppRestartHelper;
 import tw.nekomimi.nekogram.utils.AndroidUtil;
 import xyz.nextalone.nagram.NaConfig;
 
@@ -402,7 +404,7 @@ public class NekoGeneralSettingsActivity extends BaseNekoXSettingsActivity {
                 checkMainTabsRows();
                 parentLayout.rebuildAllFragmentViews(false, false);
             } else if (key.equals(NaConfig.INSTANCE.getHideContacts().getKey())) {
-                parentLayout.rebuildAllFragmentViews(false, false);
+                AppRestartHelper.triggerRebirth(ApplicationLoader.applicationContext, new Intent(ApplicationLoader.applicationContext, LaunchActivity.class));
             } else if (key.equals(NaConfig.INSTANCE.getHideTabsOnScroll().getKey())) {
                 if (!(boolean) newValue) {
                     getNotificationCenter().postNotificationName(NotificationCenter.setTabsVisible, true);

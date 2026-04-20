@@ -405,7 +405,12 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
                         cell.setChecked(false);
                         return;
                     }
-                    if (config != null) config.setConfigBool(isChecked);
+                    if (config != null) {
+                        config.setConfigBool(isChecked);
+                        if ("HideContacts".equals(config.key)) {
+                            AppRestartHelper.triggerRebirth(mContext, new Intent(mContext, LaunchActivity.class));
+                        }
+                    }
                     NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.reloadInterface);
                 }, position == quickSettingsStartRow, isLast);
             } else if (viewType == 7) {
@@ -427,7 +432,10 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
             } else if (viewType == 2) {
                 CardSwitchCell cell = (CardSwitchCell) holder.itemView;
                 if (position == hideContactsRow) {
-                    cell.setData("Hide Contacts", "Hide contacts tab", R.drawable.msg_contacts, NaConfig.INSTANCE.getHideContacts().Bool(), isChecked -> NaConfig.INSTANCE.getHideContacts().setConfigBool(isChecked), true, false);
+                    cell.setData("Hide Contacts", "Hide contacts tab", R.drawable.msg_contacts, NaConfig.INSTANCE.getHideContacts().Bool(), isChecked -> {
+                        NaConfig.INSTANCE.getHideContacts().setConfigBool(isChecked);
+                        AppRestartHelper.triggerRebirth(mContext, new Intent(mContext, LaunchActivity.class));
+                    }, true, false);
                 } else if (position == ghostModeRow) {
                     cell.setData("Ghost Mode", "Read silently", R.drawable.msg_secret, NekoConfig.isGhostModeActive(), isChecked -> NekoConfig.setGhostMode(isChecked), false, false);
                 } else if (position == musicGraphRow) {
