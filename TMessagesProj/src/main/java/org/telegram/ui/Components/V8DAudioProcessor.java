@@ -15,6 +15,9 @@ public class V8DAudioProcessor extends BaseAudioProcessor {
     private short[] reverbBuffer;
     private int reverbPos = 0;
     private final int REVERB_SIZE = 4800; // ~100ms at 48kHz
+    
+    private final float DRY_GAIN = 0.65f;
+    private final float FEEDBACK_GAIN = 0.32f;
 
     @Override
     protected AudioFormat onConfigure(AudioFormat inputAudioFormat) throws UnhandledAudioFormatException {
@@ -56,26 +59,26 @@ public class V8DAudioProcessor extends BaseAudioProcessor {
             float rightGain = (1.0f - cos) * 0.5f;
             
             float distanceMod = 0.8f + 0.2f * (float) Math.abs(sin);
-            leftGain *= distanceMod;
-            rightGain *= distanceMod;
+            leftGain *= distanceMod * DRY_GAIN;
+            rightGain *= distanceMod * DRY_GAIN;
 
             float outLeftF = left * leftGain;
             float outRightF = right * rightGain;
 
             // Simple Reverb (Feedback Delay)
             int revIdx = reverbPos * 2;
-            float revL = reverbBuffer[revIdx] * 0.3f;
-            float revR = reverbBuffer[revIdx + 1] * 0.3f;
+            float revL = reverbBuffer[revIdx] * FEEDBACK_GAIN;
+            float revR = reverbBuffer[revIdx + 1] * FEEDBACK_GAIN;
 
             outLeftF += revL;
             outRightF += revR;
 
-            // Update Reverb Buffer
-            reverbBuffer[revIdx] = (short) outLeftF;
-            reverbBuffer[revIdx + 1] = (short) outRightF;
+            // Update Reverb Buffer with safe clamping
+            reverbBuffer[revIdx] = (short) Math.max(Short.MIN_VALUE, Math.min(Short.MAX_VALUE, outLeftF));
+            reverbBuffer[revIdx + 1] = (short) Math.max(Short.MIN_VALUE, Math.min(Short.MAX_VALUE, outRightF));
             reverbPos = (reverbPos + 1) % REVERB_SIZE;
 
-            // Clamp and convert back to short
+            // Clamp and convert back to short for output
             short outLeft = (short) Math.max(Short.MIN_VALUE, Math.min(Short.MAX_VALUE, outLeftF));
             short outRight = (short) Math.max(Short.MIN_VALUE, Math.min(Short.MAX_VALUE, outRightF));
 
