@@ -1521,13 +1521,16 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
         if (parentActivity != null && parentActivity.getCurrentFocus() != null) {
             AndroidUtilities.hideKeyboard(parentActivity.getCurrentFocus());
         }
+        containerView.setLayerType(LAYER_TYPE_HARDWARE, null);
+        containerViewBack.setLayerType(LAYER_TYPE_HARDWARE, null);
+        AndroidUtilities.setPreferredMaxRefreshRate(parentActivity.getWindow());
         currentFragment.onBeginSlide();
     }
 
     public void onBackProgress(float t) {
         if (!predictiveInput) return;
         final float width = (float) getWidth();
-        final float dx = width * 0.40f * t;
+        final float dx = width * 0.45f * t; // Slightly more slide for better interactive feel
         predictiveBackHasProgress = t > 0;
         containerView.setTranslationX(dx);
         containerViewBack.setTranslationX(-(width - dx) * 0.35f * (dx / width));

@@ -752,7 +752,8 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         BackupAgent.requestBackup(this);
 
         RestrictedLanguagesSelectActivity.checkRestrictedLanguages(false);
-        if (Build.VERSION.SDK_INT >= 34 && NaConfig.INSTANCE.getBackAnimationStyle().Int() == ActionBarLayout.BACK_ANIMATION_PREDICTIVE) {
+        int animationStyle = NaConfig.INSTANCE.getBackAnimationStyle().Int();
+        if (Build.VERSION.SDK_INT >= 34 && (animationStyle == ActionBarLayout.BACK_ANIMATION_PREDICTIVE || animationStyle == ActionBarLayout.BACK_ANIMATION_SPRING)) {
             if (onBackAnimationCallback == null) {
                 onBackAnimationCallback =  new OnBackAnimationCallback() {
                     private boolean started = false;
