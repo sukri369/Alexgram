@@ -167,8 +167,8 @@ public class NekoConfig {
     public static ConfigItem disableAutoDownloadingArchive = addConfig("ArchiveFiles", configTypeBool, true);
 
     public static ConfigItem customAudioBitrate = addConfig("customAudioBitrate", configTypeInt, 32);
-    public static ConfigItem enhancedFileLoader = addConfig("enhancedFileLoader", configTypeBool, false);
-    public static ConfigItem uploadBoost = addConfig("uploadBoost", configTypeBool, false);
+    public static ConfigItem enhancedFileLoader = addConfig("enhancedFileLoader", configTypeBool, true);
+    public static ConfigItem uploadBoost = addConfig("uploadBoost", configTypeBool, true);
     public static ConfigItem useOSMDroidMap = addConfig("useOSMDroidMap", configTypeBool, false);
     public static ConfigItem mapDriftingFixForGoogleMaps = addConfig("mapDriftingFixForGoogleMaps", configTypeBool, true);
 

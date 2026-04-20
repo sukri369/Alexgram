@@ -266,7 +266,7 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
 
         addGlassSection(contentLayout, context, "GENERAL");
         LinearLayout generalCard = createGlassCard(context);
-        generalCard.addView(createSwitchRow(context, "Enable AI Assistance", "assistant_enabled", true, null));
+        generalCard.addView(createSwitchRow(context, "Enable AI Assistance", "assistant_enabled", false, null));
         generalCard.addView(createCardDivider(context, 16, 16));
         generalCard.addView(createValueRow(context, "Character Skin", getSkinName(), "character_skin", () -> {
             int current = preferences.getInt("character_skin", 0);

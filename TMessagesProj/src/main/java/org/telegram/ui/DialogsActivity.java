@@ -3153,13 +3153,13 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         }
 
         SharedPreferences aiPrefs = ApplicationLoader.applicationContext.getSharedPreferences("ai_assistant_prefs", Context.MODE_PRIVATE);
-        boolean enabled = aiPrefs.getBoolean("assistant_enabled", true);
+        boolean enabled = aiPrefs.getBoolean("assistant_enabled", false);
         updateAIAssistanceVisibility(enabled);
         
         if (aiPreferenceListener == null) {
             aiPreferenceListener = (prefs, key) -> {
                 if ("assistant_enabled".equals(key)) {
-                    AndroidUtilities.runOnUIThread(() -> updateAIAssistanceVisibility(prefs.getBoolean(key, true)));
+                    AndroidUtilities.runOnUIThread(() -> updateAIAssistanceVisibility(prefs.getBoolean(key, false)));
                 }
             };
             aiPrefs.registerOnSharedPreferenceChangeListener(aiPreferenceListener);

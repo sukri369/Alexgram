@@ -358,7 +358,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
         addMessageBubble("Try long-press to switch my style.", false, false);
 
         lastFrameTime = SystemClock.uptimeMillis();
-        if (preferences.getBoolean("assistant_enabled", true)) {
+        if (preferences.getBoolean("assistant_enabled", false)) {
             postOnAnimation(frameRunnable);
         } else {
             setVisibility(GONE);

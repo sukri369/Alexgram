@@ -259,7 +259,7 @@ object NaConfig {
         addConfig(
             "ShowOnlineStatus",
             ConfigItem.configTypeBool,
-            false
+            true
         )
     val showFullAbout =
         addConfig(
@@ -1491,7 +1491,7 @@ object NaConfig {
         addConfig(
             "HideTabsOnScroll",
             ConfigItem.configTypeBool,
-            false
+            true
         )
     val searchEngineInSearchBar =
         addConfig(
