@@ -235,16 +235,22 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
         if (lastHideContacts != hideContacts) {
             lastHideContacts = hideContacts;
             final int currentPosition = viewPager.getCurrentPosition();
+            int position = currentPosition;
+            if (hideContacts && currentPosition >= 1) {
+                position = Math.max(0, currentPosition - 1);
+            } else if (!hideContacts && currentPosition >= 1) {
+                position = currentPosition + 1;
+            }
+
+            for (int a = 0, N = fragmentsArr.size(); a < N; a++) {
+                dropFragmentAtPosition(fragmentsArr.keyAt(a));
+            }
             fragmentsArr.clear();
+
             if (viewPager != null) {
-                int position = currentPosition;
-                if (hideContacts && currentPosition >= 1) {
-                    position = Math.max(0, currentPosition - 1);
-                } else if (!hideContacts && currentPosition >= 1) {
-                    position = currentPosition + 1;
-                }
                 ViewPagerFixed.Adapter adapter = viewPager.adapter;
-                viewPager.setAdapter(null);
+                viewPager.removeAllViews();
+                viewPager.currentPosition = position;
                 viewPager.setAdapter(adapter);
                 viewPager.scrollToPosition(position);
                 selectTab(position, false);
