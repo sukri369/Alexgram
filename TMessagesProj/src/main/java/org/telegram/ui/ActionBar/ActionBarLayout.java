@@ -1367,13 +1367,13 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
-        if (transitionAnimationInProgress || fragmentsStack.size() <= 1 || inPreviewMode || transitionAnimationPreviewMode) {
+        if (transitionAnimationInProgress || inPreviewMode || transitionAnimationPreviewMode || animationInProgress) {
             if (inPreviewMode && ev != null && ev.getAction() == MotionEvent.ACTION_UP) {
                 finishPreviewFragment();
             }
             return true;
         }
-        if (!inActionMode && !animationInProgress && !predictiveBackInProgress) {
+        if (!inActionMode && !predictiveBackInProgress) {
             if (fragmentsStack.size() > 1 && allowSwipe()) {
                 if (ev != null && ev.getAction() == MotionEvent.ACTION_DOWN) {
                     BaseFragment currentFragment = fragmentsStack.get(fragmentsStack.size() - 1);
