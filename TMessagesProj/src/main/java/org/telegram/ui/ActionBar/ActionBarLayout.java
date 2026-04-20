@@ -961,7 +961,13 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
-        return animationInProgress || checkTransitionAnimation() || onTouchEvent(ev);
+        if (animationInProgress || checkTransitionAnimation() || predictiveBackInProgress) {
+            return true;
+        }
+        if (inPreviewMode || transitionAnimationPreviewMode) {
+            return false; // Let fragments and menus handle their own touches
+        }
+        return onTouchEvent(ev);
     }
 
     @Override
@@ -1369,7 +1375,24 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
     public boolean onTouchEvent(MotionEvent ev) {
         if (transitionAnimationInProgress || inPreviewMode || transitionAnimationPreviewMode || animationInProgress) {
             if (inPreviewMode && ev != null && ev.getAction() == MotionEvent.ACTION_UP) {
-                finishPreviewFragment();
+                boolean hit = false;
+                if (containerView != null) {
+                    float x = ev.getX();
+                    float y = ev.getY();
+                    if (x >= containerView.getLeft() && x <= containerView.getRight() && y >= containerView.getTop() && y <= containerView.getBottom()) {
+                        hit = true;
+                    }
+                }
+                if (previewMenu != null) {
+                    float x = ev.getX();
+                    float y = ev.getY();
+                    if (x >= previewMenu.getLeft() && x <= previewMenu.getRight() && y >= previewMenu.getTop() && y <= previewMenu.getBottom()) {
+                        hit = true;
+                    }
+                }
+                if (!hit) {
+                    finishPreviewFragment();
+                }
             }
             return true;
         }
