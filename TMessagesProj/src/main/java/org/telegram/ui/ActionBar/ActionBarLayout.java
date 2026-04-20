@@ -1762,6 +1762,9 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
         if (USE_ACTIONBAR_CROSSFADE) {
             invalidateActionBars();
         }
+        animationInProgress = false;
+        transitionAnimationPreviewMode = false;
+        previewOpenAnimationInProgress = false;
     }
 
     public BaseFragment getLastFragment() {
@@ -1848,6 +1851,8 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
         if (first) {
             animationProgress = 0.0f;
             lastFrameTime = System.nanoTime() / 1000000;
+            transitionAnimationStartTime = System.currentTimeMillis();
+            animationInProgress = true;
             containerView.setLayerType(LAYER_TYPE_HARDWARE, null);
             containerViewBack.setLayerType(LAYER_TYPE_HARDWARE, null);
             AndroidUtilities.setPreferredMaxRefreshRate(parentActivity.getWindow());
