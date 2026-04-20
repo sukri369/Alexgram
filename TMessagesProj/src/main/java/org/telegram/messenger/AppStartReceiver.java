@@ -12,18 +12,33 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
+import xyz.nextalone.nagram.NaConfig;
+
 public class AppStartReceiver extends BroadcastReceiver {
 
     public void onReceive(Context context, Intent intent) {
-        if (intent != null && (Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction()) || "org.telegram.start".equals(intent.getAction()))) {
+        if (intent == null) {
+            return;
+        }
+        String action = intent.getAction();
+        boolean isBoot = Intent.ACTION_BOOT_COMPLETED.equals(action);
+        boolean isRestart = "org.telegram.start".equals(action);
+
+        if (isBoot || isRestart) {
             AndroidUtilities.runOnUIThread(() -> {
-                SharedConfig.loadConfig();
-                if (SharedConfig.passcodeHash.length() > 0) {
-                    SharedConfig.appLocked = true;
-                    SharedConfig.saveConfig();
+                if (isBoot) {
+                    SharedConfig.loadConfig();
+                    if (SharedConfig.passcodeHash.length() > 0) {
+                        SharedConfig.appLocked = true;
+                        SharedConfig.saveConfig();
+                    }
                 }
-                ApplicationLoader.startPushService();
+                // For the restart case, only start the service if RunInBackground is enabled
+                if (isBoot || NaConfig.INSTANCE.getRunInBackground().Bool()) {
+                    ApplicationLoader.startPushService();
+                }
             });
         }
     }
 }
+

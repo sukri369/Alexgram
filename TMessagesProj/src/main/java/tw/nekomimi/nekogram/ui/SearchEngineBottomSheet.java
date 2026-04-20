@@ -7,7 +7,6 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Typeface;
-import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.text.TextUtils;
 import android.view.Gravity;
@@ -33,7 +32,19 @@ import xyz.nextalone.nagram.NaConfig;
 public class SearchEngineBottomSheet extends BottomSheet {
 
     public static final String[] ENGINE_NAMES = {
-        "Google", "Bing", "Yahoo", "DuckDuckGo", "Yandex", "Brave", "Baidu"
+        "Google",
+        "Bing",
+        "Yahoo",
+        "DuckDuckGo",
+        "Yandex",
+        "Brave",
+        "Baidu",
+        "Ahmia",
+        "Startpage",
+        "SearXNG",
+        "Swisscows",
+        "WolframAlpha",
+        "Ecosia"
     };
     public static final String[] ENGINE_URLS = {
         "https://www.google.com/search?q=",
@@ -42,7 +53,13 @@ public class SearchEngineBottomSheet extends BottomSheet {
         "https://duckduckgo.com/?q=",
         "https://yandex.com/search/?text=",
         "https://search.brave.com/search?q=",
-        "https://www.baidu.com/s?wd="
+        "https://www.baidu.com/s?wd=",
+        "https://ahmia.fi/search/?q=",
+        "https://www.startpage.com/do/dsearch?query=",
+        "https://searx.be/search?q=",
+        "https://swisscows.com/en/web?query=",
+        "https://www.wolframalpha.com/input?i=",
+        "https://www.ecosia.org/search?q="
     };
     // Brand colors for each engine badge
     private static final int[] ENGINE_COLORS = {
@@ -52,7 +69,13 @@ public class SearchEngineBottomSheet extends BottomSheet {
         0xFFDE5833, // DuckDuckGo red-orange
         0xFFFF0000, // Yandex red
         0xFFFF6000, // Brave orange
-        0xFF2319DC  // Baidu blue
+        0xFF2319DC, // Baidu blue
+        0xFF1A73E8, // Ahmia blue
+        0xFF00192A, // Startpage navy
+        0xFF3C3C3C, // SearXNG grey
+        0xFFD32F2F, // Swisscows red
+        0xFFFF9800, // WolframAlpha orange
+        0xFF006655  // Ecosia deep green
     };
 
     public interface Callback {

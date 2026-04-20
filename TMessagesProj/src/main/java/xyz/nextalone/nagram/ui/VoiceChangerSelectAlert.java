@@ -38,7 +38,7 @@ public class VoiceChangerSelectAlert extends BottomSheet {
             "🧒", "🐭", "👨", "👩", "👹",
             "🔊", "🌫️", "🎈", "🧪", "🕳️"
     };
-    private final int[] effectKeys = {
+    private static final int[] effectKeys = {
             R.string.VoiceChangerNormal,
             R.string.VoiceChangerRobotic,
             R.string.VoiceChangerAlien,
@@ -56,11 +56,21 @@ public class VoiceChangerSelectAlert extends BottomSheet {
             R.string.VoiceChangerCave
     };
 
-    private final String[] effectNames = {
+    private static final String[] effectNames = {
             "Normal", "Robotic", "Alien", "Hoarseness", "Modulation",
             "Child", "Mouse", "Man", "Woman", "Monster",
             "Echo", "Noise", "Helium", "Hexafluoride", "Cave"
     };
+
+    public static String getEffectName(int index) {
+        if (index < 0 || index >= effectNames.length) return effectNames[0];
+        return effectNames[index];
+    }
+
+    public static int getEffectKey(int index) {
+        if (index < 0 || index >= effectKeys.length) return effectKeys[0];
+        return effectKeys[index];
+    }
 
     public VoiceChangerSelectAlert(Context context) {
         super(context, true);
@@ -82,7 +92,7 @@ public class VoiceChangerSelectAlert extends BottomSheet {
         listView.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(64), AndroidUtilities.dp(12), AndroidUtilities.dp(12));
         listView.setVerticalScrollBarEnabled(false);
         listView.setOnItemClickListener((view, position) -> {
-            NaConfig.setVoiceChangerEffectValue(effects[position]);
+            NaConfig.INSTANCE.setVoiceChangerEffectValue(effects[position]);
             NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.voiceChangerUpdated);
             listView.getAdapter().notifyDataSetChanged();
             AndroidUtilities.runOnUIThread(this::dismiss, 150);
@@ -196,7 +206,7 @@ public class VoiceChangerSelectAlert extends BottomSheet {
         @Override
         public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
             VoiceEffectCell cell = (VoiceEffectCell) holder.itemView;
-            cell.setEffect(position, NaConfig.getVoiceChangerEffectValue() == effects[position]);
+            cell.setEffect(position, NaConfig.INSTANCE.getVoiceChangerEffectValue() == effects[position]);
         }
 
         @Override

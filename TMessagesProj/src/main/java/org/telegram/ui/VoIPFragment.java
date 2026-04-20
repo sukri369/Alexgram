@@ -138,6 +138,8 @@ import org.telegram.ui.Components.voip.VoIpCoverView;
 import org.telegram.ui.Components.voip.VoIpSnowView;
 import org.telegram.ui.Components.voip.VoIpSwitchLayout;
 import org.telegram.ui.Stories.recorder.HintView2;
+import xyz.nextalone.nagram.NaConfig;
+import xyz.nextalone.nagram.ui.VoiceChangerSelectAlert;
 import org.webrtc.EglBase;
 import org.webrtc.GlRectDrawer;
 import org.webrtc.RendererCommon;
@@ -168,6 +170,7 @@ public class VoIPFragment implements
     private VoIpSwitchLayout bottomSpeakerBtn;
     private VoIpSwitchLayout bottomVideoBtn;
     private VoIpSwitchLayout bottomMuteBtn;
+    private VoIpSwitchLayout bottomVoiceChangerBtn;
     private VoIPToggleButton bottomEndCallBtn;
     private final VoIPBackgroundProvider backgroundProvider = new VoIPBackgroundProvider();
 
@@ -184,8 +187,6 @@ public class VoIPFragment implements
     private ConferenceParticipantsView participantsView;
     private ImageView backIcon;
     private ImageView addIcon;
-    private View voiceChangerIcon;
-    private View voiceChangerDot;
     private int speakerPhoneIconResId;
     private ImageView speakerPhoneIcon;
     private int selectedRating;
@@ -520,7 +521,6 @@ public class VoIPFragment implements
         ((FrameLayout.LayoutParams) backIcon.getLayoutParams()).topMargin = lastInsets.getSystemWindowInsetTop();
         ((FrameLayout.LayoutParams) addIcon.getLayoutParams()).topMargin = lastInsets.getSystemWindowInsetTop();
         ((FrameLayout.LayoutParams) speakerPhoneIcon.getLayoutParams()).topMargin = dp(56) + lastInsets.getSystemWindowInsetTop();
-        ((FrameLayout.LayoutParams) voiceChangerIcon.getLayoutParams()).topMargin = dp(56) * 2 + lastInsets.getSystemWindowInsetTop();
         ((FrameLayout.LayoutParams) statusLayout.getLayoutParams()).topMargin = dp(135) + lastInsets.getSystemWindowInsetTop();
         ((FrameLayout.LayoutParams) emojiLayout.getLayoutParams()).topMargin = dp(17) + lastInsets.getSystemWindowInsetTop();
         ((FrameLayout.LayoutParams) callingUserPhotoViewMini.getLayoutParams()).topMargin = dp(93) + lastInsets.getSystemWindowInsetTop();
@@ -610,7 +610,7 @@ public class VoIPFragment implements
                 callingUserPhotoViewMini.setMute(true, true);
             }
         } else if (id == NotificationCenter.voiceChangerUpdated) {
-            updateVoiceChangerStatus();
+            updateButtons(true);
         }
     }
 
@@ -1114,15 +1114,27 @@ public class VoIPFragment implements
         bottomMuteBtn.setScaleX(0f);
         bottomMuteBtn.setScaleY(0f);
         bottomMuteBtn.animate().setStartDelay(startDelay + 32).translationY(0).scaleY(1f).scaleX(1f).setDuration(250).start();
+        bottomVoiceChangerBtn = new VoIpSwitchLayout(context, backgroundProvider);
+        bottomVoiceChangerBtn.setTranslationY(AndroidUtilities.dp(100));
+        bottomVoiceChangerBtn.setScaleX(0f);
+        bottomVoiceChangerBtn.setScaleY(0f);
+        bottomVoiceChangerBtn.animate().setStartDelay(startDelay + 48).translationY(0).scaleY(1f).scaleX(1f).setDuration(250).start();
         bottomEndCallBtn.setTranslationY(AndroidUtilities.dp(100));
         bottomEndCallBtn.setScaleX(0f);
         bottomEndCallBtn.setScaleY(0f);
-        bottomEndCallBtn.animate().setStartDelay(startDelay + 48).translationY(0).scaleY(1f).scaleX(1f).setDuration(250).start();
+        bottomEndCallBtn.animate().setStartDelay(startDelay + 64).translationY(0).scaleY(1f).scaleX(1f).setDuration(250).start();
 
         buttonsLayout.addView(bottomSpeakerBtn);
         buttonsLayout.addView(bottomVideoBtn);
         buttonsLayout.addView(bottomMuteBtn);
+        buttonsLayout.addView(bottomVoiceChangerBtn);
         buttonsLayout.addView(bottomEndCallBtn);
+
+        bottomVoiceChangerBtn.setText(LocaleController.getString("VoiceChanger", R.string.VoiceChanger), false);
+        bottomVoiceChangerBtn.setIcon(R.drawable.msg_voicechat);
+        bottomVoiceChangerBtn.setOnBtnClickedListener(v -> {
+            new VoiceChangerSelectAlert(context).show();
+        });
 
         acceptDeclineView = new AcceptDeclineView(context);
         acceptDeclineView.setListener(new AcceptDeclineView.Listener() {
@@ -1251,30 +1263,9 @@ public class VoIPFragment implements
                 });
             addPeopleSheet.show();
         });
-        FrameLayout voiceChangerContainer = new FrameLayout(context);
-        voiceChangerIcon = voiceChangerContainer;
-        ImageView voiceChangerImageView = new ImageView(context);
-        voiceChangerImageView.setBackground(Theme.createSelectorDrawable(ColorUtils.setAlphaComponent(Color.WHITE, (int) (255 * 0.3f))));
-        voiceChangerImageView.setImageResource(R.drawable.msg_calls);
-        voiceChangerImageView.setPadding(dp(16), dp(16), dp(16), dp(16));
-        voiceChangerImageView.setOnClickListener(v -> {
-            if (activity == null) return;
-            new xyz.nextalone.nagram.ui.VoiceChangerSelectAlert(activity).show();
-        });
-        voiceChangerContainer.addView(voiceChangerImageView, LayoutHelper.createFrame(56, 56, Gravity.CENTER));
-
-        voiceChangerDot = new View(context);
-        voiceChangerDot.setBackground(Theme.createCircleDrawable(dp(5), 0xff4caf50));
-        voiceChangerContainer.addView(voiceChangerDot, LayoutHelper.createFrame(10, 10, Gravity.TOP | Gravity.RIGHT, 0, 8, 8, 0));
-        
-        frameLayout.addView(voiceChangerContainer, LayoutHelper.createFrame(56, 56, Gravity.TOP | Gravity.RIGHT, 0, 112, 0, 0));
-        ScaleStateListAnimator.apply(voiceChangerImageView);
-        updateVoiceChangerStatus();
-
         if (windowView.isLockOnScreen()) {
             backIcon.setVisibility(View.GONE);
             addIcon.setVisibility(View.GONE);
-            voiceChangerIcon.setVisibility(View.GONE);
         }
 
         notificationsLayout = new VoIPNotificationsLayout(context, backgroundProvider);
@@ -1345,10 +1336,12 @@ public class VoIPFragment implements
         bottomSpeakerBtn.setType(VoIpSwitchLayout.Type.SPEAKER, false);
         bottomMuteBtn.setType(VoIpSwitchLayout.Type.MICRO, false);
         bottomVideoBtn.setType(VoIpSwitchLayout.Type.VIDEO, true);
+        bottomVoiceChangerBtn.setVisibility(View.VISIBLE);
         bottomEndCallBtn.setVisibility(View.VISIBLE);
         bottomSpeakerBtn.setVisibility(View.VISIBLE);
         bottomMuteBtn.setVisibility(View.VISIBLE);
         bottomVideoBtn.setVisibility(View.VISIBLE);
+        bottomVoiceChangerBtn.setAlpha(0f);
         bottomEndCallBtn.setAlpha(0f);
         bottomSpeakerBtn.setAlpha(0f);
         bottomMuteBtn.setAlpha(0f);
@@ -1529,7 +1522,6 @@ public class VoIPFragment implements
         speakerPhoneIcon.animate().alpha(0).setDuration(150).setInterpolator(CubicBezierInterpolator.DEFAULT).start();
         backIcon.animate().alpha(0).setDuration(150).setInterpolator(CubicBezierInterpolator.DEFAULT).start();
         addIcon.animate().alpha(0).setDuration(150).setInterpolator(CubicBezierInterpolator.DEFAULT).start();
-        voiceChangerIcon.animate().alpha(0).setDuration(150).setInterpolator(CubicBezierInterpolator.DEFAULT).start();
         emojiLayout.animate().alpha(0).setDuration(150).setInterpolator(CubicBezierInterpolator.DEFAULT).start();
         statusLayout.animate().alpha(0).setDuration(150).setInterpolator(CubicBezierInterpolator.DEFAULT).start();
         buttonsLayout.animate().alpha(0).setDuration(350).setInterpolator(CubicBezierInterpolator.DEFAULT).start();
@@ -1601,7 +1593,6 @@ public class VoIPFragment implements
                 speakerPhoneIcon.animate().setDuration(150).setInterpolator(CubicBezierInterpolator.DEFAULT).start();
                 backIcon.animate().alpha(1f).setDuration(150).setInterpolator(CubicBezierInterpolator.DEFAULT).start();
                 addIcon.animate().alpha(1f).setDuration(150).setInterpolator(CubicBezierInterpolator.DEFAULT).start();
-                voiceChangerIcon.animate().alpha(1f).setDuration(150).setInterpolator(CubicBezierInterpolator.DEFAULT).start();
                 emojiLayout.animate().alpha(1f).setDuration(150).setInterpolator(CubicBezierInterpolator.DEFAULT).start();
                 statusLayout.animate().alpha(1f).setDuration(150).setInterpolator(CubicBezierInterpolator.DEFAULT).start();
                 buttonsLayout.animate().alpha(1f).setDuration(150).setInterpolator(CubicBezierInterpolator.DEFAULT).start();
@@ -2111,14 +2102,12 @@ public class VoIPFragment implements
         if (animated) {
             if (showBack) {
                 backIcon.animate().alpha(1f).start();
-                voiceChangerIcon.animate().alpha(1f).start();
             } else {
                 if (backIcon.getVisibility() != View.VISIBLE) {
                     backIcon.setVisibility(View.VISIBLE);
                     backIcon.setAlpha(0f);
                 }
                 backIcon.animate().alpha(0f).start();
-                voiceChangerIcon.animate().alpha(0f).start();
             }
             if (showAdd) {
                 addIcon.animate().alpha(1f).start();
@@ -2133,8 +2122,6 @@ public class VoIPFragment implements
         } else {
             backIcon.setVisibility(showBack ? View.VISIBLE : View.GONE);
             backIcon.setAlpha(showBack ? 1f : 0);
-            voiceChangerIcon.setVisibility(showBack ? View.VISIBLE : View.GONE);
-            voiceChangerIcon.setAlpha(showBack ? 1f : 0);
             addIcon.setVisibility(showAdd ? View.VISIBLE : View.GONE);
             addIcon.setAlpha(showAdd ? 1f : 0);
             notificationsLayout.setTranslationY(-AndroidUtilities.dp(16) - (uiVisible ? AndroidUtilities.dp(80) : 0));
@@ -2342,7 +2329,6 @@ public class VoIPFragment implements
             notificationsLayoutStartDelay = 150;
             speakerPhoneIcon.animate().alpha(0).translationY(-AndroidUtilities.dp(10)).setDuration(150).setInterpolator(CubicBezierInterpolator.DEFAULT).start();
             backIcon.animate().alpha(0).translationY(-AndroidUtilities.dp(10)).setDuration(150).setInterpolator(CubicBezierInterpolator.DEFAULT).start();
-            voiceChangerIcon.animate().alpha(0).translationY(-AndroidUtilities.dp(10)).setDuration(150).setInterpolator(CubicBezierInterpolator.DEFAULT).start();
             addIcon.animate().alpha(0).translationY(-AndroidUtilities.dp(10)).setDuration(150).setInterpolator(CubicBezierInterpolator.DEFAULT).start();
             emojiLayout.animate().alpha(0).translationY(-AndroidUtilities.dp(10)).setDuration(150).setInterpolator(CubicBezierInterpolator.DEFAULT).start();
             callingUserTitle.animate().alpha(0).setDuration(150).translationY(-AndroidUtilities.dp(10)).setInterpolator(CubicBezierInterpolator.DEFAULT).start();
@@ -2365,7 +2351,6 @@ public class VoIPFragment implements
             statusTextView.animate().alpha(1f).setDuration(150).translationY(0).setInterpolator(CubicBezierInterpolator.DEFAULT).start();
             speakerPhoneIcon.animate().alpha(1f).translationY(0).setDuration(150).setInterpolator(CubicBezierInterpolator.DEFAULT).start();
             backIcon.animate().alpha(1f).translationY(0).setDuration(150).setInterpolator(CubicBezierInterpolator.DEFAULT).start();
-            voiceChangerIcon.animate().alpha(1f).translationY(0).setDuration(150).setInterpolator(CubicBezierInterpolator.DEFAULT).start();
             addIcon.animate().alpha(1f).translationY(0).setDuration(150).setInterpolator(CubicBezierInterpolator.DEFAULT).start();
             emojiLayout.animate().alpha(1f).translationY(0).setDuration(150).setInterpolator(CubicBezierInterpolator.DEFAULT).start();
             buttonsLayout.animate().alpha(1f).translationY(0).setDuration(150).setInterpolator(CubicBezierInterpolator.DEFAULT).start();
@@ -2728,6 +2713,10 @@ public class VoIPFragment implements
             setVideoAction(bottomVideoBtn, service, false);
             setMicrohoneAction(bottomMuteBtn, service, animated);
 
+            int effect = NaConfig.INSTANCE.getVoiceChangerEffectValue();
+            String effectName = effect == 0 ? LocaleController.getString("VoiceChanger", R.string.VoiceChanger) : LocaleController.getString(VoiceChangerSelectAlert.getEffectName(effect), VoiceChangerSelectAlert.getEffectKey(effect));
+            bottomVoiceChangerBtn.setText(effectName, animated);
+
             bottomEndCallBtn.setData(R.drawable.calls_decline, Color.WHITE, 0xFFF01D2C, LocaleController.getString(R.string.VoipEndCall2), false, animated);
             bottomEndCallBtn.setOnClickListener(view -> {
                 if (VoIPService.getSharedInstance() != null) {
@@ -2749,6 +2738,10 @@ public class VoIPFragment implements
         }
         if (bottomMuteBtn.getVisibility() == View.VISIBLE) {
             bottomMuteBtn.animationDelay = animationDelay;
+            animationDelay += 16;
+        }
+        if (bottomVoiceChangerBtn.getVisibility() == View.VISIBLE) {
+            bottomVoiceChangerBtn.animationDelay = animationDelay;
             animationDelay += 16;
         }
         if (bottomEndCallBtn.getVisibility() == View.VISIBLE) {
@@ -3333,11 +3326,6 @@ public class VoIPFragment implements
             canvas.translate(avatarsDrawable.getMaxX() + dp(7), 0);
             text.draw(canvas, 0, height / 2.0f, 0xFFFFFFFF, 1.0f);
             canvas.restore();
-        }
-    }
-    private void updateVoiceChangerStatus() {
-        if (voiceChangerDot != null) {
-            voiceChangerDot.setVisibility(xyz.nextalone.nagram.NaConfig.INSTANCE.getVoiceChangerEffectValue() != 0 ? View.VISIBLE : View.GONE);
         }
     }
 }

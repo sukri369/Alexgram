@@ -12,8 +12,7 @@ import xyz.nextalone.nagram.NaConfig;
 public class IconsResources extends Resources {
 
     public static final int ICON_REPLACE_SOLAR = 1;
-    private int _iconsType = -1;
-
+    public static final int ICON_REPLACE_REMIX = 2;
     public IconsResources(Resources resources) {
         super(resources.getAssets(), resources.getDisplayMetrics(), resources.getConfiguration());
     }
@@ -40,19 +39,18 @@ public class IconsResources extends Resources {
         return super.getDrawableForDensity(getConversion(id), density, null);
     }
 
-    private int getConversion(int icon) {
+    public static int getConversion(int icon) {
         return getConversion(icon, -1);
     }
 
-    private int getConversion(int icon, int forcedIconsType) {
-        if (_iconsType == -1) {
-            _iconsType = NaConfig.INSTANCE.getIconReplacements().Int();
-        }
-
-        int consideredIconsType = forcedIconsType == -1 ? _iconsType : forcedIconsType;
+    public static int getConversion(int icon, int forcedIconsType) {
+        int iconsType = NaConfig.INSTANCE.getIconReplacements().Int();
+        int consideredIconsType = forcedIconsType == -1 ? iconsType : forcedIconsType;
 
         if (consideredIconsType == ICON_REPLACE_SOLAR) {
             return SolarIcons.Companion.getConversion(icon);
+        } else if (consideredIconsType == ICON_REPLACE_REMIX) {
+            return RemixIcons.Companion.getConversion(icon);
         }
 
         return icon;

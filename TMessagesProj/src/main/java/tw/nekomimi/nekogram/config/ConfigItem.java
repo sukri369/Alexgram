@@ -29,7 +29,7 @@ public class ConfigItem {
     public final int type;
     public final Object defaultValue;
 
-    public volatile Object value;
+    public Object value;
 
     public ConfigItem(String key, int type, Object defaultValue) {
         this.key = key;

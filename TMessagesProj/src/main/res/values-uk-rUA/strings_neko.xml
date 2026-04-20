@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="NekoSettings">N-Налаштування</string>
+    <string name="NekoSettings">А-Налаштування</string>
     <string name="IPv6">Віддавати перевагу IPv6</string>
     <string name="MessageMenu">Меню повідомлень</string>
     <string name="HidePhone">Приховати номер телефону</string>
@@ -49,7 +49,6 @@
     <string name="TranslateApiUnsupported">Провайдер перекладу, обраний вами не підтримує вашу мову.</string>
     <string name="ProviderLingocloud">LingoCloud Translate</string>
     <string name="UndoTranslate">Приховати переклад</string>
-    <string name="DisablePhotoViewerSideAction">Вимкнути бічний дотик для перемикання фотографій</string>
     <string name="BotToken">Token</string>
     <string name="UnlimitedPinnedDialogs">Необмежені закріплені діалоги</string>
     <string name="UnlimitedPinnedDialogsAbout">Їхня синхронізація буде відключена.</string>
@@ -113,10 +112,10 @@
     <string name="enhancedFileLoader">Збільшення швидкості завантаження</string>
     <string name="mapDriftingFixForGoogleMaps">Виправлення Google Maps у Китаї</string>
     <string name="useOSMDroidMap">Використовувати карту OSMDroid</string>
-    <string name="UnknownNekoSettingsOption">У «Налаштуваннях N» немає такої опції.</string>
+    <string name="UnknownNekoSettingsOption">У «А-Налаштуваннях» немає такої опції.</string>
     <string name="PasscodeNeeded">Спочатку необхідно увімкнути блокування паролем</string>
     <string name="PasscodeNeko">Пароль</string>
-    <string name="PasscodeShowInSettings">Показати в N-налаштуваннях</string>
+    <string name="PasscodeShowInSettings">Показати в А-Налаштуваннях</string>
     <string name="PasscodeShowInSettingsAbout">Після приховування ви можете відкрити цю сторінку **лише** за посиланням:</string>
     <string name="PasscodeSet">Встановити пароль</string>
     <string name="PasscodeEdit">Змінити пароль</string>
@@ -154,7 +153,7 @@
     <string name="ClearRecentChats">Очистити недавні чати</string>
     <string name="ClearRecentChatAlert">Ви хочете очистити останні чати?</string>
     <string name="CloudConfig">Налаштування хмарного Сховища</string>
-    <string name="CloudConfigDesc">Збережіть свої N-налаштування у хмарі Telegram.</string>
+    <string name="CloudConfigDesc">Збережіть свої А-Налаштування у хмарі Telegram.</string>
     <string name="CloudConfigSyncDate">Остання синхронізація: %s, хмара: %s</string>
     <string name="CloudConfigSyncDateNever">ніколи</string>
     <string name="CloudConfigSync">Синхронізація у хмару</string>
@@ -163,7 +162,7 @@
     <string name="CloudConfigRestoreShort">Відновити</string>
     <string name="CloudConfigSyncing">Синхронізація...</string>
     <string name="CloudConfigAutoSync">Автоматична синхронізація</string>
-    <string name="CloudConfigAutoSyncDesc">Автоматично синхронізувати з хмарою після внесення змін до N-налаштувань.</string>
+    <string name="CloudConfigAutoSyncDesc">Автоматично синхронізувати з хмарою після внесення змін до А-Налаштувань.</string>
     <string name="CloudConfigSyncFailed">Не вдалося синхронізувати налаштування з хмарою</string>
     <string name="CloudConfigRestoreFailed">Не вдалося відновити налаштування з хмари</string>
     <string name="CopyCallback">Копіювати дані зворотного виклику</string>
@@ -193,7 +192,6 @@
     <string name="ShowIdAndDc">Показати ID/DC в профілі</string>
     <string name="UseDefaultTheme">Використовувати стандартну тему *</string>
     <string name="DialogsSettings">Чати</string>
-    <string name="NagramXPushService">Служба Push-сповіщень</string>
     <string name="DisableSystemAccount">Приховати акаунт у системі</string>
     <string name="FilterMenu">Меню фільтру діалогів</string>
     <string name="DisableProxyWhenVpnEnabled">Вимкнути проксі, коли увімкнено VPN</string>

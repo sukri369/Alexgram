@@ -65,7 +65,7 @@ public class VoiceChanger {
     }
 
     public static void process(ByteBuffer buffer, int count) {
-        int effect = NaConfig.getVoiceChangerEffectValue();
+        int effect = NaConfig.INSTANCE.getVoiceChangerEffectValue();
         if (effect == EFFECT_NONE) {
             if (currentEffect != EFFECT_NONE) clearState();
             currentEffect = EFFECT_NONE;

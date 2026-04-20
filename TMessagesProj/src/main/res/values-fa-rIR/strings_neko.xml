@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="NekoSettings">تنظیمات ناگرام</string>
+    <string name="NekoSettings">تنظیمات-A</string>
     <string name="IPv6">ترجیح دادن IPv6</string>
     <string name="MessageMenu">منوی پیام</string>
     <string name="HidePhone">پنهان کردن شماره تلفن</string>
@@ -49,7 +49,6 @@
     <string name="TranslateApiUnsupported">ارائه‌دهنده ترجمه انتخابی از زبان شما پشتیبانی نمی‌کند.</string>
     <string name="ProviderLingocloud">LingoCloud Translate</string>
     <string name="UndoTranslate">لغو ترجمه</string>
-    <string name="DisablePhotoViewerSideAction">غیرفعال کردن تعویض عکس با ضربه در کنار تصویر</string>
     <string name="BotToken">توکن ربات</string>
     <string name="UnlimitedPinnedDialogs">سنجاق کردن نامحدود گفتگوها</string>
     <string name="UnlimitedPinnedDialogsAbout">با غیرفعال کردن همگام‌سازی، گفتگوها را به صورت نامحدود سنجاق کنید.</string>
@@ -116,7 +115,7 @@
     <string name="UnknownNekoSettingsOption">چنین گزینه‌ای در تنظیمات وجود ندارد.</string>
     <string name="PasscodeNeeded">ابتدا باید قفل با گذرواژه را فعال کنید.</string>
     <string name="PasscodeNeko">گذرواژه</string>
-    <string name="PasscodeShowInSettings">نمایش در تنظیمات</string>
+    <string name="PasscodeShowInSettings">نمایش در تنظیمات-A</string>
     <string name="PasscodeShowInSettingsAbout">پس از پنهان کردن، **فقط** از طریق این لینک می‌توانید این صفحه را باز کنید:</string>
     <string name="PasscodeSet">تنظیم گذرواژه</string>
     <string name="PasscodeEdit">تغییر گذرواژه</string>
@@ -154,7 +153,7 @@
     <string name="ClearRecentChats">پاک کردن گفتگوهای اخیر</string>
     <string name="ClearRecentChatAlert">آیا می‌خواهید گفتگوهای اخیر خود را پاک کنید؟</string>
     <string name="CloudConfig">تنظیمات ابری</string>
-    <string name="CloudConfigDesc">ذخیره تنظیمات ناگرام</string>
+    <string name="CloudConfigDesc">ذخیره تنظیمات-A</string>
     <string name="CloudConfigSyncDate">آخرین همگام‌سازی: %s، ابر: %s</string>
     <string name="CloudConfigSyncDateNever">هرگز</string>
     <string name="CloudConfigSync">همگام‌سازی با ابر</string>
@@ -163,7 +162,7 @@
     <string name="CloudConfigRestoreShort">بازیابی</string>
     <string name="CloudConfigSyncing">در حال همگام‌سازی...</string>
     <string name="CloudConfigAutoSync">همگام‌سازی خودکار</string>
-    <string name="CloudConfigAutoSyncDesc">همگام‌سازی خودکار تنظیمات پس از هر تغییر در تنظیمات ناگرام.</string>
+    <string name="CloudConfigAutoSyncDesc">همگام‌سازی خودکار تنظیمات پس از هر تغییر در تنظیمات-A.</string>
     <string name="CloudConfigSyncFailed">همگام‌سازی تنظیمات با ابر ناموفق بود.</string>
     <string name="CloudConfigRestoreFailed">بازیابی تنظیمات از ابر ناموفق بود.</string>
     <string name="CopyCallback">کپی کردن داده Callback</string>
@@ -193,7 +192,6 @@
     <string name="ShowIdAndDc">نمایش شناسه (ID) / دیتاسنتر (DC) در پروفایل</string>
     <string name="UseDefaultTheme">استفاده از پوسته پیش‌فرض *</string>
     <string name="DialogsSettings">تنظیمات گفتگوها</string>
-    <string name="NagramXPushService">سرویس اعلان</string>
     <string name="DisableSystemAccount">غیرفعال کردن حساب سیستمی</string>
     <string name="FilterMenu">منوی فیلتر گفتگوها</string>
     <string name="DisableProxyWhenVpnEnabled">غیرفعال کردن پروکسی هنگام روشن بودن VPN</string>

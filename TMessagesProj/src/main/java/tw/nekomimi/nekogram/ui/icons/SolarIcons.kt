@@ -393,7 +393,7 @@ class SolarIcons {
             solarIcons.add(R.drawable.stickers_favorites to R.drawable.stickers_favorites_solar)
             solarIcons.add(R.drawable.stickers_gifs_trending to R.drawable.stickers_gifs_trending_solar)
             solarIcons.add(R.drawable.stickers_recent to R.drawable.msg_emoji_recent_solar)
-            solarIcons.add(R.drawable.tabs_reorder to R.drawable.tabs_reorder_solar)
+            solarIcons.add(R.drawable.tabs_reorder to R.drawable.ic_reorder_equal)
             solarIcons.add(R.drawable.theme_picker to R.drawable.theme_picker_solar)
             solarIcons.add(R.drawable.verified_profile to R.drawable.verified_profile_solar)
             solarIcons.add(R.drawable.video_send_mute to R.drawable.video_send_mute_solar)

@@ -157,9 +157,9 @@ public class OnlineThemesActivity extends BaseFragment {
                                     
                                     if (themeInfo != null) {
                                         // Update preview colors manually as they are not in the .attheme file head
-                                        themeInfo.previewBackgroundColor = item.previewBg;
-                                        themeInfo.previewInColor = item.previewIn;
-                                        themeInfo.previewOutColor = item.previewOut;
+                                        themeInfo.setPreviewBackgroundColor(item.previewBg);
+                                        themeInfo.setPreviewInColor(item.previewIn);
+                                        themeInfo.setPreviewOutColor(item.previewOut);
                                         
                                         BulletinFactory.of(OnlineThemesActivity.this).createSimpleBulletin(R.raw.done, "Theme applied!").show();
                                         

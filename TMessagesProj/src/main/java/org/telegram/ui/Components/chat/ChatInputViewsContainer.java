@@ -35,8 +35,6 @@ public class ChatInputViewsContainer extends FrameLayout {
     private final FrameLayout inputIslandBubbleContainer;
     private final FrameLayout inAppKeyboardBubbleContainer;
 
-    private boolean iosStyle;
-
     public ChatInputViewsContainer(@NonNull Context context) {
         super(context);
 
@@ -79,15 +77,8 @@ public class ChatInputViewsContainer extends FrameLayout {
     private BlurredBackgroundDrawable underKeyboardBackgroundDrawable;
     public void setInputIslandBubbleDrawable(BlurredBackgroundDrawable drawable) {
         blurredBackgroundDrawable = drawable;
-        if (blurredBackgroundDrawable != null) {
-            blurredBackgroundDrawable.setPadding(dp(7));
-            blurredBackgroundDrawable.setRadius(dp(INPUT_BUBBLE_RADIUS));
-        }
-    }
-
-    public void setIosStyle(boolean iosStyle) {
-        this.iosStyle = iosStyle;
-        invalidate();
+        blurredBackgroundDrawable.setPadding(dp(7));
+        blurredBackgroundDrawable.setRadius(dp(INPUT_BUBBLE_RADIUS));
     }
 
     public void setUnderKeyboardBackgroundDrawable(BlurredBackgroundDrawable drawable) {
@@ -99,12 +90,8 @@ public class ChatInputViewsContainer extends FrameLayout {
     }
 
     public void updateColors() {
-        if (blurredBackgroundDrawable != null) {
-            blurredBackgroundDrawable.updateColors();
-        }
-        if (underKeyboardBackgroundDrawable != null) {
-            underKeyboardBackgroundDrawable.updateColors();
-        }
+        blurredBackgroundDrawable.updateColors();
+        underKeyboardBackgroundDrawable.updateColors();
         invalidate();
     }
 
@@ -272,15 +259,16 @@ public class ChatInputViewsContainer extends FrameLayout {
         final int blurTop = getMeasuredHeight() - currentBlurredHeight;
 
         tmpRect.set(
-            Math.round(inputBubbleOffsetLeft), 0,
-            getMeasuredWidth() - Math.round(inputBubbleOffsetRight), inputBubbleHeightRound);
+            Math.round(inputBubbleOffsetLeft),
+            0,
+            getMeasuredWidth() - Math.round(inputBubbleOffsetRight),
+            inputBubbleHeightRound
+        );
         tmpRect.inset(0, -dp(7));
         tmpRect.offset(0, blurTop + (int) bubbleInputTranlationY);
 
-        if (!iosStyle && blurredBackgroundDrawable != null) {
-            blurredBackgroundDrawable.setBounds(tmpRect);
-            blurredBackgroundDrawable.draw(canvas);
-        }
+        blurredBackgroundDrawable.setBounds(tmpRect);
+        blurredBackgroundDrawable.draw(canvas);
 
         if (needDrawInAppKeyboard) {
             underKeyboardBackgroundDrawable.draw(canvas);

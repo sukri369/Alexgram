@@ -19,6 +19,7 @@ public class NekoAboutActivity extends BaseNekoSettingsActivity {
 
     private int xChannelRow;
     private int channelTipsRow;
+    private int sourceCodeRow;
     private int datacenterStatusRow;
 
     @Override
@@ -27,6 +28,7 @@ public class NekoAboutActivity extends BaseNekoSettingsActivity {
 
         xChannelRow = addRow();
         channelTipsRow = addRow();
+        sourceCodeRow = addRow();
         datacenterStatusRow = addRow();
     }
 
@@ -38,9 +40,11 @@ public class NekoAboutActivity extends BaseNekoSettingsActivity {
     @Override
     protected void onItemClick(View view, int position, float x, float y) {
         if (position == xChannelRow) {
-            MessagesController.getInstance(currentAccount).openByUserName("AlexgramApp", this, 1);
+            MessagesController.getInstance(currentAccount).openByUserName("AlexgramApp", NekoAboutActivity.this, 1);
         } else if (position == channelTipsRow) {
-            MessagesController.getInstance(currentAccount).openByUserName("Alexgramtips", this, 1);
+            MessagesController.getInstance(currentAccount).openByUserName("Alexgramtips", NekoAboutActivity.this, 1);
+        } else if (position == sourceCodeRow) {
+            Browser.openUrl(getParentActivity(), "https://github.com/alexandeer1/Alexgram");
         } else if (position == datacenterStatusRow) {
             presentFragment(new DatacenterActivity(0));
         }
@@ -59,17 +63,21 @@ public class NekoAboutActivity extends BaseNekoSettingsActivity {
 
         @Override
         public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position, boolean partial) {
+            super.onBindViewHolder(holder, position, partial);
             if (holder.getItemViewType() == TYPE_SETTINGS) {
                 TextSettingsCell textCell = (TextSettingsCell) holder.itemView;
                 if (position == xChannelRow) {
                     textCell.setTextAndValue("Alexgram Channel", "@AlexgramApp", true);
                 } else if (position == channelTipsRow) {
                     textCell.setTextAndValue("Features Tips Channel", "@Alexgramtips", true);
+                } else if (position == sourceCodeRow) {
+                    textCell.setTextAndValue(getString(R.string.SourceCode), "Github", true);
                 } else if (position == datacenterStatusRow) {
                     textCell.setText(getString(R.string.DatacenterStatus), false);
                 }
             }
         }
+
         @Override
         public int getItemViewType(int position) {
             return TYPE_SETTINGS;

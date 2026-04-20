@@ -66,6 +66,7 @@
     <string name="RegexFiltersUserHeader">Filtry użytkownika</string>
     <string name="RegexFiltersUserFilterHint">Wprowadź identyfikator użytkownika</string>
     <string name="RegexFiltersGlobalHeader">Filtry globalne</string>
+    <string name="RegexFiltersTextSelectionAddtoShared">Dodaj do udostępnionych filtrów</string>
     <string name="ShadowBan">Zakaz cieni</string>
     <string name="UnshadowBan">Zakaz usuwania cienia</string>
     <string name="ShadowBanAdded">Dodano do **filtrów użytkownika**.</string>
@@ -80,10 +81,6 @@
     <string name="MessageSavingSaveMediaInPublicGroups">… w grupach publicznych</string>
     <string name="MessageSavingSaveMediaInPrivateGroups">… w grupach prywatnych</string>
     <string name="TelegramUIAutoTranslate">Przetłumacz całe czaty</string>
-    <string name="TranslatorMode">Zachowanie tłumaczenia ręcznego</string>
-    <string name="TranslatorModeAppend">Dodać</string>
-    <string name="TranslatorModeInline">Zastąp</string>
-    <string name="TranslatorModePopup">Wyskakujące okno</string>
     <string name="Translated">przetłumaczone</string>
     <string name="ProviderRealMicrosoftTranslator">Tłumacz Microsoft</string>
     <string name="TranslatorSettings">Tłumacz</string>
@@ -110,7 +107,7 @@
     <string name="Other">Inne</string>
     <string name="RestartApp">Resetuj aplikacje</string>
     <string name="ResetSettings">Resetuj ustawienia</string>
-    <string name="ResetSettingsAlert">Czy na pewno chcesz zresetować wszystkie ustawienia-N?</string>
+    <string name="ResetSettingsAlert">Czy na pewno chcesz zresetować wszystkie A-Ustawienia?</string>
     <string name="DontAutoPlayNextVoice">Nie odtwarzaj automatycznie następnej wiadomości głosowej</string>
     <string name="SaveToChatSubfolder">Zapisz załączniki według nazwy czatu</string>
     <string name="MessageColoredBackground">Kolorowe tła Wiadomości</string>
@@ -118,7 +115,6 @@
     <string name="ChatMenu">Menu czatu</string>
     <string name="MediaViewerMenu">Menu przeglądarki multimediów</string>
     <string name="MenuAndButtons">Menu i przyciski</string>
-    <string name="ColoredAdminTitle">Kolorowy tytuł administratora</string>
     <string name="SettingsNax">Ustawienia</string>
     <string name="AccountSettingsNax">Ustawienia konta</string>
     <string name="HideReactions">Ukryj reakcje</string>
@@ -133,6 +129,7 @@
     <string name="DisableGhostMode">Wyłącz tryb ducha</string>
     <string name="GhostModeEnabled">Włączono tryb ducha</string>
     <string name="GhostModeDisabled">Wyłączono tryb ducha</string>
+    <string name="GhostModeInDrawer">Skrót do karty głównej</string>
     <string name="GhostModeStatusIndicator">Wskaźnik trybu ducha</string>
     <string name="DontSendReadMessagePackets">Nie czytaj wiadomości</string>
     <string name="DontReadStoriesPackets">Nie czytaj storek</string>
@@ -185,6 +182,8 @@
     <string name="DebugMenuDoNotForceForumTabs">Nie wymuszaj zakładek forum</string>
     <string name="DebugMenuCleanAppUpdate">Wyczyść aktualizacje aplikacji</string>
     <string name="DebugMenuMakeMemoryDump">Zrób zrzut pamięci</string>
+    <string name="DebugMenuShowFrameMetrics">Pokaż metryki klatek</string>
+    <string name="DebugMenuHideFrameMetrics">Ukryj metryki klatek</string>
     <string name="TranslateMessageLLM">Tłumacz z AI</string>
     <string name="EditLocalNameOverride">Edycja nadpisania nazwy lokalnej.</string>
     <string name="ResetChatNameOverrides">Zresetuj nadpisania nazw czatu</string>
@@ -205,7 +204,6 @@
     <string name="NoCaptionForward">Brak napisów do przodu</string>
     <string name="PreferCommonGroupsTab">Karta Preferuj grupy</string>
     <string name="PreferCommonGroupsTabNotice">Automatycznie-wybieraj zakładkę „Grupy” zamiast „Prezenty”</string>
-    <string name="SendHighQualityPhoto">Wyślij zdjęcie wysokiej jakości</string>
     <string name="GroupedMessageMenu">Menu wiadomości grupowych</string>
     <string name="GroupedMessageMenuNotice">Grupowanie przenosi główne akcje na dół menu wiadomości.</string>
     <string name="CopySticker">Kopiuj naklejkę</string>
@@ -214,9 +212,6 @@
     <string name="AutoCheckUpdateSwitch">Aktualizuj kanał</string>
     <string name="AutoCheckUpdateRelease">Upublikowane</string>
     <string name="AutoCheckUpdateBeta">Beta</string>
-    <string name="AutoInsertGIFCaption">GIF-y z automatycznymi podpisami</string>
-    <string name="AutoInsertGIFCaptionNotice">Automatycznie używa tekstu z bieżącego pola wprowadzania jako podpisu pliku GIF.</string>
-    <string name="UserAvatarsInMessagePreview">Awatary użytkowników w podglądzie wiadomości</string>
     <string name="YourVersionIsLatestNax">Twoja wersja jest aktualna.</string>
     <string name="PremiumElements">Elementy premium</string>
     <string name="PremiumItemBoosts">Licznik wzmocnienia</string>
@@ -228,7 +223,6 @@
     <string name="PremiumItemVideoAvatar">Animowane awatary</string>
     <string name="PremiumItemCustomWallpaper">Niestandardowe tapety</string>
     <string name="TranslationTargetApp">Śledź aplikację</string>
-    <string name="DisableAvatarTapToSwitch">Wyłącz awatary rowerowe, dotykając</string>
     <string name="SwitchStyle">Zmień styl</string>
     <string name="SliderStyle">Styl suwaka</string>
     <string name="StyleModern">Nowoczesny</string>
@@ -296,8 +290,6 @@
     <string name="CameraInVideoMessagesRear">Kamera tylnia</string>
     <string name="CameraInVideoMessagesAsk">Zapytaj</string>
     <string name="CameraSettings">Kamera</string>
-    <string name="SyncContactToPhone">Synchronizuj kontakt z telefonem</string>
-    <string name="AddViaQRCode">Dodaj za pomocą kodu QR</string>
     <string name="ContactNotes">Notatki</string>
     <string name="PhoneNotOnTelegramInvite">Tego numeru telefonu nie ma na Telegramie. **Zaproś &gt;**</string>
     <string name="PhoneAlreadyInContacts">Ten numer telefonu jest już w Twoich kontaktach. **Wyświetl &gt;**</string>
@@ -318,4 +310,7 @@
     <string name="UnifiedPushLastReceivedNotification">Ostatnie powiadomienie otrzymane za pomocą UnifiedPush zostało otrzymane %1$d sekund temu.\n\nOtrzymałeś %2$d powiadomień od momentu uruchomienia Nagram X.</string>
     <string name="UnifiedPushCurrentEndpoint">Aktualny punkt końcowy UnifiedPush to: %1$s</string>
     <string name="PlayOnce">Zagraj raz</string>
+    <string name="StorageSettings">Pamięć</string>
+    <string name="MainTabsSettingsHeader">Główne zakładki</string>
+    <string name="MainTabsHideTitles">Ukryj tytuły</string>
 </resources>

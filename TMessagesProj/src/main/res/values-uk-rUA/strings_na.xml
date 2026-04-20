@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="N_Config">Налаштування N</string>
+    <string name="N_Config">А-Налаштування</string>
     <string name="CombineMessage">Об\'єднати повідомлення</string>
     <string name="TextStyle">Стиль тексту</string>
     <string name="NoiseSuppressAndVoiceEnhance">Покращення звуку</string>
@@ -9,7 +9,7 @@
     <string name="SendReactions">Надсилати реакції</string>
     <string name="ShowReactions">Показати реакції</string>
     <string name="CustomTitle">Свій заголовок</string>
-    <string name="CustomTitleHint">Залиште порожнім, щоб використовувати Nagram X</string>
+    <string name="CustomTitleHint">Залиште порожнім, щоб використовувати Alexgram</string>
     <string name="CreateMono">Створити монопростір</string>
     <string name="CreateMonoLanguage">Мова коду</string>
     <string name="CopyPhoto">Копіювати зображення</string>
@@ -19,7 +19,6 @@
     <string name="ShowMessageID">Показати ID повідомлення</string>
     <string name="ShowRPCError">Показувати помилки RPC</string>
     <string name="ShowPremiumStickersAnimation">Показувати анімацію Premium наліпок</string>
-    <string name="AlwaysSaveChatOffset">Завжди зберігати зміщення чату</string>
     <string name="AppIconColorful">Барвистість</string>
     <string name="AppIconDarkGreen">Темно-зелений</string>
     <string name="AppIconNeon">Неон</string>
@@ -31,13 +30,11 @@
     <string name="ToTheMessage">Перейти до</string>
     <string name="ZalgoFilter">Фільтр символів «Zalgo»</string>
     <string name="ZalgoFilterNotice">Всі \"Z̷͍͌ā̸̜l̸̞̂g̷̝͘o̶̩̓\" символи в нікнеймах або повідомленнях буде видалено.</string>
-    <string name="labelChannelUser">Мітка користувачів каналу</string>
     <string name="AlwaysShowDownloadIcon">Завжди показувати значок завантаження</string>
     <string name="HideTitle">Сховати заголовок</string>
     <string name="IgnoreUnreadCount">Приховати кількість непрочитаних тек</string>
     <string name="SendWithoutMarkdown">Відправити без форматування</string>
     <string name="SendAsEmoji">Відправити як смайл</string>
-    <string name="CustomArtworkApi">АРІ користувацьких музичних обкладинок</string>
     <string name="CustomEditedMessage">Підпис для видалених повідомлень</string>
     <string name="NotificationIcon">Значок сповіщень</string>
     <string name="Official">Офіційний</string>
@@ -48,11 +45,11 @@
     <string name="ShowFullAbout">Завжди розгортати опис чату</string>
     <string name="TypeMessageHintUseGroupName">Назва групи як текст підказки у полі введення</string>
     <string name="HideBotButtonInInputField">Приховати кнопку бота в полі вводу</string>
-    <string name="ShowSendAsUnderMessageHint">Показувати відправника під підказкою Повідомлення у полі введення</string>
+    <string name="ShowSendAsUnderMessageHint">Показувати відправника у полі введення</string>
     <string name="CheckAllForum">Додати форум</string>
     <string name="DecorationNone">Не обрано</string>
     <string name="ChatDecoration">Оформлення чатів</string>
-    <string name="NeedChangeNekoSettings">Потрібно змінити N-налаштування</string>
+    <string name="NeedChangeNekoSettings">Потрібно змінити А-Налаштування</string>
     <string name="DoNotUnarchiveBySwipe">Вимкнути функцію \"Проведення для розархівування\"</string>
     <string name="DefaultDeleteMenu">Меню видалення за замовчуванням</string>
     <string name="DisableStories">Вимкнути історії</string>
@@ -89,7 +86,7 @@
     <string name="RegexFiltersCaseInsensitive">Нечутливі до регістрів вирази</string>
     <string name="RegexFiltersAdd">Додати фільтр</string>
     <string name="RegexFiltersEdit">Редагувати фільтр</string>
-    <string name="RegexFiltersAddDescription">Ви можете скористатися сайтом <![CDATA[<a href="https://regex101.com">regex101.com</a>]]> для повної перевірки вашого регулярного виразу. Ви також можете використовувати звичайний текст, але не забудьте екранувати дужки.</string>
+    <string name="RegexFiltersAddDescription">Ви можете скористатися сайтом &lt;a href="https://regex101.com"&gt;regex101.com&lt;/a&gt; для повної перевірки вашого регулярного виразу. Ви також можете використовувати звичайний текст, але не забудьте екранувати дужки.</string>
     <string name="RegexFiltersAddError">Помилка синтаксису регулярного виразу</string>
     <string name="ShowTimeHint">Натисніть «Час» для детальної інформації</string>
     <string name="SearchHashtagDefaultPageChannel">Типовий пошук хештегів у каналах</string>
@@ -107,4 +104,37 @@
     <string name="VideoPlayerDecoderPreferSW">Перевага програмному</string>
     <string name="VideoPlayerDecoderHardware">Тільки апаратне декодування</string>
     <string name="VideoPlayerDecoderPreferHW">Перевага апаратному</string>
+    <string name="RunInBackground">Робота у фоні</string>
+    <string name="RunInBackgroundInfo">Залишати програму запущеною у фоні для стабільної роботи сповіщень.</string>
+    <string name="NagramXPushService">Служба сповіщень Alexgram</string>
+    <string name="AppIconGoogle" translatable="false">Google</string>
+    <string name="AppIconColored">Alexgram Кольорова</string>
+    <string name="AppIconDark">Alexgram Темна</string>
+    <string name="AppIconGreen">Alexgram Зелена</string>
+    <string name="AppIconPink">Alexgram Рожева</string>
+    <string name="AppIconRoseBlue">Alexgram Рожево-синя</string>
+    <string name="AppIconWhite">Alexgram Біла</string>
+    <string name="Nagram" translatable="false">Alexgram</string>
+    <string name="PushServiceTypeFCM" translatable="false">Google FCM</string>
+    <string name="PushServiceTypeUnified" translatable="false">UnifiedPush</string>
+    <string name="PushServiceTypeMicroG" translatable="false">microG</string>
+    <string name="PushServiceTypeUnifiedGateway">Unified Push Gateway</string>
+    <string name="Pangu" translatable="false">Pangu</string>
+    <string name="EnableLiveVideoWallpaper">Живі відеошпалери</string>
+    <string name="ExportChat">Експорт чату</string>
+    <string name="ImportChat">Імпорт чату</string>
+    <string name="MusicGraph">Музичний графік</string>
+    <string name="MusicGraphInfo">Відображати кольоровий візуалізатор під час відтворення аудіо.</string>
+    <string name="SendVideoAsRound">Надіслати як відеоповідомлення</string>
+    <string name="VideoNoteDurationError">Відеоповідомлення не може бути довшим за 60 секунд.</string>
+    <string name="HiddenChats">Приховані чати</string>
+    <string name="HideChat">Додати до прихованих чатів</string>
+    <string name="UnhideChat">Видалити з прихованих чатів</string>
+    <string name="HideChats">Приховати чати</string>
+    <string name="UnhideChats">Показати чати</string>
+    <string name="HiddenChatsPasscode">Код-пароль для прихованих чатів</string>
+    <string name="UnlockHiddenChats">Розблокувати приховані чати</string>
+    <string name="HiddenChatsAbout">Приховайте важливі чати з основного списку. Доступ до них можна отримати довгим натисканням на заголовок після розблокування кодом або відбитком.</string>
+    <string name="HideContacts">Приховати контакти</string>
+    <string name="RestartRequired">Потрібен перезапуск для застосування змін</string>
 </resources>

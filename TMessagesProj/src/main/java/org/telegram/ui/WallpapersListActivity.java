@@ -43,10 +43,6 @@ import android.widget.TextView;
 import androidx.annotation.Keep;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import xyz.nextalone.nagram.NaConfig;
-import org.telegram.ui.Components.Bulletin;
-import org.telegram.ui.Components.BulletinFactory;
-import org.telegram.messenger.browser.Browser;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
@@ -62,7 +58,6 @@ import org.telegram.messenger.R;
 import org.telegram.messenger.SendMessagesHelper;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.Utilities;
-import org.telegram.messenger.browser.Browser;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
@@ -80,6 +75,7 @@ import org.telegram.ui.Cells.TextCell;
 import org.telegram.ui.Cells.TextInfoPrivacyCell;
 import org.telegram.ui.Cells.WallpaperCell;
 import org.telegram.ui.Components.ColorPicker;
+import org.telegram.ui.Components.BulletinFactory;
 import org.telegram.ui.Components.EmptyTextProgressView;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.NumberTextView;
@@ -99,6 +95,7 @@ public class WallpapersListActivity extends BaseFragment implements Notification
     @Keep
     private int uploadImageRow;
     private int setColorRow;
+    private int setVideoWallpaperRow;
     private int sectionRow;
     private int wallPaperStartRow;
     private int totalWallpaperRows;
@@ -106,7 +103,6 @@ public class WallpapersListActivity extends BaseFragment implements Notification
     private int resetRow;
     private int resetInfoRow;
     private int galleryRow;
-    private int setVideoWallpaperRow;
     private int galleryHintRow;
 
     private int currentType;
@@ -747,7 +743,14 @@ public class WallpapersListActivity extends BaseFragment implements Notification
             if (position == uploadImageRow) {
                 updater.openGallery();
             } else if (position == setVideoWallpaperRow) {
-                Browser.openUrl(getParentActivity(), "https://t.me/alexsettings/chat?r=EnableLiveVideoWallpaper");
+                try {
+                    Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                    intent.addCategory(Intent.CATEGORY_OPENABLE);
+                    intent.setType("video/*");
+                    startActivityForResult(intent, 520);
+                } catch (Exception e) {
+                    FileLog.e(e);
+                }
             } else if (position == setColorRow) {
                 WallpapersListActivity activity = new WallpapersListActivity(TYPE_COLOR);
                 activity.patterns = patterns;
@@ -818,9 +821,6 @@ public class WallpapersListActivity extends BaseFragment implements Notification
     @Override
     public void onResume() {
         super.onResume();
-        if (listAdapter != null) {
-            listAdapter.notifyDataSetChanged();
-        }
         SharedPreferences preferences = MessagesController.getGlobalMainSettings();
         Theme.ThemeInfo themeInfo = Theme.getActiveTheme();
         if (dialogId != 0) {
@@ -883,25 +883,20 @@ public class WallpapersListActivity extends BaseFragment implements Notification
         updater.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 520 && resultCode == Activity.RESULT_OK && data != null) {
             android.net.Uri uri = data.getData();
-            if (uri != null) {
+            if (uri != null && getParentActivity() != null) {
                 try {
-                final int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                getParentActivity().getContentResolver().takePersistableUriPermission(uri, takeFlags);
-                } catch (Exception e) {
-                   // ignore
+                    final int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                    getParentActivity().getContentResolver().takePersistableUriPermission(uri, takeFlags);
+                } catch (Exception ignore) {
                 }
 
                 String path = uri.toString();
-                // Save path
                 NaConfig.INSTANCE.getLiveVideoWallpaperPath().setConfigString(path);
-                // Enable if disabled
                 if (!NaConfig.INSTANCE.getEnableLiveVideoWallpaper().Bool()) {
                     NaConfig.INSTANCE.getEnableLiveVideoWallpaper().setConfigBool(true);
                 }
-                
+
                 BulletinFactory.of(this).createSimpleBulletin(R.drawable.msg_video, "Video Wallpaper Set").show();
-                
-                // Force UI update to show active state
                 if (listAdapter != null) {
                     listAdapter.notifyDataSetChanged();
                 }
@@ -1405,6 +1400,7 @@ public class WallpapersListActivity extends BaseFragment implements Notification
         } else if (currentType == TYPE_CHANNEL_PATTERNS) {
             uploadImageRow = -1;
             setColorRow = -1;
+            setVideoWallpaperRow = -1;
             sectionRow = -1;
             galleryRow = rowCount++;
             galleryHintRow = rowCount++;
@@ -2000,11 +1996,7 @@ public class WallpapersListActivity extends BaseFragment implements Notification
                         if (actionBar.isActionModeShowed()) {
                             wallpaperCell.setChecked(a, selectedWallPapers.indexOfKey(id) >= 0, !scrolling);
                         } else {
-                            if (NaConfig.INSTANCE.getEnableLiveVideoWallpaper().Bool()) {
-                                wallpaperCell.setChecked(a, false, !scrolling);
-                            } else {
-                                wallpaperCell.setChecked(a, selectedWallpaper != null, !scrolling);
-                            }
+                            wallpaperCell.setChecked(a, false, !scrolling);
                         }
                     }
                     break;

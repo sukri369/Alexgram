@@ -63,6 +63,7 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics;
 
 import static android.os.Build.VERSION.SDK_INT;
 
+@dagger.hilt.android.HiltAndroidApp
 public class ApplicationLoader extends Application {
 
     public static ApplicationLoader applicationLoaderInstance;
@@ -303,6 +304,7 @@ public class ApplicationLoader extends Application {
             DownloadController.getInstance(a);
         }
         BillingController.getInstance().startConnection();
+        xyz.nextalone.nagram.analytics.domain.AnalyticsManager.Companion.get(applicationContext).startTracking();
     }
 
     public ApplicationLoader() {
@@ -362,6 +364,31 @@ public class ApplicationLoader extends Application {
                 super.onActivityStarted(activity);
                 if (wasInBackground) {
                     ensureCurrentNetworkGet(true);
+                    xyz.nextalone.nagram.analytics.domain.AnalyticsManager.Companion.get(applicationContext).onAppForeground();
+                    // ── App Time Limit Enforcement ────────────────────────────
+                    try {
+                        xyz.nextalone.nagram.analytics.domain.AddictionController ctrl =
+                            xyz.nextalone.nagram.analytics.domain.AddictionController.Companion.get(applicationContext);
+                        if (ctrl.isLimitExceeded()) {
+                            android.content.Intent limitIntent = new android.content.Intent(
+                                applicationContext,
+                                xyz.nextalone.nagram.analytics.ui.AppLimitReachedActivity.class
+                            );
+                            limitIntent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+                                | android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                            applicationContext.startActivity(limitIntent);
+                        }
+                    } catch (Exception e) {
+                        // Fail open — never block due to an error
+                    }
+                }
+            }
+
+            @Override
+            public void onActivityStopped(Activity activity) {
+                super.onActivityStopped(activity);
+                if (isBackground()) {
+                    xyz.nextalone.nagram.analytics.domain.AnalyticsManager.Companion.get(applicationContext).onAppBackground();
                 }
             }
         };
@@ -384,18 +411,8 @@ public class ApplicationLoader extends Application {
     }
 
     private static void startPushServiceInternal() {
-        boolean forceKeepAliveService = NaConfig.INSTANCE.getRunInBackground().Bool();
-        if (PushListenerController.getProvider().hasServices() && !forceKeepAliveService) {
-            AndroidUtilities.runOnUIThread(() -> {
-                applicationContext.stopService(new Intent(applicationContext, NotificationsService.class));
-
-                PendingIntent pintent = PendingIntent.getService(applicationContext, 0, new Intent(applicationContext, NotificationsService.class), PendingIntent.FLAG_MUTABLE);
-                AlarmManager alarm = (AlarmManager) applicationContext.getSystemService(Context.ALARM_SERVICE);
-                alarm.cancel(pintent);
-                if (pendingIntent != null) {
-                    alarm.cancel(pendingIntent);
-                }
-            });
+        // Only skip the local push service if GMS provides push AND RunInBackground is NOT explicitly enabled
+        if (PushListenerController.getProvider().hasServices() && !NaConfig.INSTANCE.getRunInBackground().Bool()) {
             return;
         }
         SharedPreferences preferences = MessagesController.getNotificationsSettings(UserConfig.selectedAccount);
@@ -410,11 +427,15 @@ public class ApplicationLoader extends Application {
             editor.apply();
             ConnectionsManager.getInstance(UserConfig.selectedAccount).setPushConnectionEnabled(enabled);
         }
+        // If RunInBackground is enabled, always force the service on regardless of the pref state
+        if (!enabled && NaConfig.INSTANCE.getRunInBackground().Bool()) {
+            enabled = true;
+        }
         if (enabled) {
             AndroidUtilities.runOnUIThread(() -> {
                 try {
                     Log.d("TFOSS", "Starting push service...");
-                    if (NaConfig.INSTANCE.getPushServiceTypeInAppDialog().Bool() || forceKeepAliveService) {
+                    if (NaConfig.INSTANCE.getPushServiceTypeInAppDialog().Bool() || NaConfig.INSTANCE.getRunInBackground().Bool()) {
                         applicationContext.startForegroundService(new Intent(applicationContext, NotificationsService.class));
                     } else {
                         applicationContext.startService(new Intent(applicationContext, NotificationsService.class));

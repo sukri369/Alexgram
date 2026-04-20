@@ -9,9 +9,9 @@ import org.telegram.ui.Cells.TextCheckCell;
 import tw.nekomimi.nekogram.config.CellGroup;
 import tw.nekomimi.nekogram.config.ConfigItem;
 
-public class ConfigCellTextCheck extends AbstractConfigCell {
+public class ConfigCellTextCheck extends AbstractConfigCell implements WithBindConfig, WithKey {
     private final ConfigItem bindConfig;
-    private final CharSequence customTitle;
+    private final CharSequence title;
     private final String subtitle;
     private boolean enabled = true;
     public TextCheckCell cell;
@@ -26,7 +26,7 @@ public class ConfigCellTextCheck extends AbstractConfigCell {
 
     public ConfigCellTextCheck(ConfigItem bind, String subtitle, CharSequence customTitle) {
         this.bindConfig = bind;
-        this.customTitle = customTitle;
+        this.title = customTitle == null ? getString(bindConfig.getKey()) : customTitle;
         this.subtitle = subtitle;
     }
 
@@ -39,20 +39,7 @@ public class ConfigCellTextCheck extends AbstractConfigCell {
     }
 
     public CharSequence getTitle() {
-        if (customTitle != null) {
-            return customTitle;
-        }
-        if (bindConfig != null) {
-            String key = bindConfig.getKey();
-            if (key != null) {
-                String temp = getString(key);
-                if (temp != null) {
-                    return temp;
-                }
-                return key;
-            }
-        }
-        return "";
+        return title;
     }
 
     public String getKey() {
@@ -70,29 +57,13 @@ public class ConfigCellTextCheck extends AbstractConfigCell {
         }
     }
 
-    public void setEnabledAndUpdateState(boolean enabled) {
-        this.enabled = enabled;
-        if (this.cell != null) {
-            this.cell.setEnabled(this.enabled);
-            CharSequence title = getTitle();
-            if (title == null) title = "";
-            if (subtitle == null) {
-                cell.setTextAndCheck(title, bindConfig.Bool(), cellGroup.needSetDivider(this), true);
-            } else {
-                cell.setTextAndValueAndCheck(title.toString(), subtitle, bindConfig.Bool(), true, cellGroup.needSetDivider(this), true);
-            }
-        }
-    }
-
     public void onBindViewHolder(RecyclerView.ViewHolder holder) {
         TextCheckCell cell = (TextCheckCell) holder.itemView;
         this.cell = cell;
-        CharSequence safeTitle = getTitle();
-        if (safeTitle == null) safeTitle = "";
         if (subtitle == null) {
-            cell.setTextAndCheck(safeTitle, bindConfig.Bool(), cellGroup.needSetDivider(this), true);
+            cell.setTextAndCheck(title, bindConfig.Bool(), cellGroup.needSetDivider(this), true);
         } else {
-            cell.setTextAndValueAndCheck(safeTitle.toString(), subtitle, bindConfig.Bool(), true, cellGroup.needSetDivider(this), true);
+            cell.setTextAndValueAndCheck(title.toString(), subtitle, bindConfig.Bool(), true, cellGroup.needSetDivider(this), true);
         }
         cell.setEnabled(enabled, null);
     }
@@ -106,4 +77,3 @@ public class ConfigCellTextCheck extends AbstractConfigCell {
         cellGroup.runCallback(bindConfig.getKey(), newV);
     }
 }
-

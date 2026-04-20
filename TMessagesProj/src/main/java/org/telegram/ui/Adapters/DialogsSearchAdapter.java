@@ -46,10 +46,8 @@ import org.telegram.messenger.R;
 import org.telegram.messenger.R;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.UserConfig;
-import tw.nekomimi.nekogram.ui.HiddenChatsActivity;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
-import tw.nekomimi.nekogram.helpers.HiddenChatsController;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
@@ -72,6 +70,9 @@ import org.telegram.ui.Components.RLottieDrawable;
 import org.telegram.ui.Components.RecyclerListView;
 import org.telegram.ui.DialogsActivity;
 import org.telegram.ui.FilteredSearchView;
+
+import tw.nekomimi.nekogram.helpers.HiddenChatsController;
+import tw.nekomimi.nekogram.ui.HiddenChatsActivity;
 
 import java.util.ArrayList;
 import java.util.Arrays;

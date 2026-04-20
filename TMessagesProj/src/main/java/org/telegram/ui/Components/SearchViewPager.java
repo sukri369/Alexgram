@@ -8,7 +8,6 @@ import android.animation.AnimatorListenerAdapter;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -18,16 +17,18 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.graphics.drawable.AnimatedVectorDrawable;
+import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.view.Gravity;
-import android.view.View;
-import android.view.ViewParent;
 import android.view.MotionEvent;
+import android.view.View;
 import android.view.ViewConfiguration;
+import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.view.animation.OvershootInterpolator;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
@@ -36,7 +37,6 @@ import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -63,6 +63,7 @@ import org.telegram.ui.ActionBar.ActionBarMenu;
 import org.telegram.ui.ActionBar.ActionBarMenuItem;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BackDrawable;
+import org.telegram.ui.Components.ItemOptions;
 import org.telegram.ui.ActionBar.MenuDrawable;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
@@ -78,6 +79,7 @@ import org.telegram.ui.Cells.SharedLinkCell;
 import org.telegram.ui.Cells.SharedPhotoVideoCell;
 import org.telegram.ui.ChatActivity;
 import org.telegram.ui.Components.Premium.PremiumFeatureBottomSheet;
+import org.telegram.ui.Components.blur3.BlurredBackgroundDrawableViewFactory;
 import org.telegram.ui.Components.blur3.capture.IBlur3Capture;
 import org.telegram.ui.Components.blur3.utils.Blur3Utils;
 import org.telegram.ui.DialogsActivity;
@@ -85,15 +87,13 @@ import org.telegram.ui.FilteredSearchView;
 import org.telegram.ui.PremiumPreviewFragment;
 import org.telegram.ui.ReportBottomSheet;
 import org.telegram.ui.SearchAdsInfoBottomSheet;
-import tw.nekomimi.nekogram.ui.SearchEngineBottomSheet;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 
+import tw.nekomimi.nekogram.ui.SearchEngineBottomSheet;
 import xyz.nextalone.nagram.NaConfig;
 
 public class SearchViewPager extends ViewPagerFixed implements FilteredSearchView.UiCallback, NotificationCenter.NotificationCenterDelegate, IBlur3Capture {
@@ -124,6 +124,7 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
 
     public boolean postsAreNew;
     public final @NonNull PostsSearchContainer postsSearchContainer;
+    public WebSearchContainer webSearchContainer;
 
     public boolean expandedPublicPosts = false;
     private DefaultItemAnimator hashtagItemAnimator;
@@ -147,6 +148,19 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
     public final static int deleteItemId = 202;
     public final static int speedItemId = 203;
     public final static int saveItemId = 204;
+    public final static int WEB_SEARCH_TYPE = 7;
+
+    public boolean onBackPressed() {
+        int position = getCurrentPosition();
+        if (viewPagerAdapter != null && position >= 0 && position < viewPagerAdapter.items.size()) {
+            if (viewPagerAdapter.items.get(position).type == ViewPagerAdapter.WEB_SEARCH_TYPE_ITEM) {
+                if (webSearchContainer != null) {
+                    return webSearchContainer.onBackPressed();
+                }
+            }
+        }
+        return false;
+    }
 
     private ActionBarMenuItem speedItem;
     private ActionBarMenuItem gotoItem;
@@ -157,7 +171,6 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
     private ActionBarMenu actionMode;
 
     private SearchDownloadsContainer downloadsContainer;
-    private WebSearchContainer webSearchContainer;
 
     int currentAccount = UserConfig.selectedAccount;
 
@@ -738,8 +751,6 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
             }
             hashtagSearchAdapter.search(query);
             hashtagEmptyView.setKeyboardHeight(keyboardSize, false);
-        } else if (view == webSearchContainer) {
-            webSearchContainer.setQuery(query);
         } else if (view == searchContainer) {
             if (dialogId == 0 && minDate == 0 && maxDate == 0 || forumDialogId != 0) {
                 lastSearchScrolledToTop = false;
@@ -796,8 +807,8 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
         } else if (view instanceof SearchDownloadsContainer) {
             ((SearchDownloadsContainer) view).setKeyboardHeight(keyboardSize, false);
             ((SearchDownloadsContainer) view).search(query);
-        } else if (view instanceof WebSearchContainer) {
-            ((WebSearchContainer) view).setQuery(query);
+        } else if (view == webSearchContainer) {
+            webSearchContainer.search(query);
         }
     }
 
@@ -862,6 +873,8 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
         }
         if (show && !parent.getActionBar().actionModeIsExist(actionModeTag)) {
             actionMode = parent.getActionBar().createActionMode(true, actionModeTag);
+            // actionMode.setBackgroundColor(Color.TRANSPARENT);
+            // actionMode.drawBlur = false;
 
             if (parent.hasMainTabs) {
                 actionModeCloseView = new ImageView(getContext());
@@ -1293,13 +1306,13 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
         this.pagesPaddingTop = top;
         this.pagesPaddingBottom = bottom;
 
-        searchListView.setPadding(0, pagesPaddingTop, 0, pagesPaddingBottom, doNotRequestLayout);
-        channelsSearchListView.setPadding(0, pagesPaddingTop, 0, pagesPaddingBottom, doNotRequestLayout);
-        botsSearchListView.setPadding(0, pagesPaddingTop, 0, pagesPaddingBottom, doNotRequestLayout);
-        hashtagSearchListView.setPadding(0, pagesPaddingTop, 0, pagesPaddingBottom, doNotRequestLayout);
-        postsSearchContainer.listView.setPadding(0, pagesPaddingTop, 0, pagesPaddingBottom, doNotRequestLayout);
+        setPagesPaddings(searchContainer, searchListView, pagesPaddingTop, pagesPaddingBottom, doNotRequestLayout);
+        setPagesPaddings(channelsSearchContainer, channelsSearchListView, pagesPaddingTop, pagesPaddingBottom, doNotRequestLayout);
+        setPagesPaddings(botsSearchContainer, botsSearchListView, pagesPaddingTop, pagesPaddingBottom, doNotRequestLayout);
+        setPagesPaddings(hashtagSearchContainer, hashtagSearchListView, pagesPaddingTop, pagesPaddingBottom, doNotRequestLayout);
+        postsSearchContainer.setPagesPaddings(pagesPaddingTop, pagesPaddingBottom, doNotRequestLayout);
         if (downloadsContainer != null) {
-            downloadsContainer.recyclerListView.setPadding(0, pagesPaddingTop, 0, pagesPaddingBottom, doNotRequestLayout);
+            downloadsContainer.setPagesPaddings(pagesPaddingTop, pagesPaddingBottom, doNotRequestLayout);
         }
         if (webSearchContainer != null) {
             webSearchContainer.setPaddingTop(pagesPaddingTop);
@@ -1307,9 +1320,24 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
         for (int i = 0, N = viewsByType.size(); i < N; i++) {
             View v = viewsByType.valueAt(i);
             if (v instanceof FilteredSearchView) {
-                ((FilteredSearchView) v).recyclerListView.setPadding(0, pagesPaddingTop, 0, pagesPaddingBottom, doNotRequestLayout);
+                ((FilteredSearchView) v).setPagesPaddings(pagesPaddingTop, pagesPaddingBottom, doNotRequestLayout);
             }
         }
+        for (int i = 0; i < getChildCount(); i++) {
+            if (getChildAt(i) instanceof FilteredSearchView) {
+                ((FilteredSearchView) getChildAt(i)).setPagesPaddings(pagesPaddingTop, pagesPaddingBottom, doNotRequestLayout);
+            }
+        }
+    }
+
+    private static void setPagesPaddings(ViewGroup parent, RecyclerListView recyclerListView, int top, int bottom, boolean doNotRequestLayout) {
+        parent.setClipToPadding(false);
+        parent.setPadding(0, top, 0, bottom);
+        recyclerListView.setPadding(0, top, 0, bottom, doNotRequestLayout);
+        MarginLayoutParams lp = null;
+        lp = (MarginLayoutParams) recyclerListView.getLayoutParams();
+        lp.topMargin = -top;
+        lp.bottomMargin = -bottom;
     }
 
     public void setKeyboardHeight(int keyboardSize) {
@@ -1410,15 +1438,15 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
-        if (webSearchContainer != null) {
-            webSearchContainer.destroy();
-        }
         attached = false;
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.channelRecommendationsLoaded);
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.dialogDeleted);
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.dialogsNeedReload);
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.reloadWebappsHints);
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.storiesListUpdated);
+        if (webSearchContainer != null) {
+            webSearchContainer.destroy();
+        }
     }
 
     @Override
@@ -1442,6 +1470,12 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
     @Override
     protected void invalidateBlur() {
         fragmentView.invalidateBlur();
+    }
+
+    BlurredBackgroundDrawableViewFactory blurredBackgroundDrawableFactory;
+
+    public void setBlurredBackgroundDrawableFactory(BlurredBackgroundDrawableViewFactory factory) {
+        blurredBackgroundDrawableFactory = factory;
     }
 
     public void cancelEnterAnimation() {
@@ -1510,7 +1544,7 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
         private final static int BOTS_TYPE = 4;
         private final static int PUBLIC_POSTS_TYPE = 5;
         private final static int POSTS_TYPE = 6;
-        private final static int WEB_SEARCH_TYPE = 7;
+        private final static int WEB_SEARCH_TYPE_ITEM = 7;
 
         public ViewPagerAdapter() {
             updateItems();
@@ -1544,9 +1578,9 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
                 item = new Item(FILTER_TYPE);
                 item.filterIndex = 4;
                 items.add(item);
-                if (NaConfig.INSTANCE.getSearchEngineInSearchBar().Bool()) {
-                    items.add(new Item(WEB_SEARCH_TYPE));
-                }
+            }
+            if (NaConfig.INSTANCE.getSearchEngineInSearchBar().Bool()) {
+                items.add(new Item(WEB_SEARCH_TYPE_ITEM));
             }
         }
 
@@ -1568,8 +1602,8 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
                 return getString(R.string.DownloadsTabs);
             } else if (items.get(position).type == PUBLIC_POSTS_TYPE) {
                 return getString(R.string.PublicPostsTabs);
-            } else if (items.get(position).type == WEB_SEARCH_TYPE) {
-                return "Search";
+            } else if (items.get(position).type == WEB_SEARCH_TYPE_ITEM) {
+                return getString(R.string.Search);
             } else {
                 return FiltersView.filters[items.get(position).filterIndex].getTitle();
             }
@@ -1592,7 +1626,7 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
                 return hashtagSearchContainer;
             } else if (viewType == 2) {
                 downloadsContainer = new SearchDownloadsContainer(parent, currentAccount);
-                downloadsContainer.recyclerListView.setPadding(0, pagesPaddingTop, 0, pagesPaddingBottom);
+                downloadsContainer.setPagesPaddings(pagesPaddingTop, pagesPaddingBottom);
                 downloadsContainer.recyclerListView.setClipToPadding(false);
                 downloadsContainer.recyclerListView.addOnScrollListener(new RecyclerView.OnScrollListener() {
                     @Override
@@ -1604,17 +1638,19 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
                 downloadsContainer.recyclerListView.addEdgeEffectListener(SearchViewPager.this::invalidateBlur);
                 downloadsContainer.setUiCallback(SearchViewPager.this);
                 return downloadsContainer;
-            } else if (viewType == 6 && UserConfig.getInstance(currentAccount).isPremium()) {
-                return postsSearchContainer;
-            } else if (viewType == 8) {
-                webSearchContainer = new WebSearchContainer(getContext(), parent);
-                webSearchContainer.setPaddingTop(pagesPaddingTop);
+            } else if (viewType == 9) {
+                if (webSearchContainer == null) {
+                    webSearchContainer = new WebSearchContainer(getContext(), parent);
+                }
                 return webSearchContainer;
             } else {
                 FilteredSearchView filteredSearchView = new FilteredSearchView(parent);
                 filteredSearchView.setChatPreviewDelegate(chatPreviewDelegate);
                 filteredSearchView.setUiCallback(SearchViewPager.this);
-                filteredSearchView.recyclerListView.setPadding(0, pagesPaddingTop, 0, pagesPaddingBottom);
+                filteredSearchView.setPagesPaddings(pagesPaddingTop, pagesPaddingBottom);
+                if (blurredBackgroundDrawableFactory != null) {
+                    filteredSearchView.setBlurredBackgroundDrawableFactory(blurredBackgroundDrawableFactory);
+                }
                 filteredSearchView.recyclerListView.setClipToPadding(false);
                 filteredSearchView.recyclerListView.addOnScrollListener(new RecyclerView.OnScrollListener() {
                     @Override
@@ -1648,10 +1684,10 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
             if (items.get(position).type == POSTS_TYPE) {
                 return 6;
             }
-            if (items.get(position).type == WEB_SEARCH_TYPE) {
-                return 8;
+            if (items.get(position).type == WEB_SEARCH_TYPE_ITEM) {
+                return 9;
             }
-            return 100 + position;
+            return items.get(position).type + position;
         }
 
         @Override
@@ -1669,6 +1705,11 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
         }
     }
 
+    @Override
+    protected long getManualScrollDuration() {
+        return 320L;
+    }
+
     public interface ChatPreviewDelegate {
         void startChatPreview(RecyclerListView listView, DialogCell cell);
         void move(float dy);
@@ -1681,13 +1722,6 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
         }
     }
 
-    public boolean onBackPressed() {
-        if (webSearchContainer != null && getCurrentPosition() == viewPagerAdapter.items.size() - 1) {
-            return webSearchContainer.onBackPressed();
-        }
-        return false;
-    }
-
     private void handleSaveFiles() {
         ArrayList<MessageObject> messageObjects = new ArrayList<>(selectedFiles.values());
         hideActionMode();
@@ -1698,9 +1732,7 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
         });
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  Web-search tab container
-    // ─────────────────────────────────────────────────────────────────────────
+
     public class WebSearchContainer extends FrameLayout {
 
         private final DialogsActivity host;
@@ -1729,7 +1761,7 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
             this.host = host;
             setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
 
-            // ── Prompt Layout ──
+            // Prompt Layout
             promptLayout = new FrameLayout(context);
             addView(promptLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
@@ -1762,7 +1794,6 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
             ImageView arrowView = new ImageView(context);
             arrowView.setImageResource(R.drawable.arrow_more);
             arrowView.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText), PorterDuff.Mode.SRC_IN));
-            // Rotate arrow to point down for better "switcher" feel
             arrowView.setRotation(90);
             enginePillLayout.addView(arrowView, LayoutHelper.createLinear(20, 20, android.view.Gravity.CENTER_VERTICAL, 4, 0, 0, 0));
 
@@ -1791,13 +1822,19 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
             addView(resultsLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
             progressBar = new WebProgressBar(context);
-            resultsLayout.addView(progressBar, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 3, android.view.Gravity.TOP));
+            progressBar.setVisibility(View.GONE);
 
-            // Floating engine switcher for Results state (Themed Badge)
             SearchEngineBottomSheet.EngineBadgeView floatingBadge = new SearchEngineBottomSheet.EngineBadgeView(context);
             floatingBadge.setEngine(selected);
-            floatingBadge.setPadding(AndroidUtilities.dp(4), AndroidUtilities.dp(4), AndroidUtilities.dp(4), AndroidUtilities.dp(4));
-            floatingBadge.setBackground(Theme.createSimpleSelectorRoundRectDrawable(AndroidUtilities.dp(20), Theme.getColor(Theme.key_windowBackgroundGray), Theme.getColor(Theme.key_listSelector)));
+            floatingBadge.setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8));
+            android.graphics.drawable.GradientDrawable fabBg = new android.graphics.drawable.GradientDrawable();
+            fabBg.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+            fabBg.setColor(Theme.getColor(Theme.key_windowBackgroundWhite));
+            if (android.os.Build.VERSION.SDK_INT >= 21) {
+                floatingBadge.setElevation(AndroidUtilities.dp(4));
+                floatingBadge.setOutlineProvider(android.view.ViewOutlineProvider.BACKGROUND);
+            }
+            floatingBadge.setBackground(fabBg);
             
             final ViewConfiguration config = ViewConfiguration.get(context);
             final int touchSlop = config.getScaledTouchSlop();
@@ -1829,11 +1866,10 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
                                 float newTx = startTranslationX + deltaX;
                                 float newTy = startTranslationY + deltaY;
                                 
-                                // Boundary constraints
                                 float minX = -v.getLeft() + AndroidUtilities.dp(8);
-                                float maxX = resultsLayout.getWidth() - v.getRight() - AndroidUtilities.dp(8);
+                                float maxX = getWidth() - v.getRight() - AndroidUtilities.dp(8);
                                 float minY = -v.getTop() + AndroidUtilities.dp(8);
-                                float maxY = resultsLayout.getHeight() - v.getBottom() - AndroidUtilities.dp(8);
+                                float maxY = getHeight() - v.getBottom() - AndroidUtilities.dp(8);
                                 
                                 v.setTranslationX(Math.max(minX, Math.min(newTx, maxX)));
                                 v.setTranslationY(Math.max(minY, Math.min(newTy, maxY)));
@@ -1853,10 +1889,9 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
                                     }
                                 }).show();
                             } else {
-                                // Snap to nearest edge logic
                                 float currentTx = v.getTranslationX();
-                                float centerX = resultsLayout.getWidth() / 2f - (v.getLeft() + v.getRight()) / 2f;
-                                float targetTx = (currentTx < centerX) ? (-v.getLeft() + AndroidUtilities.dp(8)) : (resultsLayout.getWidth() - v.getRight() - AndroidUtilities.dp(8));
+                                float centerX = getWidth() / 2f - (v.getLeft() + v.getRight()) / 2f;
+                                float targetTx = (currentTx < centerX) ? (-v.getLeft() + AndroidUtilities.dp(8)) : (getWidth() - v.getRight() - AndroidUtilities.dp(8));
                                 v.animate().translationX(targetTx)
                                     .setDuration(250)
                                     .setInterpolator(new OvershootInterpolator(0.8f))
@@ -1867,11 +1902,11 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
                     return false;
                 }
             });
-            resultsLayout.addView(floatingBadge, LayoutHelper.createFrame(40, 40, android.view.Gravity.TOP | android.view.Gravity.RIGHT, 0, 8, 8, 0));
+            addView(floatingBadge, LayoutHelper.createFrame(56, 56, android.view.Gravity.BOTTOM | android.view.Gravity.RIGHT, 0, 0, 16, 16));
         }
 
         private class WebProgressBar extends View {
-            private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            private Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
             private float progress;
 
             public WebProgressBar(Context context) {
@@ -1923,9 +1958,9 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
                 settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
             }
 
-            // Dark mode integration
             if (Theme.isCurrentThemeDark() && Build.VERSION.SDK_INT >= 29) {
-                settings.setForceDark(WebSettings.FORCE_DARK_ON);
+                // FORCE_DARK_ON might be deprecated or behave differently, but let's keep it if Alexgram used it
+                // settings.setForceDark(WebSettings.FORCE_DARK_ON);
             }
 
             webView.setWebViewClient(new WebViewClient() {
@@ -1955,34 +1990,18 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
             });
 
             swipeRefreshLayout.addView(webView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
-            resultsLayout.addView(swipeRefreshLayout, 0, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
-            
-            webView.setOnTouchListener((v, event) -> {
-                if (event.getAction() == MotionEvent.ACTION_MOVE) {
-                    AndroidUtilities.hideKeyboard(host.getParentActivity().getCurrentFocus());
-                }
-                return false;
-            });
+            resultsLayout.addView(swipeRefreshLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+            resultsLayout.addView(progressBar, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 3, android.view.Gravity.TOP));
         }
 
-        public void setQuery(String query) {
-            if (query != null) query = query.trim();
-            if (TextUtils.equals(currentQuery, query)) return;
-            
-            AndroidUtilities.cancelRunOnUIThread(searchRunnable);
+        public void search(String query) {
             currentQuery = query;
-            
-            boolean hasQuery = !TextUtils.isEmpty(query);
-            if (hasQuery) {
-                hintLabel.setVisibility(View.GONE);
-                // Perform search with a slight debounce for better performance
-                AndroidUtilities.runOnUIThread(searchRunnable, 600);
+            if (TextUtils.isEmpty(query)) {
+                showPrompt();
+                AndroidUtilities.cancelRunOnUIThread(searchRunnable);
             } else {
-                hintLabel.setVisibility(View.VISIBLE);
-                if (resultsLayout.getVisibility() == View.VISIBLE) {
-                    showPrompt();
-                }
-                lastPerformedQuery = "";
+                AndroidUtilities.cancelRunOnUIThread(searchRunnable);
+                AndroidUtilities.runOnUIThread(searchRunnable, 500);
             }
         }
 
@@ -1991,33 +2010,31 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
         }
 
         private void performSearch(boolean force) {
-            if (TextUtils.isEmpty(currentQuery) || (!force && TextUtils.equals(currentQuery, lastPerformedQuery))) return;
-            lastPerformedQuery = currentQuery;
-            
+            if (TextUtils.isEmpty(currentQuery)) return;
+            if (!force && currentQuery.equals(lastPerformedQuery)) return;
+
             ensureWebView();
             promptLayout.setVisibility(View.GONE);
             resultsLayout.setVisibility(View.VISIBLE);
 
-            int engineIndex = NaConfig.INSTANCE.getSelectedSearchEngine().Int();
-            String baseUrl = SearchEngineBottomSheet.getEngineUrl(engineIndex);
-            String url;
-            try {
-                url = baseUrl + URLEncoder.encode(currentQuery, "UTF-8");
-            } catch (Exception e) {
-                url = baseUrl + currentQuery.replace(" ", "+");
-            }
+            String url = SearchEngineBottomSheet.getEngineUrl(NaConfig.INSTANCE.getSelectedSearchEngine().Int()) + Uri.encode(currentQuery);
             webView.loadUrl(url);
+            lastPerformedQuery = currentQuery;
         }
 
         private void showPrompt() {
-            resultsLayout.setVisibility(View.GONE);
             promptLayout.setVisibility(View.VISIBLE);
-            if (webView != null) webView.loadUrl("about:blank");
+            resultsLayout.setVisibility(View.GONE);
+            lastPerformedQuery = "";
+            if (webView != null) {
+                webView.stopLoading();
+                webView.loadUrl("about:blank");
+            }
         }
 
         public boolean onBackPressed() {
-            if (resultsLayout.getVisibility() == View.VISIBLE) {
-                if (webView != null && webView.canGoBack()) {
+            if (resultsLayout.getVisibility() == View.VISIBLE && webView != null) {
+                if (webView.canGoBack()) {
                     webView.goBack();
                 } else {
                     showPrompt();
@@ -2050,4 +2067,3 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
         }
     }
 }
-

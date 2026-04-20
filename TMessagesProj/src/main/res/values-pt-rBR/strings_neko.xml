@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="NekoSettings">N-Configurações</string>
+    <string name="NekoSettings">A-Configurações</string>
     <string name="IPv6">Preferir IPv6</string>
     <string name="MessageMenu">Menu de mensagem</string>
     <string name="HidePhone">Ocultar número de telefone</string>
@@ -49,7 +49,6 @@
     <string name="TranslateApiUnsupported">O provedor de tradução que você selecionou não suporta seu idioma.</string>
     <string name="ProviderLingocloud">LingoCloud Tradutor</string>
     <string name="UndoTranslate">Ocultar tradução</string>
-    <string name="DisablePhotoViewerSideAction">Desativar toque lateral para trocar fotos</string>
     <string name="BotToken">Token</string>
     <string name="UnlimitedPinnedDialogs">Diálogos fixados ilimitados</string>
     <string name="UnlimitedPinnedDialogsAbout">Fixar diálogos ilimitados ao desativar a sincronização deles.</string>
@@ -59,7 +58,7 @@
     <string name="UserRestrictionsSendGifs">Enviar GIFs</string>
     <string name="CheckAllAdministrated">Adicionar administrados</string>
     <string name="RearVideoMessages">Câmera traseira em mensagens de vídeo</string>
-    <string name="HideAllTab">Ocultar a aba \"Todos os Chats\"</string>
+    <string name="HideAllTab">Ocultar aba \"Todos os Chats\"</string>
     <string name="HideAllTabAbout">Pressione longamente o título na lista de chats para exibir todos os chats.</string>
     <string name="TabTitleType">Mostrar nas abas</string>
     <string name="TabTitleTypeText">Títulos</string>
@@ -113,10 +112,10 @@
     <string name="enhancedFileLoader">Aumentar velocidade de download</string>
     <string name="mapDriftingFixForGoogleMaps">Corrigir desvio do Google Maps na China</string>
     <string name="useOSMDroidMap">Usar mapa OSMDroid</string>
-    <string name="UnknownNekoSettingsOption">Não existe esta opção nas N-Configurações.</string>
+    <string name="UnknownNekoSettingsOption">Não existe esta opção nas A-Configurações.</string>
     <string name="PasscodeNeeded">​Você precisa ativar a senha de bloqueio primeiro</string>
     <string name="PasscodeNeko">Senha de acesso</string>
-    <string name="PasscodeShowInSettings">Mostrar nas N-Configurações</string>
+    <string name="PasscodeShowInSettings">Mostrar nas A-Configurações</string>
     <string name="PasscodeShowInSettingsAbout">Após ocultar, você poderá abrir esta página **APENAS** por este link:</string>
     <string name="PasscodeSet">Definir senha</string>
     <string name="PasscodeEdit">Alterar senha</string>
@@ -134,12 +133,12 @@
     <string name="RestrictionReason">Motivo da restrição</string>
     <string name="InvalidCustomEmojiTypeface">Arquivo de fonte inválido.</string>
     <string name="DownloadEmojiSet">Download %s</string>
-    <string name="EmojiSets">Pacotes de emojis</string>
+    <string name="EmojiSets">Pacotes de emoji</string>
     <string name="MyEmojiSets">Meu pacote de emoji</string>
     <string name="InstalledEmojiSet">Instalado</string>
     <string name="InstallingEmojiSet">Instalando…</string>
     <string name="UpdateEmojiSet">Atualizar %s</string>
-    <string name="EmojiSetHint">Isso afeta a aparência dos emojis apenas para você. Outras pessoas os veem com base nas preferências delas.</string>
+    <string name="EmojiSetHint">Isso afeta a aparência dos emojis apenas para você. Outros os verão com base nas preferências deles.</string>
     <string name="CustomEmojiSetHint">Importar e escolher pacotes de emojis do seu armazenamento interno.</string>
     <string name="AddEmojiSet">Adicionar pacote de emoji</string>
     <string name="EmojiSetRemoved">Pacote de emojis removido.</string>
@@ -155,7 +154,7 @@
     <string name="ClearRecentChats">Limpar chats recentes</string>
     <string name="ClearRecentChatAlert">Deseja limpar suas conversas recentes?</string>
     <string name="CloudConfig">Configurações da nuvem</string>
-    <string name="CloudConfigDesc">Salve suas N-Configurações na nuvem do Telegram.</string>
+    <string name="CloudConfigDesc">Salve suas A-Configurações na nuvem do Telegram.</string>
     <string name="CloudConfigSyncDate">Última sincronização: %s, nuvem: %s</string>
     <string name="CloudConfigSyncDateNever">nunca</string>
     <string name="CloudConfigSync">Sincronizar com a nuvem</string>
@@ -164,7 +163,7 @@
     <string name="CloudConfigRestoreShort">Restaurar</string>
     <string name="CloudConfigSyncing">Sincronizando...</string>
     <string name="CloudConfigAutoSync">Sincronizar automaticamente</string>
-    <string name="CloudConfigAutoSyncDesc">Sincronizar com a nuvem automaticamente após alterar as N-Configurações.</string>
+    <string name="CloudConfigAutoSyncDesc">Sincronizar com a nuvem automaticamente após alterar as A-Configurações.</string>
     <string name="CloudConfigSyncFailed">Falha ao sincronizar as configurações com a nuvem</string>
     <string name="CloudConfigRestoreFailed">Falha ao restaurar as configurações da nuvem</string>
     <string name="CopyCallback">Copiar dados de callback</string>
@@ -195,7 +194,6 @@
     <string name="ShowIdAndDc">Mostrar ID e DC no perfil</string>
     <string name="UseDefaultTheme">Usar o tema padrão *</string>
     <string name="DialogsSettings">Diálogos</string>
-    <string name="NagramXPushService">Serviço de notificação</string>
     <string name="DisableSystemAccount">Desativar conta do sistema</string>
     <string name="FilterMenu">Menu de filtros de diálogos</string>
     <string name="DisableProxyWhenVpnEnabled">Desativar proxy quando a VPN estiver ativada</string>
@@ -274,4 +272,8 @@
     <string name="EmojiUseDefault">Usar emoji do sistema</string>
     <string name="Chat">Chats</string>
     <string name="Appearance">Aparência</string>
+
+    <string name="StarFallInChat">Efeito Estrela Cadente</string>
+    <string name="StarFallInChatDescription">Mostrar animação de estrelas cadentes nos chats.</string>
+    <string name="NekoX">Configurações NekoX</string>
 </resources>

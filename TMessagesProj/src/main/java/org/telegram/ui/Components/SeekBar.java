@@ -27,7 +27,6 @@ import org.telegram.messenger.Emoji;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.Utilities;
-import xyz.nextalone.nagram.NaConfig;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -74,7 +73,6 @@ public class SeekBar {
     private long lastUpdateTime;
     private View parentView;
     private float alpha = 1f;
-    private Path waveformPath = new Path();
 
     public SeekBar(View parent) {
         if (paint == null) {
@@ -198,33 +196,17 @@ public class SeekBar {
         if (alpha < 1) {
             canvas.saveLayerAlpha(0, 0, width, height, (int) (255 * alpha), Canvas.ALL_SAVE_FLAG);
         }
-
-        float currentThumbX = (pressed ? draggingThumbX : thumbX);
-        float thumbXLeft = thumbWidth / 2f + currentThumbX;
-        if (NaConfig.INSTANCE.getWaveformSeekBar().Bool()) {
-            rect.set(thumbXLeft, height / 2 - lineHeight / 2, width - thumbWidth / 2, height / 2 + lineHeight / 2);
-        } else {
-            rect.set(thumbWidth / 2, height / 2 - lineHeight / 2, width - thumbWidth / 2, height / 2 + lineHeight / 2);
-        }
+        rect.set(thumbWidth / 2, height / 2 - lineHeight / 2, width - thumbWidth / 2, height / 2 + lineHeight / 2);
         paint.setColor(selected ? backgroundSelectedColor : backgroundColor);
         drawProgressBar(canvas, rect, paint);
         if (bufferedProgress > 0) {
             paint.setColor(selected ? backgroundSelectedColor : cacheColor);
-            float bufferedX = thumbWidth / 2f + bufferedProgress * (width - thumbWidth);
-            if (NaConfig.INSTANCE.getWaveformSeekBar().Bool()) {
-                rect.set(Math.max(thumbWidth / 2f, thumbXLeft), height / 2 - lineHeight / 2, Math.max(thumbWidth / 2f, bufferedX), height / 2 + lineHeight / 2);
-            } else {
-                rect.set(thumbWidth / 2, height / 2 - lineHeight / 2, bufferedX, height / 2 + lineHeight / 2);
-            }
+            rect.set(thumbWidth / 2, height / 2 - lineHeight / 2, thumbWidth / 2 + bufferedProgress * (width - thumbWidth), height / 2 + lineHeight / 2);
             drawProgressBar(canvas, rect, paint);
         }
-        rect.set(thumbWidth / 2, height / 2 - lineHeight / 2, thumbXLeft, height / 2 + lineHeight / 2);
+        rect.set(thumbWidth / 2, height / 2 - lineHeight / 2, thumbWidth / 2 + (pressed ? draggingThumbX : thumbX), height / 2 + lineHeight / 2);
         paint.setColor(progressColor);
-        if (NaConfig.INSTANCE.getWaveformSeekBar().Bool()) {
-            drawWaveform(canvas, rect, paint);
-        } else {
-            drawProgressBar(canvas, rect, paint);
-        }
+        drawProgressBar(canvas, rect, paint);
         paint.setColor(circleColor);
 
         int newRad = AndroidUtilities.dp(pressed ? 8 : 6);
@@ -452,55 +434,6 @@ public class SeekBar {
                 }
             }
             canvas.drawPath(tmpPath, paint);
-        }
-    }
-
-    private float animationTime = 0;
-    private long lastAnimationUpdateTime = 0;
-
-    private void drawWaveform(Canvas canvas, RectF rect, Paint paint) {
-        float width = rect.width();
-        if (width <= 0) return;
-
-        float centerY = rect.centerY();
-        float waveMaxHeight = AndroidUtilities.dp(7);
-        
-        long now = SystemClock.elapsedRealtime();
-        if (lastAnimationUpdateTime != 0 && !org.telegram.messenger.MediaController.getInstance().isMessagePaused()) {
-            animationTime += (now - lastAnimationUpdateTime) / 400.0f;
-        }
-        lastAnimationUpdateTime = now;
-
-        waveformPath.reset();
-        float step = AndroidUtilities.dp(2f);
-        for (float x = rect.left; x <= rect.right; x += step) {
-            float relativeX = x - thumbWidth / 2f;
-            float y = centerY + waveMaxHeight * (float) Math.sin(relativeX * 0.08f + animationTime);
-            if (x == rect.left) {
-                waveformPath.moveTo(x, y);
-            } else {
-                waveformPath.lineTo(x, y);
-            }
-        }
-
-        Paint.Style oldStyle = paint.getStyle();
-        Paint.Cap oldCap = paint.getStrokeCap();
-        float oldWidth = paint.getStrokeWidth();
-
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeCap(Paint.Cap.ROUND);
-        paint.setStrokeWidth(rect.height());
-
-        canvas.drawPath(waveformPath, paint);
-
-        paint.setStyle(oldStyle);
-        paint.setStrokeCap(oldCap);
-        paint.setStrokeWidth(oldWidth);
-        paint.setStrokeCap(oldCap);
-        paint.setStrokeWidth(oldWidth);
-
-        if (parentView != null) {
-            parentView.invalidate();
         }
     }
 

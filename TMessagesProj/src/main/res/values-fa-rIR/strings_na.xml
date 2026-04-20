@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="N_Config">پیکربندی N</string>
+    <string name="N_Config">تنظیمات-A</string>
     <string name="CombineMessage">ترکیب پیام‌ها</string>
     <string name="TextStyle">حالت متن</string>
     <string name="NoiseSuppressAndVoiceEnhance">بهبود صدا</string>
@@ -19,7 +19,6 @@
     <string name="ShowMessageID">نمایش شناسه پیام</string>
     <string name="ShowRPCError">گزارش خطاهای PRC</string>
     <string name="ShowPremiumStickersAnimation">نمایش انیمیشن استیکرهای پریمیوم</string>
-    <string name="AlwaysSaveChatOffset">ذخیره همیشگی موقعیت گفتگو</string>
     <string name="AppIconColorful">رنگارنگ</string>
     <string name="AppIconDarkGreen">سبز تیره</string>
     <string name="AppIconNeon">نئون</string>
@@ -31,13 +30,11 @@
     <string name="ToTheMessage">برو به</string>
     <string name="ZalgoFilter">نمادهای \"Zalgo\" را فیلتر کنید</string>
     <string name="ZalgoFilterNotice">تمام نمادهای \"Z̷͍͌ā̸̜l̸̞̂g̷̝͘o̶̩̓\" در نام‌ها یا پیام‌ها حذف خواهند شد.</string>
-    <string name="labelChannelUser">برچسب‌گذاری کاربران کانال</string>
     <string name="AlwaysShowDownloadIcon">نمایش همیشگی دکمه دانلود</string>
     <string name="HideTitle">پنهان کردن عنوان</string>
     <string name="IgnoreUnreadCount">پنهان کردن شمارنده پیام‌های خوانده نشده</string>
     <string name="SendWithoutMarkdown">ارسال بدون علامت گذاری</string>
     <string name="SendAsEmoji">ارسال به‌صورت اموجی</string>
-    <string name="CustomArtworkApi">؜Artwork API سفارشی</string>
     <string name="CustomEditedMessage">آیکون پیام ویرایش شده سفارشی</string>
     <string name="NotificationIcon">ﺁﻳﮑﻮﻥ ﺍﻋﻼﻥ‌ها</string>
     <string name="Official">رسمی</string>
@@ -52,7 +49,7 @@
     <string name="CheckAllForum">افزودن انجمن</string>
     <string name="DecorationNone">هیچ</string>
     <string name="ChatDecoration">تزئین چت</string>
-    <string name="NeedChangeNekoSettings">بهتر است تنظیمات N را تغییر دهید</string>
+    <string name="NeedChangeNekoSettings">بهتر است تنظیمات-A را تغییر دهید</string>
     <string name="DoNotUnarchiveBySwipe">غیرفعال کردن سوایپ برای بازگردانی از آرشیو</string>
     <string name="DefaultDeleteMenu">منوی حذف پیش‌فرض</string>
     <string name="DisableStories">استوری‌ها را غیرفعال کنید</string>
@@ -86,7 +83,7 @@
     <string name="RegexFiltersCaseInsensitive">عدم توجه به بزرگ یا کوچک بودن حروف</string>
     <string name="RegexFiltersAdd">افزودن فیلتر</string>
     <string name="RegexFiltersEdit">ویرایش فیلتر</string>
-    <string name="RegexFiltersAddDescription">شما می‌توانید از سایت <![CDATA[<a href="https://regex101.com">regex101.com</a>]]> برای تست کامل عبارت منظم (regular expression) خود استفاده کنید. همچنین می‌توانید از متن ساده (plain text) استفاده کنید، اما مواظب بازگردانی پرانتز ها باشید.</string>
+    <string name="RegexFiltersAddDescription">شما می‌توانید از سایت &lt;a href="https://regex101.com"&gt;regex101.com&lt;/a&gt; برای تست کامل عبارت منظم (regular expression) خود استفاده کنید. همچنین می‌توانید از متن ساده (plain text) استفاده کنید، اما مواظب بازگردانی پرانتز ها باشید.</string>
     <string name="RegexFiltersAddError">خطای نحوی سینتکس عبارت منظم</string>
     <string name="ShowTimeHint">برای نمایش جزئیات روی زمان پیام کلیک کنید</string>
     <string name="SearchHashtagDefaultPageChannel">صفحه جستجوی پیش‌فرض هشتگ‌ها در کانال‌ها</string>
@@ -104,4 +101,40 @@
     <string name="VideoPlayerDecoderPreferSW">ترجیح دادن SW</string>
     <string name="VideoPlayerDecoderHardware">فقط HW</string>
     <string name="VideoPlayerDecoderPreferHW">ترجیح دادن HW</string>
+    <string name="RunInBackground">اجرا در پس‌زمینه</string>
+    <string name="RunInBackgroundInfo">برای اطمینان از دریافت اعلان‌ها، برنامه را در پس‌زمینه در حال اجرا نگه دارید.</string>
+    <string name="NagramXPushService">سرویس اعلان الکس‌گرام</string>
+    <string name="AppIconGoogle" translatable="false">Google</string>
+    <string name="AppIconColored">الکس‌گرام رنگی</string>
+    <string name="AppIconDark">الکس‌گرام تیره</string>
+    <string name="AppIconGreen">الکس‌گرام سبز</string>
+    <string name="AppIconPink">الکس‌گرام صورتی</string>
+    <string name="AppIconRoseBlue">الکس‌گرام رزآبی</string>
+    <string name="AppIconWhite">الکس‌گرام سفید</string>
+    <string name="Nagram" translatable="false">Alexgram</string>
+    <string name="PushServiceTypeFCM" translatable="false">Google FCM</string>
+    <string name="PushServiceTypeUnified" translatable="false">UnifiedPush</string>
+    <string name="PushServiceTypeMicroG" translatable="false">microG</string>
+    <string name="PushServiceTypeUnifiedGateway">درگاه Unified Push</string>
+    <string name="RegexFiltersSharedHeader">فیلترهای مشترک</string>
+    <string name="RegexFiltersSubMenuDescription">می‌توانید فیلترهای مشترک را برای این گفتگو غیرفعال کنید.</string>
+    <string name="RegexFiltersChatHeader">فیلترهای گفتگو</string>
+    <string name="Pangu" translatable="false">Pangu</string>
+    <string name="EnableLiveVideoWallpaper">والپیپر زنده ویدیویی</string>
+    <string name="ExportChat">خروجی گرفتن از گفتگو</string>
+    <string name="ImportChat">وارد کردن گفتگو</string>
+    <string name="MusicGraph">نمودار موسیقی</string>
+    <string name="MusicGraphInfo">نمایش بصری‌ساز رنگی موسیقی هنگام پخش صدا.</string>
+    <string name="SendVideoAsRound">ارسال ویدیو به صورت گرد</string>
+    <string name="VideoNoteDurationError">ویدیو گرد نباید بیشتر از ۶۰ ثانیه باشد.</string>
+    <string name="HiddenChats">گفتگوهای پنهان</string>
+    <string name="HideChat">افزودن به گفتگوهای پنهان</string>
+    <string name="UnhideChat">حذف از گفتگوهای پنهان</string>
+    <string name="HideChats">پنهان کردن گفتگوها</string>
+    <string name="UnhideChats">آشکارسازی گفتگوها</string>
+    <string name="HiddenChatsPasscode">گذرواژه گفتگوهای پنهان</string>
+    <string name="UnlockHiddenChats">باز کردن گفتگوهای پنهان</string>
+    <string name="HiddenChatsAbout">گفتگوهای حساس را از لیست اصلی پنهان کنید. با نگه داشتن نوار عنوان و پس از باز کردن قفل با گذرواژه یا بیومتریک، به آن‌ها دسترسی پیدا کنید.</string>
+    <string name="HideContacts">پنهان کردن مخاطبین</string>
+    <string name="RestartRequired">برای اعمال تغییرات، راه‌اندازی مجدد لازم است</string>
 </resources>

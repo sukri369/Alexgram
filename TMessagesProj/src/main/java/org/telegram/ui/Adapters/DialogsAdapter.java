@@ -76,13 +76,14 @@ import org.telegram.ui.DialogsActivity;
 import org.telegram.ui.Stories.DialogStoriesCell;
 import org.telegram.ui.Stories.StoriesController;
 import org.telegram.ui.Stories.StoriesListPlaceProvider;
-import tw.nekomimi.nekogram.helpers.HiddenChatsController;
 
-import tw.nekomimi.nekogram.ui.HiddenChatsActivity;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Objects;
+
+import tw.nekomimi.nekogram.helpers.HiddenChatsController;
+import tw.nekomimi.nekogram.ui.HiddenChatsActivity;
 
 public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements DialogCell.DialogCellDelegate {
     public final static int VIEW_TYPE_DIALOG = 0,
@@ -1420,7 +1421,7 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
                     height = height - dialogsHeight + archiveHeight - paddingBottom;
                     if (paddingTop != 0) {
                         height -= AndroidUtilities.statusBarHeight;
-                        if (parentFragment.hasStories && !collapsedView && !isTransitionSupport) {
+                        if (/*parentFragment.hasStories &&*/ !collapsedView && !isTransitionSupport) {
                             height -= ActionBar.getCurrentActionBarHeight();
                             if (getParent() instanceof DialogsActivity.DialogsRecyclerView) {
                                 DialogsActivity.DialogsRecyclerView dialogsRecyclerView = (DialogsActivity.DialogsRecyclerView) getParent();
@@ -1434,7 +1435,7 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
                     height = archiveHeight - (dialogsHeight - height) - paddingBottom;
                     if (paddingTop != 0) {
                         height -= AndroidUtilities.statusBarHeight;
-                        if (parentFragment.hasStories && !collapsedView && !isTransitionSupport) {
+                        if (/*parentFragment.hasStories &&*/ !collapsedView && !isTransitionSupport) {
                             height -= ActionBar.getCurrentActionBarHeight();
                             if (getParent() instanceof DialogsActivity.DialogsRecyclerView) {
                                 DialogsActivity.DialogsRecyclerView dialogsRecyclerView = (DialogsActivity.DialogsRecyclerView) getParent();

@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="N_Config">N-设置</string>
+    <string name="N_Config">A-设置</string>
     <string name="CombineMessage">合并消息</string>
     <string name="TextStyle">文本样式</string>
     <string name="NoiseSuppressAndVoiceEnhance">噪音抑制和语音增强</string>
@@ -9,7 +9,7 @@
     <string name="SendReactions">表情回应</string>
     <string name="ShowReactions">显示表情回应菜单</string>
     <string name="CustomTitle">自定义标题</string>
-    <string name="CustomTitleHint">留空则使用 Nagram X</string>
+    <string name="CustomTitleHint">留空则使用 Alexgram</string>
     <string name="CreateMono">创建等宽</string>
     <string name="CreateMonoLanguage">等宽语言</string>
     <string name="CopyPhoto">复制图片</string>
@@ -19,7 +19,6 @@
     <string name="ShowMessageID">显示消息 ID</string>
     <string name="ShowRPCError">显示 RPC 错误</string>
     <string name="ShowPremiumStickersAnimation">显示 Premium 贴纸动画</string>
-    <string name="AlwaysSaveChatOffset">总是保存聊天记录的偏移量</string>
     <string name="AppIconColorful">缤纷</string>
     <string name="AppIconDarkGreen">深翠</string>
     <string name="AppIconNeon">霓虹</string>
@@ -31,13 +30,11 @@
     <string name="ToTheMessage">前往消息</string>
     <string name="ZalgoFilter">过滤 \"Zalgo\" 符号</string>
     <string name="ZalgoFilterNotice">昵称和消息中的 \"Z̷͍͌ā̸̜l̸̞̂g̷̝͘o̶̩̓\" 符号将被过滤。</string>
-    <string name="labelChannelUser">标记频道身份发言用户</string>
     <string name="AlwaysShowDownloadIcon">始终显示下载图标</string>
     <string name="HideTitle">隐藏标题和头像</string>
     <string name="IgnoreUnreadCount">忽略未读计数</string>
     <string name="SendWithoutMarkdown">发送时禁用 Markdown</string>
     <string name="SendAsEmoji">以 Emoji 发送</string>
-    <string name="CustomArtworkApi">自定义音乐封面 API</string>
     <string name="CustomEditedMessage">自定义已编辑消息标记</string>
     <string name="NotificationIcon">通知图标样式</string>
     <string name="Official">官方</string>
@@ -90,7 +87,7 @@
     <string name="RegexFiltersCaseInsensitive">不区分大小写</string>
     <string name="RegexFiltersAdd">添加过滤器</string>
     <string name="RegexFiltersEdit">编辑过滤器</string>
-    <string name="RegexFiltersAddDescription">您可以使用网站 <![CDATA[<a href="https://regex101.com">regex101.com</a>]]> 来测试您的正则表达式。您也可以使用纯文本，但请不要忘记使用转义符号。</string>
+    <string name="RegexFiltersAddDescription">您可以使用网站 &lt;a href="https://regex101.com"&gt;regex101.com&lt;/a&gt; 来测试您的正则表达式。您也可以使用纯文本，但请不要忘记使用转义符号。</string>
     <string name="RegexFiltersAddError">正则表达式语法错误</string>
     <string name="ShowTimeHint">点击时间显示详细信息</string>
     <string name="SearchHashtagDefaultPageChannel">在频道中点击标签时默认的搜索页面</string>
@@ -108,4 +105,36 @@
     <string name="VideoPlayerDecoderPreferSW">软解优先</string>
     <string name="VideoPlayerDecoderHardware">仅硬解</string>
     <string name="VideoPlayerDecoderPreferHW">硬解优先</string>
+    <string name="RunInBackground">后台运行</string>
+    <string name="RunInBackgroundInfo">保持程序在后台运行以确保通知可靠。</string>
+    <string name="NagramXPushService">Alexgram 推送服务</string>
+    <string name="AppIconGoogle" translatable="false">Google</string>
+    <string name="AppIconColored">Alexgram 彩色</string>
+    <string name="AppIconDark">Alexgram 深色</string>
+    <string name="AppIconGreen">Alexgram 绿色</string>
+    <string name="AppIconPink">Alexgram 粉色</string>
+    <string name="AppIconRoseBlue">Alexgram 蓝粉色</string>
+    <string name="AppIconWhite">Alexgram 白色</string>
+    <string name="Nagram" translatable="false">Alexgram</string>
+    <string name="PushServiceTypeFCM" translatable="false">Google FCM</string>
+    <string name="PushServiceTypeUnified" translatable="false">UnifiedPush</string>
+    <string name="PushServiceTypeMicroG" translatable="false">microG</string>
+    <string name="Pangu" translatable="false">Pangu</string>
+    <string name="EnableLiveVideoWallpaper">视频桌面</string>
+    <string name="ExportChat">导出聊天</string>
+    <string name="ImportChat">导入聊天</string>
+    <string name="MusicGraph">音乐图表</string>
+    <string name="MusicGraphInfo">播放音频时显示彩色音乐可视化效果。</string>
+    <string name="SendVideoAsRound">发送圆形视频</string>
+    <string name="VideoNoteDurationError">圆形视频不能超过 60 秒。</string>
+    <string name="HiddenChats">隐藏聊天</string>
+    <string name="HideChat">添加到隐藏聊天</string>
+    <string name="UnhideChat">从隐藏聊天中移除</string>
+    <string name="HideChats">隐藏聊天列表</string>
+    <string name="UnhideChats">显示聊天列表</string>
+    <string name="HiddenChatsPasscode">隐藏聊天密码</string>
+    <string name="UnlockHiddenChats">解锁隐藏聊天</string>
+    <string name="HiddenChatsAbout">从主列表中隐藏敏感聊天。解锁后长按标题栏即可访问。</string>
+    <string name="HideContacts">隐藏联系人</string>
+    <string name="RestartRequired">需要重启以应用更改</string>
 </resources>

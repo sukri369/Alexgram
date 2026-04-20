@@ -18,6 +18,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -49,7 +50,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.accessibility.AccessibilityNodeInfo;
-import xyz.nextalone.nagram.NaConfig;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -112,6 +112,7 @@ import me.vkryl.android.animator.ReplaceAnimator;
 import me.vkryl.core.lambda.Destroyable;
 
 import tw.nekomimi.nekogram.NekoConfig;
+import xyz.nextalone.nagram.NaConfig;
 
 public class FragmentContextView extends FrameLayout implements NotificationCenter.NotificationCenterDelegate, VoIPService.StateListener, GroupCallMessagesController.CallMessageListener  {
     public final static int STYLE_NOT_SET = -1,
@@ -145,7 +146,6 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
     private ChatActivityInterface chatActivity;
     private View applyingView;
     private BlurredFrameLayout frameLayout;
-    private MusicVisualizerView visualizerView;
     private FrameLayout groupCallMessagesContainer;
     private View shadow;
     private View selector;
@@ -225,12 +225,6 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
     private final boolean isSideMenued;
 
     private boolean firstLocationsLoaded;
-
-    private static Visualizer globalVisualizer;
-    private static int globalAudioSessionId = -1;
-    private static final ArrayList<MusicVisualizerView> visualizerViews = new ArrayList<>();
-    private static byte[] globalVisualizerBytes;
-
     private int lastLocationSharingCount = -1;
     private Runnable checkLocationRunnable = new Runnable() {
         @Override
@@ -249,6 +243,12 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
     private boolean checkLiveStoryAfterAnimation;
     private boolean checkPlayerAfterAnimation;
     private boolean checkImportAfterAnimation;
+    private MusicVisualizerView visualizerView;
+
+    private static Visualizer globalVisualizer;
+    private static int globalAudioSessionId = -1;
+    private static final ArrayList<MusicVisualizerView> visualizerViews = new ArrayList<>();
+    private static byte[] globalVisualizerBytes;
 
     private final static float[] speeds = new float[] {
         .5f, 1f, 1.2f, 1.5f, 1.7f, 2f
@@ -409,10 +409,6 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
             }
         };
         frameLayout.drawBlur = !isInsideBubble;
-        if (tw.nekomimi.nekogram.NekoConfig.liquidGlassUI.Bool()) {
-             frameLayout.setBackground(tw.nekomimi.nekogram.helpers.LiquidUIHelper.createLiquidDrawable());
-             frameLayout.setElevation(AndroidUtilities.dp(4));
-        }
         notifyButtonBounce = new ButtonBounce(frameLayout);
         notifyText.setOverrideFullWidth(AndroidUtilities.displaySize.x);
         notifyText.setScaleProperty(.4f);
@@ -786,8 +782,11 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
                 MessageObject messageObject = MediaController.getInstance().getPlayingMessageObject();
                 if (fragment != null && messageObject != null) {
                     if (messageObject.isMusic() || messageObject.isVoice()) {
-                        if (getContext() instanceof LaunchActivity) {
-                            fragment.showDialog(new AudioPlayerAlert(getContext(), resourcesProvider));
+                        final Activity activity = AndroidUtilities.findActivity(getContext());
+                        if (activity instanceof LaunchActivity) {
+                            new AudioPlayerAlert(activity, resourcesProvider).show();
+                        } else if (AndroidUtilities.isContextSafe(LaunchActivity.instance)) {
+                            new AudioPlayerAlert(LaunchActivity.instance, resourcesProvider).show();
                         }
                     } else {
                         long dialogId = 0;
@@ -1183,21 +1182,7 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
 
     private void updateStyle(@Style int style, boolean force) {
         if (currentStyle == style && !force) {
-            if (style == STYLE_AUDIO_PLAYER && NaConfig.INSTANCE.getMusicGraph().Bool()) {
-                if (visualizerView == null) {
-                    visualizerView = new MusicVisualizerView(getContext());
-                    frameLayout.addView(visualizerView, 0, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
-                    visualizerView.setVisibility(VISIBLE);
-                    visualizerView.setColor(getThemedColor(Theme.key_inappPlayerTitle));
-                }
-                // Always try to start/restart visualizer
-                visualizerView.start(MediaController.getInstance().getAudioSessionId());
-            }
             return;
-        }
-        if (visualizerView != null) {
-            visualizerView.setVisibility(GONE);
-            visualizerView.stop();
         }
         checkCreateView();
         if (currentStyle == STYLE_ACTIVE_GROUP_CALL || currentStyle == STYLE_CONNECTING_GROUP_CALL) {
@@ -1316,15 +1301,6 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
                 playButton.setLayoutParams(LayoutHelper.createFrame(36, 36, Gravity.TOP | Gravity.LEFT, 3, 0, 0, 0));
                 titleTextView.setLayoutParams(LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 36, Gravity.LEFT | Gravity.TOP, 37, 0, (isSideMenued ? 64 : 0) + 36, 0));
                 createPlaybackSpeedButton();
-                if (NaConfig.INSTANCE.getMusicGraph().Bool()) {
-                   if (visualizerView == null) {
-                       visualizerView = new MusicVisualizerView(getContext());
-                       frameLayout.addView(visualizerView, 0, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
-                   }
-                   visualizerView.setVisibility(VISIBLE);
-                   visualizerView.setColor(getThemedColor(Theme.key_inappPlayerTitle));
-                   visualizerView.start(MediaController.getInstance().getAudioSessionId());
-                }
                 if (playbackSpeedButton != null) {
                     playbackSpeedButton.setVisibility(VISIBLE);
                     playbackSpeedButton.setTag(1);
@@ -1435,11 +1411,6 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
-        if (visualizerView != null) {
-            visualizerView.stop();
-            // We should not null the visualizer here, as it may be reused if attached again for same style
-            // But if we navigate away and destroy view, it will be gone anyway
-        }
         if (animatorSet != null) {
             animatorSet.cancel();
             animatorSet = null;
@@ -1523,16 +1494,15 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
                 updatePlaybackButton(false);
             }
         }
-        
-        // MOVED: Ensure visualizer starts here, covering all cases (returning from back stack, etc)
+
         if (currentStyle == STYLE_AUDIO_PLAYER && NaConfig.INSTANCE.getMusicGraph().Bool()) {
-             if (visualizerView == null) {
-                 visualizerView = new MusicVisualizerView(getContext());
-                 frameLayout.addView(visualizerView, 0, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
-                 visualizerView.setVisibility(VISIBLE);
-                 visualizerView.setColor(getThemedColor(Theme.key_inappPlayerTitle));
-             }
-             visualizerView.start(MediaController.getInstance().getAudioSessionId());
+            if (visualizerView == null) {
+                visualizerView = new MusicVisualizerView(getContext());
+                frameLayout.addView(visualizerView, 0, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+                visualizerView.setVisibility(VISIBLE);
+                visualizerView.setColor(getThemedColor(Theme.key_inappPlayerTitle));
+            }
+            visualizerView.start(MediaController.getInstance().getAudioSessionId());
         }
 
         if (currentStyle == STYLE_ACTIVE_GROUP_CALL || currentStyle == STYLE_CONNECTING_GROUP_CALL) {
@@ -1877,18 +1847,6 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
         }
         MessageObject messageObject = MediaController.getInstance().getPlayingMessageObject();
         View fragmentView = fragment.getFragmentView();
-        
-        // Ensure visualizer is active if player is visible, even if style didn't change (e.g. returning from another fragment)
-        if (visible && currentStyle == STYLE_AUDIO_PLAYER && NaConfig.INSTANCE.getMusicGraph().Bool()) {
-             if (visualizerView == null) {
-                 visualizerView = new MusicVisualizerView(getContext());
-                 frameLayout.addView(visualizerView, 0, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
-                 visualizerView.setVisibility(VISIBLE);
-                 visualizerView.setColor(getThemedColor(Theme.key_inappPlayerTitle));
-             }
-             visualizerView.start(MediaController.getInstance().getAudioSessionId());
-        }
-        
         if (!create && fragmentView != null) {
             if (fragmentView.getParent() == null || ((View) fragmentView.getParent()).getVisibility() != VISIBLE) {
                 create = true;
@@ -1905,6 +1863,10 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
             if (callAvailable) {
                 checkCall(false);
                 return;
+            }
+            if (visualizerView != null) {
+                visualizerView.setVisibility(GONE);
+                visualizerView.stop();
             }
             if (visible) {
                 if (playbackSpeedButton != null && playbackSpeedButton.isSubMenuShowing()) {
@@ -2049,6 +2011,10 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
                     }
 
                     updatePlaybackButton(false);
+                    if (visualizerView != null) {
+                        visualizerView.setVisibility(GONE);
+                        visualizerView.stop();
+                    }
                 } else {
                     isMusic = true;
                     if (playbackSpeedButton != null) {
@@ -2072,6 +2038,15 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
                             continue;
                         }
                         textView.setEllipsize(TextUtils.TruncateAt.END);
+                    }
+                    if (NaConfig.INSTANCE.getMusicGraph().Bool()) {
+                        if (visualizerView == null) {
+                            visualizerView = new MusicVisualizerView(getContext());
+                            frameLayout.addView(visualizerView, 0, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+                        }
+                        visualizerView.setVisibility(VISIBLE);
+                        visualizerView.setColor(getThemedColor(Theme.key_inappPlayerTitle));
+                        visualizerView.start(MediaController.getInstance().getAudioSessionId());
                     }
                 }
                 TypefaceSpan span = new TypefaceSpan(AndroidUtilities.bold(), 0, getThemedColor(Theme.key_inappPlayerPerformer));

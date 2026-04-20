@@ -22,6 +22,7 @@ import android.widget.TextView;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
+import org.telegram.messenger.browser.Browser;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.ui.ActionBar.ActionBar;
@@ -72,7 +73,20 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
 
         actionBar.setAddToContainer(false);
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
-        // scrollView and contentLayout are declared and initialized below after rootFrame and backgroundView
+        actionBar.setAllowOverlayTitle(true);
+        actionBar.setTitle("Alexgram AI Assistance");
+        actionBar.setBackgroundColor(Color.TRANSPARENT);
+        int actionBarColor = isDark ? Color.WHITE : 0xFF1A1A2E;
+        actionBar.setItemsColor(actionBarColor, false);
+        actionBar.setTitleColor(actionBarColor);
+        actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
+            @Override
+            public void onItemClick(int id) {
+                if (id == -1) {
+                    finishFragment();
+                }
+            }
+        });
 
         // --- AI Assistance API Setup Card ---
         LinearLayout apiSetupCard = createGlassCard(context);
@@ -214,17 +228,7 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
             btnBg.setCornerRadius(AndroidUtilities.dp(8));
             gotoBtn.setBackground(btnBg);
             gotoBtn.setOnClickListener(vv -> {
-                try {
-                    android.net.Uri uri = android.net.Uri.parse("https://t.me/alexsettings/experimental?r=aiModelUrl");
-                    android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_VIEW, uri);
-                    ctx.startActivity(intent);
-                } catch (Exception e) {
-                    new AlertDialog.Builder(ctx)
-                        .setTitle("Navigation Failed")
-                        .setMessage("Please open Experimental Settings manually and scroll to the AI Reply section.")
-                        .setPositiveButton("OK", null)
-                        .show();
-                }
+                Browser.openUrl(ctx, "https://t.me/alexsettings/experimental?r=aiModelUrl");
                 alert.dismiss();
             });
             LinearLayout.LayoutParams gotoLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -236,29 +240,6 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
             alert.show();
         });
         apiSetupCard.addView(setupButton);
-
-
-        if (preferences == null) {
-            preferences = context.getSharedPreferences("ai_assistant_prefs", Context.MODE_PRIVATE);
-        }
-        setupColors();
-
-        actionBar.setAddToContainer(false);
-        actionBar.setBackButtonImage(R.drawable.ic_ab_back);
-        actionBar.setAllowOverlayTitle(true);
-        actionBar.setTitle("Alexgram AI Assistance");
-        actionBar.setBackgroundColor(Color.TRANSPARENT);
-        int actionBarColor = isDark ? Color.WHITE : 0xFF1A1A2E;
-        actionBar.setItemsColor(actionBarColor, false);
-        actionBar.setTitleColor(actionBarColor);
-        actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
-            @Override
-            public void onItemClick(int id) {
-                if (id == -1) {
-                    finishFragment();
-                }
-            }
-        });
 
         rootFrame = new FrameLayout(context);
 
@@ -279,13 +260,13 @@ public class AIAssistanceSettingsActivity extends BaseFragment {
         contentLayout.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(6), AndroidUtilities.dp(16), AndroidUtilities.dp(24));
         scrollView.addView(contentLayout, new ScrollView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
-    // Add the API setup card at the top of the content layout
-    contentLayout.addView(apiSetupCard, 0);
+        // Add the API setup card at the top of the content layout
+        contentLayout.addView(apiSetupCard);
 
 
         addGlassSection(contentLayout, context, "GENERAL");
         LinearLayout generalCard = createGlassCard(context);
-        generalCard.addView(createSwitchRow(context, "Enable AI Assistance", "assistant_enabled", true, null));
+        generalCard.addView(createSwitchRow(context, "Enable AI Assistance", "assistant_enabled", false, null));
         generalCard.addView(createCardDivider(context, 16, 16));
         generalCard.addView(createValueRow(context, "Character Skin", getSkinName(), "character_skin", () -> {
             int current = preferences.getInt("character_skin", 0);

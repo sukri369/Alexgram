@@ -56,6 +56,8 @@ import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import tw.nekomimi.nekogram.helpers.MainTabsHelper;
+
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.BuildVars;
@@ -151,7 +153,7 @@ public class ContactsActivity extends BaseFragment implements FactorAnimator.Tar
     private boolean searching;
     private boolean onlyUsers;
     private boolean needPhonebook;
-    private boolean hasMainTabs;
+    public boolean hasMainTabs;
     private boolean destroyAfterSelect;
     private boolean returnAsResult;
     private boolean createSecretChat;
@@ -251,8 +253,8 @@ public class ContactsActivity extends BaseFragment implements FactorAnimator.Tar
         getContactsController().checkInviteText();
         getContactsController().reloadContactsStatusesMaybe(false);
 
-        additionNavigationBarHeight = hasMainTabs ? dp(DialogsActivity.MAIN_TABS_HEIGHT_WITH_MARGINS) : 0;
-        additionFloatingButtonOffset = hasMainTabs ? dp(DialogsActivity.MAIN_TABS_HEIGHT + DialogsActivity.MAIN_TABS_MARGIN) : 0;
+        additionNavigationBarHeight = hasMainTabs ? dp(MainTabsHelper.getMainTabsHeightWithMargins()) : 0;
+        additionFloatingButtonOffset = hasMainTabs ? dp(MainTabsHelper.getMainTabsHeight() + MainTabsHelper.getMainTabsMargin()) : 0;
 
         return true;
     }
@@ -280,6 +282,9 @@ public class ContactsActivity extends BaseFragment implements FactorAnimator.Tar
     public View createView(Context context) {
         searching = false;
         searchWas = false;
+
+        additionNavigationBarHeight = hasMainTabs ? dp(MainTabsHelper.getMainTabsHeightWithMargins()) : 0;
+        additionFloatingButtonOffset = hasMainTabs ? dp(MainTabsHelper.getMainTabsHeight() + MainTabsHelper.getMainTabsMargin()) : 0;
 
         actionBar.setAllowOverlayTitle(true);
         if (destroyAfterSelect) {
@@ -1288,6 +1293,8 @@ public class ContactsActivity extends BaseFragment implements FactorAnimator.Tar
         }
         if (alert && askAboutContacts) {
             AlertDialog.Builder builder = AlertsCreator.createContactsPermissionDialog(activity, param -> {
+                MessagesController.getGlobalNotificationsSettings().edit().putBoolean("askAboutContacts2", false).commit();
+                NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.contactsPermissionBadgeCheck);
                 askAboutContacts = param != 0;
                 if (param == 0) {
                     return;
@@ -1321,7 +1328,10 @@ public class ContactsActivity extends BaseFragment implements FactorAnimator.Tar
                     if (grantResults[a] == PackageManager.PERMISSION_GRANTED) {
                         ContactsController.getInstance(currentAccount).forceImportContacts();
                     } else {
-                        MessagesController.getGlobalNotificationsSettings().edit().putBoolean("askAboutContacts", askAboutContacts = false).commit();
+                        MessagesController.getGlobalNotificationsSettings().edit()
+                            .putBoolean("askAboutContacts", askAboutContacts = false)
+                            .putBoolean("askAboutContacts2", false)
+                            .apply();
                         if (SystemClock.elapsedRealtime() - permissionRequestTime < 200) {
                             try {
                                 Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
@@ -1692,8 +1702,8 @@ public class ContactsActivity extends BaseFragment implements FactorAnimator.Tar
         final int additionalList = dp(48);
         final int additionalSearch = dp(DialogsActivity.SEARCH_FIELD_HEIGHT);
 
-        final int mainTabBottom = fragmentView.getMeasuredHeight() - navigationBarHeight - dp(DialogsActivity.MAIN_TABS_MARGIN);
-        final int mainTabTop = mainTabBottom - dp(DialogsActivity.MAIN_TABS_HEIGHT);
+        final int mainTabBottom = fragmentView.getMeasuredHeight() - navigationBarHeight - dp(MainTabsHelper.getMainTabsMargin());
+        final int mainTabTop = mainTabBottom - dp(MainTabsHelper.getMainTabsHeight());
 
         iBlur3PositionActionBar.set(0, -additionalList, fragmentView.getMeasuredWidth(), actionBar.getMeasuredHeight() + additionalList + additionalSearch );
         iBlur3PositionMainTabs.set(0, mainTabTop, fragmentView.getMeasuredWidth(), mainTabBottom);

@@ -35,8 +35,12 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.text.MeasuredText;
+import android.media.MediaPlayer;
 import android.os.Build;
 import android.util.Log;
+import android.graphics.SurfaceTexture;
+import android.view.Surface;
+import android.view.TextureView;
 import android.view.View;
 import android.widget.FrameLayout;
 
@@ -46,7 +50,6 @@ import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.DispatchQueue;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LiteMode;
-import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.Utilities;
 import org.telegram.ui.ActionBar.ActionBar;
@@ -58,11 +61,6 @@ import org.telegram.ui.ChatBackgroundDrawable;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-
-import android.media.MediaPlayer;
-import android.view.TextureView;
-import android.graphics.SurfaceTexture;
-import android.view.Surface;
 
 import tw.nekomimi.nekogram.NekoConfig;
 import xyz.nextalone.nagram.NaConfig;
@@ -99,7 +97,9 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
     private boolean skipBackgroundDrawing;
     SnowflakesEffect snowflakesEffect;
     public View backgroundView;
+    boolean attached;
     public boolean backgroundImageUnderActionBar;
+
     private TextureView videoTextureView;
     private MediaPlayer videoMediaPlayer;
     private boolean videoWallpaperPlaying;
@@ -110,10 +110,9 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
     public void setCanPlayVideo(boolean canPlay) {
         this.canPlayVideo = canPlay;
         if (attached) {
-             checkVideoWallpaper();
+            checkVideoWallpaper();
         }
     }
-    boolean attached;
 
 
     //blur variables
@@ -249,7 +248,7 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
                 if (drawable instanceof MotionBackgroundDrawable) {
                     MotionBackgroundDrawable motionBackgroundDrawable = (MotionBackgroundDrawable) drawable;
                     if (motionBackgroundDrawable.hasPattern()) {
-                        int actionBarHeight = backgroundImageUnderActionBar ? 0 : ((isActionBarVisible() ? ActionBar.getCurrentActionBarHeight() : 0) + (isStatusBarVisible() && Build.VERSION.SDK_INT >= 21 && occupyStatusBar ? AndroidUtilities.statusBarHeight : 0));
+                        int actionBarHeight = (!backgroundImageUnderActionBar && isActionBarVisible() ? ActionBar.getCurrentActionBarHeight() : 0) + (!backgroundImageUnderActionBar && isStatusBarVisible() && Build.VERSION.SDK_INT >= 21 && occupyStatusBar ? AndroidUtilities.statusBarHeight : 0);
                         int viewHeight = useRootView() ? getRootView().getMeasuredHeight() - actionBarHeight : getHeight();
                         float scaleX = (float) getMeasuredWidth() / (float) drawable.getIntrinsicWidth();
                         float scaleY = (float) (viewHeight) / (float) drawable.getIntrinsicHeight();
@@ -259,7 +258,9 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
                         int x = (getMeasuredWidth() - width) / 2 + (int) translationX;
                         int y = backgroundTranslationY + (viewHeight - height) / 2 + actionBarHeight + (int) translationY;
                         canvas.save();
-                        canvas.clipRect(0, actionBarHeight, width, getMeasuredHeight() - bottomClip);
+                        if (!backgroundImageUnderActionBar) {
+                            canvas.clipRect(0, actionBarHeight, width, getMeasuredHeight() - bottomClip);
+                        }
                         drawable.setBounds(x, y, x + width, y + height);
                         drawable.draw(canvas);
                         checkSnowflake(canvas);
@@ -315,7 +316,7 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
                         checkSnowflake(canvas);
                         canvas.restore();
                     } else {
-                        int actionBarHeight = backgroundImageUnderActionBar ? 0 : ((isActionBarVisible() ? ActionBar.getCurrentActionBarHeight() : 0) + (isStatusBarVisible() && Build.VERSION.SDK_INT >= 21 && occupyStatusBar ? AndroidUtilities.statusBarHeight : 0));
+                        int actionBarHeight = (!backgroundImageUnderActionBar && isActionBarVisible() ? ActionBar.getCurrentActionBarHeight() : 0) + (!backgroundImageUnderActionBar && isStatusBarVisible() && Build.VERSION.SDK_INT >= 21 && occupyStatusBar ? AndroidUtilities.statusBarHeight : 0);
                         int viewHeight = useRootView() ? getRootView().getMeasuredHeight() - actionBarHeight : getHeight();
                         float scaleX = (float) getMeasuredWidth() / (float) drawable.getIntrinsicWidth();
                         float scaleY = (float) (viewHeight) / (float) drawable.getIntrinsicHeight();
@@ -325,7 +326,9 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
                         int x = (getMeasuredWidth() - width) / 2 + (int) translationX;
                         int y = backgroundTranslationY + (viewHeight - height) / 2 + actionBarHeight + (int) translationY;
                         canvas.save();
-                        canvas.clipRect(0, actionBarHeight, width, getMeasuredHeight() - bottomClip);
+                        if (!backgroundImageUnderActionBar) {
+                            canvas.clipRect(0, actionBarHeight, width, getMeasuredHeight() - bottomClip);
+                        }
                         drawable.setBounds(x, y, x + width, y + height);
                         drawable.draw(canvas);
                         checkSnowflake(canvas);
@@ -387,10 +390,9 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
 
     }
 
-
     private boolean checkVideoWallpaper() {
         if (!canPlayVideo) {
-             if (videoTextureView != null) {
+            if (videoTextureView != null) {
                 removeView(videoTextureView);
                 videoTextureView = null;
                 releaseVideo();
@@ -401,47 +403,48 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
         boolean enabled = NaConfig.INSTANCE.getEnableLiveVideoWallpaper().Bool();
         String path = NaConfig.INSTANCE.getLiveVideoWallpaperPath().String();
 
-        // Check if path or config actually changed
         boolean pathChanged = !android.text.TextUtils.equals(path, currentVideoPath);
-        currentVideoPath = path; // Update current path
+        currentVideoPath = path;
 
         int newBlur = NaConfig.INSTANCE.getLiveVideoBlurIntensity().Int();
         boolean blurChanged = (newBlur != currentBlur);
         currentBlur = newBlur;
 
-         if (enabled && !android.text.TextUtils.isEmpty(currentVideoPath)) {
+        if (enabled && !android.text.TextUtils.isEmpty(currentVideoPath)) {
             if (videoTextureView == null) {
                 videoTextureView = new TextureView(getContext());
                 videoTextureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
                     @Override
                     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-                        // Use currentVideoPath (member variable), not the potentially stale local variable 'path'
                         playVideo(surface, currentVideoPath);
                     }
+
                     @Override
                     public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {}
+
                     @Override
                     public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
                         releaseVideo();
                         return true;
                     }
+
                     @Override
                     public void onSurfaceTextureUpdated(SurfaceTexture surface) {}
                 });
                 addView(videoTextureView, 0, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
             } else {
                 if (pathChanged && videoTextureView.isAvailable()) {
-                     playVideo(videoTextureView.getSurfaceTexture(), currentVideoPath);
+                    playVideo(videoTextureView.getSurfaceTexture(), currentVideoPath);
                 } else if (!videoWallpaperPlaying && videoTextureView.isAvailable()) {
-                     playVideo(videoTextureView.getSurfaceTexture(), currentVideoPath);
+                    playVideo(videoTextureView.getSurfaceTexture(), currentVideoPath);
                 }
             }
             if (Build.VERSION.SDK_INT >= 31 && blurChanged) {
                 if (newBlur > 0) {
-                   float r = Math.max(1f, newBlur / 4.0f);
-                   videoTextureView.setRenderEffect(RenderEffect.createBlurEffect(r, r, Shader.TileMode.CLAMP));
+                    float r = Math.max(1f, newBlur / 4.0f);
+                    videoTextureView.setRenderEffect(RenderEffect.createBlurEffect(r, r, Shader.TileMode.CLAMP));
                 } else {
-                   videoTextureView.setRenderEffect(null);
+                    videoTextureView.setRenderEffect(null);
                 }
             }
             return true;
@@ -472,6 +475,17 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
             videoMediaPlayer.setVolume(0, 0);
             videoMediaPlayer.prepareAsync();
             videoMediaPlayer.setOnPreparedListener(MediaPlayer::start);
+            videoMediaPlayer.setOnInfoListener((mp, what, extra) -> {
+                if (what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START) {
+                    if (backgroundView != null) {
+                        backgroundView.animate().alpha(0.0f).setDuration(250).withEndAction(() -> {
+                            if (backgroundView != null) backgroundView.setVisibility(View.GONE);
+                        }).start();
+                    }
+                    return true;
+                }
+                return false;
+            });
             videoWallpaperPlaying = true;
         } catch (Exception e) {
             FileLog.e(e);
@@ -486,15 +500,27 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
         videoWallpaperPlaying = false;
     }
 
+
     public void setBackgroundImage(Drawable bitmap, boolean motion) {
         boolean video = checkVideoWallpaper();
         if (backgroundDrawable == bitmap) {
             if (video) {
-               if (backgroundView != null) backgroundView.setVisibility(View.GONE);
-               if (videoTextureView != null) videoTextureView.setVisibility(View.VISIBLE);
+                if (videoTextureView != null) videoTextureView.setVisibility(View.VISIBLE);
+                if (videoMediaPlayer != null && videoMediaPlayer.isPlaying()) {
+                    if (backgroundView != null) backgroundView.setVisibility(View.GONE);
+                } else {
+                    if (backgroundView != null) {
+                        backgroundView.setVisibility(View.VISIBLE);
+                        backgroundView.setAlpha(1.0f);
+                    }
+                }
             } else {
-               if (backgroundView != null) backgroundView.setVisibility(View.VISIBLE);
-               if (videoTextureView != null) videoTextureView.setVisibility(View.GONE);
+                if (backgroundView != null) {
+                    backgroundView.setVisibility(View.VISIBLE);
+                    backgroundView.animate().cancel();
+                    backgroundView.setAlpha(1.0f);
+                }
+                if (videoTextureView != null) videoTextureView.setVisibility(View.GONE);
             }
             return;
         }
@@ -504,13 +530,23 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
         }
 
         if (video) {
-           if (backgroundView != null) backgroundView.setVisibility(View.GONE);
-           if (videoTextureView != null) videoTextureView.setVisibility(View.VISIBLE);
+            if (videoTextureView != null) videoTextureView.setVisibility(View.VISIBLE);
+            if (videoMediaPlayer != null && videoMediaPlayer.isPlaying()) {
+                if (backgroundView != null) backgroundView.setVisibility(View.GONE);
+            } else {
+                if (backgroundView != null) {
+                    backgroundView.setVisibility(View.VISIBLE);
+                    backgroundView.setAlpha(1.0f);
+                }
+            }
         } else {
-           if (backgroundView != null) backgroundView.setVisibility(View.VISIBLE);
-           if (videoTextureView != null) videoTextureView.setVisibility(View.GONE);
+            if (backgroundView != null) {
+                backgroundView.setVisibility(View.VISIBLE);
+                backgroundView.animate().cancel();
+                backgroundView.setAlpha(1.0f);
+            }
+            if (videoTextureView != null) videoTextureView.setVisibility(View.GONE);
         }
-
         if (bitmap instanceof MotionBackgroundDrawable) {
             MotionBackgroundDrawable motionBackgroundDrawable = (MotionBackgroundDrawable) bitmap;
             motionBackgroundDrawable.setParentView(backgroundView);
@@ -637,6 +673,16 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
         notifyHeightChanged();
     }
 
+    public void setBackgroundImageUnderActionBar(boolean value) {
+        if (backgroundImageUnderActionBar != value) {
+            backgroundImageUnderActionBar = value;
+            if (backgroundView != null) {
+                backgroundView.invalidate();
+            }
+            requestLayout();
+        }
+    }
+
     public int measureKeyboardHeight() {
         View rootView = getRootView();
         getWindowVisibleDisplayFrame(rect);
@@ -751,6 +797,7 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
                 snowflakesEffect = new SnowflakesEffect(1);
                 snowflakesEffect.setForcedColor(0xFFFFFFFF);
             }
+            snowflakesEffect.setForce(NaConfig.INSTANCE.getChatDecoration().Int() == 1);
             snowflakesEffect.onDraw(backgroundView, canvas);
         }
     }
@@ -1160,7 +1207,7 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
 
     public void drawBlurRect(Canvas canvas, float y, Rect rectTmp, Paint blurScrimPaint, boolean top, float alpha) {
         int blurAlpha = Color.alpha(Theme.getColor(DRAW_USING_RENDERNODE() && SharedConfig.getDevicePerformanceClass() == SharedConfig.PERFORMANCE_CLASS_HIGH ? Theme.key_chat_BlurAlpha : Theme.key_chat_BlurAlphaSlow, getResourceProvider()));
-        drawBlurRect(canvas, y, rectTmp, blurScrimPaint, top, lerp(0xFF, blurAlpha, alpha));
+        drawBlurRect(canvas, y, rectTmp, blurScrimPaint, top, lerp(0xFF, blurAlpha, alpha), 255);
     }
 
     public void drawBlurRect(Canvas canvas, float y, Rect rectTmp, Paint blurScrimPaint, boolean top, int blurAlpha) {
@@ -1168,6 +1215,7 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
     }
 
     public void drawBlurRect(Canvas canvas, float y, Rect rectTmp, Paint blurScrimPaint, boolean top, int blurAlpha, int blurSourceAlpha) {
+        if (NekoConfig.forceBlurInChat.Bool()) blurAlpha = NekoConfig.chatBlueAlphaValue.Int();
         if (!SharedConfig.chatBlurEnabled()) {
             canvas.drawRect(rectTmp, blurScrimPaint);
             return;

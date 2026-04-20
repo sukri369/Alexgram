@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="CenterActionBarTitleOn">توسيط عنوان شريط الإجراءات</string>
+    <string name="CenterActionBarTitleOff">إيقاف توسيط عنوان شريط الإجراءات</string>
+    <string name="TabletModeOn">وضع الجهاز اللوحي مفعل</string>
+    <string name="TabletModeOff">وضع الجهاز اللوحي معطل</string>
+    <string name="HideTabsOnScroll">إخفاء التبويبات عند التمرير</string>
+    <string name="SearchEngineInSearchBar">محرك البحث في شريط البحث</string>
+    <string name="SearchEngineInSearchBarDescription">استبدال البحث العالمي بمحرك بحث مخصص.</string>
+    <string name="VoiceChanger">مغير الصوت</string>
+    <string name="VoiceChangerNormal">عادي</string>
+    <string name="VoiceChangerRobotic">روبوت</string>
+    <string name="VoiceChangerAlien">فضائي</string>
+    <string name="VoiceChangerHoarseness">بحة</string>
+    <string name="VoiceChangerModulation">تعديل</string>
+    <string name="VoiceChangerChild">طفل</string>
+    <string name="VoiceChangerMouse">فأر</string>
+    <string name="VoiceChangerMan">رجل</string>
+    <string name="VoiceChangerWoman">امرأة</string>
+    <string name="VoiceChangerMonster">وحش</string>
+    <string name="VoiceChangerEcho">صدى</string>
+    <string name="VoiceChangerNoise">ضجيج</string>
+    <string name="VoiceChangerHelium">هيليوم</string>
+    <string name="VoiceChangerHexafluoride">سداسي الفلوريد</string>
+    <string name="VoiceChangerCave">كهف</string>
+    <string name="ShowVoiceChangerInChatMenu">إظهار مغير الصوت في قائمة الدردشة</string>
+    <string name="FreeProxy">بروكسي مجاني</string>
+    <string name="FreeProxyAuto">اتصال تلقائي</string>
+    <string name="FreeProxySelectCountry">اختر الدولة</string>
+    <string name="FreeProxyFetching">جاري جلب أحدث البروكسيات...</string>
+    <string name="FreeProxyCount">استعراض %1$d بروكسي مجاني</string>
+    <string name="FreeProxyUpdated">تم التحديث منذ %1$s</string>
+    <string name="FreeProxySearchHint">البحث حسب الدولة أو المدينة أو IP</string>
+    <string name="FreeProxyPing">%1$d ميلي ثانية</string>
+    <string name="AllowForwardingRestriction">السماح بالتوجيه/النسخ</string>
+    <string name="AllowForwardingRestrictionDescription">تجاوز القيود في القنوات والمجموعات التي تمنع النسخ والتوجيه.</string>
+    <string name="AllowForwardingRestrictionOnboardingTitle">تعليمات تجاوز الوسائط</string>
+    <string name="AllowForwardingRestrictionOnboardingMessage">لضمان تجربة سلسة عند تجاوز قيود التوجيه، يرجى التأكد من تنزيل الوسائط بالكامل قبل التوجيه. يسمح هذا للتطبيق بإعادة رفع المحتوى الخاص بك وتسليمه بأمان دون حظر من جهة الخادم.</string>
+    <string name="V8DAudio">خداع صوتي مكاني 360 درجة</string>
+    <string name="V8DAudioAbout">تأثير الصوت Dolby 8D</string>
+
+    <string name="StarFallInChat">تأثير النجوم المتساقطة</string>
+    <string name="StarFallInChatDescription">إظهار الرسوم المتحركة للنجوم المتساقطة في الدردشات.</string>
+    <string name="NekoX">إعدادات NekoX</string>
+    <string name="ProviderTelegramAPI">واجهة برمجة تطبيقات تيليجرام الرسمية</string>
+</resources>

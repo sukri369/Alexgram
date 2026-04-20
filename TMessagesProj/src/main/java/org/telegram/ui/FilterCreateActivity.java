@@ -154,7 +154,7 @@ public class FilterCreateActivity extends BaseFragment {
 
     private ArrayList<TL_chatlists.TL_exportedChatlistInvite> invites = new ArrayList<>();
 
-    private static final int MAX_NAME_LENGTH = 12;
+    private static final int MAX_NAME_LENGTH = 32;
 
     private static final int done_button = 1;
 
@@ -211,7 +211,6 @@ public class FilterCreateActivity extends BaseFragment {
         newFilterName = new SpannableStringBuilder(filter.name);
         newFilterName = Emoji.replaceEmoji(newFilterName, paint.getFontMetricsInt(), false);
         newFilterName = MessageObject.replaceAnimatedEmoji(newFilterName, filter.entities, paint.getFontMetricsInt());
-        newFilterName = AnimatedEmojiSpan.cloneSpans(newFilterName, AnimatedEmojiDrawable.CACHE_TYPE_TOGGLEABLE_EDIT, paint.getFontMetricsInt());
         newFilterEmoticon = filter.emoticon;
         newFilterAnimations = !filter.title_noanimate;
         AnimatedEmojiDrawable.toggleAnimations(currentAccount, newFilterAnimations);
@@ -290,12 +289,10 @@ public class FilterCreateActivity extends BaseFragment {
 
             if (actionBar != null) {
                 if (actionBar.getTitleTextView() != null) {
-                    actionBar.getTitleTextView().setEmojiCacheType(AnimatedEmojiDrawable.CACHE_TYPE_TOGGLEABLE_EDIT);
-                    actionBar.getTitleTextView().setText(AnimatedEmojiSpan.cloneSpans(newFilterName, AnimatedEmojiDrawable.CACHE_TYPE_TOGGLEABLE_EDIT, actionBar.getTitleTextView().getPaint().getFontMetricsInt()));
+                    actionBar.getTitleTextView().setEmojiCacheType(newFilterAnimations ? AnimatedEmojiDrawable.CACHE_TYPE_MESSAGES : AnimatedEmojiDrawable.CACHE_TYPE_NOANIMATE_FOLDER);
                 }
                 if (actionBar.getTitleTextView2() != null) {
-                    actionBar.getTitleTextView2().setEmojiCacheType(AnimatedEmojiDrawable.CACHE_TYPE_TOGGLEABLE_EDIT);
-                    actionBar.getTitleTextView2().setText(AnimatedEmojiSpan.cloneSpans(newFilterName, AnimatedEmojiDrawable.CACHE_TYPE_TOGGLEABLE_EDIT, actionBar.getTitleTextView2().getPaint().getFontMetricsInt()));
+                    actionBar.getTitleTextView2().setEmojiCacheType(newFilterAnimations ? AnimatedEmojiDrawable.CACHE_TYPE_MESSAGES : AnimatedEmojiDrawable.CACHE_TYPE_NOANIMATE_FOLDER);
                 }
             }
         }));
@@ -632,21 +629,10 @@ public class FilterCreateActivity extends BaseFragment {
     }
 
     public boolean hasAnimatedEmojis(CharSequence cs) {
-        if (cs instanceof Spanned) {
-            Spanned spanned = (Spanned) cs;
-            AnimatedEmojiSpan[] spans = spanned.getSpans(0, spanned.length(), AnimatedEmojiSpan.class);
-            if (spans != null && spans.length > 0) {
-                return true;
-            }
-        }
-        if (filter != null && filter.entities != null) {
-            for (int a = 0; a < filter.entities.size(); a++) {
-                if (filter.entities.get(a) instanceof TLRPC.TL_messageEntityCustomEmoji) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        if (!(cs instanceof Spanned)) return false;
+        Spanned spanned = (Spanned) cs;
+        AnimatedEmojiSpan[] spans = spanned.getSpans(0, spanned.length(), AnimatedEmojiSpan.class);
+        return spans != null && spans.length > 0;
     }
 
     public UndoView getUndoView() {
@@ -936,7 +922,6 @@ public class FilterCreateActivity extends BaseFragment {
         if (showBulletinOnResume != null) {
             showBulletinOnResume.run();
         }
-        AnimatedEmojiDrawable.toggleAnimations(currentAccount, newFilterAnimations);
     }
 
     @Override
@@ -961,8 +946,7 @@ public class FilterCreateActivity extends BaseFragment {
         }
         newFilterName = newName;
         if (folderTagsHeader != null) {
-            folderTagsHeader.previewView.setEmojiCacheType(AnimatedEmojiDrawable.CACHE_TYPE_TOGGLEABLE_EDIT);
-            folderTagsHeader.setPreviewText(AnimatedEmojiSpan.cloneSpans(newFilterName, AnimatedEmojiDrawable.CACHE_TYPE_TOGGLEABLE_EDIT, folderTagsHeader.getPreviewTextPaint().getFontMetricsInt(), .5f), false);
+            folderTagsHeader.setPreviewText(AnimatedEmojiSpan.cloneSpans(newFilterName, -1, folderTagsHeader.getPreviewTextPaint().getFontMetricsInt(), .5f), false);
         }
         newFilterEmoticon = newEmoticon;
         RecyclerView.ViewHolder holder = listView.findViewHolderForAdapterPosition(nameRow);
@@ -1517,21 +1501,14 @@ public class FilterCreateActivity extends BaseFragment {
                             CharSequence newName = s;
                             if (!TextUtils.equals(newName, newFilterName)) {
                                 nameChangedManually = !TextUtils.isEmpty(newName);
-                                newFilterName = AnimatedEmojiSpan.cloneSpans(newName, AnimatedEmojiDrawable.CACHE_TYPE_TOGGLEABLE_EDIT);
+                                newFilterName = AnimatedEmojiSpan.onlyEmojiSpans(newName);
                                 if (folderTagsHeader != null) {
-                                    folderTagsHeader.previewView.setEmojiCacheType(AnimatedEmojiDrawable.CACHE_TYPE_TOGGLEABLE_EDIT);
-                                    folderTagsHeader.setPreviewText(AnimatedEmojiSpan.cloneSpans(newFilterName, AnimatedEmojiDrawable.CACHE_TYPE_TOGGLEABLE_EDIT, folderTagsHeader.getPreviewTextPaint().getFontMetricsInt(), .5f), true);
+                                    folderTagsHeader.setPreviewText(AnimatedEmojiSpan.cloneSpans(newFilterName, -1, folderTagsHeader.getPreviewTextPaint().getFontMetricsInt(), .5f), true);
                                 }
                                 if (nameHeaderCell != null) {
                                     nameHeaderCell.rightTextView.setText(hasAnimatedEmojis(newFilterName) ? LocaleController.getString(newFilterAnimations ? R.string.FilterNameAnimationsDisable : R.string.FilterNameAnimationsEnable) : null);
                                 }
-                                actionBar.setTitle(AnimatedEmojiSpan.cloneSpans(newFilterName, newFilterAnimations ? AnimatedEmojiDrawable.CACHE_TYPE_MESSAGES : AnimatedEmojiDrawable.CACHE_TYPE_NOANIMATE_FOLDER, actionBar.getTitleFontMetricsInt()));
-                                if (actionBar.getTitleTextView() != null) {
-                                    actionBar.getTitleTextView().invalidate();
-                                }
-                                if (actionBar.getTitleTextView2() != null) {
-                                    actionBar.getTitleTextView2().invalidate();
-                                }
+                                actionBar.setTitle(AnimatedEmojiSpan.cloneSpans(newFilterName, -1, actionBar.getTitleFontMetricsInt()));
                             }
                             checkDoneButton(true);
                         }
@@ -1586,8 +1563,7 @@ public class FilterCreateActivity extends BaseFragment {
             if (viewType == 2) {
 
             } else if (viewType == VIEW_TYPE_HEADER_COLOR_PREVIEW) {
-                ((HeaderCellColorPreview) holder.itemView).previewView.setEmojiCacheType(AnimatedEmojiDrawable.CACHE_TYPE_TOGGLEABLE_EDIT);
-                ((HeaderCellColorPreview) holder.itemView).setPreviewText(AnimatedEmojiSpan.cloneSpans(newFilterName, AnimatedEmojiDrawable.CACHE_TYPE_TOGGLEABLE_EDIT, folderTagsHeader.getPreviewTextPaint().getFontMetricsInt(), .5f), true);
+                ((HeaderCellColorPreview) holder.itemView).setPreviewText(AnimatedEmojiSpan.cloneSpans(newFilterName, -1, folderTagsHeader.getPreviewTextPaint().getFontMetricsInt(), .5f), true);
             }
         }
 

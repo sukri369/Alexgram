@@ -345,7 +345,7 @@ public class EditTextEmoji extends FrameLayout implements NotificationCenter.Not
             if (shownFormatButton) {
                 if (formatOptions == null) {
                     editText.hideActionMode();
-                    ItemOptions itemOptions = ItemOptions.makeOptions(parent, resourcesProvider, emojiButton);
+                    ItemOptions itemOptions = ItemOptions.makeOptions(parent, resourcesProvider, emojiButton, false, false, true);
                     itemOptions.setMaxHeight(dp(280));
                     editText.extendActionMode(null, new MenuToItemOptions(itemOptions, editText::performMenuAction, editText.getOnPremiumMenuLockClickListener()));
                     itemOptions.forceTop(true);
@@ -382,7 +382,7 @@ public class EditTextEmoji extends FrameLayout implements NotificationCenter.Not
     }
 
     protected boolean allowEntities() {
-        return currentStyle == STYLE_STORY || currentStyle == STYLE_PHOTOVIEWER || currentStyle == STYLE_CALL;
+        return allowAnimatedEmoji || currentStyle == STYLE_STORY || currentStyle == STYLE_PHOTOVIEWER || currentStyle == STYLE_CALL;
     }
 
     public void setSuggestionsEnabled(boolean enabled) {
@@ -467,6 +467,9 @@ public class EditTextEmoji extends FrameLayout implements NotificationCenter.Not
     private boolean allowEmojisForNonPremium;
     public void allowEmojisForNonPremium(boolean allow) {
         allowEmojisForNonPremium = allow;
+        if (emojiView != null) {
+            emojiView.allowEmojisForNonPremium(allow);
+        }
     }
 
     public EmojiView getEmojiView() {

@@ -139,11 +139,13 @@ public class ActionBar extends FrameLayout implements Theme.Colorable {
     private Runnable titleActionRunnable;
     private boolean castShadows = true;
     private boolean titleScrollNonFitText;
+    private boolean forceTransparentBackground;
     private int shadowAlpha = 0xFF;
 
+    public boolean menuOccupyBack;
     protected boolean isSearchFieldVisible;
     public float searchFieldVisibleAlpha;
-    protected int itemsBackgroundColor;
+    public int itemsBackgroundColor;
     protected int itemsActionModeBackgroundColor;
     protected int itemsColor;
     protected int itemsActionModeColor;
@@ -168,7 +170,6 @@ public class ActionBar extends FrameLayout implements Theme.Colorable {
 
     SizeNotifierFrameLayout contentView;
     boolean blurredBackground;
-    private boolean forceTransparentBackground;
     public Paint blurScrimPaint = new Paint();
     Rect rectTmp = new Rect();
 
@@ -317,70 +318,59 @@ public class ActionBar extends FrameLayout implements Theme.Colorable {
             canvas.clipRect(0, -getTranslationY() + (occupyStatusBar ? AndroidUtilities.statusBarHeight : 0), getMeasuredWidth(), getMeasuredHeight());
         }
         boolean result = super.drawChild(canvas, child, drawingTime);
-        drawHolidayDecorations(canvas, child);
+        if (supportsHolidayImage && !titleOverlayShown && !LocaleController.isRTL && (child == titleTextView[0] || child == titleTextView[1] || child == titlesContainer && useContainerForTitles)) {
+            Drawable drawable = Theme.getCurrentHolidayDrawable();
+            if (drawable != null) {
+                SimpleTextView titleView = child == titlesContainer ? titleTextView[0] : (SimpleTextView) child;
+                if (titleView != null && titleView.getVisibility() == View.VISIBLE && titleView.getText() instanceof String) {
+                    TextPaint textPaint = titleView.getTextPaint();
+                    textPaint.getFontMetricsInt(fontMetricsInt);
+                    textPaint.getTextBounds((String) titleView.getText(), 0, 1, rect);
+                    int x = titleView.getTextStartX() + Theme.getCurrentHolidayDrawableXOffset() + (rect.width() - (drawable.getIntrinsicWidth() + Theme.getCurrentHolidayDrawableXOffset())) / 2;
+                    int y = titleView.getTextStartY() + Theme.getCurrentHolidayDrawableYOffset() + (int) Math.ceil((titleView.getTextHeight() - rect.height()) / 2.0f) + (int) (dp(8) * (1f - titlesContainer.getScaleY()));
+                    drawable.setBounds(x, y - drawable.getIntrinsicHeight(), x + drawable.getIntrinsicWidth(), y);
+                    drawable.setAlpha((int) (255 * titlesContainer.getAlpha() * titleView.getAlpha()));
+                    drawable.draw(canvas);
+                    if (overlayTitleAnimationInProgress) {
+                        child.invalidate();
+                        invalidate();
+                    }
+                }
+            }
+            if (NekoConfig.actionBarDecoration.Int() == 3) {
+                if (snowflakesEffect != null) {
+                    snowflakesEffect = null;
+                }
+                if (fireworksEffect != null) {
+                    fireworksEffect = null;
+                }
+            } else if (NekoConfig.actionBarDecoration.Int() == 2) {
+                if (fireworksEffect == null) {
+                    fireworksEffect = new FireworksEffect();
+                }
+            } else if (NekoConfig.actionBarDecoration.Int() == 1 || Theme.canStartHolidayAnimation()) {
+                if (snowflakesEffect == null) {
+                    snowflakesEffect = new SnowflakesEffect(0);
+                }
+                snowflakesEffect.setForce(NekoConfig.actionBarDecoration.Int() == 1);
+            } else if (!manualStart) {
+                if (snowflakesEffect != null) {
+                    snowflakesEffect = null;
+                }
+                if (fireworksEffect != null) {
+                    fireworksEffect = null;
+                }
+            }
+            if (snowflakesEffect != null) {
+                snowflakesEffect.onDraw(this, canvas);
+            } else if (fireworksEffect != null) {
+                fireworksEffect.onDraw(this, canvas);
+            }
+        }
         if (clip) {
             canvas.restore();
         }
         return result;
-    }
-
-    private void drawHolidayDecorations(Canvas canvas, View titleChild) {
-        if (!(supportsHolidayImage && !titleOverlayShown && !LocaleController.isRTL && (titleChild == titleTextView[0] || titleChild == titleTextView[1] || titleChild == titlesContainer && useContainerForTitles))) {
-            return;
-        }
-
-        if (titlesContainer == null || fontMetricsInt == null || rect == null) {
-            return;
-        }
-
-        Drawable drawable = Theme.getCurrentHolidayDrawable();
-        if (drawable != null) {
-            SimpleTextView titleView = titleChild == titlesContainer ? titleTextView[0] : (SimpleTextView) titleChild;
-            if (titleView != null && titleView.getVisibility() == View.VISIBLE && titleView.getText() instanceof String) {
-                TextPaint textPaint = titleView.getTextPaint();
-                textPaint.getFontMetricsInt(fontMetricsInt);
-                textPaint.getTextBounds((String) titleView.getText(), 0, 1, rect);
-                int x = titleView.getTextStartX() + Theme.getCurrentHolidayDrawableXOffset() + (rect.width() - (drawable.getIntrinsicWidth() + Theme.getCurrentHolidayDrawableXOffset())) / 2;
-                int y = titleView.getTextStartY() + Theme.getCurrentHolidayDrawableYOffset() + (int) Math.ceil((titleView.getTextHeight() - rect.height()) / 2.0f) + (int) (dp(8) * (1f - titlesContainer.getScaleY()));
-                drawable.setBounds(x, y - drawable.getIntrinsicHeight(), x + drawable.getIntrinsicWidth(), y);
-                drawable.setAlpha((int) (255 * titlesContainer.getAlpha() * titleView.getAlpha()));
-                drawable.draw(canvas);
-                if (overlayTitleAnimationInProgress) {
-                    titleChild.invalidate();
-                    invalidate();
-                }
-            }
-        }
-
-        if (NekoConfig.actionBarDecoration.Int() == 3) {
-            if (snowflakesEffect != null) {
-                snowflakesEffect = null;
-            }
-            if (fireworksEffect != null) {
-                fireworksEffect = null;
-            }
-        } else if (NekoConfig.actionBarDecoration.Int() == 2) {
-            if (fireworksEffect == null) {
-                fireworksEffect = new FireworksEffect();
-            }
-        } else if (NekoConfig.actionBarDecoration.Int() == 1 || Theme.canStartHolidayAnimation()) {
-            if (snowflakesEffect == null) {
-                snowflakesEffect = new SnowflakesEffect(0);
-            }
-        } else if (!manualStart) {
-            if (snowflakesEffect != null) {
-                snowflakesEffect = null;
-            }
-            if (fireworksEffect != null) {
-                fireworksEffect = null;
-            }
-        }
-
-        if (snowflakesEffect != null) {
-            snowflakesEffect.onDraw(this, canvas);
-        } else if (fireworksEffect != null) {
-            fireworksEffect.onDraw(this, canvas);
-        }
     }
 
     @Override
@@ -724,20 +714,6 @@ public class ActionBar extends FrameLayout implements Theme.Colorable {
     }
 
     public void onDrawCrossfadeContent(Canvas canvas, boolean front, boolean hideBackDrawable, float progress) {
-        canvas.save();
-        canvas.translate(front ? getWidth() * progress * 0.5f : -getWidth() * 0.4f * (1f - progress), 0);
-        for (int i = 0; i < getChildCount(); i++) {
-            View ch = getChildAt(i);
-            if ((!hideBackDrawable || ch != backButtonImageView) && ch.getVisibility() == View.VISIBLE && ch.getAlpha() != 0 && !(ch instanceof ActionBarMenu)) {
-                canvas.save();
-                canvas.translate(ch.getX(), ch.getY());
-                ch.draw(canvas);
-                canvas.restore();
-                drawHolidayDecorations(canvas, ch);
-            }
-        }
-        canvas.restore();
-
         for (int i = 0; i < getChildCount(); i++) {
             View ch = getChildAt(i);
             if ((!hideBackDrawable || ch != backButtonImageView) && ch.getVisibility() == View.VISIBLE && ch instanceof ActionBarMenu) {
@@ -747,6 +723,19 @@ public class ActionBar extends FrameLayout implements Theme.Colorable {
                 canvas.restore();
             }
         }
+
+        canvas.save();
+        canvas.translate(front ? getWidth() * progress * 0.5f : -getWidth() * 0.4f * (1f - progress), 0);
+        for (int i = 0; i < getChildCount(); i++) {
+            View ch = getChildAt(i);
+            if ((!hideBackDrawable || ch != backButtonImageView) && ch.getVisibility() == View.VISIBLE && ch.getAlpha() != 0 && !(ch instanceof ActionBarMenu)) {
+                canvas.save();
+                canvas.translate(ch.getX(), ch.getY());
+                ch.draw(canvas);
+                canvas.restore();
+            }
+        }
+        canvas.restore();
     }
 
     public void showActionMode() {
@@ -1094,13 +1083,11 @@ public class ActionBar extends FrameLayout implements Theme.Colorable {
 
     @Override
     public void setBackgroundColor(int color) {
-        if (forceTransparentBackground) {
-            actionBarColor = Color.TRANSPARENT;
-            super.setBackgroundColor(Color.TRANSPARENT);
+        if (actionBarColor == color) {
             return;
         }
         actionBarColor = color;
-        if (!blurredBackground) {
+        if (!blurredBackground && !forceTransparentBackground) {
             super.setBackgroundColor(actionBarColor);
         }
         if (backButtonImageView != null) {
@@ -1340,14 +1327,8 @@ public class ActionBar extends FrameLayout implements Theme.Colorable {
 
         int textLeft;
         if (backButtonImageView != null && backButtonImageView.getVisibility() != GONE) {
-            if (NaConfig.INSTANCE.getPillChatTitle().Bool()) {
-                ViewGroup.LayoutParams lp = backButtonImageView.getLayoutParams();
-                backButtonImageView.measure(MeasureSpec.makeMeasureSpec(lp.width, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(lp.height, MeasureSpec.EXACTLY));
-                textLeft = dp(AndroidUtilities.isTablet() ? 80 : 72); // Keep standard title offset
-            } else {
-                backButtonImageView.measure(MeasureSpec.makeMeasureSpec(dp(54), MeasureSpec.EXACTLY), actionBarHeightSpec);
-                textLeft = dp(AndroidUtilities.isTablet() ? 80 : 72);
-            }
+            backButtonImageView.measure(MeasureSpec.makeMeasureSpec(dp(54), MeasureSpec.EXACTLY), actionBarHeightSpec);
+            textLeft = dp(AndroidUtilities.isTablet() ? 80 : 72);
         } else {
             textLeft = dp(AndroidUtilities.isTablet() ? 26 : 18);
         }
@@ -1359,12 +1340,12 @@ public class ActionBar extends FrameLayout implements Theme.Colorable {
                 menuWidth = MeasureSpec.makeMeasureSpec(width, MeasureSpec.AT_MOST);
                 menu.measure(menuWidth, actionBarHeightSpec);
                 int itemsWidth = menu.getItemsMeasuredWidth(true);
-                menuWidth = MeasureSpec.makeMeasureSpec(width - dp(AndroidUtilities.isTablet() ? 74 : 66) + menu.getItemsMeasuredWidth(true), MeasureSpec.EXACTLY);
+                menuWidth = MeasureSpec.makeMeasureSpec(width - dp(menuOccupyBack ? 0 : AndroidUtilities.isTablet() ? 74 : 66) + menu.getItemsMeasuredWidth(true), MeasureSpec.EXACTLY);
                 if (!isMenuOffsetSuppressed) {
                     menu.translateXItems(-itemsWidth);
                 }
             } else if (isSearchFieldVisible) {
-                menuWidth = MeasureSpec.makeMeasureSpec(width - dp(AndroidUtilities.isTablet() ? 74 : 66), MeasureSpec.EXACTLY);
+                menuWidth = MeasureSpec.makeMeasureSpec(width - dp(menuOccupyBack ? 0 : AndroidUtilities.isTablet() ? 74 : 66), MeasureSpec.EXACTLY);
                 if (!isMenuOffsetSuppressed) {
                     menu.translateXItems(0);
                 }
@@ -1456,21 +1437,14 @@ public class ActionBar extends FrameLayout implements Theme.Colorable {
 
         int textLeft;
         if (backButtonImageView != null && backButtonImageView.getVisibility() != GONE) {
-            if (NaConfig.INSTANCE.getPillChatTitle().Bool()) {
-                FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) backButtonImageView.getLayoutParams();
-                int actionBarHeight = getMeasuredHeight() - additionalTop;
-                int y = additionalTop + (actionBarHeight - backButtonImageView.getMeasuredHeight()) / 2;
-                backButtonImageView.layout(lp.leftMargin, y, lp.leftMargin + backButtonImageView.getMeasuredWidth(), y + backButtonImageView.getMeasuredHeight());
-            } else {
-                backButtonImageView.layout(0, additionalTop, backButtonImageView.getMeasuredWidth(), additionalTop + backButtonImageView.getMeasuredHeight());
-            }
+            backButtonImageView.layout(0, additionalTop, backButtonImageView.getMeasuredWidth(), additionalTop + backButtonImageView.getMeasuredHeight());
             textLeft = dp(AndroidUtilities.isTablet() ? 80 : 72);
         } else {
             textLeft = dp(AndroidUtilities.isTablet() ? 26 : 18);
         }
 
         if (menu != null && menu.getVisibility() != GONE) {
-            int menuLeft = menu.searchFieldVisible() ? dp(AndroidUtilities.isTablet() ? 74 : 66) : (right - left) - menu.getMeasuredWidth();
+            int menuLeft = menu.searchFieldVisible() ? dp(menuOccupyBack ? 0 : AndroidUtilities.isTablet() ? 74 : 66) : (right - left) - menu.getMeasuredWidth();
             menu.layout(menuLeft, additionalTop, menuLeft + menu.getMeasuredWidth(), additionalTop + menu.getMeasuredHeight());
         }
 
@@ -2085,7 +2059,7 @@ public class ActionBar extends FrameLayout implements Theme.Colorable {
 
     @Override
     protected void dispatchDraw(Canvas canvas) {
-        if (!forceTransparentBackground && blurredBackground && actionBarColor != Color.TRANSPARENT) {
+        if (blurredBackground && actionBarColor != Color.TRANSPARENT) {
             rectTmp.set(0, 0, getMeasuredWidth(), getMeasuredHeight());
             blurScrimPaint.setColor(actionBarColor);
             if (adaptiveBackground) {
@@ -2308,12 +2282,12 @@ public class ActionBar extends FrameLayout implements Theme.Colorable {
     }
 
     private boolean isCentered() {
-        return NaConfig.INSTANCE.getCenterActionBarTitle().Bool() && NaConfig.INSTANCE.getCenterActionBarTitleType().Int() != 3;
+        return (NaConfig.INSTANCE.getCenterActionBarTitle().Bool() && NaConfig.INSTANCE.getCenterActionBarTitleType().Int() != 3);
     }
 
     // --- Spring Animation ---
     public void onDrawCrossfadeBackground(Canvas canvas) {
-        if (!forceTransparentBackground && blurredBackground && actionBarColor != Color.TRANSPARENT) {
+        if (blurredBackground && actionBarColor != Color.TRANSPARENT) {
             rectTmp.set(0, 0, getMeasuredWidth(), getMeasuredHeight());
             blurScrimPaint.setColor(actionBarColor);
             contentView.drawBlurRect(canvas, getY(), rectTmp, blurScrimPaint, true);

@@ -38,6 +38,7 @@ public class TextCheckCell2 extends FrameLayout {
     public int id;
     private TextView textView;
     private TextView valueTextView;
+    private LinearLayout textContainer;
     private Switch checkBox;
     private boolean needDivider;
     private boolean isMultiline;
@@ -97,6 +98,9 @@ public class TextCheckCell2 extends FrameLayout {
     public TextCheckCell2(Context context, Theme.ResourcesProvider resourcesProvider) {
         super(context);
 
+        textContainer = new LinearLayout(context);
+        textContainer.setOrientation(LinearLayout.VERTICAL);
+
         textView = new TextView(context);
         textView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText, resourcesProvider));
         textView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
@@ -105,7 +109,7 @@ public class TextCheckCell2 extends FrameLayout {
         textView.setSingleLine(true);
         textView.setGravity((LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.CENTER_VERTICAL);
         textView.setEllipsize(TextUtils.TruncateAt.END);
-        addView(textView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.MATCH_PARENT, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, LocaleController.isRTL ? 64 : 21, 0, LocaleController.isRTL ? 21 : 64, 0));
+        textContainer.addView(textView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
         valueTextView = new TextView(context);
         valueTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText2, resourcesProvider));
@@ -116,7 +120,9 @@ public class TextCheckCell2 extends FrameLayout {
         valueTextView.setSingleLine(true);
         valueTextView.setPadding(0, 0, 0, 0);
         valueTextView.setEllipsize(TextUtils.TruncateAt.END);
-        addView(valueTextView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, LocaleController.isRTL ? 64 : 21, 35, LocaleController.isRTL ? 21 : 64, 0));
+        textContainer.addView(valueTextView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT), 0, 2, 0, 0));
+
+        addView(textContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.CENTER_VERTICAL, LocaleController.isRTL ? 64 : 21, 0, LocaleController.isRTL ? 21 : 64, 0));
 
         checkBox = new Switch(context);
         checkBox.setDrawIconType(1);
@@ -137,9 +143,13 @@ public class TextCheckCell2 extends FrameLayout {
         super.onLayout(changed, left, top, right, bottom);
         if (collapseViewContainer != null) {
             if (LocaleController.isRTL) {
-                collapseViewContainer.setTranslationX(textView.getLeft() - collapseViewContainer.getMeasuredWidth() - dp(8));
+                int minX = dp(64); // don't overlap the toggle on the right (for RTL, left side holds toggle)
+                float desiredX = textView.getLeft() - collapseViewContainer.getMeasuredWidth() - dp(8);
+                collapseViewContainer.setTranslationX(Math.max(desiredX, minX));
             } else {
-                collapseViewContainer.setTranslationX(textView.getRight() + dp(8));
+                int maxX = getMeasuredWidth() - dp(64) - collapseViewContainer.getMeasuredWidth();
+                float desiredX = textView.getRight() + dp(8);
+                collapseViewContainer.setTranslationX(Math.min(desiredX, maxX));
             }
         }
     }
@@ -154,8 +164,8 @@ public class TextCheckCell2 extends FrameLayout {
         checkBox.setChecked(checked, animated);
         needDivider = divider;
         valueTextView.setVisibility(GONE);
-        LayoutParams layoutParams = (LayoutParams) textView.getLayoutParams();
-        layoutParams.height = LayoutParams.MATCH_PARENT;
+        LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) textView.getLayoutParams();
+        layoutParams.height = LayoutParams.WRAP_CONTENT;
         layoutParams.topMargin = 0;
         textView.setLayoutParams(layoutParams);
         setWillNotDraw(!divider);
@@ -181,10 +191,10 @@ public class TextCheckCell2 extends FrameLayout {
             valueTextView.setEllipsize(TextUtils.TruncateAt.END);
             valueTextView.setPadding(0, 0, 0, 0);
         }
-        LayoutParams layoutParams = (LayoutParams) textView.getLayoutParams();
+        LayoutParams layoutParams = (LayoutParams) textContainer.getLayoutParams();
         layoutParams.height = LayoutParams.WRAP_CONTENT;
         layoutParams.topMargin = dp(10);
-        textView.setLayoutParams(layoutParams);
+        textContainer.setLayoutParams(layoutParams);
         setWillNotDraw(!divider);
     }
 

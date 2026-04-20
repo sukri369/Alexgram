@@ -29,6 +29,7 @@ import org.telegram.messenger.FileLog;
 import org.telegram.messenger.voip.VideoCapturerDevice;
 import org.webrtc.Logging;
 import org.webrtc.ThreadUtils;
+
 import xyz.nextalone.nagram.utils.VoiceChanger;
 
 public class WebRtcAudioRecord {
@@ -169,6 +170,9 @@ public class WebRtcAudioRecord {
       long lastTime = System.nanoTime();
       while (keepAlive) {
         int bytesRead = audioRecord.read(byteBuffer, byteBuffer.capacity());
+        if (bytesRead > 0) {
+          VoiceChanger.process(byteBuffer, bytesRead);
+        }
         int deviceBytesRead;
         if (deviceAudioRecord != null) {
           deviceBytesRead = deviceAudioRecord.read(deviceByteBuffer, deviceByteBuffer.capacity());
@@ -191,10 +195,9 @@ public class WebRtcAudioRecord {
               if (mixed < -32768) {
                 mixed = -32768;
               }
-            byteBuffer.putShort(a * 2, (short) mixed);
+              byteBuffer.putShort(a * 2, (short) mixed);
             }
           }
-          VoiceChanger.process(byteBuffer, bytesRead);
           // It's possible we've been shut down during the read, and stopRecording() tried and
           // failed to join this thread. To be a bit safer, try to avoid calling any native methods
           // in case they've been unregistered after stopRecording() returned.

@@ -40,7 +40,6 @@ import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RLottieDrawable;
 import org.telegram.ui.Components.RecyclerListView;
 import org.telegram.ui.Components.StaticLayoutEx;
-import xyz.nextalone.nagram.NaConfig;
 
 import java.util.ArrayList;
 
@@ -156,12 +155,9 @@ public class BotCommandsMenuView extends View {
             menuTextLayout = StaticLayoutEx.createStaticLayout(c, textPaint, w, Layout.Alignment.ALIGN_NORMAL, 1.0f, 0f, false, TextUtils.TruncateAt.END, w, 1);
             menuTextWidth = menuTextLayout.getLineCount() > 0 ? menuTextLayout.getLineWidth(0) : 0;
         }
-        if (NaConfig.INSTANCE.getIosStyleInputBar().Bool()) {
-            menuTextWidth = 0;
-        }
         onTranslationChanged((menuTextWidth + AndroidUtilities.dp(4)) * expandProgress);
         int width = AndroidUtilities.dp(40);
-        if (expanded && menuTextWidth > 0) {
+        if (expanded) {
             width += (int) menuTextWidth + AndroidUtilities.dp(4);
         }
 
@@ -220,7 +216,7 @@ public class BotCommandsMenuView extends View {
                 canvas.restore();
             }
 
-            if (expandProgress > 0 && menuTextWidth > 0) {
+            if (expandProgress > 0) {
                 canvas.save();
                 canvas.translate(AndroidUtilities.dp(34), (getMeasuredHeight() - menuTextLayout.getHeight()) / 2f);
                 menuTextLayout.draw(canvas);

@@ -29,7 +29,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.core.content.FileProvider;
 
-import com.radolyn.ayugram.proprietary.AyuMessageUtils;
 import com.radolyn.ayugram.utils.AyuState;
 
 import org.telegram.SQLite.SQLiteCursor;
@@ -77,7 +76,9 @@ import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -128,16 +129,10 @@ public class MessageHelper extends BaseController {
             }
             if (TextUtils.isEmpty(path)) {
                 String fileName = f.getName();
-                if (!TextUtils.isEmpty(fileName)) {
-                    File found = AyuMessageUtils.findExistingFileByBaseNameFast(fileName);
-                    if (found == null || !found.exists()) {
+                    if (fileName != null) {
                         fileName = "ttl_" + messageObject.getDialogId() + "_" + messageObject.getId() + "_" + fileName;
-                        found = AyuMessageUtils.findExistingFileByBaseNameFast(fileName);
+                        // found = AyuMessageUtils.findExistingFileByBaseNameFast(fileName);
                     }
-                    if (found != null && found.exists()) {
-                        path = found.getAbsolutePath();
-                    }
-                }
             }
         }
         if (TextUtils.isEmpty(path)) {
@@ -238,12 +233,14 @@ public class MessageHelper extends BaseController {
                                 replyDialogId = dialogId;
                             }
                             long replyMsgId = message.reply_to.reply_to_msg_id;
-                            HashMap<Long, TLRPC.Message> dialogCache = replyMessageCache.computeIfAbsent(replyDialogId, k -> new HashMap<>());
-                            if (dialogCache.containsKey(replyMsgId)) {
-                                message.replyMessage = dialogCache.get(replyMsgId);
-                            } else {
-                                message.replyMessage = getMessage(replyDialogId, replyMsgId);
-                                dialogCache.put(replyMsgId, message.replyMessage);
+                            HashMap<Long, TLRPC.Message> dialogCache = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N ? replyMessageCache.computeIfAbsent(replyDialogId, k -> new HashMap<>()) : null;
+                            if (dialogCache != null) {
+                                if (dialogCache.containsKey(replyMsgId)) {
+                                    message.replyMessage = dialogCache.get(replyMsgId);
+                                } else {
+                                    message.replyMessage = getMessage(replyDialogId, replyMsgId);
+                                    dialogCache.put(replyMsgId, message.replyMessage);
+                                }
                             }
                         }
                         if (message.replyMessage != null) {
@@ -1117,7 +1114,8 @@ public class MessageHelper extends BaseController {
             final File finalTempFile = tempFile;
             AndroidUtilities.runOnUIThread(() -> {
                 Runnable callback = null;
-                if (bulletinContainer instanceof FrameLayout container) {
+                if (bulletinContainer instanceof FrameLayout) {
+                    FrameLayout container = (FrameLayout) bulletinContainer;
                     callback = () -> BulletinFactory.of(container, resourcesProvider).createCopyBulletin(getString(R.string.PhotoCopied)).show();
                 }
                 addFileToClipboard(finalTempFile, callback);
@@ -1242,4 +1240,53 @@ public class MessageHelper extends BaseController {
         }
         return null;
     }
+
+    public static final String TRANSLATION_SEPARATOR = "\n\n--------\n\n";
+
+    public static boolean shouldKeepOriginalForManualTranslation(int translatorMode) {
+        return translatorMode == 1 || translatorMode == 2;
+    }
+
+    public static String buildTranslatedDisplayText(String original, Object translated, boolean keepOriginal) {
+        String translatedText;
+        if (translated instanceof TLRPC.TL_textWithEntities) {
+            translatedText = ((TLRPC.TL_textWithEntities) translated).text;
+        } else {
+            translatedText = String.valueOf(translated);
+        }
+        if (keepOriginal && !TextUtils.isEmpty(original)) {
+            return translatedText + TRANSLATION_SEPARATOR + original;
+        }
+        return translatedText;
+    }
+
+    public static boolean isLegacyTranslatedSummary(TLRPC.TL_textWithEntities original, TLRPC.TL_textWithEntities translated) {
+        if (original == null || translated == null || TextUtils.isEmpty(translated.text)) {
+            return false;
+        }
+        return translated.text.contains(TRANSLATION_SEPARATOR);
+    }
+
+    public static boolean shouldKeepOriginalForDisplay(int translatorMode, boolean manualTranslated, boolean autoTranslated) {
+        return translatorMode == 2 || (translatorMode == 1 && manualTranslated);
+    }
+
+    public boolean shouldKeepLocalMessageOnRestrictedEdit(TLRPC.Message oldMessage, TLRPC.Message message) {
+        return false;
+    }
+
+    public void saveStickerToGallery(Context context, MessageObject messageObject, Utilities.Callback<Uri> callback) {
+        saveStickerToGallery(context, messageObject);
+        if (callback != null) {
+            callback.run(null);
+        }
+    }
+
+    public void saveStickerToGallery(Context context, TLRPC.Document document, Utilities.Callback<Uri> callback) {
+        saveStickerToGallery(context, document);
+        if (callback != null) {
+            callback.run(null);
+        }
+    }
 }
+

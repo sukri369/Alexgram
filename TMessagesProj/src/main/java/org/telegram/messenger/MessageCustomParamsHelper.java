@@ -26,6 +26,8 @@ public class MessageCustomParamsHelper {
             message.translatedToLanguage == null &&
             message.translatedPoll == null &&
             message.translatedText == null &&
+            message.translatedButtons == null &&
+            message.translatedButtonsLanguage == null &&
             message.errorAllowedPriceStars == 0 &&
             message.errorNewPriceStars == 0
         );
@@ -50,6 +52,8 @@ public class MessageCustomParamsHelper {
         toMessage.summaryText = fromMessage.summaryText;
         toMessage.translatedSummaryText = fromMessage.translatedSummaryText;
         toMessage.translatedSummaryLanguage = fromMessage.translatedSummaryLanguage;
+        toMessage.translatedButtons = fromMessage.translatedButtons;
+        toMessage.translatedButtonsLanguage = fromMessage.translatedButtonsLanguage;
     }
 
 
@@ -106,9 +110,9 @@ public class MessageCustomParamsHelper {
 
             flags |= message.translatedVoiceTranscription != null ? 256 : 0;
 
-            flags = setFlag(flags, FLAG_10, message.summaryText != null);
-            flags = setFlag(flags, FLAG_11, message.translatedSummaryText != null);
             flags = setFlag(flags, FLAG_12, message.translatedSummaryLanguage != null);
+            flags = setFlag(flags, FLAG_13, message.translatedButtonsLanguage != null);
+            flags = setFlag(flags, FLAG_14, message.translatedButtons != null);
         }
 
         @Override
@@ -158,6 +162,16 @@ public class MessageCustomParamsHelper {
             if (hasFlag(flags, FLAG_12)) {
                 stream.writeString(message.translatedSummaryLanguage);
             }
+            if (hasFlag(flags, FLAG_13)) {
+                stream.writeString(message.translatedButtonsLanguage);
+            }
+            if (hasFlag(flags, FLAG_14)) {
+                stream.writeInt32(message.translatedButtons.size());
+                for (java.util.Map.Entry<String, String> entry : message.translatedButtons.entrySet()) {
+                    stream.writeString(entry.getKey());
+                    stream.writeString(entry.getValue());
+                }
+            }
         }
 
         @Override
@@ -204,6 +218,18 @@ public class MessageCustomParamsHelper {
             }
             if (hasFlag(flags, FLAG_12)) {
                 message.translatedSummaryLanguage = stream.readString(exception);
+            }
+            if (hasFlag(flags, FLAG_13)) {
+                message.translatedButtonsLanguage = stream.readString(exception);
+            }
+            if (hasFlag(flags, FLAG_14)) {
+                int size = stream.readInt32(exception);
+                message.translatedButtons = new java.util.HashMap<>();
+                for (int i = 0; i < size; i++) {
+                    String key = stream.readString(exception);
+                    String value = stream.readString(exception);
+                    message.translatedButtons.put(key, value);
+                }
             }
         }
 

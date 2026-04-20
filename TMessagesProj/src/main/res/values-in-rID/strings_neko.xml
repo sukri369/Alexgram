@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="NekoSettings">Pengaturan-N</string>
+    <string name="NekoSettings">Pengaturan-A</string>
     <string name="IPv6">Lebih suka IPv6</string>
     <string name="MessageMenu">Menu Pesan</string>
     <string name="HidePhone">Sembunyikan Nomor Telepon</string>
@@ -49,7 +49,6 @@
     <string name="TranslateApiUnsupported">Penyedia terjemahan yang Anda pilih tidak mendukung bahasa Anda.</string>
     <string name="ProviderLingocloud">LingoCloud Terjemahan</string>
     <string name="UndoTranslate">Sembunyikan Terjemahan</string>
-    <string name="DisablePhotoViewerSideAction">Nonaktifkan Ketuk Samping untuk Mengganti Foto</string>
     <string name="BotToken">Token</string>
     <string name="UnlimitedPinnedDialogs">Dialog Tersemat Tak Terbatas</string>
     <string name="UnlimitedPinnedDialogsAbout">Sematkan dialog tak terbatas dengan mematikan sinkronisasinya.</string>
@@ -113,10 +112,10 @@
     <string name="enhancedFileLoader">Peningkatan Kecepatan Unduhan</string>
     <string name="mapDriftingFixForGoogleMaps">Perbaiki Pergerakan Google Maps di China</string>
     <string name="useOSMDroidMap">Gunakan Peta OSMDroid</string>
-    <string name="UnknownNekoSettingsOption">Tidak ada pilihan Pengaturan-N tersebut.</string>
+    <string name="UnknownNekoSettingsOption">Tidak ada pilihan Pengaturan-A tersebut.</string>
     <string name="PasscodeNeeded">Anda harus mengaktifkan kode akses terlebih dahulu</string>
     <string name="PasscodeNeko">Kode akses</string>
-    <string name="PasscodeShowInSettings">Tampilkan di Pengaturan-N</string>
+    <string name="PasscodeShowInSettings">Tampilkan di Pengaturan-A</string>
     <string name="PasscodeShowInSettingsAbout">Setelah menyembunyikannya, Anda **HANYA** dapat membuka halaman ini melalui tautan:</string>
     <string name="PasscodeSet">Atur kode akses</string>
     <string name="PasscodeEdit">Ubah kode akses</string>
@@ -155,7 +154,7 @@
     <string name="ClearRecentChats">Bersihkan obrolan terbaru</string>
     <string name="ClearRecentChatAlert">Apakah Anda ingin membersihkan obrolan terbaru Anda?</string>
     <string name="CloudConfig">Pengaturan Cloud</string>
-    <string name="CloudConfigDesc">Simpan Pengaturan-N Anda ke cloud Telegram.</string>
+    <string name="CloudConfigDesc">Simpan Pengaturan-A Anda ke cloud Telegram.</string>
     <string name="CloudConfigSyncDate">Terakhir disinkronkan: %s, cloud: %s</string>
     <string name="CloudConfigSyncDateNever">tidak pernah</string>
     <string name="CloudConfigSync">Sinkronkan ke cloud</string>
@@ -164,7 +163,7 @@
     <string name="CloudConfigRestoreShort">Pulihkan</string>
     <string name="CloudConfigSyncing">Sinkronisasi...</string>
     <string name="CloudConfigAutoSync">Sinkronisasi otomatis</string>
-    <string name="CloudConfigAutoSyncDesc">Sinkronkan ke cloud secara otomatis setelah melakukan perubahan pada Pengaturan-N.</string>
+    <string name="CloudConfigAutoSyncDesc">Sinkronkan ke cloud secara otomatis setelah melakukan perubahan pada Pengaturan-A.</string>
     <string name="CloudConfigSyncFailed">Gagal menyinkronkan pengaturan ke cloud</string>
     <string name="CloudConfigRestoreFailed">Gagal memulihkan pengaturan dari cloud</string>
     <string name="CopyCallback">Salin Data Callback</string>
@@ -195,7 +194,6 @@
     <string name="ShowIdAndDc">Tampilkan ID / DC di Profil</string>
     <string name="UseDefaultTheme">Gunakan tema default *</string>
     <string name="DialogsSettings">Dialog</string>
-    <string name="NagramXPushService">Layanan Dorong</string>
     <string name="DisableSystemAccount">Nonaktifkan Akun Sistem</string>
     <string name="FilterMenu">Menu Penyaring Dialog</string>
     <string name="DisableProxyWhenVpnEnabled">Nonaktifkan Proksi Saat VPN Diaktifkan</string>

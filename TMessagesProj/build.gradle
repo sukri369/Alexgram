@@ -5,6 +5,9 @@ plugins {
     id 'com.android.application'
     id 'com.google.gms.google-services'
     id 'com.google.firebase.crashlytics'
+    id 'com.google.dagger.hilt.android'
+    id 'com.google.devtools.ksp'
+    id 'org.jetbrains.kotlin.plugin.compose'
 }
 
 def buildTimestamp = System.getenv('BUILD_TIMESTAMP') ?: '0'
@@ -55,6 +58,12 @@ if (nativeTarget == 'SKIP') {
 }
 
 android {
+    kotlin {
+        compilerOptions {
+            jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
+        }
+    }
+
     defaultConfig.applicationId = APP_PACKAGE
 
     packaging {
@@ -114,6 +123,10 @@ android {
             annotationProcessorOptions {
                 arguments += ['room.schemaLocation': "$projectDir/schemas".toString()]
             }
+        }
+
+        buildFeatures {
+            compose = true
         }
     }
 
@@ -226,7 +239,6 @@ dependencies {
         exclude group: 'org.checkerframework', module: 'checker-compat-qual'
         exclude group: 'org.checkerframework', module: 'checker-qual'
         exclude group: 'com.google.errorprone', module: 'error_prone_annotations'
-        exclude group: 'com.google.j2objc', module: 'j2objc-annotations'
         exclude group: 'org.codehaus.mojo', module: 'animal-sniffer-annotations'
     }
     implementation 'com.google.android.gms:play-services-mlkit-subject-segmentation:16.0.0-beta1'
@@ -259,6 +271,30 @@ dependencies {
     implementation 'org.apache.commons:commons-text:1.15.0'
     // translator from nekogram
     implementation 'app.nekogram.translator:translator:1.5.5'
+
+    // Analytics & Control System
+    def hilt_version = "2.59.2"
+    implementation "com.google.dagger:hilt-android:$hilt_version"
+    ksp "com.google.dagger:hilt-compiler:$hilt_version"
+
+    def compose_bom = platform('androidx.compose:compose-bom:2025.02.00')
+    implementation compose_bom
+    implementation 'androidx.compose.ui:ui'
+    implementation 'androidx.compose.material3:material3'
+    implementation 'androidx.compose.ui:ui-tooling-preview'
+    debugImplementation 'androidx.compose.ui:ui-tooling'
+    implementation 'androidx.activity:activity-compose:1.10.0'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7'
+    implementation 'androidx.compose.material:material-icons-extended'
+
+    def room_version = "2.8.4"
+    implementation "androidx.room:room-ktx:$room_version"
+    ksp "androidx.room:room-compiler:$room_version"
+
+    def work_version = "2.10.0"
+    implementation "androidx.work:work-runtime-ktx:$work_version"
+
+    implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
 
     compileOnly fileTree('libs')
 }

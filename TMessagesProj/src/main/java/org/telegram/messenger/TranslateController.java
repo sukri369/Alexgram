@@ -267,7 +267,23 @@ public class TranslateController extends BaseController {
         return Objects.hash(messageObject.getDialogId(), messageObject.getId());
     }
 
-    private String currentLanguage() {
+    private static String currentPluralLanguage() {
+        LocaleController.LocaleInfo localeInfo = LocaleController.getInstance().getCurrentLocaleInfo();
+        String lang = null;
+        if (localeInfo != null) {
+            lang = !TextUtils.isEmpty(localeInfo.pluralLangCode) ? localeInfo.pluralLangCode : localeInfo.shortName;
+        }
+        if (TextUtils.isEmpty(lang)) {
+            Locale locale = Locale.getDefault();
+            lang = locale.getLanguage();
+        }
+        if (TextUtils.isEmpty(lang)) {
+            lang = "en";
+        }
+        return lang;
+    }
+
+    public static String currentLanguage() {
         String lang = LocaleController.getInstance().getCurrentLocaleInfo().pluralLangCode;
         if (lang != null) {
             lang = lang.split("_")[0];
@@ -460,7 +476,7 @@ public class TranslateController extends BaseController {
     public static void analyzeSuggestedLanguageCodes() {
         LinkedHashSet<String> langs = new LinkedHashSet<>();
         try {
-            langs.add(LocaleController.getInstance().getCurrentLocaleInfo().pluralLangCode);
+            langs.add(currentPluralLanguage());
         } catch (Exception e1) {
             FileLog.e(e1);
         }
@@ -659,7 +675,11 @@ public class TranslateController extends BaseController {
         if (onScreen && isTranslatingDialog(dialogId)) {
             final MessageObject finalMessageObject = messageObject;
             if (finalMessageObject.messageOwner.summarizedOpen) {
-                if (finalMessageObject.messageOwner.translatedSummaryText == null || !language.equals(finalMessageObject.messageOwner.translatedSummaryLanguage)) {
+                if (
+                    finalMessageObject.messageOwner.translatedSummaryText == null ||
+                    MessageHelper.isLegacyTranslatedSummary(finalMessageObject.messageOwner.summaryText, finalMessageObject.messageOwner.translatedSummaryText) ||
+                    !language.equals(finalMessageObject.messageOwner.translatedSummaryLanguage)
+                ) {
                     pushToSummarize(finalMessageObject, language, text -> {
                         finalMessageObject.messageOwner.translatedSummaryLanguage = text != null ? language : null;
                         finalMessageObject.messageOwner.translatedSummaryText = text;
@@ -1027,18 +1047,54 @@ public class TranslateController extends BaseController {
             return;
         }
 
+        final ArrayList<String> buttonsToTranslate = new ArrayList<>();
+        if (message.messageOwner.reply_markup instanceof TLRPC.TL_replyInlineMarkup) {
+            TLRPC.TL_replyInlineMarkup inlineMarkup = (TLRPC.TL_replyInlineMarkup) message.messageOwner.reply_markup;
+            for (int i = 0; i < inlineMarkup.rows.size(); i++) {
+                TLRPC.TL_keyboardButtonRow row = inlineMarkup.rows.get(i);
+                for (int j = 0; j < row.buttons.size(); j++) {
+                    TLRPC.KeyboardButton button = row.buttons.get(j);
+                    if (!TextUtils.isEmpty(button.text)) {
+                        buttonsToTranslate.add(button.text);
+                    }
+                }
+            }
+        }
+
         if (NekoConfig.translationProvider.Int() != Translator.providerTelegram) {
             synchronized (this) {
                 loadingTranslations.add(message.getId());
             }
 
+            final String query;
+            if (buttonsToTranslate.isEmpty()) {
+                query = message.messageOwner.message;
+            } else {
+                StringBuilder sb = new StringBuilder(message.messageOwner.message);
+                for (String btn : buttonsToTranslate) {
+                    sb.append("\n<<<<\n").append(btn);
+                }
+                query = sb.toString();
+            }
+
             final String llmContext = buildLlmAutoTranslateContext(message);
-            Translator.translateWithContext(TranslatorKt.getCode2Locale(language), message.messageOwner.message, message.messageOwner.entities, llmContext, new Translator.Companion.TranslateCallBack2() {
+            Translator.translateWithContext(TranslatorKt.getCode2Locale(language), query, message.messageOwner.entities, llmContext, new Translator.Companion.TranslateCallBack2() {
                 @Override
                 public void onSuccess(@NonNull TLRPC.TL_textWithEntities finalText) {
                     synchronized (TranslateController.this) {
                         loadingTranslations.remove(message.getId());
                     }
+                    
+                    if (!buttonsToTranslate.isEmpty() && finalText.text != null) {
+                        String[] parts = finalText.text.split("\n<<<<\n");
+                        finalText.text = parts[0];
+                        message.messageOwner.translatedButtons = new HashMap<>();
+                        message.messageOwner.translatedButtonsLanguage = language;
+                        for (int i = 0; i < Math.min(buttonsToTranslate.size(), parts.length - 1); i++) {
+                            message.messageOwner.translatedButtons.put(buttonsToTranslate.get(i), parts[i + 1].trim());
+                        }
+                    }
+
                     callback.run(isTranscription, message.getId(), finalText, language);
                 }
 
@@ -1051,9 +1107,7 @@ public class TranslateController extends BaseController {
                         if (unsupported) {
                             toggleTranslatingDialog(dialogId, false);
                             NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.showBulletin, Bulletin.TYPE_ERROR, LocaleController.getString(R.string.TranslationFailedAlert2) + " " + error);
-                        }/* else {
-                            NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.showBulletin, Bulletin.TYPE_ERROR, LocaleController.getString(R.string.TranslationFailedAlert1) + " " + error);
-                        }*/
+                        }
                         callback.run(isTranscription, message.getId(), null, language);
                     });
                 }
@@ -1710,7 +1764,7 @@ public class TranslateController extends BaseController {
             return RestrictedLanguagesSelectActivity.getRestrictedLanguages().contains(lng);
         }
         try {
-            return TextUtils.equals(LocaleController.getInstance().getCurrentLocaleInfo().pluralLangCode, lng);
+            return TextUtils.equals(currentPluralLanguage(), lng);
         } catch (Exception ignore) {
             return false;
         }
@@ -2521,4 +2575,5 @@ public class TranslateController extends BaseController {
         }
         return sb.toString();
     }
+
 }

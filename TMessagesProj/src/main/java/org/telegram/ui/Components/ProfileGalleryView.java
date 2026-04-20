@@ -32,6 +32,7 @@ import org.telegram.messenger.ImageLocation;
 import org.telegram.messenger.ImageReceiver;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
+import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
@@ -42,9 +43,6 @@ import org.telegram.ui.PinchToZoomHelper;
 import org.telegram.ui.ProfileActivity;
 
 import java.util.ArrayList;
-
-import tw.nekomimi.nekogram.NekoConfig;
-import xyz.nextalone.nagram.NaConfig;
 
 public class ProfileGalleryView extends CircularViewPager implements NotificationCenter.NotificationCenterDelegate {
 
@@ -133,8 +131,6 @@ public class ProfileGalleryView extends CircularViewPager implements Notificatio
         void onDown(boolean left);
 
         void onRelease();
-
-        default void onClick() {};
 
         void onPhotosLoaded();
 
@@ -494,8 +490,7 @@ public class ProfileGalleryView extends CircularViewPager implements Notificatio
             isDownReleased = false;
         } else if (action == MotionEvent.ACTION_UP) {
             if (!isDownReleased) {
-                if (NaConfig.INSTANCE.getDisableAvatarTapToSwitch().Bool() && callback != null) {
-                    callback.onClick();
+                if (!SharedConfig.nextMediaTap && callback != null) {
                     callback.onRelease();
                 } else {
                     int itemsCount = getRealCount();
@@ -513,8 +508,8 @@ public class ProfileGalleryView extends CircularViewPager implements Notificatio
                             }
                         }
                         if (callback != null) {
-                        callback.onRelease();
-                    }
+                            callback.onRelease();
+                        }
                         setCurrentItem(currentItem, false);
                     }
                 }

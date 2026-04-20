@@ -26,7 +26,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Base64;
-import android.util.Log;
 import android.util.LongSparseArray;
 import android.view.Surface;
 import android.view.SurfaceView;
@@ -51,8 +50,6 @@ import com.google.android.exoplayer2.analytics.AnalyticsListener;
 import com.google.android.exoplayer2.audio.AudioAttributes;
 import com.google.android.exoplayer2.audio.AudioCapabilities;
 import com.google.android.exoplayer2.audio.AudioProcessor;
-import com.google.android.exoplayer2.audio.AudioProcessor.AudioFormat;
-import com.google.android.exoplayer2.audio.AudioProcessor.UnhandledAudioFormatException;
 import com.google.android.exoplayer2.audio.AudioSink;
 import com.google.android.exoplayer2.audio.DefaultAudioSink;
 import com.google.android.exoplayer2.audio.TeeAudioProcessor;
@@ -72,15 +69,17 @@ import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.MappingTrackSelector;
 import com.google.android.exoplayer2.trackselection.TrackSelectionOverride;
 import com.google.android.exoplayer2.trackselection.TrackSelectionParameters;
+import com.google.android.exoplayer2.upstream.DataSource;
+import com.google.android.exoplayer2.upstream.DataSpec;
 import com.google.android.exoplayer2.upstream.DefaultAllocator;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
+import com.google.android.exoplayer2.upstream.TransferListener;
 import com.google.android.exoplayer2.video.SurfaceNotValidException;
 import com.google.android.exoplayer2.video.VideoListener;
 import com.google.android.exoplayer2.video.VideoSize;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
-import org.telegram.messenger.BuildVars;
 import org.telegram.messenger.DispatchQueue;
 import org.telegram.messenger.FileLoader;
 import org.telegram.messenger.FileLog;
@@ -98,6 +97,7 @@ import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.Stories.recorder.StoryEntry;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.ByteBuffer;
@@ -106,6 +106,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 
 import xyz.nextalone.nagram.NaConfig;
 
@@ -266,7 +268,11 @@ public class VideoPlayer implements Player.Listener, VideoListener, AnalyticsLis
         }
         if (player == null) {
             DefaultRenderersFactory factory;
-            factory = new AudioVisualizerRenderersFactory(ApplicationLoader.applicationContext);
+            if (audioVisualizerDelegate != null || NaConfig.INSTANCE.getV8dAudio().Bool()) {
+                factory = new AudioVisualizerRenderersFactory(ApplicationLoader.applicationContext);
+            } else {
+                factory = new DefaultRenderersFactory(ApplicationLoader.applicationContext);
+            }
             factory.setExtensionRendererMode(getPlayerExtensionRendererMode());
             ExoPlayer.Builder builder = new ExoPlayer.Builder(ApplicationLoader.applicationContext).setRenderersFactory(factory)
                     .setTrackSelector(trackSelector)
@@ -295,7 +301,7 @@ public class VideoPlayer implements Player.Listener, VideoListener, AnalyticsLis
         if (mixedAudio) {
             if (audioPlayer == null) {
                 audioPlayer = new ExoPlayer.Builder(ApplicationLoader.applicationContext)
-                        .setRenderersFactory(new AudioVisualizerRenderersFactory(ApplicationLoader.applicationContext).setExtensionRendererMode(getPlayerExtensionRendererMode()))
+                        .setRenderersFactory(new DefaultRenderersFactory(ApplicationLoader.applicationContext).setExtensionRendererMode(getPlayerExtensionRendererMode()))
                         .setTrackSelector(trackSelector)
                         .setLoadControl(loadControl).buildSimpleExoPlayer();
                 audioPlayer.addListener(new Player.Listener() {
@@ -339,7 +345,7 @@ public class VideoPlayer implements Player.Listener, VideoListener, AnalyticsLis
                 type = audioType;
                 uri = audioUri;
             }
-            mediaSource = mediaSourceFromUri(uri, type);
+            mediaSource = mediaSourceFromUri(uri, 0, type);
             mediaSource = new LoopingMediaSource(mediaSource);
             if (a == 0) {
                 mediaSource1 = mediaSource;
@@ -354,8 +360,17 @@ public class VideoPlayer implements Player.Listener, VideoListener, AnalyticsLis
         activePlayers.add(playerId);
     }
 
-    private MediaSource mediaSourceFromUri(Uri uri, String type) {
-        MediaItem mediaItem = new MediaItem.Builder().setUri(uri).build();
+    private MediaSource mediaSourceFromUri(VideoUri videoUri, String type) {
+        return mediaSourceFromUri(videoUri.uri, videoUri.fileVideoOffset, type);
+    }
+
+    private MediaSource mediaSourceFromUri(Uri uri, long videoByteOffset, String type) {
+        final MediaItem mediaItem = new MediaItem.Builder().setUri(uri).build();
+        if (videoByteOffset != 0) {
+            return new ProgressiveMediaSource.Factory(
+                () -> new OffsetDataSource(mediaDataSourceFactory.createDataSource(), videoByteOffset)
+            ).createMediaSource(mediaItem);
+        }
         switch (type) {
             case "dash":
                 if (dashMediaSourceFactory == null) {
@@ -381,10 +396,10 @@ public class VideoPlayer implements Player.Listener, VideoListener, AnalyticsLis
     }
 
     public void preparePlayer(Uri uri, String type) {
-        preparePlayer(uri, type, FileLoader.PRIORITY_HIGH);
+        preparePlayer(uri, type, FileLoader.PRIORITY_HIGH, 0);
     }
 
-    public void preparePlayer(Uri uri, String type, int priority) {
+    public void preparePlayer(Uri uri, String type, int priority, long videoByteOffset) {
         this.videoQualities = null;
         this.videoQualityToSelect = null;
         this.videoUri = uri;
@@ -401,7 +416,7 @@ public class VideoPlayer implements Player.Listener, VideoListener, AnalyticsLis
         String scheme = uri != null ? uri.getScheme() : null;
         isStreaming = scheme != null && !scheme.startsWith("file");
         ensurePlayerCreated();
-        MediaSource mediaSource = mediaSourceFromUri(uri, type);
+        MediaSource mediaSource = mediaSourceFromUri(uri, videoByteOffset, type);
         player.setMediaSource(mediaSource, true);
         player.prepare();
     }
@@ -773,14 +788,14 @@ public class VideoPlayer implements Player.Listener, VideoListener, AnalyticsLis
                 autoIsOriginal = true;
                 quality = original;
                 videoQualityToSelect = quality;
-                player.setMediaSource(mediaSourceFromUri(quality.getDownloadUri().uri, "other"), false);
+                player.setMediaSource(mediaSourceFromUri(quality.getDownloadUri(), "other"), false);
                 reset = true;
             } else if (hlsManifest != null) {
                 autoIsOriginal = false;
                 trackSelector.setParameters(trackSelector.getParameters().buildUpon().clearOverrides().build());
                 if (!currentStreamIsHls) {
                     currentStreamIsHls = true;
-                    player.setMediaSource(mediaSourceFromUri(hlsManifest, "hls"), false);
+                    player.setMediaSource(mediaSourceFromUri(hlsManifest, 0, "hls"), false);
                     reset = true;
                 }
             } else {
@@ -790,7 +805,7 @@ public class VideoPlayer implements Player.Listener, VideoListener, AnalyticsLis
                 currentStreamIsHls = false;
                 videoQualityToSelect = quality;
                 autoIsOriginal = quality.original;
-                player.setMediaSource(mediaSourceFromUri(quality.getDownloadUri().uri, "other"), false);
+                player.setMediaSource(mediaSourceFromUri(quality.getDownloadUri(), "other"), false);
                 reset = true;
             }
         } else {
@@ -802,12 +817,12 @@ public class VideoPlayer implements Player.Listener, VideoListener, AnalyticsLis
             }
             if (hlsManifest == null || quality.uris.size() == 1 || trackSelector.getCurrentMappedTrackInfo() == null) {
                 currentStreamIsHls = false;
-                player.setMediaSource(mediaSourceFromUri(quality.getDownloadUri().uri, "other"), false);
+                player.setMediaSource(mediaSourceFromUri(quality.getDownloadUri(), "other"), false);
                 reset = true;
             } else {
                 if (!currentStreamIsHls) {
                     currentStreamIsHls = true;
-                    player.setMediaSource(mediaSourceFromUri(hlsManifest, "hls"), false);
+                    player.setMediaSource(mediaSourceFromUri(hlsManifest, 0, "hls"), false);
                     reset = true;
                 }
                 TrackSelectionParameters.Builder selector = trackSelector.getParameters().buildUpon().clearOverrides();
@@ -1247,6 +1262,7 @@ public class VideoPlayer implements Player.Listener, VideoListener, AnalyticsLis
         public Uri uri;
         public long manifestDocId;
         public Uri m3u8uri;
+        public long fileVideoOffset;
 
         public TLRPC.Document document;
         public TLRPC.Document manifestDocument;
@@ -1846,14 +1862,18 @@ public class VideoPlayer implements Player.Listener, VideoListener, AnalyticsLis
         @Nullable
         @Override
         protected AudioSink buildAudioSink(Context context, boolean enableFloatOutput, boolean enableAudioTrackPlaybackParams, boolean enableOffload) {
+            ArrayList<AudioProcessor> processors = new ArrayList<>();
+            if (NaConfig.INSTANCE.getV8dAudio().Bool()) {
+                processors.add(new V8DAudioProcessor());
+            }
+            if (audioVisualizerDelegate != null) {
+                processors.add(new TeeAudioProcessor(new VisualizerBufferSink()));
+            }
             return new DefaultAudioSink.Builder()
                     .setAudioCapabilities(AudioCapabilities.getCapabilities(context))
                     .setEnableFloatOutput(enableFloatOutput)
                     .setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams)
-                    .setAudioProcessors(new AudioProcessor[] {
-                            new SpatialAudioProcessor(),
-                            new TeeAudioProcessor(new VisualizerBufferSink())
-                    })
+                    .setAudioProcessors(processors.toArray(new AudioProcessor[0]))
                     .setOffloadMode(
                             enableOffload
                                     ? DefaultAudioSink.OFFLOAD_MODE_ENABLED_GAPLESS_REQUIRED
@@ -1974,124 +1994,6 @@ public class VideoPlayer implements Player.Listener, VideoListener, AnalyticsLis
         }
     }
 
-    private class SpatialAudioProcessor implements AudioProcessor {
-        private AudioFormat inputAudioFormat = AudioFormat.NOT_SET;
-        private boolean active;
-        private ByteBuffer outputBuffer = EMPTY_BUFFER;
-        private boolean inputEnded;
-
-        private float panAngle = 0f;
-        private static final float PAN_SPEED = 0.00002f;
-
-        private short[] delayBufferL = new short[1024];
-        private short[] delayBufferR = new short[1024];
-        private int delayPtr = 0;
-
-        @Override
-        public AudioFormat configure(AudioFormat inputAudioFormat) throws UnhandledAudioFormatException {
-            if (inputAudioFormat.encoding != C.ENCODING_PCM_16BIT) {
-                throw new UnhandledAudioFormatException(inputAudioFormat);
-            }
-            this.inputAudioFormat = inputAudioFormat;
-            active = NaConfig.INSTANCE.getPlayAudio3D().Bool();
-            if (active && inputAudioFormat.channelCount == 1) {
-                return new AudioFormat(inputAudioFormat.sampleRate, 2, C.ENCODING_PCM_16BIT);
-            }
-            return inputAudioFormat;
-        }
-
-        @Override
-        public boolean isActive() {
-            return active;
-        }
-
-        @Override
-        public void queueInput(ByteBuffer inputBuffer) {
-            int remaining = inputBuffer.remaining();
-            if (remaining == 0) return;
-
-            int outputSize = inputAudioFormat.channelCount == 1 ? remaining * 2 : remaining;
-            if (outputBuffer.capacity() < outputSize) {
-                outputBuffer = ByteBuffer.allocateDirect(outputSize).order(ByteOrder.nativeOrder());
-            } else {
-                outputBuffer.clear();
-            }
-
-            while (inputBuffer.hasRemaining()) {
-                short left, right;
-                if (inputAudioFormat.channelCount == 1) {
-                    short mono = inputBuffer.getShort();
-                    left = mono;
-                    right = mono;
-                } else {
-                    left = inputBuffer.getShort();
-                    right = inputBuffer.getShort();
-                }
-
-                double cos = Math.cos(panAngle);
-                
-                // Professional Panning (Constant Power)
-                float leftGain = (float) Math.sqrt(0.5 * (1.0 + cos));
-                float rightGain = (float) Math.sqrt(0.5 * (1.0 - cos));
-
-                // ITD (Interaural Time Difference) simulation
-                int delaySamples = (int) (cos * 20); // ~0.45ms max delay
-
-                delayBufferL[delayPtr] = left;
-                delayBufferR[delayPtr] = right;
-
-                short outL, outR;
-                if (delaySamples > 0) {
-                    int idxR = (delayPtr - delaySamples + delayBufferR.length) % delayBufferR.length;
-                    outL = (short) (left * leftGain);
-                    outR = (short) (delayBufferR[idxR] * rightGain);
-                } else {
-                    int idxL = (delayPtr + delaySamples + delayBufferL.length) % delayBufferL.length;
-                    outL = (short) (delayBufferL[idxL] * leftGain);
-                    outR = (short) (right * rightGain);
-                }
-
-                outputBuffer.putShort(outL);
-                outputBuffer.putShort(outR);
-
-                delayPtr = (delayPtr + 1) % delayBufferL.length;
-                panAngle += PAN_SPEED;
-                if (panAngle > 2 * Math.PI) panAngle -= (float) (2 * Math.PI);
-            }
-            outputBuffer.flip();
-        }
-
-        @Override
-        public void queueEndOfStream() {
-            inputEnded = true;
-        }
-
-        @Override
-        public ByteBuffer getOutput() {
-            ByteBuffer outputBuffer = this.outputBuffer;
-            this.outputBuffer = EMPTY_BUFFER;
-            return outputBuffer;
-        }
-
-        @Override
-        public boolean isEnded() {
-            return inputEnded && outputBuffer == EMPTY_BUFFER;
-        }
-
-        @Override
-        public void flush() {
-            outputBuffer = EMPTY_BUFFER;
-            inputEnded = false;
-        }
-
-        @Override
-        public void reset() {
-            flush();
-            inputAudioFormat = AudioFormat.NOT_SET;
-            active = false;
-        }
-    }
-
     public boolean isHDR() {
         if (player == null) {
             return false;
@@ -2198,6 +2100,45 @@ public class VideoPlayer implements Player.Listener, VideoListener, AnalyticsLis
         }
 
         return builder.build();
+    }
+
+    public static class OffsetDataSource implements DataSource {
+        private final DataSource upstream;
+        private final long byteOffset;
+
+        public OffsetDataSource(DataSource upstream, long byteOffset) {
+            this.upstream = upstream;
+            this.byteOffset = byteOffset;
+        }
+
+        @Override
+        public void addTransferListener(TransferListener transferListener) {
+            upstream.addTransferListener(transferListener);
+        }
+
+        @Override
+        public long open(DataSpec dataSpec) throws IOException {
+            DataSpec offsetDataSpec = dataSpec.buildUpon()
+                .setPosition(dataSpec.position + byteOffset)
+                .build();
+            return upstream.open(offsetDataSpec);
+        }
+
+        @Override
+        public int read(byte[] buffer, int offset, int length) throws IOException {
+            return upstream.read(buffer, offset, length);
+        }
+
+        @Override
+        public Uri getUri() { return upstream.getUri(); }
+
+        @Override
+        public void close() throws IOException { upstream.close(); }
+
+        @Override
+        public Map<String, List<String>> getResponseHeaders() {
+            return upstream.getResponseHeaders();
+        }
     }
 
 }

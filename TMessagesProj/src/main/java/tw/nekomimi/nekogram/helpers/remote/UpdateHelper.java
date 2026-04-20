@@ -1,6 +1,7 @@
 package tw.nekomimi.nekogram.helpers.remote;
 
 import android.os.Build;
+import android.text.TextUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -89,30 +90,39 @@ public class UpdateHelper extends BaseRemoteHelper {
         Update ref = null;
         for (var string : responses) {
             try {
-                int remoteVersion = string.getInt("version_code");
+                int remoteVersion = string.optInt("version_code", 0);
                 long remoteBuildTimestamp = string.optLong("build_timestamp", 0L);
-                boolean shouldUpdate = false;
-                if (remoteVersion > currentVersion) {
+                boolean shouldUpdate;
+                if (remoteVersion == 0) {
+                    // No version_code: compare the version NAME string against what's installed.
+                    // Shows update if version string differs from installed → stops after update.
+                    String remoteVersionName = string.optString("version", "");
+                    boolean alreadyInstalled = !TextUtils.isEmpty(remoteVersionName)
+                            && remoteVersionName.trim().equals(BuildConfig.VERSION_NAME.trim());
+                    shouldUpdate = !alreadyInstalled;
+                } else if (remoteVersion > currentVersion) {
                     shouldUpdate = true;
-                } else if (remoteVersion == currentVersion && remoteBuildTimestamp > buildTimestamp) {
-                    shouldUpdate = true;
+                } else {
+                    shouldUpdate = (remoteVersion == currentVersion && remoteBuildTimestamp > buildTimestamp);
                 }
                 if (shouldUpdate || updateAlways) {
                     if (updateAlways) {
                         updateAlways = false;
                     }
+                    JSONObject docObj = string.optJSONObject("document");
                     ref = new Update(
-                            string.getBoolean("can_not_skip"),
-                            string.getString("version"),
+                            string.optBoolean("can_not_skip", false),
+                            string.optString("version", ""),
                             remoteVersion,
-                            string.getInt("sticker"),
-                            string.getInt("message"),
-                            jsonToMap(string.getJSONObject("document")),
-                            string.getString("url")
+                            string.optInt("sticker", 0),
+                            string.optInt("message", 0),
+                            (docObj != null && docObj.length() > 0) ? jsonToMap(docObj) : null,
+                            string.optString("url", null),
+                            string.optString("changelog", null)
                     );
                     break;
                 }
-            } catch (JSONException ignored) {
+            } catch (Exception ignored) {
             }
         }
         return ref;
@@ -159,6 +169,10 @@ public class UpdateHelper extends BaseRemoteHelper {
                 }
             }
         }
+        // Use inline changelog text if no channel message was fetched
+        if (TextUtils.isEmpty(update.text) && !TextUtils.isEmpty(json.changelog)) {
+            update.text = json.changelog;
+        }
         delegate.onTLResponse(update, null);
     }
 
@@ -170,10 +184,10 @@ public class UpdateHelper extends BaseRemoteHelper {
             return;
         }
         var ids = new HashMap<String, Integer>();
-        if (update.sticker != null) {
+        if (update.sticker != null && update.sticker != 0) {
             ids.put("sticker", update.sticker);
         }
-        if (update.message != null) {
+        if (update.message != null && update.message != 0) {
             ids.put("message", update.message);
         }
         if (update.document != null) {
@@ -216,8 +230,9 @@ public class UpdateHelper extends BaseRemoteHelper {
         public Integer message;
         public Map<String, Integer> document;
         public String url;
+        public String changelog;
 
-        public Update(Boolean canNotSkip, String version, int versionCode, int sticker, int message, Map<String, Integer> document, String url) {
+        public Update(Boolean canNotSkip, String version, int versionCode, int sticker, int message, Map<String, Integer> document, String url, String changelog) {
             this.canNotSkip = canNotSkip;
             this.version = version;
             this.versionCode = versionCode;
@@ -225,6 +240,7 @@ public class UpdateHelper extends BaseRemoteHelper {
             this.message = message;
             this.document = document;
             this.url = url;
+            this.changelog = changelog;
         }
     }
 }

@@ -276,9 +276,6 @@ public class BotCommandsMenuContainer extends FrameLayout implements NestedScrol
 
     public void updateColors() {
         topBackground.setColor(Theme.getColor(Theme.key_sheet_scrollUp));
-        if (tw.nekomimi.nekogram.NekoConfig.liquidGlassUI.Bool()) {
-            topBackground.setColor(ColorUtils.setAlphaComponent(topBackground.getColor(), 0));
-        }
         if (backgroundDrawable != null) {
             backgroundDrawable.updateColors();
         }

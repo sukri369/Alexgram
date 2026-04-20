@@ -9,7 +9,6 @@ import android.text.Spanned;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.graphics.Color;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -17,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
+import org.telegram.messenger.BuildConfig;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
@@ -38,6 +38,7 @@ import java.util.Locale;
 import tw.nekomimi.nekogram.helpers.PasscodeHelper;
 import tw.nekomimi.nekogram.ui.cells.AccountCell;
 import tw.nekomimi.nekogram.ui.cells.HeaderCell;
+import xyz.nextalone.nagram.NaConfig;
 
 public class NekoPasscodeSettingsActivity extends BaseNekoSettingsActivity {
 
@@ -49,13 +50,17 @@ public class NekoPasscodeSettingsActivity extends BaseNekoSettingsActivity {
     private int accountsStartRow;
     private int accountsEndRow;
 
-    private int panicCodeRow;
     private int setPanicCodeRow;
     private int removePanicCodeRow;
     private int panicCode2Row;
 
     private int clearPasscodesRow;
     private int clearPasscodes2Row;
+
+    private int showNotificationContentWhenLockedRow;
+    private int showNotificationContentWhenLocked2Row;
+    private int hiddenChatsRow;
+    private int hiddenChats2Row;
 
     private final ArrayList<Integer> accounts = new ArrayList<>();
 
@@ -163,6 +168,18 @@ public class NekoPasscodeSettingsActivity extends BaseNekoSettingsActivity {
             if (view instanceof TextCheckCell) {
                 ((TextCheckCell) view).setChecked(!PasscodeHelper.isSettingsHidden());
             }
+        } else if (position == showNotificationContentWhenLockedRow) {
+            boolean value = NaConfig.INSTANCE.getShowNotificationPreviewWhenLocked().toggleConfigBool();
+            if (view instanceof TextCheckCell textCheckCell) {
+                textCheckCell.setChecked(value);
+            }
+        } else if (position == hiddenChatsRow) {
+            tw.nekomimi.nekogram.helpers.HiddenChatsController controller = tw.nekomimi.nekogram.helpers.HiddenChatsController.getInstance();
+            if (controller.hasPasscode()) {
+                presentFragment(new tw.nekomimi.nekogram.ui.HiddenChatsPasscodeActivity(tw.nekomimi.nekogram.ui.HiddenChatsPasscodeActivity.MODE_UNLOCK_SETTINGS));
+            } else {
+                presentFragment(new tw.nekomimi.nekogram.ui.HiddenChatsPasscodeActivity(tw.nekomimi.nekogram.ui.HiddenChatsPasscodeActivity.MODE_SETUP_PASSCODE));
+            }
         }
     }
 
@@ -202,7 +219,6 @@ public class NekoPasscodeSettingsActivity extends BaseNekoSettingsActivity {
         rowCount += accounts.size();
         accountsEndRow = rowCount++;
 
-        panicCodeRow = rowCount++;
         setPanicCodeRow = rowCount++;
         if (!PasscodeHelper.hasPanicCode()) {
             removePanicCodeRow = -1;
@@ -211,13 +227,18 @@ public class NekoPasscodeSettingsActivity extends BaseNekoSettingsActivity {
         }
         panicCode2Row = rowCount++;
 
-        if (false) {
+        if (BuildConfig.DEBUG) {
             clearPasscodesRow = rowCount++;
             clearPasscodes2Row = rowCount++;
         } else {
             clearPasscodesRow = -1;
             clearPasscodes2Row = -1;
         }
+
+        showNotificationContentWhenLockedRow = rowCount++;
+        showNotificationContentWhenLocked2Row = rowCount++;
+        hiddenChatsRow = rowCount++;
+        hiddenChats2Row = rowCount++;
     }
 
     private class ListAdapter extends BaseListAdapter {
@@ -249,8 +270,9 @@ public class NekoPasscodeSettingsActivity extends BaseNekoSettingsActivity {
                     } else if (position == removePanicCodeRow) {
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteRedText3));
                         textCell.setText(getString(R.string.PasscodePanicCodeRemove), false);
+                    } else if (position == hiddenChatsRow) {
+                        textCell.setText(getString(R.string.HiddenChats), true);
                     }
-                    holder.itemView.setBackgroundColor(Color.TRANSPARENT);
                     break;
                 }
                 case 3: {
@@ -258,6 +280,8 @@ public class NekoPasscodeSettingsActivity extends BaseNekoSettingsActivity {
                     textCell.setEnabled(passcodeSet, null);
                     if (position == showInSettingsRow) {
                         textCell.setTextAndCheck(getString(R.string.PasscodeShowInSettings), !PasscodeHelper.isSettingsHidden(), false);
+                    } else if (position == showNotificationContentWhenLockedRow) {
+                        textCell.setTextAndCheck(getString(R.string.PasscodeShowMessagePreviewWhenLocked), NaConfig.INSTANCE.getShowNotificationPreviewWhenLocked().Bool(), false);
                     }
                     break;
                 }
@@ -266,10 +290,7 @@ public class NekoPasscodeSettingsActivity extends BaseNekoSettingsActivity {
                     cell.setEnabled(passcodeSet, null);
                     if (position == accountsStartRow) {
                         cell.setText(getString(R.string.Account));
-                    } else if (position == panicCodeRow) {
-                        cell.setText(getString(R.string.PasscodePanicCode));
                     }
-                    holder.itemView.setBackgroundColor(Color.TRANSPARENT);
                     break;
                 }
                 case 7: {
@@ -280,9 +301,6 @@ public class NekoPasscodeSettingsActivity extends BaseNekoSettingsActivity {
                         cell.setText(getString(R.string.PasscodeAbout));
                     } else if (position == panicCode2Row) {
                         cell.setText(getString(R.string.PasscodePanicCodeAbout));
-                        if (clearPasscodesRow == -1) {
-                            cell.setBackground(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
-                        }
                     } else if (position == showInSettings2Row) {
                         var link = String.format(Locale.ENGLISH, "https://t.me/alexsettings/%s", PasscodeHelper.getSettingsKey());
                         var stringBuilder = new SpannableStringBuilder(AndroidUtilities.replaceTags(getString(R.string.PasscodeShowInSettingsAbout)));
@@ -297,6 +315,12 @@ public class NekoPasscodeSettingsActivity extends BaseNekoSettingsActivity {
                             }
                         }, stringBuilder.length() - link.length(), stringBuilder.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                         cell.setText(stringBuilder);
+                    } else if (position == showNotificationContentWhenLocked2Row) {
+                        cell.setText(getString(R.string.PasscodeShowMessagePreviewWhenLockedAbout));
+                        cell.setBackground(Theme.getThemedDrawable(mContext, R.drawable.greydivider, Theme.key_windowBackgroundGrayShadow));
+                    } else if (position == hiddenChats2Row) {
+                        cell.setText(getString(R.string.HiddenChatsAbout));
+                        cell.setBackground(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
                     }
                     break;
                 }
@@ -321,14 +345,16 @@ public class NekoPasscodeSettingsActivity extends BaseNekoSettingsActivity {
                 return 1;
             } else if (position == clearPasscodesRow || position == setPanicCodeRow || position == removePanicCodeRow) {
                 return 2;
-            } else if (position == showInSettingsRow) {
+            } else if (position == showInSettingsRow || position == showNotificationContentWhenLockedRow) {
                 return 3;
-            } else if (position == accountsStartRow || position == panicCodeRow) {
+            } else if (position == accountsStartRow) {
                 return 4;
-            } else if (position == showInSettings2Row || position == accountsEndRow || position == panicCode2Row) {
+            } else if (position == showInSettings2Row || position == accountsEndRow || position == panicCode2Row || position == showNotificationContentWhenLocked2Row || position == hiddenChats2Row) {
                 return 7;
             } else if (position > accountsStartRow && position < accountsEndRow) {
                 return 11;
+            } else if (position == hiddenChatsRow) {
+                return 2;
             }
             return 2;
         }

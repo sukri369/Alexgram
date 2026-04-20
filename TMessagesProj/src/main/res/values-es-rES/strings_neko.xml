@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="NekoSettings">N-Ajustes</string>
+    <string name="NekoSettings">A-Ajustes</string>
     <string name="IPv6">IPv6 preferido</string>
     <string name="MessageMenu">Menú de mensaje</string>
     <string name="HidePhone">Ocultar número de teléfono</string>
@@ -49,7 +49,6 @@
     <string name="TranslateApiUnsupported">El proveedor escogido no soporta tu idioma.</string>
     <string name="ProviderLingocloud">Traducción de LingoCloud</string>
     <string name="UndoTranslate">Ocultar traducción</string>
-    <string name="DisablePhotoViewerSideAction">Desactivar toque lateral para cambiar fotos</string>
     <string name="BotToken">Token</string>
     <string name="UnlimitedPinnedDialogs">Chats anclados ilimitados</string>
     <string name="UnlimitedPinnedDialogsAbout">Ancla chats de forma ilimitada, pero se desactiva su sincronización.</string>
@@ -113,10 +112,10 @@
     <string name="enhancedFileLoader">Aumento de velocidad de descarga</string>
     <string name="mapDriftingFixForGoogleMaps">Corregir la deriva de Google Maps en China</string>
     <string name="useOSMDroidMap">Usar mapa OSMDroid</string>
-    <string name="UnknownNekoSettingsOption">No existe tal opción en N-Settings.</string>
+    <string name="UnknownNekoSettingsOption">No existe tal opción en A-Ajustes.</string>
     <string name="PasscodeNeeded">Tienes que activar primero el código de acceso</string>
     <string name="PasscodeNeko">Código de acceso</string>
-    <string name="PasscodeShowInSettings">Mostrar en N-Ajustes</string>
+    <string name="PasscodeShowInSettings">Mostrar en A-Ajustes</string>
     <string name="PasscodeShowInSettingsAbout">Después de ocultarlo, **SÓLO puede** abrir esta página mediante enlace:</string>
     <string name="PasscodeSet">Establecer código de acceso</string>
     <string name="PasscodeEdit">Cambiar código de acceso</string>
@@ -154,7 +153,7 @@
     <string name="ClearRecentChats">Borrar chats recientes</string>
     <string name="ClearRecentChatAlert">¿Quieres borrar tus chats recientes?</string>
     <string name="CloudConfig">Ajustes de la nube</string>
-    <string name="CloudConfigDesc">Guarda tus N-ajustes en la nube de Telegram.</string>
+    <string name="CloudConfigDesc">Guarda tus A-Ajustes en la nube de Telegram.</string>
     <string name="CloudConfigSyncDate">Última sincronización: %s, nube: %s</string>
     <string name="CloudConfigSyncDateNever">nunca</string>
     <string name="CloudConfigSync">Sincronizar a la nube</string>
@@ -163,7 +162,7 @@
     <string name="CloudConfigRestoreShort">Restaurar</string>
     <string name="CloudConfigSyncing">Sincronizando...</string>
     <string name="CloudConfigAutoSync">Sincronización automática</string>
-    <string name="CloudConfigAutoSyncDesc">Sincronizar a la nube automáticamente después de hacer cambios en N-Ajustes.</string>
+    <string name="CloudConfigAutoSyncDesc">Sincronizar a la nube automáticamente después de hacer cambios en A-Ajustes.</string>
     <string name="CloudConfigSyncFailed">Error al sincronizar los ajustes en la nube</string>
     <string name="CloudConfigRestoreFailed">Error al restaurar los ajustes de la nube</string>
     <string name="CopyCallback">Copiar datos de retorno</string>
@@ -193,7 +192,6 @@
     <string name="ShowIdAndDc">Mostrar ID / DC en el perfil</string>
     <string name="UseDefaultTheme">Usar tema por defecto *</string>
     <string name="DialogsSettings">Cuadros de diálogo</string>
-    <string name="NagramXPushService">Servicio Push</string>
     <string name="DisableSystemAccount">Desactivar cuenta del sistema</string>
     <string name="FilterMenu">Menú de filtros de diálogos</string>
     <string name="DisableProxyWhenVpnEnabled">Desactivar proxy cuando la VPN está habilitada</string>
@@ -272,4 +270,9 @@
     <string name="EmojiUseDefault">Usar emojis del sistema</string>
     <string name="Chat">Chats</string>
     <string name="Appearance">Apariencia</string>
+
+    <string name="StarFallInChat">Efecto lluvia de estrellas</string>
+    <string name="StarFallInChatDescription">Mostrar animación de estrellas fugaces en los chats.</string>
+    <string name="NekoX">Ajustes de NekoX</string>
+    <string name="ProviderTelegramAPI">API oficial de Telegram</string>
 </resources>

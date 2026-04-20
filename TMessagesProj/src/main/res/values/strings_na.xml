@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="N_Config">N-Config</string>
+    <string name="RunInBackground">Run in Background</string>
+    <string name="RunInBackgroundInfo">Keep the app running in the background to ensure reliable notifications.</string>
+    <string name="NagramXPushService">Alexgram Push Service</string>
+    <string name="N_Config">A-Settings</string>
     <string name="CombineMessage">Combine Messages</string>
     <string name="TextStyle">Text Style</string>
     <string name="NoiseSuppressAndVoiceEnhance">Voice Enhancements</string>
@@ -19,7 +22,6 @@
     <string name="ShowMessageID">Show Message ID</string>
     <string name="ShowRPCError">Toast RPC Errors</string>
     <string name="ShowPremiumStickersAnimation">Show Premium Stickers Animation</string>
-    <string name="AlwaysSaveChatOffset">Always Save Chat Offset</string>
     <string name="AppIconGoogle" translatable="false">Google</string>
     <string name="AppIconColorful">Colorful</string>
     <string name="AppIconDarkGreen">Dark Green</string>
@@ -38,19 +40,13 @@
     <string name="ToTheMessage">Go To</string>
     <string name="ZalgoFilter">Filter \"Zalgo\" Symbols</string>
     <string name="ZalgoFilterNotice">All \"Z̷͍͌ā̸̜l̸̞̂g̷̝͘o̶̩̓\" symbols in nicknames or messages will be removed.</string>
-    <string name="labelChannelUser">Label Channel Users</string>
     <string name="AlwaysShowDownloadIcon">Always Show Download Icon</string>
     <string name="HideTitle">Hide Title</string>
     <string name="IgnoreUnreadCount">Hide Unread Counter</string>
     <string name="SendWithoutMarkdown">Send without markdown</string>
     <string name="SendAsEmoji">Send as emoji</string>
-    <string name="CustomArtworkApi">Custom Artwork API</string>
     <string name="CustomEditedMessage">Custom Edited Mark</string>
     <string name="NotificationIcon">Notification Icon</string>
-    <string name="NotificationIconDefault">Default</string>
-    <string name="NotificationIconNagramX">Alexgram X</string>
-    <string name="NotificationIconNagram">Alexgram</string>
-    <string name="NotificationIconNeko">Neko</string>
     <string name="Official">Official</string>
     <string name="Nagram" translatable="false">Alexgram</string>
     <string name="HalloWeen">HalloWeen</string>
@@ -124,38 +120,22 @@
     <string name="VideoPlayerDecoderPreferSW">Prefer SW</string>
     <string name="VideoPlayerDecoderHardware">HW Only</string>
     <string name="VideoPlayerDecoderPreferHW">Prefer HW</string>
-    <string name="StarFallInChat">Star Fall</string>
+    <string name="EnableLiveVideoWallpaper">Live Video Wallpaper</string>
     <string name="ExportChat">Export Chat</string>
     <string name="ImportChat">Import Chat</string>
-
-    <!-- Alexgram Settings Labels -->
-    <string name="liquidGlassUI">Liquid UI</string>
-    <string name="IosStyleInputBar">IOS Style Input Bar</string>
-    <string name="MusicGraph">Music Visualizer</string>
+    <string name="MusicGraph">Music Graph</string>
+    <string name="MusicGraphInfo">Display a colorful music visualizer while playing audio.</string>
+    <string name="SendVideoAsRound">Send Video as Round</string>
+    <string name="VideoNoteDurationError">Round video cannot be longer than 60 seconds.</string>
+    <string name="HiddenChats">Hidden Chats</string>
+    <string name="HideChat">Add to Hidden Chats</string>
+    <string name="UnhideChat">Remove from Hidden Chats</string>
+    <string name="HideChats">Hide Chats</string>
+    <string name="UnhideChats">Unhide Chats</string>
+    <string name="HiddenChatsPasscode">Hidden Chats Passcode</string>
+    <string name="UnlockHiddenChats">Unlock Hidden Chats</string>
+    <string name="HiddenChatsAbout">Hide sensitive chats from the main list. Access them by holding the Title bar after unlocking with a passcode or biometric.</string>
     <string name="HideContacts">Hide Contacts</string>
-    <string name="enableAIReply">AI Reply</string>
-    <string name="enableSummarizeChat">Summarize Chat</string>
-    <string name="EnableLiveVideoWallpaper">Live Video Wallpaper</string>
-    <string name="FoldersAtBottom">Folders At Bottom</string>
-    <string name="AyuMoments">Ayu Moments</string>
-    <string name="PillChatTitle">Pill Chat Title</string>
-    <string name="PillChatTitleDescription">Wrap chat title and status in a pill-shaped background</string>
     <string name="RestartRequired">Restart required to apply changes</string>
-
-    <string name="VoiceChanger">Voice Changer</string>
-    <string name="VoiceChangerNormal">Normal</string>
-    <string name="VoiceChangerRobotic">Robotic</string>
-    <string name="VoiceChangerAlien">Alien</string>
-    <string name="VoiceChangerHoarseness">Hoarseness</string>
-    <string name="VoiceChangerModulation">Modulation</string>
-    <string name="VoiceChangerChild">Child</string>
-    <string name="VoiceChangerMouse">Mouse</string>
-    <string name="VoiceChangerMan">Man</string>
-    <string name="VoiceChangerWoman">Woman</string>
-    <string name="VoiceChangerMonster">Monster</string>
-    <string name="VoiceChangerEcho">Echo</string>
-    <string name="VoiceChangerNoise">Noise</string>
-    <string name="VoiceChangerHelium">Helium</string>
-    <string name="VoiceChangerHexafluoride">Hexafluoride</string>
-    <string name="VoiceChangerCave">Cave</string>
 </resources>
+

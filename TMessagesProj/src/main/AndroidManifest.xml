@@ -85,7 +85,6 @@
     <uses-permission android:name="me.everything.badger.permission.BADGE_COUNT_WRITE"/>
     <uses-permission android:name="com.android.vending.BILLING"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
-    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -111,7 +110,7 @@
         android:backupAgent=".BackupAgent"
         android:hardwareAccelerated="true"
         android:icon="@drawable/ic_launcher_alexgram_blue"
-        android:label="@string/AppName"
+        android:label="@string/NagramX"
         android:largeHeap="true"
         android:theme="@style/Theme.TMessages.Start"
         android:manageSpaceActivity="org.telegram.ui.ExternalActionActivity"
@@ -413,13 +412,13 @@
                 <data android:host="www.keepassdx.com" android:scheme="http" />
                 <data android:host="www.keepassdx.com" android:scheme="https" />
             </intent-filter>
-            <intent-filter android:icon="@mipmap/ic_launcher_nagram_blue" android:roundIcon="@mipmap/ic_launcher_nagram_blue_round" android:priority="1">
+            <intent-filter android:icon="@drawable/ic_launcher_alexgram_blue" android:roundIcon="@drawable/ic_launcher_alexgram_blue" android:priority="1">
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="tonsite" />
             </intent-filter>
-            <intent-filter android:icon="@mipmap/ic_launcher_nagram_blue" android:roundIcon="@mipmap/ic_launcher_nagram_blue_round" android:priority="1">
+            <intent-filter android:icon="@drawable/ic_launcher_alexgram_blue" android:roundIcon="@drawable/ic_launcher_alexgram_blue" android:priority="1">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -436,6 +435,32 @@
                 android:name="com.google.mlkit.vision.DEPENDENCIES"
                 android:value="subject_segment" />
         </activity>
+
+        <activity
+            android:name="xyz.nextalone.nagram.analytics.ui.AnalyticsDashboardActivity"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|uiMode"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+
+        <activity
+            android:name="xyz.nextalone.nagram.analytics.ui.BlockOverlayActivity"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|uiMode"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+
+        <activity
+            android:name="xyz.nextalone.nagram.analytics.ui.ChatLockedActivity"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|uiMode"
+            android:screenOrientation="portrait"
+            android:excludeFromRecents="true"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+
+        <activity
+            android:name="xyz.nextalone.nagram.analytics.ui.AppLimitReachedActivity"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|uiMode"
+            android:screenOrientation="portrait"
+            android:excludeFromRecents="true"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
         <activity-alias
             android:name="org.telegram.ui.CallsActivity"
             android:targetActivity="org.telegram.ui.LaunchActivity"
@@ -465,7 +490,7 @@
             android:stateNotNeeded="true"
             android:theme="@style/Theme.TMessages.Transparent"
             android:exported="true">
-            <intent-filter android:icon="@mipmap/ic_launcher_nagram_blue" android:roundIcon="@mipmap/ic_launcher_nagram_blue_round" android:priority="1">
+            <intent-filter android:icon="@drawable/ic_launcher_alexgram_blue" android:roundIcon="@drawable/ic_launcher_alexgram_blue" android:priority="1">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -478,7 +503,7 @@
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustPan"
             android:exported="true">
-            <intent-filter android:icon="@mipmap/ic_launcher_nagram_blue" android:roundIcon="@mipmap/ic_launcher_nagram_blue_round">
+            <intent-filter android:icon="@drawable/ic_launcher_alexgram_blue" android:roundIcon="@drawable/ic_launcher_alexgram_blue">
                 <action android:name="org.telegram.passport.AUTHORIZE"/>
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
@@ -489,7 +514,7 @@
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustPan"
             android:exported="true">
-            <intent-filter android:icon="@mipmap/ic_launcher_nagram_blue" android:roundIcon="@mipmap/ic_launcher_nagram_blue_round">
+            <intent-filter android:icon="@drawable/ic_launcher_alexgram_blue" android:roundIcon="@drawable/ic_launcher_alexgram_blue">
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE"/>
             </intent-filter>
         </activity>
@@ -499,7 +524,7 @@
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustPan"
             android:exported="true">
-            <intent-filter android:icon="@mipmap/ic_launcher_nagram_blue" android:roundIcon="@mipmap/ic_launcher_nagram_blue_round">
+            <intent-filter android:icon="@drawable/ic_launcher_alexgram_blue" android:roundIcon="@drawable/ic_launcher_alexgram_blue">
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE"/>
             </intent-filter>
         </activity>
@@ -841,7 +866,7 @@
 
         <meta-data
             android:name="firebase_analytics_collection_deactivated"
-            android:value="true" />
+            android:value="false" />
         <meta-data
             android:name="google_analytics_adid_collection_enabled"
             android:value="false" />
@@ -875,7 +900,7 @@
             android:name="miui.continuity.policy"
             android:value="5" />
 
-        <meta-data android:name="firebase_crashlytics_collection_enabled" android:value="false" />
+        <meta-data android:name="firebase_crashlytics_collection_enabled" android:value="true" />
 
     </application>
 

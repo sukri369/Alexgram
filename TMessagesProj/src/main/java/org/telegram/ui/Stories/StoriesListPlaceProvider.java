@@ -174,7 +174,7 @@ public class StoriesListPlaceProvider implements StoryViewer.PlaceProvider {
                 if (cell.getMessageObject().getId() == messageId) {
                     holder.view = child;
                     TL_stories.StoryItem storyItem = cell.getMessageObject().messageOwner.media.storyItem;
-                    if (storyItem.noforwards) {
+                    if (storyItem.noforwards && !xyz.nextalone.nagram.NaConfig.INSTANCE.getAllowForwardingRestriction().Bool()) {
                         holder.avatarImage = cell.getPhotoImage();
                     } else {
                         holder.storyImage = cell.getPhotoImage();

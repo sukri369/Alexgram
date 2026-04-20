@@ -1,15 +1,11 @@
 package xyz.nextalone.nagram.utils;
 
-import android.app.AlertDialog;
-import android.app.ProgressDialog;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Environment;
 import android.text.TextUtils;
-import android.util.Base64;
 import android.widget.Toast;
 
 import org.json.JSONArray;
@@ -17,7 +13,6 @@ import org.json.JSONObject;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.FileLoader;
 import org.telegram.messenger.FileLog;
-import org.telegram.messenger.ImageLoader;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
@@ -554,7 +549,7 @@ public class ChatExportImport {
         }
     }
 
-    public static void handleImportResult(Context context, long dialogId, Uri uri) {
+    public static void handleImportResult(Activity context, long dialogId, Uri uri) {
         if (uri == null) return;
         try {
             InputStream is = context.getContentResolver().openInputStream(uri);
@@ -586,4 +581,3 @@ public class ChatExportImport {
         }
     }
 }
-

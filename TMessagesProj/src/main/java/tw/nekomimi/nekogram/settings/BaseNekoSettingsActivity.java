@@ -11,9 +11,7 @@ import android.graphics.Rect;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.view.View;
-import android.view.Gravity;
 import android.view.ViewGroup;
-import android.graphics.Color;
 
 import androidx.annotation.NonNull;
 import androidx.core.graphics.ColorUtils;
@@ -44,15 +42,20 @@ import org.telegram.ui.Components.BlurredRecyclerView;
 import org.telegram.ui.Components.BulletinFactory;
 import org.telegram.ui.Components.CubicBezierInterpolator;
 import org.telegram.ui.Components.FlickerLoadingView;
+import org.telegram.ui.Components.ItemOptions;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
 import org.telegram.ui.Components.SizeNotifierFrameLayout;
 import org.telegram.ui.Components.URLSpanNoUnderline;
 
+import android.graphics.drawable.Drawable;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
 
+import tw.nekomimi.nekogram.helpers.QuickSettingEntry;
+import tw.nekomimi.nekogram.helpers.QuickSettingsController;
 import tw.nekomimi.nekogram.ui.cells.AccountCell;
 import tw.nekomimi.nekogram.ui.cells.EmojiSetCell;
 import tw.nekomimi.nekogram.ui.cells.HeaderCell;
@@ -81,6 +84,14 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
 
     protected BlurredRecyclerView listView;
     protected BaseListAdapter listAdapter;
+
+    protected boolean isBreakType(int position) {
+        if (listAdapter == null || position < 0 || position >= listAdapter.getItemCount()) {
+            return true;
+        }
+        int type = listAdapter.getItemViewType(position);
+        return type == TYPE_SHADOW || type == TYPE_INFO_PRIVACY;
+    }
     protected LinearLayoutManager layoutManager;
     protected Theme.ResourcesProvider resourcesProvider;
 
@@ -88,28 +99,79 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
     protected HashMap<String, Integer> rowMap = new HashMap<>(20);
     protected HashMap<Integer, String> rowMapReverse = new HashMap<>(20);
 
+    private int highlightRow = -1;
+    private final Paint highlightPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+
+    protected boolean isDark;
+    protected int cardBg;
+    protected int cardBorder;
+    protected int dividerColor;
+
 
     @Override
     public boolean onFragmentCreate() {
+        setupBrandingColors();
         super.onFragmentCreate();
-
         updateRows();
-
         return true;
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        updateRows();
+        if (listAdapter != null) {
+            listAdapter.notifyDataSetChanged();
+        }
+
+        if (getArguments() != null) {
+            String scrollToKey = getArguments().getString("scrollToKey");
+            if (scrollToKey != null) {
+                getArguments().remove("scrollToKey");
+                scrollToRow(scrollToKey, null);
+            }
+        }
+    }
+
+    protected ItemOptions makeLongClickOptions(View view) {
+        ItemOptions options = ItemOptions.makeOptions(this, view);
+        Drawable background = null;
+        if (listView != null) {
+            background = listView.getClipBackground(view);
+        }
+        return options.setScrimViewBackground(background);
+    }
+
+    protected int addRow() {
+        return rowCount++;
+    }
+
+    protected int addRow(String... keys) {
+        var row = rowCount++;
+        for (var key : keys) {
+            rowMap.put(key, row);
+        }
+        rowMapReverse.put(row, keys[0]);
+        return row;
+    }
+
     public View createView(Context context) {
+        setupBrandingColors();
         fragmentView = new BlurContentView(context);
-        fragmentView.setBackgroundColor(Color.TRANSPARENT);
+        fragmentView.setBackgroundColor(isAlexgramTheme() ? android.graphics.Color.TRANSPARENT : getThemedColor(Theme.key_windowBackgroundGray));
         SizeNotifierFrameLayout frameLayout = (SizeNotifierFrameLayout) fragmentView;
 
-        AlexgramSettingsHeaderView bgView = new AlexgramSettingsHeaderView(context);
-        frameLayout.addView(bgView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        if (isAlexgramTheme()) {
+            AlexgramSettingsHeaderView backgroundView = new AlexgramSettingsHeaderView(context);
+            frameLayout.addView(backgroundView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        }
 
-        actionBar.setDrawBlurBackground(frameLayout);
+        if (!isAlexgramTheme()) {
+            actionBar.setDrawBlurBackground(frameLayout);
+        }
 
         listView = new BlurredRecyclerView(context);
+        listView.disableBlurTopPadding = true;
         listView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
@@ -117,7 +179,6 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
             }
         });
         listView.additionalClipBottom = dp(200);
-        listView.setBackgroundColor(Color.TRANSPARENT);
         listView.setLayoutManager(layoutManager = new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
         listView.setVerticalScrollBarEnabled(false);
 
@@ -126,6 +187,10 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
         itemAnimator.setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT);
         itemAnimator.setDelayAnimations(false);
         listView.setItemAnimator(itemAnimator);
+        if (isAlexgramTheme()) {
+            listView.setPadding(0, AndroidUtilities.statusBarHeight + dp(64), 0, dp(40));
+            listView.setClipToPadding(false);
+        }
         frameLayout.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
         listAdapter = createAdapter(context);
@@ -133,6 +198,20 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
         listView.setAdapter(listAdapter);
         listView.setOnItemClickListener(this::onItemClick);
         listView.setClipToPadding(false);
+
+        listView.addItemDecoration(new RecyclerView.ItemDecoration() {
+            @Override
+            public void getItemOffsets(@NonNull android.graphics.Rect outRect, @NonNull View view, @NonNull RecyclerView recyclerView, @NonNull RecyclerView.State state) {
+                int position = recyclerView.getChildAdapterPosition(view);
+                if (position == RecyclerView.NO_POSITION || BaseNekoSettingsActivity.this.isBreakType(position)) {
+                    outRect.set(0, 0, 0, 0);
+                    return;
+                }
+                boolean isFirst = position == 0 || BaseNekoSettingsActivity.this.isBreakType(position - 1);
+                boolean isLast = position == listAdapter.getItemCount() - 1 || BaseNekoSettingsActivity.this.isBreakType(position + 1);
+                outRect.set(dp(16), isFirst ? dp(4) : 0, dp(16), isLast ? dp(12) : 0);
+            }
+        });
         listView.setOnItemLongClickListener((view, position, x, y) -> {
             if (onItemLongClick(view, position, x, y)) {
                 return true;
@@ -140,9 +219,47 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
             var holder = listView.findViewHolderForAdapterPosition(position);
             var key = getKey();
             if (key != null && holder != null && listAdapter.isEnabled(holder) && rowMapReverse.containsKey(position)) {
-                showDialog(new AlertDialog.Builder(context).setItems(new CharSequence[]{getString(R.string.CopyLink)}, (dialogInterface, i) -> {
-                    AndroidUtilities.addToClipboard(String.format(Locale.getDefault(), "https://%s/alexsettings/%s?r=%s", getMessagesController().linkPrefix, getKey(), rowMapReverse.get(position)));
-                    BulletinFactory.of(BaseNekoSettingsActivity.this).createCopyLinkBulletin().show();
+                String rowKey = rowMapReverse.get(position);
+                ArrayList<CharSequence> items = new ArrayList<>();
+                items.add(getString(R.string.CopyLink));
+                if (!QuickSettingsController.getInstance().isAdded(rowKey)) {
+                    items.add("Add to Quick Settings");
+                } else {
+                    items.add("Remove from Quick Settings");
+                }
+                showDialog(new AlertDialog.Builder(context).setItems(items.toArray(new CharSequence[0]), (dialogInterface, i) -> {
+                    if (i == 0) {
+                        AndroidUtilities.addToClipboard(String.format(Locale.getDefault(), "https://%s/alexsettings/%s?r=%s", getMessagesController().linkPrefix, getKey(), rowKey));
+                        BulletinFactory.of(BaseNekoSettingsActivity.this).createCopyLinkBulletin().show();
+                    } else if (i == 1) {
+                        if (!QuickSettingsController.getInstance().isAdded(rowKey)) {
+                            String title = "";
+                            String subtitle = null;
+                            int type = QuickSettingEntry.TYPE_NAVIGATE;
+                            if (view instanceof TextSettingsCell) {
+                                title = ((TextSettingsCell) view).getTextView().getText().toString();
+                                try {
+                                    subtitle = ((TextSettingsCell) view).getValueTextView().getText().toString();
+                                } catch (Exception ignored) {}
+                            } else if (view instanceof TextCheckCell) {
+                                title = ((TextCheckCell) view).getTextView().getText().toString();
+                                type = QuickSettingEntry.TYPE_SWITCH;
+                            } else if (view instanceof TextDetailSettingsCell) {
+                                title = ((TextDetailSettingsCell) view).getTextView().getText().toString();
+                            } else if (view instanceof NotificationsCheckCell) {
+                                title = ((NotificationsCheckCell) view).getTextView().getText().toString();
+                                type = QuickSettingEntry.TYPE_SWITCH;
+                            }
+
+                            if (title != null && !title.isEmpty()) {
+                                QuickSettingsController.getInstance().addQuickSetting(new QuickSettingEntry(rowKey, title, subtitle, "msg_settings", 0xFF2196F3, type, getClass().getName()));
+                                BulletinFactory.of(BaseNekoSettingsActivity.this).createSimpleBulletin(R.drawable.msg_settings, "Added to Quick Settings").show();
+                            }
+                        } else {
+                            QuickSettingsController.getInstance().removeQuickSetting(rowKey);
+                            BulletinFactory.of(BaseNekoSettingsActivity.this).createSimpleBulletin(R.drawable.msg_delete, "Removed from Quick Settings").show();
+                        }
+                    }
                 }).create());
                 return true;
             }
@@ -150,21 +267,28 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
         });
 
         listView.setSections(true);
-        listView.addItemDecoration(new GlassGroupDecoration(
-            viewType -> viewType == TYPE_SHADOW || viewType == TYPE_INFO_PRIVACY
-        ));
         actionBar.setAdaptiveBackground(listView);
-
-        actionBar.setAddToContainer(false);
-        actionBar.setBackgroundColor(Color.TRANSPARENT);
-        boolean isDark = Theme.getActiveTheme().isDark();
-        int abColor = isDark ? Color.WHITE : 0xFF1A1A2E;
-        actionBar.setItemsColor(abColor, false);
-        actionBar.setTitleColor(abColor);
-        
-        frameLayout.addView(actionBar, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
-
+        if (isAlexgramTheme()) {
+            frameLayout.addView(actionBar, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+        }
         return fragmentView;
+    }
+
+    protected boolean isAlexgramTheme() {
+        return true;
+    }
+
+    private void setupBrandingColors() {
+        isDark = Theme.getActiveTheme().isDark();
+        if (isDark) {
+            cardBg = 0x221E2732;
+            cardBorder = 0x15FFFFFF;
+            dividerColor = 0x10FFFFFF;
+        } else {
+            cardBg = 0x40FFFFFF;
+            cardBorder = 0x20000000;
+            dividerColor = 0x15000000;
+        }
     }
 
     // @Override
@@ -177,16 +301,18 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
 
     @Override
     public ActionBar createActionBar(Context context) {
-        ActionBar actionBar;
-        if (!hasWhiteActionBar()) {
-            actionBar = super.createActionBar(context);
-        } else {
-            actionBar = new ActionBar(context);
+        ActionBar actionBar = super.createActionBar(context);
+        if (isAlexgramTheme()) {
+            actionBar.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+            actionBar.setCastShadows(false);
+            actionBar.setAddToContainer(false);
+            int color = isDark ? android.graphics.Color.WHITE : 0xFF1A1A2E;
+            actionBar.setItemsColor(color, false);
+            actionBar.setTitleColor(color);
+            actionBar.setItemsBackgroundColor(isDark ? 0x0FFFFFFF : 0x0F000000, false);
+        } else if (hasWhiteActionBar()) {
             actionBar.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
             actionBar.setItemsColor(getThemedColor(Theme.key_windowBackgroundWhiteBlackText), false);
-            actionBar.setItemsBackgroundColor(getThemedColor(Theme.key_actionBarActionModeDefaultSelector), true);
-            actionBar.setItemsBackgroundColor(getThemedColor(Theme.key_actionBarWhiteSelector), false);
-            actionBar.setItemsColor(getThemedColor(Theme.key_actionBarActionModeDefaultIcon), true);
             actionBar.setTitleColor(getThemedColor(Theme.key_windowBackgroundWhiteBlackText));
             actionBar.setCastShadows(false);
         }
@@ -220,15 +346,6 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
 
     protected abstract String getActionBarTitle();
 
-    @SuppressLint("NotifyDataSetChanged")
-    @Override
-    public void onResume() {
-        super.onResume();
-        if (listAdapter != null) {
-            listAdapter.notifyDataSetChanged();
-        }
-    }
-
     protected boolean hasWhiteActionBar() {
         return true;
     }
@@ -253,29 +370,20 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
         return ColorUtils.calculateLuminance(color) > 0.7f;
     }
 
-    protected int addRow() {
-        return rowCount++;
-    }
-
-    // TODO: refactor the whole settings
-    protected int addRow(String... keys) {
-        var row = rowCount++;
-        for (var key : keys) {
-            rowMap.put(key, row);
-        }
-        rowMapReverse.put(row, keys[0]);
-        return row;
-    }
+    // existing addRow(String... keys) and addRow() at the bottom will be kept as the source of truth if needed, 
+    // but the ones I added are now gone or consolidated.
 
     public void scrollToRow(String key, Runnable unknown) {
         if (rowMap.containsKey(key)) {
-            listView.highlightRow(() -> {
-                // noinspection ConstantConditions
-                int position = rowMap.get(key);
-                layoutManager.scrollToPositionWithOffset(position, dp(60));
-                return position;
-            });
-        } else {
+            int position = rowMap.get(key);
+            highlightRow = position;
+            layoutManager.scrollToPositionWithOffset(position, dp(60));
+            listAdapter.notifyItemChanged(position);
+            AndroidUtilities.runOnUIThread(() -> {
+                highlightRow = -1;
+                listAdapter.notifyItemChanged(position);
+            }, 1500);
+        } else if (unknown != null) {
             unknown.run();
         }
     }
@@ -283,6 +391,7 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
     protected void updateRows() {
         rowCount = 0;
         rowMap.clear();
+        rowMapReverse.clear();
     }
 
     @Override
@@ -297,8 +406,7 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
 
     @Override
     public void onInsets(int left, int top, int right, int bottom) {
-        int topPadding = ActionBar.getCurrentActionBarHeight() + top;
-        listView.setPadding(0, topPadding, 0, bottom);
+        listView.setPadding(0, listView.getPaddingTop(), 0, bottom);
         listView.setClipToPadding(false);
     }
 
@@ -309,7 +417,7 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
 
         public BlurContentView(Context context) {
             super(context);
-            needBlur = hasWhiteActionBar();
+            needBlur = hasWhiteActionBar() && !isAlexgramTheme();
             blurBehindViews.add(this);
         }
 
@@ -357,7 +465,67 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
         }
 
         public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position, boolean partial) {
+            if (isAlexgramTheme()) {
+                modernizeCell(holder.itemView, position);
+            }
+        }
 
+        private void modernizeCell(View view, int position) {
+            int type = getItemViewType(position);
+            
+            boolean isHighlighted = position == highlightRow;
+            if (type == TYPE_HEADER) {
+                if (view instanceof HeaderCell headerCell) {
+                    headerCell.getTextView().setTextColor(isDark ? 0xFF33A1FF : 0xFF007AFF);
+                    headerCell.getTextView().setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 14);
+                    headerCell.getTextView().setTypeface(AndroidUtilities.bold());
+                    headerCell.setPadding(dp(21), dp(12), dp(21), 0);
+                    headerCell.getTextView().setPadding(0, dp(4), 0, dp(4));
+                }
+            } else if (type == TYPE_SHADOW || type == TYPE_INFO_PRIVACY) {
+                view.setBackground(null);
+                view.getLayoutParams().height = dp(12);
+                return;
+            }
+
+            boolean isFirst = position == 0 || isBreakType(position - 1);
+            boolean isLast = position == getItemCount() - 1 || isBreakType(position + 1);
+
+            android.graphics.drawable.GradientDrawable gd = new android.graphics.drawable.GradientDrawable();
+            gd.setColor(cardBg);
+            float r = dp(16);
+            gd.setCornerRadii(new float[]{
+                    isFirst ? r : 0, isFirst ? r : 0,
+                    isFirst ? r : 0, isFirst ? r : 0,
+                    isLast ? r : 0, isLast ? r : 0,
+                    isLast ? r : 0, isLast ? r : 0
+            });
+            if (isFirst && isLast) {
+                gd.setStroke(dp(1), cardBorder);
+            }
+            if (isHighlighted) {
+                gd.setColor(isDark ? 0x442196F3 : 0x222196F3);
+            }
+            view.setBackground(gd);
+
+            if (view instanceof TextSettingsCell cell) {
+                cell.getTextView().setTextColor(isDark ? android.graphics.Color.WHITE : 0xFF1A1A2E);
+                cell.getValueTextView().setTextColor(isDark ? 0xFF33A1FF : 0xFF007AFF);
+            } else if (view instanceof TextCheckCell cell) {
+                cell.getTextView().setTextColor(isDark ? android.graphics.Color.WHITE : 0xFF1A1A2E);
+                cell.getValueTextView().setTextColor(isDark ? 0xFF33A1FF : 0xFF007AFF);
+            } else if (view instanceof TextCell cell) {
+                cell.getTextView().setTextColor(isDark ? android.graphics.Color.WHITE : 0xFF1A1A2E);
+                cell.getValueTextView().setTextColor(isDark ? 0xFF33A1FF : 0xFF007AFF);
+            } else if (view instanceof TextDetailSettingsCell cell) {
+                cell.getTextView().setTextColor(isDark ? android.graphics.Color.WHITE : 0xFF1A1A2E);
+                cell.getValueTextView().setTextColor(isDark ? 0xFF33A1FF : 0xFF007AFF);
+            }
+        }
+
+        protected boolean isBreakType(int position) {
+            int type = getItemViewType(position);
+            return type == TYPE_SHADOW || type == TYPE_INFO_PRIVACY;
         }
 
         @Override
@@ -376,62 +544,62 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
                     break;
                 case TYPE_SETTINGS:
                     view = new TextSettingsCell(mContext, resourcesProvider);
-                    view.setBackgroundColor(Color.TRANSPARENT);
+                    view.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
                     break;
                 case TYPE_CHECK:
                     view = new TextCheckCell(mContext, resourcesProvider);
-                    view.setBackgroundColor(Color.TRANSPARENT);
+                    view.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
                     break;
                 case TYPE_HEADER:
                     view = new HeaderCell(mContext, resourcesProvider);
-                    view.setBackgroundColor(Color.TRANSPARENT);
+                    view.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
                     break;
                 case TYPE_NOTIFICATION_CHECK:
                     view = new NotificationsCheckCell(mContext, resourcesProvider);
-                    view.setBackgroundColor(Color.TRANSPARENT);
+                    view.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
                     break;
                 case TYPE_DETAIL_SETTINGS:
                     view = new TextDetailSettingsCell(mContext);
-                    view.setBackgroundColor(Color.TRANSPARENT);
+                    view.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
                     break;
                 case TYPE_INFO_PRIVACY:
                     view = new TextInfoPrivacyCell(mContext, resourcesProvider);
-                    view.setBackground(null);
+                    view.setBackground(Theme.getThemedDrawable(mContext, R.drawable.greydivider, getThemedColor(Theme.key_windowBackgroundGrayShadow)));
                     break;
                 case TYPE_TEXT:
                     view = new TextCell(mContext, resourcesProvider);
-                    view.setBackgroundColor(Color.TRANSPARENT);
+                    view.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
                     break;
                 case TYPE_CHECKBOX:
                     view = new TextCheckbox2Cell(mContext);
-                    view.setBackgroundColor(Color.TRANSPARENT);
+                    view.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
                     break;
                 case TYPE_RADIO:
                     view = new TextRadioCell(mContext);
-                    view.setBackgroundColor(Color.TRANSPARENT);
+                    view.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
                     break;
                 case TYPE_ACCOUNT:
                     view = new AccountCell(mContext);
-                    view.setBackgroundColor(Color.TRANSPARENT);
+                    view.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
                     break;
                 case TYPE_EMOJI:
                 case TYPE_EMOJI_SELECTION:
                     view = new EmojiSetCell(mContext, viewType == TYPE_EMOJI_SELECTION);
-                    view.setBackgroundColor(Color.TRANSPARENT);
+                    view.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
                     break;
                 case TYPE_CREATION:
                     CreationTextCell creationTextCell = new CreationTextCell(mContext, 70, resourcesProvider);
                     creationTextCell.startPadding = 61;
                     view = creationTextCell;
-                    view.setBackgroundColor(Color.TRANSPARENT);
+                    view.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
                     break;
                 case TYPE_FLICKER:
                     view = new FlickerLoadingView(mContext, resourcesProvider);
-                    view.setBackgroundColor(Color.TRANSPARENT);
+                    view.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
                     break;
                 case TYPE_CHECK2:
                     view = new TextCheckCell2(mContext);
-                    view.setBackgroundColor(Color.TRANSPARENT);
+                    view.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
                     break;
                 case TYPE_CHECKBOX2:
                     CheckBoxCell checkBoxCell = new CheckBoxCell(mContext, CheckBoxCell.TYPE_CHECK_BOX_ROUND, 21, getResourceProvider());
@@ -439,7 +607,7 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
                     checkBoxCell.getCheckBoxRound().setColor(Theme.key_switch2TrackChecked, Theme.key_radioBackground, Theme.key_checkboxCheck);
                     checkBoxCell.setEnabled(true);
                     view = checkBoxCell;
-                    view.setBackgroundColor(Color.TRANSPARENT);
+                    view.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
                     break;
             }
             // noinspection ConstantConditions

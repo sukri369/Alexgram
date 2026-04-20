@@ -224,6 +224,8 @@ import me.vkryl.android.animator.BoolAnimator;
 import me.vkryl.android.animator.FactorAnimator;
 
 import tw.nekomimi.nekogram.NekoConfig;
+import xyz.nextalone.nagram.NaConfig;
+import xyz.nextalone.nagram.ui.VoiceChangerSelectAlert;
 
 public class GroupCallActivity extends BottomSheet implements NotificationCenter.NotificationCenterDelegate, VoIPService.StateListener, FactorAnimator.Target {
 
@@ -234,6 +236,7 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
     private static final int admin_can_speak_item = 2;
     private static final int share_invite_link_item = 3;
     private static final int leave_item = 4;
+    private static final int voice_changer_item = 14;
     private static final int start_record_item = 5;
     private static final int edit_item = 6;
     private static final int permission_item = 7;
@@ -243,7 +246,6 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
     private static final int noise_item = 11;
     private static final int comments_enable_item = 12;
     private static final int comments_disable_item = 13;
-    private static final int voice_changer_item = 14;
     private static final int user_item_gap = 0;
 
     private static final int MUTE_BUTTON_STATE_UNMUTE = 0;
@@ -399,9 +401,10 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
     private ActionBarMenuSubItem everyoneItem;
     private ActionBarMenuSubItem adminItem;
     private final ActionBarMenuSubItem leaveItem;
+    private ActionBarMenuSubItem voiceChangerItem;
+    private Paint greenDotPaint;
     private final ActionBarMenuSubItem enableComments;
     private final ActionBarMenuSubItem disableComments;
-    private final ActionBarMenuSubItem voiceChangerItem;
     private final LinearLayout menuItemsContainer;
     private final View soundItemDivider;
     private WatchersView watchersView;
@@ -1357,6 +1360,11 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
             if (VoIPService.getSharedInstance() == null) {
                 dismiss();
             }
+        } else if (id == NotificationCenter.voiceChangerUpdated) {
+            if (titleLayout != null) {
+                titleLayout.invalidate();
+            }
+            updateItems();
         } else if (id == NotificationCenter.chatInfoDidLoad) {
             TLRPC.ChatFull chatFull = (TLRPC.ChatFull) args[0];
             if (chatFull.id == getChatId()) {
@@ -1444,9 +1452,8 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
             }
             updateItems();
         } else if (id == NotificationCenter.conferenceEmojiUpdated) {
-            updateItems();
-        } else if (id == NotificationCenter.voiceChangerUpdated) {
-            updateItems();
+            VoIPService voip = VoIPService.getSharedInstance();
+            encryptionDrawable.setEmojis(voip != null && voip.conference != null ? voip.conference.getEmojis() : null);
         }
     }
 
@@ -1687,7 +1694,9 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
         noiseItem.setSubtext(SharedConfig.noiseSupression ? getString(R.string.VoipNoiseCancellationEnabled) : getString(R.string.VoipNoiseCancellationDisabled));
 
         if (voiceChangerItem != null) {
-            voiceChangerItem.setRightStatus(xyz.nextalone.nagram.NaConfig.INSTANCE.getVoiceChangerEffectValue() != 0);
+            int effect = NaConfig.INSTANCE.getVoiceChangerEffectValue();
+            voiceChangerItem.setSubtext(effect == 0 ? LocaleController.getString("VoiceChangerNormal", R.string.VoiceChangerNormal) : VoiceChangerSelectAlert.getEffectName(effect));
+            voiceChangerItem.setColors(Theme.getColor(Theme.key_voipgroup_actionBarItems), Theme.getColor(Theme.key_voipgroup_actionBarItems));
         }
 
         if (canManageCall()) {
@@ -2005,8 +2014,10 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
                     toggleAdminSpeak();
                 } else if (id == share_invite_link_item) {
                     getLink(false);
-                } else if (id == voice_changer_item) {
-                    showVoiceChangerAlert();
+                } else if (id == comments_enable_item) {
+                    setCommentsEnabled(true);
+                } else if (id == comments_disable_item) {
+                    setCommentsEnabled(false);
                 } else if (id == leave_item) {
                     AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
 
@@ -2311,6 +2322,8 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
                         return;
                     }
                     service.setNoiseSupressionEnabled(SharedConfig.noiseSupression);
+                } else if (id == voice_changer_item) {
+                    new VoiceChangerSelectAlert(getContext()).show();
                 } else if (id == sound_item) {
                     VoIPService service = VoIPService.getSharedInstance();
                     if (service == null) {
@@ -2458,7 +2471,6 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
         accountInstance.getNotificationCenter().addObserver(this, NotificationCenter.conferenceEmojiUpdated);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.webRtcMicAmplitudeEvent);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.didEndCall);
-        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.voiceChangerUpdated);
 
         shadowDrawable = context.getResources().getDrawable(R.drawable.sheet_shadow_round).mutate();
 
@@ -4830,7 +4842,21 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
             liveLabelTextView.setVisibility(View.GONE);
         }
 
-        titleLayout = new LinearLayout(getContext());
+        greenDotPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        greenDotPaint.setColor(0xff34c759);
+
+        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.voiceChangerUpdated);
+
+        titleLayout = new LinearLayout(getContext()) {
+            @Override
+            protected void dispatchDraw(Canvas canvas) {
+                super.dispatchDraw(canvas);
+                if (NaConfig.INSTANCE.getVoiceChangerEffectValue() != 0) {
+                    float radius = AndroidUtilities.dp(3);
+                    canvas.drawCircle(titleTextView.getRight() + AndroidUtilities.dp(6), getMeasuredHeight() / 2f, radius, greenDotPaint);
+                }
+            }
+        };
         titleLayout.setOrientation(LinearLayout.HORIZONTAL);
         titleLayout.addView(titleTextView, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f));
         titleLayout.addView(liveLabelTextView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, 18, 6, 4, 0,0));
@@ -4890,8 +4916,10 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
         soundItem.setItemHeight(56);
 
         noiseItem = otherItem.addSubItem(noise_item, R.drawable.msg_noise_on, null, getString(R.string.VoipNoiseCancellation), true, false);
-        voiceChangerItem = otherItem.addSubItem(voice_changer_item, R.drawable.msg_calls, getString(R.string.VoiceChanger));
         noiseItem.setItemHeight(56);
+
+        voiceChangerItem = otherItem.addSubItem(voice_changer_item, R.drawable.msg_voicechat, null, LocaleController.getString("VoiceChanger", R.string.VoiceChanger), true, false);
+        voiceChangerItem.setItemHeight(56);
 
         soundItemDivider = otherItem.addDivider(ColorUtils.blendARGB(Theme.getColor(Theme.key_voipgroup_actionBar), Color.BLACK, 0.3f));
         ((ViewGroup.MarginLayoutParams) soundItemDivider.getLayoutParams()).topMargin = 0;
@@ -4915,13 +4943,13 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
         disableComments.setColors(Theme.getColor(Theme.key_voipgroup_actionBarItems), Theme.getColor(Theme.key_voipgroup_actionBarItems));
         soundItem.setColors(Theme.getColor(Theme.key_voipgroup_actionBarItems), Theme.getColor(Theme.key_voipgroup_actionBarItems));
         noiseItem.setColors(Theme.getColor(Theme.key_voipgroup_actionBarItems), Theme.getColor(Theme.key_voipgroup_actionBarItems));
+        voiceChangerItem.setColors(Theme.getColor(Theme.key_voipgroup_actionBarItems), Theme.getColor(Theme.key_voipgroup_actionBarItems));
         leaveItem.setColors(Theme.getColor(Theme.key_voipgroup_leaveCallMenu), Theme.getColor(Theme.key_voipgroup_leaveCallMenu));
         inviteItem.setColors(Theme.getColor(Theme.key_voipgroup_actionBarItems), Theme.getColor(Theme.key_voipgroup_actionBarItems));
         editTitleItem.setColors(Theme.getColor(Theme.key_voipgroup_actionBarItems), Theme.getColor(Theme.key_voipgroup_actionBarItems));
         permissionItem.setColors(Theme.getColor(Theme.key_voipgroup_actionBarItems), Theme.getColor(Theme.key_voipgroup_actionBarItems));
         recordItem.setColors(Theme.getColor(Theme.key_voipgroup_actionBarItems), Theme.getColor(Theme.key_voipgroup_actionBarItems));
         screenItem.setColors(Theme.getColor(Theme.key_voipgroup_actionBarItems), Theme.getColor(Theme.key_voipgroup_actionBarItems));
-        voiceChangerItem.setColors(Theme.getColor(Theme.key_voipgroup_actionBarItems), Theme.getColor(Theme.key_voipgroup_actionBarItems));
 
         if (call != null) {
             initCreatedGroupCall();
@@ -10791,12 +10819,5 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
                 reactionsContainerLayout.skipEnterAnimation = true;
             }
         }
-    }
-
-    private void showVoiceChangerAlert() {
-        if (parentActivity == null) {
-            return;
-        }
-        new xyz.nextalone.nagram.ui.VoiceChangerSelectAlert(parentActivity).show();
     }
 }

@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="N_Config">N-Configuración</string>
+    <string name="N_Config">A-Ajustes</string>
     <string name="CombineMessage">Combinar mensajes</string>
     <string name="TextStyle">Estilo de texto</string>
     <string name="NoiseSuppressAndVoiceEnhance">Mejoras de voz</string>
@@ -9,7 +9,7 @@
     <string name="SendReactions">Enviar reacción</string>
     <string name="ShowReactions">Mostrar reacciones</string>
     <string name="CustomTitle">Título personalizado</string>
-    <string name="CustomTitleHint">Dejar en blanco para usar Nagram X</string>
+    <string name="CustomTitleHint">Dejar en blanco para usar Alexgram</string>
     <string name="CreateMono">Crear Monoespacio</string>
     <string name="CreateMonoLanguage">Idioma del código</string>
     <string name="CopyPhoto">Copiar Foto</string>
@@ -19,7 +19,6 @@
     <string name="ShowMessageID">Mostrar ID del mensaje</string>
     <string name="ShowRPCError">Errores RPC Toast</string>
     <string name="ShowPremiumStickersAnimation">Mostrar Animación de Stickers Premium</string>
-    <string name="AlwaysSaveChatOffset">Guardar siempre el Desplazamiento de Chat</string>
     <string name="AppIconColorful">Colorido</string>
     <string name="AppIconDarkGreen">Verde Obscuro</string>
     <string name="AppIconNeon">Neón</string>
@@ -31,13 +30,11 @@
     <string name="ToTheMessage">Ir a</string>
     <string name="ZalgoFilter">Filtrar símbolos \"Zalgo\"</string>
     <string name="ZalgoFilterNotice">Se eliminarán todos los símbolos \"Zsimultánea\" en los apodos o mensajes.</string>
-    <string name="labelChannelUser">Etiquetar al usuario del canal</string>
     <string name="AlwaysShowDownloadIcon">Mostrar siempre el icono de descarga</string>
     <string name="HideTitle">Ocultar título</string>
     <string name="IgnoreUnreadCount">Ocultar contador de no leídos en carpetas</string>
     <string name="SendWithoutMarkdown">Enviar sin rebajar</string>
     <string name="SendAsEmoji">Enviar como emoji</string>
-    <string name="CustomArtworkApi">API de Artwork personalizada</string>
     <string name="CustomEditedMessage">Marca personalizada editada</string>
     <string name="NotificationIcon">Icono de la notificación</string>
     <string name="Official">Oficial</string>
@@ -52,7 +49,7 @@
     <string name="CheckAllForum">Añadir foro</string>
     <string name="DecorationNone">Ninguno</string>
     <string name="ChatDecoration">Decoración del chat</string>
-    <string name="NeedChangeNekoSettings">Necesitas cambiar N-Ajustes</string>
+    <string name="NeedChangeNekoSettings">Necesitas cambiar A-Ajustes</string>
     <string name="DoNotUnarchiveBySwipe">Deshabilitar Deslizar para Desarchivar</string>
     <string name="DefaultDeleteMenu">Menú de eliminación predeterminado</string>
     <string name="DisableStories">Deshabilitar historias</string>
@@ -89,7 +86,7 @@
     <string name="RegexFiltersCaseInsensitive">Expresiones que no distinguen mayúsculas de minúsculas</string>
     <string name="RegexFiltersAdd">Añadir filtro</string>
     <string name="RegexFiltersEdit">Editar filtro</string>
-    <string name="RegexFiltersAddDescription">Puede utilizar el sitio <![CDATA[<a href="https://regex101.com">regex101.com</a>]]> para probar completamente su expresión regular.
+    <string name="RegexFiltersAddDescription">Puede utilizar el sitio &lt;a href="https://regex101.com"&gt;regex101.com&lt;/a&gt; para probar completamente su expresión regular.
 También puede utilizar texto sin formato, pero no olvide escapar los paréntesis.</string>
     <string name="RegexFiltersAddError">Error de sintaxis Regex</string>
     <string name="ShowTimeHint">Toca la hora para ver los detalles</string>
@@ -108,4 +105,37 @@ También puede utilizar texto sin formato, pero no olvide escapar los paréntesi
     <string name="VideoPlayerDecoderPreferSW">Preferir SW</string>
     <string name="VideoPlayerDecoderHardware">Solo HW</string>
     <string name="VideoPlayerDecoderPreferHW">Preferir HW</string>
+    <string name="RunInBackground">Ejecutar en segundo plano</string>
+    <string name="RunInBackgroundInfo">Mantenga la aplicación ejecutándose en segundo plano para asegurar notificaciones fiables.</string>
+    <string name="NagramXPushService">Servicio Push Alexgram</string>
+    <string name="AppIconGoogle" translatable="false">Google</string>
+    <string name="AppIconColored">Alexgram de colores</string>
+    <string name="AppIconDark">Alexgram oscuro</string>
+    <string name="AppIconGreen">Alexgram verde</string>
+    <string name="AppIconPink">Alexgram rosa</string>
+    <string name="AppIconRoseBlue">Alexgram RosaAzul</string>
+    <string name="AppIconWhite">Alexgram blanco</string>
+    <string name="Nagram" translatable="false">Alexgram</string>
+    <string name="PushServiceTypeFCM" translatable="false">Google FCM</string>
+    <string name="PushServiceTypeUnified" translatable="false">UnifiedPush</string>
+    <string name="PushServiceTypeMicroG" translatable="false">microG</string>
+    <string name="PushServiceTypeUnifiedGateway">Unified Push Gateway</string>
+    <string name="Pangu" translatable="false">Pangu</string>
+    <string name="EnableLiveVideoWallpaper">Fondo de pantalla de video en vivo</string>
+    <string name="ExportChat">Exportar chat</string>
+    <string name="ImportChat">Importar chat</string>
+    <string name="MusicGraph">Gráfico de música</string>
+    <string name="MusicGraphInfo">Muestra un visualizador de música colorido mientras se reproduce audio.</string>
+    <string name="SendVideoAsRound">Enviar como mensaje de vídeo</string>
+    <string name="VideoNoteDurationError">El vídeo circular no puede durar más de 60 segundos.</string>
+    <string name="HiddenChats">Chats ocultos</string>
+    <string name="HideChat">Añadir a chats ocultos</string>
+    <string name="UnhideChat">Quitar de chats ocultos</string>
+    <string name="HideChats">Ocultar chats</string>
+    <string name="UnhideChats">Mostrar chats</string>
+    <string name="HiddenChatsPasscode">Contraseña de chats ocultos</string>
+    <string name="UnlockHiddenChats">Desbloquear chats ocultos</string>
+    <string name="HiddenChatsAbout">Oculta chats sensibles de la lista principal. Accede a ellos manteniendo pulsada la barra de título tras desbloquear con contraseña o biometría.</string>
+    <string name="HideContacts">Ocultar contactos</string>
+    <string name="RestartRequired">Es necesario reiniciar para aplicar los cambios</string>
 </resources>

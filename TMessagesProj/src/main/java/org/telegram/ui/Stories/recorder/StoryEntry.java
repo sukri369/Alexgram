@@ -91,6 +91,7 @@ public class StoryEntry {
     public TLRPC.TL_error error;
 
     public String audioPath;
+    public TLRPC.InputDocument audioDocument;
     public String audioAuthor, audioTitle;
     public long audioDuration;
     public long audioOffset;
@@ -768,7 +769,7 @@ public class StoryEntry {
         if (messageObject == null || messageObject.isSponsored()) {
             return false;
         }
-        if (messageObject.messageOwner != null && messageObject.messageOwner.noforwards) {
+        if (messageObject.messageOwner != null && messageObject.messageOwner.noforwards && !xyz.nextalone.nagram.NaConfig.INSTANCE.getAllowForwardingRestriction().Bool()) {
             return false;
         }
         if (messageObject.type == MessageObject.TYPE_POLL || messageObject.type == MessageObject.TYPE_CONTACT) {
@@ -776,14 +777,14 @@ public class StoryEntry {
         }
         long dialogId = messageObject.getDialogId();
         TLRPC.Chat chat = MessagesController.getInstance(messageObject.currentAccount).getChat(-dialogId);
-        if (chat != null && chat.noforwards) {
+        if (chat != null && chat.noforwards && !xyz.nextalone.nagram.NaConfig.INSTANCE.getAllowForwardingRestriction().Bool()) {
             return false;
         }
         if (dialogId >= 0 || !ChatObject.isChannelAndNotMegaGroup(chat)) {
             if (messageObject.messageOwner.fwd_from != null && messageObject.messageOwner.fwd_from.from_id != null && (messageObject.messageOwner.fwd_from.flags & 4) != 0) {
                 dialogId = DialogObject.getPeerDialogId(messageObject.messageOwner.fwd_from.from_id);
                 chat = MessagesController.getInstance(messageObject.currentAccount).getChat(-dialogId);
-                if (dialogId >= 0 || chat != null && chat.noforwards || !ChatObject.isChannelAndNotMegaGroup(chat) || !ChatObject.isPublic(chat)) {
+                if (dialogId >= 0 || (chat != null && chat.noforwards && !xyz.nextalone.nagram.NaConfig.INSTANCE.getAllowForwardingRestriction().Bool()) || !ChatObject.isChannelAndNotMegaGroup(chat) || !ChatObject.isPublic(chat)) {
                     return false;
                 }
                 return true;
@@ -798,11 +799,11 @@ public class StoryEntry {
         TLRPC.Peer peer = messageObject.messageOwner.peer_id;
         long dialogId = DialogObject.getPeerDialogId(peer);
         TLRPC.Chat chat = MessagesController.getInstance(messageObject.currentAccount).getChat(-dialogId);
-        if (chat != null && chat.noforwards || !ChatObject.isChannelAndNotMegaGroup(chat)) {
+        if ((chat != null && chat.noforwards && !xyz.nextalone.nagram.NaConfig.INSTANCE.getAllowForwardingRestriction().Bool()) || !ChatObject.isChannelAndNotMegaGroup(chat)) {
             if (messageObject.messageOwner.fwd_from != null && messageObject.messageOwner.fwd_from.from_id != null && (messageObject.messageOwner.fwd_from.flags & 4) != 0) {
                 dialogId = DialogObject.getPeerDialogId(messageObject.messageOwner.fwd_from.from_id);
                 chat = MessagesController.getInstance(messageObject.currentAccount).getChat(-dialogId);
-                if (dialogId >= 0 || chat != null && chat.noforwards || !ChatObject.isChannelAndNotMegaGroup(chat)) {
+                if (dialogId >= 0 || (chat != null && chat.noforwards && !xyz.nextalone.nagram.NaConfig.INSTANCE.getAllowForwardingRestriction().Bool()) || !ChatObject.isChannelAndNotMegaGroup(chat)) {
                     return null; // no repost
                 } else {
                     return true; // repost of forward
@@ -940,7 +941,7 @@ public class StoryEntry {
         entry.file = new File(photoEntry.path);
         entry.orientation = photoEntry.orientation;
         entry.invert = photoEntry.invert;
-        entry.isVideo = photoEntry.isVideo;
+        entry.isVideo = photoEntry.isVideo && !photoEntry.isLivePhoto;
         entry.thumbPath = photoEntry.thumbPath;
         entry.duration = photoEntry.duration * 1000L;
         entry.left = 0;
@@ -1424,14 +1425,14 @@ public class StoryEntry {
             Utilities.globalQueue.postRunnable(() -> {
                 for (int i = 0; i < paths.length; ++i)
                     if (paths[i] != null)
-                        AnimatedFileDrawable.getVideoInfo(paths[i], params[i]);
+                        AnimatedFileDrawable.getVideoInfo(paths[i], params[i], 0);
                 AndroidUtilities.runOnUIThread(fill);
             });
         } else if (file == null) {
             fill.run();
         } else {
             Utilities.globalQueue.postRunnable(() -> {
-                AnimatedFileDrawable.getVideoInfo(videoPath, params[0]);
+                AnimatedFileDrawable.getVideoInfo(videoPath, params[0], 0);
                 AndroidUtilities.runOnUIThread(fill);
             });
         }
@@ -1633,6 +1634,7 @@ public class StoryEntry {
         newEntry.isError = isError;
         newEntry.error = error;
         newEntry.audioPath = audioPath;
+        newEntry.audioDocument = audioDocument;
         newEntry.audioAuthor = audioAuthor;
         newEntry.audioTitle = audioTitle;
         newEntry.audioDuration = audioDuration;

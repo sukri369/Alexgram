@@ -50,13 +50,12 @@ public class LiteMode {
     public static final int FLAG_PARTICLES = 1 << 17;
 
     public static int PRESET_LOW = (
-        FLAGS_ANIMATED_STICKERS |
         FLAGS_ANIMATED_EMOJI |
-        FLAG_AUTOPLAY_VIDEOS |
         FLAG_AUTOPLAY_GIFS |
         FLAG_CHAT_THANOS |
+        FLAG_CHAT_SPOILER |
         FLAG_PARTICLES
-    ); // 198684
+    ); // 198812
     public static int PRESET_MEDIUM = (
         FLAGS_ANIMATED_STICKERS |
         FLAGS_ANIMATED_EMOJI |
@@ -65,8 +64,9 @@ public class LiteMode {
         FLAG_AUTOPLAY_VIDEOS |
         FLAG_AUTOPLAY_GIFS |
         FLAG_CHAT_THANOS |
+        FLAG_CHAT_SPOILER |
         FLAG_PARTICLES
-    ); // 204383
+    ); // 204511
     public static int PRESET_HIGH = (
         FLAGS_ANIMATED_STICKERS |
         FLAGS_ANIMATED_EMOJI |
@@ -147,11 +147,6 @@ public class LiteMode {
     public static boolean isEnabled(int flag) {
         if (flag == FLAG_CHAT_FORUM_TWOCOLUMN && AndroidUtilities.isTablet()) {
             // always enabled for tablets
-            return true;
-        }
-        // When Liquid Glass UI setting is on, activate Telegram's native glass + blur pipeline
-        if ((flag == FLAG_LIQUID_GLASS || flag == FLAG_CHAT_BLUR) &&
-                tw.nekomimi.nekogram.NekoConfig.liquidGlassUI.Bool()) {
             return true;
         }
         return (getValue() & preprocessFlag(flag)) > 0;
@@ -281,6 +276,10 @@ public class LiteMode {
 
         int prevValue = value;
         value = preferences.getInt("lite_mode6", defaultValue);
+        if (!preferences.getBoolean("lite_mode6_nax", false)) {
+            value |= FLAGS_ANIMATED_EMOJI | FLAG_CHAT_SPOILER | FLAG_CHAT_THANOS;
+            preferences.edit().putInt("lite_mode6", value).putBoolean("lite_mode6_nax", true).apply();
+        }
         if (loaded) {
             onFlagsUpdate(prevValue, value);
         }

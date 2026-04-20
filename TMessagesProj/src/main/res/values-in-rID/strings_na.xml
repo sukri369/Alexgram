@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="N_Config">Konfig-N</string>
+    <string name="N_Config">Konfig-A</string>
     <string name="CombineMessage">Gabungkan Pesan</string>
     <string name="TextStyle">Gaya Teks</string>
     <string name="NoiseSuppressAndVoiceEnhance">Peningkatan Suara</string>
@@ -9,7 +9,7 @@
     <string name="SendReactions">Kirim Reaksi</string>
     <string name="ShowReactions">Tampilkan Reaksi</string>
     <string name="CustomTitle">Judul Khusus</string>
-    <string name="CustomTitleHint">Biarkan kosong untuk menggunakan Nagram X</string>
+    <string name="CustomTitleHint">Biarkan kosong untuk menggunakan Alexgram</string>
     <string name="CreateMono">Buat Monospace</string>
     <string name="CreateMonoLanguage">Bahasa Kode</string>
     <string name="CopyPhoto">Salin Foto</string>
@@ -19,7 +19,6 @@
     <string name="ShowMessageID">Tampilkan ID Pesan</string>
     <string name="ShowRPCError">Beritahu Kesalahan RPC</string>
     <string name="ShowPremiumStickersAnimation">Tampilkan Animasi Stiker Premium</string>
-    <string name="AlwaysSaveChatOffset">Selalu Simpan Perbedaan Obrolan</string>
     <string name="AppIconColorful">Berwarna</string>
     <string name="AppIconDarkGreen">Hijau Gelap</string>
     <string name="AppIconNeon">Neon</string>
@@ -31,13 +30,11 @@
     <string name="ToTheMessage">Pergi Ke</string>
     <string name="ZalgoFilter">Saring Simbol \"Zalgo\"</string>
     <string name="ZalgoFilterNotice">Semua simbol \"Z̷͍͌ā̸̜l̸̞̂g̷̝͘o̶̩̓\" pada nama panggilan atau pesan akan dihapus.</string>
-    <string name="labelChannelUser">Label Pengguna Saluran</string>
     <string name="AlwaysShowDownloadIcon">Selalu Tampilkan Ikon Unduhan</string>
     <string name="HideTitle">Sembunyikan Judul</string>
     <string name="IgnoreUnreadCount">Sembunyikan Penghitung Belum Dibaca</string>
     <string name="SendWithoutMarkdown">Kirim tanpa markdown</string>
     <string name="SendAsEmoji">Kirim sebagai emoji</string>
-    <string name="CustomArtworkApi">API Artwork Khusus</string>
     <string name="CustomEditedMessage">Tanda Disunting Khusus</string>
     <string name="NotificationIcon">Ikon Pemberitahuan</string>
     <string name="Official">Resmi</string>
@@ -52,7 +49,7 @@
     <string name="CheckAllForum">Tambah forum</string>
     <string name="DecorationNone">Tidak ada</string>
     <string name="ChatDecoration">Dekorasi Obrolan</string>
-    <string name="NeedChangeNekoSettings">Anda perlu mengubah Pengaturan-N</string>
+    <string name="NeedChangeNekoSettings">Anda perlu mengubah Pengaturan-A</string>
     <string name="DoNotUnarchiveBySwipe">Nonaktifkan Geser untuk Membatalkan Arsip</string>
     <string name="DefaultDeleteMenu">Menu Hapus Default</string>
     <string name="DisableStories">Nonaktifkan Cerita</string>
@@ -90,7 +87,7 @@
     <string name="RegexFiltersCaseInsensitive">Ekspresi yang tidak peka huruf besar/kecil</string>
     <string name="RegexFiltersAdd">Tambahkan penyaring</string>
     <string name="RegexFiltersEdit">Sunting penyaring</string>
-    <string name="RegexFiltersAddDescription">Anda dapat menggudakan situs <![CDATA[<a href="https://regex101.com">regex101.com</a>]]> untuk menguji ekspresi reguler Anda secara menyeluruh. Anda juga dapat menggunakan teks biasa, tetapi jangan lupa untuk menghilangkan tanda kurung.</string>
+    <string name="RegexFiltersAddDescription">Anda dapat menggudakan situs &lt;a href="https://regex101.com"&gt;regex101.com&lt;/a&gt; untuk menguji ekspresi reguler Anda secara menyeluruh. Anda juga dapat menggunakan teks biasa, tetapi jangan lupa untuk menghilangkan tanda kurung.</string>
     <string name="RegexFiltersAddError">Kesalahan sintaks regex</string>
     <string name="ShowTimeHint">Ketuk Waktu untuk Rincian</string>
     <string name="SearchHashtagDefaultPageChannel">Halaman Pencarian Hashtag Default di Saluran</string>
@@ -108,4 +105,36 @@
     <string name="VideoPlayerDecoderPreferSW">Lebih suka SW</string>
     <string name="VideoPlayerDecoderHardware">Hanya HW</string>
     <string name="VideoPlayerDecoderPreferHW">Lebih suka HW</string>
+    <string name="RunInBackground">Jalankan di Latar Belakang</string>
+    <string name="RunInBackgroundInfo">Tetap jalankan aplikasi di latar belakang untuk memastikan notifikasi handal.</string>
+    <string name="NagramXPushService">Layanan Push Alexgram</string>
+    <string name="AppIconGoogle" translatable="false">Google</string>
+    <string name="AppIconColored">Alexgram Berwarna</string>
+    <string name="AppIconDark">Alexgram Gelap</string>
+    <string name="AppIconGreen">Alexgram Hijau</string>
+    <string name="AppIconPink">Alexgram Merah Muda</string>
+    <string name="AppIconRoseBlue">Alexgram RoseBlue</string>
+    <string name="AppIconWhite">Alexgram Putih</string>
+    <string name="Nagram" translatable="false">Alexgram</string>
+    <string name="PushServiceTypeFCM" translatable="false">Google FCM</string>
+    <string name="PushServiceTypeUnified" translatable="false">UnifiedPush</string>
+    <string name="PushServiceTypeMicroG" translatable="false">microG</string>
+    <string name="Pangu" translatable="false">Pangu</string>
+    <string name="EnableLiveVideoWallpaper">Wallpaper Video Langsung</string>
+    <string name="ExportChat">Ekspor Obrolan</string>
+    <string name="ImportChat">Impor Obrolan</string>
+    <string name="MusicGraph">Grafik Musik</string>
+    <string name="MusicGraphInfo">Tampilkan visualisator musik berwarna-warni saat memutar audio.</string>
+    <string name="SendVideoAsRound">Kirim sebagai Pesan Video</string>
+    <string name="VideoNoteDurationError">Pesan video tidak boleh lebih dari 60 detik.</string>
+    <string name="HiddenChats">Obrolan Tersembunyi</string>
+    <string name="HideChat">Tambahkan ke Obrolan Tersembunyi</string>
+    <string name="UnhideChat">Hapus dari Obrolan Tersembunyi</string>
+    <string name="HideChats">Sembunyikan Obrolan</string>
+    <string name="UnhideChats">Tampilkan Obrolan</string>
+    <string name="HiddenChatsPasscode">Sandi Obrolan Tersembunyi</string>
+    <string name="UnlockHiddenChats">Buka Kunci Obrolan Tersembunyi</string>
+    <string name="HiddenChatsAbout">Sembunyikan obrolan sensitif dari daftar utama. Akses dengan menahan bilah Judul setelah membuka kunci dengan sandi atau biometrik.</string>
+    <string name="HideContacts">Sembunyikan Kontak</string>
+    <string name="RestartRequired">Diperlukan mulai ulang untuk menerapkan perubahan</string>
 </resources>

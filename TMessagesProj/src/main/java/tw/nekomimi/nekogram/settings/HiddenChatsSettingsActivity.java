@@ -2,10 +2,7 @@ package tw.nekomimi.nekogram.settings;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffColorFilter;
 import android.graphics.drawable.GradientDrawable;
-import android.os.Build;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,20 +13,17 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.Components.LayoutHelper;
-import org.telegram.ui.Components.EditTextBoldCursor;
 import org.telegram.ui.Components.BulletinFactory;
-import android.text.InputType;
+
 import tw.nekomimi.nekogram.helpers.HiddenChatsController;
 import tw.nekomimi.nekogram.ui.HiddenChatsActivity;
 import tw.nekomimi.nekogram.ui.HiddenChatsPasscodeActivity;
-import tw.nekomimi.nekogram.settings.AlexgramSettingsHeaderView;
 
 public class HiddenChatsSettingsActivity extends BaseFragment {
     
@@ -90,26 +84,43 @@ public class HiddenChatsSettingsActivity extends BaseFragment {
             showChangePasscodeDialog(context);
         }, false));
 
+        boolean hasFingerprint = false;
         if (android.os.Build.VERSION.SDK_INT >= 23) {
             try {
                 org.telegram.messenger.support.fingerprint.FingerprintManagerCompat fingerprintManager = org.telegram.messenger.support.fingerprint.FingerprintManagerCompat.from(org.telegram.messenger.ApplicationLoader.applicationContext);
-                if (fingerprintManager.isHardwareDetected()) {
-                    optionsCard.addView(createGlassDivider(context));
-                    optionsCard.addView(createSwitchItem(context, "Unlock with Fingerprint", "Use fingerprint to access Hidden Chats", R.drawable.fingerprint, 0xFF009688,
-                            HiddenChatsController.getInstance().isBiometricEnabled(), isChecked -> {
-                                HiddenChatsController.getInstance().setBiometricEnabled(isChecked);
-                            }));
-                }
+                hasFingerprint = fingerprintManager.isHardwareDetected();
             } catch (Throwable e) {
                 org.telegram.messenger.FileLog.e(e);
             }
+        }
+
+        if (hasFingerprint) {
+            optionsCard.addView(createGlassDivider(context));
+            optionsCard.addView(createSwitchItem(context, "Unlock with Fingerprint", "Use biometric scanning as secondary decryption.", R.drawable.fingerprint, 0xFF009688,
+                    HiddenChatsController.getInstance().isBiometricEnabled(), isChecked -> {
+                        HiddenChatsController.getInstance().setBiometricEnabled(isChecked);
+                    }));
+        } else {
+            optionsCard.addView(createGlassDivider(context));
+            optionsCard.addView(createSettingItem(context, "Fingerprint Scanning", "TERMINAL_STATUS: MODULE_OFFLINE", R.drawable.fingerprint, 0xFF607D8B, v -> {
+                BulletinFactory.of(this).createSimpleBulletin(R.raw.ic_ban, "BIOMETRIC MODULE NOT FOUND", "System scan failed. Hardware sensors are not detected on this terminal.").show();
+            }, false));
         }
 
         optionsCard.addView(createGlassDivider(context));
 
         // Open Hidden Chats
         optionsCard.addView(createSettingItem(context, "Open Hidden Chats", "Access your hidden chats now", R.drawable.msg_folders_private_solar, 0xFFE91E63, v -> {
-            presentFragment(new HiddenChatsActivity(null));
+            HiddenChatsController controller = HiddenChatsController.getInstance();
+            if (controller.hasPasscode()) {
+                if (controller.isLocked()) {
+                    presentFragment(new HiddenChatsPasscodeActivity(HiddenChatsPasscodeActivity.MODE_UNLOCK_CHATS));
+                } else {
+                    presentFragment(new HiddenChatsActivity(new android.os.Bundle()));
+                }
+            } else {
+                presentFragment(new HiddenChatsPasscodeActivity(HiddenChatsPasscodeActivity.MODE_SETUP_PASSCODE));
+            }
         }, false));
 
         optionsCard.addView(createGlassDivider(context));
@@ -146,9 +157,9 @@ public class HiddenChatsSettingsActivity extends BaseFragment {
             titleView.setGravity(Gravity.CENTER_HORIZONTAL);
             container.addView(titleView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 16));
 
-            container.addView(createGuideItem(context, R.drawable.msg_folders_private_solar, 0xFF00bcd4, "Hide Chats", "Long-press any chat in the chat list, open the 3-dot menu and select 'Add to Hidden Chats'. You can also use the Plus icon inside Hidden Chats to add multiple chats at once."));
-            container.addView(createGuideItem(context, R.drawable.msg_search, 0xFFf06292, "Access Hidden Chats", "Long-press on the Alexgram header on the main screen to quickly access your Hidden Chats, or open them directly from these settings."));
-            container.addView(createGuideItem(context, R.drawable.msg_permissions_solar, 0xFFba68c8, "Privacy", "Chats added to Hidden Chats are automatically muted to ensure maximum privacy. You can manually unmute them later if you prefer."));
+            container.addView(createGuideItem(context, R.drawable.msg_folders_private_solar, 0xFF00bcd4, "Hide Chats", "Long-press any chat in the chat list, open the 3-dot menu and select 'Add to Hidden Chats'."));
+            container.addView(createGuideItem(context, R.drawable.msg_search, 0xFFf06292, "Access Hidden Chats", "Long-press on the Nagram header on the main screen to quickly access your Hidden Chats."));
+            container.addView(createGuideItem(context, R.drawable.msg_permissions_solar, 0xFFba68c8, "Privacy", "Chats added to Hidden Chats are automatically muted to ensure maximum privacy."));
             container.addView(createGuideItem(context, R.drawable.outline_shield_lock_24, 0xFF4db6ac, "Security", "Your hidden chats are strictly protected by a 4-digit passcode, and optionally your fingerprint."));
 
             TextView btn = new TextView(context);
@@ -178,11 +189,11 @@ public class HiddenChatsSettingsActivity extends BaseFragment {
     private void setupColors() {
         isDark = Theme.getActiveTheme().isDark();
         if (isDark) {
-            cardBg = 0x30FFFFFF;       // frosted glass dark
+            cardBg = 0x30FFFFFF;
             cardBorder = 0x22FFFFFF;
             dividerColor = 0x15FFFFFF;
         } else {
-            cardBg = 0x60FFFFFF;       // frosted glass light
+            cardBg = 0x60FFFFFF;
             cardBorder = 0x30000000;
             dividerColor = 0x18000000;
         }
@@ -228,7 +239,6 @@ public class HiddenChatsSettingsActivity extends BaseFragment {
         row.setBackground(Theme.getSelectorDrawable(false));
         row.setOnClickListener(onClick);
 
-        // Icon
         ImageView iconView = new ImageView(context);
         iconView.setImageResource(iconRes);
         iconView.setColorFilter(Color.WHITE);
@@ -240,7 +250,6 @@ public class HiddenChatsSettingsActivity extends BaseFragment {
         iconView.setBackground(iconBg);
         row.addView(iconView, LayoutHelper.createLinear(32, 32));
 
-        // Texts
         LinearLayout texts = new LinearLayout(context);
         texts.setOrientation(LinearLayout.VERTICAL);
         texts.setGravity(Gravity.CENTER_VERTICAL);

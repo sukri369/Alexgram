@@ -40,6 +40,11 @@ public class SnowflakesEffect {
     Bitmap particleBitmap;
 
     private long lastAnimationTime;
+    private boolean force;
+
+    public void setForce(boolean value) {
+        force = value;
+    }
 
     private class Particle {
         float x;
@@ -162,7 +167,7 @@ public class SnowflakesEffect {
     }
 
     public void onDraw(View parent, Canvas canvas) {
-        if (parent == null || canvas == null || !LiteMode.isEnabled(LiteMode.FLAG_CHAT_BACKGROUND)) {
+        if (parent == null || canvas == null || (!force && !LiteMode.isEnabled(LiteMode.FLAG_CHAT_BACKGROUND))) {
             return;
         }
 

@@ -49,7 +49,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class AppIconsSelectorCell extends RecyclerListView implements NotificationCenter.NotificationCenterDelegate {
-    public final static float ICONS_ROUND_RADIUS = 22;
+    public final static float ICONS_ROUND_RADIUS = 18;
 
     private List<LauncherIconController.LauncherIcon> availableIcons = new ArrayList<>();
     private LinearLayoutManager linearLayoutManager;
@@ -80,7 +80,7 @@ public class AppIconsSelectorCell extends RecyclerListView implements Notificati
                 holderView.bind(icon);
                 holderView.iconView.setBackground(Theme.createSimpleSelectorRoundRectDrawable(AndroidUtilities.dp(ICONS_ROUND_RADIUS), Color.TRANSPARENT, Theme.getColor(Theme.key_listSelector), Color.BLACK));
                 holderView.iconView.setForeground(icon.foreground);
-                holderView.iconView.setIsNekoXIcon(icon.isNekoX());
+                holderView.iconView.setIsSingleIcon(icon.foreground == 0);
             }
 
             @Override
@@ -294,7 +294,7 @@ public class AppIconsSelectorCell extends RecyclerListView implements Notificati
     }
 
     public static class AdaptiveIconImageView extends ImageView {
-        private boolean isNekoXIcon = false;
+        private boolean isSingleIcon = false;
         private Drawable foreground;
         private Path path = new Path();
         private int outerPadding = AndroidUtilities.dp(5);
@@ -305,16 +305,12 @@ public class AppIconsSelectorCell extends RecyclerListView implements Notificati
         }
 
         public void setForeground(int res) {
-            foreground = ContextCompat.getDrawable(getContext(), res);
+            foreground = res == 0 ? null : ContextCompat.getDrawable(getContext(), res);
             invalidate();
         }
 
-        public void setIsNekoXIcon(boolean value) {
-            if (this.isNekoXIcon != value) {
-                this.isNekoXIcon = value;
-                updatePath();
-                invalidate();
-            }
+        public void setIsSingleIcon(boolean value) {
+            this.isSingleIcon = value;
         }
 
         @Override
@@ -339,27 +335,20 @@ public class AppIconsSelectorCell extends RecyclerListView implements Notificati
         public void draw(Canvas canvas) {
             canvas.save();
             canvas.clipPath(path);
-            canvas.save();
-            if (!this.isNekoXIcon)
+            if (!this.isSingleIcon)
                 canvas.scale(1f + backgroundOuterPadding / (float) getWidth(), 1f + backgroundOuterPadding / (float) getHeight(), getWidth() / 2f, getHeight() / 2f);
             super.draw(canvas);
             canvas.restore();
 
-            if (foreground != null && !this.isNekoXIcon) {
+            if (foreground != null && !this.isSingleIcon) {
                 foreground.setBounds(-outerPadding, -outerPadding, getWidth() + outerPadding, getHeight() + outerPadding);
                 foreground.draw(canvas);
             }
-            canvas.restore();
         }
 
         private void updatePath() {
             path.rewind();
-            if (isNekoXIcon) {
-                path.addCircle(getWidth() / 2f, getHeight() / 2f, Math.min(getWidth() - getPaddingLeft() - getPaddingRight(), getHeight() - getPaddingTop() - getPaddingBottom()) / 2f, Path.Direction.CW);
-            } else {
-                float radius = AndroidUtilities.dp(ICONS_ROUND_RADIUS);
-                path.addRoundRect(new android.graphics.RectF(getPaddingLeft(), getPaddingTop(), getWidth() - getPaddingRight(), getHeight() - getPaddingBottom()), radius, radius, Path.Direction.CW);
-            }
+            path.addCircle(getWidth() / 2f, getHeight() / 2f, Math.min(getWidth() - getPaddingLeft() - getPaddingRight(), getHeight() - getPaddingTop() - getPaddingBottom()) / 2f, Path.Direction.CW);
         }
     }
 }

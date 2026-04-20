@@ -39,6 +39,7 @@ import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.ui.ActionBar.Theme;
+import org.telegram.ui.Components.chat.MiniChatAssistantView;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -125,11 +126,13 @@ public class ChatAnimeAssistantView extends FrameLayout {
     private boolean panelDragging;
     private boolean panelDragAllowed;
     private boolean autoReplyEnabled;
-    private long lastFrameTime;
+    long lastFrameTime;
     private int typingDots;
     private Runnable typingRunnable;
     private final Rect visibleFrame = new Rect();
     private GestureDetector gestureDetector;
+    private MiniChatAssistantView miniView;
+    private SizeNotifierFrameLayout blurParent;
 
     public ChatAnimeAssistantView(@NonNull Context context, @Nullable SizeNotifierFrameLayout blurParent, long dialogId) {
         this(context, blurParent, dialogId, true, true, "This feature only works in chats.", 92, 86);
@@ -153,6 +156,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
         this.autoReplySupported = autoReplySupported;
         this.autoReplyUnsupportedMessage = TextUtils.isEmpty(autoReplyUnsupportedMessage) ? "This feature only works in chats." : autoReplyUnsupportedMessage;
         autoReplyEnabled = autoReplySupported && preferences.getBoolean(getAutoReplyPreferenceKey(), false);
+        this.blurParent = blurParent;
 
         panelScrim = new View(context);
         panelScrim.setBackgroundColor(0x33000000);
@@ -179,11 +183,11 @@ public class ChatAnimeAssistantView extends FrameLayout {
         reactionBubble.setVisibility(GONE);
         characterContainer.addView(reactionBubble, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, -8, 0, 0));
 
-        addView(characterContainer, LayoutHelper.createFrame(100, 122, Gravity.BOTTOM | Gravity.RIGHT, 0, 0, 12, characterBottomMarginDp));
+        addView(characterContainer, LayoutHelper.createFrame(100, 122, Gravity.CENTER_VERTICAL | Gravity.RIGHT, 0, 0, 12, 0));
 
         panelContainer = blurParent != null ? new BlurredFrameLayout(context, blurParent) : new FrameLayout(context);
         if (panelContainer instanceof BlurredFrameLayout) {
-            ((BlurredFrameLayout) panelContainer).setBackgroundColor(0xAA152235);
+            ((BlurredFrameLayout) panelContainer).backgroundColor = 0xAA152235;
             ((BlurredFrameLayout) panelContainer).drawBlur = SharedConfig.getDevicePerformanceClass() != SharedConfig.PERFORMANCE_CLASS_LOW;
         } else {
             panelContainer.setBackgroundColor(0xEE17263D);
@@ -254,7 +258,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
         sendButton.setPadding(AndroidUtilities.dp(9), AndroidUtilities.dp(9), AndroidUtilities.dp(9), AndroidUtilities.dp(9));
         composer.addView(sendButton, LayoutHelper.createLinear(40, 40, Gravity.CENTER_VERTICAL));
 
-        addView(panelContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 272, Gravity.BOTTOM | Gravity.RIGHT, 44, 0, 14, panelBottomMarginDp));
+        addView(panelContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 272, Gravity.CENTER_VERTICAL | Gravity.RIGHT, 44, 0, 14, 0));
 
         setupPanelDragging();
         setupKeyboardListener();
@@ -354,7 +358,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
         addMessageBubble("Try long-press to switch my style.", false, false);
 
         lastFrameTime = SystemClock.uptimeMillis();
-        if (preferences.getBoolean("assistant_enabled", true)) {
+        if (preferences.getBoolean("assistant_enabled", false)) {
             postOnAnimation(frameRunnable);
         } else {
             setVisibility(GONE);
@@ -362,8 +366,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
     }
 
     private void setupKeyboardListener() {
-        // Disabled internal keyboard listener: ChatActivity now translates the entire ChatAnimeAssistantView 
-        // using updatePagedownButtonsPosition(), meaning it perfectly tracks the keyboard natively.
+        // Now handled by Activity-level translation in ChatActivity/DialogsActivity
     }
 
     private void setupPanelDragging() {
@@ -424,20 +427,24 @@ public class ChatAnimeAssistantView extends FrameLayout {
 
     private void applyLinkedPositions(boolean animated) {
         float panelTx = panelBaseTx;
-        float panelTy = panelBaseTy + keyboardShiftY;
+        float panelTy = panelBaseTy;
         float panelLeft = panelContainer.getLeft() + panelTx;
         float panelTop = panelContainer.getTop() + panelTy;
         float characterTx = panelLeft + getCharacterLinkedOffsetX() - characterContainer.getLeft();
         float characterTy = panelTop + getCharacterLinkedOffsetY() - characterContainer.getTop();
 
         if (animated) {
-            panelContainer.animate().translationX(panelTx).translationY(panelTy).setDuration(260).setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT).start();
-            characterContainer.animate().translationX(characterTx).translationY(characterTy).setDuration(260).setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT).start();
+            panelContainer.animate().translationX(panelTx).translationY(panelTy).setDuration(260).setInterpolator(org.telegram.ui.Components.CubicBezierInterpolator.EASE_OUT_QUINT).start();
+            characterContainer.animate().translationX(characterTx).translationY(characterTy).setDuration(260).setInterpolator(org.telegram.ui.Components.CubicBezierInterpolator.EASE_OUT_QUINT).start();
         } else {
             panelContainer.setTranslationX(panelTx);
             panelContainer.setTranslationY(panelTy);
             characterContainer.setTranslationX(characterTx);
             characterContainer.setTranslationY(characterTy);
+        }
+        if (miniView != null) {
+            miniView.setTranslationX(characterContainer.getTranslationX());
+            miniView.setTranslationY(characterContainer.getTranslationY());
         }
     }
 
@@ -483,31 +490,8 @@ public class ChatAnimeAssistantView extends FrameLayout {
         applyLinkedPositions(true);
     }
 
-    private void animatePanelUpForKeyboard(int kbHeight) {
-        if (!panelOpened) {
-            return;
-        }
-        keyboardShiftY = -Math.max(0, kbHeight - AndroidUtilities.dp(12));
-        animateLinkedToCurrent();
-    }
-
-    private void animatePanelDownFromKeyboard() {
-        if (!panelOpened) {
-            return;
-        }
-        keyboardShiftY = 0f;
-        animateLinkedToCurrent();
-    }
-
     private void snapPanelToBounds() {
         clampPanelBaseToBounds();
-        applyLinkedPositions(true);
-    }
-
-    private void updateCharacterPosition() {
-        if (!preferences.getBoolean("auto_follow", true) || !panelOpened) {
-            return;
-        }
         applyLinkedPositions(true);
     }
 
@@ -537,7 +521,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
     private void showLongPressMenu(View anchor) {
         PopupMenu popupMenu = new PopupMenu(getContext(), anchor);
         int order = 0;
-        if (showAutoReplyOption) {
+        if (showAutoReplyOption && assistantDialogId != 0) {
             popupMenu.getMenu().add(Menu.NONE, 1, order++, autoReplyEnabled ? "Auto Reply Mode: ON" : "Auto Reply Mode: OFF");
         }
         popupMenu.getMenu().add(Menu.NONE, 2, order++, "Switch Style");
@@ -602,6 +586,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
     }
 
     public void onDestroy() {
+        paused = true;
         removeCallbacks(frameRunnable);
         if (typingRunnable != null) {
             AndroidUtilities.cancelRunOnUIThread(typingRunnable);
@@ -630,18 +615,24 @@ public class ChatAnimeAssistantView extends FrameLayout {
 
     private void snapToBounds() {
         final float maxX = Math.max(0, getWidth() - characterContainer.getWidth() - AndroidUtilities.dp(4));
-        final float maxY = Math.max(0, getHeight() - characterContainer.getHeight() - AndroidUtilities.dp(84));
+        final float maxY = Math.max(0, getHeight() - characterContainer.getHeight() - AndroidUtilities.dp(16));
         final float targetX = characterContainer.getX() + characterContainer.getTranslationX() > getWidth() * 0.5f ? maxX - characterContainer.getLeft() : -characterContainer.getLeft();
         final float clampedY = Math.max(-characterContainer.getTop(), Math.min(maxY - characterContainer.getTop(), characterContainer.getTranslationY()));
         characterContainer.animate()
                 .translationX(targetX)
                 .translationY(clampedY)
+                .setUpdateListener(animation -> {
+                    if (miniView != null) {
+                        miniView.setTranslationX(characterContainer.getTranslationX());
+                        miniView.setTranslationY(characterContainer.getTranslationY());
+                    }
+                })
                 .setDuration(280)
-                .setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT)
+                .setInterpolator(org.telegram.ui.Components.CubicBezierInterpolator.EASE_OUT_QUINT)
                 .start();
     }
 
-    private void showPanel() {
+    public void showPanel() {
         if (panelOpened) {
             clampPanelBaseToBounds();
             animateLinkedToCurrent();
@@ -649,7 +640,6 @@ public class ChatAnimeAssistantView extends FrameLayout {
             return;
         }
         panelOpened = true;
-        keyboardShiftY = 0f;
         panelBaseTx = panelContainer.getTranslationX();
         panelBaseTy = panelContainer.getTranslationY();
         panelScrim.setVisibility(VISIBLE);
@@ -658,9 +648,13 @@ public class ChatAnimeAssistantView extends FrameLayout {
         panelContainer.bringToFront();
         characterContainer.bringToFront();
         panelScrim.animate().alpha(1f).setDuration(220).start();
-        panelContainer.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(220).setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT).start();
+        panelContainer.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(220).setInterpolator(org.telegram.ui.Components.CubicBezierInterpolator.EASE_OUT_QUINT).start();
         characterView.onOpenPanel();
         showReactionBubble("💬");
+    }
+
+    public void setMiniView(MiniChatAssistantView miniView) {
+        this.miniView = miniView;
     }
 
     private void hidePanel() {
@@ -669,12 +663,11 @@ public class ChatAnimeAssistantView extends FrameLayout {
         }
         panelOpened = false;
         panelScrim.animate().alpha(0f).setDuration(180).withEndAction(() -> panelScrim.setVisibility(GONE)).start();
-        panelContainer.animate().alpha(0f).scaleX(0.92f).scaleY(0.92f).setDuration(180).setInterpolator(CubicBezierInterpolator.DEFAULT).setListener(new AnimatorListenerAdapter() {
+        panelContainer.animate().alpha(0f).scaleX(0.92f).scaleY(0.92f).setDuration(180).setInterpolator(org.telegram.ui.Components.CubicBezierInterpolator.DEFAULT).setListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
                 panelContainer.setVisibility(GONE);
                 panelContainer.animate().setListener(null);
-                keyboardShiftY = 0f;
             }
         }).start();
     }
@@ -692,25 +685,16 @@ public class ChatAnimeAssistantView extends FrameLayout {
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
         
-        if (customBottomOffset > 0) {
+        if (customBottomOffset > 0 && !panelOpened) {
             int parentHeight = bottom - top;
-            
-            if (characterContainer != null) {
+            int cHeight = characterContainer.getMeasuredHeight();
+            int currentTop = characterContainer.getTop();
+            int targetBottom = parentHeight - (customBottomOffset + AndroidUtilities.dp(16));
+            if (currentTop + cHeight > targetBottom) {
                 int cWidth = characterContainer.getMeasuredWidth();
-                int cHeight = characterContainer.getMeasuredHeight();
                 int cLeft = characterContainer.getLeft();
-                int cBottom = parentHeight - customBottomOffset;
-                int cTop = cBottom - cHeight;
-                characterContainer.layout(cLeft, cTop, cLeft + cWidth, cBottom);
-            }
-            
-            if (panelContainer != null) {
-                int pWidth = panelContainer.getMeasuredWidth();
-                int pHeight = panelContainer.getMeasuredHeight();
-                int pLeft = panelContainer.getLeft();
-                int pBottom = parentHeight - (customBottomOffset - AndroidUtilities.dp(6));
-                int pTop = pBottom - pHeight;
-                panelContainer.layout(pLeft, pTop, pLeft + pWidth, pBottom);
+                int cTop = targetBottom - cHeight;
+                characterContainer.layout(cLeft, cTop, cLeft + cWidth, targetBottom);
             }
         }
     }
@@ -1488,15 +1472,15 @@ public class ChatAnimeAssistantView extends FrameLayout {
                 }
                 typingDots = (typingDots + 1) % 4;
                 typingView.setText("Thinking" + (typingDots == 0 ? "." : new String(new char[typingDots]).replace('\0', '.')));
-                AndroidUtilities.runOnUIThread(this, 280);
+                org.telegram.messenger.AndroidUtilities.runOnUIThread(this, 280);
             }
         };
-        AndroidUtilities.runOnUIThread(typingRunnable, 280);
+        org.telegram.messenger.AndroidUtilities.runOnUIThread(typingRunnable, 280);
     }
 
     private void hideTypingBubble(String text) {
         if (typingRunnable != null) {
-            AndroidUtilities.cancelRunOnUIThread(typingRunnable);
+            org.telegram.messenger.AndroidUtilities.cancelRunOnUIThread(typingRunnable);
             typingRunnable = null;
         }
         if (!messageViews.isEmpty()) {

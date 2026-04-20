@@ -28,8 +28,9 @@ import tw.nekomimi.nekogram.utils.AppScope
 import xyz.nextalone.nagram.NaConfig
 import java.util.Locale
 
-const val TRANSLATE_MODE_APPEND = 0
-const val TRANSLATE_MODE_REPLACE = 1
+// const val TRANSLATE_MODE_WITH_ORIGINAL_OFF = 0
+const val TRANSLATE_MODE_WITH_ORIGINAL_MANUAL_ONLY = 1
+const val TRANSLATE_MODE_WITH_ORIGINAL_ALL = 2
 
 const val TRANSLATION_SEPARATOR = "\n\n--------\n\n"
 
@@ -118,7 +119,7 @@ private suspend fun ChatActivity.translateSingleMessage(
     canReuseCache: Boolean,
 ) {
     val needsSummary = msg.needsSummaryTranslation(canReuseCache, targetLanguage)
-    val needsOriginal = msg.needsOriginalTranslation(canReuseCache, targetLanguage, translatorMode)
+    val needsOriginal = msg.needsOriginalTranslation(canReuseCache, targetLanguage)
 
     val shouldUseContext = shouldUseLlmContext(provider)
     val llmContext = if (shouldUseContext) {
@@ -128,7 +129,7 @@ private suspend fun ChatActivity.translateSingleMessage(
     // Translate summary if needed
     if (needsSummary) {
         val success =
-            translateSummary(msg, targetLocale, provider, translatorMode, llmContext)
+            translateSummary(msg, targetLocale, provider, llmContext)
         if (!success) return
     }
 
@@ -159,7 +160,6 @@ private suspend fun ChatActivity.translateSummary(
     msg: MessageObject,
     targetLocale: Locale,
     provider: Int,
-    translatorMode: Int,
     llmContext: String?,
 ): Boolean {
     val summaryText = msg.messageOwner.summaryText ?: return false
@@ -175,16 +175,7 @@ private suspend fun ChatActivity.translateSummary(
     }
 
     // Store translated summary
-    msg.messageOwner.translatedSummaryText = if (translatorMode == TRANSLATE_MODE_APPEND) {
-        TLRPC.TL_textWithEntities().apply {
-            text = summaryText.text + TRANSLATION_SEPARATOR + translatedSummary.text
-            entities = MessageHelper.mergeAppendTranslatedEntities(
-                summaryText.entities, translatedSummary, text
-            )
-        }
-    } else {
-        translatedSummary
-    }
+    msg.messageOwner.translatedSummaryText = translatedSummary
     msg.messageOwner.translatedSummaryLanguage = targetLocale.locale2code.lowercase(Locale.getDefault())
 
     return true
@@ -231,10 +222,35 @@ private suspend fun ChatActivity.translateMessageContent(
     translatorMode: Int,
     llmContext: String?
 ): Boolean {
+    val buttonsToTranslate = ArrayList<String>()
+    if (msg.messageOwner.reply_markup is TLRPC.TL_replyInlineMarkup) {
+        val inlineMarkup = msg.messageOwner.reply_markup as TLRPC.TL_replyInlineMarkup
+        for (i in inlineMarkup.rows.indices) {
+            val row = inlineMarkup.rows[i]
+            for (j in row.buttons.indices) {
+                val button = row.buttons[j]
+                if (!button.text.isNullOrEmpty()) {
+                    buttonsToTranslate.add(button.text)
+                }
+            }
+        }
+    }
+
+    val query = if (buttonsToTranslate.isEmpty()) {
+        msg.messageOwner.message
+    } else {
+        buildString {
+            append(msg.messageOwner.message)
+            for (btn in buttonsToTranslate) {
+                append("\n<<<<\n").append(btn)
+            }
+        }
+    }
+
     val result = runCatching {
         translateText(
             target,
-            msg.messageOwner.message,
+            query,
             msg.messageOwner.entities,
             provider,
             llmContext
@@ -246,12 +262,23 @@ private suspend fun ChatActivity.translateMessageContent(
         return false
     }
 
-    val originalMessage = msg.messageOwner.message
-    msg.messageOwner.translatedMessage = if (translatorMode == TRANSLATE_MODE_APPEND) {
-        originalMessage + TRANSLATION_SEPARATOR + result.text
-    } else {
-        result.text
+    if (buttonsToTranslate.isNotEmpty() && result.text != null) {
+        val parts = result.text.toString().split("\n<<<<\n")
+        val mainText = parts[0]
+        result.text = mainText
+        msg.messageOwner.translatedButtons = HashMap()
+        msg.messageOwner.translatedButtonsLanguage = target.locale2code.lowercase(Locale.getDefault())
+        for (i in 0 until minOf(buttonsToTranslate.size, parts.size - 1)) {
+            msg.messageOwner.translatedButtons[buttonsToTranslate[i]] = parts[i + 1].trim()
+        }
     }
+
+    val keepOriginal = MessageHelper.shouldKeepOriginalForManualTranslation(translatorMode)
+    msg.messageOwner.translatedMessage = MessageHelper.buildTranslatedDisplayText(
+        msg.messageOwner.message,
+        result,
+        keepOriginal
+    )
     msg.messageOwner.translatedText = result
 
     return true
@@ -272,14 +299,20 @@ private suspend fun ChatActivity.finalizeTranslation(
     }
 
     // Update UI
-    if (msg.messageOwner.translatedText != null && translatorMode == TRANSLATE_MODE_REPLACE) {
+    val keepOriginal = MessageHelper.shouldKeepOriginalForManualTranslation(translatorMode)
+    if (msg.messageOwner.summarizedOpen) {
+        AndroidUtilities.runOnUIThread {
+            postTranslatedNotification(msg)
+            notificationCenter.postNotificationName(NotificationCenter.updateInterfaces, 0)
+        }
+    } else if (msg.messageOwner.translatedText != null && !keepOriginal) {
         AndroidUtilities.runOnUIThread {
             postTranslatedNotification(msg)
             notificationCenter.postNotificationName(NotificationCenter.updateInterfaces, 0)
         }
     } else {
         withContext(Dispatchers.Main) {
-            clearTranslated(msg, currentAccount, translatorMode != TRANSLATE_MODE_APPEND)
+            clearTranslated(msg, currentAccount, false)
             messageHelper.resetMessageContent(dialogId, msg)
         }
     }
@@ -304,9 +337,10 @@ private fun ChatActivity.hideTranslation(
     translateController.removeAsTranslatingItem(msg)
     translateController.removeAsManualTranslate(msg)
     msg.messageOwner.translated = false
+    msg.messageOwner.translatedMessage = null
 
     AndroidUtilities.runOnUIThread {
-        if (translatorMode == TRANSLATE_MODE_APPEND || msg.isPoll) {
+        if ((MessageHelper.shouldKeepOriginalForManualTranslation(translatorMode) && !msg.messageOwner.summarizedOpen) || msg.isPoll) {
             messageHelper.resetMessageContent(dialogId, msg)
         } else {
             postTranslatedNotification(msg)
@@ -319,25 +353,16 @@ private fun ChatActivity.applyCachedTranslations(
     targetLanguage: String,
     translatorMode: Int,
 ) {
-    val hasCachedReplace = translatorMode == TRANSLATE_MODE_REPLACE && messages.any { msg ->
-        msg.messageOwner.translatedText?.text?.isNotEmpty() == true ||
-                msg.messageOwner.translatedPoll?.question?.text?.isNotEmpty() == true ||
-                (msg.messageOwner.summarizedOpen &&
-                        msg.messageOwner.translatedSummaryText?.text?.isNotEmpty() == true)
+    val hasCachedTranslation = messages.any { msg ->
+        msg.isTranslatedPoll() ||
+            (msg.messageOwner.translatedText?.text?.isNotEmpty() == true) ||
+            (
+                msg.messageOwner.summarizedOpen &&
+                    msg.messageOwner.translatedSummaryText?.text?.isNotEmpty() == true &&
+                    !MessageHelper.isLegacyTranslatedSummary(msg.messageOwner.summaryText, msg.messageOwner.translatedSummaryText)
+            )
     }
-
-    val hasCachedAppend = translatorMode == TRANSLATE_MODE_APPEND && messages.any { msg ->
-        msg.messageOwner.translatedMessage?.isNotEmpty() == true
-    }
-
-    val hasCachedPoll = messages.any { it.isTranslatedPoll() }
-
-    val hasCachedSummary = messages.any { msg ->
-        msg.messageOwner.summarizedOpen &&
-                msg.messageOwner.translatedSummaryText?.text?.isNotEmpty() == true
-    }
-
-    if (!hasCachedReplace && !hasCachedAppend && !hasCachedPoll && !hasCachedSummary) return
+    if (!hasCachedTranslation) return
 
     messages.forEach { msg ->
         if (!msg.matchesCachedLanguage(targetLanguage)) return@forEach
@@ -345,16 +370,18 @@ private fun ChatActivity.applyCachedTranslations(
         translateController.removeAsTranslatingItem(msg)
         translateController.addAsManualTranslate(msg)
         msg.messageOwner.translated = true
+        msg.messageOwner.translatedMessage = if (!msg.messageOwner.summarizedOpen && msg.messageOwner.translatedText != null) {
+            MessageHelper.buildTranslatedDisplayText(
+                msg.messageOwner.message,
+                msg.messageOwner.translatedText,
+                MessageHelper.shouldKeepOriginalForManualTranslation(translatorMode)
+            )
+        } else {
+            null
+        }
 
         AndroidUtilities.runOnUIThread {
             when {
-                translatorMode == TRANSLATE_MODE_REPLACE -> {
-                    notificationCenter.postNotificationName(
-                        NotificationCenter.messageTranslating, msg
-                    )
-                    postTranslatedNotification(msg)
-                }
-
                 msg.messageOwner.summarizedOpen -> {
                     postTranslatedNotification(msg)
                     notificationCenter.postNotificationName(
@@ -362,8 +389,19 @@ private fun ChatActivity.applyCachedTranslations(
                     )
                 }
 
-                else -> {
+                msg.isPoll -> {
                     messageHelper.resetMessageContent(dialogId, msg)
+                }
+
+                MessageHelper.shouldKeepOriginalForManualTranslation(translatorMode) -> {
+                    messageHelper.resetMessageContent(dialogId, msg)
+                }
+
+                else -> {
+                    notificationCenter.postNotificationName(
+                        NotificationCenter.messageTranslating, msg
+                    )
+                    postTranslatedNotification(msg)
                 }
             }
         }
@@ -373,14 +411,14 @@ private fun ChatActivity.applyCachedTranslations(
 private fun MessageObject.needsTranslation(
     canReuseCache: Boolean,
     targetLanguage: String,
-    translatorMode: Int,
+    _translatorMode: Int,
     controller: TranslateController
 ): Boolean {
     if (controller.isTranslating(this)) return false
     if (!(isPoll || messageOwner.message.isNotEmpty())) return false
 
     val needsSummary = needsSummaryTranslation(canReuseCache, targetLanguage)
-    val needsOriginal = needsOriginalTranslation(canReuseCache, targetLanguage, translatorMode)
+    val needsOriginal = needsOriginalTranslation(canReuseCache, targetLanguage)
 
     return needsSummary || needsOriginal
 }
@@ -393,13 +431,13 @@ private fun MessageObject.needsSummaryTranslation(
 
     return !canReuseCache ||
             messageOwner.translatedSummaryText?.text.isNullOrEmpty() ||
+            MessageHelper.isLegacyTranslatedSummary(messageOwner.summaryText, messageOwner.translatedSummaryText) ||
             !messageOwner.translatedSummaryLanguage.equals(targetLanguage, ignoreCase = true)
 }
 
 private fun MessageObject.needsOriginalTranslation(
     canReuseCache: Boolean,
-    targetLanguage: String,
-    translatorMode: Int
+    targetLanguage: String
 ): Boolean {
     if (!canReuseCache) return true
 
@@ -409,17 +447,14 @@ private fun MessageObject.needsOriginalTranslation(
     return when {
         isPoll -> !isTranslatedPoll() || !languageMatches
 
-        translatorMode == TRANSLATE_MODE_REPLACE ->
-            messageOwner.translatedText?.text.isNullOrEmpty() || !languageMatches
-
-        else ->
-            messageOwner.translatedMessage.isNullOrEmpty() || !languageMatches
+        else -> messageOwner.translatedText?.text.isNullOrEmpty() || !languageMatches
     }
 }
 
 private fun MessageObject.matchesCachedLanguage(targetLanguage: String): Boolean {
     return if (messageOwner.summarizedOpen) {
         messageOwner.translatedSummaryText?.text?.isNotEmpty() == true &&
+                !MessageHelper.isLegacyTranslatedSummary(messageOwner.summaryText, messageOwner.translatedSummaryText) &&
                 messageOwner.translatedSummaryLanguage.equals(targetLanguage, ignoreCase = true)
     } else {
         messageOwner.translatedToLanguage.equals(targetLanguage, ignoreCase = true)

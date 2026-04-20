@@ -16,6 +16,12 @@ public class BlurredRecyclerView extends RecyclerListView {
     boolean globalIgnoreLayout;
     public int additionalClipBottom;
     public boolean alwaysDrawChild;
+    /**
+     * Set to true in settings/non-chat screens to prevent the 203dp chat-blur
+     * top padding from being applied. Without this, enabling LiteMode Blur
+     * creates a large gap at the top of all settings screens.
+     */
+    public boolean disableBlurTopPadding = false;
 
     public BlurredRecyclerView(Context context) {
         super(context);
@@ -40,7 +46,7 @@ public class BlurredRecyclerView extends RecyclerListView {
         if (getLayoutParams() == null) {
             return;
         }
-        if (SharedConfig.chatBlurEnabled()) {
+        if (!disableBlurTopPadding && SharedConfig.chatBlurEnabled()) {
             blurTopPadding = measureBlurTopPadding();
             ((MarginLayoutParams) getLayoutParams()).topMargin = -blurTopPadding;
         } else {

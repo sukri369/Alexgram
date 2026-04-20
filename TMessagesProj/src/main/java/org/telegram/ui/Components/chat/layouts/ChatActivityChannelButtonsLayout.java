@@ -24,8 +24,9 @@ import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.ScaleStateListAnimator;
 import org.telegram.ui.Components.blur3.BlurredBackgroundDrawableViewFactory;
 import org.telegram.ui.Components.blur3.drawable.color.BlurredBackgroundColorProvider;
-import org.telegram.ui.Components.blur3.drawable.BlurredBackgroundDrawable;
 import org.telegram.ui.Components.chat.buttons.ChatActivityBlurredRoundButton;
+
+import java.util.HashSet;
 
 import me.vkryl.android.animator.BoolAnimator;
 import me.vkryl.android.animator.FactorAnimator;
@@ -43,8 +44,8 @@ public class ChatActivityChannelButtonsLayout extends FrameLayout implements Fac
     private final OnButtonFullyVisibleListener[] onButtonFullyVisible = new OnButtonFullyVisibleListener[BUTTONS_COUNT];
     private OnButtonsTotalWidthChanged onButtonsTotalWidthChanged;
     private final FrameLayout container;
-    private boolean iosStyle;
-    private BlurredBackgroundDrawable iosBackground;
+
+    private final HashSet<View> wrapContentButtons = new HashSet<>();
 
     private static final @DrawableRes int[] buttonIcons = new int[] {
         R.drawable.msg_search,
@@ -83,14 +84,9 @@ public class ChatActivityChannelButtonsLayout extends FrameLayout implements Fac
             }
         });
         addView(container, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 44, Gravity.CENTER_VERTICAL));
-        iosBackground = blurredBackgroundDrawableViewFactory.create(this, colorProvider);
-        iosBackground.setRadius(dp(22));
     }
 
     public void updateColors() {
-        if (iosBackground != null) {
-            iosBackground.updateColors();
-        }
         for (ButtonHolder holder : buttonHolders) {
             if (holder != null) {
                 holder.button.updateColors();
@@ -98,13 +94,12 @@ public class ChatActivityChannelButtonsLayout extends FrameLayout implements Fac
         }
     }
 
-    public void setIosStyle(boolean iosStyle) {
-        this.iosStyle = iosStyle;
-        invalidate();
-    }
-
     public FrameLayout getContainer() {
         return container;
+    }
+
+    public void makeViewWrapContent(View view) {
+        wrapContentButtons.add(view);
     }
 
     public void showButton(final int buttonId, boolean show, boolean animated) {
@@ -178,7 +173,12 @@ public class ChatActivityChannelButtonsLayout extends FrameLayout implements Fac
 
     private static final int CENTER_ACCENT_BACKGROUND_ANIMATOR_ID = 99;
     private final BoolAnimator animatorCenterAccentBackground = new BoolAnimator(
-        CENTER_ACCENT_BACKGROUND_ANIMATOR_ID, this, CubicBezierInterpolator.EASE_OUT_QUINT, 320L);
+        CENTER_ACCENT_BACKGROUND_ANIMATOR_ID, this, CubicBezierInterpolator.EASE_OUT_QUINT, 320L
+    );
+    private static final int WRAPPING_BUTTON_ANIMATOR_ID = 100;
+    private final BoolAnimator animatorWrappingButton = new BoolAnimator(
+        WRAPPING_BUTTON_ANIMATOR_ID, this, CubicBezierInterpolator.EASE_OUT_QUINT, 320L
+    );
 
     public void setCenterAccentBackground(boolean accent, boolean animated) {
         animatorCenterAccentBackground.setValue(accent, animated);
@@ -201,6 +201,10 @@ public class ChatActivityChannelButtonsLayout extends FrameLayout implements Fac
             invalidate();
             return;
         }
+        if (id == WRAPPING_BUTTON_ANIMATOR_ID) {
+            checkButtonsPositionsAndVisibility();
+            invalidate();
+        }
 
         final int buttonId = id >> 16;
         final int animatorId = id & 0xFFFF;
@@ -217,7 +221,7 @@ public class ChatActivityChannelButtonsLayout extends FrameLayout implements Fac
 
     @Override
     public void onFactorChangeFinished(int id, float finalFactor, FactorAnimator callee) {
-        if (id == CENTER_ACCENT_BACKGROUND_ANIMATOR_ID) {
+        if (id == CENTER_ACCENT_BACKGROUND_ANIMATOR_ID || id == WRAPPING_BUTTON_ANIMATOR_ID) {
             invalidate();
         }
 
@@ -330,9 +334,52 @@ public class ChatActivityChannelButtonsLayout extends FrameLayout implements Fac
             totalWidthRight *= totalVisibilityFactor;
         }
 
+        final float wrapping = animatorWrappingButton.getFloatValue();
+        if (wrapping > 0 && getMeasuredWidth() > 0) {
+            float left = getMeasuredWidth(), right = 0;
+            for (int i = 0; i < getContainer().getChildCount(); ++i) {
+                final View child = getContainer().getChildAt(i);
+                if (wrapContentButtons.contains(child)) {
+                    left  = Math.min(left, child.getLeft());
+                    right = Math.max(right, child.getRight());
+                }
+            }
+            if (left > right) {
+                left = right = (left + right) / 2f;
+            }
+            totalWidthLeft = lerp(totalWidthLeft, left - dp(3.33f), wrapping);
+            totalWidthRight = lerp(totalWidthRight, getMeasuredWidth() - right - dp(17.66f), wrapping);
+        }
+
         if (onButtonsTotalWidthChanged != null) {
             onButtonsTotalWidthChanged.onButtonsTotalWidthChanged(totalWidthLeft, totalWidthRight);
         }
+    }
+
+    public void updateWrappingVisible(boolean animated) {
+        boolean hasVisibleWrapping = false;
+        if (getVisibility() == View.VISIBLE && getContainer().getVisibility() == View.VISIBLE) {
+            for (int i = 0; i < getContainer().getChildCount(); ++i) {
+                final View child = getContainer().getChildAt(i);
+                if (wrapContentButtons.contains(child) && child.getVisibility() == View.VISIBLE) {
+                    hasVisibleWrapping = true;
+                }
+            }
+        }
+        animatorWrappingButton.setValue(hasVisibleWrapping, animated);
+    }
+
+    @Override
+    public void setVisibility(int visibility) {
+        super.setVisibility(visibility);
+        updateWrappingVisible(false);
+    }
+
+    @Override
+    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        super.onLayout(changed, left, top, right, bottom);
+
+        checkButtonsPositionsAndVisibility();
     }
 
     public interface OnButtonsTotalWidthChanged {
@@ -348,10 +395,6 @@ public class ChatActivityChannelButtonsLayout extends FrameLayout implements Fac
 
     @Override
     protected void dispatchDraw(@NonNull Canvas canvas) {
-        if (iosStyle) {
-            iosBackground.setBounds(container.getLeft(), container.getTop(), container.getRight(), container.getBottom());
-            iosBackground.draw(canvas);
-        }
         final int accentAlpha = (int) (255 * totalVisibilityFactor * animatorCenterAccentBackground.getFloatValue());
         if (accentAlpha > 0) {
             tmpRect.set(

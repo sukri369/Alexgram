@@ -2036,11 +2036,11 @@ public class ChatObject {
     }
 
     public static boolean canBlockUsers(TLRPC.Chat chat) {
-        return !false && canUserDoAction(chat, ACTION_BLOCK_USERS);
+        return canUserDoAction(chat, ACTION_BLOCK_USERS);
     }
 
     public static boolean canManageCalls(TLRPC.Chat chat) {
-        return !false && canUserDoAction(chat, ACTION_MANAGE_CALLS);
+        return canUserDoAction(chat, ACTION_MANAGE_CALLS);
     }
 
     public static boolean canSendStickers(TLRPC.Chat chat) {

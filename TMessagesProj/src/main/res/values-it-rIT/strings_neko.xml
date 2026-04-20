@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="NekoSettings">N-Impostazioni</string>
+    <string name="NekoSettings">A-Impostazioni</string>
     <string name="IPv6">Preferisci IPv6</string>
     <string name="MessageMenu">Menu dei messaggi</string>
     <string name="HidePhone">Nascondi numero di telefono</string>
@@ -49,7 +49,6 @@
     <string name="TranslateApiUnsupported">Il fornitore di servizi di traduzione selezionato non supporta la tua lingua.</string>
     <string name="ProviderLingocloud">Traduttore LingoCloud</string>
     <string name="UndoTranslate">Nascondi traduzione</string>
-    <string name="DisablePhotoViewerSideAction">Disabilita il tocco laterale per cambiare foto</string>
     <string name="BotToken">Token</string>
     <string name="UnlimitedPinnedDialogs">Finestre di dialogo appuntate illimitate</string>
     <string name="UnlimitedPinnedDialogsAbout">Aggiungi dialoghi illimitati disattivando la loro sincronizzazione.</string>
@@ -81,7 +80,7 @@
     <string name="AutoPauseVideo">Pausa automatica del video</string>
     <string name="AutoPauseVideoAbout">Quando si blocca lo schermo/si passa allo sfondo.</string>
     <string name="DisableProximityEvents">Disabilita eventi di prossimità</string>
-    <string name="SelectBetween">Seleziona intervallo</string>
+    <string name="SelectBetween">Seleziona messaggi</string>
     <string name="ProviderDeepLTranslate">Traduttore DeepL</string>
     <string name="ProviderMicrosoftTranslator">Traduttore Bing</string>
     <string name="DontSendGreetingSticker">Non inviare adesivi di saluto</string>
@@ -113,10 +112,10 @@
     <string name="enhancedFileLoader">Aumenta Velocità di Download</string>
     <string name="mapDriftingFixForGoogleMaps">Fixa il Drifting di Google Maps in Cina</string>
     <string name="useOSMDroidMap">Utilizza OSMDroid Map</string>
-    <string name="UnknownNekoSettingsOption">Non esiste alcuna opzione N-Impostazioni di questo tipo.</string>
+    <string name="UnknownNekoSettingsOption">Non esiste alcuna opzione A-Impostazioni di questo tipo.</string>
     <string name="PasscodeNeeded">Devi prima abilitare il blocco con codice di accesso</string>
     <string name="PasscodeNeko">Codice</string>
-    <string name="PasscodeShowInSettings">Mostra in N-Impostazioni</string>
+    <string name="PasscodeShowInSettings">Mostra in A-Impostazioni</string>
     <string name="PasscodeShowInSettingsAbout">Dopo aver nascosto, puoi aprire questa pagina **SOLO** tramite link:</string>
     <string name="PasscodeSet">Imposta Codice di Accesso</string>
     <string name="PasscodeEdit">Cambia Codice di Accesso</string>
@@ -154,7 +153,7 @@
     <string name="ClearRecentChats">Cancella le chat recenti</string>
     <string name="ClearRecentChatAlert">Vuoi cancellare le tue chat recenti?</string>
     <string name="CloudConfig">Impostazioni Cloud</string>
-    <string name="CloudConfigDesc">Salva le tue N-Impostazioni sul cloud di Telegram.</string>
+    <string name="CloudConfigDesc">Salva le tue A-Impostazioni sul cloud di Telegram.</string>
     <string name="CloudConfigSyncDate">Ultima sincronizzazione: %s, cloud: %s</string>
     <string name="CloudConfigSyncDateNever">Mai</string>
     <string name="CloudConfigSync">Sincronizza con il cloud</string>
@@ -163,7 +162,7 @@
     <string name="CloudConfigRestoreShort">Ripristina</string>
     <string name="CloudConfigSyncing">Sincronizzazione in corso...</string>
     <string name="CloudConfigAutoSync">Sincronizzazione automatica</string>
-    <string name="CloudConfigAutoSyncDesc">Sincronizzazione automatica con il cloud dopo aver apportato modifiche alle N-Impostazioni.</string>
+    <string name="CloudConfigAutoSyncDesc">Sincronizzazione automatica con il cloud dopo aver apportato modifiche alle A-Impostazioni.</string>
     <string name="CloudConfigSyncFailed">Impossibile sincronizzare le impostazioni con il cloud</string>
     <string name="CloudConfigRestoreFailed">Impossibile ripristinare le impostazioni dal cloud</string>
     <string name="CopyCallback">Copia Callback Data</string>
@@ -193,7 +192,6 @@
     <string name="ShowIdAndDc">Mostra ID / DC nel profilo</string>
     <string name="UseDefaultTheme">Usa tema predefinito *</string>
     <string name="DialogsSettings">Finestre di dialogo</string>
-    <string name="NagramXPushService">Servizio Push</string>
     <string name="DisableSystemAccount">Disabilita account di sistema</string>
     <string name="FilterMenu">Menu Filtro Dialoghi</string>
     <string name="DisableProxyWhenVpnEnabled">Disabilita proxy quando VPN è abilitato</string>
@@ -272,4 +270,9 @@
     <string name="EmojiUseDefault">Usa le Emoji di Sistema</string>
     <string name="Chat">Chats</string>
     <string name="Appearance">Aspetto</string>
+
+    <string name="StarFallInChat">Effetto Pioggia di Stelle</string>
+    <string name="StarFallInChatDescription">Mostra l\'animazione delle stelle cadenti nelle chat.</string>
+    <string name="NekoX">Impostazioni NekoX</string>
+    <string name="ProviderTelegramAPI">API Ufficiale Telegram</string>
 </resources>

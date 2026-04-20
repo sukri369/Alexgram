@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="XChannel">Alexgram Channel</string>
+    <string name="XChannel">کانال Alexgram</string>
     <string name="EnableSaveDeletedMessages">نمایش پیام‌های حذف شده</string>
     <string name="DeletedMessage">حذف شده</string>
     <string name="EnableSaveEditsHistory">ذخیره تاریخچه ویرایش پیام‌ها</string>
@@ -62,10 +62,6 @@
     <string name="MessageSavingSaveMediaInPublicGroups">... در گروه‌های عمومی</string>
     <string name="MessageSavingSaveMediaInPrivateGroups">... در گروه‌های خصوصی</string>
     <string name="TelegramUIAutoTranslate">ترجمه خودکار همه گفتگوها</string>
-    <string name="TranslatorMode">نحوه نمایش ترجمه</string>
-    <string name="TranslatorModeAppend">افزودن به پیام</string>
-    <string name="TranslatorModeInline">جایگزینی با پیام</string>
-    <string name="TranslatorModePopup">پنجره شناور</string>
     <string name="Translated">ترجمه شده</string>
     <string name="ProviderRealMicrosoftTranslator">مترجم مایکروسافت</string>
     <string name="TranslatorSettings">مترجم</string>
@@ -92,7 +88,7 @@
     <string name="Other">سایر موارد</string>
     <string name="RestartApp">راه‌اندازی مجدد</string>
     <string name="ResetSettings">بازنشانی تنظیمات</string>
-    <string name="ResetSettingsAlert">آیا مطمئنید که می‌خواهید تمام تنظیمات ناگرام را بازنشانی کنید؟</string>
+    <string name="ResetSettingsAlert">آیا مطمئنید که می‌خواهید تمام تنظیمات-A را بازنشانی کنید؟</string>
     <string name="DontAutoPlayNextVoice">عدم پخش خودکار پیام صوتی بعدی</string>
     <string name="SaveToChatSubfolder">ذخیره پیوست‌ها در پوشه‌ای با نام گفتگو</string>
     <string name="MessageColoredBackground">پس‌زمینه رنگی پیام‌ها</string>
@@ -100,8 +96,8 @@
     <string name="ChatMenu">منوی گفتگو</string>
     <string name="MediaViewerMenu">منوی نمایشگر رسانه</string>
     <string name="MenuAndButtons">منوها و دکمه‌ها</string>
-    <string name="ColoredAdminTitle">عنوان رنگی مدیر</string>
-    <string name="SettingsNax">تنظیمات ناگرام</string>
+    <string name="ASettings">تنظیمات-A</string>
+    <string name="SettingsNax">تنظیمات-A</string>
     <string name="AccountSettingsNax">تنظیمات حساب کاربری</string>
     <string name="HideReactions">پنهان کردن واکنش‌ها</string>
     <string name="DoubleTapIncoming">پیام‌های دریافتی</string>
@@ -183,7 +179,6 @@
     <string name="NoCaptionForward">ارسال بدون زیرنویس</string>
     <string name="PreferCommonGroupsTab">ترجیح تب گروه‌ها</string>
     <string name="PreferCommonGroupsTabNotice">انتخاب خودکار تب \"گروه‌ها\" به جای \"هدایا\" در صورت امکان.</string>
-    <string name="SendHighQualityPhoto">ارسال عکس با کیفیت بالا</string>
     <string name="GroupedMessageMenu">منوی پیام‌های گروهی</string>
     <string name="GroupedMessageMenuNotice">گروه‌بندی، اقدامات اصلی را به پایین منوی پیام منتقل می‌کند.</string>
     <string name="CopySticker">کپی کردن استیکر</string>
@@ -192,9 +187,6 @@
     <string name="AutoCheckUpdateSwitch">کانال به‌روزرسانی</string>
     <string name="AutoCheckUpdateRelease">نسخه نهایی</string>
     <string name="AutoCheckUpdateBeta">نسخه بتا</string>
-    <string name="AutoInsertGIFCaption">زیرنویس خودکار برای گیف‌ها</string>
-    <string name="AutoInsertGIFCaptionNotice">به طور خودکار از متن موجود در فیلد ورودی به عنوان زیرنویس گیف استفاده می‌کند.</string>
-    <string name="UserAvatarsInMessagePreview">آواتار کاربران در پیش‌نمایش پیام</string>
     <string name="YourVersionIsLatestNax">نسخه شما به‌روز است.</string>
     <string name="PremiumElements">عناصر پریمیوم</string>
     <string name="PremiumItemBoosts">شمارنده بوست</string>
@@ -206,7 +198,6 @@
     <string name="PremiumItemVideoAvatar">آواتارهای متحرک</string>
     <string name="PremiumItemCustomWallpaper">تصاویر پس‌زمینه سفارشی</string>
     <string name="TranslationTargetApp">پیروی از زبان برنامه</string>
-    <string name="DisableAvatarTapToSwitch">غیرفعال کردن تغییر آواتار با ضربه</string>
     <string name="SwitchStyle">سبک دکمه سوییچ</string>
     <string name="SliderStyle">سبک اسلایدر</string>
     <string name="StyleModern">مدرن</string>
@@ -235,4 +226,47 @@
     <string name="PinnedReactions_Apply">به‌روزرسانی واکنش‌های پین‌شده</string>
     <string name="HowToObtain">چگونه به دست آورم؟</string>
     <string name="SortByUnread">مرتب‌سازی بر اساس خوانده نشده</string>
+    <string name="CenterActionBarTitleOn">مرکزی کردن عنوان نوار ابزار</string>
+    <string name="CenterActionBarTitleOff">غیرفعال کردن مرکزیت عنوان</string>
+    <string name="TabletModeOn">حالت تبلت فعال شد</string>
+    <string name="TabletModeOff">حالت تبلت غیرفعال شد</string>
+    <string name="HideTabsOnScroll">پنهان کردن زبانه‌ها هنگام اسکرول</string>
+    <string name="SearchEngineInSearchBar">موتور جستجو در نوار جستجو</string>
+    <string name="SearchEngineInSearchBarDescription">جایگزینی جستجوی جهانی با یک موتور جستجوی سفارشی.</string>
+    <string name="VoiceChanger">تغییر دهنده صدا</string>
+    <string name="VoiceChangerNormal">عادی</string>
+    <string name="VoiceChangerRobotic">رباتیک</string>
+    <string name="VoiceChangerAlien">فضایی</string>
+    <string name="VoiceChangerHoarseness">گرفتگی صدا</string>
+    <string name="VoiceChangerModulation">تعدیل</string>
+    <string name="VoiceChangerChild">کودک</string>
+    <string name="VoiceChangerMouse">موش</string>
+    <string name="VoiceChangerMan">مرد</string>
+    <string name="VoiceChangerWoman">زن</string>
+    <string name="VoiceChangerMonster">هیولا</string>
+    <string name="VoiceChangerEcho">اکو</string>
+    <string name="VoiceChangerNoise">نویز</string>
+    <string name="VoiceChangerHelium">هلیوم</string>
+    <string name="VoiceChangerHexafluoride">هگزافلوراید</string>
+    <string name="VoiceChangerCave">غار</string>
+    <string name="ShowVoiceChangerInChatMenu">نمایش تغییر دهنده صدا در منوی چت</string>
+    <string name="FreeProxy">پروکسی رایگان</string>
+    <string name="FreeProxyAuto">اتصال خودکار</string>
+    <string name="FreeProxySelectCountry">انتخاب کشور</string>
+    <string name="FreeProxyFetching">در حال دریافت جدیدترین پروکسی‌ها...</string>
+    <string name="FreeProxyCount">در حال مرور %1$d پروکسی رایگان</string>
+    <string name="FreeProxyUpdated">%1$s پیش بروز شد</string>
+    <string name="FreeProxySearchHint">جستجو بر اساس کشور، شهر یا IP</string>
+    <string name="FreeProxyPing">%1$d میلی‌ثانیه</string>
+    <string name="AllowForwardingRestriction">اجازه هدایت/کپی</string>
+    <string name="AllowForwardingRestrictionDescription">دور زدن محدودیت‌ها در کانال‌ها و گروه‌هایی که کپی و هدایت را ممنوع کرده‌اند.</string>
+    <string name="AllowForwardingRestrictionOnboardingTitle">دستورالعمل‌های دور زدن رسانه</string>
+    <string name="AllowForwardingRestrictionOnboardingMessage">برای اطمینان از تجربه‌ای یکپارچه هنگام دور زدن محدودیت‌های هدایت، لطفاً قبل از هدایت مطمئن شوید که رسانه به طور کامل دانلود شده است. این به برنامه اجازه می‌دهد تا محتوای شما را به طور ایمن دوباره بارگذاری و بدون مسدود شدن توسط سرور تحویل دهد.</string>
+    <string name="V8DAudio">توهم صوتی فضایی ۳۶۰ درجه</string>
+    <string name="V8DAudioAbout">جلوه صوتی Dolby 8D</string>
+
+    <string name="StarFallInChat">جلوه بارش ستاره</string>
+    <string name="StarFallInChatDescription">نمایش انیمیشن شهاب سنگ در چت‌ها.</string>
+    <string name="NekoX">تنظیمات NekoX</string>
+    <string name="ProviderTelegramAPI">API رسمی تلگرام</string>
 </resources>

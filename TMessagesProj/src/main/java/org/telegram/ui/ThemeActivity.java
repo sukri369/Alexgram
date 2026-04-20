@@ -83,7 +83,6 @@ import org.telegram.ui.Cells.BrightnessControlCell;
 import org.telegram.ui.Cells.ChatListCell;
 import org.telegram.ui.Cells.ChatMessageCell;
 import org.telegram.ui.Cells.HeaderCell;
-import org.telegram.ui.Cells.NotificationIconsSelectorCell;
 import org.telegram.ui.Cells.NotificationsCheckCell;
 import org.telegram.ui.Cells.RadioButtonCell;
 import org.telegram.ui.Cells.RadioColorCell;
@@ -180,7 +179,6 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
     private int nightThemeRow;
     @Keep
     private int browserRow;
-    private int onlineThemesRow;
     private int nightDisabledRow;
     private int nightScheduledRow;
     private int nightAutomaticRow;
@@ -243,6 +241,8 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
     private int notificationIconHeaderRow;
     private int notificationIconSelectorRow;
     private int notificationIconShadowRow;
+
+    private int onlineThemesRow;
 
     private int rowCount;
 
@@ -604,6 +604,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
         searchEngineRow = -1;
         bluetoothScoRow = -1;
         settings2Row = -1;
+        onlineThemesRow = -1;
 
         swipeGestureHeaderRow = -1;
         swipeGestureRow = -1;
@@ -617,11 +618,9 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
         appIconHeaderRow = -1;
         appIconSelectorRow = -1;
         appIconShadowRow = -1;
-
         notificationIconHeaderRow = -1;
         notificationIconSelectorRow = -1;
         notificationIconShadowRow = -1;
-
         lastShadowRow = -1;
 
         defaultThemes.clear();
@@ -770,27 +769,33 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                 if (notify || previousUpdatedType == -1) {
                     listAdapter.notifyDataSetChanged();
                 } else {
-                    if (prevThemeAccentListRow == -1 && themeAccentListRow != -1) {
-                        listAdapter.notifyItemInserted(themeAccentListRow);
-                    } else if (prevThemeAccentListRow != -1 && themeAccentListRow == -1) {
-                        listAdapter.notifyItemRemoved(prevThemeAccentListRow);
-                        if (prevEditThemeRow != -1) {
-                            prevEditThemeRow--;
+                    // Guard against calling notifyItem* while RecyclerView is computing a layout
+                    // (e.g. during fast fling). Fall back to notifyDataSetChanged which is safe.
+                    if (listView != null && listView.isComputingLayout()) {
+                        listAdapter.notifyDataSetChanged();
+                    } else {
+                        if (prevThemeAccentListRow == -1 && themeAccentListRow != -1) {
+                            listAdapter.notifyItemInserted(themeAccentListRow);
+                        } else if (prevThemeAccentListRow != -1 && themeAccentListRow == -1) {
+                            listAdapter.notifyItemRemoved(prevThemeAccentListRow);
+                            if (prevEditThemeRow != -1) {
+                                prevEditThemeRow--;
+                            }
+                        } else if (themeAccentListRow != -1) {
+                            listAdapter.notifyItemChanged(themeAccentListRow);
                         }
-                    } else if (themeAccentListRow != -1) {
-                        listAdapter.notifyItemChanged(themeAccentListRow);
-                    }
 
-                    if (prevEditThemeRow == -1 && editThemeRow != -1) {
-                        listAdapter.notifyItemInserted(editThemeRow);
-                    } else if (prevEditThemeRow != -1 && editThemeRow == -1) {
-                        listAdapter.notifyItemRemoved(prevEditThemeRow);
-                    }
+                        if (prevEditThemeRow == -1 && editThemeRow != -1) {
+                            listAdapter.notifyItemInserted(editThemeRow);
+                        } else if (prevEditThemeRow != -1 && editThemeRow == -1) {
+                            listAdapter.notifyItemRemoved(prevEditThemeRow);
+                        }
 
-                    if (prevRaiseToSpeakRow == -1 && raiseToSpeakRow != -1) {
-                        listAdapter.notifyItemInserted(raiseToSpeakRow);
-                    } else if (prevRaiseToSpeakRow != -1 && raiseToSpeakRow == -1) {
-                        listAdapter.notifyItemRemoved(prevRaiseToSpeakRow);
+                        if (prevRaiseToSpeakRow == -1 && raiseToSpeakRow != -1) {
+                            listAdapter.notifyItemInserted(raiseToSpeakRow);
+                        } else if (prevRaiseToSpeakRow != -1 && raiseToSpeakRow == -1) {
+                            listAdapter.notifyItemRemoved(prevRaiseToSpeakRow);
+                        }
                     }
                 }
             } else {
@@ -1502,18 +1507,25 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                 editTheme();
             } else if (position == stickersRow) {
                 presentFragment(new StickersActivity(MediaDataController.TYPE_IMAGE, null));
-            } else if (position == onlineThemesRow) {
-                presentFragment(new OnlineThemesActivity());
             } else if (position == liteModeRow) {
                 presentFragment(new LiteModeSettingsActivity());
+            } else if (position == onlineThemesRow) {
+                presentFragment(new OnlineThemesActivity());
             }
         });
         if (currentType == THEME_TYPE_BASIC) {
+            // Use a minimal animator only for insert/remove (raiseToSpeakRow visibility toggle).
+            // Avoid heavy DefaultItemAnimator during fast fling — it causes excessive GC pressure
+            // and frame drops that can trigger crashes on some devices (e.g. Realme/ColorOS).
             DefaultItemAnimator itemAnimator = new DefaultItemAnimator();
-            itemAnimator.setDurations(350);
+            itemAnimator.setDurations(150);
             itemAnimator.setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT);
             itemAnimator.setDelayAnimations(false);
             itemAnimator.setSupportsChangeAnimations(false);
+            itemAnimator.setAddDuration(150);
+            itemAnimator.setRemoveDuration(150);
+            itemAnimator.setMoveDuration(0);
+            itemAnimator.setChangeDuration(0);
             listView.setItemAnimator(itemAnimator);
         }
 
@@ -2101,7 +2113,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
             int type = holder.getItemViewType();
             return type == 0 || type == TYPE_TEXT_SETTING || type == TYPE_THEME_TYPE || type == TYPE_TEXT_CHECK ||
                     type == TYPE_NIGHT_THEME || type == TYPE_THEME_LIST || type == TYPE_THEME_ACCENT_LIST ||
-                    type == TYPE_TEXT_PREFERENCE || type == 18 || type == TYPE_APP_ICON || type == TYPE_CHOOSE_COLOR;
+                    type == TYPE_TEXT_PREFERENCE || type == TYPE_APP_ICON || type == TYPE_CHOOSE_COLOR || type == TYPE_NOTIFICATION_ICON;
         }
 
         private void showOptionsForTheme(Theme.ThemeInfo themeInfo) {
@@ -2478,12 +2490,18 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                     break;
                 case TYPE_APP_ICON:
                     view = new AppIconsSelectorCell(mContext, ThemeActivity.this, currentAccount);
-                    break;
-                case TYPE_NOTIFICATION_ICON:
-                    view = new NotificationIconsSelectorCell(mContext, ThemeActivity.this, currentAccount);
+                    // Fixed height avoids expensive WRAP_CONTENT re-measure on each scroll frame
+                    view.setLayoutParams(new RecyclerView.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT, AndroidUtilities.dp(100)));
                     break;
                 case TYPE_CHOOSE_COLOR:
                     view = new PeerColorActivity.ChangeNameColorCell(currentAccount, 0, mContext, getResourceProvider());
+                    break;
+                case TYPE_NOTIFICATION_ICON:
+                    view = new org.telegram.ui.Cells.NotificationIconsSelectorCell(mContext, ThemeActivity.this, currentAccount);
+                    // Fixed height avoids expensive WRAP_CONTENT re-measure on each scroll frame
+                    view.setLayoutParams(new RecyclerView.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT, AndroidUtilities.dp(100)));
                     break;
             }
             return new RecyclerListView.Holder(view);
@@ -2580,8 +2598,6 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                     HeaderCell headerCell = (HeaderCell) holder.itemView;
                     if (position == scheduleHeaderRow) {
                         headerCell.setText(getString("AutoNightSchedule", R.string.AutoNightSchedule));
-                    } else if (position == notificationIconHeaderRow) {
-                        headerCell.setText(getString("NotificationIcon", R.string.NotificationIcon));
                     } else if (position == automaticHeaderRow) {
                         headerCell.setText(getString("AutoNightBrightness", R.string.AutoNightBrightness));
                     } else if (position == preferedHeaderRow) {
@@ -2606,6 +2622,8 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                         headerCell.setText(getString("SelectTheme", R.string.SelectTheme));
                     } else if (position == appIconHeaderRow) {
                         headerCell.setText(getString(R.string.AppIcon));
+                    } else if (position == notificationIconHeaderRow) {
+                        headerCell.setText(getString("NotificationIcon", R.string.NotificationIcon));
                     } else if (position == otherHeaderRow) {
                         headerCell.setText(getString("OtherSettings", R.string.OtherSettings));
                     } else if (position == mediaSoundHeaderRow) {
@@ -2721,9 +2739,9 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                     } else if (position == onlineThemesRow) {
                         cell.setColors(Theme.key_dialogIcon, Theme.key_windowBackgroundWhiteBlackText);
                         cell.setTextAndIcon("Online Themes", R.drawable.msg2_chats_add, true);
-                        cell.setSubtitle("Browse and download themes from GitHub");
-                        cell.offsetFromImage = 64;
+                        cell.setSubtitle("Browse and download community themes");
                         cell.heightDp = 60;
+                        cell.offsetFromImage = 64;
                         cell.imageLeft = 20;
                     }
                     break;
@@ -2830,7 +2848,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
     public ArrayList<ThemeDescription> getThemeDescriptions() {
         ArrayList<ThemeDescription> themeDescriptions = new ArrayList<>();
 
-        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_CELLBACKGROUNDCOLOR, new Class[]{TextSettingsCell.class, TextCheckCell.class, HeaderCell.class, BrightnessControlCell.class, ThemeTypeCell.class, TextSizeCell.class, BubbleRadiusCell.class, ChatListCell.class, NotificationsCheckCell.class, ThemesHorizontalListCell.class, TintRecyclerListView.class, TextCell.class, PeerColorActivity.ChangeNameColorCell.class, SwipeGestureSettingsView.class, DefaultThemesPreviewCell.class, AppIconsSelectorCell.class, NotificationIconsSelectorCell.class}, null, null, null, Theme.key_windowBackgroundWhite));
+        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_CELLBACKGROUNDCOLOR, new Class[]{TextSettingsCell.class, TextCheckCell.class, HeaderCell.class, BrightnessControlCell.class, ThemeTypeCell.class, TextSizeCell.class, BubbleRadiusCell.class, ChatListCell.class, NotificationsCheckCell.class, ThemesHorizontalListCell.class, TintRecyclerListView.class, TextCell.class, PeerColorActivity.ChangeNameColorCell.class, SwipeGestureSettingsView.class, DefaultThemesPreviewCell.class, AppIconsSelectorCell.class, org.telegram.ui.Cells.NotificationIconsSelectorCell.class}, null, null, null, Theme.key_windowBackgroundWhite));
         themeDescriptions.add(new ThemeDescription(fragmentView, ThemeDescription.FLAG_BACKGROUND, null, null, null, null, Theme.key_windowBackgroundGray));
 
 //        themeDescriptions.add(new ThemeDescription(actionBar, ThemeDescription.FLAG_BACKGROUND, null, null, null, null, Theme.key_actionBarDefault));

@@ -2,16 +2,14 @@ package tw.nekomimi.nekogram.helpers;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.SparseArray;
 
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.UserConfig;
-import org.telegram.messenger.Utilities;
-import android.util.SparseArray;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.ArrayList;
 
 public class HiddenChatsController {
 
@@ -70,7 +68,7 @@ public class HiddenChatsController {
 
     private void saveIds(int currentAccount) {
         if (hiddenChatIds.indexOfKey(currentAccount) >= 0) {
-            preferences.edit().putStringSet("hidden_ids_" + currentAccount, hiddenChatIds.get(currentAccount)).apply();
+            preferences.edit().putStringSet("hidden_ids_" + currentAccount, new java.util.HashSet<>(hiddenChatIds.get(currentAccount))).apply();
         }
     }
 
@@ -139,9 +137,36 @@ public class HiddenChatsController {
         Set<String> ids = hiddenChatIds.get(currentAccount);
         return ids != null && ids.contains(String.valueOf(dialogId));
     }
+
+    public boolean isHidden(long dialogId) {
+        return isHidden(UserConfig.selectedAccount, dialogId);
+    }
     
     public int getHiddenCount(int currentAccount) {
         Set<String> ids = hiddenChatIds.get(currentAccount);
         return ids != null ? ids.size() : 0;
+    }
+
+    public boolean hasHiddenChats() {
+        for (int i = 0; i < UserConfig.MAX_ACCOUNT_COUNT; i++) {
+            if (getHiddenCount(i) > 0) return true;
+        }
+        return false;
+    }
+
+    public boolean isLocked() {
+        return !isUnlocked;
+    }
+
+    public void hide(int currentAccount, long dialogId) {
+        if (!isHidden(currentAccount, dialogId)) {
+            toggleHidden(currentAccount, dialogId);
+        }
+    }
+
+    public void unhide(int currentAccount, long dialogId) {
+        if (isHidden(currentAccount, dialogId)) {
+            toggleHidden(currentAccount, dialogId);
+        }
     }
 }

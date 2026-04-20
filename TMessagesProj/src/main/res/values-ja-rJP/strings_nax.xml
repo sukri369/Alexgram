@@ -66,6 +66,7 @@
     <string name="RegexFiltersUserHeader">ユーザーフィルター</string>
     <string name="RegexFiltersUserFilterHint">ユーザー ID を入力</string>
     <string name="RegexFiltersGlobalHeader">グローバルフィルター</string>
+    <string name="RegexFiltersTextSelectionAddtoShared">共通フィルターに追加</string>
     <string name="ShadowBan">シャドウバン</string>
     <string name="UnshadowBan">シャドウバン解除</string>
     <string name="ShadowBanAdded">**ユーザーフィルタ**に追加しました。</string>
@@ -80,10 +81,6 @@
     <string name="MessageSavingSaveMediaInPublicGroups">パブリックグループで保存</string>
     <string name="MessageSavingSaveMediaInPrivateGroups">プライベートグループで保存</string>
     <string name="TelegramUIAutoTranslate">チャット全体を翻訳</string>
-    <string name="TranslatorMode">手動翻訳表示タイプ</string>
-    <string name="TranslatorModeAppend">追加</string>
-    <string name="TranslatorModeInline">置換</string>
-    <string name="TranslatorModePopup">ポップアップ</string>
     <string name="Translated">翻訳済み</string>
     <string name="ProviderRealMicrosoftTranslator">Microsoft 翻訳</string>
     <string name="TranslatorSettings">翻訳</string>
@@ -110,7 +107,7 @@
     <string name="Other">その他</string>
     <string name="RestartApp">アプリを再起動</string>
     <string name="ResetSettings">設定をリセット</string>
-    <string name="ResetSettingsAlert">「N-設定」をリセットしますか？</string>
+    <string name="ResetSettingsAlert">「A-設定」をリセットしますか？</string>
     <string name="DontAutoPlayNextVoice">次のボイスメッセージを自動再生しない</string>
     <string name="SaveToChatSubfolder">チャット別にファイルを保存</string>
     <string name="MessageColoredBackground">カラフルなメッセージ</string>
@@ -118,7 +115,6 @@
     <string name="ChatMenu">チャットメニュー</string>
     <string name="MediaViewerMenu">メディアビューアーメニュー</string>
     <string name="MenuAndButtons">メニューとボタン</string>
-    <string name="ColoredAdminTitle">色付きの管理者タイトル</string>
     <string name="SettingsNax">設定</string>
     <string name="AccountSettingsNax">アカウント設定</string>
     <string name="HideReactions">リアクションを非表示</string>
@@ -129,11 +125,11 @@
     <string name="MapPreviewProviderYandexNax">Yandex</string>
     <string name="GhostMode">ゴーストモード</string>
     <string name="GhostEssentialsHeader">ゴースト設定</string>
-    <string name="EnableGhostMode">ゴーストモードを有効化</string>
-    <string name="DisableGhostMode">ゴーストモードを無効化</string>
+    <string name="EnableGhostMode">ゴースト ON</string>
+    <string name="DisableGhostMode">ゴースト OFF</string>
     <string name="GhostModeEnabled">ゴーストモードが有効です</string>
     <string name="GhostModeDisabled">ゴーストモードが無効です</string>
-    <string name="GhostModeInDrawer">メインタブショートカット</string>
+    <string name="GhostModeInDrawer">ショートカット</string>
     <string name="GhostModeStatusIndicator">ゴーストモード標識</string>
     <string name="DontSendReadMessagePackets">メッセージの既読を送信しない</string>
     <string name="DontReadStoriesPackets">ストーリーの既読を送信しない</string>
@@ -186,6 +182,8 @@
     <string name="DebugMenuDoNotForceForumTabs">話題タブを強制しない</string>
     <string name="DebugMenuCleanAppUpdate">アプリの更新を消去</string>
     <string name="DebugMenuMakeMemoryDump">メモリダンプを作成</string>
+    <string name="DebugMenuShowFrameMetrics">フレームメトリクスを表示</string>
+    <string name="DebugMenuHideFrameMetrics">フレームメトリクスを非表示</string>
     <string name="TranslateMessageLLM">AI で翻訳</string>
     <string name="EditLocalNameOverride">ローカルチャット名の上書きを編集しています。</string>
     <string name="ResetChatNameOverrides">チャット名の上書きをリセット</string>
@@ -206,7 +204,6 @@
     <string name="NoCaptionForward">説明文なしで転送</string>
     <string name="PreferCommonGroupsTab">グループタブを優先</string>
     <string name="PreferCommonGroupsTabNotice">可能な場合、\"ギフト\"の代わりに\"グループ\"タブを自動選択します。</string>
-    <string name="SendHighQualityPhoto">高画質の写真を送信</string>
     <string name="GroupedMessageMenu">メッセージメニューをグループ化</string>
     <string name="GroupedMessageMenuNotice">グループ化すると、メインアクションがメッセージメニューの下部に移動します。</string>
     <string name="CopySticker">ステッカーをコピー</string>
@@ -215,9 +212,6 @@
     <string name="AutoCheckUpdateSwitch">更新チャネル</string>
     <string name="AutoCheckUpdateRelease">リリース</string>
     <string name="AutoCheckUpdateBeta">ベータ</string>
-    <string name="AutoInsertGIFCaption">GIF 自動キャプション</string>
-    <string name="AutoInsertGIFCaptionNotice">メッセージ入力欄のテキストを、GIF のキャプションとして自動で送信します。</string>
-    <string name="UserAvatarsInMessagePreview">メッセージプレビューでのユーザーアバター</string>
     <string name="YourVersionIsLatestNax">お使いのバージョンは最新です。</string>
     <string name="PremiumElements">プレミアム要素</string>
     <string name="PremiumItemBoosts">後押し者標示</string>
@@ -229,7 +223,6 @@
     <string name="PremiumItemVideoAvatar">アバターアニメーション</string>
     <string name="PremiumItemCustomWallpaper">カスタム背景</string>
     <string name="TranslationTargetApp">アプリに従う</string>
-    <string name="DisableAvatarTapToSwitch">タップでアバター切り替えを無効化</string>
     <string name="SwitchStyle">スイッチスタイル</string>
     <string name="SliderStyle">スライダースタイル</string>
     <string name="StyleModern">モダン</string>
@@ -297,8 +290,6 @@
     <string name="CameraInVideoMessagesRear">リアカメラ</string>
     <string name="CameraInVideoMessagesAsk">尋ねる</string>
     <string name="CameraSettings">カメラ</string>
-    <string name="SyncContactToPhone">連絡先をデバイスに同期</string>
-    <string name="AddViaQRCode">QRコードで追加</string>
     <string name="ContactNotes">メモ</string>
     <string name="PhoneNotOnTelegramInvite">この電話番号はTelegramに登録されていません。 **招待 &gt;**</string>
     <string name="PhoneAlreadyInContacts">この電話番号は既に連絡先に登録されています。**表示 &gt;**</string>
@@ -319,4 +310,21 @@
     <string name="UnifiedPushLastReceivedNotification">UnifiedPush で最後に受信した通知は %1$d 秒前です。\n\nNagram X の起動以降、 %2$d 件の通知を受信しました。</string>
     <string name="UnifiedPushCurrentEndpoint">現在の UnifiedPush エンドポイントは：%1$s</string>
     <string name="PlayOnce">ワンショット</string>
+    <string name="StorageSettings">ストレージ</string>
+    <string name="MainTabsSettingsHeader">メインタブ</string>
+    <string name="MainTabsHideTitles">タイトルを非表示</string>
+    <string name="PasscodeShowMessagePreviewWhenLocked">メッセージプレビューを表示</string>
+    <string name="PasscodeShowMessagePreviewWhenLockedAbout">パスコードロックが有効な場合でも通知内容を表示します。</string>
+    <string name="StickerSavedHint">ステッカーを保存しました。</string>
+    <string name="StickerCopied">ステッカーをコピーしました。</string>
+    <string name="StrokeOnViews">グレア効果</string>
+    <string name="HideBottomNavigationBar">下部ナビゲーションバーを非表示</string>
+    <string name="TranslatorMode">原文付き</string>
+    <string name="TranslatorWithOriginalTextOff">オフ</string>
+    <string name="TranslatorWithOriginalTextManualOnly">マニュアルのみ</string>
+    <string name="TranslatorWithOriginalTextOn">オン</string>
+    <string name="CenterActionBarTitleOn">オン</string>
+    <string name="CenterActionBarTitleOff">オフ</string>
+    <string name="TabletModeOn">オン</string>
+    <string name="TabletModeOff">オフ</string>
 </resources>

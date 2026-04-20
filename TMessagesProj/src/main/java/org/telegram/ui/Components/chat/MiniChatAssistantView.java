@@ -1,4 +1,3 @@
-
 package org.telegram.ui.Components.chat;
 
 import android.content.Context;
