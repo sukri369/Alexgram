@@ -219,8 +219,8 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
     private final AbstractConfigCell aiAssistanceSettingsRow = cellGroup.appendCell(new ConfigCellText("AiAssistanceSettings", () -> presentFragment(new AIAssistanceSettingsActivity())));
     private final AbstractConfigCell enableAIReplyRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getEnableAIReply()));
     private final AbstractConfigCell enableSummarizeChatRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getEnableSummarizeChat()));
-    private final AbstractConfigCell aiModelUrlRow = cellGroup.appendCell(new ConfigCellTextInput("AI Model URL", NaConfig.INSTANCE.getAiModelUrl(), "https://api.openai.com/v1/chat/completions", null));
-    private final AbstractConfigCell aiApiKeyRow = cellGroup.appendCell(new ConfigCellTextInput("AI API Key", NaConfig.INSTANCE.getAiApiKey(), "sk-...", null));
+    private final AbstractConfigCell aiModelUrlRow = cellGroup.appendCell(new ConfigCellTextInput("AI Model URL", NaConfig.INSTANCE.getAiModelUrl(), "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash", null));
+    private final AbstractConfigCell aiApiKeyRow = cellGroup.appendCell(new ConfigCellTextInput("AI API Key", NaConfig.INSTANCE.getAiApiKey(), "Api Key", null));
     private final AbstractConfigCell testAiApiRow = cellGroup.appendCell(new ConfigCellText("TestAiApi", () -> {
         String url = NaConfig.INSTANCE.getAiModelUrl().String();
         String key = NaConfig.INSTANCE.getAiApiKey().String();
