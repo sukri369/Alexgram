@@ -182,20 +182,24 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                 int actionBarHeight = 0;
                 int actionBarY = 0;
                 int actionBarShadowAlpha = 0;
-                int childCount = getChildCount();
-                for (int a = 0; a < childCount; a++) {
-                    View view = getChildAt(a);
-                    if (view == child) {
-                        continue;
-                    }
-                    if (view instanceof ActionBar && view.getVisibility() == VISIBLE) {
-                        final ActionBar actionBar = (ActionBar) view;
-                        if (actionBar.getCastShadows() && actionBar.getShadowAlpha() > 0) {
-                            actionBarHeight = view.getMeasuredHeight();
-                            actionBarY = (int) view.getY();
-                            actionBarShadowAlpha = actionBar.getShadowAlpha();
+
+                // Optimization: Skip expensive ActionBar search loop during transition animations
+                if (!isTransitionAnimationInProgress() && !animationInProgress && !predictiveBackInProgress) {
+                    int childCount = getChildCount();
+                    for (int a = 0; a < childCount; a++) {
+                        View view = getChildAt(a);
+                        if (view == child) {
+                            continue;
                         }
-                        break;
+                        if (view instanceof ActionBar && view.getVisibility() == VISIBLE) {
+                            final ActionBar actionBar = (ActionBar) view;
+                            if (actionBar.getCastShadows() && actionBar.getShadowAlpha() > 0) {
+                                actionBarHeight = view.getMeasuredHeight();
+                                actionBarY = (int) view.getY();
+                                actionBarShadowAlpha = actionBar.getShadowAlpha();
+                            }
+                            break;
+                        }
                     }
                 }
                 boolean result = super.drawChild(canvas, child, drawingTime);
@@ -1858,27 +1862,28 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                     .setSpring(new SpringForce(SPRING_MULTIPLIER)
                             .setStiffness(preview ? open ? SPRING_STIFFNESS_PREVIEW : SPRING_STIFFNESS_PREVIEW_OUT : SPRING_STIFFNESS)
                             .setDampingRatio(preview ? 0.6f : 1f));
+            final float widthNoPaddings = (float) getWidth() - getPaddingLeft() - getPaddingRight();
+            final BaseFragment oldFragmentFinal = oldFragment;
+            final BaseFragment newFragmentFinal = newFragment;
+
             currentSpringAnimation.addUpdateListener((animation, value, velocity) -> {
                 animationProgress = value / SPRING_MULTIPLIER;
                 if (USE_ACTIONBAR_CROSSFADE) {
                     swipeProgress = MathUtils.clamp(open ? (1f - animationProgress) : animationProgress, 0f, 1f);
                 }
-                if (newFragment != null) {
-                    newFragment.onTransitionAnimationProgress(true, animationProgress);
+                if (newFragmentFinal != null) {
+                    newFragmentFinal.onTransitionAnimationProgress(true, animationProgress);
                 }
-                if (oldFragment != null) {
-                    oldFragment.onTransitionAnimationProgress(false, animationProgress);
+                if (oldFragmentFinal != null) {
+                    oldFragmentFinal.onTransitionAnimationProgress(false, animationProgress);
                 }
                 if (preview) {
-                    Integer oldNavigationBarColor = oldFragment != null ? oldFragment.getNavigationBarColor() : null;
-                    Integer newNavigationBarColor = newFragment != null ? newFragment.getNavigationBarColor() : null;
-                    if (newFragment != null && oldNavigationBarColor != null) {
-                        float ratio = MathUtils.clamp(4f * animationProgress, 0f, 1f);
-                        newFragment.setNavigationBarColor(ColorUtils.blendARGB(oldNavigationBarColor, newNavigationBarColor, ratio));
+                    float ratio = MathUtils.clamp(4f * animationProgress, 0f, 1f);
+                    if (newFragmentFinal != null && oldFragmentFinal != null) {
+                        newFragmentFinal.setNavigationBarColor(ColorUtils.blendARGB(oldFragmentFinal.getNavigationBarColor(), newFragmentFinal.getNavigationBarColor(), ratio));
                     }
                 }
                 float interpolated = animationProgress;
-                float widthNoPaddings = getWidth() - getPaddingLeft() - getPaddingRight();
                 if (open) {
                     float clampedInterpolated = MathUtils.clamp(interpolated, 0, 1);
                     if (preview) {
@@ -3758,10 +3763,10 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
     public static final int BACK_ANIMATION_PREDICTIVE = 2;
     private static final boolean USE_SPRING_ANIMATION = NaConfig.INSTANCE.getBackAnimationStyle().Int() == BACK_ANIMATION_SPRING;
     private static final boolean USE_ACTIONBAR_CROSSFADE = USE_SPRING_ANIMATION && NaConfig.INSTANCE.getSpringAnimationCrossfade().Bool();
-    private static final float SPRING_STIFFNESS = 1000f;
-    private static final float SPRING_STIFFNESS_PREVIEW = 800f;
-    private static final float SPRING_STIFFNESS_PREVIEW_OUT = 1000f;
-    private static final float SPRING_STIFFNESS_PREVIEW_EXPAND = 1000f;
+    private static final float SPRING_STIFFNESS = 1200f;
+    private static final float SPRING_STIFFNESS_PREVIEW = 900f;
+    private static final float SPRING_STIFFNESS_PREVIEW_OUT = 1200f;
+    private static final float SPRING_STIFFNESS_PREVIEW_EXPAND = 1200f;
     private static final float SPRING_MULTIPLIER = 1000f;
     private float swipeProgress;
     private SpringAnimation currentSpringAnimation;
