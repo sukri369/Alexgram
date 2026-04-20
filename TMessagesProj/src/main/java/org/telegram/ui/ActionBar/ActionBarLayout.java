@@ -1367,7 +1367,13 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
-        if (!checkTransitionAnimation() && !inActionMode && !animationInProgress && !predictiveBackInProgress) {
+        if (transitionAnimationInProgress || fragmentsStack.size() <= 1 || inPreviewMode || transitionAnimationPreviewMode) {
+            if (inPreviewMode && ev != null && ev.getAction() == MotionEvent.ACTION_UP) {
+                finishPreviewFragment();
+            }
+            return true;
+        }
+        if (!inActionMode && !animationInProgress && !predictiveBackInProgress) {
             if (fragmentsStack.size() > 1 && allowSwipe()) {
                 if (ev != null && ev.getAction() == MotionEvent.ACTION_DOWN) {
                     BaseFragment currentFragment = fragmentsStack.get(fragmentsStack.size() - 1);
@@ -1763,8 +1769,12 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
             invalidateActionBars();
         }
         animationInProgress = false;
+        transitionAnimationInProgress = false;
         transitionAnimationPreviewMode = false;
         previewOpenAnimationInProgress = false;
+        inPreviewMode = false;
+        startedTracking = false;
+        maybeStartTracking = false;
     }
 
     public BaseFragment getLastFragment() {
@@ -1943,6 +1953,7 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                 }
             });
             currentSpringAnimation.addEndListener((animation, canceled, value, velocity) -> {
+                animationProgress = 1.0f;
                 onAnimationEndCheck(false);
                 setInnerTranslationX(0);
             });
