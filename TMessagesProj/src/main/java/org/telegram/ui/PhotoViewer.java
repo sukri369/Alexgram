@@ -24216,6 +24216,20 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
     private void generateAiImage(String prompt) {
         if (parentActivity == null) return;
 
+        File f = null;
+        if (currentMessageObject != null) {
+            if (!TextUtils.isEmpty(currentMessageObject.messageOwner.attachPath)) {
+                f = new File(currentMessageObject.messageOwner.attachPath);
+                if (!f.exists()) {
+                    f = null;
+                }
+            }
+            if (f == null) {
+                f = FileLoader.getInstance(currentAccount).getPathToMessage(currentMessageObject.messageOwner);
+            }
+        }
+        final String imagePath = (f != null && f.exists()) ? f.getAbsolutePath() : null;
+
         AlertDialog progressDialog = new AlertDialog(parentActivity, 3);
         progressDialog.setCanCancel(false);
         progressDialog.show();
@@ -24225,6 +24239,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             NaConfig.INSTANCE.getAiImageModelUrl().String(),
             NaConfig.INSTANCE.getAiImageApiKey().String(),
             prompt,
+            imagePath,
             new AiImageClient.Callback() {
                 @Override
                 public void onSuccess(String filePath) {

@@ -34,13 +34,15 @@ public class AiImageClient {
         void onError(String error);
     }
 
-    public static void generateImage(int provider, String baseUrl, String apiKey, String prompt, Callback callback) {
+    public static void generateImage(int provider, String baseUrl, String apiKey, String prompt, String originalImagePath, Callback callback) {
         if (provider == 0) {
             generateOpenAI(baseUrl, apiKey, prompt, callback);
         } else if (provider == 1) {
-            generateGemini(baseUrl, apiKey, prompt, callback);
+            generateGemini(baseUrl, apiKey, prompt, originalImagePath, callback);
         } else if (provider == 2) {
             generatePollinations(prompt, callback);
+        } else if (provider == 3) {
+            generateSiliconFlow(baseUrl, apiKey, prompt, originalImagePath, callback);
         }
     }
 
@@ -97,7 +99,7 @@ public class AiImageClient {
         }
     }
 
-    private static void generateGemini(String baseUrl, String apiKey, String prompt, Callback callback) {
+    private static void generateGemini(String baseUrl, String apiKey, String prompt, String originalImagePath, Callback callback) {
         String url = baseUrl;
         if (url == null || url.isEmpty()) {
             url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent";
@@ -136,8 +138,27 @@ public class AiImageClient {
             } else {
                 // Gemini generateContent multimodal format
                 JSONArray parts = new JSONArray();
+
+                // Add original image if provided (Image-to-Image)
+                if (originalImagePath != null && !originalImagePath.isEmpty()) {
+                    try {
+                        File imageFile = new File(originalImagePath);
+                        if (imageFile.exists()) {
+                            byte[] data = readBytes(imageFile);
+                            String base64 = Base64.encodeToString(data, Base64.NO_WRAP);
+                            JSONObject imagePart = new JSONObject();
+                            JSONObject inlineData = new JSONObject();
+                            inlineData.put("mimeType", "image/jpeg");
+                            inlineData.put("data", base64);
+                            imagePart.put("inlineData", inlineData);
+                            parts.put(imagePart);
+                        }
+                    } catch (Exception ignore) {}
+                }
+
                 JSONObject textPart = new JSONObject();
-                textPart.put("text", "Generate an image for: " + prompt);
+                String prefix = (originalImagePath != null && !originalImagePath.isEmpty()) ? "Modify this image based on: " : "Generate an image for: ";
+                textPart.put("text", prefix + prompt);
                 parts.put(textPart);
                 
                 JSONObject content = new JSONObject();
@@ -273,6 +294,110 @@ public class AiImageClient {
         } catch (Exception e) {
             callback.onError(e.getMessage());
         }
+    }
+
+    private static void generateSiliconFlow(String baseUrl, String apiKey, String prompt, String originalImagePath, Callback callback) {
+        String url = baseUrl;
+        if (url == null || url.isEmpty() || url.contains("openai.com") || !url.startsWith("http")) {
+            url = "https://api.siliconflow.cn/v1/images/generations";
+        }
+
+        try {
+            JSONObject json = new JSONObject();
+            String model = "stabilityai/stable-diffusion-xl-base-1.0";
+            if (baseUrl != null && !baseUrl.isEmpty() && !baseUrl.startsWith("http")) {
+                model = baseUrl;
+            }
+            json.put("model", model);
+            json.put("prompt", prompt);
+
+            if (originalImagePath != null && !originalImagePath.isEmpty()) {
+                File f = new File(originalImagePath);
+                if (f.exists()) {
+                    byte[] data = readBytes(f);
+                    String base64 = Base64.encodeToString(data, Base64.NO_WRAP);
+                    json.put("image", "data:image/jpeg;base64," + base64);
+                }
+            }
+
+            RequestBody body = RequestBody.create(json.toString(), HttpClient.MEDIA_TYPE_JSON);
+            Request request = new Request.Builder()
+                    .url(url)
+                    .header("Authorization", "Bearer " + apiKey)
+                    .post(body)
+                    .build();
+
+            client.newCall(request).enqueue(new okhttp3.Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    callback.onError(e.getMessage());
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    try {
+                        String responseData = response.body().string();
+                        if (!response.isSuccessful()) {
+                            callback.onError("SiliconFlow Error: " + responseData);
+                            return;
+                        }
+                        JSONObject result = new JSONObject(responseData);
+                        JSONArray images = result.optJSONArray("images");
+                        if (images == null) images = result.optJSONArray("data");
+                        
+                        if (images != null && images.length() > 0) {
+                            JSONObject first = images.getJSONObject(0);
+                            String urlOrBase64 = first.optString("url");
+                            if (urlOrBase64.isEmpty()) urlOrBase64 = first.optString("b64_json");
+                            
+                            if (urlOrBase64.startsWith("http")) {
+                                downloadAndSave(urlOrBase64, callback);
+                            } else {
+                                byte[] decoded = Base64.decode(urlOrBase64, Base64.DEFAULT);
+                                saveBytes(decoded, callback);
+                            }
+                        } else {
+                            callback.onError("No image in SiliconFlow response: " + responseData);
+                        }
+                    } catch (Exception e) {
+                        callback.onError(e.getMessage());
+                    }
+                }
+            });
+        } catch (Exception e) {
+            callback.onError(e.getMessage());
+        }
+    }
+
+    private static void downloadAndSave(String url, Callback callback) {
+        Request request = new Request.Builder().url(url).build();
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                callback.onError(e.getMessage());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    saveBytes(response.body().bytes(), callback);
+                } else {
+                    callback.onError("Download failed: " + response.message());
+                }
+            }
+        });
+    }
+
+    private static byte[] readBytes(File file) throws IOException {
+        long length = file.length();
+        if (length > Integer.MAX_VALUE) {
+            throw new IOException("File is too large");
+        }
+        byte[] bytes = new byte[(int) length];
+        try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
+            raf.readFully(bytes);
+        }
+        return bytes;
     }
 
     private static void saveBytes(byte[] bytes, Callback callback) {
