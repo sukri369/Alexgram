@@ -35,10 +35,12 @@ public class AiImageClient {
     }
 
     public static void generateImage(int provider, String baseUrl, String apiKey, String prompt, Callback callback) {
-        if (provider == 0) { // OpenAI Compatible
+        if (provider == 0) {
             generateOpenAI(baseUrl, apiKey, prompt, callback);
-        } else { // Gemini
+        } else if (provider == 1) {
             generateGemini(baseUrl, apiKey, prompt, callback);
+        } else if (provider == 2) {
+            generatePollinations(prompt, callback);
         }
     }
 
@@ -235,6 +237,42 @@ public class AiImageClient {
                 saveBytes(response.body().bytes(), callback);
             }
         });
+    }
+
+    private static void generatePollinations(String prompt, Callback callback) {
+        try {
+            String encodedPrompt = java.net.URLEncoder.encode(prompt, "UTF-8");
+            long seed = System.currentTimeMillis();
+            String url = "https://image.pollinations.ai/prompt/" + encodedPrompt + "?width=1024&height=1024&nologo=true&seed=" + seed;
+
+            Request request = new Request.Builder()
+                    .url(url)
+                    .get()
+                    .build();
+
+            client.newCall(request).enqueue(new okhttp3.Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    callback.onError(e.getMessage());
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    try {
+                        if (!response.isSuccessful()) {
+                            callback.onError("HTTP " + response.code() + ": " + response.message());
+                            return;
+                        }
+                        byte[] bytes = response.body().bytes();
+                        saveBytes(bytes, callback);
+                    } catch (Exception e) {
+                        callback.onError(e.getMessage());
+                    }
+                }
+            });
+        } catch (Exception e) {
+            callback.onError(e.getMessage());
+        }
     }
 
     private static void saveBytes(byte[] bytes, Callback callback) {
