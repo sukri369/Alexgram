@@ -159,7 +159,12 @@ public class AiImageClient {
                 }
 
                 JSONObject textPart = new JSONObject();
-                String prefix = (originalImagePath != null && !originalImagePath.isEmpty()) ? "Modify this image based on: " : "Generate an image for: ";
+                String prefix;
+                if (originalImagePath != null && !originalImagePath.isEmpty()) {
+                    prefix = "You are an AI photo editor. Look at the provided photo and modify it according to this instruction: ";
+                } else {
+                    prefix = "Generate an image for: ";
+                }
                 textPart.put("text", prefix + prompt);
                 parts.put(textPart);
                 
@@ -299,13 +304,23 @@ public class AiImageClient {
     }
 
     private static void generateSiliconFlow(String baseUrl, String apiKey, String prompt, String originalImagePath, Callback callback) {
-        // Fallback models in case the primary one is disabled (Error 30003)
-        final String[] fallbackModels = {
-                "black-forest-labs/FLUX.1-schnell",
-                "stabilityai/stable-diffusion-xl-base-1.0",
-                "ZhipuAI/CogView3",
-                "stabilityai/stable-diffusion-v2-1"
-        };
+        // Different fallback list depending on whether we are editing or generating new
+        final String[] fallbackModels;
+        if (originalImagePath != null && !originalImagePath.isEmpty()) {
+            // These models support true Image-to-Image (I2I) / reference images
+            fallbackModels = new String[]{
+                    "stabilityai/stable-diffusion-xl-base-1.0",
+                    "Kwai-Kolors/Kolors",
+                    "THUDM/CogView3Plus"
+            };
+        } else {
+            // High speed text-to-image models
+            fallbackModels = new String[]{
+                    "black-forest-labs/FLUX.1-schnell",
+                    "stabilityai/stable-diffusion-xl-base-1.0",
+                    "THUDM/CogView3Plus"
+            };
+        }
         
         generateSiliconFlowWithRetry(0, fallbackModels, baseUrl, apiKey, prompt, originalImagePath, callback);
     }
@@ -362,8 +377,8 @@ public class AiImageClient {
                     try {
                         String responseData = response.body().string();
                         if (!response.isSuccessful()) {
-                            // If model is disabled (30003), try the next fallback
-                            if (responseData.contains("30003") || responseData.contains("Model disabled")) {
+                            // If model is disabled (30003) or not found (20012), try the next fallback
+                            if (responseData.contains("30003") || responseData.contains("20012") || responseData.contains("Model disabled") || responseData.contains("Model does not exist")) {
                                 AndroidUtilities.runOnUIThread(() -> generateSiliconFlowWithRetry(index + 1, models, baseUrl, apiKey, prompt, originalImagePath, callback));
                                 return;
                             }
