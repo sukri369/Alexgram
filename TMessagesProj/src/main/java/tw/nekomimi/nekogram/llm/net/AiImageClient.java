@@ -580,7 +580,11 @@ public class AiImageClient {
                 File f = new File(originalImagePath);
                 if (f.exists()) {
                     byte[] data = readBytes(f);
-                    json.put("image", Base64.encodeToString(data, Base64.NO_WRAP));
+                    JSONArray imageArray = new JSONArray();
+                    for (byte b : data) {
+                        imageArray.put(b & 0xFF);
+                    }
+                    json.put("image", imageArray);
                     json.put("strength", 0.6);
                 }
             }
