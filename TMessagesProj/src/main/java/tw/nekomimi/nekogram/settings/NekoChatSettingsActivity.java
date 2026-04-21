@@ -479,7 +479,7 @@ public class NekoChatSettingsActivity extends BaseNekoXSettingsActivity implemen
     // AI Image Replacement
     private final AbstractConfigCell headerAiImage = cellGroup.appendCell(new ConfigCellHeader(getString(R.string.NaxAiReplaceTitle)));
     private final AbstractConfigCell aiImageReplaceEnabledRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getAiImageReplaceEnabled(), getString(R.string.NaxAiReplaceImageSummary)));
-    private final String[] aiImageProviders = new String[]{"OpenAI Compatible", "Gemini (Google AI)", "Pollinations.ai (FREE)", "SiliconFlow (Free I2I)"};
+    private final String[] aiImageProviders = new String[]{"OpenAI Compatible", "Gemini (Google AI)", "Pollinations.ai (FREE)", "SiliconFlow (Free I2I)", "AI Horde (Truly Free I2I)"};
     private final AbstractConfigCell aiImageProviderRow = cellGroup.appendCell(new ConfigCellSelectBox(null, NaConfig.INSTANCE.getAiImageProvider(), aiImageProviders, null));
     private final AbstractConfigCell aiImageModelUrlRow = cellGroup.appendCell(new ConfigCellTextInput(null, NaConfig.INSTANCE.getAiImageModelUrl(), "https://api.openai.com/v1", null));
     private final AbstractConfigCell aiImageApiKeyRow = cellGroup.appendCell(new ConfigCellTextInput(null, NaConfig.INSTANCE.getAiImageApiKey(), getString(R.string.LlmApiKey), null));

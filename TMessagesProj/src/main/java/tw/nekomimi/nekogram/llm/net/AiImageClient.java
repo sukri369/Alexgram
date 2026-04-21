@@ -45,6 +45,8 @@ public class AiImageClient {
             generatePollinations(prompt, callback);
         } else if (provider == 3) {
             generateSiliconFlow(baseUrl, apiKey, prompt, originalImagePath, callback);
+        } else if (provider == 4) {
+            generateAiHorde(apiKey, prompt, originalImagePath, callback);
         }
     }
 
@@ -414,6 +416,147 @@ public class AiImageClient {
     }
 
 
+
+    private static void generateAiHorde(String apiKey, String prompt, String originalImagePath, Callback callback) {
+        String url = "https://aihorde.net/api/v2/generate/async";
+        String actualApiKey = (apiKey == null || apiKey.isEmpty()) ? "0000000000" : apiKey;
+
+        try {
+            JSONObject json = new JSONObject();
+            json.put("prompt", prompt);
+            
+            JSONObject params = new JSONObject();
+            params.put("n", 1);
+            params.put("steps", 20);
+            params.put("width", 512);
+            params.put("height", 512);
+            params.put("sampler_name", "k_euler");
+            if (originalImagePath != null && !originalImagePath.isEmpty()) {
+                params.put("denoising_strength", 0.65);
+            }
+            json.put("params", params);
+
+            if (originalImagePath != null && !originalImagePath.isEmpty()) {
+                File f = new File(originalImagePath);
+                if (f.exists()) {
+                    byte[] data = readBytes(f);
+                    String base64 = Base64.encodeToString(data, Base64.NO_WRAP);
+                    json.put("source_image", base64);
+                    json.put("source_processing", "img2img");
+                }
+            }
+
+            JSONArray models = new JSONArray();
+            models.put("stable_diffusion");
+            json.put("models", models);
+
+            RequestBody body = RequestBody.create(json.toString(), HttpClient.MEDIA_TYPE_JSON);
+            Request request = new Request.Builder()
+                    .url(url)
+                    .header("apikey", actualApiKey)
+                    .post(body)
+                    .build();
+
+            client.newCall(request).enqueue(new okhttp3.Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    callback.onError(e.getMessage());
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    try {
+                        String responseData = response.body().string();
+                        if (!response.isSuccessful()) {
+                            callback.onError("AI Horde Error: " + responseData);
+                            return;
+                        }
+                        JSONObject result = new JSONObject(responseData);
+                        String id = result.getString("id");
+                        // Start polling
+                        checkAiHordeStatus(id, actualApiKey, callback, 0);
+                    } catch (Exception e) {
+                        callback.onError(e.getMessage());
+                    }
+                }
+            });
+        } catch (Exception e) {
+            callback.onError(e.getMessage());
+        }
+    }
+
+    private static void checkAiHordeStatus(String id, String apiKey, Callback callback, int attempt) {
+        if (attempt > 60) { // Timeout after ~180s
+            callback.onError("AI Horde request timed out. Please try again.");
+            return;
+        }
+
+        String url = "https://aihorde.net/api/v2/generate/check/" + id;
+        Request request = new Request.Builder()
+                .url(url)
+                .header("apikey", apiKey)
+                .get()
+                .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                callback.onError(e.getMessage());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                try {
+                    String responseData = response.body().string();
+                    JSONObject result = new JSONObject(responseData);
+                    boolean done = result.optBoolean("done", false);
+                    if (done) {
+                        getAiHordeResult(id, apiKey, callback);
+                    } else {
+                        // Poll again after 3 seconds
+                        AndroidUtilities.runOnUIThread(() -> checkAiHordeStatus(id, apiKey, callback, attempt + 1), 3000);
+                    }
+                } catch (Exception e) {
+                    callback.onError(e.getMessage());
+                }
+            }
+        });
+    }
+
+    private static void getAiHordeResult(String id, String apiKey, Callback callback) {
+        String url = "https://aihorde.net/api/v2/generate/status/" + id;
+        Request request = new Request.Builder()
+                .url(url)
+                .header("apikey", apiKey)
+                .get()
+                .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                callback.onError(e.getMessage());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                try {
+                    String responseData = response.body().string();
+                    JSONObject result = new JSONObject(responseData);
+                    JSONArray generations = result.getJSONArray("generations");
+                    if (generations.length() > 0) {
+                        JSONObject first = generations.getJSONObject(0);
+                        String imgData = first.getString("img"); // Horde returns base64 in "img"
+                        byte[] decoded = Base64.decode(imgData, Base64.DEFAULT);
+                        saveBytes(decoded, callback);
+                    } else {
+                        callback.onError("No generations found in AI Horde response");
+                    }
+                } catch (Exception e) {
+                    callback.onError(e.getMessage());
+                }
+            }
+        });
+    }
 
     private static byte[] readBytes(File file) throws IOException {
         long length = file.length();
