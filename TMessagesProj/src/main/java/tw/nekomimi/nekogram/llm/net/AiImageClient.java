@@ -42,7 +42,7 @@ public class AiImageClient {
         } else if (provider == 1) {
             generateGemini(baseUrl, apiKey, prompt, originalImagePath, callback);
         } else if (provider == 2) {
-            generatePollinations(prompt, callback);
+            generatePollinations(prompt, originalImagePath, callback);
         } else if (provider == 3) {
             generateSiliconFlow(baseUrl, apiKey, prompt, originalImagePath, callback);
         } else if (provider == 4) {
@@ -271,15 +271,31 @@ public class AiImageClient {
         });
     }
 
-    private static void generatePollinations(String prompt, Callback callback) {
+    private static void generatePollinations(String prompt, String originalImagePath, Callback callback) {
+        String url = "https://gen.pollinations.ai/v1/images/generations";
+        
         try {
-            String encodedPrompt = java.net.URLEncoder.encode(prompt, "UTF-8");
-            long seed = System.currentTimeMillis();
-            String url = "https://image.pollinations.ai/prompt/" + encodedPrompt + "?width=1024&height=1024&nologo=true&seed=" + seed;
+            JSONObject json = new JSONObject();
+            json.put("prompt", prompt);
+            
+            if (originalImagePath != null && !originalImagePath.isEmpty()) {
+                File f = new File(originalImagePath);
+                if (f.exists()) {
+                    byte[] data = readBytes(f);
+                    String base64 = Base64.encodeToString(data, Base64.NO_WRAP);
+                    json.put("image", "data:image/jpeg;base64," + base64);
+                    json.put("model", "p-image-edit");
+                } else {
+                    json.put("model", "flux");
+                }
+            } else {
+                json.put("model", "flux");
+            }
 
+            RequestBody body = RequestBody.create(json.toString(), HttpClient.MEDIA_TYPE_JSON);
             Request request = new Request.Builder()
                     .url(url)
-                    .get()
+                    .post(body)
                     .build();
 
             client.newCall(request).enqueue(new okhttp3.Callback() {
@@ -291,12 +307,15 @@ public class AiImageClient {
                 @Override
                 public void onResponse(Call call, Response response) throws IOException {
                     try {
+                        String responseData = response.body().string();
                         if (!response.isSuccessful()) {
-                            callback.onError("HTTP " + response.code() + ": " + response.message());
+                            callback.onError("Pollinations.ai Error: " + responseData);
                             return;
                         }
-                        byte[] bytes = response.body().bytes();
-                        saveBytes(bytes, callback);
+                        JSONObject result = new JSONObject(responseData);
+                        JSONArray data = result.getJSONArray("data");
+                        String imageUrl = data.getJSONObject(0).getString("url");
+                        downloadAndSave(imageUrl, callback);
                     } catch (Exception e) {
                         callback.onError(e.getMessage());
                     }
