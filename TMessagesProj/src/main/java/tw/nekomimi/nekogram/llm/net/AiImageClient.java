@@ -298,29 +298,38 @@ public class AiImageClient {
     }
 
     private static void generateSiliconFlow(String baseUrl, String apiKey, String prompt, String originalImagePath, Callback callback) {
-        String url = baseUrl;
-        if (url == null || url.isEmpty() || url.contains("openai.com") || !url.startsWith("http")) {
-            url = "https://api.siliconflow.cn/v1/images/generations";
+        // Fallback models in case the primary one is disabled (Error 30003)
+        final String[] fallbackModels = {
+                "black-forest-labs/FLUX.1-schnell",
+                "stabilityai/stable-diffusion-xl-base-1.0",
+                "ZhipuAI/CogView3",
+                "stabilityai/stable-diffusion-v2-1"
+        };
+        
+        generateSiliconFlowWithRetry(0, fallbackModels, baseUrl, apiKey, prompt, originalImagePath, callback);
+    }
+
+    private static void generateSiliconFlowWithRetry(int index, String[] models, String baseUrl, String apiKey, String prompt, String originalImagePath, Callback callback) {
+        if (index >= models.length) {
+            callback.onError("All SiliconFlow models are currently disabled or restricted. Please check your account balance.");
+            return;
+        }
+
+        String url = "https://api.siliconflow.cn/v1/images/generations";
+        String model = models[index];
+
+        // If user provided a specific model name in the URL field, use it first
+        if (index == 0 && baseUrl != null && !baseUrl.isEmpty()) {
+            if (!baseUrl.startsWith("http")) {
+                model = baseUrl;
+            } else if (!baseUrl.contains("openai.com") && !baseUrl.endsWith("/generations")) {
+                String[] parts = baseUrl.split("/");
+                model = parts[parts.length - 1];
+            }
         }
 
         try {
             JSONObject json = new JSONObject();
-            // Default to FLUX.1-schnell for better free-tier availability
-            String model = "black-forest-labs/FLUX.1-schnell";
-            if (baseUrl != null && !baseUrl.isEmpty()) {
-                if (baseUrl.startsWith("http")) {
-                    // Extract model name from end of URL if it doesn't look like a standard endpoint
-                    if (!baseUrl.endsWith("/generations") && !baseUrl.endsWith("/edits")) {
-                        String[] parts = baseUrl.split("/");
-                        model = parts[parts.length - 1];
-                        url = "https://api.siliconflow.cn/v1/images/generations";
-                    }
-                } else {
-                    // If user just typed a model name like "stabilityai/sdxl"
-                    model = baseUrl;
-                    url = "https://api.siliconflow.cn/v1/images/generations";
-                }
-            }
             json.put("model", model);
             json.put("prompt", prompt);
 
@@ -333,6 +342,7 @@ public class AiImageClient {
                 }
             }
 
+            final String currentModel = model;
             RequestBody body = RequestBody.create(json.toString(), HttpClient.MEDIA_TYPE_JSON);
             Request request = new Request.Builder()
                     .url(url)
@@ -351,7 +361,12 @@ public class AiImageClient {
                     try {
                         String responseData = response.body().string();
                         if (!response.isSuccessful()) {
-                            callback.onError("SiliconFlow Error: " + responseData);
+                            // If model is disabled (30003), try the next fallback
+                            if (responseData.contains("30003") || responseData.contains("Model disabled")) {
+                                AndroidUtilities.runOnUIThread(() -> generateSiliconFlowWithRetry(index + 1, models, baseUrl, apiKey, prompt, originalImagePath, callback));
+                                return;
+                            }
+                            callback.onError("SiliconFlow (" + currentModel + ") Error: " + responseData);
                             return;
                         }
                         JSONObject result = new JSONObject(responseData);
@@ -370,7 +385,7 @@ public class AiImageClient {
                                 saveBytes(decoded, callback);
                             }
                         } else {
-                            callback.onError("No image in SiliconFlow response: " + responseData);
+                            callback.onError("No image in response: " + responseData);
                         }
                     } catch (Exception e) {
                         callback.onError(e.getMessage());
