@@ -98,7 +98,7 @@ public class AiImageClient {
     private static void generateGemini(String baseUrl, String apiKey, String prompt, Callback callback) {
         String url = baseUrl;
         if (url == null || url.isEmpty()) {
-            url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+            url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent";
         } else if (!url.startsWith("http")) {
             url = "https://generativelanguage.googleapis.com/v1beta/models/" + url;
         }
@@ -107,7 +107,7 @@ public class AiImageClient {
         boolean isPredict = url.contains(":predict");
         if (!isPredict && !url.contains(":generateContent")) {
             // Default to generateContent for gemini-2.0, predict for others
-            if (url.contains("gemini-2.0")) {
+            if (url.contains("gemini-2.0") || url.contains("gemini-exp")) {
                 url += ":generateContent";
             } else {
                 url += ":predict";
@@ -147,8 +147,7 @@ public class AiImageClient {
                 
                 JSONObject generationConfig = new JSONObject();
                 JSONArray modalities = new JSONArray();
-                modalities.put("TEXT");
-                modalities.put("IMAGE");
+                modalities.put("IMAGE"); // Only request IMAGE to avoid modality text,image support error
                 generationConfig.put("responseModalities", modalities);
                 json.put("generationConfig", generationConfig);
             }
@@ -170,7 +169,11 @@ public class AiImageClient {
                     try {
                         String responseData = response.body().string();
                         if (!response.isSuccessful()) {
-                            callback.onError("HTTP " + response.code() + " for " + finalUrl + ": " + responseData);
+                            String errorMsg = "HTTP " + response.code() + " for " + finalUrl + ": " + responseData;
+                            if (response.code() == 400 || response.code() == 404) {
+                                errorMsg += "\n\nTip: Ensure this model is enabled for your API key in Google AI Studio.";
+                            }
+                            callback.onError(errorMsg);
                             return;
                         }
                         
