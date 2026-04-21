@@ -391,4 +391,9 @@
     <string name="NaxAiReplace">Replace</string>
     <string name="NaxAiKeepOriginal">Keep Original</string>
     <string name="NaxAiError">AI Generation Error: %1$s</string>
+
+    <string name="AiImageReplaceEnabled">Enable AI Image Replacement</string>
+    <string name="AiImageProvider">AI Provider</string>
+    <string name="AiImageModelUrl">API Endpoint / Model URL</string>
+    <string name="AiImageApiKey">API Key</string>
 </resources>

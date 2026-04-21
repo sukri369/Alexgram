@@ -100,8 +100,14 @@ public class AiImageClient {
         if (url == null || url.isEmpty()) {
             url = "https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict";
         }
+
+        // Add :predict if missing for Imagen models
+        if (!url.contains(":") && !url.endsWith(":predict") && !url.endsWith(":generateContent")) {
+            url += ":predict";
+        }
+
         if (!url.contains("?key=") && apiKey != null && !apiKey.isEmpty()) {
-            url += "?key=" + apiKey;
+            url += (url.contains("?") ? "&" : "?") + "key=" + apiKey;
         }
 
         try {
