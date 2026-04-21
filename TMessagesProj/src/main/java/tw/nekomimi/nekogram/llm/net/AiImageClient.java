@@ -10,6 +10,7 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
@@ -242,7 +243,7 @@ public class AiImageClient {
     }
 
     private static void downloadAndSave(String url, Callback callback) {
-        Request request = new Request.Builder().url(url).get().build();
+        Request request = new Request.Builder().url(url).build();
         client.newCall(request).enqueue(new okhttp3.Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -251,11 +252,11 @@ public class AiImageClient {
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-                if (!response.isSuccessful()) {
-                    callback.onError("Download HTTP error: " + response.code());
-                    return;
+                if (response.isSuccessful() && response.body() != null) {
+                    saveBytes(response.body().bytes(), callback);
+                } else {
+                    callback.onError("Download failed: HTTP " + response.code());
                 }
-                saveBytes(response.body().bytes(), callback);
             }
         });
     }
@@ -369,24 +370,7 @@ public class AiImageClient {
         }
     }
 
-    private static void downloadAndSave(String url, Callback callback) {
-        Request request = new Request.Builder().url(url).build();
-        client.newCall(request).enqueue(new okhttp3.Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                callback.onError(e.getMessage());
-            }
 
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                if (response.isSuccessful()) {
-                    saveBytes(response.body().bytes(), callback);
-                } else {
-                    callback.onError("Download failed: " + response.message());
-                }
-            }
-        });
-    }
 
     private static byte[] readBytes(File file) throws IOException {
         long length = file.length();
