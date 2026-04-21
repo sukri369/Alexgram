@@ -98,17 +98,21 @@ public class AiImageClient {
     private static void generateGemini(String baseUrl, String apiKey, String prompt, Callback callback) {
         String url = baseUrl;
         if (url == null || url.isEmpty()) {
-            url = "https://generativelanguage.googleapis.com/v1/models/imagen-3.0-generate-001:predict";
+            url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
         } else if (!url.startsWith("http")) {
-            url = "https://generativelanguage.googleapis.com/v1/models/" + url;
+            url = "https://generativelanguage.googleapis.com/v1beta/models/" + url;
         }
 
-        // Detect if action (like :predict) is missing.
-        // We look for a colon after the initial protocol (https://)
-        int protocolEnd = url.indexOf("//");
-        String urlPath = protocolEnd != -1 ? url.substring(protocolEnd + 2) : url;
-        if (!urlPath.contains(":") && !urlPath.contains("?")) {
-            url += ":predict";
+        // Determine if it's specialized (predict) or multimodal (generateContent)
+        boolean isPredict = url.contains(":predict");
+        if (!isPredict && !url.contains(":generateContent")) {
+            // Default to generateContent for gemini-2.0, predict for others
+            if (url.contains("gemini-2.0")) {
+                url += ":generateContent";
+            } else {
+                url += ":predict";
+                isPredict = true;
+            }
         }
 
         if (!url.contains("?key=") && apiKey != null && !apiKey.isEmpty()) {
@@ -116,16 +120,38 @@ public class AiImageClient {
         }
 
         final String finalUrl = url;
+        final boolean finalIsPredict = isPredict;
 
         try {
-            JSONObject instances = new JSONObject();
-            instances.put("prompt", prompt);
-            
-            JSONArray instancesArray = new JSONArray();
-            instancesArray.put(instances);
-
             JSONObject json = new JSONObject();
-            json.put("instances", instancesArray);
+            if (finalIsPredict) {
+                // Imagen predict format
+                JSONObject instances = new JSONObject();
+                instances.put("prompt", prompt);
+                JSONArray instancesArray = new JSONArray();
+                instancesArray.put(instances);
+                json.put("instances", instancesArray);
+            } else {
+                // Gemini generateContent multimodal format
+                JSONArray parts = new JSONArray();
+                JSONObject textPart = new JSONObject();
+                textPart.put("text", "Generate an image for: " + prompt);
+                parts.put(textPart);
+                
+                JSONObject content = new JSONObject();
+                content.put("parts", parts);
+                
+                JSONArray contents = new JSONArray();
+                contents.put(content);
+                json.put("contents", contents);
+                
+                JSONObject generationConfig = new JSONObject();
+                JSONArray modalities = new JSONArray();
+                modalities.put("TEXT");
+                modalities.put("IMAGE");
+                generationConfig.put("responseModalities", modalities);
+                json.put("generationConfig", generationConfig);
+            }
 
             RequestBody body = RequestBody.create(json.toString(), HttpClient.MEDIA_TYPE_JSON);
             Request request = new Request.Builder()
@@ -147,15 +173,37 @@ public class AiImageClient {
                             callback.onError("HTTP " + response.code() + " for " + finalUrl + ": " + responseData);
                             return;
                         }
-                        JSONObject result = new JSONObject(responseData);
-                        JSONArray predictions = result.getJSONArray("predictions");
-                        JSONObject first = predictions.getJSONObject(0);
-                        if (first.has("bytesBase64Encoded")) {
-                             String base64 = first.getString("bytesBase64Encoded");
-                             byte[] decoded = Base64.decode(base64, Base64.DEFAULT);
-                             saveBytes(decoded, callback);
+                        
+                        if (finalIsPredict) {
+                            JSONObject result = new JSONObject(responseData);
+                            JSONArray predictions = result.getJSONArray("predictions");
+                            JSONObject first = predictions.getJSONObject(0);
+                            if (first.has("bytesBase64Encoded")) {
+                                 String base64 = first.getString("bytesBase64Encoded");
+                                 byte[] decoded = Base64.decode(base64, Base64.DEFAULT);
+                                 saveBytes(decoded, callback);
+                            } else {
+                                 callback.onError("No image data in response from " + finalUrl);
+                            }
                         } else {
-                             callback.onError("No image data in response from " + finalUrl);
+                            JSONObject result = new JSONObject(responseData);
+                            JSONArray candidates = result.getJSONArray("candidates");
+                            JSONObject firstCand = candidates.getJSONObject(0);
+                            JSONObject content = firstCand.getJSONObject("content");
+                            JSONArray parts = content.getJSONArray("parts");
+                            for (int i = 0; i < parts.length(); i++) {
+                                JSONObject part = parts.getJSONObject(i);
+                                if (part.has("inlineData")) {
+                                    JSONObject inlineData = part.getJSONObject("inlineData");
+                                    if (inlineData.getString("mimeType").startsWith("image/")) {
+                                        String base64 = inlineData.getString("data");
+                                        byte[] decoded = Base64.decode(base64, Base64.DEFAULT);
+                                        saveBytes(decoded, callback);
+                                        return;
+                                    }
+                                }
+                            }
+                            callback.onError("No image in Gemini multimodal response from " + finalUrl);
                         }
                     } catch (Exception e) {
                         callback.onError(e.getMessage());
