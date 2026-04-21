@@ -305,9 +305,21 @@ public class AiImageClient {
 
         try {
             JSONObject json = new JSONObject();
-            String model = "stabilityai/stable-diffusion-xl-base-1.0";
-            if (baseUrl != null && !baseUrl.isEmpty() && !baseUrl.startsWith("http")) {
-                model = baseUrl;
+            // Default to FLUX.1-schnell for better free-tier availability
+            String model = "black-forest-labs/FLUX.1-schnell";
+            if (baseUrl != null && !baseUrl.isEmpty()) {
+                if (baseUrl.startsWith("http")) {
+                    // Extract model name from end of URL if it doesn't look like a standard endpoint
+                    if (!baseUrl.endsWith("/generations") && !baseUrl.endsWith("/edits")) {
+                        String[] parts = baseUrl.split("/");
+                        model = parts[parts.length - 1];
+                        url = "https://api.siliconflow.cn/v1/images/generations";
+                    }
+                } else {
+                    // If user just typed a model name like "stabilityai/sdxl"
+                    model = baseUrl;
+                    url = "https://api.siliconflow.cn/v1/images/generations";
+                }
             }
             json.put("model", model);
             json.put("prompt", prompt);
