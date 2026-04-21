@@ -851,6 +851,30 @@ object NaConfig {
             ConfigItem.configTypeString,
             ""
         )
+    val aiImageReplaceEnabled =
+        addConfig(
+            "AiImageReplaceEnabled",
+            ConfigItem.configTypeBool,
+            false
+        )
+    val aiImageProvider =
+        addConfig(
+            "AiImageProvider",
+            ConfigItem.configTypeInt,
+            0
+        )
+    val aiImageModelUrl =
+        addConfig(
+            "AiImageModelUrl",
+            ConfigItem.configTypeString,
+            ""
+        )
+    val aiImageApiKey =
+        addConfig(
+            "AiImageApiKey",
+            ConfigItem.configTypeString,
+            ""
+        )
     val llmProviderOpenRouterModel =
         addConfig(
             "LlmProviderOpenRouterModel",
