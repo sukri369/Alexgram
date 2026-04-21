@@ -24159,15 +24159,11 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         } catch (Throwable e) {
             FileLog.e(e);
         }
-    }    private void updateWindowHdrColorMode() {
-        if (Build.VERSION.SDK_INT < 34) {
-            return;
-        }
     }
 
     private void updateAiImageButton() {
         if (aiImageButton == null) return;
-        boolean enabled = NaConfig.INSTANCE.getAiImageReplaceEnabled().Bool();
+        boolean enabled = NaConfig.getAiImageReplaceEnabled();
         boolean isPhoto = !imagesArrLocals.isEmpty() && currentIndex >= 0 && currentIndex < imagesArrLocals.size() && !isCurrentVideo;
         boolean canReplace = sendPhotoType != -1;
 
@@ -24225,9 +24221,9 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         progressDialog.show();
 
         AiImageClient.generateImage(
-            NaConfig.INSTANCE.getAiImageProvider().Int(),
-            NaConfig.INSTANCE.getAiImageModelUrl().Chat(),
-            NaConfig.INSTANCE.getAiImageApiKey().Chat(),
+            NaConfig.getAiImageProvider(),
+            NaConfig.getAiImageModelUrl(),
+            NaConfig.getAiImageApiKey(),
             prompt,
             new AiImageClient.Callback() {
                 @Override
