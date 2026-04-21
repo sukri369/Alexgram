@@ -98,7 +98,7 @@ public class AiImageClient {
     private static void generateGemini(String baseUrl, String apiKey, String prompt, Callback callback) {
         String url = baseUrl;
         if (url == null || url.isEmpty()) {
-            url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent";
+            url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent";
         } else if (!url.startsWith("http")) {
             url = "https://generativelanguage.googleapis.com/v1beta/models/" + url;
         }
@@ -106,8 +106,8 @@ public class AiImageClient {
         // Determine if it's specialized (predict) or multimodal (generateContent)
         boolean isPredict = url.contains(":predict");
         if (!isPredict && !url.contains(":generateContent")) {
-            // Default to generateContent for gemini-2.0, predict for others
-            if (url.contains("gemini-2.0") || url.contains("gemini-exp")) {
+            // Updated detection for 2.5 and 3.1 series
+            if (url.contains("gemini-1.5") || url.contains("gemini-2.0") || url.contains("gemini-2.5") || url.contains("gemini-3.1") || url.contains("gemini-exp")) {
                 url += ":generateContent";
             } else {
                 url += ":predict";
@@ -147,7 +147,7 @@ public class AiImageClient {
                 
                 JSONObject generationConfig = new JSONObject();
                 JSONArray modalities = new JSONArray();
-                modalities.put("IMAGE"); // Only request IMAGE to avoid modality text,image support error
+                modalities.put("IMAGE"); // Only request IMAGE to avoid modality support error
                 generationConfig.put("responseModalities", modalities);
                 json.put("generationConfig", generationConfig);
             }
@@ -169,9 +169,9 @@ public class AiImageClient {
                     try {
                         String responseData = response.body().string();
                         if (!response.isSuccessful()) {
-                            String errorMsg = "HTTP " + response.code() + " for " + finalUrl + ": " + responseData;
+                            String errorMsg = "AI Generation Error: HTTP " + response.code() + " for " + finalUrl + ": " + responseData;
                             if (response.code() == 400 || response.code() == 404) {
-                                errorMsg += "\n\nTip: Ensure this model is enabled for your API key in Google AI Studio.";
+                                errorMsg += "\n\nTip: Google updated their model list for April 2026. Ensure you have the latest Gemini 2.5 or 3.1 models enabled in your AI Studio.";
                             }
                             callback.onError(errorMsg);
                             return;
