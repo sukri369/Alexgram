@@ -98,17 +98,24 @@ public class AiImageClient {
     private static void generateGemini(String baseUrl, String apiKey, String prompt, Callback callback) {
         String url = baseUrl;
         if (url == null || url.isEmpty()) {
-            url = "https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict";
+            url = "https://generativelanguage.googleapis.com/v1/models/imagen-3.0-generate-001:predict";
+        } else if (!url.startsWith("http")) {
+            url = "https://generativelanguage.googleapis.com/v1/models/" + url;
         }
 
-        // Add :predict if missing for Imagen models
-        if (!url.contains(":") && !url.endsWith(":predict") && !url.endsWith(":generateContent")) {
+        // Detect if action (like :predict) is missing.
+        // We look for a colon after the initial protocol (https://)
+        int protocolEnd = url.indexOf("//");
+        String urlPath = protocolEnd != -1 ? url.substring(protocolEnd + 2) : url;
+        if (!urlPath.contains(":") && !urlPath.contains("?")) {
             url += ":predict";
         }
 
         if (!url.contains("?key=") && apiKey != null && !apiKey.isEmpty()) {
             url += (url.contains("?") ? "&" : "?") + "key=" + apiKey;
         }
+
+        final String finalUrl = url;
 
         try {
             JSONObject instances = new JSONObject();
@@ -122,7 +129,7 @@ public class AiImageClient {
 
             RequestBody body = RequestBody.create(json.toString(), HttpClient.MEDIA_TYPE_JSON);
             Request request = new Request.Builder()
-                    .url(url)
+                    .url(finalUrl)
                     .post(body)
                     .build();
 
@@ -137,7 +144,7 @@ public class AiImageClient {
                     try {
                         String responseData = response.body().string();
                         if (!response.isSuccessful()) {
-                            callback.onError("HTTP " + response.code() + ": " + responseData);
+                            callback.onError("HTTP " + response.code() + " for " + finalUrl + ": " + responseData);
                             return;
                         }
                         JSONObject result = new JSONObject(responseData);
@@ -148,7 +155,7 @@ public class AiImageClient {
                              byte[] decoded = Base64.decode(base64, Base64.DEFAULT);
                              saveBytes(decoded, callback);
                         } else {
-                             callback.onError("No image data in response");
+                             callback.onError("No image data in response from " + finalUrl);
                         }
                     } catch (Exception e) {
                         callback.onError(e.getMessage());
