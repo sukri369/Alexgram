@@ -397,5 +397,5 @@
     <string name="AiImageModelUrl">API Endpoint / Model URL</string>
     <string name="AiImageApiKey">API Key</string>
     <string name="usePollinationsAi">Use Pollinations.ai</string>
-    <string name="usePollinationsAiAbout">Use Pollinations.ai for free AI Reply, Summarize, and Assistance. No API key required.</string>
+    <string name="usePollinationsAiAbout">Use Pollinations.ai for free AI Reply, Summarize, and AI Assistance. No API key required.</string>
 </resources>

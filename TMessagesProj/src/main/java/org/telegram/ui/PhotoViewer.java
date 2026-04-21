@@ -24234,11 +24234,10 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         progressDialog.setCanCancel(false);
         progressDialog.show();
 
-        boolean usePollinations = NaConfig.INSTANCE.getUsePollinationsAi().Bool();
         AiImageClient.generateImage(
-            usePollinations ? 2 : NaConfig.INSTANCE.getAiImageProvider().Int(),
-            usePollinations ? null : NaConfig.INSTANCE.getAiImageModelUrl().String(),
-            usePollinations ? null : NaConfig.INSTANCE.getAiImageApiKey().String(),
+            NaConfig.INSTANCE.getAiImageProvider().Int(),
+            NaConfig.INSTANCE.getAiImageModelUrl().String(),
+            NaConfig.INSTANCE.getAiImageApiKey().String(),
             prompt,
             imagePath,
             new AiImageClient.Callback() {
