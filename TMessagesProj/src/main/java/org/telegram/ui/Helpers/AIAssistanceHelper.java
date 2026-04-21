@@ -51,6 +51,22 @@ public class AIAssistanceHelper {
                 "Identity rule: when the user asks about 'my name' or 'who am I', refer to the account owner from context, never other chat participants. " +
                 "User prompt: " + prompt;
 
+
+        if (NaConfig.INSTANCE.getUsePollinationsAi().Bool()) {
+            callAiApi("https://text.pollinations.ai/v1/chat/completions", null, "openai", decoratedPrompt, chatContext, null, new AiGenerationCallback() {
+                @Override
+                public void onSuccess(String result) {
+                    AndroidUtilities.runOnUIThread(() -> callback.onSuccess(result));
+                }
+
+                @Override
+                public void onError(String error) {
+                    AndroidUtilities.runOnUIThread(() -> callback.onError(error));
+                }
+            });
+            return;
+        }
+
         final String url1;
         final String key1;
 
@@ -62,7 +78,7 @@ public class AIAssistanceHelper {
             return;
         }
 
-        callAiApi(url1, key1, decoratedPrompt, chatContext, null, new AiGenerationCallback() {
+        callAiApi(url1, key1, "gpt-4o", decoratedPrompt, chatContext, null, new AiGenerationCallback() {
             @Override
             public void onSuccess(String result) {
                 AndroidUtilities.runOnUIThread(() -> callback.onSuccess(result));
@@ -78,7 +94,7 @@ public class AIAssistanceHelper {
                         return;
                     }
 
-                    callAiApi(url2, key2, decoratedPrompt, chatContext, null, new AiGenerationCallback() {
+                    callAiApi(url2, key2, "gpt-4o", decoratedPrompt, chatContext, null, new AiGenerationCallback() {
                         @Override
                         public void onSuccess(String result) {
                             AndroidUtilities.runOnUIThread(() -> callback.onSuccess(result));
@@ -96,7 +112,7 @@ public class AIAssistanceHelper {
         });
     }
 
-    public static void callAiApi(String apiUrl, String apiKey, String userPrompt, String originalMessageText, File imageFile, AiGenerationCallback callback) {
+    public static void callAiApi(String apiUrl, String apiKey, String model, String userPrompt, String originalMessageText, File imageFile, AiGenerationCallback callback) {
         if (TextUtils.isEmpty(apiUrl)) {
             callback.onError("API URL is not configured.");
             return;
@@ -154,7 +170,7 @@ public class AIAssistanceHelper {
                 jsonBody.put("contents", contents);
 
             } else {
-                jsonBody.put("model", "gpt-4o"); 
+                jsonBody.put("model", model != null ? model : "gpt-4o"); 
 
                 JSONArray messages = new JSONArray();
 

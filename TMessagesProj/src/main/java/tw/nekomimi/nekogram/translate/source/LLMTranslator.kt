@@ -169,13 +169,14 @@ object LLMTranslator : Translator {
 
     @Throws(IOException::class, RateLimitException::class, UnsupportedOperationException::class)
     private fun doLLMTranslate(to: String, query: String): String {
-        val apiKey = getNextApiKey() ?: throw UnsupportedOperationException(getString(R.string.ApiKeyNotSet))
-        val apiKeyForLog = apiKey.takeLast(2)
+        val usePollinations = NaConfig.usePollinationsAi.Bool()
+        val apiKey = if (usePollinations) "no-key" else getNextApiKey() ?: throw UnsupportedOperationException(getString(R.string.ApiKeyNotSet))
+        val apiKeyForLog = if (usePollinations) "pollinations" else apiKey.takeLast(2)
         if (BuildVars.LOGS_ENABLED) Log.d("LLMTranslator", "createPost: Bearer $apiKeyForLog")
 
         val llmProviderPreset = NaConfig.llmProviderPreset.Int()
-        val apiUrl = LlmConfig.getEffectiveBaseUrl(llmProviderPreset)
-        val model = LlmConfig.getEffectiveModelName(llmProviderPreset)
+        val apiUrl = if (usePollinations) "https://text.pollinations.ai/v1" else LlmConfig.getEffectiveBaseUrl(llmProviderPreset)
+        val model = if (usePollinations) "openai" else LlmConfig.getEffectiveModelName(llmProviderPreset)
 
         val configuredSystemPrompt = NaConfig.llmSystemPrompt.String()
         val hasCustomSystemPrompt = !configuredSystemPrompt.isNullOrEmpty()

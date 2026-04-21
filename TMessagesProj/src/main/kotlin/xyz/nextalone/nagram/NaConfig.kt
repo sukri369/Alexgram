@@ -1542,6 +1542,12 @@ object NaConfig {
             ConfigItem.configTypeBool,
             false
         )
+    val usePollinationsAi =
+        addConfig(
+            "usePollinationsAi",
+            ConfigItem.configTypeBool,
+            false
+        )
     val aiModelUrl =
         addConfig(
             "aiModelUrl",
