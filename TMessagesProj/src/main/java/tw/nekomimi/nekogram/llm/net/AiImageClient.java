@@ -42,7 +42,7 @@ public class AiImageClient {
         } else if (provider == 1) {
             generateGemini(baseUrl, apiKey, prompt, originalImagePath, callback);
         } else if (provider == 2) {
-            generatePollinations(prompt, originalImagePath, callback);
+            generatePollinations(prompt, originalImagePath, apiKey, callback);
         } else if (provider == 3) {
             generateSiliconFlow(baseUrl, apiKey, prompt, originalImagePath, callback);
         } else if (provider == 4) {
@@ -271,59 +271,72 @@ public class AiImageClient {
         });
     }
 
-    private static void generatePollinations(String prompt, String originalImagePath, Callback callback) {
+    private static void generatePollinations(String prompt, String originalImagePath, String apiKey, Callback callback) {
+        // If no image is provided or no API key is found, use the 100% free keyless GET endpoint
+        if ((originalImagePath == null || originalImagePath.isEmpty()) || (apiKey == null || apiKey.isEmpty())) {
+            try {
+                String encodedPrompt = java.net.URLEncoder.encode(prompt, "UTF-8");
+                long seed = System.currentTimeMillis();
+                String url = "https://image.pollinations.ai/prompt/" + encodedPrompt + "?width=1024&height=1024&nologo=true&seed=" + seed;
+
+                Request request = new Request.Builder().url(url).get().build();
+                client.newCall(request).enqueue(new okhttp3.Callback() {
+                    @Override
+                    public void onFailure(Call call, IOException e) { callback.onError(e.getMessage()); }
+                    @Override
+                    public void onResponse(Call call, Response response) throws IOException {
+                        try {
+                            if (!response.isSuccessful()) {
+                                callback.onError("Pollinations.ai Free Error: " + response.code());
+                                return;
+                            }
+                            saveBytes(response.body().bytes(), callback);
+                        } catch (Exception e) { callback.onError(e.getMessage()); }
+                    }
+                });
+            } catch (Exception e) { callback.onError(e.getMessage()); }
+            return;
+        }
+
+        // If we have an image and a key, use the professional V2 Hub for Image-to-Image
         String url = "https://gen.pollinations.ai/v1/images/generations";
-        
         try {
             JSONObject json = new JSONObject();
             json.put("prompt", prompt);
-            
-            if (originalImagePath != null && !originalImagePath.isEmpty()) {
-                File f = new File(originalImagePath);
-                if (f.exists()) {
-                    byte[] data = readBytes(f);
-                    String base64 = Base64.encodeToString(data, Base64.NO_WRAP);
-                    json.put("image", "data:image/jpeg;base64," + base64);
-                    json.put("model", "p-image-edit");
-                } else {
-                    json.put("model", "flux");
-                }
-            } else {
-                json.put("model", "flux");
+            File f = new File(originalImagePath);
+            if (f.exists()) {
+                byte[] data = readBytes(f);
+                String base64 = Base64.encodeToString(data, Base64.NO_WRAP);
+                json.put("image", "data:image/jpeg;base64," + base64);
+                json.put("model", "p-image-edit");
             }
 
             RequestBody body = RequestBody.create(json.toString(), HttpClient.MEDIA_TYPE_JSON);
             Request request = new Request.Builder()
                     .url(url)
+                    .header("Authorization", "Bearer " + apiKey)
                     .post(body)
                     .build();
 
             client.newCall(request).enqueue(new okhttp3.Callback() {
                 @Override
-                public void onFailure(Call call, IOException e) {
-                    callback.onError(e.getMessage());
-                }
-
+                public void onFailure(Call call, IOException e) { callback.onError(e.getMessage()); }
                 @Override
                 public void onResponse(Call call, Response response) throws IOException {
                     try {
                         String responseData = response.body().string();
                         if (!response.isSuccessful()) {
-                            callback.onError("Pollinations.ai Error: " + responseData);
+                            callback.onError("Pollinations.ai Pro Error: " + responseData);
                             return;
                         }
                         JSONObject result = new JSONObject(responseData);
                         JSONArray data = result.getJSONArray("data");
                         String imageUrl = data.getJSONObject(0).getString("url");
                         downloadAndSave(imageUrl, callback);
-                    } catch (Exception e) {
-                        callback.onError(e.getMessage());
-                    }
+                    } catch (Exception e) { callback.onError(e.getMessage()); }
                 }
             });
-        } catch (Exception e) {
-            callback.onError(e.getMessage());
-        }
+        } catch (Exception e) { callback.onError(e.getMessage()); }
     }
 
     private static void generateSiliconFlow(String baseUrl, String apiKey, String prompt, String originalImagePath, Callback callback) {
