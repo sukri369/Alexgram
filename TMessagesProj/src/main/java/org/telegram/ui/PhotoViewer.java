@@ -2368,7 +2368,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
 
             canvas.saveLayer(0, 0, getMeasuredWidth(), getMeasuredHeight(), null);
 
-            paint.setAlpha((int) (alpha * 100));
+            paint.setAlpha((int) (alpha * 80));
 
             float videoRatio = 1f;
             if (videoPlayer != null && videoPlayer.player != null) {
@@ -2394,8 +2394,8 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 videoHeight = videoWidth / videoRatio;
             }
 
-            float scaleX = (videoWidth / bitmap.getWidth()) * 1.35f;
-            float scaleY = (videoHeight / bitmap.getHeight()) * 1.35f;
+            float scaleX = (videoWidth / bitmap.getWidth()) * 1.3f;
+            float scaleY = (videoHeight / bitmap.getHeight()) * 1.3f;
 
             matrix.reset();
             matrix.postScale(scaleX, scaleY);
@@ -4891,6 +4891,9 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 animatingImageView.measure(MeasureSpec.makeMeasureSpec(layoutParams.width, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(layoutParams.height, MeasureSpec.AT_MOST));
                 containerView.measure(MeasureSpec.makeMeasureSpec(widthSize, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(heightSize, MeasureSpec.EXACTLY));
                 navigationBar.measure(MeasureSpec.makeMeasureSpec(widthSize, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(navigationBarHeight, MeasureSpec.EXACTLY));
+                if (ambientModeView != null) {
+                    ambientModeView.measure(MeasureSpec.makeMeasureSpec(widthSize, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(heightSize, MeasureSpec.EXACTLY));
+                }
             }
 
             @SuppressWarnings("DrawAllocation")
@@ -4899,6 +4902,9 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 animatingImageView.layout(getPaddingLeft(), 0, getPaddingLeft() + animatingImageView.getMeasuredWidth(), animatingImageView.getMeasuredHeight());
                 containerView.layout(getPaddingLeft(), 0, getPaddingLeft() + containerView.getMeasuredWidth(), containerView.getMeasuredHeight());
                 navigationBar.layout(getPaddingLeft(), containerView.getMeasuredHeight(), navigationBar.getMeasuredWidth(), containerView.getMeasuredHeight() + navigationBar.getMeasuredHeight());
+                if (ambientModeView != null) {
+                    ambientModeView.layout(0, 0, getMeasuredWidth(), getMeasuredHeight());
+                }
                 wasLayout = true;
                 if (changed) {
                     if (!dontResetZoomOnFirstLayout) {
@@ -4987,6 +4993,9 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 if (isVisible) {
                     blackPaint.setAlpha(backgroundDrawable.getAlpha());
                     canvas.drawRect(0, getMeasuredHeight(), getMeasuredWidth(), getMeasuredHeight() + insets.bottom, blackPaint);
+                }
+                if (ambientModeView != null && NaConfig.INSTANCE.getAmbientMode().Bool() && isPlaying) {
+                    ambientModeView.draw(canvas);
                 }
             }
 
@@ -5186,8 +5195,6 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                         WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS;
 
         ambientModeView = new AmbientModeView(activity);
-        ambientModeView.setTranslationZ(-100f);
-        containerView.addView(ambientModeView, 0, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
         paintingOverlay = new PaintingOverlay(parentActivity);
         containerView.addView(paintingOverlay, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
@@ -11599,6 +11606,9 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             videoTextureView.getBitmap(ambientBitmap);
             Utilities.blurBitmap(ambientBitmap, 7, 1, 32, 32, ambientBitmap.getRowBytes());
             ambientModeView.setBitmap(ambientBitmap);
+            if (windowView != null) {
+                windowView.invalidate();
+            }
         } else if (videoSurfaceView != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             Surface surface = videoSurfaceView.getHolder().getSurface();
             if (surface != null && surface.isValid()) {
@@ -11606,6 +11616,9 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                     if (result == PixelCopy.SUCCESS && ambientBitmap != null && !ambientBitmap.isRecycled()) {
                         Utilities.blurBitmap(ambientBitmap, 7, 1, 32, 32, ambientBitmap.getRowBytes());
                         ambientModeView.setBitmap(ambientBitmap);
+                        if (windowView != null) {
+                            windowView.invalidate();
+                        }
                     }
                 }, new Handler(Looper.getMainLooper()));
             }
