@@ -272,33 +272,63 @@ public class AiImageClient {
     }
 
     private static void generatePollinations(String prompt, String originalImagePath, String apiKey, Callback callback) {
-        // If no image is provided or no API key is found, use the 100% free keyless GET endpoint
-        if ((originalImagePath == null || originalImagePath.isEmpty()) || (apiKey == null || apiKey.isEmpty())) {
-            try {
-                String encodedPrompt = java.net.URLEncoder.encode(prompt, "UTF-8");
-                long seed = System.currentTimeMillis();
-                String url = "https://image.pollinations.ai/prompt/" + encodedPrompt + "?width=1024&height=1024&nologo=true&seed=" + seed;
+        // If no image is provided or no API key is found, use the 100% free keyless path
+        if ((apiKey == null || apiKey.isEmpty())) {
+            if (originalImagePath != null && !originalImagePath.isEmpty()) {
+                // To do Image-to-Image on Pollinations for free, we must first host the image publicly
+                uploadToAnonymousHost(originalImagePath, url -> {
+                    try {
+                        String encodedPrompt = java.net.URLEncoder.encode(prompt, "UTF-8");
+                        String encodedUrl = java.net.URLEncoder.encode(url, "UTF-8");
+                        long seed = System.currentTimeMillis();
+                        // Primary image.pollinations.ai endpoint for high speed keyless I2I
+                        String finalUrl = "https://image.pollinations.ai/prompt/" + encodedPrompt + "?image=" + encodedUrl + "&width=1024&height=1024&nologo=true&seed=" + seed + "&model=flux";
 
-                Request request = new Request.Builder().url(url).get().build();
-                client.newCall(request).enqueue(new okhttp3.Callback() {
-                    @Override
-                    public void onFailure(Call call, IOException e) { callback.onError(e.getMessage()); }
-                    @Override
-                    public void onResponse(Call call, Response response) throws IOException {
-                        try {
-                            if (!response.isSuccessful()) {
-                                callback.onError("Pollinations.ai Free Error: " + response.code());
-                                return;
+                        Request request = new Request.Builder().url(finalUrl).get().build();
+                        client.newCall(request).enqueue(new okhttp3.Callback() {
+                            @Override
+                            public void onFailure(Call call, IOException e) { callback.onError(e.getMessage()); }
+                            @Override
+                            public void onResponse(Call call, Response response) throws IOException {
+                                try {
+                                    if (!response.isSuccessful()) {
+                                        callback.onError("Pollinations.ai Free Error: " + response.code());
+                                        return;
+                                    }
+                                    saveBytes(response.body().bytes(), callback);
+                                } catch (Exception e) { callback.onError(e.getMessage()); }
                             }
-                            saveBytes(response.body().bytes(), callback);
-                        } catch (Exception e) { callback.onError(e.getMessage()); }
-                    }
-                });
-            } catch (Exception e) { callback.onError(e.getMessage()); }
+                        });
+                    } catch (Exception e) { callback.onError(e.getMessage()); }
+                }, error -> callback.onError("Upload failed (for free tier): " + error));
+            } else {
+                // Standard Text-to-Image (no upload needed)
+                try {
+                    String encodedPrompt = java.net.URLEncoder.encode(prompt, "UTF-8");
+                    long seed = System.currentTimeMillis();
+                    String finalUrl = "https://image.pollinations.ai/prompt/" + encodedPrompt + "?width=1024&height=1024&nologo=true&seed=" + seed + "&model=flux";
+
+                    Request request = new Request.Builder().url(finalUrl).get().build();
+                    client.newCall(request).enqueue(new okhttp3.Callback() {
+                        @Override
+                        public void onFailure(Call call, IOException e) { callback.onError(e.getMessage()); }
+                        @Override
+                        public void onResponse(Call call, Response response) throws IOException {
+                            try {
+                                if (!response.isSuccessful()) {
+                                    callback.onError("Pollinations.ai Free Error: " + response.code());
+                                    return;
+                                }
+                                saveBytes(response.body().bytes(), callback);
+                            } catch (Exception e) { callback.onError(e.getMessage()); }
+                        }
+                    });
+                } catch (Exception e) { callback.onError(e.getMessage()); }
+            }
             return;
         }
 
-        // If we have an image and a key, use the professional V2 Hub for Image-to-Image
+        // If we have a key, use the professional V2 Hub for Image-to-Image
         String url = "https://gen.pollinations.ai/v1/images/generations";
         try {
             JSONObject json = new JSONObject();
@@ -652,6 +682,46 @@ public class AiImageClient {
         } catch (Exception e) {
             callback.onError(e.getMessage());
         }
+    }
+
+    private static void uploadToAnonymousHost(String filePath, Utilities.Callback<String> onSuccess, Utilities.Callback<String> onError) {
+        File file = new File(filePath);
+        if (!file.exists()) {
+            onError.run("File not found");
+            return;
+        }
+
+        RequestBody requestBody = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("file", file.getName(),
+                        RequestBody.create(file, MediaType.parse("image/jpeg")))
+                .build();
+
+        Request request = new Request.Builder()
+                .url("https://0x0.st")
+                .post(requestBody)
+                .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                onError.run(e.getMessage());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                try {
+                    if (response.isSuccessful()) {
+                        String url = response.body().string().trim();
+                        onSuccess.run(url);
+                    } else {
+                        onError.run("Upload failed: " + response.code());
+                    }
+                } catch (Exception e) {
+                    onError.run(e.getMessage());
+                }
+            }
+        });
     }
 
     private static byte[] readBytes(File file) throws IOException {
