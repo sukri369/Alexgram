@@ -1146,7 +1146,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 return;
             }
             updateAmbientMode();
-            AndroidUtilities.runOnUIThread(this, 100);
+            AndroidUtilities.runOnUIThread(this, 200);
         }
     };
     private boolean allowShowFullscreenButton;
@@ -2346,7 +2346,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         private final Matrix matrix = new Matrix();
         private final AnimatedFloat alphaAnimated;
         private final AnimatedFloat crossfade;
-        private boolean enabled;
+        private boolean isAmbientEnabled;
         private RadialGradient radialGradient;
 
         private float lastCenterX, lastCenterY, lastW, lastH;
@@ -2355,6 +2355,13 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             super(context);
             alphaAnimated = new AnimatedFloat(this, 0, 250, CubicBezierInterpolator.DEFAULT);
             crossfade = new AnimatedFloat(this, 0, 300, CubicBezierInterpolator.DEFAULT);
+        }
+
+        public void setAmbientEnabled(boolean enabled) {
+            if (this.isAmbientEnabled != enabled) {
+                this.isAmbientEnabled = enabled;
+                invalidate();
+            }
         }
 
         @Override
@@ -2367,7 +2374,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
 
         @Override
         protected void onDraw(Canvas canvas) {
-            float alpha = alphaAnimated.set(enabled && bitmap != null && !bitmap.isRecycled() ? 1f : 0f);
+            float alpha = alphaAnimated.set(isAmbientEnabled && bitmap != null && !bitmap.isRecycled() ? 1f : 0f);
             if (alpha <= 0 || bitmap == null || bitmap.isRecycled()) return;
 
             paint.setAlpha((int) (alpha * 80));
@@ -11650,7 +11657,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             return;
         }
         boolean enabled = NaConfig.INSTANCE.getAmbientMode().Bool();
-        ambientModeView.setEnabled(enabled);
+        ambientModeView.setAmbientEnabled(enabled);
         if (!enabled) {
             return;
         }
