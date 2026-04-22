@@ -11590,8 +11590,9 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         if (ambientModeView == null || !isPlaying || !NaConfig.INSTANCE.getAmbientMode().Bool()) {
             return;
         }
-        if (ambientModeView.getParent() != null) {
-            containerView.bringChildToBack(ambientModeView);
+        if (ambientModeView.getParent() != null && containerView.indexOfChild(ambientModeView) != 0) {
+            containerView.removeView(ambientModeView);
+            containerView.addView(ambientModeView, 0, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
         }
         if (ambientBitmap == null) {
             ambientBitmap = Bitmap.createBitmap(32, 32, Bitmap.Config.ARGB_8888);
