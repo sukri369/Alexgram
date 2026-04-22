@@ -2438,7 +2438,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             gradientPaint.setAlpha((int) (alpha * 255));
             canvas.drawRect(0, 0, viewWidth, viewHeight, gradientPaint);
 
-            if (alphaAnimated.get() != (enabled ? 1f : 0f) || crossfade.get() != 1f) {
+            if (alphaAnimated.get() != (isAmbientEnabled ? 1f : 0f) || crossfade.get() != 1f) {
                 invalidate();
             }
         }
@@ -2473,9 +2473,6 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             invalidate();
         }
 
-        public void setEnabled(boolean enabled) {
-            this.enabled = enabled;
-            invalidate();
         }
     }
 
