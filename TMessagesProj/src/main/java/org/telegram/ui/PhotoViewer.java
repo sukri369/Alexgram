@@ -1146,7 +1146,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 return;
             }
             updateAmbientMode();
-            AndroidUtilities.runOnUIThread(this, 100);
+            AndroidUtilities.runOnUIThread(this, 130);
         }
     };
     private boolean allowShowFullscreenButton;
@@ -2394,13 +2394,25 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 videoHeight = videoWidth / videoRatio;
             }
 
-            float scaleX = (videoWidth / bitmap.getWidth()) * 1.7f;
-            float scaleY = (videoHeight / bitmap.getHeight()) * 1.7f;
+            float videoCenterX = viewWidth / 2f;
+            float videoCenterY = viewHeight / 2f;
+            if (aspectRatioFrameLayout != null) {
+                videoCenterX = aspectRatioFrameLayout.getX() + aspectRatioFrameLayout.getWidth() / 2f;
+                videoCenterY = aspectRatioFrameLayout.getY() + aspectRatioFrameLayout.getHeight() / 2f;
+            }
+
+            float scaleX = (videoWidth / bitmap.getWidth()) * 2.0f;
+            float scaleY = (videoHeight / bitmap.getHeight()) * 2.0f;
             float cf = crossfade.set(1f);
 
             matrix.reset();
             matrix.postScale(scaleX, scaleY);
-            matrix.postTranslate((viewWidth - bitmap.getWidth() * scaleX) / 2, (viewHeight - bitmap.getHeight() * scaleY) / 2);
+            matrix.postTranslate(videoCenterX - (bitmap.getWidth() * scaleX) / 2f, videoCenterY - (bitmap.getHeight() * scaleY) / 2f);
+
+            // Re-center gradient if needed
+            radialGradient = new RadialGradient(videoCenterX, videoCenterY, Math.max(viewWidth, viewHeight) * 0.9f,
+                    new int[]{0x00000000, 0xFF000000}, new float[]{0.5f, 1.0f}, Shader.TileMode.CLAMP);
+            gradientPaint.setShader(radialGradient);
 
             if (prevBitmap != null && cf < 1f) {
                 paint.setAlpha((int) (alpha * 80 * (1f - cf)));
