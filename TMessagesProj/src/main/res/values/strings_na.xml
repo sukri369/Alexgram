@@ -137,5 +137,10 @@
     <string name="HiddenChatsAbout">Hide sensitive chats from the main list. Access them by holding the Title bar after unlocking with a passcode or biometric.</string>
     <string name="HideContacts">Hide Contacts</string>
     <string name="RestartRequired">Restart required to apply changes</string>
+    <string name="SplitChat">Split Chat</string>
+    <string name="SplitChatClose">Close Split</string>
+    <string name="SplitChatSelectChat">Select a chat to open alongside</string>
+    <string name="SplitChatHint">Tap an icon to restore minimized chat</string>
+    <string name="SplitChatMinimized">Chat minimized</string>
 </resources>
 

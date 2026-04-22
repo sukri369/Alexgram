@@ -501,6 +501,7 @@ public class ChatActivity extends BaseFragment implements
     private final static int nkbtn_voice_changer = 2104;
     private final static int nkbtn_advanced_tool = 2106;
     private final static int nkbtn_change_font = 2107;
+    private final static int nkbtn_split_chat = 2108;
     private final static int send_video_as_round = 1846;
 
     public int shareAlertDebugMode = DEBUG_SHARE_ALERT_MODE_NORMAL;
@@ -4905,6 +4906,11 @@ public class ChatActivity extends BaseFragment implements
                     actionBar.actionBarMenuOnItemClick.onItemClick(import_chat);
                 });
             }
+            ActionBarMenuSubItem splitChatItem = ActionBarMenuItem.addItem(advancedToolsLayout, R.drawable.ic_split_chat_na, LocaleController.getString("SplitChat", R.string.SplitChat), false, getResourceProvider());
+            splitChatItem.setOnClickListener(v -> {
+                headerItem.closeSubMenu();
+                actionBar.actionBarMenuOnItemClick.onItemClick(nkbtn_split_chat);
+            });
             headerItem.lazilyAddSwipeBackItem(R.drawable.ic_advanced_tool_na, null, "Advanced Tool", advancedToolsLayout);
             headerItem.lazilyAddColoredGap();
 
@@ -45645,6 +45651,11 @@ public class ChatActivity extends BaseFragment implements
             if (!getMessagesController().checkCanOpenChat(args, ChatActivity.this))
                 return;
             presentFragment(new ChatActivity(args), true);
+        } else if (id == nkbtn_split_chat) {
+            if (getParentActivity() instanceof org.telegram.ui.LaunchActivity) {
+                xyz.nextalone.nagram.ui.SplitChatManager.getInstance()
+                        .activateSplitMode((org.telegram.ui.LaunchActivity) getParentActivity(), dialog_id);
+            }
         } else if (id == nkbtn_repeat) {
             repeatMessage(false, false);
             clearSelectionMode();
