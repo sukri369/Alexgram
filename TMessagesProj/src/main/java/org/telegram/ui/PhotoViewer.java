@@ -11670,7 +11670,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
 
         if (videoTextureView != null && videoTextureView.isAvailable()) {
             videoTextureView.getBitmap(ambientBitmap);
-            Utilities.blurBitmap(ambientBitmap, 12, 3, 64, 64, ambientBitmap.getRowBytes());
+            Utilities.stackBlurBitmap(ambientBitmap, 12);
             ambientModeView.setBitmap(ambientBitmap);
             if (windowView != null) {
                 windowView.invalidate();
@@ -11680,7 +11680,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             if (surface != null && surface.isValid()) {
                 PixelCopy.request(videoSurfaceView, ambientBitmap, result -> {
                     if (result == PixelCopy.SUCCESS && ambientBitmap != null && !ambientBitmap.isRecycled()) {
-                        Utilities.blurBitmap(ambientBitmap, 12, 3, 64, 64, ambientBitmap.getRowBytes());
+                        Utilities.stackBlurBitmap(ambientBitmap, 12);
                         ambientModeView.setBitmap(ambientBitmap);
                         if (windowView != null) {
                             windowView.invalidate();
