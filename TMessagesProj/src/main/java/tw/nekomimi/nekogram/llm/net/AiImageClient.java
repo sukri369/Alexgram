@@ -694,13 +694,15 @@ public class AiImageClient {
 
         RequestBody requestBody = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
-                .addFormDataPart("file", file.getName(),
+                .addFormDataPart("reqtype", "fileupload")
+                .addFormDataPart("fileToUpload", file.getName(),
                         RequestBody.create(file, MediaType.parse("image/jpeg")))
                 .build();
 
         Request request = new Request.Builder()
-                .url("https://0x0.st")
+                .url("https://catbox.moe/user/api.php")
                 .post(requestBody)
+                .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
                 .build();
 
         client.newCall(request).enqueue(new okhttp3.Callback() {
@@ -714,12 +716,19 @@ public class AiImageClient {
                 try {
                     if (response.isSuccessful()) {
                         String url = response.body().string().trim();
-                        onSuccess.run(url);
+                        // Catbox returns the direct URL as the response body
+                        if (url.startsWith("http")) {
+                            onSuccess.run(url);
+                        } else {
+                            onError.run("Unexpected response: " + url);
+                        }
                     } else {
-                        onError.run("Upload failed: " + response.code());
+                        onError.run("Upload failed with HTTP " + response.code());
                     }
                 } catch (Exception e) {
                     onError.run(e.getMessage());
+                } finally {
+                    response.close();
                 }
             }
         });
