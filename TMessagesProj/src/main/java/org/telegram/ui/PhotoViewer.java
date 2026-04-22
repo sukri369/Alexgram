@@ -2356,6 +2356,10 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             alphaAnimated = new AnimatedFloat(this, 0, 250, CubicBezierInterpolator.DEFAULT);
             crossfade = new AnimatedFloat(this, 0, 300, CubicBezierInterpolator.DEFAULT);
             
+            paint.setDither(true);
+            paint.setAntiAlias(true);
+            paint.setFilterBitmap(true);
+
             ColorMatrix colorMatrix = new ColorMatrix();
             colorMatrix.setSaturation(1.4f);
             paint.setColorFilter(new ColorMatrixColorFilter(colorMatrix));
@@ -2414,8 +2418,8 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 videoCenterY = aspectRatioFrameLayout.getY() + aspectRatioFrameLayout.getHeight() / 2f;
             }
 
-            float scaleX = (videoWidth / bitmap.getWidth()) * 3.5f;
-            float scaleY = (videoHeight / bitmap.getHeight()) * 3.5f;
+            float scaleX = (videoWidth / bitmap.getWidth()) * 3.0f;
+            float scaleY = (videoHeight / bitmap.getHeight()) * 3.0f;
             float cf = crossfade.set(1f);
 
             matrix.reset();
@@ -11660,13 +11664,13 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         if (!enabled) {
             return;
         }
-        if (ambientBitmap == null || ambientBitmap.isRecycled()) {
-            ambientBitmap = Bitmap.createBitmap(32, 32, Bitmap.Config.ARGB_8888);
+        if (ambientBitmap == null || ambientBitmap.isRecycled() || ambientBitmap.getWidth() != 64) {
+            ambientBitmap = Bitmap.createBitmap(64, 64, Bitmap.Config.ARGB_8888);
         }
 
         if (videoTextureView != null && videoTextureView.isAvailable()) {
             videoTextureView.getBitmap(ambientBitmap);
-            Utilities.blurBitmap(ambientBitmap, 12, 1, 32, 32, ambientBitmap.getRowBytes());
+            Utilities.blurBitmap(ambientBitmap, 12, 3, 64, 64, ambientBitmap.getRowBytes());
             ambientModeView.setBitmap(ambientBitmap);
             if (windowView != null) {
                 windowView.invalidate();
@@ -11676,7 +11680,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             if (surface != null && surface.isValid()) {
                 PixelCopy.request(videoSurfaceView, ambientBitmap, result -> {
                     if (result == PixelCopy.SUCCESS && ambientBitmap != null && !ambientBitmap.isRecycled()) {
-                        Utilities.blurBitmap(ambientBitmap, 12, 1, 32, 32, ambientBitmap.getRowBytes());
+                        Utilities.blurBitmap(ambientBitmap, 12, 3, 64, 64, ambientBitmap.getRowBytes());
                         ambientModeView.setBitmap(ambientBitmap);
                         if (windowView != null) {
                             windowView.invalidate();
