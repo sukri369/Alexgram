@@ -48,6 +48,7 @@ import android.graphics.PixelFormat;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.PorterDuffXfermode;
+import android.graphics.RadialGradient;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.RenderEffect;
@@ -2340,17 +2341,24 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
     private class AmbientModeView extends View {
         private Bitmap bitmap;
         private final Paint paint = new Paint(Paint.FILTER_BITMAP_FLAG);
+        private final Paint gradientPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         private final Matrix matrix = new Matrix();
-        private final AnimatedFloat alphaAnimated = new AnimatedFloat(this, 350, CubicBezierInterpolator.EASE_OUT);
+        private final AnimatedFloat alphaAnimated;
         private boolean enabled;
+        private RadialGradient radialGradient;
 
         public AmbientModeView(Context context) {
             super(context);
+            alphaAnimated = new AnimatedFloat(this, 0, 350, CubicBezierInterpolator.DEFAULT);
+            gradientPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_OUT));
         }
 
-        public void setBitmap(Bitmap newBitmap) {
-            this.bitmap = newBitmap;
-            invalidate();
+        @Override
+        protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+            super.onSizeChanged(w, h, oldw, oldh);
+            radialGradient = new RadialGradient(w / 2f, h / 2f, Math.max(w, h) * 0.5f,
+                    new int[]{0x00000000, 0xFF000000}, new float[]{0.3f, 1.0f}, Shader.TileMode.CLAMP);
+            gradientPaint.setShader(radialGradient);
         }
 
         @Override
@@ -2358,15 +2366,50 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             float alpha = alphaAnimated.set(enabled ? 1f : 0f);
             if (alpha <= 0 || bitmap == null) return;
 
-            paint.setAlpha((int) (alpha * 230)); // Increased opacity
+            canvas.saveLayer(0, 0, getMeasuredWidth(), getMeasuredHeight(), null);
 
-            float scale = Math.max((float) getMeasuredWidth() / bitmap.getWidth(), (float) getMeasuredHeight() / bitmap.getHeight()) * 1.5f; // Increased scale
+            paint.setAlpha((int) (alpha * 210));
+
+            float videoRatio = 1f;
+            if (videoPlayer != null && videoPlayer.getVideoHeight() > 0) {
+                videoRatio = (float) videoPlayer.getVideoWidth() / videoPlayer.getVideoHeight();
+                int rotation = videoPlayer.getVideoRotation();
+                if (rotation == 90 || rotation == 270) {
+                    videoRatio = 1f / videoRatio;
+                }
+            }
+
+            float viewWidth = getMeasuredWidth();
+            float viewHeight = getMeasuredHeight();
+            float videoWidth, videoHeight;
+
+            if (viewWidth / viewHeight > videoRatio) {
+                videoHeight = viewHeight;
+                videoWidth = videoHeight * videoRatio;
+            } else {
+                videoWidth = viewWidth;
+                videoHeight = videoWidth / videoRatio;
+            }
+
+            float scaleX = (videoWidth / bitmap.getWidth()) * 1.6f;
+            float scaleY = (videoHeight / bitmap.getHeight()) * 1.6f;
+
             matrix.reset();
-            matrix.postScale(scale, scale);
-            matrix.postTranslate((getMeasuredWidth() - bitmap.getWidth() * scale) / 2, (getMeasuredHeight() - bitmap.getHeight() * scale) / 2);
+            matrix.postScale(scaleX, scaleY);
+            matrix.postTranslate((viewWidth - bitmap.getWidth() * scaleX) / 2, (viewHeight - bitmap.getHeight() * scaleY) / 2);
 
             canvas.drawBitmap(bitmap, matrix, paint);
-            invalidate(); // Ensure smooth animation of alpha
+            canvas.drawRect(0, 0, viewWidth, viewHeight, gradientPaint);
+            canvas.restore();
+
+            if (alphaAnimated.get() != (enabled ? 1f : 0f)) {
+                invalidate();
+            }
+        }
+
+        public void setBitmap(Bitmap newBitmap) {
+            this.bitmap = newBitmap;
+            invalidate();
         }
 
         public void setEnabled(boolean enabled) {
