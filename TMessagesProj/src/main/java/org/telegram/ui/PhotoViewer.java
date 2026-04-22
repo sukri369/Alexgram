@@ -1142,11 +1142,11 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
     private final Runnable ambientUpdateRunnable = new Runnable() {
         @Override
         public void run() {
-            if (videoPlayer == null || !isPlaying || !NaConfig.INSTANCE.getAmbientMode().Bool()) {
+            if (videoPlayer == null || !isPlaying) {
                 return;
             }
             updateAmbientMode();
-            AndroidUtilities.runOnUIThread(this, 130);
+            AndroidUtilities.runOnUIThread(this, 100);
         }
     };
     private boolean allowShowFullscreenButton;
@@ -5045,7 +5045,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                     blackPaint.setAlpha(backgroundDrawable.getAlpha());
                     canvas.drawRect(0, getMeasuredHeight(), getMeasuredWidth(), getMeasuredHeight() + insets.bottom, blackPaint);
                 }
-                if (ambientModeView != null && NaConfig.INSTANCE.getAmbientMode().Bool()) {
+                if (ambientModeView != null) {
                     ambientModeView.draw(canvas);
                 }
             }
@@ -11646,7 +11646,12 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
     }
 
     private void updateAmbientMode() {
-        if (ambientModeView == null || !isPlaying || !NaConfig.INSTANCE.getAmbientMode().Bool()) {
+        if (ambientModeView == null || !isPlaying) {
+            return;
+        }
+        boolean enabled = NaConfig.INSTANCE.getAmbientMode().Bool();
+        ambientModeView.setEnabled(enabled);
+        if (!enabled) {
             return;
         }
         if (ambientBitmap == null || ambientBitmap.isRecycled()) {
