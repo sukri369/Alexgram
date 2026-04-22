@@ -2368,7 +2368,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
 
             canvas.saveLayer(0, 0, getMeasuredWidth(), getMeasuredHeight(), null);
 
-            paint.setAlpha((int) (alpha * 160));
+            paint.setAlpha((int) (alpha * 100));
 
             float videoRatio = 1f;
             if (videoPlayer != null && videoPlayer.player != null) {
@@ -5186,6 +5186,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                         WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS;
 
         ambientModeView = new AmbientModeView(activity);
+        ambientModeView.setTranslationZ(-100f);
         containerView.addView(ambientModeView, 0, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
         paintingOverlay = new PaintingOverlay(parentActivity);
@@ -11559,7 +11560,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         if (videoTextureView != null) {
             videoTextureView.setPivotX(0);
             videoTextureView.setPivotY(0);
-            videoTextureView.setOpaque(false);
+            videoTextureView.setOpaque(true);
             aspectRatioFrameLayout.addView(videoTextureView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.CENTER));
         } else {
             aspectRatioFrameLayout.addView(videoSurfaceView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.CENTER));
@@ -11589,10 +11590,6 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
     private void updateAmbientMode() {
         if (ambientModeView == null || !isPlaying || !NaConfig.INSTANCE.getAmbientMode().Bool()) {
             return;
-        }
-        if (ambientModeView.getParent() != null && containerView.indexOfChild(ambientModeView) != 0) {
-            containerView.removeView(ambientModeView);
-            containerView.addView(ambientModeView, 0, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
         }
         if (ambientBitmap == null) {
             ambientBitmap = Bitmap.createBitmap(32, 32, Bitmap.Config.ARGB_8888);
