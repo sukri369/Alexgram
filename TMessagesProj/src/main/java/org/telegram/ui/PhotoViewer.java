@@ -2340,16 +2340,19 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
 
     private class AmbientModeView extends View {
         private Bitmap bitmap;
+        private Bitmap prevBitmap;
         private final Paint paint = new Paint(Paint.FILTER_BITMAP_FLAG);
         private final Paint gradientPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         private final Matrix matrix = new Matrix();
         private final AnimatedFloat alphaAnimated;
+        private final AnimatedFloat crossfade;
         private boolean enabled;
         private RadialGradient radialGradient;
 
         public AmbientModeView(Context context) {
             super(context);
             alphaAnimated = new AnimatedFloat(this, 0, 350, CubicBezierInterpolator.DEFAULT);
+            crossfade = new AnimatedFloat(this, 0, 800, CubicBezierInterpolator.DEFAULT);
             gradientPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_OUT));
         }
 
@@ -2357,7 +2360,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         protected void onSizeChanged(int w, int h, int oldw, int oldh) {
             super.onSizeChanged(w, h, oldw, oldh);
             radialGradient = new RadialGradient(w / 2f, h / 2f, Math.max(w, h) * 0.5f,
-                    new int[]{0x00000000, 0xFF000000}, new float[]{0.4f, 1.0f}, Shader.TileMode.CLAMP);
+                    new int[]{0x00000000, 0xFF000000}, new float[]{0.3f, 1.0f}, Shader.TileMode.CLAMP);
             gradientPaint.setShader(radialGradient);
         }
 
@@ -2394,24 +2397,44 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 videoHeight = videoWidth / videoRatio;
             }
 
-            float scaleX = (videoWidth / bitmap.getWidth()) * 1.3f;
-            float scaleY = (videoHeight / bitmap.getHeight()) * 1.3f;
+            float scaleX = (videoWidth / bitmap.getWidth()) * 1.7f;
+            float scaleY = (videoHeight / bitmap.getHeight()) * 1.7f;
+            float cf = crossfade.set(1f);
 
             matrix.reset();
             matrix.postScale(scaleX, scaleY);
             matrix.postTranslate((viewWidth - bitmap.getWidth() * scaleX) / 2, (viewHeight - bitmap.getHeight() * scaleY) / 2);
 
+            if (prevBitmap != null && cf < 1f) {
+                paint.setAlpha((int) (alpha * 80 * (1f - cf)));
+                canvas.drawBitmap(prevBitmap, matrix, paint);
+            }
+            paint.setAlpha((int) (alpha * 80 * cf));
             canvas.drawBitmap(bitmap, matrix, paint);
+
             canvas.drawRect(0, 0, viewWidth, viewHeight, gradientPaint);
             canvas.restore();
 
-            if (alphaAnimated.get() != (enabled ? 1f : 0f)) {
+            if (alphaAnimated.get() != (enabled ? 1f : 0f) || crossfade.get() != 1f) {
                 invalidate();
             }
         }
 
         public void setBitmap(Bitmap newBitmap) {
-            this.bitmap = newBitmap;
+            if (this.bitmap != null) {
+                if (prevBitmap == null) {
+                    prevBitmap = Bitmap.createBitmap(this.bitmap.getWidth(), this.bitmap.getHeight(), Bitmap.Config.ARGB_8888);
+                }
+                Canvas c = new Canvas(prevBitmap);
+                c.drawBitmap(this.bitmap, 0, 0, null);
+            }
+            if (this.bitmap == null) {
+                this.bitmap = Bitmap.createBitmap(newBitmap.getWidth(), newBitmap.getHeight(), Bitmap.Config.ARGB_8888);
+            }
+            Canvas c = new Canvas(this.bitmap);
+            c.drawBitmap(newBitmap, 0, 0, null);
+            crossfade.set(0f, true);
+            crossfade.set(1f);
             invalidate();
         }
 
