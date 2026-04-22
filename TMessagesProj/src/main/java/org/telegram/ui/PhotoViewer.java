@@ -2349,10 +2349,12 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         private boolean enabled;
         private RadialGradient radialGradient;
 
+        private float lastCenterX, lastCenterY, lastW, lastH;
+
         public AmbientModeView(Context context) {
             super(context);
-            alphaAnimated = new AnimatedFloat(this, 0, 350, CubicBezierInterpolator.DEFAULT);
-            crossfade = new AnimatedFloat(this, 0, 800, CubicBezierInterpolator.DEFAULT);
+            alphaAnimated = new AnimatedFloat(this, 0, 250, CubicBezierInterpolator.DEFAULT);
+            crossfade = new AnimatedFloat(this, 0, 300, CubicBezierInterpolator.DEFAULT);
         }
 
         @Override
@@ -2409,10 +2411,15 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             matrix.postScale(scaleX, scaleY);
             matrix.postTranslate(videoCenterX - (bitmap.getWidth() * scaleX) / 2f, videoCenterY - (bitmap.getHeight() * scaleY) / 2f);
 
-            // Re-center gradient if needed
-            radialGradient = new RadialGradient(videoCenterX, videoCenterY, Math.max(viewWidth, viewHeight) * 0.9f,
-                    new int[]{0x00000000, 0xFF000000}, new float[]{0.5f, 1.0f}, Shader.TileMode.CLAMP);
-            gradientPaint.setShader(radialGradient);
+            if (videoCenterX != lastCenterX || videoCenterY != lastCenterY || viewWidth != lastW || viewHeight != lastH) {
+                lastCenterX = videoCenterX;
+                lastCenterY = videoCenterY;
+                lastW = viewWidth;
+                lastH = viewHeight;
+                radialGradient = new RadialGradient(videoCenterX, videoCenterY, Math.max(viewWidth, viewHeight) * 0.9f,
+                        new int[]{0x00000000, 0xFF000000}, new float[]{0.5f, 1.0f}, Shader.TileMode.CLAMP);
+                gradientPaint.setShader(radialGradient);
+            }
 
             if (prevBitmap != null && cf < 1f) {
                 paint.setAlpha((int) (alpha * 80 * (1f - cf)));
