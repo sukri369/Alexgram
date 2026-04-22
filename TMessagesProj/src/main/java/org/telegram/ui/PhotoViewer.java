@@ -24419,23 +24419,24 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
     private static class GenericPathDrawable extends Drawable {
         private final Path path;
         private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        private int intrinsicWidth;
-        private int intrinsicHeight;
+        private final float vWidth;
+        private final float vHeight;
 
         public GenericPathDrawable(String pathData, int width, int height) {
             this.path = PathParser.createPathFromPathData(pathData);
-            this.intrinsicWidth = width;
-            this.intrinsicHeight = height;
+            this.vWidth = width;
+            this.vHeight = height;
             paint.setColor(0xffffffff);
             paint.setStyle(Paint.Style.FILL);
         }
 
         @Override
         public void draw(Canvas canvas) {
-            canvas.save();
             Rect bounds = getBounds();
+            if (bounds.width() == 0 || bounds.height() == 0) return;
+            canvas.save();
             canvas.translate(bounds.left, bounds.top);
-            float scale = Math.min(bounds.width() / (float) intrinsicWidth, bounds.height() / (float) intrinsicHeight);
+            float scale = Math.min(bounds.width() / vWidth, bounds.height() / vHeight);
             canvas.scale(scale, scale);
             canvas.drawPath(path, paint);
             canvas.restore();
@@ -24458,12 +24459,12 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
 
         @Override
         public int getIntrinsicWidth() {
-            return intrinsicWidth;
+            return AndroidUtilities.dp(vWidth);
         }
 
         @Override
         public int getIntrinsicHeight() {
-            return intrinsicHeight;
+            return AndroidUtilities.dp(vHeight);
         }
     }
 }
