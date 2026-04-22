@@ -40,6 +40,7 @@ import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ChatActivity;
 import org.telegram.ui.Components.AvatarDrawable;
 import org.telegram.ui.Components.BackupImageView;
+import org.telegram.ui.Components.CubicBezierInterpolator;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.DialogsActivity;
 import org.telegram.ui.LaunchActivity;
@@ -261,7 +262,7 @@ public class SplitChatLayout extends FrameLayout {
         old.container.animate()
                 .scaleX(0.3f).scaleY(0.3f).alpha(0f)
                 .setDuration(280)
-                .setInterpolator(AndroidUtilities.accelerateDecelerateInterpolator)
+                .setInterpolator(CubicBezierInterpolator.EASE_BOTH)
                 .withEndAction(() -> {
                     if (old.actionBarLayout != null) {
                         old.actionBarLayout.onPause();
