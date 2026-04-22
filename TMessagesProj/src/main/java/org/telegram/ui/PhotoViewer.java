@@ -24426,6 +24426,8 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             this.path = PathParser.createPathFromPathData(pathData);
             this.intrinsicWidth = width;
             this.intrinsicHeight = height;
+            paint.setColor(0xffffffff);
+            paint.setStyle(Paint.Style.FILL);
         }
 
         @Override
