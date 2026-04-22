@@ -2357,7 +2357,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         protected void onSizeChanged(int w, int h, int oldw, int oldh) {
             super.onSizeChanged(w, h, oldw, oldh);
             radialGradient = new RadialGradient(w / 2f, h / 2f, Math.max(w, h) * 0.5f,
-                    new int[]{0x00000000, 0xFF000000}, new float[]{0.3f, 1.0f}, Shader.TileMode.CLAMP);
+                    new int[]{0x00000000, 0xFF000000}, new float[]{0.4f, 1.0f}, Shader.TileMode.CLAMP);
             gradientPaint.setShader(radialGradient);
         }
 
@@ -2368,7 +2368,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
 
             canvas.saveLayer(0, 0, getMeasuredWidth(), getMeasuredHeight(), null);
 
-            paint.setAlpha((int) (alpha * 210));
+            paint.setAlpha((int) (alpha * 160));
 
             float videoRatio = 1f;
             if (videoPlayer != null && videoPlayer.player != null) {
@@ -2394,8 +2394,8 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 videoHeight = videoWidth / videoRatio;
             }
 
-            float scaleX = (videoWidth / bitmap.getWidth()) * 1.6f;
-            float scaleY = (videoHeight / bitmap.getHeight()) * 1.6f;
+            float scaleX = (videoWidth / bitmap.getWidth()) * 1.35f;
+            float scaleY = (videoHeight / bitmap.getHeight()) * 1.35f;
 
             matrix.reset();
             matrix.postScale(scaleX, scaleY);
@@ -11589,6 +11589,9 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
     private void updateAmbientMode() {
         if (ambientModeView == null || !isPlaying || !NaConfig.INSTANCE.getAmbientMode().Bool()) {
             return;
+        }
+        if (ambientModeView.getParent() != null) {
+            containerView.bringChildToBack(ambientModeView);
         }
         if (ambientBitmap == null) {
             ambientBitmap = Bitmap.createBitmap(32, 32, Bitmap.Config.ARGB_8888);
