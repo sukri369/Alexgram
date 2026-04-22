@@ -2371,11 +2371,14 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             paint.setAlpha((int) (alpha * 210));
 
             float videoRatio = 1f;
-            if (videoPlayer != null && videoPlayer.getVideoHeight() > 0) {
-                videoRatio = (float) videoPlayer.getVideoWidth() / videoPlayer.getVideoHeight();
-                int rotation = videoPlayer.getVideoRotation();
-                if (rotation == 90 || rotation == 270) {
-                    videoRatio = 1f / videoRatio;
+            if (videoPlayer != null && videoPlayer.player != null) {
+                com.google.android.exoplayer2.video.VideoSize videoSize = videoPlayer.player.getVideoSize();
+                if (videoSize.height > 0) {
+                    videoRatio = (float) videoSize.width / videoSize.height;
+                    int rotation = videoSize.unappliedRotationDegrees;
+                    if (rotation == 90 || rotation == 270) {
+                        videoRatio = 1f / videoRatio;
+                    }
                 }
             }
 
