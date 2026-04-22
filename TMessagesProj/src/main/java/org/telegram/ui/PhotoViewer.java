@@ -59,6 +59,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
+import androidx.core.graphics.PathParser;
 import android.media.AudioManager;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
@@ -929,6 +930,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
     private ActionBarMenuSlider.SpeedSlider speedItem;
     private ActionBarMenuSubItem loopItem;
     private ActionBarMenuSubItem ambientItem;
+    private Drawable ambientOnDrawable, ambientOffDrawable;
     private ActionBarMenuSubItem galleryButton;
     private ActionBarPopupWindow.GapView galleryGap;
     private ActionBarMenuSubItem pipItem;
@@ -6203,6 +6205,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                     if (ambientItem != null) {
                         ambientItem.setEnabledByColor(enabled, 0xFFFFFFFF, 0xFF73B4EC);
                         ambientItem.setSelectorColor(enabled ? 0x0F73B4EC : 0x0fffffff);
+                        ambientItem.setIcon(enabled ? ambientOnDrawable : ambientOffDrawable);
                     }
                 }
             }
@@ -6370,8 +6373,13 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         if (NaConfig.INSTANCE.getMediaViewerMenuItemCopyPhoto().Bool()) menuItem.addSubItem(gallery_menu_copy, R.drawable.msg_copy_photo, getString(R.string.CopyPhoto)).setColors(0xfffafafa, 0xfffafafa);
         if (NaConfig.INSTANCE.getMediaViewerMenuItemCopyFrame().Bool()) menuItem.addSubItem(gallery_menu_copy_frame, R.drawable.msg_copy_photo_solar, getString(R.string.CopyVideoFrame)).setColors(0xfffafafa, 0xfffafafa);
 
+        if (ambientOnDrawable == null) {
+            ambientOffDrawable = new GenericPathDrawable("M9.97308 18H11V13H13V18H14.0269C14.1589 16.7984 14.7721 15.8065 15.7676 14.7226C15.8797 14.6006 16.5988 13.8564 16.6841 13.7501C17.5318 12.6931 18 11.385 18 10C18 6.68629 15.3137 4 12 4C8.68629 4 6 6.68629 6 10C6 11.3843 6.46774 12.6917 7.31462 13.7484C7.40004 13.855 8.12081 14.6012 8.23154 14.7218C9.22766 15.8064 9.84103 16.7984 9.97308 18ZM10 20V21H14V20H10ZM5.75395 14.9992C4.65645 13.6297 4 11.8915 4 10C4 5.58172 7.58172 2 12 2C16.4183 2 20 5.58172 20 10C20 11.8925 19.3428 13.6315 18.2443 15.0014C17.624 15.7748 16 17 16 18.5V21C16 22.1046 15.1046 23 14 23H10C8.89543 23 8 22.1046 8 21V18.5C8 17 6.37458 15.7736 5.75395 14.9992Z", 24, 24);
+            ambientOnDrawable = new GenericPathDrawable("M9.97308 18H14.0269C14.1589 16.7984 14.7721 15.8065 15.7676 14.7226C15.8797 14.6006 16.5988 13.8564 16.6841 13.7501C17.5318 12.6931 18 11.385 18 10C18 6.68629 15.3137 4 12 4C8.68629 4 6 6.68629 6 10C6 11.3843 6.46774 12.6917 7.31462 13.7484C7.40004 13.855 8.12081 14.6012 8.23154 14.7218C9.22766 15.8064 9.84103 16.7984 9.97308 18ZM14 20H10V21H14V20ZM5.75395 14.9992C4.65645 13.6297 4 11.8915 4 10C4 5.58172 7.58172 2 12 2C16.4183 2 20 5.58172 20 10C20 11.8925 19.3428 13.6315 18.2443 15.0014C17.624 15.7748 16 17 16 18.5V21C16 22.1046 15.1046 23 14 23H10C8.89543 23 8 22.1046 8 21V18.5C8 17 6.37458 15.7736 5.75395 14.9992ZM13 10.0048H15.5L11 16.0048V12.0048H8.5L13 6V10.0048Z", 24, 24);
+        }
         boolean ambientEnabled = NaConfig.INSTANCE.getAmbientMode().Bool();
-        ambientItem = menuItem.addSubItem(gallery_menu_ambient, R.drawable.magic_stick_solar, getString(R.string.AmbientMode));
+        ambientItem = menuItem.addSubItem(gallery_menu_ambient, 0, getString(R.string.AmbientMode));
+        ambientItem.setIcon(ambientEnabled ? ambientOnDrawable : ambientOffDrawable);
         ambientItem.setEnabledByColor(ambientEnabled, 0xFFFFFFFF, 0xFF73B4EC);
         ambientItem.setSelectorColor(ambientEnabled ? 0x0F73B4EC : 0x0fffffff);
         if (NaConfig.INSTANCE.getMediaViewerMenuItemSetProfilePhoto().Bool()) menuItem.addSubItem(gallery_menu_set_photo, R.drawable.msg_openprofile, getString(R.string.SetProfilePhoto)).setColors(0xfffafafa, 0xfffafafa);
@@ -24406,5 +24414,53 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         Bitmap bitmap = centerImage != null ? centerImage.getBitmap() : null;
         boolean enabled = !centerImageIsVideo && AndroidUtil.hasGainmap(bitmap);
         setWindowHdrColorMode(enabled);
+    }
+    private static class GenericPathDrawable extends Drawable {
+        private final Path path;
+        private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private int intrinsicWidth;
+        private int intrinsicHeight;
+
+        public GenericPathDrawable(String pathData, int width, int height) {
+            this.path = PathParser.createPathFromPathData(pathData);
+            this.intrinsicWidth = width;
+            this.intrinsicHeight = height;
+        }
+
+        @Override
+        public void draw(Canvas canvas) {
+            canvas.save();
+            Rect bounds = getBounds();
+            canvas.translate(bounds.left, bounds.top);
+            float scale = Math.min(bounds.width() / (float) intrinsicWidth, bounds.height() / (float) intrinsicHeight);
+            canvas.scale(scale, scale);
+            canvas.drawPath(path, paint);
+            canvas.restore();
+        }
+
+        @Override
+        public void setAlpha(int alpha) {
+            paint.setAlpha(alpha);
+        }
+
+        @Override
+        public void setColorFilter(ColorFilter colorFilter) {
+            paint.setColorFilter(colorFilter);
+        }
+
+        @Override
+        public int getOpacity() {
+            return PixelFormat.TRANSLUCENT;
+        }
+
+        @Override
+        public int getIntrinsicWidth() {
+            return intrinsicWidth;
+        }
+
+        @Override
+        public int getIntrinsicHeight() {
+            return intrinsicHeight;
+        }
     }
 }
