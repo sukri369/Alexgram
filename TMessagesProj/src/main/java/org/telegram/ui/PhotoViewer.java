@@ -1145,11 +1145,15 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
     private final Runnable ambientUpdateRunnable = new Runnable() {
         @Override
         public void run() {
-            if (videoPlayer == null || !isPlaying) {
+            if (videoPlayer == null) {
                 return;
             }
-            updateAmbientMode();
-            AndroidUtilities.runOnUIThread(this, 500);
+            if (isPlaying) {
+                updateAmbientMode();
+                AndroidUtilities.runOnUIThread(this, 500);
+            } else {
+                AndroidUtilities.runOnUIThread(this, 1000);
+            }
         }
     };
     private boolean allowShowFullscreenButton;
@@ -2356,7 +2360,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
 
         public AmbientModeView(Context context) {
             super(context);
-            alphaAnimated = new AnimatedFloat(this, 0, 400, CubicBezierInterpolator.DEFAULT);
+            alphaAnimated = new AnimatedFloat(this, 0, 250, CubicBezierInterpolator.DEFAULT);
             crossfade = new AnimatedFloat(this, 0, 500, CubicBezierInterpolator.DEFAULT);
             
             paint.setDither(true);
@@ -6208,7 +6212,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                     boolean enabled = !NaConfig.INSTANCE.getAmbientMode().Bool();
                     NaConfig.INSTANCE.getAmbientMode().setConfigBool(enabled);
                     if (ambientModeView != null) {
-                        ambientModeView.setEnabled(enabled);
+                        ambientModeView.setAmbientEnabled(enabled);
                     }
                     if (enabled) {
                         AndroidUtilities.runOnUIThread(ambientUpdateRunnable);
@@ -11268,7 +11272,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 @Override
                 public void onVideoSizeChanged(int width, int height, int unappliedRotationDegrees, float pixelWidthHeightRatio) {
                     if (ambientModeView != null) {
-                        ambientModeView.setEnabled(NaConfig.INSTANCE.getAmbientMode().Bool());
+                        ambientModeView.setAmbientEnabled(NaConfig.INSTANCE.getAmbientMode().Bool());
                     }
                     if (NaConfig.INSTANCE.getAmbientMode().Bool()) {
                         AndroidUtilities.runOnUIThread(ambientUpdateRunnable);
@@ -11306,6 +11310,9 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                     }
                     if (firstFrameView != null && (videoPlayer == null || !videoPlayer.isLooping())) {
                         AndroidUtilities.runOnUIThread(() -> firstFrameView.updateAlpha(), 64);
+                    }
+                    if (NaConfig.INSTANCE.getAmbientMode().Bool()) {
+                        AndroidUtilities.runOnUIThread(ambientUpdateRunnable);
                     }
                 }
 
@@ -11614,7 +11621,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         };
         aspectRatioFrameLayout.setWillNotDraw(false);
         if (ambientModeView != null) {
-            ambientModeView.setEnabled(NaConfig.INSTANCE.getAmbientMode().Bool());
+            ambientModeView.setAmbientEnabled(NaConfig.INSTANCE.getAmbientMode().Bool());
         }
         aspectRatioFrameLayout.setVisibility(View.INVISIBLE);
         int index = 0;
