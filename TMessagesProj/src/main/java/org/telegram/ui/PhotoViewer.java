@@ -2366,8 +2366,8 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
 
         @Override
         protected void onDraw(Canvas canvas) {
-            float alpha = alphaAnimated.set(enabled && bitmap != null ? 1f : 0f);
-            if (alpha <= 0 || bitmap == null) return;
+            float alpha = alphaAnimated.set(enabled && bitmap != null && !bitmap.isRecycled() ? 1f : 0f);
+            if (alpha <= 0 || bitmap == null || bitmap.isRecycled()) return;
 
             canvas.saveLayer(0, 0, getMeasuredWidth(), getMeasuredHeight(), null);
 
@@ -2421,6 +2421,18 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         }
 
         public void setBitmap(Bitmap newBitmap) {
+            if (newBitmap == null || newBitmap.isRecycled()) {
+                if (bitmap != null) {
+                    bitmap.recycle();
+                    bitmap = null;
+                }
+                if (prevBitmap != null) {
+                    prevBitmap.recycle();
+                    prevBitmap = null;
+                }
+                invalidate();
+                return;
+            }
             if (this.bitmap != null) {
                 if (prevBitmap == null) {
                     prevBitmap = Bitmap.createBitmap(this.bitmap.getWidth(), this.bitmap.getHeight(), Bitmap.Config.ARGB_8888);
@@ -11621,7 +11633,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         if (ambientModeView == null || !isPlaying || !NaConfig.INSTANCE.getAmbientMode().Bool()) {
             return;
         }
-        if (ambientBitmap == null) {
+        if (ambientBitmap == null || ambientBitmap.isRecycled()) {
             ambientBitmap = Bitmap.createBitmap(32, 32, Bitmap.Config.ARGB_8888);
         }
 
@@ -11658,9 +11670,8 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             cancelVideoPlayRunnable();
             AndroidUtilities.cancelRunOnUIThread(setLoadingRunnable);
             AndroidUtilities.cancelRunOnUIThread(hideActionBarRunnable);
-            if (ambientBitmap != null) {
-                ambientBitmap.recycle();
-                ambientBitmap = null;
+            if (ambientModeView != null) {
+                ambientModeView.setBitmap(null);
             }
             if (shouldSavePositionForCurrentVideoShortTerm != null) {
                 final float progress = videoPlayer.getCurrentPosition() / (float) videoPlayer.getDuration();
