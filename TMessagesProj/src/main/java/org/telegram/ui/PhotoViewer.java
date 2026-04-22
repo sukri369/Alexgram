@@ -2355,6 +2355,10 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             super(context);
             alphaAnimated = new AnimatedFloat(this, 0, 250, CubicBezierInterpolator.DEFAULT);
             crossfade = new AnimatedFloat(this, 0, 300, CubicBezierInterpolator.DEFAULT);
+            
+            ColorMatrix colorMatrix = new ColorMatrix();
+            colorMatrix.setSaturation(1.4f);
+            paint.setColorFilter(new ColorMatrixColorFilter(colorMatrix));
         }
 
         public void setAmbientEnabled(boolean enabled) {
@@ -2410,8 +2414,8 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 videoCenterY = aspectRatioFrameLayout.getY() + aspectRatioFrameLayout.getHeight() / 2f;
             }
 
-            float scaleX = (videoWidth / bitmap.getWidth()) * 2.0f;
-            float scaleY = (videoHeight / bitmap.getHeight()) * 2.0f;
+            float scaleX = (videoWidth / bitmap.getWidth()) * 3.5f;
+            float scaleY = (videoHeight / bitmap.getHeight()) * 3.5f;
             float cf = crossfade.set(1f);
 
             matrix.reset();
@@ -2423,8 +2427,8 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 lastCenterY = videoCenterY;
                 lastW = viewWidth;
                 lastH = viewHeight;
-                radialGradient = new RadialGradient(videoCenterX, videoCenterY, Math.max(viewWidth, viewHeight) * 0.9f,
-                        new int[]{0x00000000, 0xFF000000}, new float[]{0.5f, 1.0f}, Shader.TileMode.CLAMP);
+                radialGradient = new RadialGradient(videoCenterX, videoCenterY, Math.max(viewWidth, viewHeight) * 1.0f,
+                        new int[]{0x00000000, 0x00000000, 0x7F000000, 0xFF000000}, new float[]{0.0f, 0.35f, 0.7f, 1.0f}, Shader.TileMode.CLAMP);
                 gradientPaint.setShader(radialGradient);
             }
 
@@ -11662,7 +11666,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
 
         if (videoTextureView != null && videoTextureView.isAvailable()) {
             videoTextureView.getBitmap(ambientBitmap);
-            Utilities.blurBitmap(ambientBitmap, 7, 1, 32, 32, ambientBitmap.getRowBytes());
+            Utilities.blurBitmap(ambientBitmap, 12, 1, 32, 32, ambientBitmap.getRowBytes());
             ambientModeView.setBitmap(ambientBitmap);
             if (windowView != null) {
                 windowView.invalidate();
@@ -11672,7 +11676,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             if (surface != null && surface.isValid()) {
                 PixelCopy.request(videoSurfaceView, ambientBitmap, result -> {
                     if (result == PixelCopy.SUCCESS && ambientBitmap != null && !ambientBitmap.isRecycled()) {
-                        Utilities.blurBitmap(ambientBitmap, 7, 1, 32, 32, ambientBitmap.getRowBytes());
+                        Utilities.blurBitmap(ambientBitmap, 12, 1, 32, 32, ambientBitmap.getRowBytes());
                         ambientModeView.setBitmap(ambientBitmap);
                         if (windowView != null) {
                             windowView.invalidate();
