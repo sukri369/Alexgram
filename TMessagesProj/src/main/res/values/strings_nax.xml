@@ -378,24 +378,6 @@
     <string name="V8DAudio">Spatial 360 Degree Sound Illusion</string>
     <string name="V8DAudioAbout">Dolby 8D Sound Effect</string>
 
-    <string name="NaxAiReplaceImage">Replace Image with AI</string>
-    <string name="NaxAiReplaceImageSummary">Use AI to generate and replace the current image based on a prompt.</string>
-    <string name="NaxAiProvider">AI Provider</string>
-    <string name="NaxAiModelUrl">API Endpoint / Model URL</string>
-    <string name="NaxAiApiKey">API Key</string>
-    <string name="NaxAiReplaceTitle">AI Image Replacement</string>
-    <string name="NaxAiPromptHint">Describe what you want to generate...</string>
-    <string name="NaxAiGenerate">Generate</string>
-    <string name="NaxAiComparisonTitle">AI Generated Image</string>
-    <string name="NaxAiComparisonMessage">Do you want to replace the current image with this one?</string>
-    <string name="NaxAiReplace">Replace</string>
-    <string name="NaxAiKeepOriginal">Keep Original</string>
-    <string name="NaxAiError">AI Generation Error: %1$s</string>
-
-    <string name="AiImageReplaceEnabled">Enable AI Image Replacement</string>
-    <string name="AiImageProvider">AI Provider</string>
-    <string name="AiImageModelUrl">API Endpoint / Model URL</string>
-    <string name="AiImageApiKey">API Key</string>
     <string name="usePollinationsAi">Use Pollinations.ai</string>
     <string name="usePollinationsAiAbout">Use Pollinations.ai for free AI Reply, Summarize, and AI Assistance. No API key required.</string>
 </resources>

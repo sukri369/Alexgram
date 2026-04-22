@@ -199,8 +199,6 @@ import org.telegram.messenger.browser.Browser;
 import org.telegram.messenger.utils.PhotoUtilities;
 import org.telegram.messenger.camera.Size;
 import org.telegram.messenger.chromecast.ChromecastController;
-import tw.nekomimi.nekogram.llm.net.AiImageClient;
-import xyz.nextalone.nagram.NaConfig;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BottomSheet;
 import org.telegram.ui.Components.LayoutHelper;
@@ -1013,7 +1011,6 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
     private FrameLayout captionEditContainer;
     private FrameLayout topCaptionEditContainer;
     private FrameLayout captionContainer;
-    private ImageView aiImageButton;
     private ChatAttachAlert parentAlert;
 //    private PhotoViewerCaptionEnterView captionEditText;
     private int sendPhotoType;
@@ -7072,20 +7069,6 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         });
         containerView.addView(livePhotoButton, LayoutHelper.createFrame(45, 45, Gravity.LEFT | Gravity.BOTTOM, 8, 0, 0, -4));
 
-        aiImageButton = new ImageView(parentActivity);
-        aiImageButton.setScaleType(ImageView.ScaleType.CENTER);
-        aiImageButton.setImageResource(R.drawable.msg_bots_solar);
-        aiImageButton.setContentDescription(LocaleController.getString("NaxAiReplaceImage", R.string.NaxAiReplaceImage));
-        aiImageButton.setColorFilter(new PorterDuffColorFilter(0xFFFFFFFF, PorterDuff.Mode.SRC_IN));
-        aiImageButton.setBackground(iBlur3FactoryFrostedLiquidGlass.create(aiImageButton)
-                .setColorProvider(BlurredBackgroundProviderImpl.photoViewer(null))
-                .setPadding(dp(4))
-                .setRadius(dp(16)));
-        ScaleStateListAnimator.apply(aiImageButton);
-        containerView.addView(aiImageButton, LayoutHelper.createFrame(40, 40, Gravity.LEFT | Gravity.BOTTOM, 8, 0, 0, -4));
-        aiImageButton.setOnClickListener(v -> showAiPromptDialog());
-        aiImageButton.setVisibility(View.GONE);
-
         captionEdit = new CaptionPhotoViewer(containerView.getContext(), windowView, containerView, containerView, resourcesProvider, blurManager, this::applyCaption) {
             private final Path path = new Path();
 
@@ -12747,7 +12730,6 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                     }
                     if (muteButton.getTag() != null) {
                         muteButton.setVisibility(sendPhotoTypeIsGif ? View.GONE : View.VISIBLE);
-                        updateAiImageButton();
                         arrayList.add(ObjectAnimator.ofFloat(muteButton, View.ALPHA, 1));
                     }
                     if (livePhotoButton.getTag() != null) {
@@ -16515,7 +16497,6 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 canZoom = !isEmbedVideo && (!imagesArrLocals.isEmpty() || (currentFileNames[0] != null && /*!isVideo && */photoProgressViews[0].backgroundState != 0));
             }
             updateMinMax(scale);
-            updateAiImageButton();
             releasePlayer(false);
         }
         if (isVideo && videoPath != null) {
@@ -21707,7 +21688,6 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
     }
 
     public void updateMuteButton() {
-        updateAiImageButton();
         if (videoPlayer != null) {
             videoPlayer.setMute(CastSync.isActive() || muteVideo);
         }
@@ -24158,172 +24138,6 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             }
         } catch (Throwable e) {
             FileLog.e(e);
-        }
-    }
-
-    private void updateAiImageButton() {
-        if (aiImageButton == null) return;
-        boolean enabled = NaConfig.INSTANCE.getAiImageReplaceEnabled().Bool();
-        boolean isPhoto = !imagesArrLocals.isEmpty() && currentIndex >= 0 && currentIndex < imagesArrLocals.size() && !isCurrentVideo;
-        boolean canReplace = sendPhotoType != -1;
-
-        if (enabled && isPhoto && canReplace) {
-            aiImageButton.setVisibility(View.VISIBLE);
-            aiImageButton.animate().alpha(1.0f).setDuration(150).start();
-            
-            float offset = 0;
-            if (muteButton != null && muteButton.getVisibility() == View.VISIBLE) {
-                offset += dp(48);
-            }
-            if (livePhotoButton != null && livePhotoButton.getVisibility() == View.VISIBLE) {
-                offset += dp(48);
-            }
-            aiImageButton.setTranslationX(offset);
-        } else {
-            aiImageButton.animate().alpha(0.0f).setDuration(150).withEndAction(() -> aiImageButton.setVisibility(View.GONE)).start();
-        }
-    }
-
-    private void showAiPromptDialog() {
-        if (parentActivity == null) return;
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(parentActivity);
-        builder.setTitle(LocaleController.getString("NaxAiReplaceTitle", R.string.NaxAiReplaceTitle));
-
-        LinearLayout container = new LinearLayout(parentActivity);
-        container.setOrientation(LinearLayout.VERTICAL);
-        container.setPadding(dp(24), dp(10), dp(24), dp(10));
-
-        final EditText promptEditText = new EditText(parentActivity);
-        promptEditText.setHint(LocaleController.getString("NaxAiPromptHint", R.string.NaxAiPromptHint));
-        promptEditText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
-        promptEditText.setTextColor(Theme.getColor(Theme.key_dialogTextBlack, resourcesProvider));
-        promptEditText.setHintTextColor(Theme.getColor(Theme.key_dialogTextHint, resourcesProvider));
-        promptEditText.setBackground(null);
-        container.addView(promptEditText, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
-
-        builder.setView(container);
-        builder.setPositiveButton(LocaleController.getString("NaxAiGenerate", R.string.NaxAiGenerate), (dialog, which) -> {
-            String prompt = promptEditText.getText().toString();
-            if (!TextUtils.isEmpty(prompt)) {
-                generateAiImage(prompt);
-            }
-        });
-        builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
-        builder.show();
-    }
-
-    private void generateAiImage(String prompt) {
-        if (parentActivity == null) return;
-
-        File f = null;
-        if (currentMessageObject != null) {
-            if (!TextUtils.isEmpty(currentMessageObject.messageOwner.attachPath)) {
-                f = new File(currentMessageObject.messageOwner.attachPath);
-                if (!f.exists()) {
-                    f = null;
-                }
-            }
-            if (f == null) {
-                f = FileLoader.getInstance(currentAccount).getPathToMessage(currentMessageObject.messageOwner);
-            }
-        }
-        final String imagePath = (f != null && f.exists()) ? f.getAbsolutePath() : null;
-
-        AlertDialog progressDialog = new AlertDialog(parentActivity, 3);
-        progressDialog.setCanCancel(false);
-        progressDialog.show();
-
-        AiImageClient.generateImage(
-            NaConfig.INSTANCE.getAiImageProvider().Int(),
-            NaConfig.INSTANCE.getAiImageModelUrl().String(),
-            NaConfig.INSTANCE.getAiImageApiKey().String(),
-            prompt,
-            imagePath,
-            new AiImageClient.Callback() {
-                @Override
-                public void onSuccess(String filePath) {
-                    AndroidUtilities.runOnUIThread(() -> {
-                        progressDialog.dismiss();
-                        showAiComparisonView(filePath);
-                    });
-                }
-
-                @Override
-                public void onError(String error) {
-                    AndroidUtilities.runOnUIThread(() -> {
-                        progressDialog.dismiss();
-                        AlertDialog.Builder builder = new AlertDialog.Builder(parentActivity);
-                        builder.setTitle(LocaleController.getString("AppName", R.string.AppName));
-                        builder.setMessage(LocaleController.formatString("NaxAiError", R.string.NaxAiError, error));
-                        builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), null);
-                        builder.show();
-                    });
-                }
-            }
-        );
-    }
-
-    private void showAiComparisonView(String newImagePath) {
-        if (parentActivity == null || containerView == null) return;
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(parentActivity);
-        builder.setTitle(LocaleController.getString("NaxAiComparisonTitle", R.string.NaxAiComparisonTitle));
-        builder.setMessage(LocaleController.getString("NaxAiComparisonMessage", R.string.NaxAiComparisonMessage));
-
-        FrameLayout frameLayout = new FrameLayout(parentActivity);
-        frameLayout.setPadding(dp(24), dp(10), dp(24), dp(10));
-
-        // Original image
-        ImageView originalView = new ImageView(parentActivity);
-        originalView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        if (currentIndex >= 0 && currentIndex < imagesArrLocals.size()) {
-            Object obj = imagesArrLocals.get(currentIndex);
-            if (obj instanceof MediaController.PhotoEntry) {
-                originalView.setImageURI(Uri.fromFile(new File(((MediaController.PhotoEntry) obj).path)));
-            }
-        }
-        frameLayout.addView(originalView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 300, Gravity.CENTER));
-
-        // New AI image (fading in)
-        ImageView resultView = new ImageView(parentActivity);
-        resultView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        resultView.setImageURI(Uri.fromFile(new File(newImagePath)));
-        resultView.setAlpha(0.0f);
-        frameLayout.addView(resultView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 300, Gravity.CENTER));
-
-        builder.setView(frameLayout);
-
-        builder.setPositiveButton(LocaleController.getString("NaxAiReplace", R.string.NaxAiReplace), (dialog, which) -> {
-            replaceImageWithAi(newImagePath);
-        });
-        builder.setNegativeButton(LocaleController.getString("NaxAiKeepOriginal", R.string.NaxAiKeepOriginal), null);
-        
-        AlertDialog dialog = builder.create();
-        dialog.show();
-
-        // Cross-fade animation
-        resultView.animate()
-                .alpha(1.0f)
-                .setDuration(1200)
-                .setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator())
-                .start();
-    }
-
-    private void replaceImageWithAi(String newImagePath) {
-        if (currentIndex < 0 || currentIndex >= imagesArrLocals.size()) return;
-        Object object = imagesArrLocals.get(currentIndex);
-        if (object instanceof MediaController.PhotoEntry) {
-            MediaController.PhotoEntry entry = (MediaController.PhotoEntry) object;
-            entry.path = newImagePath;
-            entry.imagePath = newImagePath;
-            entry.thumbPath = null; // Forces reload
-            setIsAboutToSwitchToIndex(currentIndex, true, true, true);
-            setImageIndex(currentIndex, true, true, true);
-        } else if (object instanceof MediaController.SearchImage) {
-            MediaController.SearchImage searchImage = (MediaController.SearchImage) object;
-            searchImage.imageUrl = newImagePath; // This might be tricky depending on how SearchImage works
-            // Better to handle based on specific type
         }
     }
 
