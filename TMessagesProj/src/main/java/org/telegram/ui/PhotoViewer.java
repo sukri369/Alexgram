@@ -1129,6 +1129,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
     private ImageView textureImageView;
     private ImageView[] fullscreenButton = new ImageView[3];
     private AmbientModeView ambientModeView;
+    private Bitmap ambientBitmap;
     private final Runnable ambientUpdateRunnable = new Runnable() {
         @Override
         public void run() {
@@ -2349,14 +2350,15 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             float alpha = alphaAnimated.set(enabled ? 1f : 0f);
             if (alpha <= 0 || bitmap == null) return;
 
-            paint.setAlpha((int) (alpha * 180)); // Max opacity for the glow
+            paint.setAlpha((int) (alpha * 230)); // Increased opacity
 
-            float scale = Math.max((float) getMeasuredWidth() / bitmap.getWidth(), (float) getMeasuredHeight() / bitmap.getHeight()) * 1.3f;
+            float scale = Math.max((float) getMeasuredWidth() / bitmap.getWidth(), (float) getMeasuredHeight() / bitmap.getHeight()) * 1.5f; // Increased scale
             matrix.reset();
             matrix.postScale(scale, scale);
             matrix.postTranslate((getMeasuredWidth() - bitmap.getWidth() * scale) / 2, (getMeasuredHeight() - bitmap.getHeight() * scale) / 2);
 
             canvas.drawBitmap(bitmap, matrix, paint);
+            invalidate(); // Ensure smooth animation of alpha
         }
 
         public void setEnabled(boolean enabled) {
@@ -11471,7 +11473,11 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             ambientModeView.setEnabled(NaConfig.INSTANCE.getAmbientMode().Bool());
         }
         aspectRatioFrameLayout.setVisibility(View.INVISIBLE);
-        containerView.addView(aspectRatioFrameLayout, 0, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.CENTER));
+        int index = 0;
+        if (ambientModeView != null) {
+            index = containerView.indexOfChild(ambientModeView) + 1;
+        }
+        containerView.addView(aspectRatioFrameLayout, index, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.CENTER));
         usedSurfaceView = false;
 
         if (imagesArrLocals.isEmpty()) {
@@ -11527,17 +11533,15 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
     }
 
     private void updateAmbientMode() {
-        if (ambientModeView == null || videoPlayer == null || !isPlaying || !NaConfig.INSTANCE.getAmbientMode().Bool()) {
+        if (ambientModeView == null || videoTextureView == null || !isPlaying || !NaConfig.INSTANCE.getAmbientMode().Bool()) {
             return;
         }
-        Bitmap bitmap = null;
-        if (videoTextureView != null) {
-            bitmap = videoTextureView.getBitmap(32, 32);
+        if (ambientBitmap == null) {
+            ambientBitmap = Bitmap.createBitmap(32, 32, Bitmap.Config.ARGB_8888);
         }
-        if (bitmap != null) {
-            Utilities.blurBitmap(bitmap, 3, 1, bitmap.getWidth(), bitmap.getHeight(), bitmap.getRowBytes());
-            ambientModeView.setBitmap(bitmap);
-        }
+        videoTextureView.getBitmap(ambientBitmap);
+        Utilities.blurBitmap(ambientBitmap, 7, 1, 32, 32, ambientBitmap.getRowBytes());
+        ambientModeView.setBitmap(ambientBitmap);
     }
 
     private void releasePlayer(boolean onClose) {
