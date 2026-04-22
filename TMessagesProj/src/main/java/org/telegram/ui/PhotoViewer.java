@@ -11548,17 +11548,20 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             ambientBitmap = Bitmap.createBitmap(32, 32, Bitmap.Config.ARGB_8888);
         }
 
-        if (videoTextureView != null) {
+        if (videoTextureView != null && videoTextureView.isAvailable()) {
             videoTextureView.getBitmap(ambientBitmap);
             Utilities.blurBitmap(ambientBitmap, 7, 1, 32, 32, ambientBitmap.getRowBytes());
             ambientModeView.setBitmap(ambientBitmap);
         } else if (videoSurfaceView != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            PixelCopy.request(videoSurfaceView, ambientBitmap, result -> {
-                if (result == PixelCopy.SUCCESS) {
-                    Utilities.blurBitmap(ambientBitmap, 7, 1, 32, 32, ambientBitmap.getRowBytes());
-                    ambientModeView.setBitmap(ambientBitmap);
-                }
-            }, new Handler(Looper.getMainLooper()));
+            Surface surface = videoSurfaceView.getHolder().getSurface();
+            if (surface != null && surface.isValid()) {
+                PixelCopy.request(videoSurfaceView, ambientBitmap, result -> {
+                    if (result == PixelCopy.SUCCESS && ambientBitmap != null && !ambientBitmap.isRecycled()) {
+                        Utilities.blurBitmap(ambientBitmap, 7, 1, 32, 32, ambientBitmap.getRowBytes());
+                        ambientModeView.setBitmap(ambientBitmap);
+                    }
+                }, new Handler(Looper.getMainLooper()));
+            }
         }
     }
 
@@ -11572,6 +11575,10 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             cancelVideoPlayRunnable();
             AndroidUtilities.cancelRunOnUIThread(setLoadingRunnable);
             AndroidUtilities.cancelRunOnUIThread(hideActionBarRunnable);
+            if (ambientBitmap != null) {
+                ambientBitmap.recycle();
+                ambientBitmap = null;
+            }
             if (shouldSavePositionForCurrentVideoShortTerm != null) {
                 final float progress = videoPlayer.getCurrentPosition() / (float) videoPlayer.getDuration();
                 savedVideoPositions.put(shouldSavePositionForCurrentVideoShortTerm, new SavedVideoPosition(progress, SystemClock.elapsedRealtime()));

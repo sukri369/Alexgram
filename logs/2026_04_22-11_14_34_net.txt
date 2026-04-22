@@ -1,0 +1,1591 @@
+4-22 11:14:34.344 debug: Config(0xb400006e825ab280, /data/user/0/org.tele.alexgram/files/tgnet.dat) load, size = 6852, fileSize = 6856
+4-22 11:14:34.344 debug: create new 16584 buffer
+4-22 11:14:34.344 debug: config version = 5
+4-22 11:14:34.344 debug: current dc id = 5, time difference = 0, registered for push = 1
+4-22 11:14:34.344 debug: Config(0xb400006e825ab380, /data/user/0/org.tele.alexgram/files/dc1conf.dat) load, size = 36, fileSize = 40
+4-22 11:14:34.344 debug: datacenter(0xb400006e8256f200) 1 loaded (hasAuthKey = 1, 0xa3d7261922f79fd9)
+4-22 11:14:34.344 debug: Config(0xb400006e825ab480, /data/user/0/org.tele.alexgram/files/dc2conf.dat) load, size = 36, fileSize = 40
+4-22 11:14:34.344 debug: datacenter(0xb400006e8256f400) 2 loaded (hasAuthKey = 1, 0x3d6ca84e657c65dd)
+4-22 11:14:34.344 debug: Config(0xb400006e825ab6c0, /data/user/0/org.tele.alexgram/files/dc3conf.dat) load, size = 36, fileSize = 40
+4-22 11:14:34.344 debug: datacenter(0xb400006e8256f600) 3 loaded (hasAuthKey = 1, 0x9210cf294fca28f6)
+4-22 11:14:34.344 debug: Config(0xb400006e825ab880, /data/user/0/org.tele.alexgram/files/dc4conf.dat) load, size = 36, fileSize = 40
+4-22 11:14:34.344 debug: datacenter(0xb400006e8256f800) 4 loaded (hasAuthKey = 1, 0xd3319281c838d522)
+4-22 11:14:34.344 debug: Config(0xb400006e825ab9c0, /data/user/0/org.tele.alexgram/files/dc5conf.dat) load, size = 36, fileSize = 40
+4-22 11:14:34.344 debug: datacenter(0xb400006e8256fa00) 5 loaded (hasAuthKey = 1, 0x32994828ebd0250a)
+4-22 11:14:34.344 debug: Config(0xb400006e825abb00, /data/user/0/org.tele.alexgram/files/dc201conf.dat) load, size = 36, fileSize = 40
+4-22 11:14:34.344 debug: datacenter(0xb400006e8256fc00) 201 loaded (hasAuthKey = 1, 0xfc5282547e29b870)
+4-22 11:14:34.345 debug: network thread started
+4-22 11:14:34.346 debug: connection(0xb400006f19430500, account0, dc5, type 8) connecting (91.108.56.144:443)
+4-22 11:14:34.346 debug: connection(0xb400006f19430500) socketAddress6, port: 0, family:0
+4-22 11:14:34.350 debug: connection(0xb400006f19430500) set current timeout = 30
+4-22 11:14:34.350 debug: connection(0xb400006f19430500, account0, dc5, type 8) send message (session: 0x8323e3bd71bd492c, seqno: 0, messageid: 0x69e8604259999c00): 24TL_ping_delay_disconnect(0xb400006f1942adc0)
+4-22 11:14:34.350 debug: dc5 send ping to push connection
+4-22 11:14:34.350 debug: create new 1224 buffer
+4-22 11:14:34.352 debug: connection(0xb400006f19430500, account0, dc5, type 8) suspend
+4-22 11:14:34.352 debug: connection(0xb400006f19430500, account0, dc5, type 8) disconnected with reason 0
+4-22 11:14:34.352 debug: connection(0xb400006f19430500) push connection closed
+4-22 11:14:34.352 debug: connection(0xb400006f19430500) push connection closed
+4-22 11:14:34.352 debug: push ping timeout
+4-22 11:14:34.353 debug: connection(0xb400006f19430a00, account0, dc5, type 1) connecting (91.108.56.144:443)
+4-22 11:14:34.354 debug: connection(0xb400006f19430a00) socketAddress6, port: 0, family:0
+4-22 11:14:34.356 debug: connection(0xb400006f19430a00) set current timeout = 12
+4-22 11:14:34.422 debug: Config(0xb400006df1058680, /data/user/0/org.tele.alexgram/files/account1/tgnet.dat) load, size = 1808, fileSize = 1812
+4-22 11:14:34.422 debug: create new 4296 buffer
+4-22 11:14:34.422 debug: config version = 5
+4-22 11:14:34.422 debug: current dc id = 2, time difference = 0, registered for push = 0
+4-22 11:14:34.423 debug: datacenter(0xb400006df1047000) 1 loaded (hasAuthKey = 0, 0x0)
+4-22 11:14:34.423 debug: Config(0xb400006df1058c00, /data/user/0/org.tele.alexgram/files/account1/dc2conf.dat) load, size = 36, fileSize = 40
+4-22 11:14:34.423 debug: datacenter(0xb400006df1047200) 2 loaded (hasAuthKey = 1, 0x503fb61d6f14a5aa)
+4-22 11:14:34.423 debug: datacenter(0xb400006df1047400) 3 loaded (hasAuthKey = 0, 0x0)
+4-22 11:14:34.423 debug: datacenter(0xb400006df1047600) 4 loaded (hasAuthKey = 0, 0x0)
+4-22 11:14:34.423 debug: datacenter(0xb400006df1047800) 5 loaded (hasAuthKey = 0, 0x0)
+4-22 11:14:34.424 debug: network thread started
+4-22 11:14:34.430 debug: push ping timeout
+4-22 11:14:34.430 debug: time for push ping
+4-22 11:14:34.430 debug: connection(0xb400006f19431900, account1, dc2, type 1) connecting (149.154.167.50:5222)
+4-22 11:14:34.431 debug: connection(0xb400006f19431900) socketAddress6, port: 0, family:0
+4-22 11:14:34.433 debug: connection(0xb400006f19431900) set current timeout = 12
+4-22 11:14:34.447 debug: Config(0xb400006df106dbc0, /data/user/0/org.tele.alexgram/files/account2/tgnet.dat) load, size = 2080, fileSize = 2084
+4-22 11:14:34.447 debug: config version = 5
+4-22 11:14:34.447 debug: current dc id = 2, time difference = 0, registered for push = 0
+4-22 11:14:34.447 debug: datacenter(0xb400006df1047c00) 1 loaded (hasAuthKey = 0, 0x0)
+4-22 11:14:34.447 debug: Config(0xb400006df106df00, /data/user/0/org.tele.alexgram/files/account2/dc2conf.dat) load, size = 36, fileSize = 40
+4-22 11:14:34.447 debug: datacenter(0xb400006df1047e00) 2 loaded (hasAuthKey = 1, 0x4f481ff13a0f2513)
+4-22 11:14:34.447 debug: datacenter(0xb400006df108f000) 3 loaded (hasAuthKey = 0, 0x0)
+4-22 11:14:34.447 debug: datacenter(0xb400006df108f200) 4 loaded (hasAuthKey = 0, 0x0)
+4-22 11:14:34.447 debug: datacenter(0xb400006df108f400) 5 loaded (hasAuthKey = 0, 0x0)
+4-22 11:14:34.448 debug: network thread started
+4-22 11:14:34.455 debug: push ping timeout
+4-22 11:14:34.455 debug: time for push ping
+4-22 11:14:34.456 debug: connection(0xb400006f19432300, account2, dc2, type 1) connecting (149.154.167.50:5222)
+4-22 11:14:34.456 debug: connection(0xb400006f19432300) socketAddress6, port: 0, family:0
+4-22 11:14:34.458 debug: connection(0xb400006f19432300) set current timeout = 12
+4-22 11:14:34.468 debug: Config(0xb400006df10bafc0, /data/user/0/org.tele.alexgram/files/account3/tgnet.dat) load, size = 1808, fileSize = 1812
+4-22 11:14:34.468 debug: config version = 5
+4-22 11:14:34.468 debug: current dc id = 2, time difference = 0, registered for push = 0
+4-22 11:14:34.468 debug: datacenter(0xb400006df108f800) 1 loaded (hasAuthKey = 0, 0x0)
+4-22 11:14:34.468 debug: Config(0xb400006df10e6280, /data/user/0/org.tele.alexgram/files/account3/dc2conf.dat) load, size = 36, fileSize = 40
+4-22 11:14:34.468 debug: datacenter(0xb400006df108fa00) 2 loaded (hasAuthKey = 1, 0xa2bdf9084825848c)
+4-22 11:14:34.468 debug: datacenter(0xb400006df108fc00) 3 loaded (hasAuthKey = 0, 0x0)
+4-22 11:14:34.468 debug: Config(0xb400006df10e65c0, /data/user/0/org.tele.alexgram/files/account3/dc4conf.dat) load, size = 36, fileSize = 40
+4-22 11:14:34.468 debug: datacenter(0xb400006df108fe00) 4 loaded (hasAuthKey = 0, 0x0)
+4-22 11:14:34.468 debug: datacenter(0xb400006df10b4200) 5 loaded (hasAuthKey = 0, 0x0)
+4-22 11:14:34.469 debug: network thread started
+4-22 11:14:34.476 debug: push ping timeout
+4-22 11:14:34.476 debug: time for push ping
+4-22 11:14:34.476 debug: connection(0xb400006f19432800, account3, dc2, type 1) connecting (149.154.167.41:443)
+4-22 11:14:34.476 debug: connection(0xb400006f19432800) socketAddress6, port: 0, family:0
+4-22 11:14:34.479 debug: send request 0xb400006e825c1970 - 14TL_api_request
+4-22 11:14:34.479 debug: connection(0xb400006f19432800) set current timeout = 12
+4-22 11:14:34.480 debug: send request 0xb400006e825c1a10 - 14TL_api_request
+4-22 11:14:34.480 debug: send request wrapped 0xb400006e825c1a10 - 14TL_api_request
+4-22 11:14:34.480 debug: can't do request without login 14TL_api_request, reschedule token 1
+4-22 11:14:34.480 debug: send request 0xb400006e825c19c0 - 14TL_api_request
+4-22 11:14:34.480 debug: send request wrapped 0xb400006e825c19c0 - 14TL_api_request
+4-22 11:14:34.480 debug: can't do request without login 14TL_api_request, reschedule token 1
+4-22 11:14:34.493 debug: Config(0xb400006df1122400, /data/user/0/org.tele.alexgram/files/account4/tgnet.dat) load, size = 1808, fileSize = 1812
+4-22 11:14:34.493 debug: config version = 5
+4-22 11:14:34.493 debug: current dc id = 2, time difference = 0, registered for push = 0
+4-22 11:14:34.493 debug: datacenter(0xb400006df10b4400) 1 loaded (hasAuthKey = 0, 0x0)
+4-22 11:14:34.493 debug: Config(0xb400006df11226c0, /data/user/0/org.tele.alexgram/files/account4/dc2conf.dat) load, size = 36, fileSize = 40
+4-22 11:14:34.493 debug: datacenter(0xb400006df10b4600) 2 loaded (hasAuthKey = 1, 0x247f23082d1f3f0b)
+4-22 11:14:34.493 debug: datacenter(0xb400006df10b4800) 3 loaded (hasAuthKey = 0, 0x0)
+4-22 11:14:34.493 debug: datacenter(0xb400006df10b4a00) 4 loaded (hasAuthKey = 0, 0x0)
+4-22 11:14:34.493 debug: datacenter(0xb400006df10b4c00) 5 loaded (hasAuthKey = 0, 0x0)
+4-22 11:14:34.494 debug: network thread started
+4-22 11:14:34.501 debug: push ping timeout
+4-22 11:14:34.501 debug: time for push ping
+4-22 11:14:34.502 debug: connection(0xb400006f0d9ec100, account4, dc2, type 1) connecting (149.154.167.41:443)
+4-22 11:14:34.502 debug: connection(0xb400006f0d9ec100) socketAddress6, port: 0, family:0
+4-22 11:14:34.505 debug: connection(0xb400006f0d9ec100) set current timeout = 12
+4-22 11:14:34.505 debug: send request 0xb400006df11429b0 - 14TL_api_request
+4-22 11:14:34.506 debug: send request wrapped 0xb400006df11429b0 - 14TL_api_request
+4-22 11:14:34.506 debug: can't do request without login 14TL_api_request, reschedule token 1
+4-22 11:14:34.518 debug: Config(0xb400006df1148600, /data/user/0/org.tele.alexgram/files/account5/tgnet.dat) load, size = 1808, fileSize = 1812
+4-22 11:14:34.518 debug: config version = 5
+4-22 11:14:34.518 debug: current dc id = 2, time difference = 0, registered for push = 0
+4-22 11:14:34.518 debug: datacenter(0xb400006df10b4e00) 1 loaded (hasAuthKey = 0, 0x0)
+4-22 11:14:34.518 debug: Config(0xb400006df1148a80, /data/user/0/org.tele.alexgram/files/account5/dc2conf.dat) load, size = 36, fileSize = 40
+4-22 11:14:34.518 debug: datacenter(0xb400006df116f000) 2 loaded (hasAuthKey = 1, 0x9fd101c3e2174ddf)
+4-22 11:14:34.518 debug: datacenter(0xb400006df116f200) 3 loaded (hasAuthKey = 0, 0x0)
+4-22 11:14:34.518 debug: datacenter(0xb400006df116f400) 4 loaded (hasAuthKey = 0, 0x0)
+4-22 11:14:34.518 debug: datacenter(0xb400006df116f600) 5 loaded (hasAuthKey = 0, 0x0)
+4-22 11:14:34.519 debug: network thread started
+4-22 11:14:34.520 debug: create new 8 buffer
+4-22 11:14:34.526 debug: push ping timeout
+4-22 11:14:34.527 debug: time for push ping
+4-22 11:14:34.527 debug: connection(0xb400006f0d9ecb00, account5, dc2, type 1) connecting (149.154.167.41:443)
+4-22 11:14:34.528 debug: connection(0xb400006f0d9ecb00) socketAddress6, port: 0, family:0
+4-22 11:14:34.528 debug: wrap in layer 14TL_api_request, flags = 2
+4-22 11:14:34.528 debug: send request wrapped 0xb400006f1942c440 - 15invokeWithLayer
+4-22 11:14:34.528 debug: can't do request without login 14TL_api_request, reschedule token 1
+4-22 11:14:34.530 debug: connection(0xb400006f0d9ecb00) set current timeout = 12
+4-22 11:14:34.531 debug: send request 0xb400006df1142b40 - 14TL_api_request
+4-22 11:14:34.531 debug: wrap in layer 14TL_api_request, flags = 2
+4-22 11:14:34.531 debug: send request wrapped 0xb400006df1143090 - 15invokeWithLayer
+4-22 11:14:34.531 debug: can't do request without login 14TL_api_request, reschedule token 1
+4-22 11:14:34.542 debug: Config(0xb400006df118d600, /data/user/0/org.tele.alexgram/files/account6/tgnet.dat) load, size = 1808, fileSize = 1812
+4-22 11:14:34.542 debug: config version = 5
+4-22 11:14:34.542 debug: current dc id = 2, time difference = 0, registered for push = 0
+4-22 11:14:34.542 debug: datacenter(0xb400006df116f800) 1 loaded (hasAuthKey = 0, 0x0)
+4-22 11:14:34.542 debug: Config(0xb400006df118d880, /data/user/0/org.tele.alexgram/files/account6/dc2conf.dat) load, size = 36, fileSize = 40
+4-22 11:14:34.542 debug: datacenter(0xb400006df116fa00) 2 loaded (hasAuthKey = 1, 0x9d47b37707773989)
+4-22 11:14:34.542 debug: datacenter(0xb400006df116fc00) 3 loaded (hasAuthKey = 0, 0x0)
+4-22 11:14:34.542 debug: datacenter(0xb400006df116fe00) 4 loaded (hasAuthKey = 0, 0x0)
+4-22 11:14:34.542 debug: datacenter(0xb400006df119e000) 5 loaded (hasAuthKey = 0, 0x0)
+4-22 11:14:34.542 debug: network thread started
+4-22 11:14:34.544 debug: create new 8 buffer
+4-22 11:14:34.545 debug: connection(0xb400006f19430a00) reset last event time, on connect
+4-22 11:14:34.556 debug: connection(0xb400006f19430a00, account0, dc5, type 1) connected to 91.108.56.144:443
+4-22 11:14:34.556 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 0, messageid: 0x69e860428e560400): 18TL_destroy_session(0xb400006f1942cee0)
+4-22 11:14:34.549 debug: push ping timeout
+4-22 11:14:34.558 debug: time for push ping
+4-22 11:14:34.558 debug: connection(0xb400006df119f000, account6, dc2, type 1) connecting (149.154.167.41:443)
+4-22 11:14:34.558 debug: connection(0xb400006df119f000) socketAddress6, port: 0, family:0
+4-22 11:14:34.561 debug: connection(0xb400006df119f000) set current timeout = 12
+4-22 11:14:34.561 debug: send request 0xb400006df1143220 - 14TL_api_request
+4-22 11:14:34.561 debug: send request wrapped 0xb400006df1143220 - 14TL_api_request
+4-22 11:14:34.561 debug: can't do request without login 14TL_api_request, reschedule token 1
+4-22 11:14:34.564 debug: create new 8 buffer
+4-22 11:14:34.569 debug: Config(0xb400006df118dec0, /data/user/0/org.tele.alexgram/files/account7/tgnet.dat) load, size = 6792, fileSize = 6796
+4-22 11:14:34.569 debug: config version = 5
+4-22 11:14:34.569 debug: current dc id = 5, time difference = 0, registered for push = 1
+4-22 11:14:34.569 debug: Config(0xb400006df11a4640, /data/user/0/org.tele.alexgram/files/account7/dc1conf.dat) load, size = 36, fileSize = 40
+4-22 11:14:34.569 debug: datacenter(0xb400006df119e400) 1 loaded (hasAuthKey = 1, 0x7878933d3a7ae8ae)
+4-22 11:14:34.569 debug: Config(0xb400006df11a4800, /data/user/0/org.tele.alexgram/files/account7/dc2conf.dat) load, size = 36, fileSize = 40
+4-22 11:14:34.569 debug: datacenter(0xb400006df119e600) 2 loaded (hasAuthKey = 1, 0xd16658165e0200ea)
+4-22 11:14:34.569 debug: datacenter(0xb400006df119e800) 3 loaded (hasAuthKey = 0, 0x0)
+4-22 11:14:34.569 debug: Config(0xb400006df11a4b00, /data/user/0/org.tele.alexgram/files/account7/dc4conf.dat) load, size = 36, fileSize = 40
+4-22 11:14:34.569 debug: datacenter(0xb400006df119ea00) 4 loaded (hasAuthKey = 1, 0xade6b770a0b3396)
+4-22 11:14:34.569 debug: Config(0xb400006df11a4c40, /data/user/0/org.tele.alexgram/files/account7/dc5conf.dat) load, size = 36, fileSize = 40
+4-22 11:14:34.569 debug: datacenter(0xb400006df119ec00) 5 loaded (hasAuthKey = 1, 0xcf36ac6268e0e7f5)
+4-22 11:14:34.569 debug: Config(0xb400006df11a4d80, /data/user/0/org.tele.alexgram/files/account7/dc201conf.dat) load, size = 36, fileSize = 40
+4-22 11:14:34.569 debug: datacenter(0xb400006df119ee00) 201 loaded (hasAuthKey = 1, 0xa7775378766c1276)
+4-22 11:14:34.573 debug: network thread started
+4-22 11:14:34.574 debug: connection(0xb400006f19434b00, account7, dc5, type 8) connecting (91.108.56.185:5222)
+4-22 11:14:34.574 debug: connection(0xb400006f19434b00) socketAddress6, port: 0, family:0
+4-22 11:14:34.584 debug: connection(0xb400006f19434b00) set current timeout = 30
+4-22 11:14:34.584 debug: connection(0xb400006f19434b00, account7, dc5, type 8) send message (session: 0xd8d013765d7dc22b, seqno: 0, messageid: 0x69e8604295810800): 24TL_ping_delay_disconnect(0xb400006f1942d890)
+4-22 11:14:34.584 debug: dc5 send ping to push connection
+4-22 11:14:34.585 debug: connection(0xb400006f19434b00, account7, dc5, type 8) suspend
+4-22 11:14:34.585 debug: connection(0xb400006f19434b00, account7, dc5, type 8) disconnected with reason 0
+4-22 11:14:34.585 debug: connection(0xb400006f19434b00) push connection closed
+4-22 11:14:34.585 debug: connection(0xb400006f19434b00) push connection closed
+4-22 11:14:34.585 debug: push ping timeout
+4-22 11:14:34.591 debug: connection(0xb400006f195c0000, account7, dc5, type 1) connecting (91.108.56.185:5222)
+4-22 11:14:34.591 debug: connection(0xb400006f195c0000) socketAddress6, port: 0, family:0
+4-22 11:14:34.594 debug: connection(0xb400006f195c0000) set current timeout = 12
+4-22 11:14:34.594 debug: send request 0xb400006df1143680 - 14TL_api_request
+4-22 11:14:34.595 debug: send request wrapped 0xb400006df1143680 - 14TL_api_request
+4-22 11:14:34.595 debug: create new 8 buffer
+4-22 11:14:34.596 debug: Config(0xb400006df11a7c40, /data/user/0/org.tele.alexgram/files/account8/tgnet.dat) load, size = 6284, fileSize = 6288
+4-22 11:14:34.596 debug: config version = 5
+4-22 11:14:34.596 debug: current dc id = 4, time difference = 0, registered for push = 1
+4-22 11:14:34.596 debug: Config(0xb400006df11a7e00, /data/user/0/org.tele.alexgram/files/account8/dc1conf.dat) load, size = 36, fileSize = 40
+4-22 11:14:34.596 debug: datacenter(0xb400006df11a6200) 1 loaded (hasAuthKey = 1, 0x1353ac86f8d99eb2)
+4-22 11:14:34.597 debug: Config(0xb400006df11a7fc0, /data/user/0/org.tele.alexgram/files/account8/dc2conf.dat) load, size = 36, fileSize = 40
+4-22 11:14:34.597 debug: datacenter(0xb400006df11a6400) 2 loaded (hasAuthKey = 1, 0x5352c0efb89d9e08)
+4-22 11:14:34.597 debug: datacenter(0xb400006df11a6600) 3 loaded (hasAuthKey = 0, 0x0)
+4-22 11:14:34.597 debug: Config(0xb400006ddbe132c0, /data/user/0/org.tele.alexgram/files/account8/dc4conf.dat) load, size = 36, fileSize = 40
+4-22 11:14:34.597 debug: datacenter(0xb400006df11a6800) 4 loaded (hasAuthKey = 1, 0x5823874f836ce7ed)
+4-22 11:14:34.597 debug: Config(0xb400006ddbe13400, /data/user/0/org.tele.alexgram/files/account8/dc5conf.dat) load, size = 36, fileSize = 40
+4-22 11:14:34.597 debug: datacenter(0xb400006df11a6a00) 5 loaded (hasAuthKey = 1, 0x293faf59aa5117d3)
+4-22 11:14:34.597 debug: Config(0xb400006ddbe13540, /data/user/0/org.tele.alexgram/files/account8/dc201conf.dat) load, size = 36, fileSize = 40
+4-22 11:14:34.597 debug: datacenter(0xb400006df11a6c00) 201 loaded (hasAuthKey = 1, 0x8af1d340c3b1fc32)
+4-22 11:14:34.597 debug: network thread started
+4-22 11:14:34.600 debug: connection(0xb400006f195c0a00, account8, dc4, type 8) connecting (149.154.167.91:5222)
+4-22 11:14:34.601 debug: connection(0xb400006f195c0a00) socketAddress6, port: 0, family:0
+4-22 11:14:34.603 debug: connection(0xb400006f195c0a00) set current timeout = 30
+4-22 11:14:34.603 debug: connection(0xb400006f195c0a00, account8, dc4, type 8) send message (session: 0x349690ab2aaa2e5c, seqno: 0, messageid: 0x69e860429a5e3400): 24TL_ping_delay_disconnect(0xb400006f1942d8e0)
+4-22 11:14:34.603 debug: dc4 send ping to push connection
+4-22 11:14:34.606 debug: connection(0xb400006f195c0a00, account8, dc4, type 8) suspend
+4-22 11:14:34.606 debug: connection(0xb400006f195c0a00, account8, dc4, type 8) disconnected with reason 0
+4-22 11:14:34.606 debug: connection(0xb400006f195c0a00) push connection closed
+4-22 11:14:34.606 debug: connection(0xb400006f195c0a00) push connection closed
+4-22 11:14:34.606 debug: push ping timeout
+4-22 11:14:34.606 debug: connection(0xb400006f195c0500, account8, dc4, type 1) connecting (149.154.167.91:5222)
+4-22 11:14:34.606 debug: connection(0xb400006f195c0500) socketAddress6, port: 0, family:0
+4-22 11:14:34.610 debug: connection(0xb400006f195c0500) set current timeout = 12
+4-22 11:14:34.610 debug: send request 0xb400006df11b2780 - 14TL_api_request
+4-22 11:14:34.610 debug: send request wrapped 0xb400006df11b2780 - 14TL_api_request
+4-22 11:14:34.621 debug: create new 8 buffer
+4-22 11:14:34.624 debug: create new 1224 buffer
+4-22 11:14:34.626 debug: Config(0xb400006ddbe644c0, /data/user/0/org.tele.alexgram/files/account9/tgnet.dat) load, size = 8052, fileSize = 8056
+4-22 11:14:34.626 debug: config version = 5
+4-22 11:14:34.626 debug: current dc id = 5, time difference = 0, registered for push = 1
+4-22 11:14:34.626 debug: Config(0xb400006ddbe645c0, /data/user/0/org.tele.alexgram/files/account9/dc1conf.dat) load, size = 36, fileSize = 40
+4-22 11:14:34.626 debug: datacenter(0xb400006ddbe83000) 1 loaded (hasAuthKey = 1, 0x66dc899bf8e37304)
+4-22 11:14:34.626 debug: Config(0xb400006ddbe64740, /data/user/0/org.tele.alexgram/files/account9/dc2conf.dat) load, size = 36, fileSize = 40
+4-22 11:14:34.626 debug: datacenter(0xb400006ddbe83200) 2 loaded (hasAuthKey = 1, 0xc6bda5a23f66fb7d)
+4-22 11:14:34.626 debug: Config(0xb400006ddbe64900, /data/user/0/org.tele.alexgram/files/account9/dc3conf.dat) load, size = 36, fileSize = 40
+4-22 11:14:34.626 debug: datacenter(0xb400006ddbe83400) 3 loaded (hasAuthKey = 1, 0xa20cf0b8e1baae70)
+4-22 11:14:34.626 debug: Config(0xb400006ddbe64a40, /data/user/0/org.tele.alexgram/files/account9/dc4conf.dat) load, size = 36, fileSize = 40
+4-22 11:14:34.626 debug: datacenter(0xb400006ddbe83600) 4 loaded (hasAuthKey = 1, 0x2e83f2289cdc7851)
+4-22 11:14:34.626 debug: Config(0xb400006ddbe64b80, /data/user/0/org.tele.alexgram/files/account9/dc5conf.dat) load, size = 36, fileSize = 40
+4-22 11:14:34.626 debug: datacenter(0xb400006ddbe83800) 5 loaded (hasAuthKey = 1, 0x3251639be98faa7e)
+4-22 11:14:34.626 debug: Config(0xb400006ddbe64cc0, /data/user/0/org.tele.alexgram/files/account9/dc201conf.dat) load, size = 36, fileSize = 40
+4-22 11:14:34.626 debug: datacenter(0xb400006ddbe83a00) 201 loaded (hasAuthKey = 1, 0xb9c152beb34c90f1)
+4-22 11:14:34.627 debug: network thread started
+4-22 11:14:34.629 debug: connection(0xb400006f195c0f00, account9, dc5, type 8) connecting (91.108.56.160:443)
+4-22 11:14:34.630 debug: connection(0xb400006f195c0f00) socketAddress6, port: 0, family:0
+4-22 11:14:34.634 debug: connection(0xb400006f195c0f00) set current timeout = 30
+4-22 11:14:34.634 debug: connection(0xb400006f195c0f00, account9, dc5, type 8) send message (session: 0x3c0fdbd0ac2fccb5, seqno: 0, messageid: 0x69e86042a24dd400): 24TL_ping_delay_disconnect(0xb400006f1942dac0)
+4-22 11:14:34.634 debug: dc5 send ping to push connection
+4-22 11:14:34.635 debug: connection(0xb400006f195c0f00, account9, dc5, type 8) suspend
+4-22 11:14:34.635 debug: connection(0xb400006f195c0f00, account9, dc5, type 8) disconnected with reason 0
+4-22 11:14:34.635 debug: connection(0xb400006f195c0f00) push connection closed
+4-22 11:14:34.635 debug: connection(0xb400006f195c0f00) push connection closed
+4-22 11:14:34.635 debug: push ping timeout
+4-22 11:14:34.637 debug: connection(0xb400006f195c1400, account9, dc5, type 1) connecting (91.108.56.160:443)
+4-22 11:14:34.638 debug: connection(0xb400006f195c1400) socketAddress6, port: 0, family:0
+4-22 11:14:34.640 debug: connection(0xb400006f195c1400) set current timeout = 12
+4-22 11:14:34.641 debug: send request 0xb400006df11b5e80 - 14TL_api_request
+4-22 11:14:34.641 debug: send request wrapped 0xb400006df11b5e80 - 14TL_api_request
+4-22 11:14:34.646 debug: connection(0xb400006f19432300) reset last event time, on connect
+4-22 11:14:34.647 debug: connection(0xb400006f19432300, account2, dc2, type 1) connected to 149.154.167.50:5222
+4-22 11:14:34.647 debug: connection(0xb400006f19432300, account2, dc2, type 1) send message (session: 0xfc0b54ca05ba61a8, seqno: 0, messageid: 0x69e86042a5a1cc00): 18TL_destroy_session(0xb400006f1942db10)
+4-22 11:14:34.686 debug: Config(0xb400006e825ab9c0, /data/user/0/org.tele.alexgram/files/dc5conf.dat) start write config
+4-22 11:14:34.686 debug: Config(0xb400006e825ab9c0, /data/user/0/org.tele.alexgram/files/dc5conf.dat) fileno = 273
+4-22 11:14:34.697 debug: connection(0xb400006f195c0000) reset last event time, on connect
+4-22 11:14:34.697 debug: connection(0xb400006f195c0000, account7, dc5, type 1) connected to 91.108.56.185:5222
+4-22 11:14:34.697 debug: Config(0xb400006e825ab9c0, /data/user/0/org.tele.alexgram/files/dc5conf.dat) config write ok
+4-22 11:14:34.698 debug: messageId for token = 1, 0x69e86042b2b02004
+4-22 11:14:34.698 debug: connection(0xb400006f19430a00) set current timeout = 4
+4-22 11:14:34.698 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 152 equal to packet size
+4-22 11:14:34.698 debug: start write messages to container
+4-22 11:14:34.698 debug: connection(0xb400006f195c0000, account7, dc5, type 1) send message (session: 0xaf37c8ffbe0f3858, seqno: 0, messageid: 0x69e86042b2b02000): 18TL_destroy_session(0xb400006f195f8a90)
+4-22 11:14:34.698 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received object 16TL_msg_container
+4-22 11:14:34.698 debug: process server response 0xb400006f19439bc0 - 16TL_msg_container
+4-22 11:14:34.698 debug: received container with 2 items
+4-22 11:14:34.698 debug: 4-22 11:14:34.698 debug: inner message 0 id 0x69e86042e7dcac01 processconnection(0xb400006f195c0000, account7, dc5, type 1) send message (session: 0xaf37c8ffbe0f3858, seqno: 1, messageid: 0x69e86042b2b02004): 14TL_api_request(0xb400006df1143680)
+
+4-22 11:14:34.698 debug: process server response 0xb400006f19439c80 - 22TL_new_session_created
+4-22 11:14:34.698 debug: connection(0xb400006f19430a00, account0, dc5, type 1) new session created (first message id: 0x69e860428e560400, server salt: 0xa2f448410c0fd6b1, unique id: 0x6feae47d448862c9)
+4-22 11:14:34.698 debug: Config(0xb400006e825ab280, /data/user/0/org.tele.alexgram/files/tgnet.dat) start write config
+4-22 11:14:34.699 debug: Config(0xb400006e825ab280, /data/user/0/org.tele.alexgram/files/tgnet.dat) fileno = 273
+4-22 11:14:34.701 debug: Config(0xb400006e825ab280, /data/user/0/org.tele.alexgram/files/tgnet.dat) config write ok
+4-22 11:14:34.702 debug: inner message 1 id 0x69e86042e7dcac05 process
+4-22 11:14:34.702 debug: process server response 0xb400006f195f8ae0 - 21TL_destroy_session_ok
+4-22 11:14:34.702 debug: destroyed session 0x81ad4b4ad41639c7 (ok)
+4-22 11:14:34.702 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 0, messageid: 0x69e86042b3b64800): 11TL_msgs_ack(0xb400006f19439bc0)
+4-22 11:14:34.702 debug: create new 8 buffer
+4-22 11:14:34.704 debug: send request 0xb400006ddbf247d0 - 14TL_api_request
+4-22 11:14:34.704 debug: send request wrapped 0xb400006ddbf247d0 - 14TL_api_request
+4-22 11:14:34.705 debug: messageId for token = 1, 0x69e86042b47ae000
+4-22 11:14:34.705 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 1, messageid: 0x69e86042b47ae000): 14TL_api_request(0xb400006ddbf247d0)
+4-22 11:14:34.718 debug: connection(0xb400006f0d9ec100) reset last event time, on connect
+4-22 11:14:34.718 debug: connection(0xb400006f0d9ec100, account4, dc2, type 1) connected to 149.154.167.41:443
+4-22 11:14:34.718 debug: connection(0xb400006f0d9ec100, account4, dc2, type 1) send message (session: 0x879897659e8102ef, seqno: 0, messageid: 0x69e86042b7ced800): 18TL_destroy_session(0xb400006ddbf24a50)
+4-22 11:14:34.737 debug: connection(0xb400006f0d9ecb00) reset last event time, on connect
+4-22 11:14:34.737 debug: connection(0xb400006f0d9ecb00, account5, dc2, type 1) connected to 149.154.167.41:443
+4-22 11:14:34.737 debug: connection(0xb400006f0d9ecb00, account5, dc2, type 1) send message (session: 0x1c796fa7da064101, seqno: 0, messageid: 0x69e86042bcac0800): 18TL_destroy_session(0xb400006ddbf24aa0)
+4-22 11:14:34.742 debug: connection(0xb400006f195c1400) reset last event time, on connect
+4-22 11:14:34.743 debug: connection(0xb400006f195c1400, account9, dc5, type 1) connected to 91.108.56.160:443
+4-22 11:14:34.743 debug: messageId for token = 1, 0x69e86042be354004
+4-22 11:14:34.743 debug: start write messages to container
+4-22 11:14:34.743 debug: connection(0xb400006f195c1400, account9, dc5, type 1) send message (session: 0xb8b32be116273aa2, seqno: 0, messageid: 0x69e86042be354000): 18TL_destroy_session(0xb400006f1942d980)
+4-22 11:14:34.743 debug: connection(0xb400006f195c1400, account9, dc5, type 1) send message (session: 0xb8b32be116273aa2, seqno: 1, messageid: 0x69e86042be354004): 14TL_api_request(0xb400006df11b5e80)
+4-22 11:14:34.743 debug: create new 1224 buffer
+4-22 11:14:34.747 debug: connection(0xb400006f19432800) reset last event time, on connect
+4-22 11:14:34.747 debug: connection(0xb400006f19432800, account3, dc2, type 1) connected to 149.154.167.41:443
+4-22 11:14:34.747 debug: connection(0xb400006f19432800, account3, dc2, type 1) send message (session: 0x5cd106fdb8b0d285, seqno: 0, messageid: 0x69e86042bf3b6400): 18TL_destroy_session(0xb400006f1942d980)
+4-22 11:14:34.747 debug: create new 128 buffer
+4-22 11:14:34.782 debug: connection(0xb400006df119f000) reset last event time, on connect
+4-22 11:14:34.783 debug: connection(0xb400006df119f000, account6, dc2, type 1) connected to 149.154.167.41:443
+4-22 11:14:34.783 debug: connection(0xb400006df119f000, account6, dc2, type 1) send message (session: 0x478d95a72a28270a, seqno: 0, messageid: 0x69e86042c872b000): 18TL_destroy_session(0xb400006ddbf25130)
+4-22 11:14:34.808 debug: Config(0xb400006df11a4c40, /data/user/0/org.tele.alexgram/files/account7/dc5conf.dat) start write config
+4-22 11:14:34.809 debug: Config(0xb400006df11a4c40, /data/user/0/org.tele.alexgram/files/account7/dc5conf.dat) fileno = 281
+4-22 11:14:34.812 debug: Config(0xb400006df11a4c40, /data/user/0/org.tele.alexgram/files/account7/dc5conf.dat) config write ok
+4-22 11:14:34.812 debug: connection(0xb400006f195c0000) set current timeout = 4
+4-22 11:14:34.812 debug: connection(0xb400006f195c0000, account7, dc5, type 1) received message len 184 equal to packet size
+4-22 11:14:34.812 debug: connection(0xb400006f195c0000, account7, dc5, type 1) received object 16TL_msg_container
+4-22 11:14:34.812 debug: process server response 0xb400006f19439c20 - 16TL_msg_container
+4-22 11:14:34.812 debug: received container with 3 items
+4-22 11:14:34.812 debug: inner message 0 id 0x69e860430794b401 process
+4-22 11:14:34.812 debug: process server response 0xb400006f19439c80 - 22TL_new_session_created
+4-22 11:14:34.812 debug: connection(0xb400006f195c0000, account7, dc5, type 1) new session created (first message id: 0x69e86042b2b02000, server salt: 0x14cbb01b6a5f8bbd, unique id: 0x5f4283f7a01525eb)
+4-22 11:14:34.812 debug: Config(0xb400006df118dec0, /data/user/0/org.tele.alexgram/files/account7/tgnet.dat) start write config
+4-22 11:14:34.813 debug: Config(0xb400006df118dec0, /data/user/0/org.tele.alexgram/files/account7/tgnet.dat) fileno = 281
+4-22 11:14:34.815 debug: Config(0xb400006df118dec0, /data/user/0/org.tele.alexgram/files/account7/tgnet.dat) config write ok
+4-22 11:14:34.815 debug: inner message 1 id 0x69e860430794b405 process
+4-22 11:14:34.815 debug: process server response 0xb400006f195f8cc0 - 21TL_destroy_session_ok
+4-22 11:14:34.815 debug: destroyed session 0x9d43abceba3dab99 (ok)
+4-22 11:14:34.815 debug: inner message 2 id 0x69e8604307965801 process
+4-22 11:14:34.815 debug: process server response 0xb400006f19439ce0 - 11TL_msgs_ack
+4-22 11:14:34.816 debug: connection(0xb400006f195c0000, account7, dc5, type 1) send message (session: 0xaf37c8ffbe0f3858, seqno: 2, messageid: 0x69e86042d0e56000): 11TL_msgs_ack(0xb400006f19439c20)
+4-22 11:14:34.816 debug: send request 0xb400006ddbf264e0 - 14TL_api_request
+4-22 11:14:34.816 debug: send request wrapped 0xb400006ddbf264e0 - 14TL_api_request
+4-22 11:14:34.816 debug: messageId for token = 2, 0x69e86042d0e56004
+4-22 11:14:34.817 debug: connection(0xb400006f195c0000, account7, dc5, type 1) send message (session: 0xaf37c8ffbe0f3858, seqno: 3, messageid: 0x69e86042d0e56004): 14TL_api_request(0xb400006ddbf264e0)
+4-22 11:14:34.826 debug: connection(0xb400006f195c0500) reset last event time, on connect
+4-22 11:14:34.826 debug: connection(0xb400006f195c0500, account8, dc4, type 1) connected to 149.154.167.91:5222
+4-22 11:14:34.826 debug: messageId for token = 1, 0x69e86042d374bc04
+4-22 11:14:34.826 debug: start write messages to container
+4-22 11:14:34.826 debug: connection(0xb400006f195c0500, account8, dc4, type 1) send message (session: 0x8641089e1232f263, seqno: 0, messageid: 0x69e86042d374bc00): 18TL_destroy_session(0xb400006f195f8cc0)
+4-22 11:14:34.826 debug: connection(0xb400006f195c0500, account8, dc4, type 1) send message (session: 0x8641089e1232f263, seqno: 1, messageid: 0x69e86042d374bc04): 14TL_api_request(0xb400006df11b2780)
+4-22 11:14:34.831 debug: connection(0xb400006f195c0000, account7, dc5, type 1) received message len 88 equal to packet size
+4-22 11:14:34.831 debug: api request constructor 0x98f6ac75, don't parse
+4-22 11:14:34.831 debug: connection(0xb400006f195c0000, account7, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:34.831 debug: process server response 0xb400006f195f8cc0 - 13TL_rpc_result
+4-22 11:14:34.831 debug: message_id 7631455409672731649 connection(0xb400006f195c0000, account7, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:34.831 debug: got response for request 0xb400006df1143680, req_id = 1 - 14TL_api_request (messageId = 0x69e86042b2b02004)
+4-22 11:14:34.832 debug: 5) erase request 1 0x69e86042b2b02004
+4-22 11:14:34.832 debug: connection(0xb400006f195c0000, account7, dc5, type 1) send message (session: 0xaf37c8ffbe0f3858, seqno: 4, messageid: 0x69e86042d4fdf400): 11TL_msgs_ack(0xb400006f19439c20)
+4-22 11:14:34.839 debug: Config(0xb400006df106df00, /data/user/0/org.tele.alexgram/files/account2/dc2conf.dat) start write config
+4-22 11:14:34.840 debug: Config(0xb400006df106df00, /data/user/0/org.tele.alexgram/files/account2/dc2conf.dat) fileno = 282
+4-22 11:14:34.842 debug: Config(0xb400006df106df00, /data/user/0/org.tele.alexgram/files/account2/dc2conf.dat) config write ok
+4-22 11:14:34.842 debug: connection(0xb400006f19432300) set current timeout = 4
+4-22 11:14:34.842 debug: connection(0xb400006f19432300, account2, dc2, type 1) received message len 152 equal to packet size
+4-22 11:14:34.842 debug: connection(0xb400006f19432300, account2, dc2, type 1) received object 16TL_msg_container
+4-22 11:14:34.842 debug: process server response 0xb400006f19439c20 - 16TL_msg_container
+4-22 11:14:34.842 debug: received container with 2 items
+4-22 11:14:34.842 debug: inner message 0 id 0x69e86043019fa401 process
+4-22 11:14:34.842 debug: process server response 0xb400006f19439c80 - 22TL_new_session_created
+4-22 11:14:34.842 debug: connection(0xb400006f19432300, account2, dc2, type 1) new session created (first message id: 0x69e86042a5a1cc00, server salt: 0x13323cde4c487411, unique id: 0x4a7ac304b24a2363)
+4-22 11:14:34.842 debug: Config(0xb400006df106dbc0, /data/user/0/org.tele.alexgram/files/account2/tgnet.dat) start write config
+4-22 11:14:34.843 debug: Config(0xb400006df106dbc0, /data/user/0/org.tele.alexgram/files/account2/tgnet.dat) fileno = 282
+4-22 11:14:34.845 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 376 but packet larger 1764
+4-22 11:14:34.845 debug: Config(0xb400006df106dbc0, /data/user/0/org.tele.alexgram/files/account2/tgnet.dat) config write ok
+4-22 11:14:34.845 debug: not found request to parse constructor 0x74ae4240
+4-22 11:14:34.845 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received unparsed packet on 0x0
+4-22 11:14:34.845 debug: inner message 1 id 0x69e86043019fa405 process
+4-22 11:14:34.846 debug: process server response 0xb400006f195f8cc0 - 21TL_destroy_session_ok
+4-22 11:14:34.846 debug: destroyed session 0x58b4d848818e4850 (ok)
+4-22 11:14:34.846 debug: connection(0xb400006f19432300, account2, dc2, type 1) send message (session: 0xfc0b54ca05ba61a8, seqno: 0, messageid: 0x69e86042d8937400): 11TL_msgs_ack(0xb400006f19439c20)
+4-22 11:14:34.849 debug: Config(0xb400006ddbe64b80, /data/user/0/org.tele.alexgram/files/account9/dc5conf.dat) start write config
+4-22 11:14:34.849 debug: Config(0xb400006ddbe64b80, /data/user/0/org.tele.alexgram/files/account9/dc5conf.dat) fileno = 282
+4-22 11:14:34.851 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 1384 equal to packet size
+4-22 11:14:34.851 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:34.851 debug: process server response 0xb400006f195f8cc0 - 13TL_rpc_result
+4-22 11:14:34.851 debug: message_id 7631455409736617985 connection(0xb400006f19430a00, account0, dc5, type 1) received rpc_result with 14TL_gzip_packed
+4-22 11:14:34.851 debug: got response for request 0xb400006ddbf247d0, req_id = 1 - 14TL_api_request (messageId = 0x69e86042b47ae000)
+4-22 11:14:34.851 debug: api request constructor 0xf49ca0, don't parse
+4-22 11:14:34.852 debug: Config(0xb400006ddbe64b80, /data/user/0/org.tele.alexgram/files/account9/dc5conf.dat) config write ok
+4-22 11:14:34.852 debug: connection(0xb400006f195c1400) set current timeout = 4
+4-22 11:14:34.853 debug: connection(0xb400006f195c1400, account9, dc5, type 1) received message len 184 equal to packet size
+4-22 11:14:34.853 debug: connection(0xb400006f195c1400, account9, dc5, type 1) received object 16TL_msg_container
+4-22 11:14:34.853 debug: process server response 0xb400006f19439c20 - 16TL_msg_container
+4-22 11:14:34.853 debug: received container with 3 items
+4-22 11:14:34.853 debug: 5) erase request 1 0x69e86042b47ae000
+4-22 11:14:34.853 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 2, messageid: 0x69e86042da5e3400): 11TL_msgs_ack(0xb400006f19439d40)
+4-22 11:14:34.853 debug: inner message 0 id 0x69e860430e4c3801 process
+4-22 11:14:34.853 debug: process server response 0xb400006f19439c80 - 22TL_new_session_created
+4-22 11:14:34.854 debug: connection(0xb400006f195c1400, account9, dc5, type 1) new session created (first message id: 0x69e86042be354000, server salt: 0x701c9e4926162a0d, unique id: 0x28df44fd26c282bc)
+4-22 11:14:34.854 debug: Config(0xb400006ddbe644c0, /data/user/0/org.tele.alexgram/files/account9/tgnet.dat) start write config
+4-22 11:14:34.854 debug: Config(0xb400006ddbe644c0, /data/user/0/org.tele.alexgram/files/account9/tgnet.dat) fileno = 282
+4-22 11:14:34.857 debug: Config(0xb400006ddbe644c0, /data/user/0/org.tele.alexgram/files/account9/tgnet.dat) config write ok
+4-22 11:14:34.857 debug: inner message 1 id 0x69e860430e4c3805 process
+4-22 11:14:34.857 debug: process server response 0xb400006f195f8d60 - 21TL_destroy_session_ok
+4-22 11:14:34.857 debug: destroyed session 0x242b7627aed780fb (ok)
+4-22 11:14:34.857 debug: inner message 2 id 0x69e860430e58f401 process
+4-22 11:14:34.857 debug: process server response 0xb400006f19439ce0 - 11TL_msgs_ack
+4-22 11:14:34.857 debug: connection(0xb400006f195c1400, account9, dc5, type 1) send message (session: 0xb8b32be116273aa2, seqno: 2, messageid: 0x69e86042db645c00): 11TL_msgs_ack(0xb400006f19439c20)
+4-22 11:14:34.881 debug: connection(0xb400006f195c1400, account9, dc5, type 1) received message len 152 equal to packet size
+4-22 11:14:34.881 debug: api request constructor 0x8a4d87a, don't parse
+4-22 11:14:34.881 debug: connection(0xb400006f195c1400, account9, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:34.881 debug: process server response 0xb400006f195f8cc0 - 13TL_rpc_result
+4-22 11:14:34.881 debug: message_id 7631455409829752833 connection(0xb400006f195c1400, account9, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:34.881 debug: got response for request 0xb400006df11b5e80, req_id = 1 - 14TL_api_request (messageId = 0x69e86042be354004)
+4-22 11:14:34.882 debug: 5) erase request 1 0x69e86042be354004
+4-22 11:14:34.882 debug: connection(0xb400006f195c1400, account9, dc5, type 1) send message (session: 0xb8b32be116273aa2, seqno: 2, messageid: 0x69e86042e1cac000): 11TL_msgs_ack(0xb400006f19439c20)
+4-22 11:14:34.904 debug: Config(0xb400006df11226c0, /data/user/0/org.tele.alexgram/files/account4/dc2conf.dat) start write config
+4-22 11:14:34.905 debug: Config(0xb400006df11226c0, /data/user/0/org.tele.alexgram/files/account4/dc2conf.dat) fileno = 282
+4-22 11:14:34.908 debug: Config(0xb400006df11226c0, /data/user/0/org.tele.alexgram/files/account4/dc2conf.dat) config write ok
+4-22 11:14:34.908 debug: connection(0xb400006f0d9ec100) set current timeout = 4
+4-22 11:14:34.908 debug: connection(0xb400006f0d9ec100, account4, dc2, type 1) received message len 152 equal to packet size
+4-22 11:14:34.908 debug: connection(0xb400006f0d9ec100, account4, dc2, type 1) received object 16TL_msg_container
+4-22 11:14:34.908 debug: process server response 0xb400006dd51470e0 - 16TL_msg_container
+4-22 11:14:34.908 debug: received container with 2 items
+4-22 11:14:34.908 debug: inner message 0 id 0x69e860431426e401 process
+4-22 11:14:34.908 debug: process server response 0xb400006dd5147140 - 22TL_new_session_created
+4-22 11:14:34.908 debug: connection(0xb400006f0d9ec100, account4, dc2, type 1) new session created (first message id: 0x69e86042b7ced800, server salt: 0x5d5119468efb1d0f, unique id: 0xd1cb43c6ea58894a)
+4-22 11:14:34.908 debug: Config(0xb400006df1122400, /data/user/0/org.tele.alexgram/files/account4/tgnet.dat) start write config
+4-22 11:14:34.909 debug: Config(0xb400006df1122400, /data/user/0/org.tele.alexgram/files/account4/tgnet.dat) fileno = 282
+4-22 11:14:34.911 debug: Config(0xb400006df1122400, /data/user/0/org.tele.alexgram/files/account4/tgnet.dat) config write ok
+4-22 11:14:34.911 debug: inner message 1 id 0x69e860431426e405 process
+4-22 11:14:34.911 debug: process server response 0xb400006df11b5e80 - 21TL_destroy_session_ok
+4-22 11:14:34.911 debug: destroyed session 0xfd53989e80a188 (ok)
+4-22 11:14:34.911 debug: connection(0xb400006f0d9ec100, account4, dc2, type 1) send message (session: 0x879897659e8102ef, seqno: 0, messageid: 0x69e86042e9374c00): 11TL_msgs_ack(0xb400006dd51470e0)
+4-22 11:14:34.938 debug: connection(0xb400006f195c0000, account7, dc5, type 1) received message len 104 equal to packet size
+4-22 11:14:34.938 debug: api request constructor 0x5d75a138, don't parse
+4-22 11:14:34.938 debug: connection(0xb400006f195c0000, account7, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:34.938 debug: process server response 0xb400006f195f8cc0 - 13TL_rpc_result
+4-22 11:14:34.938 debug: message_id 7631455410137668609 connection(0xb400006f195c0000, account7, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:34.938 debug: got response for request 0xb400006ddbf264e0, req_id = 2 - 14TL_api_request (messageId = 0x69e86042d0e56004)
+4-22 11:14:34.939 debug: 5) erase request 2 0x69e86042d0e56004
+4-22 11:14:34.940 debug: connection(0xb400006f195c0000, account7, dc5, type 1) send message (session: 0xaf37c8ffbe0f3858, seqno: 4, messageid: 0x69e86042f0a3d800): 11TL_msgs_ack(0xb400006f19439c20)
+4-22 11:14:34.949 debug: Config(0xb400006df1148a80, /data/user/0/org.tele.alexgram/files/account5/dc2conf.dat) start write config
+4-22 11:14:34.950 debug: Config(0xb400006df1148a80, /data/user/0/org.tele.alexgram/files/account5/dc2conf.dat) fileno = 282
+4-22 11:14:34.953 debug: Config(0xb400006df1148a80, /data/user/0/org.tele.alexgram/files/account5/dc2conf.dat) config write ok
+4-22 11:14:34.953 debug: connection(0xb400006f0d9ecb00) set current timeout = 4
+4-22 11:14:34.953 debug: connection(0xb400006f0d9ecb00, account5, dc2, type 1) received message len 152 equal to packet size
+4-22 11:14:34.953 debug: connection(0xb400006f0d9ecb00, account5, dc2, type 1) received object 16TL_msg_container
+4-22 11:14:34.953 debug: process server response 0xb400006dd51470e0 - 16TL_msg_container
+4-22 11:14:34.953 debug: received container with 2 items
+4-22 11:14:34.953 debug: inner message 0 id 0x69e860431e3cd801 process
+4-22 11:14:34.953 debug: process server response 0xb400006dd5147140 - 22TL_new_session_created
+4-22 11:14:34.953 debug: connection(0xb400006f0d9ecb00, account5, dc2, type 1) new session created (first message id: 0x69e86042bcac0800, server salt: 0xcf2edbf33909944f, unique id: 0x13328445ecd7e8c7)
+4-22 11:14:34.954 debug: Config(0xb400006df1148600, /data/user/0/org.tele.alexgram/files/account5/tgnet.dat) start write config
+4-22 11:14:34.954 debug: Config(0xb400006df1148600, /data/user/0/org.tele.alexgram/files/account5/tgnet.dat) fileno = 282
+4-22 11:14:34.956 debug: Config(0xb400006df1148600, /data/user/0/org.tele.alexgram/files/account5/tgnet.dat) config write ok
+4-22 11:14:34.956 debug: inner message 1 id 0x69e860431e3cd805 process
+4-22 11:14:34.956 debug: process server response 0xb400006ddbf247d0 - 21TL_destroy_session_ok
+4-22 11:14:34.956 debug: destroyed session 0x9046a010d30c4240 (ok)
+4-22 11:14:34.956 debug: connection(0xb400006f0d9ecb00, account5, dc2, type 1) send message (session: 0x1c796fa7da064101, seqno: 0, messageid: 0x69e86042f4bc6c00): 11TL_msgs_ack(0xb400006dd51470e0)
+4-22 11:14:34.964 debug: Config(0xb400006df10e6280, /data/user/0/org.tele.alexgram/files/account3/dc2conf.dat) start write config
+4-22 11:14:34.965 debug: Config(0xb400006df10e6280, /data/user/0/org.tele.alexgram/files/account3/dc2conf.dat) fileno = 282
+4-22 11:14:34.967 debug: Config(0xb400006df10e6280, /data/user/0/org.tele.alexgram/files/account3/dc2conf.dat) config write ok
+4-22 11:14:34.967 debug: connection(0xb400006f19432800) set current timeout = 4
+4-22 11:14:34.967 debug: connection(0xb400006f19432800, account3, dc2, type 1) received message len 152 equal to packet size
+4-22 11:14:34.967 debug: connection(0xb400006f19432800, account3, dc2, type 1) received object 16TL_msg_container
+4-22 11:14:34.967 debug: process server response 0xb400006f19439c20 - 16TL_msg_container
+4-22 11:14:34.967 debug: received container with 2 items
+4-22 11:14:34.967 debug: inner message 0 id 0x69e860431bfcc801 process
+4-22 11:14:34.968 debug: process server response 0xb400006f19439c80 - 22TL_new_session_created
+4-22 11:14:34.968 debug: connection(0xb400006f19432800, account3, dc2, type 1) new session created (first message id: 0x69e86042bf3b6400, server salt: 0x375106f119317221, unique id: 0x84a9236ab17a9047)
+4-22 11:14:34.968 debug: Config(0xb400006df10bafc0, /data/user/0/org.tele.alexgram/files/account3/tgnet.dat) start write config
+4-22 11:14:34.968 debug: Config(0xb400006df10bafc0, /data/user/0/org.tele.alexgram/files/account3/tgnet.dat) fileno = 282
+4-22 11:14:34.970 debug: Config(0xb400006df10bafc0, /data/user/0/org.tele.alexgram/files/account3/tgnet.dat) config write ok
+4-22 11:14:34.970 debug: inner message 1 id 0x69e860431bfcc805 process
+4-22 11:14:34.970 debug: process server response 0xb400006f195f8cc0 - 21TL_destroy_session_ok
+4-22 11:14:34.970 debug: destroyed session 0x3e30454256a995a2 (ok)
+4-22 11:14:34.970 debug: connection(0xb400006f19432800, account3, dc2, type 1) send message (session: 0x5cd106fdb8b0d285, seqno: 0, messageid: 0x69e86042f851ec00): 11TL_msgs_ack(0xb400006f19439c20)
+4-22 11:14:34.976 debug: Config(0xb400006df118d880, /data/user/0/org.tele.alexgram/files/account6/dc2conf.dat) start write config
+4-22 11:14:34.976 debug: Config(0xb400006df118d880, /data/user/0/org.tele.alexgram/files/account6/dc2conf.dat) fileno = 282
+4-22 11:14:34.978 debug: Config(0xb400006df118d880, /data/user/0/org.tele.alexgram/files/account6/dc2conf.dat) config write ok
+4-22 11:14:34.979 debug: connection(0xb400006df119f000) set current timeout = 4
+4-22 11:14:34.979 debug: connection(0xb400006df119f000, account6, dc2, type 1) received message len 152 equal to packet size
+4-22 11:14:34.979 debug: connection(0xb400006df119f000, account6, dc2, type 1) received object 16TL_msg_container
+4-22 11:14:34.979 debug: process server response 0xb400006dd51470e0 - 16TL_msg_container
+4-22 11:14:34.979 debug: received container with 2 items
+4-22 11:14:34.979 debug: inner message 0 id 0x69e8604324782801 process
+4-22 11:14:34.979 debug: process server response 0xb400006dd5147140 - 22TL_new_session_created
+4-22 11:14:34.979 debug: connection(0xb400006df119f000, account6, dc2, type 1) new session created (first message id: 0x69e86042c872b000, server salt: 0xc0e34f65da9995e5, unique id: 0xae3abdf21c7713d0)
+4-22 11:14:34.979 debug: Config(0xb400006df118d600, /data/user/0/org.tele.alexgram/files/account6/tgnet.dat) start write config
+4-22 11:14:34.980 debug: Config(0xb400006df118d600, /data/user/0/org.tele.alexgram/files/account6/tgnet.dat) fileno = 282
+4-22 11:14:34.982 debug: Config(0xb400006df118d600, /data/user/0/org.tele.alexgram/files/account6/tgnet.dat) config write ok
+4-22 11:14:34.982 debug: inner message 1 id 0x69e8604324782805 process
+4-22 11:14:34.982 debug: process server response 0xb400006ddbf25f40 - 21TL_destroy_session_ok
+4-22 11:14:34.982 debug: destroyed session 0x969a2738e7d38d62 (ok)
+4-22 11:14:34.982 debug: connection(0xb400006df119f000, account6, dc2, type 1) send message (session: 0x478d95a72a28270a, seqno: 0, messageid: 0x69e86042fb645c00): 11TL_msgs_ack(0xb400006dd51470e0)
+4-22 11:14:35.047 debug: Config(0xb400006ddbe132c0, /data/user/0/org.tele.alexgram/files/account8/dc4conf.dat) start write config
+4-22 11:14:35.048 debug: Config(0xb400006ddbe132c0, /data/user/0/org.tele.alexgram/files/account8/dc4conf.dat) fileno = 283
+4-22 11:14:35.050 debug: Config(0xb400006ddbe132c0, /data/user/0/org.tele.alexgram/files/account8/dc4conf.dat) config write ok
+4-22 11:14:35.050 debug: connection(0xb400006f195c0500) set current timeout = 4
+4-22 11:14:35.050 debug: connection(0xb400006f195c0500, account8, dc4, type 1) received message len 184 equal to packet size
+4-22 11:14:35.050 debug: connection(0xb400006f195c0500, account8, dc4, type 1) received object 16TL_msg_container
+4-22 11:14:35.050 debug: process server response 0xb400006f19439c20 - 16TL_msg_container
+4-22 11:14:35.050 debug: received container with 3 items
+4-22 11:14:35.050 debug: inner message 0 id 0x69e8604331cfb401 process
+4-22 11:14:35.051 debug: process server response 0xb400006f19439c80 - 22TL_new_session_created
+4-22 11:14:35.051 debug: connection(0xb400006f195c0500, account8, dc4, type 1) new session created (first message id: 0x69e86042d374bc00, server salt: 0xf46a50193aac9501, unique id: 0x73f31d594dc9f877)
+4-22 11:14:35.051 debug: Config(0xb400006df11a7c40, /data/user/0/org.tele.alexgram/files/account8/tgnet.dat) start write config
+4-22 11:14:35.052 debug: Config(0xb400006df11a7c40, /data/user/0/org.tele.alexgram/files/account8/tgnet.dat) fileno = 283
+4-22 11:14:35.053 debug: Config(0xb400006df11a7c40, /data/user/0/org.tele.alexgram/files/account8/tgnet.dat) config write ok
+4-22 11:14:35.053 debug: inner message 1 id 0x69e8604331cfb405 process
+4-22 11:14:35.053 debug: process server response 0xb400006f195f8cc0 - 21TL_destroy_session_ok
+4-22 11:14:35.054 debug: destroyed session 0x857beb2e44a04950 (ok)
+4-22 11:14:35.054 debug: inner message 2 id 0x69e8604331d2ec01 process
+4-22 11:14:35.054 debug: process server response 0xb400006f19439ce0 - 11TL_msgs_ack
+4-22 11:14:35.054 debug: connection(0xb400006f195c0500, account8, dc4, type 1) send message (session: 0x8641089e1232f263, seqno: 2, messageid: 0x69e860430dd2f400): 11TL_msgs_ack(0xb400006f19439c20)
+4-22 11:14:35.067 debug: connection(0xb400006f195c0500, account8, dc4, type 1) received message len 344 equal to packet size
+4-22 11:14:35.067 debug: connection(0xb400006f195c0500, account8, dc4, type 1) received object 13TL_rpc_result
+4-22 11:14:35.067 debug: process server response 0xb400006f195f8cc0 - 13TL_rpc_result
+4-22 11:14:35.067 debug: message_id 7631455410382470145 connection(0xb400006f195c0500, account8, dc4, type 1) received rpc_result with 14TL_gzip_packed
+4-22 11:14:35.067 debug: got response for request 0xb400006df11b2780, req_id = 1 - 14TL_api_request (messageId = 0x69e86042d374bc04)
+4-22 11:14:35.068 debug: api request constructor 0x8a4d87a, don't parse
+4-22 11:14:35.069 debug: 5) erase request 1 0x69e86042d374bc04
+4-22 11:14:35.069 debug: connection(0xb400006f195c0500, account8, dc4, type 1) send message (session: 0x8641089e1232f263, seqno: 2, messageid: 0x69e8604311a9fc00): 11TL_msgs_ack(0xb400006f19439c20)
+4-22 11:14:35.103 debug: create new 4296 buffer
+4-22 11:14:35.123 debug: send request 0xb400006ddbf26800 - 14TL_api_request
+4-22 11:14:35.123 debug: send request 0xb400006ddbf26850 - 14TL_api_request
+4-22 11:14:35.123 debug: send request wrapped 0xb400006ddbf26800 - 14TL_api_request
+4-22 11:14:35.123 debug: send request wrapped 0xb400006ddbf26850 - 14TL_api_request
+4-22 11:14:35.123 debug: messageId for token = 2, 0x69e860431f7cf000
+4-22 11:14:35.123 debug: connection(0xb400006f195c1400, account9, dc5, type 1) send message (session: 0xb8b32be116273aa2, seqno: 3, messageid: 0x69e860431f7cf000): 14TL_api_request(0xb400006ddbf26850)
+4-22 11:14:35.123 debug: messageId for token = 2, 0x69e860431f7cf000
+4-22 11:14:35.123 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 3, messageid: 0x69e860431f7cf000): 14TL_api_request(0xb400006ddbf26800)
+4-22 11:14:35.234 debug: create new 160000 buffer
+4-22 11:14:35.246 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 1224 equal to packet size
+4-22 11:14:35.246 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:35.246 debug: process server response 0xb400006f195f8ef0 - 13TL_rpc_result
+4-22 11:14:35.246 debug: message_id 7631455411455454209 connection(0xb400006f19430a00, account0, dc5, type 1) received rpc_result with 14TL_gzip_packed
+4-22 11:14:35.246 debug: got response for request 0xb400006ddbf26800, req_id = 2 - 14TL_api_request (messageId = 0x69e860431f7cf000)
+4-22 11:14:35.247 debug: api request constructor 0xade1591, don't parse
+4-22 11:14:35.250 debug: 5) erase request 2 0x69e860431f7cf000
+4-22 11:14:35.250 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 4, messageid: 0x69e8604340000000): 11TL_msgs_ack(0xb400006f19439c20)
+4-22 11:14:35.266 debug: connection(0xb400006f195c1400, account9, dc5, type 1) received message len 1192 equal to packet size
+4-22 11:14:35.266 debug: connection(0xb400006f195c1400, account9, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:35.266 debug: process server response 0xb400006f195f8ef0 - 13TL_rpc_result
+4-22 11:14:35.266 debug: message_id 7631455411487894529 connection(0xb400006f195c1400, account9, dc5, type 1) received rpc_result with 14TL_gzip_packed
+4-22 11:14:35.266 debug: got response for request 0xb400006ddbf26850, req_id = 2 - 14TL_api_request (messageId = 0x69e860431f7cf000)
+4-22 11:14:35.266 debug: api request constructor 0xf49ca0, don't parse
+4-22 11:14:35.268 debug: 5) erase request 2 0x69e860431f7cf000
+4-22 11:14:35.268 debug: connection(0xb400006f195c1400, account9, dc5, type 1) send message (session: 0xb8b32be116273aa2, seqno: 4, messageid: 0x69e86043449ba800): 11TL_msgs_ack(0xb400006f19439c20)
+4-22 11:14:35.517 debug: wakeup network account0
+4-22 11:14:35.544 debug: send request 0xb400006dcecf1400 - 14TL_api_request
+4-22 11:14:35.544 debug: send request wrapped 0xb400006dcecf1400 - 14TL_api_request
+4-22 11:14:35.544 debug: messageId for token = 3, 0x69e860438b439800
+4-22 11:14:35.544 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 5, messageid: 0x69e860438b439800): 14TL_api_request(0xb400006dcecf1400)
+4-22 11:14:35.545 debug: send request 0xb400006dcecf14f0 - 14TL_api_request
+4-22 11:14:35.545 debug: send request wrapped 0xb400006dcecf14f0 - 14TL_api_request
+4-22 11:14:35.545 debug: messageId for token = 4, 0x69e860438b852000
+4-22 11:14:35.545 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 7, messageid: 0x69e860438b852000): 14TL_api_request(0xb400006dcecf14f0)
+4-22 11:14:35.545 debug: send request 0xb400006dcecf1540 - 14TL_api_request
+4-22 11:14:35.545 debug: send request wrapped 0xb400006dcecf1540 - 14TL_api_request
+4-22 11:14:35.545 debug: messageId for token = 5, 0x69e860438b852004
+4-22 11:14:35.545 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 9, messageid: 0x69e860438b852004): 14TL_api_request(0xb400006dcecf1540)
+4-22 11:14:35.545 debug: create new 128 buffer
+4-22 11:14:35.545 debug: send request 0xb400006dcecf15e0 - 14TL_api_request
+4-22 11:14:35.545 debug: send request wrapped 0xb400006dcecf15e0 - 14TL_api_request
+4-22 11:14:35.545 debug: messageId for token = 6, 0x69e860438b852008
+4-22 11:14:35.545 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 11, messageid: 0x69e860438b852008): 14TL_api_request(0xb400006dcecf15e0)
+4-22 11:14:35.545 debug: create new 128 buffer
+4-22 11:14:35.545 debug: create new 8 buffer
+4-22 11:14:35.545 debug: send request 0xb400006dcecf1680 - 14TL_api_request
+4-22 11:14:35.545 debug: send request wrapped 0xb400006dcecf1680 - 14TL_api_request
+4-22 11:14:35.545 debug: messageId for token = 7, 0x69e860438b85200c
+4-22 11:14:35.545 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 13, messageid: 0x69e860438b85200c): 14TL_api_request(0xb400006dcecf1680)
+4-22 11:14:35.545 debug: create new 8 buffer
+4-22 11:14:35.545 debug: send request 0xb400006dcecf16d0 - 14TL_api_request
+4-22 11:14:35.545 debug: send request wrapped 0xb400006dcecf16d0 - 14TL_api_request
+4-22 11:14:35.545 debug: messageId for token = 8, 0x69e860438b852010
+4-22 11:14:35.545 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 15, messageid: 0x69e860438b852010): 14TL_api_request(0xb400006dcecf16d0)
+4-22 11:14:35.545 debug: create new 8 buffer
+4-22 11:14:35.545 debug: send request 0xb400006dcecf1720 - 14TL_api_request
+4-22 11:14:35.545 debug: send request wrapped 0xb400006dcecf1720 - 14TL_api_request
+4-22 11:14:35.545 debug: messageId for token = 9, 0x69e860438b852014
+4-22 11:14:35.545 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 17, messageid: 0x69e860438b852014): 14TL_api_request(0xb400006dcecf1720)
+4-22 11:14:35.545 debug: create new 1224 buffer
+4-22 11:14:35.545 debug: create new 8 buffer
+4-22 11:14:35.641 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 184 but packet larger 362
+4-22 11:14:35.641 debug: api request constructor 0x481eadfa, don't parse
+4-22 11:14:35.641 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received object 16TL_msg_container
+4-22 11:14:35.641 debug: process server response 0xb400006f1943a640 - 16TL_msg_container
+4-22 11:14:35.641 debug: received container with 2 items
+4-22 11:14:35.641 debug: inner message 0 id 0x69e86043dc544c01 process
+4-22 11:14:35.641 debug: process server response 0xb400006f195fb970 - 13TL_rpc_result
+4-22 11:14:35.641 debug: message_id 0 connection(0xb400006f19430a00, account0, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:35.641 debug: got response for request 0xb400006dcecf1540, req_id = 5 - 14TL_api_request (messageId = 0x69e860438b852004)
+4-22 11:14:35.642 debug: 5) erase request 5 0x69e860438b852004
+4-22 11:14:35.642 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 18, messageid: 0x69e86043a45a1c00): 11TL_msgs_ack(0xb400006f1943a820)
+4-22 11:14:35.642 debug: inner message 1 id 0x69e86043dc544c05 process
+4-22 11:14:35.642 debug: process server response 0xb400006f1943a7c0 - 11TL_msgs_ack
+4-22 11:14:35.642 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 88 but packet larger 177
+4-22 11:14:35.642 debug: api request constructor 0x481eadfa, don't parse
+4-22 11:14:35.642 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:35.642 debug: process server response 0xb400006f195fb970 - 13TL_rpc_result
+4-22 11:14:35.642 debug: message_id 7631455413158098945 connection(0xb400006f19430a00, account0, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:35.642 debug: got response for request 0xb400006dcecf15e0, req_id = 6 - 14TL_api_request (messageId = 0x69e860438b852008)
+4-22 11:14:35.642 debug: 5) erase request 6 0x69e860438b852008
+4-22 11:14:35.642 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 18, messageid: 0x69e86043a45a1c04): 11TL_msgs_ack(0xb400006f1943a640)
+4-22 11:14:35.642 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 88 equal to packet size
+4-22 11:14:35.642 debug: api request constructor 0xfe41b34f, don't parse
+4-22 11:14:35.642 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:35.642 debug: process server response 0xb400006f195fb970 - 13TL_rpc_result
+4-22 11:14:35.642 debug: message_id 7631455413158166529 connection(0xb400006f19430a00, account0, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:35.642 debug: got response for request 0xb400006dcecf1720, req_id = 9 - 14TL_api_request (messageId = 0x69e860438b852014)
+4-22 11:14:35.642 debug: 5) erase request 9 0x69e860438b852014
+4-22 11:14:35.643 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 18, messageid: 0x69e86043a49ba800): 11TL_msgs_ack(0xb400006f1943a640)
+4-22 11:14:35.643 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 104 but packet larger 813
+4-22 11:14:35.643 debug: api request constructor 0xeafdf716, don't parse
+4-22 11:14:35.643 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:35.643 debug: process server response 0xb400006f195fb970 - 13TL_rpc_result
+4-22 11:14:35.643 debug: message_id 7631455413163415553 connection(0xb400006f19430a00, account0, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:35.643 debug: got response for request 0xb400006dcecf1400, req_id = 3 - 14TL_api_request (messageId = 0x69e860438b439800)
+4-22 11:14:35.645 debug: 5) erase request 3 0x69e860438b439800
+4-22 11:14:35.645 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 18, messageid: 0x69e86043a51eb800): 11TL_msgs_ack(0xb400006f1943a640)
+4-22 11:14:35.645 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 88 but packet larger 708
+4-22 11:14:35.645 debug: api request constructor 0xb06fdbdf, don't parse
+4-22 11:14:35.645 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:35.645 debug: process server response 0xb400006f195fb970 - 13TL_rpc_result
+4-22 11:14:35.645 debug: message_id 7631455413168688129 connection(0xb400006f19430a00, account0, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:35.645 debug: got response for request 0xb400006dcecf14f0, req_id = 4 - 14TL_api_request (messageId = 0x69e860438b852000)
+4-22 11:14:35.645 debug: 5) erase request 4 0x69e860438b852000
+4-22 11:14:35.645 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 18, messageid: 0x69e86043a51eb804): 11TL_msgs_ack(0xb400006f1943a640)
+4-22 11:14:35.645 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 616 equal to packet size
+4-22 11:14:35.646 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:35.646 debug: process server response 0xb400006f195fb970 - 13TL_rpc_result
+4-22 11:14:35.646 debug: message_id 7631455413168248833 connection(0xb400006f19430a00, account0, dc5, type 1) received rpc_result with 14TL_gzip_packed
+4-22 11:14:35.646 debug: got response for request 0xb400006dcecf16d0, req_id = 8 - 14TL_api_request (messageId = 0x69e860438b852010)
+4-22 11:14:35.646 debug: api request constructor 0x6e153f16, don't parse
+4-22 11:14:35.647 debug: 5) erase request 8 0x69e860438b852010
+4-22 11:14:35.647 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 18, messageid: 0x69e86043a5a1cc00): 11TL_msgs_ack(0xb400006f1943a640)
+4-22 11:14:35.714 debug: send request 0xb400006dcecf3c00 - 14TL_api_request
+4-22 11:14:35.714 debug: send request wrapped 0xb400006dcecf3c00 - 14TL_api_request
+4-22 11:14:35.714 debug: messageId for token = 10, 0x69e86043b6c8b400
+4-22 11:14:35.714 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 19, messageid: 0x69e86043b6c8b400): 14TL_api_request(0xb400006dcecf3c00)
+4-22 11:14:35.714 debug: send request 0xb400006dcecf3c50 - 14TL_api_request
+4-22 11:14:35.714 debug: send request wrapped 0xb400006dcecf3c50 - 14TL_api_request
+4-22 11:14:35.714 debug: messageId for token = 11, 0x69e86043b6c8b404
+4-22 11:14:35.714 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 21, messageid: 0x69e86043b6c8b404): 14TL_api_request(0xb400006dcecf3c50)
+4-22 11:14:35.716 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received packet size less(2452) then message size(142488)
+4-22 11:14:35.718 debug: send request 0xb400006dcecf3e80 - 14TL_api_request
+4-22 11:14:35.718 debug: send request wrapped 0xb400006dcecf3e80 - 14TL_api_request
+4-22 11:14:35.718 debug: messageId for token = 12, 0x69e86043b7ced800
+4-22 11:14:35.718 debug: send request 0xb400006dcecf3ed0 - 14TL_api_request
+4-22 11:14:35.718 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 23, messageid: 0x69e86043b7ced800): 14TL_api_request(0xb400006dcecf3e80)
+4-22 11:14:35.718 debug: send request wrapped 0xb400006dcecf3ed0 - 14TL_api_request
+4-22 11:14:35.718 debug: messageId for token = 2, 0x69e86043b7ced800
+4-22 11:14:35.718 debug: connection(0xb400006f195c0500, account8, dc4, type 1) send message (session: 0x8641089e1232f263, seqno: 3, messageid: 0x69e86043b7ced800): 14TL_api_request(0xb400006dcecf3ed0)
+4-22 11:14:35.718 debug: send request 0xb400006dcecf3f20 - 14TL_api_request
+4-22 11:14:35.718 debug: send request wrapped 0xb400006dcecf3f20 - 14TL_api_request
+4-22 11:14:35.718 debug: messageId for token = 13, 0x69e86043b7ced804
+4-22 11:14:35.719 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 25, messageid: 0x69e86043b7ced804): 14TL_api_request(0xb400006dcecf3f20)
+4-22 11:14:35.945 debug: connection(0xb400006f195c0500, account8, dc4, type 1) received message len 104 equal to packet size
+4-22 11:14:35.945 debug: api request constructor 0x5d75a138, don't parse
+4-22 11:14:35.946 debug: connection(0xb400006f195c0500, account8, dc4, type 1) received object 13TL_rpc_result
+4-22 11:14:35.946 debug: process server response 0xb400006db25edac0 - 13TL_rpc_result
+4-22 11:14:35.946 debug: message_id 7631455414148182017 connection(0xb400006f195c0500, account8, dc4, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:35.946 debug: got response for request 0xb400006dcecf3ed0, req_id = 2 - 14TL_api_request (messageId = 0x69e86043b7ced800)
+4-22 11:14:35.947 debug: 5) erase request 2 0x69e86043b7ced800
+4-22 11:14:35.948 debug: connection(0xb400006f195c0500, account8, dc4, type 1) send message (session: 0x8641089e1232f263, seqno: 4, messageid: 0x69e86043f2b02000): 11TL_msgs_ack(0xb400006db17adde0)
+4-22 11:14:35.964 debug: send request 0xb400006dcecf4a60 - 14TL_api_request
+4-22 11:14:35.964 debug: send request wrapped 0xb400006dcecf4a60 - 14TL_api_request
+4-22 11:14:35.964 debug: messageId for token = 3, 0x69e86043f6c8b400
+4-22 11:14:35.964 debug: connection(0xb400006f195c0000, account7, dc5, type 1) send message (session: 0xaf37c8ffbe0f3858, seqno: 5, messageid: 0x69e86043f6c8b400): 14TL_api_request(0xb400006dcecf4a60)
+4-22 11:14:35.965 debug: send request 0xb400006dcecf3ed0 - 14TL_api_request
+4-22 11:14:35.966 debug: send request wrapped 0xb400006dcecf3ed0 - 14TL_api_request
+4-22 11:14:35.966 debug: messageId for token = 4, 0x69e86043f74bc800
+4-22 11:14:35.966 debug: connection(0xb400006f195c0000, account7, dc5, type 1) send message (session: 0xaf37c8ffbe0f3858, seqno: 7, messageid: 0x69e86043f74bc800): 14TL_api_request(0xb400006dcecf3ed0)
+4-22 11:14:35.966 debug: send request 0xb400006dcecf4b00 - 14TL_api_request
+4-22 11:14:35.966 debug: send request wrapped 0xb400006dcecf4b00 - 14TL_api_request
+4-22 11:14:35.966 debug: messageId for token = 5, 0x69e86043f74bc804
+4-22 11:14:35.966 debug: connection(0xb400006f195c0000, account7, dc5, type 1) send message (session: 0xaf37c8ffbe0f3858, seqno: 9, messageid: 0x69e86043f74bc804): 14TL_api_request(0xb400006dcecf4b00)
+4-22 11:14:35.967 debug: send request 0xb400006dcecf4b50 - 14TL_api_request
+4-22 11:14:35.967 debug: send request wrapped 0xb400006dcecf4b50 - 14TL_api_request
+4-22 11:14:35.967 debug: messageId for token = 6, 0x69e86043f78d5000
+4-22 11:14:35.967 debug: connection(0xb400006f195c0000, account7, dc5, type 1) send message (session: 0xaf37c8ffbe0f3858, seqno: 11, messageid: 0x69e86043f78d5000): 14TL_api_request(0xb400006dcecf4b50)
+4-22 11:14:35.978 debug: create new 128 buffer
+4-22 11:14:35.978 debug: send request 0xb400006dcecf4ab0 - 14TL_api_request
+4-22 11:14:35.978 debug: send request wrapped 0xb400006dcecf4ab0 - 14TL_api_request
+4-22 11:14:35.978 debug: messageId for token = 3, 0x69e86043fa5e3400
+4-22 11:14:35.978 debug: connection(0xb400006f195c0500, account8, dc4, type 1) send message (session: 0x8641089e1232f263, seqno: 5, messageid: 0x69e86043fa5e3400): 14TL_api_request(0xb400006dcecf4ab0)
+4-22 11:14:35.980 debug: create new 128 buffer
+4-22 11:14:35.980 debug: send request 0xb400006dcecf4bf0 - 14TL_api_request
+4-22 11:14:35.980 debug: send request wrapped 0xb400006dcecf4bf0 - 14TL_api_request
+4-22 11:14:35.980 debug: messageId for token = 4, 0x69e86043fae14800
+4-22 11:14:35.980 debug: create new 128 buffer
+4-22 11:14:35.980 debug: connection(0xb400006f195c0500, account8, dc4, type 1) send message (session: 0x8641089e1232f263, seqno: 7, messageid: 0x69e86043fae14800): 14TL_api_request(0xb400006dcecf4bf0)
+4-22 11:14:35.980 debug: create new 128 buffer
+4-22 11:14:35.980 debug: send request 0xb400006dcecf4c90 - 14TL_api_request
+4-22 11:14:35.980 debug: send request wrapped 0xb400006dcecf4c90 - 14TL_api_request
+4-22 11:14:35.981 debug: create new 128 buffer
+4-22 11:14:35.981 debug: messageId for token = 5, 0x69e86043fb22d000
+4-22 11:14:35.981 debug: connection(0xb400006f195c0500, account8, dc4, type 1) send message (session: 0x8641089e1232f263, seqno: 9, messageid: 0x69e86043fb22d000): 14TL_api_request(0xb400006dcecf4c90)
+4-22 11:14:35.981 debug: send request 0xb400006dcecf4c40 - 14TL_api_request
+4-22 11:14:35.981 debug: send request wrapped 0xb400006dcecf4c40 - 14TL_api_request
+4-22 11:14:35.981 debug: messageId for token = 6, 0x69e86043fb22d004
+4-22 11:14:35.981 debug: connection(0xb400006f195c0500, account8, dc4, type 1) send message (session: 0x8641089e1232f263, seqno: 11, messageid: 0x69e86043fb22d004): 14TL_api_request(0xb400006dcecf4c40)
+4-22 11:14:35.996 debug: create new 128 buffer
+4-22 11:14:35.996 debug: send request 0xb400006dcecf4ce0 - 14TL_api_request
+4-22 11:14:35.996 debug: send request wrapped 0xb400006dcecf4ce0 - 14TL_api_request
+4-22 11:14:35.996 debug: messageId for token = 3, 0x69e86043fef9dc00
+4-22 11:14:35.996 debug: connection(0xb400006f195c1400, account9, dc5, type 1) send message (session: 0xb8b32be116273aa2, seqno: 5, messageid: 0x69e86043fef9dc00): 14TL_api_request(0xb400006dcecf4ce0)
+4-22 11:14:35.996 debug: create new 128 buffer
+4-22 11:14:35.996 debug: send request 0xb400006dcecf4e20 - 14TL_api_request
+4-22 11:14:35.996 debug: send request wrapped 0xb400006dcecf4e20 - 14TL_api_request
+4-22 11:14:35.996 debug: messageId for token = 4, 0x69e86043fef9dc04
+4-22 11:14:35.996 debug: connection(0xb400006f195c1400, account9, dc5, type 1) send message (session: 0xb8b32be116273aa2, seqno: 7, messageid: 0x69e86043fef9dc04): 14TL_api_request(0xb400006dcecf4e20)
+4-22 11:14:35.997 debug: send request 0xb400006dcecf4e70 - 14TL_api_request
+4-22 11:14:35.997 debug: send request wrapped 0xb400006dcecf4e70 - 14TL_api_request
+4-22 11:14:35.997 debug: messageId for token = 5, 0x69e86043ff3b6400
+4-22 11:14:35.997 debug: connection(0xb400006f195c1400, account9, dc5, type 1) send message (session: 0xb8b32be116273aa2, seqno: 9, messageid: 0x69e86043ff3b6400): 14TL_api_request(0xb400006dcecf4e70)
+4-22 11:14:35.997 debug: create new 128 buffer
+4-22 11:14:35.998 debug: send request 0xb400006dcecf4f10 - 14TL_api_request
+4-22 11:14:35.998 debug: send request wrapped 0xb400006dcecf4f10 - 14TL_api_request
+4-22 11:14:35.998 debug: messageId for token = 6, 0x69e86043ff7cf000
+4-22 11:14:35.998 debug: connection(0xb400006f195c1400, account9, dc5, type 1) send message (session: 0xb8b32be116273aa2, seqno: 11, messageid: 0x69e86043ff7cf000): 14TL_api_request(0xb400006dcecf4f10)
+4-22 11:14:35.999 debug: send request 0xb400006dcecf4ec0 - 14TL_api_request
+4-22 11:14:35.999 debug: send request 0xb400006dcecf4f60 - 14TL_api_request
+4-22 11:14:35.999 debug: wrap in layer 14TL_api_request, flags = 2
+4-22 11:14:35.999 debug: send request wrapped 0xb400006dcecf4f60 - 14TL_api_request
+4-22 11:14:36.999 debug: send request wrapped 0xb400006db17b2c10 - 15invokeWithLayer
+4-22 11:14:36.000 debug: can't do request without login 14TL_api_request, reschedule token 2
+4-22 11:14:36.000 debug: can't do request without login 14TL_api_request, reschedule token 2
+4-22 11:14:36.000 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 142488 equal to packet size
+4-22 11:14:36.002 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:36.002 debug: process server response 0xb400006db17b2c60 - 13TL_rpc_result
+4-22 11:14:36.002 debug: message_id 7631455413472129025 connection(0xb400006f19430a00, account0, dc5, type 1) received rpc_result with 14TL_gzip_packed
+4-22 11:14:36.002 debug: got response for request 0xb400006dcecf1680, req_id = 7 - 14TL_api_request (messageId = 0x69e860438b85200c)
+4-22 11:14:36.004 debug: send request 0xb400006dcecf4fb0 - 14TL_api_request
+4-22 11:14:36.004 debug: send request wrapped 0xb400006dcecf4fb0 - 14TL_api_request
+4-22 11:14:36.004 debug: can't do request without login 14TL_api_request, reschedule token 2
+4-22 11:14:36.004 debug: send request 0xb400006dbf7830a0 - 14TL_api_request
+4-22 11:14:36.004 debug: send request wrapped 0xb400006dbf7830a0 - 14TL_api_request
+4-22 11:14:36.004 debug: can't do request without login 14TL_api_request, reschedule token 2
+4-22 11:14:36.004 debug: api request constructor 0x30a6ec7e, don't parse
+4-22 11:14:36.004 debug: send request 0xb400006dbf7830f0 - 14TL_api_request
+4-22 11:14:36.005 debug: wrap in layer 14TL_api_request, flags = 2
+4-22 11:14:36.005 debug: send request wrapped 0xb400006dbf783230 - 15invokeWithLayer
+4-22 11:14:36.005 debug: can't do request without login 14TL_api_request, reschedule token 2
+4-22 11:14:36.005 debug: send request 0xb400006dbf783280 - 14TL_api_request
+4-22 11:14:36.005 debug: send request wrapped 0xb400006dbf783280 - 14TL_api_request
+4-22 11:14:36.005 debug: can't do request without login 14TL_api_request, reschedule token 2
+4-22 11:14:36.009 debug: create new 128 buffer
+4-22 11:14:36.009 debug: send request 0xb400006dbf7832d0 - 14TL_api_request
+4-22 11:14:36.009 debug: send request wrapped 0xb400006dbf7832d0 - 14TL_api_request
+4-22 11:14:36.009 debug: create new 128 buffer
+4-22 11:14:36.009 debug: messageId for token = 7, 0x69e86044024dd400
+4-22 11:14:36.009 debug: connection(0xb400006f195c0000, account7, dc5, type 1) send message (session: 0xaf37c8ffbe0f3858, seqno: 13, messageid: 0x69e86044024dd400): 14TL_api_request(0xb400006dbf7832d0)
+4-22 11:14:36.009 debug: send request 0xb400006dbf783320 - 14TL_api_request
+4-22 11:14:36.009 debug: send request wrapped 0xb400006dbf783320 - 14TL_api_request
+4-22 11:14:36.009 debug: messageId for token = 7, 0x69e86044024dd400
+4-22 11:14:36.009 debug: connection(0xb400006f195c0500, account8, dc4, type 1) send message (session: 0x8641089e1232f263, seqno: 13, messageid: 0x69e86044024dd400): 14TL_api_request(0xb400006dbf783320)
+4-22 11:14:36.010 debug: create new 128 buffer
+4-22 11:14:36.010 debug: create new 8 buffer
+4-22 11:14:36.021 debug: reset sleep timeout account7
+4-22 11:14:36.068 debug: create new 128 buffer
+4-22 11:14:36.068 debug: create new 128 buffer
+4-22 11:14:36.081 debug: connection(0xb400006f195c0000, account7, dc5, type 1) received message len 184 but packet larger 362
+4-22 11:14:36.081 debug: api request constructor 0xeafdf716, don't parse
+4-22 11:14:36.081 debug: connection(0xb400006f195c0000, account7, dc5, type 1) received object 16TL_msg_container
+4-22 11:14:36.081 debug: process server response 0xb400006db17ae6e0 - 16TL_msg_container
+4-22 11:14:36.081 debug: received container with 2 items
+4-22 11:14:36.081 debug: inner message 0 id 0x69e860444d368001 process
+4-22 11:14:36.081 debug: process server response 0xb400006db11fd170 - 13TL_rpc_result
+4-22 11:14:36.082 debug: message_id 0 connection(0xb400006f195c0000, account7, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:36.082 debug: got response for request 0xb400006dcecf4a60, req_id = 3 - 14TL_api_request (messageId = 0x69e86043f6c8b400)
+4-22 11:14:36.082 debug: 5) erase request 3 0x69e86043f6c8b400
+4-22 11:14:36.082 debug: connection(0xb400006f195c0000, account7, dc5, type 1) send message (session: 0xaf37c8ffbe0f3858, seqno: 14, messageid: 0x69e8604414fdf400): 11TL_msgs_ack(0xb400006db17ae7a0)
+4-22 11:14:36.082 debug: create new 8 buffer
+4-22 11:14:36.082 debug: inner message 1 id 0x69e860444d368005 process
+4-22 11:14:36.083 debug: process server response 0xb400006db17ae740 - 11TL_msgs_ack
+4-22 11:14:36.083 debug: connection(0xb400006f195c0000, account7, dc5, type 1) received message len 88 but packet larger 177
+4-22 11:14:36.083 debug: api request constructor 0x481eadfa, don't parse
+4-22 11:14:36.083 debug: connection(0xb400006f195c0000, account7, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:36.083 debug: process server response 0xb400006db11fd170 - 13TL_rpc_result
+4-22 11:14:36.083 debug: message_id 7631455415050087425 connection(0xb400006f195c0000, account7, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:36.083 debug: got response for request 0xb400006dcecf4b50, req_id = 6 - 14TL_api_request (messageId = 0x69e86043f78d5000)
+4-22 11:14:36.083 debug: 5) erase request 6 0x69e86043f78d5000
+4-22 11:14:36.084 debug: connection(0xb400006f195c0000, account7, dc5, type 1) send message (session: 0xaf37c8ffbe0f3858, seqno: 14, messageid: 0x69e8604415810800): 11TL_msgs_ack(0xb400006db17ae6e0)
+4-22 11:14:36.084 debug: create new 8 buffer
+4-22 11:14:36.084 debug: connection(0xb400006f195c0000, account7, dc5, type 1) received message len 88 equal to packet size
+4-22 11:14:36.084 debug: api request constructor 0xb06fdbdf, don't parse
+4-22 11:14:36.084 debug: connection(0xb400006f195c0000, account7, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:36.084 debug: process server response 0xb400006db11fd170 - 13TL_rpc_result
+4-22 11:14:36.084 debug: message_id 7631455415051552769 connection(0xb400006f195c0000, account7, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:36.084 debug: got response for request 0xb400006dcecf3ed0, req_id = 4 - 14TL_api_request (messageId = 0x69e86043f74bc800)
+4-22 11:14:36.084 debug: 5) erase request 4 0x69e86043f74bc800
+4-22 11:14:36.085 debug: connection(0xb400006f195c0000, account7, dc5, type 1) send message (session: 0xaf37c8ffbe0f3858, seqno: 14, messageid: 0x69e8604415c29000): 11TL_msgs_ack(0xb400006db17ae6e0)
+4-22 11:14:36.085 debug: create new 8 buffer
+4-22 11:14:36.085 debug: connection(0xb400006f195c0000, account7, dc5, type 1) received message len 88 equal to packet size
+4-22 11:14:36.085 debug: api request constructor 0x481eadfa, don't parse
+4-22 11:14:36.085 debug: connection(0xb400006f195c0000, account7, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:36.085 debug: process server response 0xb400006db11fd170 - 13TL_rpc_result
+4-22 11:14:36.085 debug: message_id 7631455415053687809 connection(0xb400006f195c0000, account7, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:36.085 debug: got response for request 0xb400006dcecf4b00, req_id = 5 - 14TL_api_request (messageId = 0x69e86043f74bc804)
+4-22 11:14:36.086 debug: 5) erase request 5 0x69e86043f74bc804
+4-22 11:14:36.086 debug: connection(0xb400006f195c0000, account7, dc5, type 1) send message (session: 0xaf37c8ffbe0f3858, seqno: 14, messageid: 0x69e8604416041800): 11TL_msgs_ack(0xb400006db17ae6e0)
+4-22 11:14:36.086 debug: create new 8 buffer
+4-22 11:14:36.101 debug: connection(0xb400006f195c1400, account9, dc5, type 1) received message len 280 equal to packet size
+4-22 11:14:36.101 debug: not found request to parse constructor 0x78d4dec1
+4-22 11:14:36.102 debug: connection(0xb400006f195c1400, account9, dc5, type 1) received object 16TL_msg_container
+4-22 11:14:36.102 debug: process server response 0xb400006db17ae740 - 16TL_msg_container
+4-22 11:14:36.102 debug: received container with 2 items
+4-22 11:14:36.102 debug: inner message 0 id 0x69e860444e324c01 is unparsed
+4-22 11:14:36.103 debug: inner message 1 id 0x69e860444e379801 process
+4-22 11:14:36.104 debug: process server response 0xb400006db17ae7a0 - 11TL_msgs_ack
+4-22 11:14:36.105 debug: connection(0xb400006f195c1400, account9, dc5, type 1) send message (session: 0xb8b32be116273aa2, seqno: 12, messageid: 0x69e860441ae14800): 11TL_msgs_ack(0xb400006db1bf1660)
+4-22 11:14:36.106 debug: connection(0xb400006f195c1400, account9, dc5, type 1) received message len 168 but packet larger 257
+4-22 11:14:36.106 debug: api request constructor 0xb06fdbdf, don't parse
+4-22 11:14:36.106 debug: connection(0xb400006f195c1400, account9, dc5, type 1) received object 16TL_msg_container
+4-22 11:14:36.106 debug: process server response 0xb400006db1bf1660 - 16TL_msg_container
+4-22 11:14:36.106 debug: received container with 2 items
+4-22 11:14:36.106 debug: inner message 0 id 0x69e860444f8fcc01 process
+4-22 11:14:36.107 debug: process server response 0xb400006db11fd350 - 13TL_rpc_result
+4-22 11:14:36.107 debug: message_id 0 connection(0xb400006f195c1400, account9, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:36.107 debug: got response for request 0xb400006dcecf4ce0, req_id = 3 - 14TL_api_request (messageId = 0x69e86043fef9dc00)
+4-22 11:14:36.109 debug: 5) erase request 3 0x69e86043fef9dc00
+4-22 11:14:36.109 debug: connection(0xb400006f195c1400, account9, dc5, type 1) send message (session: 0xb8b32be116273aa2, seqno: 12, messageid: 0x69e860441be76c00): 11TL_msgs_ack(0xb400006db17ae7a0)
+4-22 11:14:36.109 debug: inner message 1 id 0x69e860444f8fcc05 process
+4-22 11:14:36.109 debug: process server response 0xb400006db17ae740 - 11TL_msgs_ack
+4-22 11:14:36.109 debug: connection(0xb400006f195c1400, account9, dc5, type 1) received message len 88 equal to packet size
+4-22 11:14:36.109 debug: api request constructor 0x481eadfa, don't parse
+4-22 11:14:36.109 debug: connection(0xb400006f195c1400, account9, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:36.109 debug: process server response 0xb400006db11fd170 - 13TL_rpc_result
+4-22 11:14:36.109 debug: message_id 7631455415090527233 connection(0xb400006f195c1400, account9, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:36.109 debug: got response for request 0xb400006dcecf4f10, req_id = 6 - 14TL_api_request (messageId = 0x69e86043ff7cf000)
+4-22 11:14:36.110 debug: 5) erase request 6 0x69e86043ff7cf000
+4-22 11:14:36.110 debug: connection(0xb400006f195c1400, account9, dc5, type 1) send message (session: 0xb8b32be116273aa2, seqno: 12, messageid: 0x69e860441c28f800): 11TL_msgs_ack(0xb400006db1bf1660)
+4-22 11:14:36.110 debug: connection(0xb400006f195c1400, account9, dc5, type 1) received message len 88 but packet larger 177
+4-22 11:14:36.110 debug: api request constructor 0x481eadfa, don't parse
+4-22 11:14:36.110 debug: connection(0xb400006f195c1400, account9, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:36.110 debug: process server response 0xb400006db11fd170 - 13TL_rpc_result
+4-22 11:14:36.110 debug: message_id 7631455415096175617 connection(0xb400006f195c1400, account9, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:36.110 debug: got response for request 0xb400006dcecf4e70, req_id = 5 - 14TL_api_request (messageId = 0x69e86043ff3b6400)
+4-22 11:14:36.110 debug: 5) erase request 5 0x69e86043ff3b6400
+4-22 11:14:36.111 debug: connection(0xb400006f195c1400, account9, dc5, type 1) send message (session: 0xb8b32be116273aa2, seqno: 12, messageid: 0x69e860441c6a8000): 11TL_msgs_ack(0xb400006db1bf1660)
+4-22 11:14:36.111 debug: connection(0xb400006f195c1400, account9, dc5, type 1) received message len 88 equal to packet size
+4-22 11:14:36.111 debug: api request constructor 0xb06fdbdf, don't parse
+4-22 11:14:36.111 debug: connection(0xb400006f195c1400, account9, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:36.111 debug: process server response 0xb400006db11fd170 - 13TL_rpc_result
+4-22 11:14:36.111 debug: message_id 7631455415098867713 connection(0xb400006f195c1400, account9, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:36.111 debug: got response for request 0xb400006dcecf4e20, req_id = 4 - 14TL_api_request (messageId = 0x69e86043fef9dc04)
+4-22 11:14:36.112 debug: 5) erase request 4 0x69e86043fef9dc04
+4-22 11:14:36.112 debug: connection(0xb400006f195c1400, account9, dc5, type 1) send message (session: 0xb8b32be116273aa2, seqno: 12, messageid: 0x69e860441cac0800): 11TL_msgs_ack(0xb400006db1bf1660)
+4-22 11:14:36.112 debug: create new 1224 buffer
+4-22 11:14:36.112 debug: create new 8 buffer
+4-22 11:14:36.113 debug: 5) erase request 7 0x69e860438b85200c
+4-22 11:14:36.113 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 26, messageid: 0x69e860441ced9400): 11TL_msgs_ack(0xb400006db1bf1660)
+4-22 11:14:36.113 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 312 but packet larger 1183
+4-22 11:14:36.113 debug: api request constructor 0x7f077ad9, don't parse
+4-22 11:14:36.114 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received object 16TL_msg_container
+4-22 11:14:36.114 debug: process server response 0xb400006db1bf1660 - 16TL_msg_container
+4-22 11:14:36.114 debug: received container with 2 items
+4-22 11:14:36.114 debug: inner message 0 id 0x69e860440a84dc01 process
+4-22 11:14:36.114 debug: process server response 0xb400006db17b30c0 - 13TL_rpc_result
+4-22 11:14:36.114 debug: message_id 0 connection(0xb400006f19430a00, account0, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:36.115 debug: got response for request 0xb400006dcecf3c50, req_id = 11 - 14TL_api_request (messageId = 0x69e86043b6c8b404)
+4-22 11:14:36.117 debug: 5) erase request 11 0x69e86043b6c8b404
+4-22 11:14:36.117 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 26, messageid: 0x69e860441df3b800): 11TL_msgs_ack(0xb400006db1bf1360)
+4-22 11:14:36.117 debug: inner message 1 id 0x69e860440a84dc05 process
+4-22 11:14:36.117 debug: process server response 0xb400006db17ae740 - 11TL_msgs_ack
+4-22 11:14:36.117 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 232 but packet larger 870
+4-22 11:14:36.117 debug: api request constructor 0x7f077ad9, don't parse
+4-22 11:14:36.117 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:36.117 debug: process server response 0xb400006f1942a000 - 13TL_rpc_result
+4-22 11:14:36.117 debug: message_id 7631455413935019009 connection(0xb400006f19430a00, account0, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:36.117 debug: got response for request 0xb400006dcecf3c00, req_id = 10 - 14TL_api_request (messageId = 0x69e86043b6c8b400)
+4-22 11:14:36.118 debug: 5) erase request 10 0x69e86043b6c8b400
+4-22 11:14:36.118 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 26, messageid: 0x69e860441e354000): 11TL_msgs_ack(0xb400006db1bf1360)
+4-22 11:14:36.118 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 88 but packet larger 637
+4-22 11:14:36.118 debug: api request constructor 0xbc799737, don't parse
+4-22 11:14:36.118 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:36.118 debug: process server response 0xb400006f1942a000 - 13TL_rpc_result
+4-22 11:14:36.118 debug: message_id 7631455413938288641 connection(0xb400006f19430a00, account0, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:36.118 debug: got response for request 0xb400006dcecf3f20, req_id = 13 - 14TL_api_request (messageId = 0x69e86043b7ced804)
+4-22 11:14:36.118 debug: 5) erase request 13 0x69e86043b7ced804
+4-22 11:14:36.118 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 26, messageid: 0x69e860441e354004): 11TL_msgs_ack(0xb400006db1bf1360)
+4-22 11:14:36.118 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received packet size less(545) then message size(824)
+4-22 11:14:36.118 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 824 equal to packet size
+4-22 11:14:36.118 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:36.119 debug: process server response 0xb400006f1942a000 - 13TL_rpc_result
+4-22 11:14:36.119 debug: message_id 7631455414002288641 connection(0xb400006f19430a00, account0, dc5, type 1) received rpc_result with 14TL_gzip_packed
+4-22 11:14:36.119 debug: got response for request 0xb400006dcecf3e80, req_id = 12 - 14TL_api_request (messageId = 0x69e86043b7ced800)
+4-22 11:14:36.119 debug: api request constructor 0x2064674e, don't parse
+4-22 11:14:36.120 debug: 5) erase request 12 0x69e86043b7ced800
+4-22 11:14:36.120 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 26, messageid: 0x69e860441eb85400): 11TL_msgs_ack(0xb400006db1bf1360)
+4-22 11:14:36.120 debug: create new 1224 buffer
+4-22 11:14:36.120 debug: send request 0xb400006dbf783af0 - 14TL_api_request
+4-22 11:14:36.120 debug: send request wrapped 0xb400006dbf783af0 - 14TL_api_request
+4-22 11:14:36.120 debug: messageId for token = 14, 0x69e860441eb85404
+4-22 11:14:36.120 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 27, messageid: 0x69e860441eb85404): 14TL_api_request(0xb400006dbf783af0)
+4-22 11:14:36.121 debug: send request 0xb400006dbf783b40 - 14TL_api_request
+4-22 11:14:36.121 debug: send request wrapped 0xb400006dbf783b40 - 14TL_api_request
+4-22 11:14:36.121 debug: messageId for token = 15, 0x69e860441ef9dc00
+4-22 11:14:36.121 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 29, messageid: 0x69e860441ef9dc00): 14TL_api_request(0xb400006dbf783b40)
+4-22 11:14:36.121 debug: create new 8 buffer
+4-22 11:14:36.121 debug: send request 0xb400006dbf783b90 - 14TL_api_request
+4-22 11:14:36.121 debug: send request wrapped 0xb400006dbf783b90 - 14TL_api_request
+4-22 11:14:36.121 debug: messageId for token = 16, 0x69e860441ef9dc04
+4-22 11:14:36.121 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 31, messageid: 0x69e860441ef9dc04): 14TL_api_request(0xb400006dbf783b90)
+4-22 11:14:36.121 debug: create new 1224 buffer
+4-22 11:14:36.121 debug: create new 8 buffer
+4-22 11:14:36.121 debug: send request 0xb400006dbf783be0 - 14TL_api_request
+4-22 11:14:36.121 debug: send request wrapped 0xb400006dbf783be0 - 14TL_api_request
+4-22 11:14:36.121 debug: messageId for token = 17, 0x69e860441ef9dc08
+4-22 11:14:36.121 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 33, messageid: 0x69e860441ef9dc08): 14TL_api_request(0xb400006dbf783be0)
+4-22 11:14:36.121 debug: create new 1224 buffer
+4-22 11:14:36.121 debug: create new 8 buffer
+4-22 11:14:36.121 debug: send request 0xb400006dbf783c30 - 14TL_api_request
+4-22 11:14:36.121 debug: send request wrapped 0xb400006dbf783c30 - 14TL_api_request
+4-22 11:14:36.121 debug: messageId for token = 18, 0x69e860441ef9dc0c
+4-22 11:14:36.121 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 35, messageid: 0x69e860441ef9dc0c): 14TL_api_request(0xb400006dbf783c30)
+4-22 11:14:36.121 debug: create new 1224 buffer
+4-22 11:14:36.121 debug: create new 8 buffer
+4-22 11:14:36.121 debug: send request 0xb400006dcecf3ed0 - 14TL_api_request
+4-22 11:14:36.121 debug: send request wrapped 0xb400006dcecf3ed0 - 14TL_api_request
+4-22 11:14:36.121 debug: messageId for token = 19, 0x69e860441ef9dc10
+4-22 11:14:36.121 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 37, messageid: 0x69e860441ef9dc10): 14TL_api_request(0xb400006dcecf3ed0)
+4-22 11:14:36.121 debug: create new 1224 buffer
+4-22 11:14:36.121 debug: create new 8 buffer
+4-22 11:14:36.121 debug: send request 0xb400006dbf783eb0 - 14TL_api_request
+4-22 11:14:36.121 debug: send request wrapped 0xb400006dbf783eb0 - 14TL_api_request
+4-22 11:14:36.121 debug: messageId for token = 20, 0x69e860441ef9dc14
+4-22 11:14:36.121 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 39, messageid: 0x69e860441ef9dc14): 14TL_api_request(0xb400006dbf783eb0)
+4-22 11:14:36.121 debug: create new 1224 buffer
+4-22 11:14:36.121 debug: create new 8 buffer
+4-22 11:14:36.121 debug: send request 0xb400006dcecf3c00 - 14TL_api_request
+4-22 11:14:36.121 debug: send request wrapped 0xb400006dcecf3c00 - 14TL_api_request
+4-22 11:14:36.121 debug: messageId for token = 21, 0x69e860441ef9dc18
+4-22 11:14:36.121 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 41, messageid: 0x69e860441ef9dc18): 14TL_api_request(0xb400006dcecf3c00)
+4-22 11:14:36.121 debug: create new 1224 buffer
+4-22 11:14:36.121 debug: create new 8 buffer
+4-22 11:14:36.121 debug: send request 0xb400006dcecf4e20 - 14TL_api_request
+4-22 11:14:36.121 debug: send request wrapped 0xb400006dcecf4e20 - 14TL_api_request
+4-22 11:14:36.121 debug: messageId for token = 22, 0x69e860441ef9dc1c
+4-22 11:14:36.121 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 43, messageid: 0x69e860441ef9dc1c): 14TL_api_request(0xb400006dcecf4e20)
+4-22 11:14:36.122 debug: create new 1224 buffer
+4-22 11:14:36.122 debug: create new 8 buffer
+4-22 11:14:36.122 debug: too much 1224 buffers
+4-22 11:14:36.122 debug: too much 1224 buffers
+4-22 11:14:36.122 debug: too much 1224 buffers
+4-22 11:14:36.124 debug: too much 1224 buffers
+4-22 11:14:36.126 debug: connection(0xb400006f195c0000, account7, dc5, type 1) received message len 104 equal to packet size
+4-22 11:14:36.127 debug: api request constructor 0xeae87e42, don't parse
+4-22 11:14:36.127 debug: connection(0xb400006f195c0000, account7, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:36.127 debug: process server response 0xb400006db17b30c0 - 13TL_rpc_result
+4-22 11:14:36.127 debug: message_id 7631455415243845633 connection(0xb400006f195c0000, account7, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:36.127 debug: got response for request 0xb400006dbf7832d0, req_id = 7 - 14TL_api_request (messageId = 0x69e86044024dd400)
+4-22 11:14:36.128 debug: 5) erase request 7 0x69e86044024dd400
+4-22 11:14:36.128 debug: connection(0xb400006f195c0000, account7, dc5, type 1) send message (session: 0xaf37c8ffbe0f3858, seqno: 14, messageid: 0x69e8604420c49c00): 11TL_msgs_ack(0xb400006db1bf1360)
+4-22 11:14:36.147 debug: send request 0xb400006dbf784540 - 14TL_api_request
+4-22 11:14:36.147 debug: send request wrapped 0xb400006dbf784540 - 14TL_api_request
+4-22 11:14:36.147 debug: connection(0xb400006db1897900, account0, dc2, type 2) connecting (149.154.167.222:443)
+4-22 11:14:36.148 debug: connection(0xb400006db1897900) socketAddress6, port: 0, family:0
+4-22 11:14:36.150 debug: connection(0xb400006db1897900) set current timeout = 12
+4-22 11:14:36.150 debug: messageId for token = 23, 0x69e8604426666800
+4-22 11:14:36.150 debug: connection(0xb400006db1897900, account0, dc2, type 2) send message (session: 0xbacfa446236d18c1, seqno: 1, messageid: 0x69e8604426666800): 14TL_api_request(0xb400006dbf784540)
+4-22 11:14:36.217 debug: connection(0xb400006f195c0500, account8, dc4, type 1) received message len 184 equal to packet size
+4-22 11:14:36.217 debug: api request constructor 0xeafdf716, don't parse
+4-22 11:14:36.217 debug: connection(0xb400006f195c0500, account8, dc4, type 1) received object 16TL_msg_container
+4-22 11:14:36.217 debug: process server response 0xb400006db1bf1360 - 16TL_msg_container
+4-22 11:14:36.217 debug: received container with 2 items
+4-22 11:14:36.217 debug: inner message 0 id 0x69e860445d281801 process
+4-22 11:14:36.217 debug: process server response 0xb400006daaf4a960 - 13TL_rpc_result
+4-22 11:14:36.217 debug: message_id 0 connection(0xb400006f195c0500, account8, dc4, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:36.218 debug: got response for request 0xb400006dcecf4ab0, req_id = 3 - 14TL_api_request (messageId = 0x69e86043fa5e3400)
+4-22 11:14:36.224 debug: 5) erase request 3 0x69e86043fa5e3400
+4-22 11:14:36.224 debug: connection(0xb400006f195c0500, account8, dc4, type 1) send message (session: 0x8641089e1232f263, seqno: 14, messageid: 0x69e8604439581000): 11TL_msgs_ack(0xb400006db17aea40)
+4-22 11:14:36.225 debug: inner message 1 id 0x69e860445d281805 process
+4-22 11:14:36.225 debug: process server response 0xb400006db17ae9e0 - 11TL_msgs_ack
+4-22 11:14:36.226 debug: connection(0xb400006f195c0500, account8, dc4, type 1) received message len 88 but packet larger 177
+4-22 11:14:36.226 debug: api request constructor 0x481eadfa, don't parse
+4-22 11:14:36.226 debug: connection(0xb400006f195c0500, account8, dc4, type 1) received object 13TL_rpc_result
+4-22 11:14:36.226 debug: process server response 0xb400006daaf4a960 - 13TL_rpc_result
+4-22 11:14:36.226 debug: message_id 7631455415355813889 connection(0xb400006f195c0500, account8, dc4, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:36.226 debug: got response for request 0xb400006dcecf4c40, req_id = 6 - 14TL_api_request (messageId = 0x69e86043fb22d004)
+4-22 11:14:36.226 debug: 5) erase request 6 0x69e86043fb22d004
+4-22 11:14:36.227 debug: connection(0xb400006f195c0500, account8, dc4, type 1) send message (session: 0x8641089e1232f263, seqno: 14, messageid: 0x69e860443a1cac00): 11TL_msgs_ack(0xb400006db1bf1360)
+4-22 11:14:36.227 debug: connection(0xb400006f195c0500, account8, dc4, type 1) received message len 88 equal to packet size
+4-22 11:14:36.227 debug: api request constructor 0x481eadfa, don't parse
+4-22 11:14:36.227 debug: connection(0xb400006f195c0500, account8, dc4, type 1) received object 13TL_rpc_result
+4-22 11:14:36.227 debug: process server response 0xb400006daaf4a960 - 13TL_rpc_result
+4-22 11:14:36.227 debug: message_id 7631455415357240321 connection(0xb400006f195c0500, account8, dc4, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:36.227 debug: got response for request 0xb400006dcecf4c90, req_id = 5 - 14TL_api_request (messageId = 0x69e86043fb22d000)
+4-22 11:14:36.227 debug: 5) erase request 5 0x69e86043fb22d000
+4-22 11:14:36.227 debug: connection(0xb400006f195c0500, account8, dc4, type 1) send message (session: 0x8641089e1232f263, seqno: 14, messageid: 0x69e860443a1cac04): 11TL_msgs_ack(0xb400006db1bf1360)
+4-22 11:14:36.228 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 200 but packet larger 369
+4-22 11:14:36.228 debug: api request constructor 0x9e8fa6d3, don't parse
+4-22 11:14:36.228 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received object 16TL_msg_container
+4-22 11:14:36.228 debug: process server response 0xb400006db1bf1360 - 16TL_msg_container
+4-22 11:14:36.228 debug: received container with 2 items
+4-22 11:14:36.228 debug: inner message 0 id 0x69e86044720c1401 process
+4-22 11:14:36.228 debug: 4-22 11:14:36.228 debug: process server response 0xb400006daaf4a960 - 13TL_rpc_result
+4-22 11:14:36.228 debug: message_id 0 connection(0xb400006f19430a00, account0, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:36.228 debug: got response for request 0xb400006dbf783b90, req_id = 16 - 14TL_api_request (messageId = 0x69e860441ef9dc04)
+4-22 11:14:36.229 debug: 5) erase request 16 0x69e860441ef9dc04
+4-22 11:14:36.229 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 44, messageid: 0x69e860443a9fc000): 11TL_msgs_ack(0xb400006db17aea40)
+4-22 11:14:36.229 debug: inner message 1 id 0x69e86044720c1405 process
+4-22 11:14:36.229 debug: process server response 0xb400006db17ae9e0 - 11TL_msgs_ack
+4-22 11:14:36.229 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 168 equal to packet size
+4-22 11:14:36.229 debug: api request constructor 0x6efc5e81, don't parse
+4-22 11:14:36.229 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:36.229 debug: process server response 0xb400006daaf4a960 - 13TL_rpc_result
+4-22 11:14:36.229 debug: message_id 7631455415671367681 connection(0xb400006f19430a00, account0, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:36.229 debug: got response for request 0xb400006dbf783eb0, req_id = 20 - 14TL_api_request (messageId = 0x69e860441ef9dc14)
+4-22 11:14:36.229 debug: 5) erase request 20 0x69e860441ef9dc14
+4-22 11:14:36.230 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 44, messageid: 0x69e860443ae14800): 11TL_msgs_ack(0xb400006db1bf1360)
+connection(0xb400006f195c0500, account8, dc4, type 1) received message len 88 equal to packet size
+4-22 11:14:36.231 debug: api request constructor 0xb06fdbdf, don't parse
+4-22 11:14:36.231 debug: connection(0xb400006f195c0500, account8, dc4, type 1) received object 13TL_rpc_result
+4-22 11:14:36.231 debug: process server response 0xb400006daaf4a960 - 13TL_rpc_result
+4-22 11:14:36.231 debug: message_id 7631455415358773249 connection(0xb400006f195c0500, account8, dc4, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:36.231 debug: got response for request 0xb400006dcecf4bf0, req_id = 4 - 14TL_api_request (messageId = 0x69e86043fae14800)
+4-22 11:14:36.232 debug: 5) erase request 4 0x69e86043fae14800
+4-22 11:14:36.232 debug: connection(0xb400006f195c0500, account8, dc4, type 1) send message (session: 0x8641089e1232f263, seqno: 14, messageid: 0x69e860443b645c00): 11TL_msgs_ack(0xb400006db1bf1360)
+4-22 11:14:36.237 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 152 but packet larger 378
+4-22 11:14:36.237 debug: api request constructor 0x1158fe3e, don't parse
+4-22 11:14:36.237 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:36.237 debug: process server response 0xb400006daaf4a960 - 13TL_rpc_result
+4-22 11:14:36.237 debug: message_id 7631455415674437633 connection(0xb400006f19430a00, account0, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:36.237 debug: got response for request 0xb400006dcecf3ed0, req_id = 19 - 14TL_api_request (messageId = 0x69e860441ef9dc10)
+4-22 11:14:36.237 debug: 5) erase request 19 0x69e860441ef9dc10
+4-22 11:14:36.237 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 44, messageid: 0x69e860443cac0800): 11TL_msgs_ack(0xb400006db17aebc0)
+4-22 11:14:36.238 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 88 but packet larger 225
+4-22 11:14:36.238 debug: api request constructor 0xf1749a22, don't parse
+4-22 11:14:36.238 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:36.238 debug: process server response 0xb400006daaf4a960 - 13TL_rpc_result
+4-22 11:14:36.238 debug: message_id 7631455415677678593 connection(0xb400006f19430a00, account0, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:36.238 debug: got response for request 0xb400006dbf783be0, req_id = 17 - 14TL_api_request (messageId = 0x69e860441ef9dc08)
+4-22 11:14:36.238 debug: 5) erase request 17 0x69e860441ef9dc08
+4-22 11:14:36.238 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 44, messageid: 0x69e860443ced9400): 11TL_msgs_ack(0xb400006db17aebc0)
+4-22 11:14:36.238 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 136 equal to packet size
+4-22 11:14:36.238 debug: api request constructor 0xc776ba4e, don't parse
+4-22 11:14:36.238 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:36.238 debug: process server response 0xb400006daaf4a960 - 13TL_rpc_result
+4-22 11:14:36.238 debug: message_id 7631455415681973249 connection(0xb400006f19430a00, account0, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:36.238 debug: got response for request 0xb400006dcecf3c00, req_id = 21 - 14TL_api_request (messageId = 0x69e860441ef9dc18)
+4-22 11:14:36.240 debug: 5) erase request 21 0x69e860441ef9dc18
+4-22 11:14:36.240 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 44, messageid: 0x69e860443d70a400): 11TL_msgs_ack(0xb400006db17aee00)
+4-22 11:14:36.240 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 136 but packet larger 1309
+4-22 11:14:36.240 debug: api request constructor 0xc776ba4e, don't parse
+4-22 11:14:36.240 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:36.240 debug: process server response 0xb400006daaf4a960 - 13TL_rpc_result
+4-22 11:14:36.240 debug: message_id 7631455415703727105 connection(0xb400006f19430a00, account0, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:36.240 debug: got response for request 0xb400006dcecf4e20, req_id = 22 - 14TL_api_request (messageId = 0x69e860441ef9dc1c)
+4-22 11:14:36.241 debug: connection(0xb400006f195c0500, account8, dc4, type 1) received message len 104 equal to packet size
+4-22 11:14:36.241 debug: 5) erase request 22 0x69e860441ef9dc1c
+4-22 11:14:36.241 debug: api request constructor 0xeae87e42, don't parse
+4-22 11:14:36.241 debug: connection(0xb400006f195c0500, account8, dc4, type 1) received object 13TL_rpc_result
+4-22 11:14:36.241 debug: process server response 0xb400006daaf4aa00 - 13TL_rpc_result
+4-22 11:14:36.241 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 44, messageid: 0x69e860443db22c00): 11TL_msgs_ack(0xb400006db17aee00)
+4-22 11:14:36.241 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 88 but packet larger 1172
+4-22 11:14:36.241 debug: api request constructor 0x9f071957, don't parse
+4-22 11:14:36.241 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:36.241 debug: process server response 0xb400006daaf4a960 - 13TL_rpc_result
+4-22 11:14:36.241 debug: message_id 7631455415712704513 connection(0xb400006f19430a00, account0, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:36.241 debug: got response for request 0xb400006dbf783c30, req_id = 18 - 14TL_api_request (messageId = 0x69e860441ef9dc0c)
+4-22 11:14:36.242 debug: 5) erase request 18 0x69e860441ef9dc0c
+4-22 11:14:36.242 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 44, messageid: 0x69e860443df3b800): 11TL_msgs_ack(0xb400006db17aee60)
+4-22 11:14:36.242 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 1080 equal to packet size
+4-22 11:14:36.243 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:36.243 debug: process server response 0xb400006daaf4a960 - 13TL_rpc_result
+4-22 11:14:36.243 debug: message_id 7631455415720308737 connection(0xb400006f19430a00, account0, dc5, type 1) received rpc_result with 14TL_gzip_packed
+4-22 11:14:36.243 debug: got response for request 0xb400006dbf783af0, req_id = 14 - 14TL_api_request (messageId = 0x69e860441eb85404)
+4-22 11:14:36.243 debug: api request constructor 0x3371c354, don't parse
+4-22 11:14:36.241 debug: message_id 7631455415418680321 connection(0xb400006f195c0500, account8, dc4, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:36.243 debug: got response for request 0xb400006dbf783320, req_id = 7 - 14TL_api_request (messageId = 0x69e86044024dd400)
+4-22 11:14:36.249 debug: 5) erase request 14 0x69e860441eb85404
+4-22 11:14:36.249 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 44, messageid: 0x69e860443fbe7800): 11TL_msgs_ack(0xb400006db17aee00)
+4-22 11:14:36.249 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 792 equal to packet size
+4-22 11:14:36.249 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:36.249 debug: process server response 0xb400006daaf4a960 - 13TL_rpc_result
+4-22 11:14:36.249 debug: message_id 7631455415761703937 connection(0xb400006f19430a00, account0, dc5, type 1) received rpc_result with 14TL_gzip_packed
+4-22 11:14:36.249 debug: got response for request 0xb400006dbf783b40, req_id = 15 - 14TL_api_request (messageId = 0x69e860441ef9dc00)
+4-22 11:14:36.249 debug: api request constructor 0x3b6d152e, don't parse
+4-22 11:14:36.252 debug: 5) erase request 15 0x69e860441ef9dc00
+4-22 11:14:36.252 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 44, messageid: 0x69e8604440831400): 11TL_msgs_ack(0xb400006db17aee00)
+4-22 11:14:36.254 debug: 5) erase request 7 0x69e86044024dd400
+4-22 11:14:36.254 debug: connection(0xb400006f195c0500, account8, dc4, type 1) send message (session: 0x8641089e1232f263, seqno: 14, messageid: 0x69e8604441062400): 11TL_msgs_ack(0xb400006db17aee00)
+4-22 11:14:36.296 debug: send request 0xb400006da9c469a0 - 14TL_api_request
+4-22 11:14:36.297 debug: send request wrapped 0xb400006da9c469a0 - 14TL_api_request
+4-22 11:14:36.297 debug: messageId for token = 24, 0x69e860444c083000
+4-22 11:14:36.297 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 45, messageid: 0x69e860444c083000): 14TL_api_request(0xb400006da9c469a0)
+4-22 11:14:36.334 debug: send request 0xb400006da9c46ae0 - 14TL_api_request
+4-22 11:14:36.334 debug: send request wrapped 0xb400006da9c46ae0 - 14TL_api_request
+4-22 11:14:36.334 debug: messageId for token = 25, 0x69e8604455810800
+4-22 11:14:36.334 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 47, messageid: 0x69e8604455810800): 14TL_api_request(0xb400006da9c46ae0)
+4-22 11:14:36.335 debug: send request 0xb400006da9c46b30 - 14TL_api_request
+4-22 11:14:36.335 debug: send request wrapped 0xb400006da9c46b30 - 14TL_api_request
+4-22 11:14:36.335 debug: messageId for token = 7, 0x69e8604455c29000
+4-22 11:14:36.336 debug: connection(0xb400006db1897900) reset last event time, on connect
+4-22 11:14:36.336 debug: connection(0xb400006db1897900, account0, dc2, type 2) connected to 149.154.167.222:443
+4-22 11:14:36.336 debug: connection(0xb400006db1897900, account0, dc2, type 2) send message (session: 0xbacfa446236d18c1, seqno: 1, messageid: 0x69e8604426666800): 14TL_api_request(0xb400006dbf784540)
+4-22 11:14:36.336 debug: connection(0xb400006f195c1400, account9, dc5, type 1) send message (session: 0xb8b32be116273aa2, seqno: 13, messageid: 0x69e8604455c29000): 14TL_api_request(0xb400006da9c46b30)
+4-22 11:14:36.346 debug: Config(0xb400006e825ab280, /data/user/0/org.tele.alexgram/files/tgnet.dat) start write config
+4-22 11:14:36.346 debug: Config(0xb400006e825ab280, /data/user/0/org.tele.alexgram/files/tgnet.dat) fileno = 387
+4-22 11:14:36.349 debug: Config(0xb400006e825ab280, /data/user/0/org.tele.alexgram/files/tgnet.dat) config write ok
+4-22 11:14:36.420 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 328 equal to packet size
+4-22 11:14:36.421 debug: api request constructor 0x3371c354, don't parse
+4-22 11:14:36.421 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received object 16TL_msg_container
+4-22 11:14:36.421 debug: process server response 0xb400006db18a2420 - 16TL_msg_container
+4-22 11:14:36.421 debug: received container with 2 items
+4-22 11:14:36.421 debug: inner message 0 id 0x69e86044a4006401 process
+4-22 11:14:36.421 debug: process server response 0xb400006daaf4dbb0 - 13TL_rpc_result
+4-22 11:14:36.421 debug: message_id 0 connection(0xb400006f19430a00, account0, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:36.421 debug: got response for request 0xb400006da9c469a0, req_id = 24 - 14TL_api_request (messageId = 0x69e860444c083000)
+4-22 11:14:36.422 debug: 5) erase request 24 0x69e860444c083000
+4-22 11:14:36.422 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 48, messageid: 0x69e860446c083000): 11TL_msgs_ack(0xb400006db18a2540)
+4-22 11:14:36.422 debug: inner message 1 id 0x69e86044a4006405 process
+4-22 11:14:36.422 debug: process server response 0xb400006db18a2480 - 11TL_msgs_ack
+4-22 11:14:36.431 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 248 equal to packet size
+4-22 11:14:36.431 debug: api request constructor 0xeae87e42, don't parse
+4-22 11:14:36.431 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:36.431 debug: process server response 0xb400006daaf4dbb0 - 13TL_rpc_result
+4-22 11:14:36.431 debug: message_id 7631455416538462209 connection(0xb400006f19430a00, account0, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:36.431 debug: got response for request 0xb400006da9c46ae0, req_id = 25 - 14TL_api_request (messageId = 0x69e8604455810800)
+4-22 11:14:36.433 debug: 5) erase request 25 0x69e8604455810800
+4-22 11:14:36.434 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 48, messageid: 0x69e860446ed91800): 11TL_msgs_ack(0xb400006f19438060)
+4-22 11:14:36.473 debug: connection(0xb400006f195c1400, account9, dc5, type 1) received packet size less(2452) then message size(10760)
+4-22 11:14:36.495 debug: connection(0xb400006f195c1400, account9, dc5, type 1) received message len 10760 equal to packet size
+4-22 11:14:36.496 debug: connection(0xb400006f195c1400, account9, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:36.496 debug: process server response 0xb400006daaf4e740 - 13TL_rpc_result
+4-22 11:14:36.496 debug: message_id 7631455416675085313 connection(0xb400006f195c1400, account9, dc5, type 1) received rpc_result with 14TL_gzip_packed
+4-22 11:14:36.496 debug: got response for request 0xb400006da9c46b30, req_id = 7 - 14TL_api_request (messageId = 0x69e8604455c29000)
+4-22 11:14:36.496 debug: api request constructor 0xeae87e42, don't parse
+4-22 11:14:36.541 debug: Config(0xb400006e825ab480, /data/user/0/org.tele.alexgram/files/dc2conf.dat) start write config
+4-22 11:14:36.542 debug: Config(0xb400006e825ab480, /data/user/0/org.tele.alexgram/files/dc2conf.dat) fileno = 5
+4-22 11:14:36.543 debug: Config(0xb400006e825ab480, /data/user/0/org.tele.alexgram/files/dc2conf.dat) config write ok
+4-22 11:14:36.543 debug: connection(0xb400006db1897900) set current timeout = 25
+4-22 11:14:36.543 debug: connection(0xb400006db1897900, account0, dc2, type 2) received message len 168 equal to packet size
+4-22 11:14:36.543 debug: connection(0xb400006db1897900, account0, dc2, type 2) received object 16TL_msg_container
+4-22 11:14:36.543 debug: process server response 0xb400006daae4a240 - 16TL_msg_container
+4-22 11:14:36.543 debug: received container with 2 items
+4-22 11:14:36.543 debug: inner message 0 id 0x69e86044b6865001 process
+4-22 11:14:36.543 debug: process server response 0xb400006daae4a2a0 - 22TL_new_session_created
+4-22 11:14:36.543 debug: connection(0xb400006db1897900, account0, dc2, type 2) new session created (first message id: 0x69e8604426666800, server salt: 0xafb3d76c278b535d, unique id: 0xff3b3be05a02fa65)
+4-22 11:14:36.544 debug: create new 16584 buffer
+4-22 11:14:36.544 debug: Config(0xb400006e825ab280, /data/user/0/org.tele.alexgram/files/tgnet.dat) start write config
+4-22 11:14:36.544 debug: Config(0xb400006e825ab280, /data/user/0/org.tele.alexgram/files/tgnet.dat) fileno = 5
+4-22 11:14:36.546 debug: Config(0xb400006e825ab280, /data/user/0/org.tele.alexgram/files/tgnet.dat) config write ok
+4-22 11:14:36.546 debug: inner message 1 id 0x69e86044b6869001 process
+4-22 11:14:36.546 debug: process server response 0xb400006daae4a300 - 11TL_msgs_ack
+4-22 11:14:36.597 debug: connection(0xb400006db1897900, account0, dc2, type 2) received message len 472 equal to packet size
+4-22 11:14:36.597 debug: api request constructor 0xf18cda44, don't parse
+4-22 11:14:36.597 debug: connection(0xb400006db1897900, account0, dc2, type 2) received object 13TL_rpc_result
+4-22 11:14:36.597 debug: process server response 0xb400006db195fd00 - 13TL_rpc_result
+4-22 11:14:36.597 debug: message_id 7631455417048225793 connection(0xb400006db1897900, account0, dc2, type 2) received rpc_result with 15TL_api_response
+4-22 11:14:36.597 debug: got response for request 0xb400006dbf784540, req_id = 23 - 14TL_api_request (messageId = 0x69e8604426666800)
+4-22 11:14:36.604 debug: 5) erase request 7 0x69e8604455c29000
+4-22 11:14:36.604 debug: connection(0xb400006f195c1400, account9, dc5, type 1) send message (session: 0xb8b32be116273aa2, seqno: 14, messageid: 0x69e860449a9fc000): 11TL_msgs_ack(0xb400006daae4ad20)
+4-22 11:14:36.617 debug: send request 0xb400006e825c1bf0 - 14TL_api_request
+4-22 11:14:36.618 debug: send request wrapped 0xb400006e825c1bf0 - 14TL_api_request
+4-22 11:14:36.618 debug: messageId for token = 8, 0x69e860449e354000
+4-22 11:14:36.618 debug: connection(0xb400006f195c0500, account8, dc4, type 1) send message (session: 0x8641089e1232f263, seqno: 15, messageid: 0x69e860449e354000): 14TL_api_request(0xb400006e825c1bf0)
+4-22 11:14:36.619 debug: send request 0xb400006df1142aa0 - 14TL_api_request
+4-22 11:14:36.619 debug: wrap in layer 14TL_api_request, flags = 2
+4-22 11:14:36.619 debug: send request wrapped 0xb400006db195ee50 - 15invokeWithLayer
+4-22 11:14:36.619 debug: can't do request without login 14TL_api_request, reschedule token 3
+4-22 11:14:36.619 debug: send request 0xb400006df1143180 - 14TL_api_request
+4-22 11:14:36.620 debug: send request wrapped 0xb400006df1143180 - 14TL_api_request
+4-22 11:14:36.620 debug: can't do request without login 14TL_api_request, reschedule token 3
+4-22 11:14:36.620 debug: send request 0xb400006df1142af0 - 14TL_api_request
+4-22 11:14:36.620 debug: send request wrapped 0xb400006df1142af0 - 14TL_api_request
+4-22 11:14:36.620 debug: can't do request without login 14TL_api_request, reschedule token 3
+4-22 11:14:36.621 debug: send request 0xb400006df11431d0 - 14TL_api_request
+4-22 11:14:36.621 debug: wrap in layer 14TL_api_request, flags = 2
+4-22 11:14:36.621 debug: send request wrapped 0xb400006df1146fb0 - 15invokeWithLayer
+4-22 11:14:36.621 debug: can't do request without login 14TL_api_request, reschedule token 3
+4-22 11:14:36.621 debug: send request 0xb400006df11b5d40 - 14TL_api_request
+4-22 11:14:36.621 debug: send request wrapped 0xb400006df11b5d40 - 14TL_api_request
+4-22 11:14:36.621 debug: can't do request without login 14TL_api_request, reschedule token 3
+4-22 11:14:36.621 debug: send request 0xb400006ddbf247d0 - 14TL_api_request
+4-22 11:14:36.621 debug: send request wrapped 0xb400006ddbf247d0 - 14TL_api_request
+4-22 11:14:36.621 debug: can't do request without login 14TL_api_request, reschedule token 3
+4-22 11:14:36.622 debug: send request 0xb400006e825c1c40 - 14TL_api_request
+4-22 11:14:36.622 debug: send request wrapped 0xb400006e825c1c40 - 14TL_api_request
+4-22 11:14:36.623 debug: messageId for token = 8, 0x69e860449f7cf000
+4-22 11:14:36.623 debug: connection(0xb400006f195c1400, account9, dc5, type 1) send message (session: 0xb8b32be116273aa2, seqno: 15, messageid: 0x69e860449f7cf000): 14TL_api_request(0xb400006e825c1c40)
+4-22 11:14:36.625 debug: send request 0xb400006ddbf25cc0 - 14TL_api_request
+4-22 11:14:36.625 debug: send request wrapped 0xb400006ddbf25cc0 - 14TL_api_request
+4-22 11:14:36.625 debug: messageId for token = 9, 0x69e86044a0000000
+4-22 11:14:36.625 debug: connection(0xb400006f195c0500, account8, dc4, type 1) send message (session: 0x8641089e1232f263, seqno: 17, messageid: 0x69e86044a0000000): 14TL_api_request(0xb400006ddbf25cc0)
+4-22 11:14:36.625 debug: send request 0xb400006ddbf25d60 - 14TL_api_request
+4-22 11:14:36.625 debug: send request wrapped 0xb400006ddbf25d60 - 14TL_api_request
+4-22 11:14:36.625 debug: messageId for token = 10, 0x69e86044a0000004
+4-22 11:14:36.625 debug: connection(0xb400006f195c0500, account8, dc4, type 1) send message (session: 0x8641089e1232f263, seqno: 19, messageid: 0x69e86044a0000004): 14TL_api_request(0xb400006ddbf25d60)
+4-22 11:14:36.629 debug: send request 0xb400006ddbf25c20 - 14TL_api_request
+4-22 11:14:36.629 debug: send request wrapped 0xb400006ddbf25c20 - 14TL_api_request
+4-22 11:14:36.629 debug: messageId for token = 9, 0x69e86044a1062400
+4-22 11:14:36.629 debug: connection(0xb400006f195c1400, account9, dc5, type 1) send message (session: 0xb8b32be116273aa2, seqno: 17, messageid: 0x69e86044a1062400): 14TL_api_request(0xb400006ddbf25c20)
+4-22 11:14:36.617 debug: send request 0xb400006e825c0d40 - 14TL_api_request
+4-22 11:14:36.636 debug: send request wrapped 0xb400006e825c0d40 - 14TL_api_request
+4-22 11:14:36.636 debug: messageId for token = 8, 0x69e86044a2d0e400
+4-22 11:14:36.636 debug: connection(0xb400006f195c0000, account7, dc5, type 1) send message (session: 0xaf37c8ffbe0f3858, seqno: 15, messageid: 0x69e86044a2d0e400): 14TL_api_request(0xb400006e825c0d40)
+4-22 11:14:36.636 debug: send request 0xb400006ddbf25b80 - 14TL_api_request
+4-22 11:14:36.636 debug: send request wrapped 0xb400006ddbf25b80 - 14TL_api_request
+4-22 11:14:36.636 debug: messageId for token = 9, 0x69e86044a2d0e404
+4-22 11:14:36.636 debug: connection(0xb400006f195c0000, account7, dc5, type 1) send message (session: 0xaf37c8ffbe0f3858, seqno: 17, messageid: 0x69e86044a2d0e404): 14TL_api_request(0xb400006ddbf25b80)
+4-22 11:14:36.659 debug: 5) erase request 23 0x69e8604426666800
+4-22 11:14:36.659 debug: send request 0xb400006e825bf990 - 14TL_api_request
+4-22 11:14:36.659 debug: send request wrapped 0xb400006e825bf990 - 14TL_api_request
+4-22 11:14:36.659 debug: messageId for token = 26, 0x69e86044a8b43800
+4-22 11:14:36.659 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 49, messageid: 0x69e86044a8b43800): 14TL_api_request(0xb400006e825bf990)
+4-22 11:14:36.667 debug: send request 0xb400006ddbf26e40 - 14TL_api_request
+4-22 11:14:36.667 debug: send request wrapped 0xb400006ddbf26e40 - 14TL_api_request
+4-22 11:14:36.667 debug: messageId for token = 10, 0x69e86044aac08400
+4-22 11:14:36.667 debug: connection(0xb400006f195c0000, account7, dc5, type 1) send message (session: 0xaf37c8ffbe0f3858, seqno: 19, messageid: 0x69e86044aac08400): 14TL_api_request(0xb400006ddbf26e40)
+4-22 11:14:36.690 debug: send request 0xb400006ddbf26df0 - 14TL_api_request
+4-22 11:14:36.690 debug: send request wrapped 0xb400006ddbf26df0 - 14TL_api_request
+4-22 11:14:36.690 debug: messageId for token = 10, 0x69e86044b0a3d800
+4-22 11:14:36.690 debug: connection(0xb400006f195c1400, account9, dc5, type 1) send message (session: 0xb8b32be116273aa2, seqno: 19, messageid: 0x69e86044b0a3d800): 14TL_api_request(0xb400006ddbf26df0)
+4-22 11:14:36.704 debug: send request 0xb400006ddbf26e90 - 14TL_api_request
+4-22 11:14:36.704 debug: send request wrapped 0xb400006ddbf26e90 - 14TL_api_request
+4-22 11:14:36.704 debug: connection(0xb400006de270c800, account0, dc201, type 2) connecting (91.108.23.100:443)
+4-22 11:14:36.704 debug: connection(0xb400006de270c800) socketAddress6, port: 0, family:0
+4-22 11:14:36.713 debug: connection(0xb400006de270c800) set current timeout = 12
+4-22 11:14:36.713 debug: messageId for token = 27, 0x69e86044b6872c00
+4-22 11:14:36.713 debug: connection(0xb400006de270c800, account0, dc201, type 2) send message (session: 0x855d357d86803355, seqno: 1, messageid: 0x69e86044b6872c00): 14TL_api_request(0xb400006ddbf26e90)
+4-22 11:14:36.744 debug: connection(0xb400006f195c1400, account9, dc5, type 1) received message len 152 but packet larger 241
+4-22 11:14:36.744 debug: api request constructor 0xbc799737, don't parse
+4-22 11:14:36.744 debug: connection(0xb400006f195c1400, account9, dc5, type 1) received object 16TL_msg_container
+4-22 11:14:36.744 debug: process server response 0xb400006da7686840 - 16TL_msg_container
+4-22 11:14:36.744 debug: received container with 2 items
+4-22 11:14:36.744 debug: inner message 0 id 0x69e86044f3010401 process
+4-22 11:14:36.744 debug: process server response 0xb400006db1960020 - 13TL_rpc_result
+4-22 11:14:36.744 debug: message_id 0 connection(0xb400006f195c1400, account9, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:36.744 debug: got response for request 0xb400006ddbf25c20, req_id = 9 - 14TL_api_request (messageId = 0x69e86044a1062400)
+4-22 11:14:36.744 debug: 5) erase request 9 0x69e86044a1062400
+4-22 11:14:36.744 debug: connection(0xb400006f195c1400, account9, dc5, type 1) send message (session: 0xb8b32be116273aa2, seqno: 20, messageid: 0x69e86044be76c800): 11TL_msgs_ack(0xb400006da7686d80)
+4-22 11:14:36.744 debug: inner message 1 id 0x69e86044f3010405 process
+4-22 11:14:36.744 debug: process server response 0xb400006da7686d20 - 11TL_msgs_ack
+4-22 11:14:36.745 debug: connection(0xb400006f195c1400, account9, dc5, type 1) received message len 88 equal to packet size
+4-22 11:14:36.745 debug: api request constructor 0x997275b5, don't parse
+4-22 11:14:36.745 debug: connection(0xb400006f195c1400, account9, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:36.745 debug: process server response 0xb400006db1960020 - 13TL_rpc_result
+4-22 11:14:36.745 debug: message_id 7631455417833793537 connection(0xb400006f195c1400, account9, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:36.745 debug: got response for request 0xb400006e825c1c40, req_id = 8 - 14TL_api_request (messageId = 0x69e860449f7cf000)
+4-22 11:14:36.745 debug: 5) erase request 8 0x69e860449f7cf000
+4-22 11:14:36.745 debug: connection(0xb400006f195c1400, account9, dc5, type 1) send message (session: 0xb8b32be116273aa2, seqno: 20, messageid: 0x69e86044beb85400): 11TL_msgs_ack(0xb400006da7686840)
+4-22 11:14:36.762 debug: wakeup network account0
+4-22 11:14:36.762 debug: connection(0xb400006de270c800) reset last event time, on connect
+4-22 11:14:36.763 debug: connection(0xb400006de270c800, account0, dc201, type 2) connected to 91.108.23.100:443
+4-22 11:14:36.763 debug: connection(0xb400006de270c800, account0, dc201, type 2) send message (session: 0x855d357d86803355, seqno: 1, messageid: 0x69e86044b6872c00): 14TL_api_request(0xb400006ddbf26e90)
+4-22 11:14:36.775 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 88 equal to packet size
+4-22 11:14:36.776 debug: api request constructor 0x997275b5, don't parse
+4-22 11:14:36.776 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:36.776 debug: process server response 0xb400006da76ac3b0 - 13TL_rpc_result
+4-22 11:14:36.776 debug: message_id 7631455418021089281 connection(0xb400006f19430a00, account0, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:36.776 debug: got response for request 0xb400006e825bf990, req_id = 26 - 14TL_api_request (messageId = 0x69e86044a8b43800)
+4-22 11:14:36.776 debug: 5) erase request 26 0x69e86044a8b43800
+4-22 11:14:36.776 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 50, messageid: 0x69e86044c6a7f000): 11TL_msgs_ack(0xb400006da7686f00)
+4-22 11:14:36.823 debug: connection(0xb400006f195c1400, account9, dc5, type 1) received message len 88 equal to packet size
+4-22 11:14:36.823 debug: api request constructor 0x7cde641d, don't parse
+4-22 11:14:36.823 debug: connection(0xb400006f195c1400, account9, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:36.823 debug: process server response 0xb400006da76aca40 - 13TL_rpc_result
+4-22 11:14:36.823 debug: message_id 7631455418167532545 connection(0xb400006f195c1400, account9, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:36.823 debug: got response for request 0xb400006ddbf26df0, req_id = 10 - 14TL_api_request (messageId = 0x69e86044b0a3d800)
+4-22 11:14:36.824 debug: 5) erase request 10 0x69e86044b0a3d800
+4-22 11:14:36.824 debug: connection(0xb400006f195c1400, account9, dc5, type 1) send message (session: 0xb8b32be116273aa2, seqno: 20, messageid: 0x69e86044d2f1ac00): 11TL_msgs_ack(0xb400006daae4a960)
+4-22 11:14:36.826 debug: send request 0xb400006e825bf990 - 14TL_api_request
+4-22 11:14:36.826 debug: send request wrapped 0xb400006e825bf990 - 14TL_api_request
+4-22 11:14:36.826 debug: messageId for token = 28, 0x69e86044d374bc00
+4-22 11:14:36.826 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 51, messageid: 0x69e86044d374bc00): 14TL_api_request(0xb400006e825bf990)
+4-22 11:14:36.826 debug: Config(0xb400006e825abb00, /data/user/0/org.tele.alexgram/files/dc201conf.dat) start write config
+4-22 11:14:36.827 debug: Config(0xb400006e825abb00, /data/user/0/org.tele.alexgram/files/dc201conf.dat) fileno = 337
+4-22 11:14:36.829 debug: Config(0xb400006e825abb00, /data/user/0/org.tele.alexgram/files/dc201conf.dat) config write ok
+4-22 11:14:36.829 debug: connection(0xb400006de270c800) set current timeout = 25
+4-22 11:14:36.829 debug: connection(0xb400006de270c800, account0, dc201, type 2) received message len 168 equal to packet size
+4-22 11:14:36.830 debug: connection(0xb400006de270c800, account0, dc201, type 2) received object 16TL_msg_container
+4-22 11:14:36.830 debug: process server response 0xb400006db1bf1900 - 16TL_msg_container
+4-22 11:14:36.830 debug: received container with 2 items
+4-22 11:14:36.830 debug: inner message 0 id 0x69e860439ee30001 process
+4-22 11:14:36.830 debug: process server response 0xb400006daae4a960 - 22TL_new_session_created
+4-22 11:14:36.830 debug: connection(0xb400006de270c800, account0, dc201, type 2) new session created (first message id: 0x69e86044b6872c00, server salt: 0x767b0c226ab7cb63, unique id: 0xa9ba5733c252e8e2)
+4-22 11:14:36.830 debug: Config(0xb400006e825ab280, /data/user/0/org.tele.alexgram/files/tgnet.dat) start write config
+4-22 11:14:36.831 debug: Config(0xb400006e825ab280, /data/user/0/org.tele.alexgram/files/tgnet.dat) fileno = 337
+4-22 11:14:36.833 debug: Config(0xb400006e825ab280, /data/user/0/org.tele.alexgram/files/tgnet.dat) config write ok
+4-22 11:14:36.833 debug: inner message 1 id 0x69e860439ee35401 process
+4-22 11:14:36.833 debug: process server response 0xb400006daae4acc0 - 11TL_msgs_ack
+4-22 11:14:36.833 debug: connection(0xb400006de270c800, account0, dc201, type 2) received packet size less(11048) then message size(16616)
+4-22 11:14:36.833 debug: create new 40000 buffer
+4-22 11:14:36.853 debug: connection(0xb400006f195c0000, account7, dc5, type 1) received message len 152 but packet larger 241
+4-22 11:14:36.854 debug: api request constructor 0x997275b5, don't parse
+4-22 11:14:36.854 debug: connection(0xb400006f195c0000, account7, dc5, type 1) received object 16TL_msg_container
+4-22 11:14:36.854 debug: process server response 0xb400006daae4b0e0 - 16TL_msg_container
+4-22 11:14:36.854 debug: received container with 2 items
+4-22 11:14:36.854 debug: inner message 0 id 0x69e86045120ba401 process
+4-22 11:14:36.854 debug: process server response 0xb400006da76adda0 - 13TL_rpc_result
+4-22 11:14:36.854 debug: message_id 0 connection(0xb400006f195c0000, account7, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:36.854 debug: got response for request 0xb400006e825c0d40, req_id = 8 - 14TL_api_request (messageId = 0x69e86044a2d0e400)
+4-22 11:14:36.854 debug: 5) erase request 8 0x69e86044a2d0e400
+4-22 11:14:36.855 debug: connection(0xb400006f195c0000, account7, dc5, type 1) send message (session: 0xaf37c8ffbe0f3858, seqno: 20, messageid: 0x69e86044dae14800): 11TL_msgs_ack(0xb400006daae4c7c0)
+4-22 11:14:36.855 debug: inner message 1 id 0x69e86045120ba405 process
+4-22 11:14:36.855 debug: process server response 0xb400006da7688340 - 11TL_msgs_ack
+4-22 11:14:36.855 debug: connection(0xb400006f195c0000, account7, dc5, type 1) received message len 88 equal to packet size
+4-22 11:14:36.855 debug: api request constructor 0xbc799737, don't parse
+4-22 11:14:36.855 debug: connection(0xb400006f195c0000, account7, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:36.855 debug: process server response 0xb400006da76adda0 - 13TL_rpc_result
+4-22 11:14:36.856 debug: message_id 7631455418352593921 connection(0xb400006f195c0000, account7, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:36.856 debug: got response for request 0xb400006ddbf26e40, req_id = 10 - 14TL_api_request (messageId = 0x69e86044aac08400)
+4-22 11:14:36.856 debug: 5) erase request 10 0x69e86044aac08400
+4-22 11:14:36.856 debug: connection(0xb400006f195c0000, account7, dc5, type 1) send message (session: 0xaf37c8ffbe0f3858, seqno: 20, messageid: 0x69e86044db22d000): 11TL_msgs_ack(0xb400006da7687f80)
+4-22 11:14:36.857 debug: connection(0xb400006f195c0000, account7, dc5, type 1) received message len 88 equal to packet size
+4-22 11:14:36.858 debug: api request constructor 0x7cde641d, don't parse
+4-22 11:14:36.858 debug: connection(0xb400006f195c0000, account7, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:36.858 debug: process server response 0xb400006da76ae2a0 - 13TL_rpc_result
+4-22 11:14:36.858 debug: message_id 7631455418384959489 connection(0xb400006f195c0000, account7, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:36.859 debug: got response for request 0xb400006ddbf25b80, req_id = 9 - 14TL_api_request (messageId = 0x69e86044a2d0e404)
+4-22 11:14:36.859 debug: 5) erase request 9 0x69e86044a2d0e404
+4-22 11:14:36.859 debug: connection(0xb400006f195c0000, account7, dc5, type 1) send message (session: 0xaf37c8ffbe0f3858, seqno: 20, messageid: 0x69e86044dbe76c00): 11TL_msgs_ack(0xb400006daae4c7c0)
+4-22 11:14:36.877 debug: connection(0xb400006de270c800, account0, dc201, type 2) received message len 16616 equal to packet size
+4-22 11:14:36.878 debug: api request constructor 0xa99fca4f, don't parse
+4-22 11:14:36.878 debug: connection(0xb400006de270c800, account0, dc201, type 2) received object 13TL_rpc_result
+4-22 11:14:36.878 debug: process server response 0xb400006da76ad8f0 - 13TL_rpc_result
+4-22 11:14:36.878 debug: message_id 7631455412126970881 connection(0xb400006de270c800, account0, dc201, type 2) received rpc_result with 15TL_api_response
+4-22 11:14:36.878 debug: got response for request 0xb400006ddbf26e90, req_id = 27 - 14TL_api_request (messageId = 0x69e86044b6872c00)
+4-22 11:14:36.880 debug: 5) erase request 27 0x69e86044b6872c00
+4-22 11:14:36.882 debug: connection(0xb400006f195c0500, account8, dc4, type 1) received message len 152 equal to packet size
+4-22 11:14:36.882 debug: api request constructor 0xbc799737, don't parse
+4-22 11:14:36.883 debug: connection(0xb400006f195c0500, account8, dc4, type 1) received object 16TL_msg_container
+4-22 11:14:36.883 debug: process server response 0xb400006da7687f80 - 16TL_msg_container
+4-22 11:14:36.883 debug: received container with 2 items
+4-22 11:14:36.883 debug: inner message 0 id 0x69e86045076d8001 process
+4-22 11:14:36.883 debug: process server response 0xb400006da76adf30 - 13TL_rpc_result
+4-22 11:14:36.883 debug: message_id 0 connection(0xb400006f195c0500, account8, dc4, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:36.883 debug: got response for request 0xb400006ddbf25cc0, req_id = 9 - 14TL_api_request (messageId = 0x69e86044a0000000)
+4-22 11:14:36.883 debug: 5) erase request 9 0x69e86044a0000000
+4-22 11:14:36.884 debug: connection(0xb400006f195c0500, account8, dc4, type 1) send message (session: 0x8641089e1232f263, seqno: 20, messageid: 0x69e86044e24dd400): 11TL_msgs_ack(0xb400006daae4cfa0)
+4-22 11:14:36.884 debug: inner message 1 id 0x69e86045076d8005 process
+4-22 11:14:36.884 debug: process server response 0xb400006da7688100 - 11TL_msgs_ack
+4-22 11:14:36.884 debug: connection(0xb400006f195c0500, account8, dc4, type 1) received message len 88 equal to packet size
+4-22 11:14:36.885 debug: api request constructor 0x997275b5, don't parse
+4-22 11:14:36.885 debug: connection(0xb400006f195c0500, account8, dc4, type 1) received object 13TL_rpc_result
+4-22 11:14:36.885 debug: process server response 0xb400006da76ad530 - 13TL_rpc_result
+4-22 11:14:36.885 debug: message_id 7631455418181679105 connection(0xb400006f195c0500, account8, dc4, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:36.885 debug: got response for request 0xb400006e825c1bf0, req_id = 8 - 14TL_api_request (messageId = 0x69e860449e354000)
+4-22 11:14:36.885 debug: 5) erase request 8 0x69e860449e354000
+4-22 11:14:36.886 debug: connection(0xb400006f195c0500, account8, dc4, type 1) send message (session: 0x8641089e1232f263, seqno: 20, messageid: 0x69e86044e2d0e400): 11TL_msgs_ack(0xb400006daae4c880)
+4-22 11:14:36.893 debug: connection(0xb400006f195c0500, account8, dc4, type 1) received message len 88 equal to packet size
+4-22 11:14:36.894 debug: api request constructor 0x7cde641d, don't parse
+4-22 11:14:36.894 debug: connection(0xb400006f195c0500, account8, dc4, type 1) received object 13TL_rpc_result
+4-22 11:14:36.894 debug: process server response 0xb400006da76acc70 - 13TL_rpc_result
+4-22 11:14:36.894 debug: message_id 7631455418223607809 connection(0xb400006f195c0500, account8, dc4, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:36.894 debug: got response for request 0xb400006ddbf25d60, req_id = 10 - 14TL_api_request (messageId = 0x69e86044a0000004)
+4-22 11:14:36.894 debug: 5) erase request 10 0x69e86044a0000004
+4-22 11:14:36.895 debug: connection(0xb400006f195c0500, account8, dc4, type 1) send message (session: 0x8641089e1232f263, seqno: 20, messageid: 0x69e86044e51eb800): 11TL_msgs_ack(0xb400006da7688400)
+4-22 11:14:36.949 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 152 equal to packet size
+4-22 11:14:36.949 debug: api request constructor 0x1cb5c415, don't parse
+4-22 11:14:36.949 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:36.949 debug: process server response 0xb400006da76ad490 - 13TL_rpc_result
+4-22 11:14:36.949 debug: message_id 7631455418773167105 connection(0xb400006f19430a00, account0, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:36.949 debug: got response for request 0xb400006e825bf990, req_id = 28 - 14TL_api_request (messageId = 0x69e86044d374bc00)
+4-22 11:14:36.950 debug: 5) erase request 28 0x69e86044d374bc00
+4-22 11:14:36.950 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 52, messageid: 0x69e86044f3333400): 11TL_msgs_ack(0xb400006daae4acc0)
+4-22 11:14:37.201 debug: send request 0xb400006dcecf1810 - 14TL_api_request
+4-22 11:14:37.201 debug: send request wrapped 0xb400006dcecf1810 - 14TL_api_request
+4-22 11:14:37.201 debug: messageId for token = 29, 0x69e860453374bc00
+4-22 11:14:37.201 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 53, messageid: 0x69e860453374bc00): 14TL_api_request(0xb400006dcecf1810)
+4-22 11:14:37.205 debug: send request 0xb400006dcecf1c70 - 14TL_api_request
+4-22 11:14:37.205 debug: send request wrapped 0xb400006dcecf1c70 - 14TL_api_request
+4-22 11:14:37.205 debug: messageId for token = 30, 0x69e86045347ae000
+4-22 11:14:37.205 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 55, messageid: 0x69e86045347ae000): 14TL_api_request(0xb400006dcecf1c70)
+4-22 11:14:37.220 debug: send request 0xb400006dcecf1720 - 14TL_api_request
+4-22 11:14:37.221 debug: send request wrapped 0xb400006dcecf1720 - 14TL_api_request
+4-22 11:14:37.221 debug: messageId for token = 31, 0x69e8604538937400
+4-22 11:14:37.221 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 57, messageid: 0x69e8604538937400): 14TL_api_request(0xb400006dcecf1720)
+4-22 11:14:37.225 debug: reset sleep timeout account9
+4-22 11:14:37.249 debug: send request 0xb400006dcecf1b30 - 14TL_api_request
+4-22 11:14:37.249 debug: send request wrapped 0xb400006dcecf1b30 - 14TL_api_request
+4-22 11:14:37.249 debug: messageId for token = 32, 0x69e860453fbe7800
+4-22 11:14:37.249 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 59, messageid: 0x69e860453fbe7800): 14TL_api_request(0xb400006dcecf1b30)
+4-22 11:14:37.363 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 168 equal to packet size
+4-22 11:14:37.364 debug: api request constructor 0x7cde641d, don't parse
+4-22 11:14:37.364 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received object 16TL_msg_container
+4-22 11:14:37.364 debug: process server response 0xb400006db18a31a0 - 16TL_msg_container
+4-22 11:14:37.364 debug: received container with 2 items
+4-22 11:14:37.364 debug: inner message 0 id 0x69e86045955a9401 process
+4-22 11:14:37.364 debug: process server response 0xb400006db11fdd00 - 13TL_rpc_result
+4-22 11:14:37.364 debug: message_id 0 connection(0xb400006f19430a00, account0, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:37.364 debug: got response for request 0xb400006dcecf1810, req_id = 29 - 14TL_api_request (messageId = 0x69e860453374bc00)
+4-22 11:14:37.364 debug: 5) erase request 29 0x69e860453374bc00
+4-22 11:14:37.365 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 60, messageid: 0x69e860455d70a400): 11TL_msgs_ack(0xb400006db18a3500)
+4-22 11:14:37.365 debug: inner message 1 id 0x69e86045955a9405 process
+4-22 11:14:37.365 debug: process server response 0xb400006db17af100 - 11TL_msgs_ack
+4-22 11:14:37.368 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 232 equal to packet size
+4-22 11:14:37.368 debug: api request constructor 0xf83ae221, don't parse
+4-22 11:14:37.368 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:37.369 debug: process server response 0xb400006db195fd00 - 13TL_rpc_result
+4-22 11:14:37.369 debug: message_id 7631455420574357505 connection(0xb400006f19430a00, account0, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:37.369 debug: got response for request 0xb400006dcecf1b30, req_id = 32 - 14TL_api_request (messageId = 0x69e860453fbe7800)
+4-22 11:14:37.371 debug: 5) erase request 32 0x69e860453fbe7800
+4-22 11:14:37.371 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 60, messageid: 0x69e860455ef9dc00): 11TL_msgs_ack(0xb400006db18a3500)
+4-22 11:14:37.380 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 536 but packet larger 1860
+4-22 11:14:37.380 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:37.380 debug: process server response 0xb400006db11fe570 - 13TL_rpc_result
+4-22 11:14:37.380 debug: message_id 7631455420613690369 connection(0xb400006f19430a00, account0, dc5, type 1) received rpc_result with 14TL_gzip_packed
+4-22 11:14:37.380 debug: got response for request 0xb400006dcecf1c70, req_id = 30 - 14TL_api_request (messageId = 0x69e86045347ae000)
+4-22 11:14:37.380 debug: api request constructor 0xc776ba4e, don't parse
+4-22 11:14:37.382 debug: 5) erase request 30 0x69e86045347ae000
+4-22 11:14:37.382 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 60, messageid: 0x69e8604561cac000): 11TL_msgs_ack(0xb400006db17af280)
+4-22 11:14:37.382 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 1320 equal to packet size
+4-22 11:14:37.382 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:37.382 debug: process server response 0xb400006db11fe570 - 13TL_rpc_result
+4-22 11:14:37.382 debug: message_id 7631455420620980225 connection(0xb400006f19430a00, account0, dc5, type 1) received rpc_result with 14TL_gzip_packed
+4-22 11:14:37.382 debug: got response for request 0xb400006dcecf1720, req_id = 31 - 14TL_api_request (messageId = 0x69e8604538937400)
+4-22 11:14:37.382 debug: api request constructor 0x3371c354, don't parse
+4-22 11:14:37.384 debug: 5) erase request 31 0x69e8604538937400
+4-22 11:14:37.385 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 60, messageid: 0x69e86045628f5c00): 11TL_msgs_ack(0xb400006db17af520)
+4-22 11:14:38.386 debug: time for push ping
+4-22 11:14:38.386 debug: connection(0xb400006f19430500, account0, dc5, type 8) connecting (91.108.56.144:443)
+4-22 11:14:38.386 debug: connection(0xb400006f19430500) socketAddress6, port: 0, family:0
+4-22 11:14:38.388 debug: connection(0xb400006f19430500) set current timeout = 30
+4-22 11:14:38.388 debug: connection(0xb400006f19430500, account0, dc5, type 8) send message (session: 0x8323e3bd71bd492c, seqno: 0, messageid: 0x69e860466353f800): 24TL_ping_delay_disconnect(0xb400006db11feb60)
+4-22 11:14:38.388 debug: dc5 send ping to push connection
+4-22 11:14:38.389 debug: send request 0xb400006eaf05aff0 - 14TL_api_request
+4-22 11:14:38.389 debug: send request wrapped 0xb400006eaf05aff0 - 14TL_api_request
+4-22 11:14:38.389 debug: messageId for token = 33, 0x69e8604663958000
+4-22 11:14:38.389 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 61, messageid: 0x69e8604663958000): 14TL_api_request(0xb400006eaf05aff0)
+4-22 11:14:38.544 debug: connection(0xb400006f19430500) reset last event time, on connect
+4-22 11:14:38.544 debug: connection(0xb400006f19430500, account0, dc5, type 8) connected to 91.108.56.144:443
+4-22 11:14:38.544 debug: connection(0xb400006f19430500, account0, dc5, type 8) send message (session: 0x8323e3bd71bd492c, seqno: 0, messageid: 0x69e860468b439800): 24TL_ping_delay_disconnect(0xb400006db11fee80)
+4-22 11:14:38.544 debug: dc5 send ping to push connection
+4-22 11:14:38.552 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 88 equal to packet size
+4-22 11:14:38.552 debug: api request constructor 0xbc799737, don't parse
+4-22 11:14:38.552 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:38.552 debug: process server response 0xb400006db25ed980 - 13TL_rpc_result
+4-22 11:14:38.552 debug: message_id 7631455425652222977 connection(0xb400006f19430a00, account0, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:38.552 debug: got response for request 0xb400006eaf05aff0, req_id = 33 - 14TL_api_request (messageId = 0x69e8604663958000)
+4-22 11:14:38.553 debug: 5) erase request 33 0x69e8604663958000
+4-22 11:14:38.553 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 62, messageid: 0x69e860468d916800): 11TL_msgs_ack(0xb400006db18a2420)
+4-22 11:14:38.646 debug: Config(0xb400006e825ab9c0, /data/user/0/org.tele.alexgram/files/dc5conf.dat) start write config
+4-22 11:14:38.646 debug: Config(0xb400006e825ab9c0, /data/user/0/org.tele.alexgram/files/dc5conf.dat) fileno = 476
+4-22 11:14:38.649 debug: Config(0xb400006e825ab9c0, /data/user/0/org.tele.alexgram/files/dc5conf.dat) config write ok
+4-22 11:14:38.649 debug: connection(0xb400006f19430500) set current timeout = 900
+4-22 11:14:38.649 debug: connection(0xb400006f19430500, account0, dc5, type 8) received message len 88 but packet larger 177
+4-22 11:14:38.649 debug: connection(0xb400006f19430500, account0, dc5, type 8) received object 7TL_pong
+4-22 11:14:38.649 debug: process server response 0xb400006db11ff420 - 7TL_pong
+4-22 11:14:38.649 debug: connection(0xb400006f19430500, account0, dc5, type 8) received push ping
+4-22 11:14:38.649 debug: connection(0xb400006f19430500, account0, dc5, type 8) received message len 88 equal to packet size
+4-22 11:14:38.649 debug: connection(0xb400006f19430500, account0, dc5, type 8) received object 7TL_pong
+4-22 11:14:38.649 debug: process server response 0xb400006db11ff420 - 7TL_pong
+4-22 11:14:38.649 debug: connection(0xb400006f19430500, account0, dc5, type 8) received push ping
+4-22 11:14:38.862 debug: time for push ping
+4-22 11:14:38.863 debug: connection(0xb400006f19434b00, account7, dc5, type 8) connecting (91.108.56.185:5222)
+4-22 11:14:38.863 debug: connection(0xb400006f19434b00) socketAddress6, port: 0, family:0
+4-22 11:14:38.864 debug: connection(0xb400006f19434b00) set current timeout = 30
+4-22 11:14:38.865 debug: connection(0xb400006f19434b00, account7, dc5, type 8) send message (session: 0xd8d013765d7dc22b, seqno: 0, messageid: 0x69e86046dd70a400): 24TL_ping_delay_disconnect(0xb400006db11feb60)
+4-22 11:14:38.865 debug: dc5 send ping to push connection
+4-22 11:14:38.898 debug: time for push ping
+4-22 11:14:38.898 debug: connection(0xb400006f195c0a00, account8, dc4, type 8) connecting (149.154.167.91:5222)
+4-22 11:14:38.898 debug: connection(0xb400006f195c0a00) socketAddress6, port: 0, family:0
+4-22 11:14:38.906 debug: connection(0xb400006f195c0a00) set current timeout = 30
+4-22 11:14:38.906 debug: connection(0xb400006f195c0a00, account8, dc4, type 8) send message (session: 0x349690ab2aaa2e5c, seqno: 0, messageid: 0x69e86046e7efa000): 24TL_ping_delay_disconnect(0xb400006db11ff4c0)
+4-22 11:14:38.906 debug: dc4 send ping to push connection
+4-22 11:14:38.944 debug: connection(0xb400006f19434b00) reset last event time, on connect
+4-22 11:14:38.944 debug: connection(0xb400006f19434b00, account7, dc5, type 8) connected to 91.108.56.185:5222
+4-22 11:14:38.944 debug: connection(0xb400006f19434b00, account7, dc5, type 8) send message (session: 0xd8d013765d7dc22b, seqno: 0, messageid: 0x69e86046f1a9fc00): 24TL_ping_delay_disconnect(0xb400006db11fe9d0)
+4-22 11:14:38.944 debug: dc5 send ping to push connection
+4-22 11:14:39.036 debug: Config(0xb400006df11a4c40, /data/user/0/org.tele.alexgram/files/account7/dc5conf.dat) start write config
+4-22 11:14:39.036 debug: Config(0xb400006df11a4c40, /data/user/0/org.tele.alexgram/files/account7/dc5conf.dat) fileno = 477
+4-22 11:14:39.039 debug: Config(0xb400006df11a4c40, /data/user/0/org.tele.alexgram/files/account7/dc5conf.dat) config write ok
+4-22 11:14:39.039 debug: connection(0xb400006f19434b00) set current timeout = 900
+4-22 11:14:39.039 debug: connection(0xb400006f19434b00, account7, dc5, type 8) received message len 88 but packet larger 177
+4-22 11:14:39.039 debug: connection(0xb400006f19434b00, account7, dc5, type 8) received object 7TL_pong
+4-22 11:14:39.039 debug: process server response 0xb400006db11fe9d0 - 7TL_pong
+4-22 11:14:39.039 debug: connection(0xb400006f19434b00, account7, dc5, type 8) received push ping
+4-22 11:14:39.039 debug: connection(0xb400006f19434b00, account7, dc5, type 8) received message len 88 equal to packet size
+4-22 11:14:39.039 debug: connection(0xb400006f19434b00, account7, dc5, type 8) received object 7TL_pong
+4-22 11:14:39.039 debug: process server response 0xb400006db11fe9d0 - 7TL_pong
+4-22 11:14:39.039 debug: connection(0xb400006f19434b00, account7, dc5, type 8) received push ping
+4-22 11:14:39.118 debug: connection(0xb400006f195c0a00) reset last event time, on connect
+4-22 11:14:39.119 debug: connection(0xb400006f195c0a00, account8, dc4, type 8) connected to 149.154.167.91:5222
+4-22 11:14:39.119 debug: connection(0xb400006f195c0a00, account8, dc4, type 8) send message (session: 0x349690ab2aaa2e5c, seqno: 0, messageid: 0x69e860471e76c800): 24TL_ping_delay_disconnect(0xb400006db11fe9d0)
+4-22 11:14:39.119 debug: dc4 send ping to push connection
+4-22 11:14:39.128 debug: send request 0xb400006ddbf265d0 - 14TL_api_request
+4-22 11:14:39.128 debug: send request wrapped 0xb400006ddbf265d0 - 14TL_api_request
+4-22 11:14:39.129 debug: messageId for token = 34, 0x69e8604721062400
+4-22 11:14:39.129 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 63, messageid: 0x69e8604721062400): 14TL_api_request(0xb400006ddbf265d0)
+4-22 11:14:39.133 debug: send request 0xb400006ddbf268a0 - 14TL_api_request
+4-22 11:14:39.133 debug: send request wrapped 0xb400006ddbf268a0 - 14TL_api_request
+4-22 11:14:39.133 debug: messageId for token = 35, 0x69e86047220c4c00
+4-22 11:14:39.133 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 65, messageid: 0x69e86047220c4c00): 14TL_api_request(0xb400006ddbf268a0)
+4-22 11:14:39.133 debug: send request 0xb400006ddbf268f0 - 14TL_api_request
+4-22 11:14:39.133 debug: send request wrapped 0xb400006ddbf268f0 - 14TL_api_request
+4-22 11:14:39.133 debug: messageId for token = 36, 0x69e86047220c4c04
+4-22 11:14:39.134 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 67, messageid: 0x69e86047220c4c04): 14TL_api_request(0xb400006ddbf268f0)
+4-22 11:14:39.221 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 504 equal to packet size
+4-22 11:14:39.221 debug: not found request to parse constructor 0x74ae4240
+4-22 11:14:39.221 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received object 16TL_msg_container
+4-22 11:14:39.221 debug: process server response 0xb400006db18a2360 - 16TL_msg_container
+4-22 11:14:39.221 debug: received container with 2 items
+4-22 11:14:39.221 debug: inner message 0 id 0x69e8604770fa0401 is unparsed
+4-22 11:14:39.223 debug: inner message 1 id 0x69e8604770fcf401 process
+4-22 11:14:39.223 debug: process server response 0xb400006db18a25a0 - 11TL_msgs_ack
+4-22 11:14:39.223 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 68, messageid: 0x69e8604739168800): 11TL_msgs_ack(0xb400006db18a2360)
+4-22 11:14:39.228 debug: time for push ping
+4-22 11:14:39.228 debug: connection(0xb400006f195c0f00, account9, dc5, type 8) connecting (91.108.56.160:443)
+4-22 11:14:39.228 debug: connection(0xb400006f195c0f00) socketAddress6, port: 0, family:0
+4-22 11:14:39.230 debug: connection(0xb400006f195c0f00) set current timeout = 30
+4-22 11:14:39.230 debug: connection(0xb400006f195c0f00, account9, dc5, type 8) send message (session: 0x3c0fdbd0ac2fccb5, seqno: 0, messageid: 0x69e860473ae14800): 24TL_ping_delay_disconnect(0xb400006daaf4a190)
+4-22 11:14:39.230 debug: dc5 send ping to push connection
+4-22 11:14:39.233 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 184 but packet larger 305
+4-22 11:14:39.233 debug: api request constructor 0x6c9ce8ed, don't parse
+4-22 11:14:39.233 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received object 16TL_msg_container
+4-22 11:14:39.233 debug: process server response 0xb400006db17ae7a0 - 16TL_msg_container
+4-22 11:14:39.234 debug: received container with 2 items
+4-22 11:14:39.234 debug: inner message 0 id 0x69e8604773ba1401 process
+4-22 11:14:39.234 debug: process server response 0xb400006db11ff790 - 13TL_rpc_result
+4-22 11:14:39.235 debug: message_id 0 connection(0xb400006f19430a00, account0, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:39.235 debug: got response for request 0xb400006ddbf268a0, req_id = 35 - 14TL_api_request (messageId = 0x69e86047220c4c00)
+4-22 11:14:39.237 debug: 5) erase request 35 0x69e86047220c4c00
+4-22 11:14:39.237 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 68, messageid: 0x69e860473cac0800): 11TL_msgs_ack(0xb400006db17aeb60)
+4-22 11:14:39.237 debug: inner message 1 id 0x69e8604773ba1405 process
+4-22 11:14:39.237 debug: process server response 0xb400006db18a2360 - 11TL_msgs_ack
+4-22 11:14:39.237 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 120 equal to packet size
+4-22 11:14:39.237 debug: api request constructor 0x6c9ce8ed, don't parse
+4-22 11:14:39.237 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:39.237 debug: process server response 0xb400006db11ff790 - 13TL_rpc_result
+4-22 11:14:39.237 debug: message_id 7631455428582683649 connection(0xb400006f19430a00, account0, dc5, type 1) received rpc_result with 15TL_api_response
+4-22 11:14:39.237 debug: got response for request 0xb400006ddbf268f0, req_id = 36 - 14TL_api_request (messageId = 0x69e86047220c4c04)
+4-22 11:14:39.237 debug: 5) erase request 36 0x69e86047220c4c04
+4-22 11:14:39.237 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 68, messageid: 0x69e860473cac0804): 11TL_msgs_ack(0xb400006db17ae6e0)
+4-22 11:14:39.252 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received packet size less(7364) then message size(35224)
+4-22 11:14:39.311 debug: Config(0xb400006ddbe132c0, /data/user/0/org.tele.alexgram/files/account8/dc4conf.dat) start write config
+4-22 11:14:39.312 debug: Config(0xb400006ddbe132c0, /data/user/0/org.tele.alexgram/files/account8/dc4conf.dat) fileno = 517
+4-22 11:14:39.315 debug: Config(0xb400006ddbe132c0, /data/user/0/org.tele.alexgram/files/account8/dc4conf.dat) config write ok
+4-22 11:14:39.315 debug: connection(0xb400006f195c0a00) set current timeout = 900
+4-22 11:14:39.315 debug: connection(0xb400006f195c0a00, account8, dc4, type 8) received message len 88 but packet larger 177
+4-22 11:14:39.315 debug: connection(0xb400006f195c0a00, account8, dc4, type 8) received object 7TL_pong
+4-22 11:14:39.315 debug: process server response 0xb400006db11ff510 - 7TL_pong
+4-22 11:14:39.315 debug: connection(0xb400006f195c0a00, account8, dc4, type 8) received push ping
+4-22 11:14:39.315 debug: connection(0xb400006f195c0a00, account8, dc4, type 8) received message len 88 equal to packet size
+4-22 11:14:39.315 debug: connection(0xb400006f195c0a00, account8, dc4, type 8) received object 7TL_pong
+4-22 11:14:39.315 debug: process server response 0xb400006db11ff510 - 7TL_pong
+4-22 11:14:39.315 debug: connection(0xb400006f195c0a00, account8, dc4, type 8) received push ping
+4-22 11:14:39.322 debug: connection(0xb400006f195c0f00) reset last event time, on connect
+4-22 11:14:39.323 debug: connection(0xb400006f195c0f00, account9, dc5, type 8) connected to 91.108.56.160:443
+4-22 11:14:39.323 debug: connection(0xb400006f195c0f00, account9, dc5, type 8) send message (session: 0x3c0fdbd0ac2fccb5, seqno: 0, messageid: 0x69e8604752b02000): 24TL_ping_delay_disconnect(0xb400006da76ad9e0)
+4-22 11:14:39.323 debug: dc5 send ping to push connection
+4-22 11:14:39.401 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 35224 equal to packet size
+4-22 11:14:39.401 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:39.401 debug: process server response 0xb400006db195d8c0 - 13TL_rpc_result
+4-22 11:14:39.401 debug: message_id 7631455428666603521 connection(0xb400006f19430a00, account0, dc5, type 1) received rpc_result with 14TL_gzip_packed
+4-22 11:14:39.401 debug: got response for request 0xb400006ddbf265d0, req_id = 34 - 14TL_api_request (messageId = 0x69e8604721062400)
+4-22 11:14:39.405 debug: api request constructor 0xfd5e12bd, don't parse
+4-22 11:14:39.414 debug: 5) erase request 34 0x69e8604721062400
+4-22 11:14:39.414 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 68, messageid: 0x69e8604769fbe800): 11TL_msgs_ack(0xb400006db18a3c20)
+4-22 11:14:39.426 debug: Config(0xb400006ddbe64b80, /data/user/0/org.tele.alexgram/files/account9/dc5conf.dat) start write config
+4-22 11:14:39.426 debug: Config(0xb400006ddbe64b80, /data/user/0/org.tele.alexgram/files/account9/dc5conf.dat) fileno = 477
+4-22 11:14:39.429 debug: Config(0xb400006ddbe64b80, /data/user/0/org.tele.alexgram/files/account9/dc5conf.dat) config write ok
+4-22 11:14:39.429 debug: connection(0xb400006f195c0f00) set current timeout = 900
+4-22 11:14:39.429 debug: connection(0xb400006f195c0f00, account9, dc5, type 8) received message len 88 but packet larger 177
+4-22 11:14:39.429 debug: connection(0xb400006f195c0f00, account9, dc5, type 8) received object 7TL_pong
+4-22 11:14:39.429 debug: process server response 0xb400006db11ff420 - 7TL_pong
+4-22 11:14:39.429 debug: connection(0xb400006f195c0f00, account9, dc5, type 8) received push ping
+4-22 11:14:39.429 debug: connection(0xb400006f195c0f00, account9, dc5, type 8) received message len 88 equal to packet size
+4-22 11:14:39.429 debug: connection(0xb400006f195c0f00, account9, dc5, type 8) received object 7TL_pong
+4-22 11:14:39.429 debug: process server response 0xb400006db11ff420 - 7TL_pong
+4-22 11:14:39.429 debug: connection(0xb400006f195c0f00, account9, dc5, type 8) received push ping
+4-22 11:14:39.624 debug: connection(0xb400006f19432800) reset last event time, no requests
+4-22 11:14:39.624 debug: connection(0xb400006f19432300) reset last event time, no requests
+4-22 11:14:39.624 debug: connection(0xb400006df119f000) reset last event time, no requests
+4-22 11:14:39.625 debug: connection(0xb400006f0d9ecb00) reset last event time, no requests
+4-22 11:14:39.627 debug: connection(0xb400006f0d9ec100) reset last event time, no requests
+4-22 11:14:41.042 debug: connection(0xb400006f195c0000) reset last event time, no requests
+4-22 11:14:41.318 debug: connection(0xb400006f195c0500) reset last event time, no requests
+4-22 11:14:41.418 debug: send request 0xb400006dcecf4ba0 - 14TL_api_request
+4-22 11:14:41.418 debug: send request wrapped 0xb400006dcecf4ba0 - 14TL_api_request
+4-22 11:14:41.418 debug: messageId for token = 37, 0x69e860496b020c00
+4-22 11:14:41.418 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 69, messageid: 0x69e860496b020c00): 14TL_api_request(0xb400006dcecf4ba0)
+4-22 11:14:41.432 debug: connection(0xb400006f195c1400) reset last event time, no requests
+4-22 11:14:41.586 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 408 equal to packet size
+4-22 11:14:41.586 debug: not found request to parse constructor 0x74ae4240
+4-22 11:14:41.586 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received object 16TL_msg_container
+4-22 11:14:41.586 debug: process server response 0xb400006db1b3b060 - 16TL_msg_container
+4-22 11:14:41.586 debug: received container with 2 items
+4-22 11:14:41.586 debug: inner message 0 id 0x69e86049ce330801 is unparsed
+4-22 11:14:41.587 debug: inner message 1 id 0x69e86049ce35c001 process
+4-22 11:14:41.587 debug: process server response 0xb400006db1bf1180 - 11TL_msgs_ack
+4-22 11:14:41.587 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 70, messageid: 0x69e860499645a400): 11TL_msgs_ack(0xb400006db1b3b060)
+4-22 11:14:41.602 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received message len 504 equal to packet size
+4-22 11:14:41.602 debug: connection(0xb400006f19430a00, account0, dc5, type 1) received object 13TL_rpc_result
+4-22 11:14:41.602 debug: process server response 0xb400006db11ff1a0 - 13TL_rpc_result
+4-22 11:14:41.602 debug: message_id 7631455438758125569 connection(0xb400006f19430a00, account0, dc5, type 1) received rpc_result with 14TL_gzip_packed
+4-22 11:14:41.602 debug: got response for request 0xb400006dcecf4ba0, req_id = 37 - 14TL_api_request (messageId = 0x69e860496b020c00)
+4-22 11:14:41.602 debug: api request constructor 0x2064674e, don't parse
+4-22 11:14:41.603 debug: 5) erase request 37 0x69e860496b020c00
+4-22 11:14:41.603 debug: connection(0xb400006f19430a00, account0, dc5, type 1) send message (session: 0xcc94dc3c790b6b52, seqno: 70, messageid: 0x69e860499a5e3400): 11TL_msgs_ack(0xb400006db1b3b060)
+4-22 11:14:41.786 debug: connection(0xb400006f19431900) reset last event time, on connect
+4-22 11:14:41.786 debug: connection(0xb400006f19431900, account1, dc2, type 1) connected to 149.154.167.50:5222
+4-22 11:14:41.786 debug: connection(0xb400006f19431900, account1, dc2, type 1) send message (session: 0x2f4d5f096e303ff0, seqno: 0, messageid: 0x69e86049c9374c00): 18TL_destroy_session(0xb400006da61922f0)
+4-22 11:14:42.051 debug: Config(0xb400006df1058c00, /data/user/0/org.tele.alexgram/files/account1/dc2conf.dat) start write config
+4-22 11:14:42.051 debug: Config(0xb400006df1058c00, /data/user/0/org.tele.alexgram/files/account1/dc2conf.dat) fileno = 496
+4-22 11:14:42.054 debug: Config(0xb400006df1058c00, /data/user/0/org.tele.alexgram/files/account1/dc2conf.dat) config write ok
+4-22 11:14:42.054 debug: connection(0xb400006f19431900) set current timeout = 4
+4-22 11:14:42.054 debug: connection(0xb400006f19431900, account1, dc2, type 1) received message len 152 equal to packet size
+4-22 11:14:42.054 debug: connection(0xb400006f19431900, account1, dc2, type 1) received object 16TL_msg_container
+4-22 11:14:42.054 debug: process server response 0xb400006db1bf1660 - 16TL_msg_container
+4-22 11:14:42.054 debug: received container with 2 items
+4-22 11:14:42.054 debug: inner message 0 id 0x69e8604a261f4c01 process
+4-22 11:14:42.054 debug: process server response 0xb400006db17ae4a0 - 22TL_new_session_created
+4-22 11:14:42.054 debug: connection(0xb400006f19431900, account1, dc2, type 1) new session created (first message id: 0x69e86049c9374c00, server salt: 0x3a9b7bd405d5ebf9, unique id: 0x22476c20530d7090)
+4-22 11:14:42.054 debug: Config(0xb400006df1058680, /data/user/0/org.tele.alexgram/files/account1/tgnet.dat) start write config
+4-22 11:14:42.054 debug: Config(0xb400006df1058680, /data/user/0/org.tele.alexgram/files/account1/tgnet.dat) fileno = 496
+4-22 11:14:42.056 debug: Config(0xb400006df1058680, /data/user/0/org.tele.alexgram/files/account1/tgnet.dat) config write ok
+4-22 11:14:42.056 debug: inner message 1 id 0x69e8604a261f4c05 process
+4-22 11:14:42.056 debug: process server response 0xb400006da61922f0 - 21TL_destroy_session_ok
+4-22 11:14:42.056 debug: destroyed session 0x73bc9943e7e95314 (ok)
+4-22 11:14:42.057 debug: connection(0xb400006f19431900, account1, dc2, type 1) send message (session: 0x2f4d5f096e303ff0, seqno: 0, messageid: 0x69e8604a0e978c00): 11TL_msgs_ack(0xb400006db1bf1660)

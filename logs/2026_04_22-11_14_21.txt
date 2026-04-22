@@ -1,0 +1,1333 @@
+-----start log 2026_04_22-11_14_21-----
+2026_04_22-11_14_21.627 D/ApplicationLoader: app start time = 252562005
+2026_04_22-11_14_21.628 D/ApplicationLoader: buildVersion = v12.6.4 (177683[6]) direct arm64-v8a 
+2026_04_22-11_14_21.628 D/ApplicationLoader: device = manufacturer=realme, device=RE5C6CL1, model=RMX3785, product=RMX3785IN
+2026_04_22-11_14_21.634 D/NativeLoader: loaded normal lib
+2026_04_22-11_14_21.634 D/ApplicationLoader: load libs time = 56
+2026_04_22-11_14_21.672 D/AndroidUtilities: external dir mounted
+2026_04_22-11_14_21.686 D/AndroidUtilities: check dir /storage/emulated/0/Android/data/org.tele.alexgram/cache 
+2026_04_22-11_14_21.704 D/LocaleController: getLocaleFileStrings: reloadLastFile = false
+2026_04_22-11_14_21.713 D/AndroidUtilities: external dir mounted
+2026_04_22-11_14_21.716 D/AndroidUtilities: check dir /storage/emulated/0/Android/data/org.tele.alexgram/cache 
+2026_04_22-11_14_21.716 D/ImageLoader: cache path = /storage/emulated/0/Android/data/org.tele.alexgram/cache
+2026_04_22-11_14_21.716 D/ImageLoader: selected SD card = 
+2026_04_22-11_14_21.721 D/ImageLoader: external storage = /storage/emulated/0
+2026_04_22-11_14_21.726 D/MessagesStorage: current db version = 173
+2026_04_22-11_14_21.735 D/SharedConfig: device performance info selected_class = 1 (cpu_count = 8, freq = 2050, memoryClass = 384, android version 35, manufacture realme, screenRefreshRate=120.00001, screenMaxRefreshRate=120.00001)
+2026_04_22-11_14_21.749 D/LocaleController: applyLanguage: currentLocaleInfo is set
+2026_04_22-11_14_21.749 D/LocaleController: applyLanguage: reloadLastFile=false force=false isLoadingRemote=false
+2026_04_22-11_14_21.753 D/ApplicationLoader: screen state = true
+2026_04_22-11_14_21.769 D/SharedConfig: device performance info selected_class = 1 (cpu_count = 8, freq = 2050, memoryClass = 384, android version 35, manufacture realme, screenRefreshRate=120.00001, screenMaxRefreshRate=120.00001)
+2026_04_22-11_14_21.772 D/ConnectionsManager: valid interface: name:ap0 (ap0)
+2026_04_22-11_14_21.772 D/ConnectionsManager: address: fe80::488c:19ff:feda:8b18%ap0
+2026_04_22-11_14_21.772 D/ConnectionsManager: address: 2401:4900:b017:7623::6f
+2026_04_22-11_14_21.772 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.772 D/ConnectionsManager: address: 10.158.158.236
+2026_04_22-11_14_21.772 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.772 D/ConnectionsManager: valid interface: name:dummy0 (dummy0)
+2026_04_22-11_14_21.772 D/ConnectionsManager: address: fe80::8ce:24ff:fe4c:8e13%dummy0
+2026_04_22-11_14_21.773 D/ConnectionsManager: valid interface: name:ifb0 (ifb0)
+2026_04_22-11_14_21.773 D/ConnectionsManager: address: fe80::b017:d3ff:fe12:4af4%ifb0
+2026_04_22-11_14_21.773 D/ConnectionsManager: valid interface: name:ifb2 (ifb2)
+2026_04_22-11_14_21.773 D/ConnectionsManager: address: fe80::84e7:aaff:fe64:c118%ifb2
+2026_04_22-11_14_21.773 D/ConnectionsManager: valid interface: name:ccmni2 (ccmni2)
+2026_04_22-11_14_21.773 D/ConnectionsManager: address: fe80::8000:0:0:0%ccmni2
+2026_04_22-11_14_21.773 D/ConnectionsManager: address: 2409:4124:8:7c31:8000::
+2026_04_22-11_14_21.773 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.774 D/ConnectionsManager: valid interface: name:ccmni3 (ccmni3)
+2026_04_22-11_14_21.774 D/ConnectionsManager: address: fe80::a9ab:d59f:d8ef:e911%ccmni3
+2026_04_22-11_14_21.774 D/ConnectionsManager: address: 2401:4900:b041:aeee:a9ab:d59f:d8ef:e911
+2026_04_22-11_14_21.774 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.774 D/ConnectionsManager: valid interface: name:ifb1 (ifb1)
+2026_04_22-11_14_21.774 D/ConnectionsManager: address: fe80::346d:b1ff:fe94:f110%ifb1
+2026_04_22-11_14_21.774 D/ConnectionsManager: valid interface: name:ccmni1 (ccmni1)
+2026_04_22-11_14_21.774 D/ConnectionsManager: address: fe80::8c95:f885:a990:8f48%ccmni1
+2026_04_22-11_14_21.775 D/ConnectionsManager: address: 2401:4900:b017:7623:8c95:f885:a990:8f48
+2026_04_22-11_14_21.775 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.775 D/ConnectionsManager: address: 100.93.255.32
+2026_04_22-11_14_21.775 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.777 D/ConnectionsManager: selected ip strategy 0
+2026_04_22-11_14_21.789 D/SharedConfig: device performance info selected_class = 1 (cpu_count = 8, freq = 2050, memoryClass = 384, android version 35, manufacture realme, screenRefreshRate=120.00001, screenMaxRefreshRate=120.00001)
+2026_04_22-11_14_21.791 D/ConnectionsManager: valid interface: name:ap0 (ap0)
+2026_04_22-11_14_21.791 D/ConnectionsManager: address: fe80::488c:19ff:feda:8b18%ap0
+2026_04_22-11_14_21.791 D/ConnectionsManager: address: 2401:4900:b017:7623::6f
+2026_04_22-11_14_21.791 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.791 D/ConnectionsManager: address: 10.158.158.236
+2026_04_22-11_14_21.791 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.792 D/ConnectionsManager: valid interface: name:dummy0 (dummy0)
+2026_04_22-11_14_21.792 D/ConnectionsManager: address: fe80::8ce:24ff:fe4c:8e13%dummy0
+2026_04_22-11_14_21.792 D/ConnectionsManager: valid interface: name:ifb0 (ifb0)
+2026_04_22-11_14_21.792 D/ConnectionsManager: address: fe80::b017:d3ff:fe12:4af4%ifb0
+2026_04_22-11_14_21.793 D/ConnectionsManager: valid interface: name:ifb2 (ifb2)
+2026_04_22-11_14_21.793 D/ConnectionsManager: address: fe80::84e7:aaff:fe64:c118%ifb2
+2026_04_22-11_14_21.793 D/ConnectionsManager: valid interface: name:ccmni2 (ccmni2)
+2026_04_22-11_14_21.793 D/ConnectionsManager: address: fe80::8000:0:0:0%ccmni2
+2026_04_22-11_14_21.793 D/ConnectionsManager: address: 2409:4124:8:7c31:8000::
+2026_04_22-11_14_21.793 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.793 D/ConnectionsManager: valid interface: name:ccmni3 (ccmni3)
+2026_04_22-11_14_21.793 D/ConnectionsManager: address: fe80::a9ab:d59f:d8ef:e911%ccmni3
+2026_04_22-11_14_21.794 D/MessagesStorage: current db version = 173
+2026_04_22-11_14_21.794 D/ConnectionsManager: address: 2401:4900:b041:aeee:a9ab:d59f:d8ef:e911
+2026_04_22-11_14_21.794 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.794 D/ConnectionsManager: valid interface: name:ifb1 (ifb1)
+2026_04_22-11_14_21.794 D/ConnectionsManager: address: fe80::346d:b1ff:fe94:f110%ifb1
+2026_04_22-11_14_21.794 D/ConnectionsManager: valid interface: name:ccmni1 (ccmni1)
+2026_04_22-11_14_21.794 D/ConnectionsManager: address: fe80::8c95:f885:a990:8f48%ccmni1
+2026_04_22-11_14_21.794 D/ConnectionsManager: address: 2401:4900:b017:7623:8c95:f885:a990:8f48
+2026_04_22-11_14_21.794 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.794 D/ConnectionsManager: address: 100.93.255.32
+2026_04_22-11_14_21.794 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.796 D/ConnectionsManager: selected ip strategy 0
+2026_04_22-11_14_21.812 D/SharedConfig: device performance info selected_class = 1 (cpu_count = 8, freq = 2050, memoryClass = 384, android version 35, manufacture realme, screenRefreshRate=120.00001, screenMaxRefreshRate=120.00001)
+2026_04_22-11_14_21.812 D/ImageLoader: image path = /storage/emulated/0/Android/data/org.tele.alexgram/files/Telegram/Telegram Images
+2026_04_22-11_14_21.812 D/ConnectionsManager: valid interface: name:ap0 (ap0)
+2026_04_22-11_14_21.815 D/ConnectionsManager: address: fe80::488c:19ff:feda:8b18%ap0
+2026_04_22-11_14_21.815 D/ConnectionsManager: address: 2401:4900:b017:7623::6f
+2026_04_22-11_14_21.815 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.815 D/ConnectionsManager: address: 10.158.158.236
+2026_04_22-11_14_21.816 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.816 D/ConnectionsManager: valid interface: name:dummy0 (dummy0)
+2026_04_22-11_14_21.816 D/MessagesStorage: current db version = 173
+2026_04_22-11_14_21.816 D/ConnectionsManager: address: fe80::8ce:24ff:fe4c:8e13%dummy0
+2026_04_22-11_14_21.816 D/ConnectionsManager: valid interface: name:ifb0 (ifb0)
+2026_04_22-11_14_21.816 D/ConnectionsManager: address: fe80::b017:d3ff:fe12:4af4%ifb0
+2026_04_22-11_14_21.816 D/ConnectionsManager: valid interface: name:ifb2 (ifb2)
+2026_04_22-11_14_21.816 D/ConnectionsManager: address: fe80::84e7:aaff:fe64:c118%ifb2
+2026_04_22-11_14_21.816 D/ConnectionsManager: valid interface: name:ccmni2 (ccmni2)
+2026_04_22-11_14_21.816 D/ConnectionsManager: address: fe80::8000:0:0:0%ccmni2
+2026_04_22-11_14_21.817 D/ConnectionsManager: address: 2409:4124:8:7c31:8000::
+2026_04_22-11_14_21.817 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.817 D/ConnectionsManager: valid interface: name:ccmni3 (ccmni3)
+2026_04_22-11_14_21.817 D/ConnectionsManager: address: fe80::a9ab:d59f:d8ef:e911%ccmni3
+2026_04_22-11_14_21.817 D/ConnectionsManager: address: 2401:4900:b041:aeee:a9ab:d59f:d8ef:e911
+2026_04_22-11_14_21.817 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.817 D/ConnectionsManager: valid interface: name:ifb1 (ifb1)
+2026_04_22-11_14_21.817 D/ConnectionsManager: address: fe80::346d:b1ff:fe94:f110%ifb1
+2026_04_22-11_14_21.817 D/ConnectionsManager: valid interface: name:ccmni1 (ccmni1)
+2026_04_22-11_14_21.817 D/ConnectionsManager: address: fe80::8c95:f885:a990:8f48%ccmni1
+2026_04_22-11_14_21.817 D/ConnectionsManager: address: 2401:4900:b017:7623:8c95:f885:a990:8f48
+2026_04_22-11_14_21.817 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.817 D/ConnectionsManager: address: 100.93.255.32
+2026_04_22-11_14_21.817 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.818 D/ConnectionsManager: selected ip strategy 0
+2026_04_22-11_14_21.821 D/ImageLoader: video path = /storage/emulated/0/Android/data/org.tele.alexgram/files/Telegram/Telegram Video
+2026_04_22-11_14_21.830 D/ImageLoader: audio path = /storage/emulated/0/Android/data/org.tele.alexgram/files/Telegram/Telegram Audio
+2026_04_22-11_14_21.834 D/MessagesStorage: current db version = 173
+2026_04_22-11_14_21.836 D/ImageLoader: documents path = /storage/emulated/0/Android/data/org.tele.alexgram/files/Telegram/Telegram Documents
+2026_04_22-11_14_21.836 D/SharedConfig: device performance info selected_class = 1 (cpu_count = 8, freq = 2050, memoryClass = 384, android version 35, manufacture realme, screenRefreshRate=120.00001, screenMaxRefreshRate=120.00001)
+2026_04_22-11_14_21.838 D/ConnectionsManager: valid interface: name:ap0 (ap0)
+2026_04_22-11_14_21.838 D/ConnectionsManager: address: fe80::488c:19ff:feda:8b18%ap0
+2026_04_22-11_14_21.838 D/ConnectionsManager: address: 2401:4900:b017:7623::6f
+2026_04_22-11_14_21.838 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.838 D/ConnectionsManager: address: 10.158.158.236
+2026_04_22-11_14_21.838 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.838 D/ConnectionsManager: valid interface: name:dummy0 (dummy0)
+2026_04_22-11_14_21.838 D/ConnectionsManager: address: fe80::8ce:24ff:fe4c:8e13%dummy0
+2026_04_22-11_14_21.839 D/ConnectionsManager: valid interface: name:ifb0 (ifb0)
+2026_04_22-11_14_21.839 D/ConnectionsManager: address: fe80::b017:d3ff:fe12:4af4%ifb0
+2026_04_22-11_14_21.839 D/ConnectionsManager: valid interface: name:ifb2 (ifb2)
+2026_04_22-11_14_21.839 D/ConnectionsManager: address: fe80::84e7:aaff:fe64:c118%ifb2
+2026_04_22-11_14_21.839 D/ConnectionsManager: valid interface: name:ccmni2 (ccmni2)
+2026_04_22-11_14_21.840 D/ConnectionsManager: address: fe80::8000:0:0:0%ccmni2
+2026_04_22-11_14_21.840 D/ConnectionsManager: address: 2409:4124:8:7c31:8000::
+2026_04_22-11_14_21.840 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.840 D/ConnectionsManager: valid interface: name:ccmni3 (ccmni3)
+2026_04_22-11_14_21.840 D/ConnectionsManager: address: fe80::a9ab:d59f:d8ef:e911%ccmni3
+2026_04_22-11_14_21.840 D/ConnectionsManager: address: 2401:4900:b041:aeee:a9ab:d59f:d8ef:e911
+2026_04_22-11_14_21.840 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.840 D/ConnectionsManager: valid interface: name:ifb1 (ifb1)
+2026_04_22-11_14_21.841 D/ConnectionsManager: address: fe80::346d:b1ff:fe94:f110%ifb1
+2026_04_22-11_14_21.841 D/ImageLoader: files path = /storage/emulated/0/Android/data/org.tele.alexgram/files/Telegram/Telegram Files
+2026_04_22-11_14_21.841 D/ConnectionsManager: valid interface: name:ccmni1 (ccmni1)
+2026_04_22-11_14_21.841 D/ConnectionsManager: address: fe80::8c95:f885:a990:8f48%ccmni1
+2026_04_22-11_14_21.841 D/ConnectionsManager: address: 2401:4900:b017:7623:8c95:f885:a990:8f48
+2026_04_22-11_14_21.841 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.841 D/ConnectionsManager: address: 100.93.255.32
+2026_04_22-11_14_21.841 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.843 D/ConnectionsManager: selected ip strategy 0
+2026_04_22-11_14_21.846 D/ImageLoader: stories path = /storage/emulated/0/Android/data/org.tele.alexgram/files/Telegram/Telegram Stories
+2026_04_22-11_14_21.859 D/MessagesStorage: current db version = 173
+2026_04_22-11_14_21.860 D/SharedConfig: device performance info selected_class = 1 (cpu_count = 8, freq = 2050, memoryClass = 384, android version 35, manufacture realme, screenRefreshRate=120.00001, screenMaxRefreshRate=120.00001)
+2026_04_22-11_14_21.862 D/ConnectionsManager: valid interface: name:ap0 (ap0)
+2026_04_22-11_14_21.862 D/ConnectionsManager: address: fe80::488c:19ff:feda:8b18%ap0
+2026_04_22-11_14_21.862 D/ConnectionsManager: address: 2401:4900:b017:7623::6f
+2026_04_22-11_14_21.862 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.862 D/ConnectionsManager: address: 10.158.158.236
+2026_04_22-11_14_21.862 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.862 D/ConnectionsManager: valid interface: name:dummy0 (dummy0)
+2026_04_22-11_14_21.863 D/ConnectionsManager: address: fe80::8ce:24ff:fe4c:8e13%dummy0
+2026_04_22-11_14_21.863 D/ConnectionsManager: valid interface: name:ifb0 (ifb0)
+2026_04_22-11_14_21.863 D/ConnectionsManager: address: fe80::b017:d3ff:fe12:4af4%ifb0
+2026_04_22-11_14_21.863 D/ConnectionsManager: valid interface: name:ifb2 (ifb2)
+2026_04_22-11_14_21.863 D/ConnectionsManager: address: fe80::84e7:aaff:fe64:c118%ifb2
+2026_04_22-11_14_21.864 D/ConnectionsManager: valid interface: name:ccmni2 (ccmni2)
+2026_04_22-11_14_21.864 D/ConnectionsManager: address: fe80::8000:0:0:0%ccmni2
+2026_04_22-11_14_21.864 D/ConnectionsManager: address: 2409:4124:8:7c31:8000::
+2026_04_22-11_14_21.864 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.864 D/ConnectionsManager: valid interface: name:ccmni3 (ccmni3)
+2026_04_22-11_14_21.864 D/ConnectionsManager: address: fe80::a9ab:d59f:d8ef:e911%ccmni3
+2026_04_22-11_14_21.864 D/ConnectionsManager: address: 2401:4900:b041:aeee:a9ab:d59f:d8ef:e911
+2026_04_22-11_14_21.864 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.865 D/ConnectionsManager: valid interface: name:ifb1 (ifb1)
+2026_04_22-11_14_21.865 D/ConnectionsManager: address: fe80::346d:b1ff:fe94:f110%ifb1
+2026_04_22-11_14_21.865 D/ConnectionsManager: valid interface: name:ccmni1 (ccmni1)
+2026_04_22-11_14_21.866 D/ConnectionsManager: address: fe80::8c95:f885:a990:8f48%ccmni1
+2026_04_22-11_14_21.866 D/ConnectionsManager: address: 2401:4900:b017:7623:8c95:f885:a990:8f48
+2026_04_22-11_14_21.866 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.866 D/ConnectionsManager: address: 100.93.255.32
+2026_04_22-11_14_21.866 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.867 D/ConnectionsManager: selected ip strategy 0
+2026_04_22-11_14_21.877 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_help_getPromoData@8260c6 with token = 1
+2026_04_22-11_14_21.879 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_help_getPromoData@6795623 with token = 1
+2026_04_22-11_14_21.881 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_help_getPromoData@abe1a38 with token = 1
+2026_04_22-11_14_21.881 D/SharedConfig: device performance info selected_class = 1 (cpu_count = 8, freq = 2050, memoryClass = 384, android version 35, manufacture realme, screenRefreshRate=120.00001, screenMaxRefreshRate=120.00001)
+2026_04_22-11_14_21.882 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_help_getPromoData@956a1e4 with token = 1
+2026_04_22-11_14_21.883 D/ConnectionsManager: valid interface: name:ap0 (ap0)
+2026_04_22-11_14_21.884 D/ConnectionsManager: address: fe80::488c:19ff:feda:8b18%ap0
+2026_04_22-11_14_21.884 D/ConnectionsManager: address: 2401:4900:b017:7623::6f
+2026_04_22-11_14_21.884 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.884 D/ConnectionsManager: address: 10.158.158.236
+2026_04_22-11_14_21.884 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.884 D/ConnectionsManager: valid interface: name:dummy0 (dummy0)
+2026_04_22-11_14_21.884 D/ConnectionsManager: address: fe80::8ce:24ff:fe4c:8e13%dummy0
+2026_04_22-11_14_21.885 D/ConnectionsManager: valid interface: name:ifb0 (ifb0)
+2026_04_22-11_14_21.885 D/ConnectionsManager: address: fe80::b017:d3ff:fe12:4af4%ifb0
+2026_04_22-11_14_21.885 D/ConnectionsManager: valid interface: name:ifb2 (ifb2)
+2026_04_22-11_14_21.885 D/ConnectionsManager: address: fe80::84e7:aaff:fe64:c118%ifb2
+2026_04_22-11_14_21.886 D/ConnectionsManager: valid interface: name:ccmni2 (ccmni2)
+2026_04_22-11_14_21.886 D/ConnectionsManager: address: fe80::8000:0:0:0%ccmni2
+2026_04_22-11_14_21.886 D/ConnectionsManager: address: 2409:4124:8:7c31:8000::
+2026_04_22-11_14_21.886 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.886 D/ConnectionsManager: valid interface: name:ccmni3 (ccmni3)
+2026_04_22-11_14_21.886 D/ConnectionsManager: address: fe80::a9ab:d59f:d8ef:e911%ccmni3
+2026_04_22-11_14_21.886 D/ConnectionsManager: address: 2401:4900:b041:aeee:a9ab:d59f:d8ef:e911
+2026_04_22-11_14_21.886 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.886 D/ConnectionsManager: valid interface: name:ifb1 (ifb1)
+2026_04_22-11_14_21.887 D/ConnectionsManager: address: fe80::346d:b1ff:fe94:f110%ifb1
+2026_04_22-11_14_21.887 D/ConnectionsManager: valid interface: name:ccmni1 (ccmni1)
+2026_04_22-11_14_21.887 D/ConnectionsManager: address: fe80::8c95:f885:a990:8f48%ccmni1
+2026_04_22-11_14_21.887 D/ConnectionsManager: address: 2401:4900:b017:7623:8c95:f885:a990:8f48
+2026_04_22-11_14_21.887 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.887 D/ConnectionsManager: address: 100.93.255.32
+2026_04_22-11_14_21.888 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.890 D/ConnectionsManager: selected ip strategy 0
+2026_04_22-11_14_21.895 D/MessagesStorage: current db version = 173
+2026_04_22-11_14_21.896 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_help_getPromoData@7b81580 with token = 1
+2026_04_22-11_14_21.897 D/ImageLoader: image path = /storage/emulated/0/Android/media/org.tele.alexgram/Telegram/Telegram Images
+2026_04_22-11_14_21.904 D/SharedConfig: device performance info selected_class = 1 (cpu_count = 8, freq = 2050, memoryClass = 384, android version 35, manufacture realme, screenRefreshRate=120.00001, screenMaxRefreshRate=120.00001)
+2026_04_22-11_14_21.906 D/ConnectionsManager: valid interface: name:ap0 (ap0)
+2026_04_22-11_14_21.907 D/ConnectionsManager: address: fe80::488c:19ff:feda:8b18%ap0
+2026_04_22-11_14_21.907 D/ConnectionsManager: address: 2401:4900:b017:7623::6f
+2026_04_22-11_14_21.907 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.907 D/ConnectionsManager: address: 10.158.158.236
+2026_04_22-11_14_21.907 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.907 D/ConnectionsManager: valid interface: name:dummy0 (dummy0)
+2026_04_22-11_14_21.908 D/ConnectionsManager: address: fe80::8ce:24ff:fe4c:8e13%dummy0
+2026_04_22-11_14_21.908 D/ConnectionsManager: valid interface: name:ifb0 (ifb0)
+2026_04_22-11_14_21.908 D/ConnectionsManager: address: fe80::b017:d3ff:fe12:4af4%ifb0
+2026_04_22-11_14_21.908 D/ConnectionsManager: valid interface: name:ifb2 (ifb2)
+2026_04_22-11_14_21.909 D/MessagesStorage: current db version = 173
+2026_04_22-11_14_21.909 D/ConnectionsManager: address: fe80::84e7:aaff:fe64:c118%ifb2
+2026_04_22-11_14_21.909 D/ConnectionsManager: valid interface: name:ccmni2 (ccmni2)
+2026_04_22-11_14_21.909 D/ConnectionsManager: address: fe80::8000:0:0:0%ccmni2
+2026_04_22-11_14_21.909 D/ConnectionsManager: address: 2409:4124:8:7c31:8000::
+2026_04_22-11_14_21.909 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.909 D/ConnectionsManager: valid interface: name:ccmni3 (ccmni3)
+2026_04_22-11_14_21.909 D/ConnectionsManager: address: fe80::a9ab:d59f:d8ef:e911%ccmni3
+2026_04_22-11_14_21.910 D/ConnectionsManager: address: 2401:4900:b041:aeee:a9ab:d59f:d8ef:e911
+2026_04_22-11_14_21.910 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.910 D/ConnectionsManager: valid interface: name:ifb1 (ifb1)
+2026_04_22-11_14_21.910 D/ConnectionsManager: address: fe80::346d:b1ff:fe94:f110%ifb1
+2026_04_22-11_14_21.910 D/ConnectionsManager: valid interface: name:ccmni1 (ccmni1)
+2026_04_22-11_14_21.910 D/ConnectionsManager: address: fe80::8c95:f885:a990:8f48%ccmni1
+2026_04_22-11_14_21.910 D/ConnectionsManager: address: 2401:4900:b017:7623:8c95:f885:a990:8f48
+2026_04_22-11_14_21.910 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.910 D/ConnectionsManager: address: 100.93.255.32
+2026_04_22-11_14_21.910 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.912 D/ConnectionsManager: selected ip strategy 0
+2026_04_22-11_14_21.913 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_help_getPromoData@7694386 with token = 1
+2026_04_22-11_14_21.935 D/ImageLoader: video path = /storage/emulated/0/Android/media/org.tele.alexgram/Telegram/Telegram Video
+2026_04_22-11_14_21.951 D/SharedConfig: device performance info selected_class = 1 (cpu_count = 8, freq = 2050, memoryClass = 384, android version 35, manufacture realme, screenRefreshRate=120.00001, screenMaxRefreshRate=120.00001)
+2026_04_22-11_14_21.953 D/ConnectionsManager: valid interface: name:ap0 (ap0)
+2026_04_22-11_14_21.953 D/ConnectionsManager: address: fe80::488c:19ff:feda:8b18%ap0
+2026_04_22-11_14_21.954 D/ConnectionsManager: address: 2401:4900:b017:7623::6f
+2026_04_22-11_14_21.954 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.954 D/ConnectionsManager: address: 10.158.158.236
+2026_04_22-11_14_21.954 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.954 D/ConnectionsManager: valid interface: name:dummy0 (dummy0)
+2026_04_22-11_14_21.954 D/ConnectionsManager: address: fe80::8ce:24ff:fe4c:8e13%dummy0
+2026_04_22-11_14_21.954 D/ConnectionsManager: valid interface: name:ifb0 (ifb0)
+2026_04_22-11_14_21.956 D/ConnectionsManager: address: fe80::b017:d3ff:fe12:4af4%ifb0
+2026_04_22-11_14_21.956 D/ConnectionsManager: valid interface: name:ifb2 (ifb2)
+2026_04_22-11_14_21.956 D/ConnectionsManager: address: fe80::84e7:aaff:fe64:c118%ifb2
+2026_04_22-11_14_21.956 D/ConnectionsManager: valid interface: name:ccmni2 (ccmni2)
+2026_04_22-11_14_21.956 D/ConnectionsManager: address: fe80::8000:0:0:0%ccmni2
+2026_04_22-11_14_21.956 D/ConnectionsManager: address: 2409:4124:8:7c31:8000::
+2026_04_22-11_14_21.956 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.956 D/ConnectionsManager: valid interface: name:ccmni3 (ccmni3)
+2026_04_22-11_14_21.956 D/ConnectionsManager: address: fe80::a9ab:d59f:d8ef:e911%ccmni3
+2026_04_22-11_14_21.957 D/ConnectionsManager: address: 2401:4900:b041:aeee:a9ab:d59f:d8ef:e911
+2026_04_22-11_14_21.957 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.957 D/ConnectionsManager: valid interface: name:ifb1 (ifb1)
+2026_04_22-11_14_21.957 D/ConnectionsManager: address: fe80::346d:b1ff:fe94:f110%ifb1
+2026_04_22-11_14_21.957 D/ConnectionsManager: valid interface: name:ccmni1 (ccmni1)
+2026_04_22-11_14_21.957 D/ConnectionsManager: address: fe80::8c95:f885:a990:8f48%ccmni1
+2026_04_22-11_14_21.957 D/ConnectionsManager: address: 2401:4900:b017:7623:8c95:f885:a990:8f48
+2026_04_22-11_14_21.957 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.958 D/ConnectionsManager: address: 100.93.255.32
+2026_04_22-11_14_21.958 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.958 D/ConnectionsManager: selected ip strategy 0
+2026_04_22-11_14_21.962 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_help_getPromoData@2bb25a3 with token = 1
+2026_04_22-11_14_21.975 D/MessagesStorage: current db version = 173
+2026_04_22-11_14_21.976 D/MessagesStorage: current db version = 173
+2026_04_22-11_14_21.981 D/SharedConfig: device performance info selected_class = 1 (cpu_count = 8, freq = 2050, memoryClass = 384, android version 35, manufacture realme, screenRefreshRate=120.00001, screenMaxRefreshRate=120.00001)
+2026_04_22-11_14_21.984 D/ConnectionsManager: valid interface: name:ap0 (ap0)
+2026_04_22-11_14_21.984 D/ConnectionsManager: address: fe80::488c:19ff:feda:8b18%ap0
+2026_04_22-11_14_21.984 D/ConnectionsManager: address: 2401:4900:b017:7623::6f
+2026_04_22-11_14_21.984 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.984 D/ConnectionsManager: address: 10.158.158.236
+2026_04_22-11_14_21.984 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.985 D/ConnectionsManager: valid interface: name:dummy0 (dummy0)
+2026_04_22-11_14_21.985 D/ConnectionsManager: address: fe80::8ce:24ff:fe4c:8e13%dummy0
+2026_04_22-11_14_21.985 D/ConnectionsManager: valid interface: name:ifb0 (ifb0)
+2026_04_22-11_14_21.985 D/ConnectionsManager: address: fe80::b017:d3ff:fe12:4af4%ifb0
+2026_04_22-11_14_21.986 D/ConnectionsManager: valid interface: name:ifb2 (ifb2)
+2026_04_22-11_14_21.986 D/ConnectionsManager: address: fe80::84e7:aaff:fe64:c118%ifb2
+2026_04_22-11_14_21.986 D/ConnectionsManager: valid interface: name:ccmni2 (ccmni2)
+2026_04_22-11_14_21.986 D/ConnectionsManager: address: fe80::8000:0:0:0%ccmni2
+2026_04_22-11_14_21.986 D/ConnectionsManager: address: 2409:4124:8:7c31:8000::
+2026_04_22-11_14_21.986 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.987 D/ConnectionsManager: valid interface: name:ccmni3 (ccmni3)
+2026_04_22-11_14_21.987 D/ConnectionsManager: address: fe80::a9ab:d59f:d8ef:e911%ccmni3
+2026_04_22-11_14_21.987 D/ConnectionsManager: address: 2401:4900:b041:aeee:a9ab:d59f:d8ef:e911
+2026_04_22-11_14_21.988 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.988 D/ConnectionsManager: valid interface: name:ifb1 (ifb1)
+2026_04_22-11_14_21.988 D/ConnectionsManager: address: fe80::346d:b1ff:fe94:f110%ifb1
+2026_04_22-11_14_21.988 D/ConnectionsManager: valid interface: name:ccmni1 (ccmni1)
+2026_04_22-11_14_21.988 D/ConnectionsManager: address: fe80::8c95:f885:a990:8f48%ccmni1
+2026_04_22-11_14_21.988 D/ConnectionsManager: address: 2401:4900:b017:7623:8c95:f885:a990:8f48
+2026_04_22-11_14_21.988 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.989 D/ConnectionsManager: address: 100.93.255.32
+2026_04_22-11_14_21.989 D/ConnectionsManager: address is good
+2026_04_22-11_14_21.991 D/ConnectionsManager: selected ip strategy 0
+2026_04_22-11_14_21.994 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_help_getPromoData@b615a69 with token = 1
+2026_04_22-11_14_22.001 D/MessagesController: start getDifference with date = 1776836646 pts = 269096 qts = 154404717
+2026_04_22-11_14_22.002 D/MessagesController: getDifference: isUpdating = true
+2026_04_22-11_14_22.002 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_updates_getDifference@2a66cac with token = 1
+2026_04_22-11_14_22.014 D/SharedConfig: device performance info selected_class = 1 (cpu_count = 8, freq = 2050, memoryClass = 384, android version 35, manufacture realme, screenRefreshRate=120.00001, screenMaxRefreshRate=120.00001)
+2026_04_22-11_14_22.016 D/ConnectionsManager: valid interface: name:ap0 (ap0)
+2026_04_22-11_14_22.017 D/ConnectionsManager: address: fe80::488c:19ff:feda:8b18%ap0
+2026_04_22-11_14_22.017 D/ConnectionsManager: address: 2401:4900:b017:7623::6f
+2026_04_22-11_14_22.017 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.017 D/ConnectionsManager: address: 10.158.158.236
+2026_04_22-11_14_22.017 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.017 D/ConnectionsManager: valid interface: name:dummy0 (dummy0)
+2026_04_22-11_14_22.017 D/ConnectionsManager: address: fe80::8ce:24ff:fe4c:8e13%dummy0
+2026_04_22-11_14_22.018 D/ConnectionsManager: valid interface: name:ifb0 (ifb0)
+2026_04_22-11_14_22.018 D/ConnectionsManager: address: fe80::b017:d3ff:fe12:4af4%ifb0
+2026_04_22-11_14_22.018 D/ConnectionsManager: valid interface: name:ifb2 (ifb2)
+2026_04_22-11_14_22.018 D/ConnectionsManager: address: fe80::84e7:aaff:fe64:c118%ifb2
+2026_04_22-11_14_22.018 D/ConnectionsManager: valid interface: name:ccmni2 (ccmni2)
+2026_04_22-11_14_22.018 D/ConnectionsManager: address: fe80::8000:0:0:0%ccmni2
+2026_04_22-11_14_22.018 D/ConnectionsManager: address: 2409:4124:8:7c31:8000::
+2026_04_22-11_14_22.019 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.019 D/ConnectionsManager: valid interface: name:ccmni3 (ccmni3)
+2026_04_22-11_14_22.019 D/ConnectionsManager: address: fe80::a9ab:d59f:d8ef:e911%ccmni3
+2026_04_22-11_14_22.019 D/ConnectionsManager: address: 2401:4900:b041:aeee:a9ab:d59f:d8ef:e911
+2026_04_22-11_14_22.019 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.020 D/ConnectionsManager: valid interface: name:ifb1 (ifb1)
+2026_04_22-11_14_22.020 D/ConnectionsManager: address: fe80::346d:b1ff:fe94:f110%ifb1
+2026_04_22-11_14_22.020 D/ConnectionsManager: valid interface: name:ccmni1 (ccmni1)
+2026_04_22-11_14_22.020 D/ConnectionsManager: address: fe80::8c95:f885:a990:8f48%ccmni1
+2026_04_22-11_14_22.020 D/ConnectionsManager: address: 2401:4900:b017:7623:8c95:f885:a990:8f48
+2026_04_22-11_14_22.020 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.020 D/ConnectionsManager: address: 100.93.255.32
+2026_04_22-11_14_22.020 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.022 D/ConnectionsManager: selected ip strategy 0
+2026_04_22-11_14_22.023 D/ApplicationLoader: app initied
+2026_04_22-11_14_22.025 D/MessagesStorage: current db version = 173
+2026_04_22-11_14_22.040 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_help_getPromoData@463c4a3 with token = 1
+2026_04_22-11_14_22.095 E/AndroidUtilities: density = 3.175 display size = 1080 2400 391.885x390.769, screen layout: 268435810, statusbar height: 110, navbar height: 51
+2026_04_22-11_14_22.100 E/FileLog: java.lang.SecurityException: listen
+2026_04_22-11_14_22.101 E/tmessages: 	at android.os.Parcel.createExceptionOrNull(Parcel.java:3271)
+2026_04_22-11_14_22.101 E/tmessages: 	at android.os.Parcel.createException(Parcel.java:3255)
+2026_04_22-11_14_22.101 E/tmessages: 	at android.os.Parcel.readException(Parcel.java:3238)
+2026_04_22-11_14_22.101 E/tmessages: 	at android.os.Parcel.readException(Parcel.java:3180)
+2026_04_22-11_14_22.101 E/tmessages: 	at com.android.internal.telephony.ITelephonyRegistry$Stub$Proxy.listenWithEventList(ITelephonyRegistry.java:1218)
+2026_04_22-11_14_22.101 E/tmessages: 	at android.telephony.TelephonyRegistryManager.listenFromListener(TelephonyRegistryManager.java:322)
+2026_04_22-11_14_22.101 E/tmessages: 	at android.telephony.TelephonyManager.listen(TelephonyManager.java:6886)
+2026_04_22-11_14_22.101 E/tmessages: 	at org.telegram.messenger.MediaController.lambda$new$3(MediaController.java:1486)
+2026_04_22-11_14_22.101 E/tmessages: 	at org.telegram.messenger.MediaController.$r8$lambda$QWe00RaIbvpbhYrPaZcDeBgI2ug(MediaController.java:0)
+2026_04_22-11_14_22.101 E/tmessages: 	at org.telegram.messenger.MediaController$$ExternalSyntheticLambda46.run(R8$$SyntheticClass:0)
+2026_04_22-11_14_22.101 E/tmessages: 	at android.os.Handler.handleCallback(Handler.java:973)
+2026_04_22-11_14_22.101 E/tmessages: 	at android.os.Handler.dispatchMessage(Handler.java:100)
+2026_04_22-11_14_22.101 E/tmessages: 	at android.os.Looper.loopOnce(Looper.java:282)
+2026_04_22-11_14_22.102 E/tmessages: 	at android.os.Looper.loop(Looper.java:387)
+2026_04_22-11_14_22.102 E/tmessages: 	at org.telegram.messenger.DispatchQueue.run(DispatchQueue.java:141)
+2026_04_22-11_14_22.102 E/tmessages: Caused by android.os.RemoteException: Remote stack trace:
+	at com.android.internal.telephony.TelephonyPermissions.enforceCarrierPrivilege(TelephonyPermissions.java:694)
+	at com.android.internal.telephony.TelephonyPermissions.checkReadPhoneState(TelephonyPermissions.java:186)
+	at com.android.internal.telephony.TelephonyPermissions.checkCallingOrSelfReadPhoneState(TelephonyPermissions.java:96)
+	at com.android.server.TelephonyRegistry.checkListenerPermission(TelephonyRegistry.java:4104)
+	at com.android.server.TelephonyRegistry.listen(TelephonyRegistry.java:1148)
+
+2026_04_22-11_14_22.103 D/ContactsController: load contacts from cache
+2026_04_22-11_14_22.113 E/FileLog: java.lang.IllegalArgumentException: View=com.android.internal.policy.DecorView{509992f V.E...... R.....ID 0,0-0,0 alpha=1.0 viewInfo = }[] not attached to window manager
+2026_04_22-11_14_22.113 E/tmessages: 	at android.view.WindowManagerGlobal.findViewLocked(WindowManagerGlobal.java:596)
+2026_04_22-11_14_22.113 E/tmessages: 	at android.view.WindowManagerGlobal.updateViewLayout(WindowManagerGlobal.java:488)
+2026_04_22-11_14_22.113 E/tmessages: 	at android.view.WindowManagerImpl.updateViewLayout(WindowManagerImpl.java:165)
+2026_04_22-11_14_22.113 E/tmessages: 	at org.telegram.messenger.AndroidUtilities.setPreferredMaxRefreshRate(AndroidUtilities.java:2977)
+2026_04_22-11_14_22.113 E/tmessages: 	at org.telegram.messenger.AndroidUtilities.setPreferredMaxRefreshRate(AndroidUtilities.java:2903)
+2026_04_22-11_14_22.113 E/tmessages: 	at org.telegram.ui.LaunchActivity.onCreate(LaunchActivity.java:460)
+2026_04_22-11_14_22.113 E/tmessages: 	at android.app.Activity.performCreate(Activity.java:9196)
+2026_04_22-11_14_22.113 E/tmessages: 	at android.app.Activity.performCreate(Activity.java:9168)
+2026_04_22-11_14_22.113 E/tmessages: 	at android.app.Instrumentation.callActivityOnCreate(Instrumentation.java:1544)
+2026_04_22-11_14_22.113 E/tmessages: 	at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:4346)
+2026_04_22-11_14_22.113 E/tmessages: 	at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:4569)
+2026_04_22-11_14_22.113 E/tmessages: 	at android.app.servertransaction.LaunchActivityItem.execute(LaunchActivityItem.java:126)
+2026_04_22-11_14_22.113 E/tmessages: 	at android.app.servertransaction.TransactionExecutor.executeNonLifecycleItem(TransactionExecutor.java:179)
+2026_04_22-11_14_22.113 E/tmessages: 	at android.app.servertransaction.TransactionExecutor.executeTransactionItems(TransactionExecutor.java:114)
+2026_04_22-11_14_22.113 E/tmessages: 	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:86)
+2026_04_22-11_14_22.113 E/tmessages: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2902)
+2026_04_22-11_14_22.114 E/tmessages: 	at android.os.Handler.dispatchMessage(Handler.java:107)
+2026_04_22-11_14_22.114 E/tmessages: 	at android.os.Looper.loopOnce(Looper.java:282)
+2026_04_22-11_14_22.114 E/tmessages: 	at android.os.Looper.loop(Looper.java:387)
+2026_04_22-11_14_22.114 E/tmessages: 	at android.app.ActivityThread.main(ActivityThread.java:9500)
+2026_04_22-11_14_22.114 E/tmessages: 	at java.lang.reflect.Method.invoke(Native Method)
+2026_04_22-11_14_22.114 E/tmessages: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:600)
+2026_04_22-11_14_22.114 E/tmessages: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1005)
+2026_04_22-11_14_22.135 D/ContactsController: load contacts from cache
+2026_04_22-11_14_22.142 D/ContactsController: load contacts from cache
+2026_04_22-11_14_22.144 D/ContactsController: load contacts from cache
+2026_04_22-11_14_22.166 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_help_promoDataEmpty@285a1a3 messageId = 0x69e860360f1aa004
+2026_04_22-11_14_22.166 D/MessagesController: start getDifference with date = 1776836649 pts = 2117 qts = 155086211
+2026_04_22-11_14_22.166 D/MessagesController: getDifference: isUpdating = true
+2026_04_22-11_14_22.173 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_updates_getDifference@5fad994 with token = 2
+2026_04_22-11_14_22.174 D/MessagesController: folderId = 0 load cacheOffset = 0 count = 100 cache = true
+2026_04_22-11_14_22.174 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_contacts_getBlocked@35c49fb with token = 2
+2026_04_22-11_14_22.192 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_messages_getRecentReactions@286918f with token = 3
+2026_04_22-11_14_22.195 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_updates_difference@3bac03f messageId = 0x69e8603600418800
+2026_04_22-11_14_22.195 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_messages_getTopReactions@95d72b4 with token = 4
+2026_04_22-11_14_22.197 D/ConnectionsManager: send request org.telegram.tgnet.tl.TL_account$getDefaultProfilePhotoEmojis@2bd7879 with token = 5
+2026_04_22-11_14_22.198 D/ConnectionsManager: send request org.telegram.tgnet.tl.TL_account$getDefaultProfilePhotoEmojis@bf759be with token = 6
+2026_04_22-11_14_22.239 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_messages_getStickers@ce952bc with token = 7
+2026_04_22-11_14_22.240 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_messages_getStickerSet@ff5b245 with token = 8
+2026_04_22-11_14_22.240 D/ConnectionsManager: send request org.telegram.tgnet.tl.TL_account$getGlobalPrivacySettings@e4c1d9a with token = 9
+2026_04_22-11_14_22.282 D/TypefaceHelper: mediumWeightSupported = false
+2026_04_22-11_14_22.282 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_updates_difference@41999d1 messageId = 0x69e860362c083000
+2026_04_22-11_14_22.283 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_contacts_blocked@d090c27 messageId = 0x69e860362c8b4400
+2026_04_22-11_14_22.290 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_emojiListNotModified@2d30504 messageId = 0x69e8603632b02000
+2026_04_22-11_14_22.291 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_messages_reactions@3452aa5 messageId = 0x69e860363126ec00
+2026_04_22-11_14_22.292 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_messages_reactionsNotModified@402cc21 messageId = 0x69e86036322d1000
+2026_04_22-11_14_22.294 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_emojiListNotModified@8c7de59 messageId = 0x69e86036326e9800
+2026_04_22-11_14_22.305 D/MessagesController: process update TL_updateNewChannelMessage
+2026_04_22-11_14_22.306 D/MessagesController: org.telegram.tgnet.TLRPC$TL_updateNewChannelMessage@a38b06 channelId = 2036072316 message_id = 350734
+2026_04_22-11_14_22.313 D/MessagesStorage: update messageRead currentMaxId = 350663 dialogId = -2036072316
+2026_04_22-11_14_22.317 D/MessagesController: received difference: isUpdating = false
+2026_04_22-11_14_22.319 D/MessagesController: received difference with date = 1776836662 pts = 2117 seq = 3529 messages = 0 users = 1 chats = 1 other updates = 1
+2026_04_22-11_14_22.320 D/MessagesController: start getDifference with date = 1776836659 pts = 64608 qts = 0
+2026_04_22-11_14_22.320 D/MessagesController: getDifference: isUpdating = true
+2026_04_22-11_14_22.320 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_updates_getDifference@d679f38 with token = 2
+2026_04_22-11_14_22.336 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_globalPrivacySettings@42e2736 messageId = 0x69e860363db22c00
+2026_04_22-11_14_22.337 D/AndroidUtilities: wasInBackground = true appLocked = false autoLockIn = 3600 lastPauseTime = 252560 uptime = 252562
+2026_04_22-11_14_22.342 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_messages_stickerSet@5af7041 messageId = 0x69e860363d70a404
+2026_04_22-11_14_22.378 D/LaunchActivity: OS name rmx3785_15.0.0.1610(ex01) rmx3785_15.0.0.1610(ex01)
+2026_04_22-11_14_22.385 D/ForegroundDetector: switch to foreground
+2026_04_22-11_14_22.392 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_help_promoData@101da3 messageId = 0x69e8603629374c04
+2026_04_22-11_14_22.392 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_contacts_resolveUsername@ef678a0 with token = 10
+2026_04_22-11_14_22.394 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_contacts_resolveUsername@1fcf0ff with token = 11
+2026_04_22-11_14_22.426 D/AndroidUtilities: wasInBackground = false appLocked = false autoLockIn = 3600 lastPauseTime = 252560 uptime = 252562
+2026_04_22-11_14_22.427 D/LaunchActivity: reset lastPauseTime onPasscodeResume
+2026_04_22-11_14_22.427 D/ConnectionsManager: app paused = false
+2026_04_22-11_14_22.427 D/ConnectionsManager: app resume count 1
+2026_04_22-11_14_22.427 D/ConnectionsManager: reset app pause time
+2026_04_22-11_14_22.459 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_updates_difference@c5c45e5 messageId = 0x69e8603651eb8400
+2026_04_22-11_14_22.472 D/AnalyticsManager$startMonitoring$1: NagramAnalytics: Pulse check - session_secs=0 exceeded=false
+2026_04_22-11_14_22.499 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_help_promoData@92d4463 messageId = 0x69e8603641cac004
+2026_04_22-11_14_22.542 D/SQLitePreparedStatement: sqlite query SELECT did, folder_id, unread_count, unread_count_i FROM dialogs WHERE unread_count > 0 OR flags > 0 UNION ALL SELECT did, folder_id, unread_count, unread_count_i FROM dialogs WHERE unread_count_i > 0 took 804ms
+2026_04_22-11_14_22.594 D/SQLitePreparedStatement: sqlite query SELECT did, folder_id, unread_count, unread_count_i FROM dialogs WHERE unread_count > 0 OR flags > 0 UNION ALL SELECT did, folder_id, unread_count, unread_count_i FROM dialogs WHERE unread_count_i > 0 took 518ms
+2026_04_22-11_14_22.648 D/ConnectionsManager: valid interface: name:ap0 (ap0)
+2026_04_22-11_14_22.648 D/ConnectionsManager: address: fe80::488c:19ff:feda:8b18%ap0
+2026_04_22-11_14_22.649 D/ConnectionsManager: address: 2401:4900:b017:7623::6f
+2026_04_22-11_14_22.649 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.649 D/ConnectionsManager: address: 10.158.158.236
+2026_04_22-11_14_22.649 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.649 D/ConnectionsManager: valid interface: name:dummy0 (dummy0)
+2026_04_22-11_14_22.649 D/ConnectionsManager: address: fe80::8ce:24ff:fe4c:8e13%dummy0
+2026_04_22-11_14_22.649 D/ConnectionsManager: valid interface: name:ifb0 (ifb0)
+2026_04_22-11_14_22.649 D/ConnectionsManager: address: fe80::b017:d3ff:fe12:4af4%ifb0
+2026_04_22-11_14_22.649 D/ConnectionsManager: valid interface: name:ifb2 (ifb2)
+2026_04_22-11_14_22.650 D/ConnectionsManager: address: fe80::84e7:aaff:fe64:c118%ifb2
+2026_04_22-11_14_22.650 D/ConnectionsManager: valid interface: name:ccmni2 (ccmni2)
+2026_04_22-11_14_22.650 D/ConnectionsManager: address: fe80::8000:0:0:0%ccmni2
+2026_04_22-11_14_22.650 D/ConnectionsManager: address: 2409:4124:8:7c31:8000::
+2026_04_22-11_14_22.650 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.650 D/ConnectionsManager: valid interface: name:ccmni3 (ccmni3)
+2026_04_22-11_14_22.651 D/ConnectionsManager: address: fe80::a9ab:d59f:d8ef:e911%ccmni3
+2026_04_22-11_14_22.651 D/ConnectionsManager: address: 2401:4900:b041:aeee:a9ab:d59f:d8ef:e911
+2026_04_22-11_14_22.651 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.651 D/ConnectionsManager: valid interface: name:ifb1 (ifb1)
+2026_04_22-11_14_22.651 D/ConnectionsManager: address: fe80::346d:b1ff:fe94:f110%ifb1
+2026_04_22-11_14_22.651 D/ConnectionsManager: valid interface: name:ccmni1 (ccmni1)
+2026_04_22-11_14_22.651 D/ConnectionsManager: address: fe80::8c95:f885:a990:8f48%ccmni1
+2026_04_22-11_14_22.652 D/ConnectionsManager: address: 2401:4900:b017:7623:8c95:f885:a990:8f48
+2026_04_22-11_14_22.652 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.652 D/ConnectionsManager: address: 100.93.255.32
+2026_04_22-11_14_22.652 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.653 D/ConnectionsManager: selected ip strategy 0
+2026_04_22-11_14_22.655 D/ConnectionsManager: valid interface: name:ap0 (ap0)
+2026_04_22-11_14_22.655 D/ConnectionsManager: address: fe80::488c:19ff:feda:8b18%ap0
+2026_04_22-11_14_22.655 D/ConnectionsManager: address: 2401:4900:b017:7623::6f
+2026_04_22-11_14_22.656 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.656 D/ConnectionsManager: address: 10.158.158.236
+2026_04_22-11_14_22.656 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.656 D/ConnectionsManager: valid interface: name:dummy0 (dummy0)
+2026_04_22-11_14_22.656 D/ConnectionsManager: address: fe80::8ce:24ff:fe4c:8e13%dummy0
+2026_04_22-11_14_22.657 D/ConnectionsManager: valid interface: name:ifb0 (ifb0)
+2026_04_22-11_14_22.657 D/ConnectionsManager: address: fe80::b017:d3ff:fe12:4af4%ifb0
+2026_04_22-11_14_22.657 D/ConnectionsManager: valid interface: name:ifb2 (ifb2)
+2026_04_22-11_14_22.657 D/ConnectionsManager: address: fe80::84e7:aaff:fe64:c118%ifb2
+2026_04_22-11_14_22.657 D/ConnectionsManager: valid interface: name:ccmni2 (ccmni2)
+2026_04_22-11_14_22.657 D/ConnectionsManager: address: fe80::8000:0:0:0%ccmni2
+2026_04_22-11_14_22.657 D/ConnectionsManager: address: 2409:4124:8:7c31:8000::
+2026_04_22-11_14_22.657 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.657 D/ConnectionsManager: valid interface: name:ccmni3 (ccmni3)
+2026_04_22-11_14_22.657 D/ConnectionsManager: address: fe80::a9ab:d59f:d8ef:e911%ccmni3
+2026_04_22-11_14_22.658 D/ConnectionsManager: address: 2401:4900:b041:aeee:a9ab:d59f:d8ef:e911
+2026_04_22-11_14_22.658 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.658 D/ConnectionsManager: valid interface: name:ifb1 (ifb1)
+2026_04_22-11_14_22.658 D/ConnectionsManager: address: fe80::346d:b1ff:fe94:f110%ifb1
+2026_04_22-11_14_22.658 D/ConnectionsManager: valid interface: name:ccmni1 (ccmni1)
+2026_04_22-11_14_22.658 D/ConnectionsManager: address: fe80::8c95:f885:a990:8f48%ccmni1
+2026_04_22-11_14_22.658 D/ConnectionsManager: address: 2401:4900:b017:7623:8c95:f885:a990:8f48
+2026_04_22-11_14_22.658 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.659 D/ConnectionsManager: address: 100.93.255.32
+2026_04_22-11_14_22.659 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.660 D/ConnectionsManager: selected ip strategy 0
+2026_04_22-11_14_22.664 D/ConnectionsManager: valid interface: name:ap0 (ap0)
+2026_04_22-11_14_22.664 D/ConnectionsManager: address: fe80::488c:19ff:feda:8b18%ap0
+2026_04_22-11_14_22.664 D/ConnectionsManager: address: 2401:4900:b017:7623::6f
+2026_04_22-11_14_22.664 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.665 D/ConnectionsManager: address: 10.158.158.236
+2026_04_22-11_14_22.665 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.665 D/ConnectionsManager: valid interface: name:dummy0 (dummy0)
+2026_04_22-11_14_22.665 D/ConnectionsManager: address: fe80::8ce:24ff:fe4c:8e13%dummy0
+2026_04_22-11_14_22.665 D/ConnectionsManager: valid interface: name:ifb0 (ifb0)
+2026_04_22-11_14_22.666 D/ConnectionsManager: address: fe80::b017:d3ff:fe12:4af4%ifb0
+2026_04_22-11_14_22.666 D/ConnectionsManager: valid interface: name:ifb2 (ifb2)
+2026_04_22-11_14_22.666 D/ConnectionsManager: address: fe80::84e7:aaff:fe64:c118%ifb2
+2026_04_22-11_14_22.666 D/ConnectionsManager: valid interface: name:ccmni2 (ccmni2)
+2026_04_22-11_14_22.666 D/ConnectionsManager: address: fe80::8000:0:0:0%ccmni2
+2026_04_22-11_14_22.666 D/ConnectionsManager: address: 2409:4124:8:7c31:8000::
+2026_04_22-11_14_22.667 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.667 D/ConnectionsManager: valid interface: name:ccmni3 (ccmni3)
+2026_04_22-11_14_22.667 D/ConnectionsManager: address: fe80::a9ab:d59f:d8ef:e911%ccmni3
+2026_04_22-11_14_22.667 D/ConnectionsManager: address: 2401:4900:b041:aeee:a9ab:d59f:d8ef:e911
+2026_04_22-11_14_22.667 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.667 D/ConnectionsManager: valid interface: name:ifb1 (ifb1)
+2026_04_22-11_14_22.667 D/ConnectionsManager: address: fe80::346d:b1ff:fe94:f110%ifb1
+2026_04_22-11_14_22.668 D/ConnectionsManager: valid interface: name:ccmni1 (ccmni1)
+2026_04_22-11_14_22.668 D/ConnectionsManager: address: fe80::8c95:f885:a990:8f48%ccmni1
+2026_04_22-11_14_22.668 D/ConnectionsManager: address: 2401:4900:b017:7623:8c95:f885:a990:8f48
+2026_04_22-11_14_22.668 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.668 D/ConnectionsManager: address: 100.93.255.32
+2026_04_22-11_14_22.668 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.668 D/ConnectionsManager: selected ip strategy 0
+2026_04_22-11_14_22.669 D/ConnectionsManager: valid interface: name:ap0 (ap0)
+2026_04_22-11_14_22.669 D/ConnectionsManager: address: fe80::488c:19ff:feda:8b18%ap0
+2026_04_22-11_14_22.669 D/ConnectionsManager: address: 2401:4900:b017:7623::6f
+2026_04_22-11_14_22.670 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.670 D/ConnectionsManager: address: 10.158.158.236
+2026_04_22-11_14_22.670 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.670 D/ConnectionsManager: valid interface: name:dummy0 (dummy0)
+2026_04_22-11_14_22.670 D/ConnectionsManager: address: fe80::8ce:24ff:fe4c:8e13%dummy0
+2026_04_22-11_14_22.670 D/ConnectionsManager: valid interface: name:ifb0 (ifb0)
+2026_04_22-11_14_22.670 D/ConnectionsManager: address: fe80::b017:d3ff:fe12:4af4%ifb0
+2026_04_22-11_14_22.670 D/ConnectionsManager: valid interface: name:ifb2 (ifb2)
+2026_04_22-11_14_22.670 D/ConnectionsManager: address: fe80::84e7:aaff:fe64:c118%ifb2
+2026_04_22-11_14_22.670 D/ConnectionsManager: valid interface: name:ccmni2 (ccmni2)
+2026_04_22-11_14_22.671 D/ConnectionsManager: address: fe80::8000:0:0:0%ccmni2
+2026_04_22-11_14_22.672 D/ConnectionsManager: address: 2409:4124:8:7c31:8000::
+2026_04_22-11_14_22.673 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.673 D/ConnectionsManager: valid interface: name:ccmni3 (ccmni3)
+2026_04_22-11_14_22.673 D/ConnectionsManager: address: fe80::a9ab:d59f:d8ef:e911%ccmni3
+2026_04_22-11_14_22.673 D/ConnectionsManager: address: 2401:4900:b041:aeee:a9ab:d59f:d8ef:e911
+2026_04_22-11_14_22.673 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.673 D/ConnectionsManager: valid interface: name:ifb1 (ifb1)
+2026_04_22-11_14_22.673 D/ConnectionsManager: address: fe80::346d:b1ff:fe94:f110%ifb1
+2026_04_22-11_14_22.674 D/ConnectionsManager: valid interface: name:ccmni1 (ccmni1)
+2026_04_22-11_14_22.674 D/ConnectionsManager: address: fe80::8c95:f885:a990:8f48%ccmni1
+2026_04_22-11_14_22.674 D/ConnectionsManager: address: 2401:4900:b017:7623:8c95:f885:a990:8f48
+2026_04_22-11_14_22.674 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.674 D/ConnectionsManager: address: 100.93.255.32
+2026_04_22-11_14_22.674 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.674 D/ConnectionsManager: selected ip strategy 0
+2026_04_22-11_14_22.678 D/ConnectionsManager: valid interface: name:ap0 (ap0)
+2026_04_22-11_14_22.678 D/ConnectionsManager: address: fe80::488c:19ff:feda:8b18%ap0
+2026_04_22-11_14_22.678 D/ConnectionsManager: address: 2401:4900:b017:7623::6f
+2026_04_22-11_14_22.678 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.679 D/ConnectionsManager: address: 10.158.158.236
+2026_04_22-11_14_22.679 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.679 D/ConnectionsManager: valid interface: name:dummy0 (dummy0)
+2026_04_22-11_14_22.679 D/ConnectionsManager: address: fe80::8ce:24ff:fe4c:8e13%dummy0
+2026_04_22-11_14_22.679 D/ConnectionsManager: valid interface: name:ifb0 (ifb0)
+2026_04_22-11_14_22.679 D/ConnectionsManager: address: fe80::b017:d3ff:fe12:4af4%ifb0
+2026_04_22-11_14_22.679 D/ConnectionsManager: valid interface: name:ifb2 (ifb2)
+2026_04_22-11_14_22.680 D/ConnectionsManager: address: fe80::84e7:aaff:fe64:c118%ifb2
+2026_04_22-11_14_22.680 D/ConnectionsManager: valid interface: name:ccmni2 (ccmni2)
+2026_04_22-11_14_22.680 D/ConnectionsManager: address: fe80::8000:0:0:0%ccmni2
+2026_04_22-11_14_22.681 D/ConnectionsManager: address: 2409:4124:8:7c31:8000::
+2026_04_22-11_14_22.681 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.681 D/ConnectionsManager: valid interface: name:ccmni3 (ccmni3)
+2026_04_22-11_14_22.682 D/ConnectionsManager: address: fe80::a9ab:d59f:d8ef:e911%ccmni3
+2026_04_22-11_14_22.682 D/ConnectionsManager: address: 2401:4900:b041:aeee:a9ab:d59f:d8ef:e911
+2026_04_22-11_14_22.682 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.683 D/ConnectionsManager: valid interface: name:ifb1 (ifb1)
+2026_04_22-11_14_22.683 D/ConnectionsManager: address: fe80::346d:b1ff:fe94:f110%ifb1
+2026_04_22-11_14_22.683 D/ConnectionsManager: valid interface: name:ccmni1 (ccmni1)
+2026_04_22-11_14_22.683 D/ConnectionsManager: address: fe80::8c95:f885:a990:8f48%ccmni1
+2026_04_22-11_14_22.683 D/ConnectionsManager: address: 2401:4900:b017:7623:8c95:f885:a990:8f48
+2026_04_22-11_14_22.683 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.683 D/ConnectionsManager: address: 100.93.255.32
+2026_04_22-11_14_22.686 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.686 D/ConnectionsManager: selected ip strategy 0
+2026_04_22-11_14_22.687 D/ConnectionsManager: valid interface: name:ap0 (ap0)
+2026_04_22-11_14_22.688 D/ConnectionsManager: address: fe80::488c:19ff:feda:8b18%ap0
+2026_04_22-11_14_22.688 D/ConnectionsManager: address: 2401:4900:b017:7623::6f
+2026_04_22-11_14_22.688 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.688 D/ConnectionsManager: address: 10.158.158.236
+2026_04_22-11_14_22.688 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.688 D/ConnectionsManager: valid interface: name:dummy0 (dummy0)
+2026_04_22-11_14_22.688 D/ConnectionsManager: address: fe80::8ce:24ff:fe4c:8e13%dummy0
+2026_04_22-11_14_22.688 D/ConnectionsManager: valid interface: name:ifb0 (ifb0)
+2026_04_22-11_14_22.689 D/ConnectionsManager: address: fe80::b017:d3ff:fe12:4af4%ifb0
+2026_04_22-11_14_22.689 D/ConnectionsManager: valid interface: name:ifb2 (ifb2)
+2026_04_22-11_14_22.689 D/ConnectionsManager: address: fe80::84e7:aaff:fe64:c118%ifb2
+2026_04_22-11_14_22.689 D/ConnectionsManager: valid interface: name:ccmni2 (ccmni2)
+2026_04_22-11_14_22.689 D/ConnectionsManager: address: fe80::8000:0:0:0%ccmni2
+2026_04_22-11_14_22.689 D/ConnectionsManager: address: 2409:4124:8:7c31:8000::
+2026_04_22-11_14_22.689 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.689 D/ConnectionsManager: valid interface: name:ccmni3 (ccmni3)
+2026_04_22-11_14_22.689 D/ConnectionsManager: address: fe80::a9ab:d59f:d8ef:e911%ccmni3
+2026_04_22-11_14_22.689 D/ConnectionsManager: address: 2401:4900:b041:aeee:a9ab:d59f:d8ef:e911
+2026_04_22-11_14_22.689 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.689 D/ConnectionsManager: valid interface: name:ifb1 (ifb1)
+2026_04_22-11_14_22.689 D/ConnectionsManager: address: fe80::346d:b1ff:fe94:f110%ifb1
+2026_04_22-11_14_22.689 D/ConnectionsManager: valid interface: name:ccmni1 (ccmni1)
+2026_04_22-11_14_22.690 D/ConnectionsManager: address: fe80::8c95:f885:a990:8f48%ccmni1
+2026_04_22-11_14_22.690 D/ConnectionsManager: address: 2401:4900:b017:7623:8c95:f885:a990:8f48
+2026_04_22-11_14_22.690 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.690 D/ConnectionsManager: address: 100.93.255.32
+2026_04_22-11_14_22.690 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.691 D/ConnectionsManager: selected ip strategy 0
+2026_04_22-11_14_22.694 D/ConnectionsManager: valid interface: name:ap0 (ap0)
+2026_04_22-11_14_22.694 D/ConnectionsManager: address: fe80::488c:19ff:feda:8b18%ap0
+2026_04_22-11_14_22.694 D/ConnectionsManager: address: 2401:4900:b017:7623::6f
+2026_04_22-11_14_22.694 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.694 D/ConnectionsManager: address: 10.158.158.236
+2026_04_22-11_14_22.694 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.695 D/ConnectionsManager: valid interface: name:dummy0 (dummy0)
+2026_04_22-11_14_22.695 D/ConnectionsManager: address: fe80::8ce:24ff:fe4c:8e13%dummy0
+2026_04_22-11_14_22.695 D/ConnectionsManager: valid interface: name:ifb0 (ifb0)
+2026_04_22-11_14_22.695 D/ConnectionsManager: address: fe80::b017:d3ff:fe12:4af4%ifb0
+2026_04_22-11_14_22.695 D/ConnectionsManager: valid interface: name:ifb2 (ifb2)
+2026_04_22-11_14_22.695 D/ConnectionsManager: address: fe80::84e7:aaff:fe64:c118%ifb2
+2026_04_22-11_14_22.696 D/ConnectionsManager: valid interface: name:ccmni2 (ccmni2)
+2026_04_22-11_14_22.697 D/ConnectionsManager: address: fe80::8000:0:0:0%ccmni2
+2026_04_22-11_14_22.697 D/ConnectionsManager: address: 2409:4124:8:7c31:8000::
+2026_04_22-11_14_22.697 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.697 D/ConnectionsManager: valid interface: name:ccmni3 (ccmni3)
+2026_04_22-11_14_22.697 D/ConnectionsManager: address: fe80::a9ab:d59f:d8ef:e911%ccmni3
+2026_04_22-11_14_22.697 D/ConnectionsManager: address: 2401:4900:b041:aeee:a9ab:d59f:d8ef:e911
+2026_04_22-11_14_22.697 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.697 D/ConnectionsManager: valid interface: name:ifb1 (ifb1)
+2026_04_22-11_14_22.697 D/ConnectionsManager: address: fe80::346d:b1ff:fe94:f110%ifb1
+2026_04_22-11_14_22.697 D/ConnectionsManager: valid interface: name:ccmni1 (ccmni1)
+2026_04_22-11_14_22.698 D/ConnectionsManager: address: fe80::8c95:f885:a990:8f48%ccmni1
+2026_04_22-11_14_22.698 D/ConnectionsManager: address: 2401:4900:b017:7623:8c95:f885:a990:8f48
+2026_04_22-11_14_22.698 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.698 D/ConnectionsManager: address: 100.93.255.32
+2026_04_22-11_14_22.698 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.701 D/ConnectionsManager: selected ip strategy 0
+2026_04_22-11_14_22.701 D/ConnectionsManager: valid interface: name:ap0 (ap0)
+2026_04_22-11_14_22.702 D/ConnectionsManager: address: fe80::488c:19ff:feda:8b18%ap0
+2026_04_22-11_14_22.702 D/ConnectionsManager: address: 2401:4900:b017:7623::6f
+2026_04_22-11_14_22.702 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.702 D/ConnectionsManager: address: 10.158.158.236
+2026_04_22-11_14_22.702 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.702 D/ConnectionsManager: valid interface: name:dummy0 (dummy0)
+2026_04_22-11_14_22.702 D/ConnectionsManager: address: fe80::8ce:24ff:fe4c:8e13%dummy0
+2026_04_22-11_14_22.702 D/ConnectionsManager: valid interface: name:ifb0 (ifb0)
+2026_04_22-11_14_22.703 D/ConnectionsManager: address: fe80::b017:d3ff:fe12:4af4%ifb0
+2026_04_22-11_14_22.703 D/ConnectionsManager: valid interface: name:ifb2 (ifb2)
+2026_04_22-11_14_22.703 D/ConnectionsManager: address: fe80::84e7:aaff:fe64:c118%ifb2
+2026_04_22-11_14_22.709 D/ConnectionsManager: valid interface: name:ccmni2 (ccmni2)
+2026_04_22-11_14_22.709 D/ConnectionsManager: address: fe80::8000:0:0:0%ccmni2
+2026_04_22-11_14_22.709 D/ConnectionsManager: address: 2409:4124:8:7c31:8000::
+2026_04_22-11_14_22.710 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.710 D/ConnectionsManager: valid interface: name:ccmni3 (ccmni3)
+2026_04_22-11_14_22.710 D/ConnectionsManager: address: fe80::a9ab:d59f:d8ef:e911%ccmni3
+2026_04_22-11_14_22.710 D/ConnectionsManager: address: 2401:4900:b041:aeee:a9ab:d59f:d8ef:e911
+2026_04_22-11_14_22.710 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.710 D/ConnectionsManager: valid interface: name:ifb1 (ifb1)
+2026_04_22-11_14_22.710 D/ConnectionsManager: address: fe80::346d:b1ff:fe94:f110%ifb1
+2026_04_22-11_14_22.710 D/ConnectionsManager: valid interface: name:ccmni1 (ccmni1)
+2026_04_22-11_14_22.710 D/ConnectionsManager: address: fe80::8c95:f885:a990:8f48%ccmni1
+2026_04_22-11_14_22.710 D/ConnectionsManager: address: 2401:4900:b017:7623:8c95:f885:a990:8f48
+2026_04_22-11_14_22.710 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.710 D/ConnectionsManager: address: 100.93.255.32
+2026_04_22-11_14_22.710 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.710 D/ConnectionsManager: selected ip strategy 0
+2026_04_22-11_14_22.710 D/ConnectionsManager: valid interface: name:ap0 (ap0)
+2026_04_22-11_14_22.711 D/ConnectionsManager: address: fe80::488c:19ff:feda:8b18%ap0
+2026_04_22-11_14_22.711 D/ConnectionsManager: address: 2401:4900:b017:7623::6f
+2026_04_22-11_14_22.711 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.711 D/ConnectionsManager: address: 10.158.158.236
+2026_04_22-11_14_22.711 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.711 D/ConnectionsManager: valid interface: name:dummy0 (dummy0)
+2026_04_22-11_14_22.711 D/ConnectionsManager: address: fe80::8ce:24ff:fe4c:8e13%dummy0
+2026_04_22-11_14_22.712 D/ConnectionsManager: valid interface: name:ifb0 (ifb0)
+2026_04_22-11_14_22.712 D/ConnectionsManager: address: fe80::b017:d3ff:fe12:4af4%ifb0
+2026_04_22-11_14_22.712 D/ConnectionsManager: valid interface: name:ifb2 (ifb2)
+2026_04_22-11_14_22.712 D/ConnectionsManager: address: fe80::84e7:aaff:fe64:c118%ifb2
+2026_04_22-11_14_22.712 D/ConnectionsManager: valid interface: name:ccmni2 (ccmni2)
+2026_04_22-11_14_22.712 D/ConnectionsManager: address: fe80::8000:0:0:0%ccmni2
+2026_04_22-11_14_22.712 D/ConnectionsManager: address: 2409:4124:8:7c31:8000::
+2026_04_22-11_14_22.712 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.712 D/ConnectionsManager: valid interface: name:ccmni3 (ccmni3)
+2026_04_22-11_14_22.713 D/ConnectionsManager: address: fe80::a9ab:d59f:d8ef:e911%ccmni3
+2026_04_22-11_14_22.713 D/ConnectionsManager: address: 2401:4900:b041:aeee:a9ab:d59f:d8ef:e911
+2026_04_22-11_14_22.713 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.713 D/ConnectionsManager: valid interface: name:ifb1 (ifb1)
+2026_04_22-11_14_22.713 D/ConnectionsManager: address: fe80::346d:b1ff:fe94:f110%ifb1
+2026_04_22-11_14_22.713 D/ConnectionsManager: valid interface: name:ccmni1 (ccmni1)
+2026_04_22-11_14_22.713 D/ConnectionsManager: address: fe80::8c95:f885:a990:8f48%ccmni1
+2026_04_22-11_14_22.714 D/ConnectionsManager: address: 2401:4900:b017:7623:8c95:f885:a990:8f48
+2026_04_22-11_14_22.714 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.714 D/ConnectionsManager: address: 100.93.255.32
+2026_04_22-11_14_22.714 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.714 D/ConnectionsManager: selected ip strategy 0
+2026_04_22-11_14_22.720 D/ConnectionsManager: valid interface: name:ap0 (ap0)
+2026_04_22-11_14_22.720 D/ConnectionsManager: address: fe80::488c:19ff:feda:8b18%ap0
+2026_04_22-11_14_22.721 D/ConnectionsManager: address: 2401:4900:b017:7623::6f
+2026_04_22-11_14_22.721 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.721 D/ConnectionsManager: address: 10.158.158.236
+2026_04_22-11_14_22.721 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.721 D/ConnectionsManager: valid interface: name:dummy0 (dummy0)
+2026_04_22-11_14_22.721 D/ConnectionsManager: address: fe80::8ce:24ff:fe4c:8e13%dummy0
+2026_04_22-11_14_22.721 D/ConnectionsManager: valid interface: name:ifb0 (ifb0)
+2026_04_22-11_14_22.721 D/ConnectionsManager: address: fe80::b017:d3ff:fe12:4af4%ifb0
+2026_04_22-11_14_22.721 D/ConnectionsManager: valid interface: name:ifb2 (ifb2)
+2026_04_22-11_14_22.721 D/ConnectionsManager: address: fe80::84e7:aaff:fe64:c118%ifb2
+2026_04_22-11_14_22.721 D/ConnectionsManager: valid interface: name:ccmni2 (ccmni2)
+2026_04_22-11_14_22.722 D/ConnectionsManager: address: fe80::8000:0:0:0%ccmni2
+2026_04_22-11_14_22.722 D/ConnectionsManager: address: 2409:4124:8:7c31:8000::
+2026_04_22-11_14_22.722 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.722 D/ConnectionsManager: valid interface: name:ccmni3 (ccmni3)
+2026_04_22-11_14_22.722 D/ConnectionsManager: address: fe80::a9ab:d59f:d8ef:e911%ccmni3
+2026_04_22-11_14_22.722 D/ConnectionsManager: address: 2401:4900:b041:aeee:a9ab:d59f:d8ef:e911
+2026_04_22-11_14_22.722 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.722 D/ConnectionsManager: valid interface: name:ifb1 (ifb1)
+2026_04_22-11_14_22.722 D/ConnectionsManager: address: fe80::346d:b1ff:fe94:f110%ifb1
+2026_04_22-11_14_22.722 D/ConnectionsManager: valid interface: name:ccmni1 (ccmni1)
+2026_04_22-11_14_22.722 D/ConnectionsManager: address: fe80::8c95:f885:a990:8f48%ccmni1
+2026_04_22-11_14_22.722 D/ConnectionsManager: address: 2401:4900:b017:7623:8c95:f885:a990:8f48
+2026_04_22-11_14_22.722 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.722 D/ConnectionsManager: address: 100.93.255.32
+2026_04_22-11_14_22.723 D/ConnectionsManager: address is good
+2026_04_22-11_14_22.723 D/ConnectionsManager: selected ip strategy 0
+2026_04_22-11_14_22.723 D/NotificationsController: NotificationsController dismissNotification
+2026_04_22-11_14_22.743 D/NotificationsController: setBadge 0
+2026_04_22-11_14_22.758 D/NotificationsController: NotificationsController dismissNotification
+2026_04_22-11_14_22.760 D/NotificationsController: setBadge 0
+2026_04_22-11_14_22.760 D/NotificationsController: NotificationsController dismissNotification
+2026_04_22-11_14_22.762 D/NotificationsController: setBadge 0
+2026_04_22-11_14_22.762 D/NotificationsController: NotificationsController dismissNotification
+2026_04_22-11_14_22.764 D/NotificationsController: setBadge 0
+2026_04_22-11_14_22.765 D/NotificationsController: NotificationsController dismissNotification
+2026_04_22-11_14_22.765 D/NotificationsController: setBadge 0
+2026_04_22-11_14_22.766 D/NotificationsController: NotificationsController dismissNotification
+2026_04_22-11_14_22.767 D/NotificationsController: setBadge 0
+2026_04_22-11_14_22.794 D/LaunchActivity: switch to state 3
+2026_04_22-11_14_22.796 D/LaunchActivity: switch to state 5
+2026_04_22-11_14_22.805 D/FilePathDatabase: current files db version = 7
+2026_04_22-11_14_22.810 D/FilePathDatabase: file db backup created /data/user/0/org.tele.alexgram/files/file_to_path_backup.db
+2026_04_22-11_14_22.810 D/FilePathDatabase: files db created from_backup= false
+2026_04_22-11_14_22.829 D/NotificationsController: NotificationsController: processNewMessages msgs.size()=1 isLast=true isFcm=false)
+2026_04_22-11_14_22.830 D/NotificationsController: showExtraNotifications pushMessages.size()=14
+2026_04_22-11_14_22.831 D/MessagesController: not found dialog with id -2036072316 dictCount = 0 allCount = 0
+2026_04_22-11_14_22.837 D/NotificationsController: current channel for 7channel_silent_b2b3a_-4943434677740461702 = NotificationChannel{mId='7channel_silent_b2b3a_-4943434677740461702', mName=Silent, mDescription=, mImportance=2, mBypassDnd=false, mLockscreenVisibility=-1000, mSound=null, mLights=false, mLightColor=0, mVibrationPattern=null, mVibrationEffect=null, mUserLockedFields=0, mUserVisibleTaskShown=false, mVibrationEnabled=false, mShowBadge=true, mDeleted=false, mDeletedTimeMs=-1, mGroup='other7', mAudioAttributes=AudioAttributes: usage=USAGE_NOTIFICATION content=CONTENT_TYPE_SONIFICATION flags=0x800 tags= bundle=null, mBlockableSystem=false, mAllowBubbles=-1, mImportanceLockedDefaultApp=false, mOriginalImp=2, mParent=null, mConversationId=null, mDemoted=false, mImportantConvo=false, mLastNotificationUpdateTimeMs=0, mShowBanner=false, mFold=false, mOpush=false, mShowIcon=true, mMaxMessages=-1, mSupportNumBadge=false, mBadgeOption=0, mChangeableFold=true, mChangeableShowIcon=true, mUnimportant=true, mTempShowBadge=true}
+2026_04_22-11_14_22.838 D/NotificationsController: showExtraNotifications: sortedDialogs += -1571576950
+2026_04_22-11_14_22.838 D/NotificationsController: showExtraNotifications: sortedDialogs += -1596786046
+2026_04_22-11_14_22.839 D/NotificationsController: showExtraNotifications: dialog -1596786046 is skipped, message date (1776097328 <= 1776097328)
+2026_04_22-11_14_22.839 D/NotificationsController: showExtraNotifications: dialog 5431791273 is skipped, message date (1775789735 <= 1775789735)
+2026_04_22-11_14_22.839 D/NotificationsController: showExtraNotifications: dialog 214871303 is skipped, message date (1775105432 <= 1775105432)
+2026_04_22-11_14_22.840 D/NotificationsController: showExtraNotifications: dialog 5717348915 is skipped, message date (1774855088 <= 1774855088)
+2026_04_22-11_14_22.840 D/NotificationsController: showExtraNotifications: dialog 8586427739 is skipped, message date (1773550469 <= 1773550469)
+2026_04_22-11_14_22.841 D/NotificationsController: showExtraNotifications: dialog 7658324037 is skipped, message date (1771773020 <= 1771773020)
+2026_04_22-11_14_22.841 D/NotificationsController: showExtraNotifications: dialog 6730329053 is skipped, message date (1771245329 <= 1771245329)
+2026_04_22-11_14_22.841 D/NotificationsController: showExtraNotifications: dialog 7424851068 is skipped, message date (1771169438 <= 1771169438)
+2026_04_22-11_14_22.841 D/NotificationsController: showExtraNotifications: dialog 8024646758 is skipped, message date (1771082576 <= 1771082576)
+2026_04_22-11_14_22.841 D/NotificationsController: showExtraNotifications: dialog 7792643619 is skipped, message date (1770994894 <= 1770994894)
+2026_04_22-11_14_22.841 D/NotificationsController: showExtraNotifications: dialog 8437269317 is skipped, message date (1770655665 <= 1770655665)
+2026_04_22-11_14_22.841 D/NotificationsController: showExtraNotifications: dialog 7620715036 is skipped, message date (1770632946 <= 1770632946)
+2026_04_22-11_14_22.842 D/NotificationsController: showExtraNotifications: passcode=true waitingForPasscode=false hideNotificationContent=false selfUserId=8537656691 useSummaryNotification=true
+2026_04_22-11_14_22.899 D/NotificationsController: show extra notifications chatId -1571576950 topicId 0
+2026_04_22-11_14_22.903 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_messages_stickers@34f1e9e messageId = 0x69e860363d70a400
+2026_04_22-11_14_22.905 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_contacts_resolvedPeer@5767d77 messageId = 0x69e8603664dd3000
+2026_04_22-11_14_22.905 D/NotificationsController: showExtraNotifications: holders.add -1571576950
+2026_04_22-11_14_22.905 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_contacts_resolvedPeer@e469649 messageId = 0x69e86036645a1c00
+2026_04_22-11_14_22.913 D/MessagesController: start getDifference with date = 1776836649 pts = 68042 qts = 0
+2026_04_22-11_14_22.913 D/MessagesController: getDifference: isUpdating = true
+2026_04_22-11_14_22.916 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_messages_getRecentReactions@4ba4fe0 with token = 3
+2026_04_22-11_14_22.916 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_messages_getTopReactions@eea7299 with token = 4
+2026_04_22-11_14_22.916 D/ConnectionsManager: send request org.telegram.tgnet.tl.TL_account$getDefaultProfilePhotoEmojis@413995e with token = 5
+2026_04_22-11_14_22.916 D/ConnectionsManager: send request org.telegram.tgnet.tl.TL_account$getDefaultProfilePhotoEmojis@1c7213f with token = 6
+2026_04_22-11_14_22.917 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_messages_getRecentReactions@fbed6a with token = 2
+2026_04_22-11_14_22.917 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_messages_getTopReactions@796925b with token = 3
+2026_04_22-11_14_22.918 D/ConnectionsManager: send request org.telegram.tgnet.tl.TL_account$getDefaultProfilePhotoEmojis@9163af8 with token = 4
+2026_04_22-11_14_22.918 D/ConnectionsManager: send request org.telegram.tgnet.tl.TL_account$getDefaultProfilePhotoEmojis@83edbd1 with token = 5
+2026_04_22-11_14_22.918 D/NotificationsController: show extra notifications chatId -1596786046 topicId 0
+2026_04_22-11_14_22.922 D/NotificationsController: showExtraNotifications: holders.add -1596786046
+2026_04_22-11_14_22.923 D/NotificationsController: show summary with id 8
+2026_04_22-11_14_22.930 D/NotificationsController: showExtraNotifications: holders.size()=2
+2026_04_22-11_14_22.931 D/NotificationsController: showExtraNotifications: holders[0].call()
+2026_04_22-11_14_22.932 W/NotificationsController$1NotificationHolder: show dialog notification with id -1571576951 -1571576950 user=null chat=org.telegram.tgnet.TLRPC$TL_channel@93a4796
+2026_04_22-11_14_22.935 D/LaunchActivity: schedule app lock in 3601000
+2026_04_22-11_14_22.935 D/ConnectionsManager: app paused = true
+2026_04_22-11_14_22.936 D/ConnectionsManager: app resume count 0
+2026_04_22-11_14_23.066 D/NotificationsController: showExtraNotifications: holders[1].call()
+2026_04_22-11_14_23.066 W/NotificationsController$1NotificationHolder: show dialog notification with id -1596786047 -1596786046 user=null chat=org.telegram.tgnet.TLRPC$TL_channel@11cb024
+2026_04_22-11_14_23.079 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_messages_reactions@d41a52 messageId = 0x69e86036ea7efc00
+2026_04_22-11_14_23.082 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_messages_reactionsNotModified@7c06123 messageId = 0x69e86036ea7efc04
+2026_04_22-11_14_23.083 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_emojiListNotModified@e943620 messageId = 0x69e86036eac08400
+2026_04_22-11_14_23.083 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_emojiListNotModified@775899e messageId = 0x69e86036ea7efc08
+2026_04_22-11_14_23.133 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_messages_getRecentReactions@2ad5ab9 with token = 3
+2026_04_22-11_14_23.133 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_messages_getTopReactions@68a28ac with token = 4
+2026_04_22-11_14_23.135 D/ConnectionsManager: send request org.telegram.tgnet.tl.TL_account$getDefaultProfilePhotoEmojis@3d63d0a with token = 5
+2026_04_22-11_14_23.136 D/ConnectionsManager: send request org.telegram.tgnet.tl.TL_account$getDefaultProfilePhotoEmojis@88d397b with token = 6
+2026_04_22-11_14_23.137 D/ConnectionsManager: send request org.telegram.tgnet.tl.TL_account$getAutoDownloadSettings@bc72398 with token = 2
+2026_04_22-11_14_23.139 D/ConnectionsManager: send request org.telegram.tgnet.tl.TL_account$getAutoDownloadSettings@32a7f1 with token = 2
+2026_04_22-11_14_23.139 D/ConnectionsManager: send request org.telegram.tgnet.tl.TL_account$getAutoDownloadSettings@a231fd6 with token = 2
+2026_04_22-11_14_23.139 D/ConnectionsManager: send request org.telegram.tgnet.tl.TL_account$getAutoDownloadSettings@a2bf257 with token = 2
+2026_04_22-11_14_23.140 D/ConnectionsManager: send request org.telegram.tgnet.tl.TL_account$getAutoDownloadSettings@ed6e144 with token = 2
+2026_04_22-11_14_23.140 D/ConnectionsManager: send request org.telegram.tgnet.tl.TL_account$getAutoDownloadSettings@8b8d22d with token = 2
+2026_04_22-11_14_23.142 D/ContactsController: done loading contacts
+2026_04_22-11_14_23.143 D/ContactsController: load contacts from server
+2026_04_22-11_14_23.144 D/ContactsController: done loading contacts
+2026_04_22-11_14_23.145 D/ContactsController: load contacts from server
+2026_04_22-11_14_23.145 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_channels_getMessages@2896362 with token = 7
+2026_04_22-11_14_23.145 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_messages_reactions@935cf3 messageId = 0x69e86036eac08400
+2026_04_22-11_14_23.150 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_messages_reactionsNotModified@dfd6429 messageId = 0x69e86036eac08404
+2026_04_22-11_14_23.150 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_emojiListNotModified@a1e53ae messageId = 0x69e86036eac08408
+2026_04_22-11_14_23.151 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_emojiListNotModified@2fcd54f messageId = 0x69e86036eac0840c
+2026_04_22-11_14_23.153 D/NotificationsController: setBadge 58
+2026_04_22-11_14_23.244 D/LaunchActivity: cancel lockRunnable onPasscodeResume
+2026_04_22-11_14_23.244 D/AndroidUtilities: wasInBackground = false appLocked = false autoLockIn = 3600 lastPauseTime = 252563 uptime = 252563
+2026_04_22-11_14_23.244 D/LaunchActivity: reset lastPauseTime onPasscodeResume
+2026_04_22-11_14_23.244 D/ConnectionsManager: app paused = false
+2026_04_22-11_14_23.245 D/ConnectionsManager: app resume count 1
+2026_04_22-11_14_23.245 D/ConnectionsManager: reset app pause time
+2026_04_22-11_14_23.272 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_messages_reactionsNotModified@316bd4 messageId = 0x69e86037224dd404
+2026_04_22-11_14_23.272 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_messages_reactionsNotModified@dddb17d messageId = 0x69e86037224dd400
+2026_04_22-11_14_23.272 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_emojiListNotModified@726d872 messageId = 0x69e8603722d0e400
+2026_04_22-11_14_23.277 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_emojiListNotModified@ba914c3 messageId = 0x69e8603722d0e404
+2026_04_22-11_14_23.361 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_messages_channelMessages@d30b863 messageId = 0x69e860372624dc00
+2026_04_22-11_14_23.367 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_updates_getDifference@217842 with token = 6
+2026_04_22-11_14_23.367 D/MessagesController: process update TL_updateNewChannelMessage
+2026_04_22-11_14_23.367 D/MessagesController: org.telegram.tgnet.TLRPC$TL_updateNewChannelMessage@b38a689 channelId = 1948743629 message_id = 47625
+2026_04_22-11_14_23.377 D/MessagesController: received difference: isUpdating = false
+2026_04_22-11_14_23.378 D/MessagesController: received difference with date = 1776836662 pts = 64608 seq = 5501 messages = 0 users = 1 chats = 1 other updates = 1
+2026_04_22-11_14_23.378 D/ContactsController: done loading contacts
+2026_04_22-11_14_23.379 D/MessagesStorage: update messageRead currentMaxId = 47608 dialogId = -1948743629
+2026_04_22-11_14_23.388 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_contacts_getContacts@5c83813 with token = 8
+2026_04_22-11_14_23.391 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_contacts_getContacts@8f7ac26 with token = 7
+2026_04_22-11_14_23.397 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_messages_search@8342209 with token = 12
+2026_04_22-11_14_23.400 D/NotificationsController: NotificationsController: processNewMessages msgs.size()=1 isLast=true isFcm=false)
+2026_04_22-11_14_23.400 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_messages_search@acf4be with token = 13
+2026_04_22-11_14_23.400 D/MessagesController: not found dialog with id -1948743629 dictCount = 7 allCount = 7
+2026_04_22-11_14_23.402 D/ContactsController: load contacts from server
+2026_04_22-11_14_23.402 D/MessagesController: add other uid = 8537656691 for account 0
+2026_04_22-11_14_23.402 D/MessagesController: add other uid = 6980974072 for account 0
+2026_04_22-11_14_23.402 D/MessagesController: add other uid = 7960928753 for account 0
+2026_04_22-11_14_23.402 D/MessagesController: add other uid = 6722550550 for account 7
+2026_04_22-11_14_23.402 D/MessagesController: add other uid = 6980974072 for account 7
+2026_04_22-11_14_23.402 D/MessagesController: add other uid = 7960928753 for account 7
+2026_04_22-11_14_23.403 D/MessagesController: add other uid = 6722550550 for account 8
+2026_04_22-11_14_23.403 D/MessagesController: add other uid = 8537656691 for account 8
+2026_04_22-11_14_23.403 D/MessagesController: add other uid = 7960928753 for account 8
+2026_04_22-11_14_23.403 D/MessagesController: add other uid = 6722550550 for account 9
+2026_04_22-11_14_23.403 D/MessagesController: add other uid = 8537656691 for account 9
+2026_04_22-11_14_23.403 D/MessagesController: add other uid = 6980974072 for account 9
+2026_04_22-11_14_23.408 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_contacts_getContacts@4c2c2ff with token = 7
+2026_04_22-11_14_23.409 D/ConnectionsManager: send request org.telegram.tgnet.tl.TL_account$registerDevice@3f76f91 with token = 14
+2026_04_22-11_14_23.410 D/MessagesStorage: 9 current cached contacts count = 0
+2026_04_22-11_14_23.412 D/ConnectionsManager: send request org.telegram.tgnet.tl.TL_account$registerDevice@2faf1a6 with token = 9
+2026_04_22-11_14_23.412 D/ContactsController: start read contacts from phone
+2026_04_22-11_14_23.412 D/ContactsController: contacts sync disabled
+2026_04_22-11_14_23.412 D/ContactsController: done processing contacts
+2026_04_22-11_14_23.415 D/ConnectionsManager: send request org.telegram.tgnet.tl.TL_account$registerDevice@608bd2c with token = 8
+2026_04_22-11_14_23.417 D/ConnectionsManager: send request org.telegram.tgnet.tl.TL_account$registerDevice@d16258a with token = 8
+2026_04_22-11_14_23.443 D/SQLitePreparedStatement: sqlite query SELECT data FROM chats WHERE uid IN(2813564336,2231105250,2135361552,2074389587,2050838996,2021681281,2017395419,2016450760,1907803583,1896920689,1867076149,1305903306,1132452609,3133919933,2467705421,2349438816,2241277690,2103686180,2068411565,1770898668,1754916275,1648862305,1632728092,1619601209,1612565626,1532494956,1324138225,1138614213,3642911695,2442152837,2331068091,2324739883,2089267130,2059638276,1898486632,1848892814,1750444656,1664744452,2199504131,2185330287,2161242975,2001739482,1516897404,1216536150,1006503122,2118537595,1601807931,1549206010,1291970534,2220647875,2165155301,3417266959,2639313064,1998867431,1763687612,1375164247,1890608516,1333854359,2189715950,1116368038,2475313399,2704815576,2203786135,1407951867,2329949330,2286320945,2061640685,2020205239,2866673778,1601798662,2246146947,2249704117,1600446204,2430196464,2073969127,1280300072,3612812259,2414699235,1224624669,1110197229,2055026488,1989814077,1859813868,1596786046,1416583787,2249499893,2203125254,1502187117,1227729243,2095611678,2073222049,1868408316,1220568647,2200810390,2331034122,1724856481,1598773095,1892504456,1770125286,2422054930,2096499100,1944607209,1900965628,1919012292,1886019715,1899511562,2120055216,2452435254,2297714639,2270675338,2142693476,2075601166,1439853191,1835680962,2259826858,1005640892,2080467465,2032223553,2410064367,2237089950,2140799390,2029435909,2191593654,2013707618,1857302142,2095495970,2035748224,1239653028,1541764588,2325970170,2074367107,2277340687,1900614679,1973396740,1902113785,2173900823,2148758661,2157464891,1744824600,2244026383,1826873987,1877747044,1864926969,1662591986,1977784654,2007141958,2217391945,1973136160,1538092324,1514476557,2039438207,2421961895,1467351925,2033372423,1989799625,2221687784,1924409673,2123496906,2090755310,1234291126,1967015836,1229070535,1761810694,1930041537,1514079866,1728572563,3437749950,1801976314,1513290450,1856700643,2836591749,2161718625,1954007076,1596982292,1691569999,2175599227,1925573701,1826361488,2028425041,1473763450,2103308874,2052465568,1430318179,2188278301,1918900558,2194934477,1860425897,1598430504,2175506828,2479189637,1942212040,1967344516,2367199504,2226596507,1363714651,2428170968,2215975024) took 513ms
+2026_04_22-11_14_23.507 D/ContactsController: done loading contacts
+2026_04_22-11_14_23.511 D/MessagesController: process update TL_updateChannelTooLong
+2026_04_22-11_14_23.513 D/MessagesController: org.telegram.tgnet.TLRPC$TL_updateChannelTooLong@ff2c8b9 channelId = 2713711526
+2026_04_22-11_14_23.524 D/ContactsController: load contacts from server
+2026_04_22-11_14_23.527 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_messages_channelMessages@c086744 messageId = 0x69e8603766666800
+2026_04_22-11_14_23.529 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_messages_channelMessages@2755962 messageId = 0x69e8603765e35400
+2026_04_22-11_14_23.530 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_boolTrue@1c6b3b0 messageId = 0x69e8603768f5c400
+2026_04_22-11_14_23.535 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_contacts_contacts@ddb5adc messageId = 0x69e8603763958000
+2026_04_22-11_14_23.536 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_boolTrue@e3ce7e5 messageId = 0x69e860376a7efc00
+2026_04_22-11_14_23.551 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_boolTrue@aaadf12 messageId = 0x69e8603769ba6000
+2026_04_22-11_14_23.601 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_updates_difference@c9af832 messageId = 0x69e860375df3b800
+2026_04_22-11_14_23.610 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_contacts_contacts@ba8a877 messageId = 0x69e860376872b000
+2026_04_22-11_14_23.616 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_contacts_contacts@88c8575 messageId = 0x69e86037645a1c00
+2026_04_22-11_14_23.623 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_boolTrue@a7a0dc messageId = 0x69e8603769fbe800
+2026_04_22-11_14_23.658 D/FileLoader: create load operation fileName=2_773947703670342104.tgs documentName=AnimatedSticker.tgs size=6.2 KB position in queue 0 account=0 cacheType=1 priority=0 stream=null
+2026_04_22-11_14_23.678 D/FileLoadOperation: start loading file to temp = /storage/emulated/0/Android/data/org.tele.alexgram/cache/2_773947703670342104.temp final = /storage/emulated/0/Android/data/org.tele.alexgram/cache/2_773947703670342104.tgs priority0
+2026_04_22-11_14_23.721 D/NotificationsController: NotificationsController dismissNotification
+2026_04_22-11_14_23.723 D/NotificationsController: setBadge 58
+2026_04_22-11_14_23.724 D/NotificationsController: NotificationsController: process new messages, value is false (-2036072316, false, false, false)
+2026_04_22-11_14_23.740 D/FileLoader: create load operation fileName=1_4909424820812251759.tgs documentName=AnimatedSticker.tgs size=55.2 KB position in queue 0 account=0 cacheType=11 priority=0 stream=null
+2026_04_22-11_14_23.740 D/FileLoader: create load operation fileName=1_5109641279730353573.tgs documentName=AnimatedSticker.tgs size=57.0 KB position in queue 1 account=0 cacheType=11 priority=0 stream=null
+2026_04_22-11_14_23.741 D/FileLoader: create load operation fileName=1_5181593617004757506.tgs documentName=AnimatedSticker.tgs size=25.2 KB position in queue 2 account=0 cacheType=11 priority=0 stream=null
+2026_04_22-11_14_23.741 D/FileLoader: create load operation fileName=1_5044361272934532415.tgs documentName=AnimatedSticker.tgs size=10.3 KB position in queue 3 account=0 cacheType=11 priority=0 stream=null
+2026_04_22-11_14_23.742 D/FileLoader: create load operation fileName=1_5181852277115192162.tgs documentName=AnimatedSticker.tgs size=7.3 KB position in queue 4 account=0 cacheType=11 priority=0 stream=null
+2026_04_22-11_14_23.742 D/FileLoader: create load operation fileName=1_5044158348614697953.tgs documentName=AnimatedSticker.tgs size=7.8 KB position in queue 5 account=0 cacheType=11 priority=0 stream=null
+2026_04_22-11_14_23.742 D/FileLoader: create load operation fileName=1_4906965037207257780.tgs documentName=AnimatedSticker.tgs size=25.5 KB position in queue 6 account=0 cacheType=11 priority=0 stream=null
+2026_04_22-11_14_23.742 D/FileLoader: create load operation fileName=1_5048978706375115415.tgs documentName=AnimatedSticker.tgs size=10.5 KB position in queue 7 account=0 cacheType=11 priority=0 stream=null
+2026_04_22-11_14_23.743 D/FileLoader: create load operation fileName=1_5127435509626308100.tgs documentName=AnimatedSticker.tgs size=10.4 KB position in queue 8 account=0 cacheType=11 priority=0 stream=null
+2026_04_22-11_14_23.744 D/FileLoader: create load operation fileName=1_5041975474436179119.tgs documentName=AnimatedSticker.tgs size=9.5 KB position in queue 9 account=0 cacheType=11 priority=0 stream=null
+2026_04_22-11_14_23.744 D/FileLoader: create load operation fileName=1_5183884724359135908.tgs documentName=AnimatedSticker.tgs size=25.2 KB position in queue 10 account=0 cacheType=11 priority=0 stream=null
+2026_04_22-11_14_23.745 D/FileLoader: create load operation fileName=1_5044361315884204959.tgs documentName=AnimatedSticker.tgs size=19.8 KB position in queue 11 account=0 cacheType=11 priority=0 stream=null
+2026_04_22-11_14_23.745 D/FileLoader: create load operation fileName=1_5130019946067133023.tgs documentName=AnimatedSticker.tgs size=16.9 KB position in queue 12 account=0 cacheType=11 priority=0 stream=null
+2026_04_22-11_14_23.745 D/FileLoader: create load operation fileName=1_5044210558237148088.tgs documentName=AnimatedSticker.tgs size=9.1 KB position in queue 13 account=0 cacheType=11 priority=0 stream=null
+2026_04_22-11_14_23.745 D/FileLoader: create load operation fileName=1_5127352539448082997.tgs documentName=AnimatedSticker.tgs size=16.6 KB position in queue 14 account=0 cacheType=11 priority=0 stream=null
+2026_04_22-11_14_23.746 D/FileLoader: create load operation fileName=1_5044214131649938714.tgs documentName=AnimatedSticker.tgs size=10.7 KB position in queue 15 account=0 cacheType=11 priority=0 stream=null
+2026_04_22-11_14_23.746 D/FileLoader: create load operation fileName=1_5129967225343574495.tgs documentName=AnimatedSticker.tgs size=46.6 KB position in queue 16 account=0 cacheType=11 priority=0 stream=null
+2026_04_22-11_14_23.746 D/FileLoader: create load operation fileName=1_5041795575436018575.tgs documentName=AnimatedSticker.tgs size=21.4 KB position in queue 17 account=0 cacheType=11 priority=0 stream=null
+2026_04_22-11_14_23.746 D/FileLoader: create load operation fileName=1_5127413407724601904.tgs documentName=AnimatedSticker.tgs size=11.8 KB position in queue 18 account=0 cacheType=11 priority=0 stream=null
+2026_04_22-11_14_23.747 D/FileLoader: create load operation fileName=1_5044578104358470746.tgs documentName=AnimatedSticker.tgs size=5.9 KB position in queue 19 account=0 cacheType=11 priority=0 stream=null
+2026_04_22-11_14_23.747 D/FileLoader: create load operation fileName=1_5159385139981059251.tgs documentName=AnimatedSticker.tgs size=63.3 KB position in queue 20 account=0 cacheType=11 priority=0 stream=null
+2026_04_22-11_14_23.747 D/FileLoader: create load operation fileName=1_5107584321108051014.tgs documentName=AnimatedSticker.tgs size=60.2 KB position in queue 21 account=0 cacheType=11 priority=0 stream=null
+2026_04_22-11_14_23.748 D/FileLoader: create load operation fileName=1_5104858069142078462.tgs documentName=AnimatedSticker.tgs size=59.1 KB position in queue 22 account=0 cacheType=11 priority=0 stream=null
+2026_04_22-11_14_23.749 D/FileLoader: create load operation fileName=1_5104841245755180586.tgs documentName=AnimatedSticker.tgs size=58.7 KB position in queue 23 account=0 cacheType=11 priority=0 stream=null
+2026_04_22-11_14_23.749 D/FileLoader: create load operation fileName=1_5170169077011841524.tgs documentName=AnimatedSticker.tgs size=56.2 KB position in queue 24 account=0 cacheType=11 priority=0 stream=null
+2026_04_22-11_14_23.749 D/FileLoader: create load operation fileName=1_5170166362592510656.tgs documentName=AnimatedSticker.tgs size=63.8 KB position in queue 25 account=0 cacheType=11 priority=0 stream=null
+2026_04_22-11_14_23.750 D/FileLoader: create load operation fileName=1_5048771083361059460.tgs documentName=AnimatedSticker.tgs size=43.0 KB position in queue 26 account=0 cacheType=11 priority=0 stream=null
+2026_04_22-11_14_23.750 D/FileLoader: create load operation fileName=1_5170257231215591956.tgs documentName=AnimatedSticker.tgs size=26.4 KB position in queue 27 account=0 cacheType=11 priority=0 stream=null
+2026_04_22-11_14_23.750 D/FileLoader: create load operation fileName=1_5158936234294248618.tgs documentName=AnimatedSticker.tgs size=34.1 KB position in queue 28 account=0 cacheType=11 priority=0 stream=null
+2026_04_22-11_14_23.750 D/FileLoader: create load operation fileName=1_4967494041374556629.tgs documentName=AnimatedSticker.tgs size=28.2 KB position in queue 29 account=0 cacheType=11 priority=0 stream=null
+2026_04_22-11_14_23.844 D/NotificationsController: showExtraNotifications pushMessages.size()=50
+2026_04_22-11_14_23.849 D/NotificationsController: current channel for 9channel_silent_b2b3a_-194466490098834848 = NotificationChannel{mId='9channel_silent_b2b3a_-194466490098834848', mName=Silent, mDescription=, mImportance=2, mBypassDnd=false, mLockscreenVisibility=-1000, mSound=null, mLights=false, mLightColor=0, mVibrationPattern=null, mVibrationEffect=null, mUserLockedFields=0, mUserVisibleTaskShown=false, mVibrationEnabled=false, mShowBadge=true, mDeleted=false, mDeletedTimeMs=-1, mGroup='other9', mAudioAttributes=AudioAttributes: usage=USAGE_NOTIFICATION content=CONTENT_TYPE_SONIFICATION flags=0x800 tags= bundle=null, mBlockableSystem=false, mAllowBubbles=-1, mImportanceLockedDefaultApp=false, mOriginalImp=2, mParent=null, mConversationId=null, mDemoted=false, mImportantConvo=false, mLastNotificationUpdateTimeMs=0, mShowBanner=false, mFold=false, mOpush=false, mShowIcon=true, mMaxMessages=-1, mSupportNumBadge=false, mBadgeOption=0, mChangeableFold=true, mChangeableShowIcon=true, mUnimportant=true, mTempShowBadge=true}
+2026_04_22-11_14_23.850 D/NotificationsController: showExtraNotifications: sortedDialogs += -2410797028
+2026_04_22-11_14_23.851 D/NotificationsController: showExtraNotifications: sortedDialogs += -2182974982
+2026_04_22-11_14_23.851 D/NotificationsController: showExtraNotifications: sortedDialogs += -2598154723
+2026_04_22-11_14_23.851 D/NotificationsController: showExtraNotifications: sortedDialogs += -2720113935
+2026_04_22-11_14_23.851 D/NotificationsController: showExtraNotifications: sortedDialogs += 6815304449
+2026_04_22-11_14_23.852 D/NotificationsController: showExtraNotifications: sortedDialogs += -3770422402
+2026_04_22-11_14_23.852 D/NotificationsController: showExtraNotifications: sortedDialogs += -2335849431
+2026_04_22-11_14_23.852 D/NotificationsController: showExtraNotifications: sortedDialogs += -3807474806
+2026_04_22-11_14_23.852 D/NotificationsController: showExtraNotifications: sortedDialogs += -2964099736
+2026_04_22-11_14_23.852 D/NotificationsController: showExtraNotifications: sortedDialogs += -2508906726
+2026_04_22-11_14_23.852 D/NotificationsController: showExtraNotifications: sortedDialogs += -2107968004
+2026_04_22-11_14_23.852 D/NotificationsController: showExtraNotifications: sortedDialogs += -2526702111
+2026_04_22-11_14_23.853 D/NotificationsController: showExtraNotifications: passcode=true waitingForPasscode=false hideNotificationContent=false selfUserId=7960928753 useSummaryNotification=true
+2026_04_22-11_14_23.858 D/StoriesController: StoriesController cache=true hidden=false processAllStoriesResponse {}
+2026_04_22-11_14_23.939 D/NotificationsController: show extra notifications chatId -2410797028 topicId 0
+2026_04_22-11_14_23.945 D/NotificationsController: showExtraNotifications: holders.add -2410797028
+2026_04_22-11_14_23.958 D/NotificationsController: show extra notifications chatId -2182974982 topicId 0
+2026_04_22-11_14_23.963 D/NotificationsController: showExtraNotifications: holders.add -2182974982
+2026_04_22-11_14_23.977 D/NotificationsController: show extra notifications chatId -2598154723 topicId 0
+2026_04_22-11_14_23.981 D/NotificationsController: showExtraNotifications: holders.add -2598154723
+2026_04_22-11_14_23.998 D/NotificationsController: show extra notifications chatId -2720113935 topicId 0
+2026_04_22-11_14_24.003 D/NotificationsController: showExtraNotifications: holders.add -2720113935
+2026_04_22-11_14_24.019 D/NotificationsController: show extra notifications chatId 6815304449 topicId 0
+2026_04_22-11_14_24.025 D/NotificationsController: showExtraNotifications: holders.add 6815304449
+2026_04_22-11_14_24.041 D/FilePathDatabase: checkMediaExistance size=2 time=4 thread_time=4
+2026_04_22-11_14_24.096 D/FilePathDatabase: checkMediaExistance size=93 time=54 thread_time=53
+2026_04_22-11_14_24.097 D/NotificationsController: show extra notifications chatId -3770422402 topicId 0
+2026_04_22-11_14_24.101 D/NotificationsController: showExtraNotifications: holders.add -3770422402
+2026_04_22-11_14_24.115 D/NotificationsController: show extra notifications chatId -2335849431 topicId 0
+2026_04_22-11_14_24.117 D/MessagesStorage: 0 current cached contacts count = 0
+2026_04_22-11_14_24.117 D/ContactsController: start read contacts from phone
+2026_04_22-11_14_24.117 D/ContactsController: contacts sync disabled
+2026_04_22-11_14_24.117 D/ContactsController: done processing contacts
+2026_04_22-11_14_24.118 D/MessagesController: start getChannelDifference with pts = 8366533 channelId = 2713711526
+2026_04_22-11_14_24.119 D/MessagesController: process update TL_updateChannelTooLong
+2026_04_22-11_14_24.119 D/MessagesController: org.telegram.tgnet.TLRPC$TL_updateChannelTooLong@d597e6f channelId = 1899511562
+2026_04_22-11_14_24.122 D/NotificationsController: showExtraNotifications: holders.add -2335849431
+2026_04_22-11_14_24.122 D/NotificationsController: showExtraNotifications: break from holders, count over 7
+2026_04_22-11_14_24.123 D/NotificationsController: show summary with id 10
+2026_04_22-11_14_24.124 D/MessagesController: start getChannelDifference with pts = 322599 channelId = 1899511562
+2026_04_22-11_14_24.125 D/MessagesController: received difference: isUpdating = false
+2026_04_22-11_14_24.125 D/MessagesController: received difference with date = 1776836662 pts = 269096 seq = 4956 messages = 0 users = 0 chats = 2 other updates = 2
+2026_04_22-11_14_24.125 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_contacts_getContacts@4b49a14 with token = 15
+2026_04_22-11_14_24.126 D/MessagesController: account 0 registered for push, push type: 2
+2026_04_22-11_14_24.126 D/MessagesController: account 9 registered for push, push type: 2
+2026_04_22-11_14_24.126 D/MessagesController: account 7 registered for push, push type: 2
+2026_04_22-11_14_24.130 D/NotificationsController: showExtraNotifications: holders.size()=7
+2026_04_22-11_14_24.130 D/NotificationsController: showExtraNotifications: holders[0].call()
+2026_04_22-11_14_24.131 W/NotificationsController$1NotificationHolder: show dialog notification with id 1884170267 -2410797028 user=null chat=org.telegram.tgnet.TLRPC$TL_channel@79fc803
+2026_04_22-11_14_24.131 D/MessagesController: loaded folderId 0 loadType 1 count 118
+2026_04_22-11_14_24.138 D/LaunchActivity: switch to state 3
+2026_04_22-11_14_24.230 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_contacts_contacts@c07ad8e messageId = 0x69e860381fbe7800
+2026_04_22-11_14_24.259 D/MessagesController: account 8 registered for push, push type: 2
+2026_04_22-11_14_24.259 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_messages_getPeerDialogs@7ed0c1 with token = 16
+2026_04_22-11_14_24.260 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_users_getFullUser@fdfe066 with token = 17
+2026_04_22-11_14_24.260 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_messages_getFavedStickers@d95cfa7 with token = 18
+2026_04_22-11_14_24.260 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_messages_getStickers@387c54 with token = 19
+2026_04_22-11_14_24.261 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_upload_getFile@af99cf2 with token = 26
+2026_04_22-11_14_24.261 D/FileLoadOperation: debug_loading: 2_773947703670342104.tgs dc=2 send reqId 26 offset=0 conType=2 priority=0
+2026_04_22-11_14_24.261 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_messages_getAvailableReactions@f45bf43 with token = 20
+2026_04_22-11_14_24.262 D/FileLoadOperation: finished downloading file to /storage/emulated/0/Android/data/org.tele.alexgram/cache/1_4909424820812251759.tgs time = 502 dc = 1 size = 55.2 KB
+2026_04_22-11_14_24.262 D/FileLoadOperation: finished downloading file to /storage/emulated/0/Android/data/org.tele.alexgram/cache/1_5109641279730353573.tgs time = 502 dc = 1 size = 57.0 KB
+2026_04_22-11_14_24.262 D/FileLoadOperation: finished downloading file to /storage/emulated/0/Android/data/org.tele.alexgram/cache/1_5181593617004757506.tgs time = 502 dc = 1 size = 25.2 KB
+2026_04_22-11_14_24.262 D/FileLoadOperation: finished downloading file to /storage/emulated/0/Android/data/org.tele.alexgram/cache/1_5044361272934532415.tgs time = 502 dc = 1 size = 10.3 KB
+2026_04_22-11_14_24.262 D/FileLoadOperation: finished downloading file to /storage/emulated/0/Android/data/org.tele.alexgram/cache/1_5181852277115192162.tgs time = 502 dc = 1 size = 7.3 KB
+2026_04_22-11_14_24.262 D/FileLoadOperation: finished downloading file to /storage/emulated/0/Android/data/org.tele.alexgram/cache/1_5044158348614697953.tgs time = 481 dc = 1 size = 7.8 KB
+2026_04_22-11_14_24.262 D/FileLoadOperation: finished downloading file to /storage/emulated/0/Android/data/org.tele.alexgram/cache/1_4906965037207257780.tgs time = 480 dc = 1 size = 25.5 KB
+2026_04_22-11_14_24.262 D/FileLoadOperation: finished downloading file to /storage/emulated/0/Android/data/org.tele.alexgram/cache/1_5048978706375115415.tgs time = 480 dc = 1 size = 10.5 KB
+2026_04_22-11_14_24.263 D/FileLoadOperation: finished downloading file to /storage/emulated/0/Android/data/org.tele.alexgram/cache/1_5127435509626308100.tgs time = 480 dc = 1 size = 10.4 KB
+2026_04_22-11_14_24.263 D/FileLoadOperation: finished downloading file to /storage/emulated/0/Android/data/org.tele.alexgram/cache/1_5041975474436179119.tgs time = 481 dc = 1 size = 9.5 KB
+2026_04_22-11_14_24.263 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_help_getAppConfig@1cb09c0 with token = 3
+2026_04_22-11_14_24.264 D/FileLoadOperation: finished downloading file to /storage/emulated/0/Android/data/org.tele.alexgram/cache/1_5183884724359135908.tgs time = 460 dc = 1 size = 25.2 KB
+2026_04_22-11_14_24.264 D/FileLoadOperation: finished downloading file to /storage/emulated/0/Android/data/org.tele.alexgram/cache/1_5044361315884204959.tgs time = 459 dc = 1 size = 19.8 KB
+2026_04_22-11_14_24.264 D/FileLoadOperation: finished downloading file to /storage/emulated/0/Android/data/org.tele.alexgram/cache/1_5130019946067133023.tgs time = 459 dc = 1 size = 16.9 KB
+2026_04_22-11_14_24.264 D/FileLoadOperation: finished downloading file to /storage/emulated/0/Android/data/org.tele.alexgram/cache/1_5044210558237148088.tgs time = 459 dc = 1 size = 9.1 KB
+2026_04_22-11_14_24.264 D/FileLoadOperation: finished downloading file to /storage/emulated/0/Android/data/org.tele.alexgram/cache/1_5127352539448082997.tgs time = 459 dc = 1 size = 16.6 KB
+2026_04_22-11_14_24.264 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_help_getAppConfig@aebd6f9 with token = 3
+2026_04_22-11_14_24.264 D/FileLoadOperation: finished downloading file to /storage/emulated/0/Android/data/org.tele.alexgram/cache/1_5044214131649938714.tgs time = 439 dc = 1 size = 10.7 KB
+2026_04_22-11_14_24.264 D/FileLoadOperation: finished downloading file to /storage/emulated/0/Android/data/org.tele.alexgram/cache/1_5129967225343574495.tgs time = 438 dc = 1 size = 46.6 KB
+2026_04_22-11_14_24.264 D/FileLoadOperation: finished downloading file to /storage/emulated/0/Android/data/org.tele.alexgram/cache/1_5041795575436018575.tgs time = 438 dc = 1 size = 21.4 KB
+2026_04_22-11_14_24.265 D/FileLoadOperation: finished downloading file to /storage/emulated/0/Android/data/org.tele.alexgram/cache/1_5127413407724601904.tgs time = 438 dc = 1 size = 11.8 KB
+2026_04_22-11_14_24.265 D/FileLoadOperation: finished downloading file to /storage/emulated/0/Android/data/org.tele.alexgram/cache/1_5044578104358470746.tgs time = 438 dc = 1 size = 5.9 KB
+2026_04_22-11_14_24.265 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_help_getAppConfig@f80963e with token = 3
+2026_04_22-11_14_24.265 D/FileLoadOperation: finished downloading file to /storage/emulated/0/Android/data/org.tele.alexgram/cache/1_5159385139981059251.tgs time = 419 dc = 1 size = 63.3 KB
+2026_04_22-11_14_24.265 D/FileLoadOperation: finished downloading file to /storage/emulated/0/Android/data/org.tele.alexgram/cache/1_5107584321108051014.tgs time = 418 dc = 1 size = 60.2 KB
+2026_04_22-11_14_24.265 D/FileLoadOperation: finished downloading file to /storage/emulated/0/Android/data/org.tele.alexgram/cache/1_5104858069142078462.tgs time = 418 dc = 1 size = 59.1 KB
+2026_04_22-11_14_24.265 D/FileLoadOperation: finished downloading file to /storage/emulated/0/Android/data/org.tele.alexgram/cache/1_5104841245755180586.tgs time = 418 dc = 1 size = 58.7 KB
+2026_04_22-11_14_24.266 D/FileLoadOperation: finished downloading file to /storage/emulated/0/Android/data/org.tele.alexgram/cache/1_5170169077011841524.tgs time = 418 dc = 1 size = 56.2 KB
+2026_04_22-11_14_24.266 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_help_getAppConfig@97b0c9f with token = 3
+2026_04_22-11_14_24.266 D/ConnectionsManager: send request org.telegram.tgnet.tl.TL_stories$TL_stories_getAllStories@93701ec with token = 21
+2026_04_22-11_14_24.266 D/ConnectionsManager: send request org.telegram.tgnet.tl.TL_stories$TL_stories_getAllStories@789e9b5 with token = 22
+2026_04_22-11_14_24.266 D/FileLoadOperation: finished downloading file to /storage/emulated/0/Android/data/org.tele.alexgram/cache/1_5170166362592510656.tgs time = 398 dc = 1 size = 63.8 KB
+2026_04_22-11_14_24.266 D/FileLoadOperation: finished downloading file to /storage/emulated/0/Android/data/org.tele.alexgram/cache/1_5048771083361059460.tgs time = 398 dc = 1 size = 43.0 KB
+2026_04_22-11_14_24.266 D/FileLoadOperation: finished downloading file to /storage/emulated/0/Android/data/org.tele.alexgram/cache/1_5170257231215591956.tgs time = 398 dc = 1 size = 26.4 KB
+2026_04_22-11_14_24.266 D/FileLoadOperation: finished downloading file to /storage/emulated/0/Android/data/org.tele.alexgram/cache/1_5158936234294248618.tgs time = 397 dc = 1 size = 34.1 KB
+2026_04_22-11_14_24.266 D/FileLoadOperation: finished downloading file to /storage/emulated/0/Android/data/org.tele.alexgram/cache/1_4967494041374556629.tgs time = 397 dc = 1 size = 28.2 KB
+2026_04_22-11_14_24.266 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_help_getAppConfig@1ebd84a with token = 3
+2026_04_22-11_14_24.267 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_help_getAppConfig@8dd3bb with token = 3
+2026_04_22-11_14_24.270 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_help_getAppConfig@8850d8 with token = 10
+2026_04_22-11_14_24.270 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_help_getAppConfig@1bc6c31 with token = 9
+2026_04_22-11_14_24.271 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_help_getAppConfig@49da284 with token = 9
+2026_04_22-11_14_24.271 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_help_getAppConfig@4ba9a6d with token = 23
+2026_04_22-11_14_24.271 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_updates_getChannelDifference@bcf26a2 with token = 24
+2026_04_22-11_14_24.271 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_updates_getChannelDifference@844ff33 with token = 25
+2026_04_22-11_14_24.271 D/ConnectionsManager: send request org.telegram.tgnet.tl.TL_account$updateStatus@f9462f0 with token = 11
+2026_04_22-11_14_24.272 D/AyuGhostUtils: GhostMode: Forcing offline status in updateStatus request.
+2026_04_22-11_14_24.272 D/ConnectionsManager: send request org.telegram.tgnet.tl.TL_account$updateStatus@df37069 with token = 10
+2026_04_22-11_14_24.272 D/AyuGhostUtils: GhostMode: Forcing offline status in updateStatus request.
+2026_04_22-11_14_24.272 D/ConnectionsManager: send request org.telegram.tgnet.tl.TL_account$updateStatus@71d0aee with token = 10
+2026_04_22-11_14_24.272 D/AyuGhostUtils: GhostMode: Forcing offline status in updateStatus request.
+2026_04_22-11_14_24.273 D/MessagesController: received difference: isUpdating = false
+2026_04_22-11_14_24.273 D/MessagesController: received difference with date = 1776836663 pts = 68042 seq = 1915 messages = 0 users = 1 chats = 1 other updates = 0
+2026_04_22-11_14_24.273 D/ContactsController: done loading contacts
+2026_04_22-11_14_24.273 D/ContactsController: done loading contacts
+2026_04_22-11_14_24.277 D/ContactsController: done loading contacts
+2026_04_22-11_14_24.280 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_messages_getPeerDialogs@2c65b8f with token = 27
+2026_04_22-11_14_24.296 D/MessagesStorage: 7 current cached contacts count = 0
+2026_04_22-11_14_24.296 D/MessagesStorage: 8 current cached contacts count = 0
+2026_04_22-11_14_24.297 D/ContactsController: start read contacts from phone
+2026_04_22-11_14_24.297 D/ContactsController: done loading contacts
+2026_04_22-11_14_24.298 D/ContactsController: contacts sync disabled
+2026_04_22-11_14_24.298 D/ContactsController: done processing contacts
+2026_04_22-11_14_24.298 D/ContactsController: start read contacts from phone
+2026_04_22-11_14_24.298 D/ContactsController: contacts sync disabled
+2026_04_22-11_14_24.298 D/ContactsController: done processing contacts
+2026_04_22-11_14_24.379 D/NotificationsController: showExtraNotifications: holders[1].call()
+2026_04_22-11_14_24.380 W/NotificationsController$1NotificationHolder: show dialog notification with id 2111992313 -2182974982 user=null chat=org.telegram.tgnet.TLRPC$TL_channel@f2a892
+2026_04_22-11_14_24.391 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_messages_favedStickersNotModified@e0c10b5 messageId = 0x69e86038428f5c08
+2026_04_22-11_14_24.392 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_messages_stickersNotModified@bba0331 messageId = 0x69e8603842d0e400
+2026_04_22-11_14_24.396 D/NotificationsController: showExtraNotifications: holders[2].call()
+2026_04_22-11_14_24.397 W/NotificationsController$1NotificationHolder: show dialog notification with id 1696812572 -2598154723 user=null chat=org.telegram.tgnet.TLRPC$TL_channel@14df97
+2026_04_22-11_14_24.398 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_boolFalse@acd6584 messageId = 0x69e8603845a1cc00
+2026_04_22-11_14_24.398 D/ConnectionsManager: java received org.telegram.tgnet.tl.TL_stories$TL_stories_allStoriesNotModified@23dde33 messageId = 0x69e8603844189400
+2026_04_22-11_14_24.400 D/ConnectionsManager: java received org.telegram.tgnet.tl.TL_stories$TL_stories_allStories@aace0ab messageId = 0x69e8603844189404
+2026_04_22-11_14_24.404 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_messages_peerDialogs@36d2a67 messageId = 0x69e86038428f5c00
+2026_04_22-11_14_24.404 D/MessagesController: process update TL_updateReadHistoryInbox
+2026_04_22-11_14_24.405 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_messages_availableReactionsNotModified@b10a014 messageId = 0x69e8603843958004
+2026_04_22-11_14_24.407 D/MessagesStorage: 6722550550 set inbox max 157728
+2026_04_22-11_14_24.409 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_help_appConfig@9e6032d messageId = 0x69e8603845a1cc00
+2026_04_22-11_14_24.410 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_messages_peerDialogs@a8409dc messageId = 0x69e8603847efa000
+2026_04_22-11_14_24.413 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_updates_channelDifference@942d061 messageId = 0x69e8603845a1cc04
+2026_04_22-11_14_24.415 D/NotificationsController: showExtraNotifications: holders[3].call()
+2026_04_22-11_14_24.415 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_users_userFull@3a5b874 messageId = 0x69e86038428f5c04
+2026_04_22-11_14_24.416 W/NotificationsController$1NotificationHolder: show dialog notification with id 1574853360 -2720113935 user=null chat=org.telegram.tgnet.TLRPC$TL_channel@97b119d
+2026_04_22-11_14_24.417 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_boolFalse@5328612 messageId = 0x69e8603845a1cc00
+2026_04_22-11_14_24.418 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_help_appConfig@113502f messageId = 0x69e8603845604400
+2026_04_22-11_14_24.422 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_updates_channelDifference@60ea28 messageId = 0x69e8603845a1cc08
+2026_04_22-11_14_24.431 D/MessagesController: process update TL_updateDeleteChannelMessages
+2026_04_22-11_14_24.433 D/MessagesController: org.telegram.tgnet.TLRPC$TL_updateDeleteChannelMessages@21cd640 channelId = 2713711526
+2026_04_22-11_14_24.433 D/MessagesStorage: update messageRead currentMaxId = 3945433 dialogId = -2713711526
+2026_04_22-11_14_24.435 D/MessagesStorage: update messageRead currentMaxId = 3945433 dialogId = -2713711526
+2026_04_22-11_14_24.438 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_help_appConfig@f1276be messageId = 0x69e8603845604400
+2026_04_22-11_14_24.438 D/StoriesController: StoriesController loaded stories from server state=1776836608:-712474370:0:4e7833d541239e9de6 more=false  org.telegram.tgnet.tl.TL_stories$TL_stories_allStoriesNotModified@23dde33
+2026_04_22-11_14_24.438 D/StoriesController: StoriesController loaded stories from server state=1776836649:0:0:e4fd2003751ae45d67 more=true  org.telegram.tgnet.tl.TL_stories$TL_stories_allStories@aace0ab
+2026_04_22-11_14_24.438 D/StoriesController: StoriesController cache=false hidden=true processAllStoriesResponse {}
+2026_04_22-11_14_24.440 D/AyuMessagesController: .nomedia file already exists in attachments folder
+2026_04_22-11_14_24.446 D/MessagesController: received channel difference with pts = 8366551 channelId = 2713711526
+2026_04_22-11_14_24.446 D/MessagesController: new_messages = 2 messages = 0 users = 2 chats = 1 other updates = 1
+2026_04_22-11_14_24.448 D/MessagesController: received channel difference with pts = 322602 channelId = 1899511562
+2026_04_22-11_14_24.449 D/MessagesController: new_messages = 2 messages = 0 users = 1 chats = 1 other updates = 0
+2026_04_22-11_14_24.452 D/ConnectionsManager: send request org.telegram.tgnet.tl.TL_account$updateStatus@de42c1e with token = 28
+2026_04_22-11_14_24.452 D/AyuGhostUtils: GhostMode: Forcing offline status in updateStatus request.
+2026_04_22-11_14_24.455 D/MessagesController: peer settings loaded for 6722550550 add = false block = false spam = false share = false geo = false hide = true distance = 0 invite = false
+2026_04_22-11_14_24.460 D/NotificationsController: NotificationsController: processNewMessages msgs.size()=2 isLast=true isFcm=false)
+2026_04_22-11_14_24.462 D/FilePathDatabase: checkMediaExistance size=1 time=0 thread_time=0
+2026_04_22-11_14_24.477 D/MessagesStorage: update messageRead currentMaxId = 142344 dialogId = -1899511562
+2026_04_22-11_14_24.478 D/MessagesStorage: update messageRead currentMaxId = 142344 dialogId = -1899511562
+2026_04_22-11_14_24.482 D/MessagesController: processDialogsUpdate -2713711526
+2026_04_22-11_14_24.482 D/MessagesController: processDialogsUpdate dialog not null
+2026_04_22-11_14_24.483 D/MessagesController: processDialogsUpdate oldMsgs (count = 1) old top_message = 4080082 new top_message = 4080082  unread_count =59224 fromCache=true
+2026_04_22-11_14_24.483 D/MessagesController: processDialogsUpdate oldMsgDeleted false
+2026_04_22-11_14_24.502 D/NotificationsController: NotificationsController: processNewMessages msgs.size()=2 isLast=true isFcm=false)
+2026_04_22-11_14_24.511 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_channels_getMessages@9218feb with token = 29
+2026_04_22-11_14_24.537 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_boolFalse@a636fc0 messageId = 0x69e8603845a1cc00
+2026_04_22-11_14_24.542 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_boolFalse@6e344f9 messageId = 0x69e8603873b64800
+2026_04_22-11_14_24.560 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_help_appConfig@f626477 messageId = 0x69e8603845604400
+2026_04_22-11_14_24.579 D/NotificationsController: showExtraNotifications: holders[4].call()
+2026_04_22-11_14_24.580 D/FileLoader: create load operation fileName=5_6219813836673785747.webp documentName=sticker.webp size=115.6 KB position in queue 0 account=0 cacheType=0 priority=0 stream=null
+2026_04_22-11_14_24.580 W/NotificationsController$1NotificationHolder: show dialog notification with id -1774630142 6815304449 user=org.telegram.tgnet.TLRPC$TL_user@20b6b6f chat=null
+2026_04_22-11_14_24.581 D/FileLoader: create load operation fileName=2_2737268664460902441.tgs documentName=AnimatedSticker.tgs size=63.9 KB position in queue 1 account=0 cacheType=0 priority=0 stream=null
+2026_04_22-11_14_24.596 D/FileLoadOperation: finished downloading file to /storage/emulated/0/Android/data/org.tele.alexgram/files/Telegram/Telegram Documents/5_6219813836673785747.webp time = 2 dc = 5 size = 115.6 KB
+2026_04_22-11_14_24.601 D/FileLoadOperation: finished downloading file to /storage/emulated/0/Android/data/org.tele.alexgram/files/Telegram/Telegram Documents/2_2737268664460902441.tgs time = 1 dc = 2 size = 63.9 KB
+2026_04_22-11_14_24.625 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_messages_channelMessages@11e2503 messageId = 0x69e8603883127000
+2026_04_22-11_14_24.656 D/NotificationsController: showExtraNotifications: holders[5].call()
+2026_04_22-11_14_24.656 W/NotificationsController$1NotificationHolder: show dialog notification with id 524544893 -3770422402 user=null chat=org.telegram.tgnet.TLRPC$TL_channel@4e75ff1
+2026_04_22-11_14_24.711 D/DefaultBandwidthMeter: debug_loading: bandwidth meter on transfer 384 B per 442ms
+2026_04_22-11_14_24.711 D/DefaultBandwidthMeter: debug_loading: bandwidth meter (onTransfer), bitrate estimate = 6950
+2026_04_22-11_14_24.711 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_upload_fileCdnRedirect@1f2d4ba messageId = 0x69e8603843958000
+2026_04_22-11_14_24.711 D/FileLoadOperation: debug_loading: 2_773947703670342104.tgs time=450 dcId=2 cdn=false conType=2 reqId26
+2026_04_22-11_14_24.713 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_upload_getCdnFile@3116f6b with token = 30
+2026_04_22-11_14_24.713 D/FileLoadOperation: debug_loading: 2_773947703670342104.tgs dc=201 send reqId 30 offset=0 conType=2 priority=0
+2026_04_22-11_14_24.717 D/NotificationsController: showExtraNotifications: holders[6].call()
+2026_04_22-11_14_24.718 W/NotificationsController$1NotificationHolder: show dialog notification with id 1959117864 -2335849431 user=null chat=org.telegram.tgnet.TLRPC$TL_channel@6213ac8
+2026_04_22-11_14_24.720 D/ConnectionsManager: send request org.telegram.tgnet.tl.TL_stories$TL_stories_getPeerMaxIDs@6ca60e3 with token = 31
+2026_04_22-11_14_24.780 D/NotificationsController: setBadge 24102
+2026_04_22-11_14_24.781 D/NotificationsController: NotificationsController: process new messages, value is false (-1948743629, false, false, false)
+2026_04_22-11_14_24.813 D/NotificationsController: NotificationsController dismissNotification
+2026_04_22-11_14_24.814 D/NotificationsController: setBadge 25881
+2026_04_22-11_14_24.815 D/NotificationsController: NotificationsController: process new messages, value is false (-2713711526, false, false, false)
+2026_04_22-11_14_24.816 D/NotificationsController: NotificationsController: process new messages, value is false (-2713711526, false, false, false)
+2026_04_22-11_14_24.816 D/NotificationsController: NotificationsController: process new messages, isGlobalNotificationsEnabled(-1899511562, true, false, false) = false
+2026_04_22-11_14_24.816 D/NotificationsController: NotificationsController: process new messages, value is false (-1899511562, true, false, false)
+2026_04_22-11_14_24.816 D/NotificationsController: NotificationsController: process new messages, value is false (-1899511562, true, false, false)
+2026_04_22-11_14_24.837 D/ConnectionsManager: java received org.telegram.tgnet.Vector@49cbbe6 messageId = 0x69e86038b8937400
+2026_04_22-11_14_24.846 D/DefaultBandwidthMeter: debug_loading: bandwidth meter on transfer 6.2 KB per 133ms
+2026_04_22-11_14_24.846 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_upload_cdnFile@1e04527 messageId = 0x69e86038b78d5000
+2026_04_22-11_14_24.846 D/FileLoadOperation: debug_loading: 2_773947703670342104.tgs time=134 dcId=201 cdn=true conType=2 reqId30
+2026_04_22-11_14_24.854 D/FileLoadOperation: finished downloading file to /storage/emulated/0/Android/data/org.tele.alexgram/cache/2_773947703670342104.tgs time = 229 dc = 2 size = 6.2 KB
+2026_04_22-11_14_24.936 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_updates@72ef88
+2026_04_22-11_14_24.937 D/MessagesController: process update TL_updateNewChannelMessage
+2026_04_22-11_14_24.937 D/MessagesController: org.telegram.tgnet.TLRPC$TL_updateNewChannelMessage@11b9d21 channelId = 2713711526 message_id = 4080083
+2026_04_22-11_14_24.939 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_updates@2314fd2
+2026_04_22-11_14_24.946 D/MessagesStorage: update messageRead currentMaxId = 3945433 dialogId = -2713711526
+2026_04_22-11_14_24.956 D/NotificationsController: NotificationsController: processNewMessages msgs.size()=1 isLast=true isFcm=false)
+2026_04_22-11_14_24.957 D/NotificationsController: NotificationsController: process new messages, value is false (-2713711526, false, false, false)
+2026_04_22-11_14_26.555 D/MessagesController: request spam button for -2482650832
+2026_04_22-11_14_26.555 D/MessagesController: dialog bar already hidden for -2482650832
+2026_04_22-11_14_26.556 D/MessagesController: start getChannelDifference with pts = 2454 channelId = 2482650832
+2026_04_22-11_14_26.556 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_updates_getChannelDifference@48ec8db with token = 32
+2026_04_22-11_14_26.556 D/MessagesController: load messages in chat -2482650832 topic_id 0 count 15 max_id 0 cache true mindate = 0 guid 4 load_type 2 last_message_id 0 mode 0 index 1 firstUnread 0 unread_count 0 last_date 0 queryFromServer false isTopic false
+2026_04_22-11_14_26.557 D/MessagesController: load messages in chat -2482650832 topic_id 0 count 1 max_id 0 cache true mindate = 0 guid 4 load_type 2 last_message_id 0 mode 1 index 2 firstUnread 0 unread_count 0 last_date 0 queryFromServer false isTopic false
+2026_04_22-11_14_26.558 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_messages_getOnlines@6606f78 with token = 33
+2026_04_22-11_14_26.559 D/ActionBarLayout: present fragment ChatActivity args=Bundle[{dialog_filter_id=0, chat_id=2482650832, dialog_folder_id=0}]
+2026_04_22-11_14_26.584 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_messages_getSavedHistory@33b8cfd with token = 34
+2026_04_22-11_14_26.629 D/MessagesStorage: messages load time = 8 for dialog = -2482650832
+2026_04_22-11_14_26.630 D/MessagesStorage: messages load time = 0 for dialog = -2482650832
+2026_04_22-11_14_26.630 D/MessagesController: processLoadedMessages size 15 in chat -2482650832 topic_id 0 count 15 max_id 0 cache true guid 4 load_type 2 last_message_id 1687 index 1 firstUnread 0 unread_count 0 last_date 1776677260 queryFromServer false isTopic false mode 0
+2026_04_22-11_14_26.652 D/FilePathDatabase: checkMediaExistance size=15 time=3 thread_time=0
+2026_04_22-11_14_26.652 D/MessagesController: process time=21 count=15 for dialog  -2482650832
+2026_04_22-11_14_26.652 D/MessagesController: processLoadedMessages size 0 in chat -2482650832 topic_id 0 count 1 max_id 0 cache true guid 4 load_type 2 last_message_id 0 index 2 firstUnread 0 unread_count 0 last_date 0 queryFromServer false isTopic false mode 1
+2026_04_22-11_14_26.707 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_updates@cddd3a
+2026_04_22-11_14_26.708 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_updates@c5a29e1
+2026_04_22-11_14_26.709 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_updates@c6ed992
+2026_04_22-11_14_26.710 D/MessagesController: process update TL_updateNewChannelMessage
+2026_04_22-11_14_26.710 D/MessagesController: org.telegram.tgnet.TLRPC$TL_updateNewChannelMessage@a694f63 channelId = 1899511562 message_id = 142409
+2026_04_22-11_14_26.710 D/MessagesController: process update TL_updateNewChannelMessage
+2026_04_22-11_14_26.711 D/MessagesController: org.telegram.tgnet.TLRPC$TL_updateNewChannelMessage@e992760 channelId = 2713711526 message_id = 4080084
+2026_04_22-11_14_26.718 D/MessagesStorage: update messageRead currentMaxId = 142344 dialogId = -1899511562
+2026_04_22-11_14_26.727 D/MessagesController: org.telegram.tgnet.TLRPC$TL_updateNewChannelMessage@f4288f2 need get channel diff, pts: 8366553 8366556 count = 1 channelId = 2713711526
+2026_04_22-11_14_26.727 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_updates_channelDifferenceEmpty@23a3b43 messageId = 0x69e8603a8e978c00
+2026_04_22-11_14_26.727 D/MessagesController: add to queue
+2026_04_22-11_14_26.727 D/MessagesController: HOLE IN CHANNEL 2713711526 UPDATES QUEUE - will wait more time
+2026_04_22-11_14_26.728 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_messages_messages@9abd5c0 messageId = 0x69e8603a95c29000
+2026_04_22-11_14_26.728 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_chatOnlines@d3b489f messageId = 0x69e8603a8f1aa000
+2026_04_22-11_14_26.729 D/MessagesStorage: update messageRead currentMaxId = 3945433 dialogId = -2713711526
+2026_04_22-11_14_26.741 D/Timer: ChatActivity.createView total=182ms
+#0  new ChatActivityTextSelectionHelper: 2ms
+#1  create ChatMessageCell n=15: 13ms
+
+2026_04_22-11_14_26.772 D/MessagesController: received channel difference with pts = 2454 channelId = 2482650832
+2026_04_22-11_14_26.772 D/MessagesController: new_messages = 0 messages = 0 users = 0 chats = 0 other updates = 0
+2026_04_22-11_14_26.792 D/ChatListItemAnimator: end animations
+2026_04_22-11_14_26.817 D/MediaController: proximity changed to 5.0 max value = 5.0
+2026_04_22-11_14_26.821 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_channels_getParticipants@e619ee3 with token = 35
+2026_04_22-11_14_26.821 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_channels_getFullChannel@48c00e0 with token = 36
+2026_04_22-11_14_26.821 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_channels_getParticipants@520cf99 with token = 37
+2026_04_22-11_14_26.822 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_updateShort@78f325e
+2026_04_22-11_14_26.822 D/ConnectionsManager: send request org.telegram.tgnet.tl.TL_stories$TL_premium_getBoostsStatus@c05463f with token = 38
+2026_04_22-11_14_26.822 D/MessagesController: process update TL_updateChannelMessageViews
+2026_04_22-11_14_26.823 D/MessagesController: org.telegram.tgnet.TLRPC$TL_updateChannelMessageViews@d604b0c channelId = 2490759778
+2026_04_22-11_14_26.823 D/ConnectionsManager: send request org.telegram.tgnet.tl.TL_phone$getGroupCall@25cc55 with token = 39
+2026_04_22-11_14_26.824 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_channels_getSendAs@812075b with token = 40
+2026_04_22-11_14_26.824 D/ChatActivity$ChatActivityAdapter: notify data set changed fragmentOpened=false
+2026_04_22-11_14_26.829 D/ChatActivity$ChatActivityAdapter: notify data set changed fragmentOpened=false
+2026_04_22-11_14_26.832 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_messages_getSavedDialogs@a6806d3 with token = 41
+2026_04_22-11_14_26.842 D/ChatActivity$ChatActivityAdapter: notify data set changed fragmentOpened=false
+2026_04_22-11_14_26.842 D/Timer: MessageLoaderLogger dialogId=-2482650832 index=1 count=15 total=286ms
+#0  MessagesStorage.getMessages: storageQueue.postRunnable: 65ms
+#1  MessagesStorage.getMessages: 8ms
+#2  MessagesStorage.getMessages: stageQueue.postRunnable: 1ms
+#3  processLoadedMessages: 22ms
+#4  processLoadedMessages: runOnUIThread: 179ms
+#5  processLoadedMessages: post runOnUIThread: 11ms
+#6   loadReplyMessagesForMessages: 0ms
+#7    loadReplyMessagesForMessages: filling replies from the same array: 0ms
+#8    loadReplyMessagesForMessages: gathering ids of missing reply data: 0ms
+
+2026_04_22-11_14_26.843 D/MessagesController: load messages in chat -2482650832 topic_id 0 count 1 max_id 0 cache false mindate = 0 guid 4 load_type 2 last_message_id 0 mode 1 index 2 firstUnread 0 unread_count 0 last_date 0 queryFromServer false isTopic false
+2026_04_22-11_14_26.844 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_messages_getScheduledHistory@ff12672 with token = 42
+2026_04_22-11_14_26.846 D/NotificationsController: NotificationsController: processNewMessages msgs.size()=1 isLast=true isFcm=false)
+2026_04_22-11_14_26.846 D/NotificationsController: NotificationsController: process new messages, isGlobalNotificationsEnabled(-1899511562, true, false, false) = false
+2026_04_22-11_14_26.847 D/NotificationsController: NotificationsController: process new messages, value is false (-1899511562, true, false, false)
+2026_04_22-11_14_26.848 D/NotificationsController: NotificationsController: processNewMessages msgs.size()=1 isLast=true isFcm=false)
+2026_04_22-11_14_26.849 D/MessagesController: load messages in chat -2482650832 topic_id 0 count 50 max_id 1673 cache true mindate = 1774696374 guid 4 load_type 0 last_message_id 0 mode 0 index 3 firstUnread 0 unread_count 0 last_date 0 queryFromServer false isTopic false
+2026_04_22-11_14_26.849 D/NotificationsController: NotificationsController: process new messages, value is false (-2713711526, false, false, false)
+2026_04_22-11_14_26.855 D/MessagesStorage: messages load time = 5 for dialog = -2482650832
+2026_04_22-11_14_26.855 D/MessagesController: processLoadedMessages size 50 in chat -2482650832 topic_id 0 count 50 max_id 1673 cache true guid 4 load_type 0 last_message_id 0 index 3 firstUnread 0 unread_count 0 last_date 0 queryFromServer false isTopic false mode 0
+2026_04_22-11_14_26.861 D/FileLoader: create load operation fileName=5_6282893587558440428.mp4 documentName=042001_1776677186231.mp4 size=784.6 KB position in queue 0 account=0 cacheType=1 priority=65536 stream=org.telegram.messenger.AnimatedFileDrawableStream@4ff9ed0
+2026_04_22-11_14_26.871 D/FileLoader: create load operation fileName=5_6233299531472052624.mp4 documentName=040401_1775277766692.mp4 size=17.3 MB position in queue 1 account=0 cacheType=1 priority=65536 stream=org.telegram.messenger.AnimatedFileDrawableStream@bdd72e
+2026_04_22-11_14_26.891 D/ChatActivity$21: chatItemAnimator enable notifications
+2026_04_22-11_14_26.892 D/MediaDataController: load media did -2482650832 count = 30 max_id 0 type = 0 cache = 1 classGuid = 4
+2026_04_22-11_14_26.894 D/MediaDataController: load media did -2482650832 count = 30 max_id 0 type = 1 cache = 1 classGuid = 4
+2026_04_22-11_14_26.894 D/MediaDataController: load media did -2482650832 count = 30 max_id 0 type = 2 cache = 1 classGuid = 4
+2026_04_22-11_14_26.894 D/MediaDataController: load media did -2482650832 count = 30 max_id 0 type = 3 cache = 1 classGuid = 4
+2026_04_22-11_14_26.894 D/MediaDataController: load media did -2482650832 count = 30 max_id 0 type = 6 cache = 1 classGuid = 4
+2026_04_22-11_14_26.894 D/MediaDataController: load media did -2482650832 count = 30 max_id 0 type = 7 cache = 1 classGuid = 4
+2026_04_22-11_14_26.894 D/ChatActivity: ChatActivity didReceiveNewMessages start
+2026_04_22-11_14_26.894 D/ChatActivity: ChatActivity didReceiveNewMessages return: done
+2026_04_22-11_14_26.901 D/ChatActivity: ChatActivity didReceiveNewMessages start
+2026_04_22-11_14_26.901 D/ChatActivity: ChatActivity didReceiveNewMessages return: done
+2026_04_22-11_14_26.905 D/MediaDataController: process load media messagesCount 30 did -2482650832 topicId 0 count = 30 max_id=0 min_id=0 type = 0 cache = 1 classGuid = 4 topReached=false
+2026_04_22-11_14_26.908 D/MediaDataController: process load media messagesCount 21 did -2482650832 topicId 0 count = 30 max_id=0 min_id=0 type = 1 cache = 1 classGuid = 4 topReached=false
+2026_04_22-11_14_26.910 D/MediaDataController: process load media messagesCount 2 did -2482650832 topicId 0 count = 30 max_id=0 min_id=0 type = 2 cache = 1 classGuid = 4 topReached=false
+2026_04_22-11_14_26.917 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_updates@2894244
+2026_04_22-11_14_26.919 D/MediaDataController: process load media messagesCount 30 did -2482650832 topicId 0 count = 30 max_id=0 min_id=0 type = 3 cache = 1 classGuid = 4 topReached=false
+2026_04_22-11_14_26.926 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_messages_savedDialogsNotModified@155d53f messageId = 0x69e8603ad5810800
+2026_04_22-11_14_26.927 D/MediaDataController: process load media messagesCount 30 did -2482650832 topicId 0 count = 30 max_id=0 min_id=0 type = 6 cache = 1 classGuid = 4 topReached=false
+2026_04_22-11_14_26.928 D/ConnectionsManager: java received org.telegram.tgnet.tl.TL_stories$TL_premium_boostsStatus@4b71ef8 messageId = 0x69e8603ad2f1ac04
+2026_04_22-11_14_26.930 D/ConnectionsManager: java received org.telegram.tgnet.tl.TL_phone$groupCall@8e283c2 messageId = 0x69e8603ad2f1ac08
+2026_04_22-11_14_26.934 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_channels_channelParticipants@5625ce6 messageId = 0x69e8603ad2f1ac00
+2026_04_22-11_14_26.937 D/MediaDataController: process load media messagesCount 7 did -2482650832 topicId 0 count = 30 max_id=0 min_id=0 type = 7 cache = 1 classGuid = 4 topReached=false
+2026_04_22-11_14_26.944 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_channels_channelParticipants@75de888 messageId = 0x69e8603ad26e9800
+2026_04_22-11_14_26.954 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_messages_channelMessages@4f35d48 messageId = 0x69e8603ad8106400
+2026_04_22-11_14_26.965 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_channels_sendAsPeers@fe80e90 messageId = 0x69e8603ad3333400
+2026_04_22-11_14_26.969 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_messages_chatFull@9a220f9 messageId = 0x69e8603ad2b02000
+2026_04_22-11_14_26.977 D/TypefaceHelper: italicSupported = true
+2026_04_22-11_14_26.991 D/FilePathDatabase: checkMediaExistance size=30 time=9 thread_time=9
+2026_04_22-11_14_27.044 D/FilePathDatabase: checkMediaExistance size=21 time=35 thread_time=34
+2026_04_22-11_14_27.046 D/FilePathDatabase: checkMediaExistance size=2 time=1 thread_time=1
+2026_04_22-11_14_27.093 D/FilePathDatabase: checkMediaExistance size=50 time=0 thread_time=0
+2026_04_22-11_14_27.093 D/MessagesController: process time=238 count=50 for dialog  -2482650832
+2026_04_22-11_14_27.094 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_messages_getMessagesReactions@6872149 with token = 43
+2026_04_22-11_14_27.097 D/FileLoadOperation: finished downloading file to /storage/emulated/0/Android/data/org.tele.alexgram/cache/5_6282893587558440428.mp4 time = 215 dc = 5 size = 784.6 KB
+2026_04_22-11_14_27.098 D/FileLoadOperation: finished downloading file to /storage/emulated/0/Android/data/org.tele.alexgram/cache/5_6233299531472052624.mp4 time = 214 dc = 5 size = 17.3 MB
+2026_04_22-11_14_27.098 D/MessagesController: org.telegram.tgnet.TLRPC$TL_updateNewChannelMessage@b239a4e need get channel diff, pts: 8366553 8366558 count = 1 channelId = 2713711526
+2026_04_22-11_14_27.098 D/MessagesController: add to queue
+2026_04_22-11_14_27.098 D/MessagesController: HOLE IN CHANNEL 2713711526 UPDATES QUEUE - will wait more time
+2026_04_22-11_14_27.109 D/Timer: MessageLoaderLogger dialogId=-2482650832 index=3 count=50 total=259ms
+#0  MessagesStorage.getMessages: storageQueue.postRunnable: 0ms
+#1  MessagesStorage.getMessages: 6ms
+#2  MessagesStorage.getMessages: stageQueue.postRunnable: 0ms
+#3  processLoadedMessages: 238ms
+#4  processLoadedMessages: runOnUIThread: 14ms
+#5  processLoadedMessages: post runOnUIThread: 1ms
+#6   loadReplyMessagesForMessages: 0ms
+#7    loadReplyMessagesForMessages: filling replies from the same array: 0ms
+#8    loadReplyMessagesForMessages: gathering ids of missing reply data: 0ms
+
+2026_04_22-11_14_27.154 D/MessagesController: processLoadedMessages size 0 in chat -2482650832 topic_id 0 count 1 max_id 0 cache false guid 4 load_type 2 last_message_id 0 index 2 firstUnread 0 unread_count 0 last_date 0 queryFromServer false isTopic false mode 1
+2026_04_22-11_14_27.158 D/MessagesController: process time=1 count=0 for dialog  -2482650832
+2026_04_22-11_14_27.158 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_channels_readHistory@7104a5f with token = 44
+2026_04_22-11_14_27.160 D/AyuGhostUtils: GhostMode: Blocking read status request and sending fake response.
+2026_04_22-11_14_27.161 D/ConnectionsManager: GhostMode: Request TL_channels_readHistory blocked by handler.
+2026_04_22-11_14_27.181 D/MessagesController: processNewDifferenceParams seq = -1 pts = -1 date = -1 pts_count = 0
+2026_04_22-11_14_27.182 D/ConnectionsManager: send request org.telegram.tgnet.tl.TL_stories$TL_premium_getMyBoosts@c89810a with token = 45
+2026_04_22-11_14_27.182 D/ConnectionsManager: send request org.telegram.tgnet.tl.TL_phone$getGroupParticipants@c360798 with token = 46
+2026_04_22-11_14_27.203 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_updates@aa9d0f3 messageId = 0x69e8603b18d50000
+2026_04_22-11_14_27.204 D/MessagesController: HOLE IN CHANNEL 2713711526 UPDATES QUEUE - will wait more time
+2026_04_22-11_14_27.213 D/ChatActivity: getScrollingOffsetForView view=org.telegram.ui.Cells.ChatMessageCell{153f0d VF.D..... ......ID 0,813-1080,1919 alpha=1.0 viewInfo = } results in {0} chatHeight=2112 bottom=1919 paddingBottom=193
+2026_04_22-11_14_27.214 D/ChatActivity$ChatActivityAdapter: notify item removed 18
+2026_04_22-11_14_27.214 D/ChatActivity$ChatActivityAdapter: notify item range inserted 18:52
+2026_04_22-11_14_27.214 D/FilePathDatabase: checkMediaExistance size=1 time=1 thread_time=0
+2026_04_22-11_14_27.215 D/ChatActivity$ChatActivityAdapter: notify data set changed fragmentOpened=true
+2026_04_22-11_14_27.216 D/ConnectionsManager: send request org.telegram.tgnet.tl.TL_stories$TL_premium_getBoostsStatus@961057d with token = 47
+2026_04_22-11_14_27.216 D/FilePathDatabase: checkMediaExistance size=1 time=0 thread_time=0
+2026_04_22-11_14_27.246 D/ChatActivity$21: chatItemAnimator enable notifications
+2026_04_22-11_14_27.311 D/ConnectionsManager: java received org.telegram.tgnet.tl.TL_stories$TL_premium_myBoosts@ef1028d messageId = 0x69e8603b2ed91800
+2026_04_22-11_14_27.321 D/ConnectionsManager: java received org.telegram.tgnet.tl.TL_phone$groupParticipants@1733c42 messageId = 0x69e8603b2ed91804
+2026_04_22-11_14_27.347 D/ChatObject$Call: new participants count 0
+2026_04_22-11_14_27.374 D/ConnectionsManager: java received org.telegram.tgnet.tl.TL_stories$TL_premium_boostsStatus@170119a messageId = 0x69e8603b374bc800
+2026_04_22-11_14_27.393 D/ConnectionsManager: send request org.telegram.tgnet.tl.TL_stories$TL_premium_getMyBoosts@cddf2a8 with token = 48
+2026_04_22-11_14_27.513 D/ConnectionsManager: java received org.telegram.tgnet.tl.TL_stories$TL_premium_myBoosts@ddde85a messageId = 0x69e8603b649ba800
+2026_04_22-11_14_27.542 D/FilePathDatabase: checkMediaExistance size=30 time=3 thread_time=0
+2026_04_22-11_14_27.626 D/FilePathDatabase: checkMediaExistance size=30 time=4 thread_time=3
+2026_04_22-11_14_27.653 D/FilePathDatabase: checkMediaExistance size=7 time=9 thread_time=9
+2026_04_22-11_14_27.699 D/CodeHighlighting: [CodeHighlighter] Successfully read 98 languages, 1094 patterns in 45ms from codelng.gzip
+2026_04_22-11_14_27.706 D/CodeHighlighting: [CodeHighlighter] tokenize took 6ms
+2026_04_22-11_14_27.706 D/CodeHighlighting: [CodeHighlighter] colorize took 0ms
+2026_04_22-11_14_27.707 D/CodeHighlighting: [CodeHighlighter] applying 90 colorize spans took 1ms in another thread
+2026_04_22-11_14_28.530 D/MessagesController: QUEUE CHANNEL 2713711526 UPDATES WAIT TIMEOUT - CHECK QUEUE
+2026_04_22-11_14_28.530 D/MessagesController: HOLE IN CHANNEL 2713711526 UPDATES QUEUE - getChannelDifference 
+2026_04_22-11_14_28.530 D/MessagesController: start getChannelDifference with pts = 8366553 channelId = 2713711526
+2026_04_22-11_14_28.531 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_updates_getChannelDifference@62b6c0f with token = 49
+2026_04_22-11_14_28.645 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_updates_channelDifference@81ff6d2 messageId = 0x69e8603c87efa000
+2026_04_22-11_14_28.658 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_messages_getMessagesReactions@1e862f6 with token = 50
+2026_04_22-11_14_28.684 D/SQLitePreparedStatement: sqlite query SELECT data, date, hash FROM stickers_v2 WHERE id = 6 took 1650ms
+2026_04_22-11_14_28.848 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_updates@2580bf4 messageId = 0x69e8603ca8b43800
+2026_04_22-11_14_29.032 D/ChatActivity$ChatActivityAdapter: notify data set changed fragmentOpened=true
+2026_04_22-11_14_29.062 D/ChatActivity$21: chatItemAnimator enable notifications
+2026_04_22-11_14_29.321 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_messages_getMessagesReactions@c45fdd9 with token = 51
+2026_04_22-11_14_29.322 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_messages_getMessagesReactions@bfb639e with token = 52
+2026_04_22-11_14_29.323 D/MessagesController: process update TL_updateDeleteChannelMessages
+2026_04_22-11_14_29.323 D/MessagesController: org.telegram.tgnet.TLRPC$TL_updateDeleteChannelMessages@de0fe4c channelId = 2713711526
+2026_04_22-11_14_29.323 D/MessagesController: process update TL_updatePinnedChannelMessages
+2026_04_22-11_14_29.323 D/MessagesController: org.telegram.tgnet.TLRPC$TL_updatePinnedChannelMessages@10f9e95 channelId = 2713711526
+2026_04_22-11_14_29.324 D/MessagesController: received channel difference with pts = 8366558 channelId = 2713711526
+2026_04_22-11_14_29.324 D/MessagesController: new_messages = 1 messages = 0 users = 2 chats = 1 other updates = 2
+2026_04_22-11_14_29.324 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_messages_getMessagesReactions@2361baa with token = 53
+2026_04_22-11_14_29.324 D/ConnectionsManager: send request org.telegram.tgnet.tl.TL_stories$TL_premium_getBoostsStatus@cf3c39b with token = 54
+2026_04_22-11_14_29.328 D/MessagesStorage: update messageRead currentMaxId = 3945433 dialogId = -2713711526
+2026_04_22-11_14_29.330 D/ChatActivity: ChatActivity didReceiveNewMessages start
+2026_04_22-11_14_29.330 D/ChatActivity: ChatActivity didReceiveNewMessages return: done
+2026_04_22-11_14_29.332 D/NotificationsController: NotificationsController: processNewMessages msgs.size()=1 isLast=true isFcm=false)
+2026_04_22-11_14_29.333 D/NotificationsController: NotificationsController: process new messages, value is false (-2713711526, false, false, false)
+2026_04_22-11_14_29.346 D/AyuMessagesController: saving message 4080084 for -2713711526 with topic 0
+2026_04_22-11_14_29.417 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_updates@32745f9 messageId = 0x69e8603d522d1000
+2026_04_22-11_14_29.424 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_updates@f94c638 messageId = 0x69e8603d526e9800
+2026_04_22-11_14_29.427 D/ConnectionsManager: java received org.telegram.tgnet.tl.TL_stories$TL_premium_boostsStatus@a716a13 messageId = 0x69e8603d53333400
+2026_04_22-11_14_29.428 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_updates@779357c messageId = 0x69e8603d52f1ac00
+2026_04_22-11_14_29.436 D/ConnectionsManager: send request org.telegram.tgnet.tl.TL_stories$TL_premium_getMyBoosts@b65b9e3 with token = 55
+2026_04_22-11_14_29.490 D/FilePathDatabase: checkMediaExistance size=1 time=1 thread_time=1
+2026_04_22-11_14_29.491 D/ConnectionsManager: send request org.telegram.tgnet.TLRPC$TL_channels_getMessages@f27cfd6 with token = 56
+2026_04_22-11_14_29.504 D/MessagesController: processDialogsUpdate -2713711526
+2026_04_22-11_14_29.504 D/MessagesController: processDialogsUpdate dialog not null
+2026_04_22-11_14_29.504 D/MessagesController: processDialogsUpdate oldMsgs (count = 1) old top_message = 4080085 new top_message = 4080085  unread_count =59226 fromCache=true
+2026_04_22-11_14_29.504 D/MessagesController: processDialogsUpdate oldMsgDeleted false
+2026_04_22-11_14_29.528 D/ConnectionsManager: java received org.telegram.tgnet.tl.TL_stories$TL_premium_myBoosts@acae257 messageId = 0x69e8603d6f9db400
+2026_04_22-11_14_29.597 D/ConnectionsManager: java received org.telegram.tgnet.TLRPC$TL_messages_channelMessages@b291362 messageId = 0x69e8603d7df3b800
+2026_04_22-11_14_30.371 D/MediaDataController: load media did -2482650832 count = 20 max_id 0 type = 0 cache = 1 classGuid = 5
+2026_04_22-11_14_30.377 D/MediaDataController: process load media messagesCount 20 did -2482650832 topicId 0 count = 20 max_id=0 min_id=0 type = 0 cache = 1 classGuid = 5 topReached=false
+2026_04_22-11_14_30.443 D/FilePathDatabase: checkMediaExistance size=20 time=34 thread_time=14
