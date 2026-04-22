@@ -65,6 +65,8 @@ import android.media.MediaFormat;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.SystemClock;
 import android.text.Layout;
 import android.text.Spannable;
@@ -97,7 +99,9 @@ import android.view.HapticFeedbackConstants;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.OrientationEventListener;
+import android.view.PixelCopy;
 import android.view.Surface;
+import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.TextureView;
 import android.view.VelocityTracker;
@@ -105,15 +109,19 @@ import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.ViewOutlineProvider;
+import android.view.ViewParent;
+import android.view.ViewPropertyAnimator;
 import android.view.ViewTreeObserver;
 import android.view.WindowInsets;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityManager;
+import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Interpolator;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.OvershootInterpolator;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -11533,15 +11541,25 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
     }
 
     private void updateAmbientMode() {
-        if (ambientModeView == null || videoTextureView == null || !isPlaying || !NaConfig.INSTANCE.getAmbientMode().Bool()) {
+        if (ambientModeView == null || !isPlaying || !NaConfig.INSTANCE.getAmbientMode().Bool()) {
             return;
         }
         if (ambientBitmap == null) {
             ambientBitmap = Bitmap.createBitmap(32, 32, Bitmap.Config.ARGB_8888);
         }
-        videoTextureView.getBitmap(ambientBitmap);
-        Utilities.blurBitmap(ambientBitmap, 7, 1, 32, 32, ambientBitmap.getRowBytes());
-        ambientModeView.setBitmap(ambientBitmap);
+
+        if (videoTextureView != null) {
+            videoTextureView.getBitmap(ambientBitmap);
+            Utilities.blurBitmap(ambientBitmap, 7, 1, 32, 32, ambientBitmap.getRowBytes());
+            ambientModeView.setBitmap(ambientBitmap);
+        } else if (videoSurfaceView != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            PixelCopy.request(videoSurfaceView, ambientBitmap, result -> {
+                if (result == PixelCopy.SUCCESS) {
+                    Utilities.blurBitmap(ambientBitmap, 7, 1, 32, 32, ambientBitmap.getRowBytes());
+                    ambientModeView.setBitmap(ambientBitmap);
+                }
+            }, new Handler(Looper.getMainLooper()));
+        }
     }
 
     private void releasePlayer(boolean onClose) {
