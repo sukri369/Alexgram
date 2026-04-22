@@ -380,4 +380,5 @@
 
     <string name="usePollinationsAi">Use Pollinations.ai</string>
     <string name="usePollinationsAiAbout">Use Pollinations.ai for free AI Reply, Summarize, and AI Assistance. No API key required.</string>
+    <string name="AmbientMode">Ambient Mode</string>
 </resources>

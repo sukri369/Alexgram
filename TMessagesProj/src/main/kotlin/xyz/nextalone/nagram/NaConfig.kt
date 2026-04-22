@@ -159,6 +159,12 @@ object NaConfig {
             ConfigItem.configTypeBool,
             true
         )
+    val ambientMode =
+        addConfig(
+            "AmbientMode",
+            ConfigItem.configTypeBool,
+            false
+        )
     val showNoQuoteForward =
         addConfig(
             "NoQuoteForward",

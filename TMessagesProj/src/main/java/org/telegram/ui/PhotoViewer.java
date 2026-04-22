@@ -919,6 +919,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
     private ActionBarMenuSubItem allMediaItem;
     private ActionBarMenuSlider.SpeedSlider speedItem;
     private ActionBarMenuSubItem loopItem;
+    private ActionBarMenuSubItem ambientItem;
     private ActionBarMenuSubItem galleryButton;
     private ActionBarPopupWindow.GapView galleryGap;
     private ActionBarMenuSubItem pipItem;
@@ -1127,6 +1128,17 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
     public TextureView changedTextureView;
     private ImageView textureImageView;
     private ImageView[] fullscreenButton = new ImageView[3];
+    private AmbientModeView ambientModeView;
+    private final Runnable ambientUpdateRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (videoPlayer == null || !isPlaying || !NaConfig.INSTANCE.getAmbientMode().Bool()) {
+                return;
+            }
+            updateAmbientMode();
+            AndroidUtilities.runOnUIThread(this, 150);
+        }
+    };
     private boolean allowShowFullscreenButton;
     private int[] pipPosition = new int[2];
     private boolean pipAnimationInProgress;
@@ -2220,6 +2232,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
     private final static int gallery_menu_set_photo = 203;
     private final static int gallery_menu_send_noquote = 204;
     private final static int gallery_menu_copy_frame = 205;
+    private final static int gallery_menu_ambient = 206;
 
     private static DecelerateInterpolator decelerateInterpolator;
     private static Paint progressPaint;
@@ -2312,6 +2325,43 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                     drawRunnable = null;
                 }
             }
+        }
+    }
+
+    private class AmbientModeView extends View {
+        private Bitmap bitmap;
+        private final Paint paint = new Paint(Paint.FILTER_BITMAP_FLAG);
+        private final Matrix matrix = new Matrix();
+        private final AnimatedFloat alphaAnimated = new AnimatedFloat(this, 350, CubicBezierInterpolator.EASE_OUT);
+        private boolean enabled;
+
+        public AmbientModeView(Context context) {
+            super(context);
+        }
+
+        public void setBitmap(Bitmap newBitmap) {
+            this.bitmap = newBitmap;
+            invalidate();
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            float alpha = alphaAnimated.set(enabled ? 1f : 0f);
+            if (alpha <= 0 || bitmap == null) return;
+
+            paint.setAlpha((int) (alpha * 180)); // Max opacity for the glow
+
+            float scale = Math.max((float) getMeasuredWidth() / bitmap.getWidth(), (float) getMeasuredHeight() / bitmap.getHeight()) * 1.3f;
+            matrix.reset();
+            matrix.postScale(scale, scale);
+            matrix.postTranslate((getMeasuredWidth() - bitmap.getWidth() * scale) / 2, (getMeasuredHeight() - bitmap.getHeight() * scale) / 2);
+
+            canvas.drawBitmap(bitmap, matrix, paint);
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+            invalidate();
         }
     }
 
@@ -5079,6 +5129,9 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                         WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM |
                         WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS;
 
+        ambientModeView = new AmbientModeView(activity);
+        containerView.addView(ambientModeView, 0, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+
         paintingOverlay = new PaintingOverlay(parentActivity);
         containerView.addView(paintingOverlay, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
         leftPaintingOverlay = new PaintingOverlay(parentActivity);
@@ -6013,6 +6066,19 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                     }
                     if (photo == null) return;
                     AlertsCreator.createReportPhotoAlert(currentAccount, parentActivity, avatarsDialogId, photo, new DarkThemeResourceProvider());
+                } else if (id == gallery_menu_ambient) {
+                    boolean enabled = !NaConfig.INSTANCE.getAmbientMode().Bool();
+                    NaConfig.INSTANCE.getAmbientMode().setConfigBool(enabled);
+                    if (ambientModeView != null) {
+                        ambientModeView.setEnabled(enabled);
+                    }
+                    if (enabled) {
+                        AndroidUtilities.runOnUIThread(ambientUpdateRunnable);
+                    }
+                    if (ambientItem != null) {
+                        ambientItem.setEnabledByColor(enabled, 0xFFFFFFFF, 0xFF73B4EC);
+                        ambientItem.setSelectorColor(enabled ? 0x0F73B4EC : 0x0fffffff);
+                    }
                 }
             }
 
@@ -6177,7 +6243,12 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         //menuItem.addSubItem(gallery_menu_edit_avatar, R.drawable.photo_paint, LocaleController.getString(R.string.EditPhoto)).setColors(0xfffafafa, 0xfffafafa);
 
         if (NaConfig.INSTANCE.getMediaViewerMenuItemCopyPhoto().Bool()) menuItem.addSubItem(gallery_menu_copy, R.drawable.msg_copy_photo, getString(R.string.CopyPhoto)).setColors(0xfffafafa, 0xfffafafa);
-        if (NaConfig.INSTANCE.getMediaViewerMenuItemCopyFrame().Bool()) menuItem.addSubItem(gallery_menu_copy_frame, R.drawable.msg_copy_photo, getString(R.string.CopyVideoFrame)).setColors(0xfffafafa, 0xfffafafa);
+        if (NaConfig.INSTANCE.getMediaViewerMenuItemCopyFrame().Bool()) menuItem.addSubItem(gallery_menu_copy_frame, R.drawable.msg_copy_photo_solar, getString(R.string.CopyVideoFrame)).setColors(0xfffafafa, 0xfffafafa);
+
+        boolean ambientEnabled = NaConfig.INSTANCE.getAmbientMode().Bool();
+        ambientItem = menuItem.addSubItem(gallery_menu_ambient, R.drawable.magic_stick_solar, getString(R.string.AmbientMode));
+        ambientItem.setEnabledByColor(ambientEnabled, 0xFFFFFFFF, 0xFF73B4EC);
+        ambientItem.setSelectorColor(ambientEnabled ? 0x0F73B4EC : 0x0fffffff);
         if (NaConfig.INSTANCE.getMediaViewerMenuItemSetProfilePhoto().Bool()) menuItem.addSubItem(gallery_menu_set_photo, R.drawable.msg_openprofile, getString(R.string.SetProfilePhoto)).setColors(0xfffafafa, 0xfffafafa);
         if (NaConfig.INSTANCE.getMediaViewerMenuItemScanQRCode().Bool()) menuItem.addSubItem(gallery_menu_scan, R.drawable.msg_qrcode, getString(R.string.ScanQRCode)).setColors(0xfffafafa, 0xfffafafa);
 
@@ -10751,6 +10822,9 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 photoProgressViews[0].setIndexedAlpha(1, !isCurrentVideo && (!isAccessibilityEnabled() || playerWasPlaying) && ((playerAutoStarted && !playerWasPlaying) || !isActionBarVisible) ? 0f : 1f, false);
                 playerWasPlaying = true;
                 AndroidUtilities.runOnUIThread(updateProgressRunnable);
+                if (NaConfig.INSTANCE.getAmbientMode().Bool()) {
+                    AndroidUtilities.runOnUIThread(ambientUpdateRunnable);
+                }
             }
         } else if (isPlaying || playbackState == ExoPlayer.STATE_ENDED) {
             if (currentEditMode != EDIT_MODE_PAINT) {
@@ -11047,6 +11121,12 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
 
                 @Override
                 public void onVideoSizeChanged(int width, int height, int unappliedRotationDegrees, float pixelWidthHeightRatio) {
+                    if (ambientModeView != null) {
+                        ambientModeView.setEnabled(NaConfig.INSTANCE.getAmbientMode().Bool());
+                    }
+                    if (NaConfig.INSTANCE.getAmbientMode().Bool()) {
+                        AndroidUtilities.runOnUIThread(ambientUpdateRunnable);
+                    }
                     if (aspectRatioFrameLayout != null) {
                         if (unappliedRotationDegrees == 90 || unappliedRotationDegrees == 270) {
                             int temp = width;
@@ -11387,6 +11467,9 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             }
         };
         aspectRatioFrameLayout.setWillNotDraw(false);
+        if (ambientModeView != null) {
+            ambientModeView.setEnabled(NaConfig.INSTANCE.getAmbientMode().Bool());
+        }
         aspectRatioFrameLayout.setVisibility(View.INVISIBLE);
         containerView.addView(aspectRatioFrameLayout, 0, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.CENTER));
         usedSurfaceView = false;
@@ -11440,6 +11523,20 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         if (pipSource != null) {
             pipSource.setContentView(aspectRatioFrameLayout);
             pipSource.setPlaceholderView(pipPlaceholderView);
+        }
+    }
+
+    private void updateAmbientMode() {
+        if (ambientModeView == null || videoPlayer == null || !isPlaying || !NaConfig.INSTANCE.getAmbientMode().Bool()) {
+            return;
+        }
+        Bitmap bitmap = null;
+        if (videoTextureView != null) {
+            bitmap = videoTextureView.getBitmap(32, 32);
+        }
+        if (bitmap != null) {
+            Utilities.blurBitmap(bitmap, 3, 1, bitmap.getWidth(), bitmap.getHeight(), bitmap.getRowBytes());
+            ambientModeView.setBitmap(bitmap);
         }
     }
 
