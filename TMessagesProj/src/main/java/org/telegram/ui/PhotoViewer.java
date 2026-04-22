@@ -1146,7 +1146,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 return;
             }
             updateAmbientMode();
-            AndroidUtilities.runOnUIThread(this, 150);
+            AndroidUtilities.runOnUIThread(this, 100);
         }
     };
     private boolean allowShowFullscreenButton;
@@ -2353,7 +2353,6 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             super(context);
             alphaAnimated = new AnimatedFloat(this, 0, 350, CubicBezierInterpolator.DEFAULT);
             crossfade = new AnimatedFloat(this, 0, 800, CubicBezierInterpolator.DEFAULT);
-            gradientPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_OUT));
         }
 
         @Override
@@ -2368,8 +2367,6 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         protected void onDraw(Canvas canvas) {
             float alpha = alphaAnimated.set(enabled && bitmap != null && !bitmap.isRecycled() ? 1f : 0f);
             if (alpha <= 0 || bitmap == null || bitmap.isRecycled()) return;
-
-            canvas.saveLayer(0, 0, getMeasuredWidth(), getMeasuredHeight(), null);
 
             paint.setAlpha((int) (alpha * 80));
 
@@ -2412,8 +2409,8 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             paint.setAlpha((int) (alpha * 80 * cf));
             canvas.drawBitmap(bitmap, matrix, paint);
 
+            gradientPaint.setAlpha((int) (alpha * 255));
             canvas.drawRect(0, 0, viewWidth, viewHeight, gradientPaint);
-            canvas.restore();
 
             if (alphaAnimated.get() != (enabled ? 1f : 0f) || crossfade.get() != 1f) {
                 invalidate();
