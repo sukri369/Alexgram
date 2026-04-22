@@ -2366,7 +2366,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
 
         @Override
         protected void onDraw(Canvas canvas) {
-            float alpha = alphaAnimated.set(enabled ? 1f : 0f);
+            float alpha = alphaAnimated.set(enabled && bitmap != null ? 1f : 0f);
             if (alpha <= 0 || bitmap == null) return;
 
             canvas.saveLayer(0, 0, getMeasuredWidth(), getMeasuredHeight(), null);
@@ -5017,7 +5017,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                     blackPaint.setAlpha(backgroundDrawable.getAlpha());
                     canvas.drawRect(0, getMeasuredHeight(), getMeasuredWidth(), getMeasuredHeight() + insets.bottom, blackPaint);
                 }
-                if (ambientModeView != null && NaConfig.INSTANCE.getAmbientMode().Bool() && isPlaying) {
+                if (ambientModeView != null && NaConfig.INSTANCE.getAmbientMode().Bool()) {
                     ambientModeView.draw(canvas);
                 }
             }
