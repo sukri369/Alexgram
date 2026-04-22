@@ -2472,8 +2472,6 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             crossfade.set(1f);
             invalidate();
         }
-
-        }
     }
 
     private static class SelectedPhotosListView extends RecyclerListView {
