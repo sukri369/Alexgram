@@ -306,6 +306,110 @@ public class SplitChatLayout extends FrameLayout {
         if (divider != null) divider.setVisibility(panes.size() >= 2 ? VISIBLE : GONE);
     }
 
+    private void swapPanes() {
+        if (panes.size() < 2) return;
+        long id1 = panes.get(0).dialogId;
+        long id2 = panes.get(1).dialogId;
+        
+        SplitPane p1 = panes.get(0);
+        SplitPane p2 = panes.get(1);
+        try { if (p1.fragment != null) { p1.fragment.onPause(); p1.fragment.onFragmentDestroy(); } } catch(Exception ignore){}
+        try { if (p2.fragment != null) { p2.fragment.onPause(); p2.fragment.onFragmentDestroy(); } } catch(Exception ignore){}
+        panes.clear();
+        
+        pane1Container.removeAllViews();
+        pane2Container.removeAllViews();
+        
+        embedFragment(id2, pane1Container, true);
+        embedFragment(id1, pane2Container, false);
+        requestLayout();
+    }
+
+    private void closePane(long dialogId, boolean isFirst) {
+        if (panes.size() <= 1) {
+            closeSplit();
+            return;
+        }
+        if (!isFirst) {
+            SplitPane old = panes.get(1);
+            try { if (old.fragment != null) { old.fragment.onPause(); old.fragment.onFragmentDestroy(); } } catch(Exception ignore){}
+            panes.remove(1);
+            pane2Container.removeAllViews();
+            if (divider != null) divider.setVisibility(GONE);
+        } else {
+            long id2 = panes.get(1).dialogId;
+            SplitPane old2 = panes.get(1);
+            try { if (old2.fragment != null) { old2.fragment.onPause(); old2.fragment.onFragmentDestroy(); } } catch(Exception ignore){}
+            panes.remove(1); 
+            pane2Container.removeAllViews();
+            swapPane(id2, true); 
+        }
+        requestLayout();
+    }
+
+    private void showPaneMenu(View anchor, long dialogId, boolean isFirst) {
+        org.telegram.ui.ActionBar.ActionBarPopupWindow.ActionBarPopupWindowLayout popupLayout = 
+            new org.telegram.ui.ActionBar.ActionBarPopupWindow.ActionBarPopupWindowLayout(getContext());
+        
+        final org.telegram.ui.ActionBar.ActionBarPopupWindow[] popupWindow = new org.telegram.ui.ActionBar.ActionBarPopupWindow[1];
+
+        // 1. Expand
+        org.telegram.ui.ActionBar.ActionBarMenuSubItem expandItem = new org.telegram.ui.ActionBar.ActionBarMenuSubItem(getContext(), true, false);
+        expandItem.setTextAndIcon("Expand", xyz.nextalone.nagram.R.drawable.ic_split_expand_na);
+        expandItem.setOnClickListener(v -> {
+            if (popupWindow[0] != null) popupWindow[0].dismiss();
+            if (!panes.isEmpty()) {
+                panes.get(0).weight = isFirst ? 0.75f : 0.25f;
+                requestLayout();
+            }
+        });
+        popupLayout.addView(expandItem);
+
+        // 2. Full screen
+        org.telegram.ui.ActionBar.ActionBarMenuSubItem fullItem = new org.telegram.ui.ActionBar.ActionBarMenuSubItem(getContext(), false, false);
+        fullItem.setTextAndIcon("Full Screen", xyz.nextalone.nagram.R.drawable.ic_split_fullscreen_na);
+        fullItem.setOnClickListener(v -> {
+            if (popupWindow[0] != null) popupWindow[0].dismiss();
+            long otherId = 0;
+            for (SplitPane p : panes) {
+                if (p.dialogId != dialogId) {
+                    otherId = p.dialogId; break;
+                }
+            }
+            if (otherId != 0) demoteToMini(otherId);
+        });
+        popupLayout.addView(fullItem);
+
+        // 3. Switch Chat
+        org.telegram.ui.ActionBar.ActionBarMenuSubItem switchItem = new org.telegram.ui.ActionBar.ActionBarMenuSubItem(getContext(), false, false);
+        switchItem.setTextAndIcon("Switch Chat", xyz.nextalone.nagram.R.drawable.ic_split_switch_na);
+        switchItem.setOnClickListener(v -> {
+            if (popupWindow[0] != null) popupWindow[0].dismiss();
+            swapPanes();
+        });
+        popupLayout.addView(switchItem);
+
+        // 4. Close Chat
+        org.telegram.ui.ActionBar.ActionBarMenuSubItem closeItem = new org.telegram.ui.ActionBar.ActionBarMenuSubItem(getContext(), false, true);
+        closeItem.setTextAndIcon("Close Chat", xyz.nextalone.nagram.R.drawable.ic_split_close_chat_na);
+        closeItem.setColors(Theme.getColor(Theme.key_text_RedBold), Theme.getColor(Theme.key_text_RedBold));
+        closeItem.setOnClickListener(v -> {
+            if (popupWindow[0] != null) popupWindow[0].dismiss();
+            closePane(dialogId, isFirst);
+        });
+        popupLayout.addView(closeItem);
+
+        popupWindow[0] = new org.telegram.ui.ActionBar.ActionBarPopupWindow(popupLayout, LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT);
+        popupWindow[0].setOutsideTouchable(true);
+        popupWindow[0].setClippingEnabled(true);
+        popupWindow[0].setAnimationStyle(xyz.nextalone.nagram.R.style.PopupAnimation);
+        popupWindow[0].setFocusable(true);
+        popupWindow[0].setInputMethodMode(org.telegram.ui.ActionBar.ActionBarPopupWindow.INPUT_METHOD_NOT_NEEDED);
+        popupWindow[0].setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_UNSPECIFIED);
+        
+        popupWindow[0].showAsDropDown(anchor, 0, -anchor.getMeasuredHeight());
+    }
+
     public void openDialogInNextPane(long dialogId) {
         if (!built) return;
         if (!panes.isEmpty()) demoteToMini(panes.get(0));
