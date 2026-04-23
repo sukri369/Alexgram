@@ -214,6 +214,24 @@ public class SplitChatLayout extends FrameLayout {
                 ((org.telegram.ui.Components.SizeNotifierFrameLayout) view).setOccupyStatusBar(false);
             }
 
+            // Fix: ChatAvatarContainer (the header avatar+title+subtitle) defaults to
+            // occupyStatusBar=true which adds statusBarHeight top-padding internally.
+            // Inside our 56dp action bar (occupyStatusBar=false) the avatar overflows
+            // below the bar and bleeds into the message area (clipChildren=false in ChatActivity).
+            // Call setOccupyStatusBar(false) on it via reflection so it fits within 56dp.
+            try {
+                java.lang.reflect.Field avField = org.telegram.ui.ChatActivity.class.getDeclaredField("avatarContainer");
+                avField.setAccessible(true);
+                Object avatarContainer = avField.get(chat);
+                if (avatarContainer != null) {
+                    java.lang.reflect.Method setOsb = avatarContainer.getClass()
+                            .getMethod("setOccupyStatusBar", boolean.class);
+                    setOsb.invoke(avatarContainer, false);
+                }
+            } catch (Exception ignore) {
+                FileLog.d("SplitChat: could not set avatarContainer.setOccupyStatusBar");
+            }
+
             container.removeAllViews();
             container.addView(view, LayoutHelper.createFrame(
                     LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
