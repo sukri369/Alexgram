@@ -209,7 +209,9 @@ public class SplitChatLayout extends FrameLayout {
             else              args.putLong("chat_id", -dialogId);
 
             org.telegram.ui.ChatActivity chat = new org.telegram.ui.ChatActivity(args);
-            // Do NOT set isInsideContainer — it suppresses the action bar / header
+            // isInsideContainer=true prevents window-inset conflicts between panes
+            // (status bar, nav bar, keyboard — each pane should NOT own these)
+            chat.isInsideContainer = true;
             chat.setParentLayout(host.actionBarLayout);
 
             if (!chat.onFragmentCreate()) {
@@ -224,16 +226,21 @@ public class SplitChatLayout extends FrameLayout {
             }
 
             container.removeAllViews();
-            // Add fragment view first (background layer)
             container.addView(view, LayoutHelper.createFrame(
                     LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
-            // Then add action bar on top — this is what ActionBarLayout.presentFragment does
+
+            // isInsideContainer hides the actionBar (line 4024 in ChatActivity).
+            // We force it back visible and strip status-bar height from it.
             org.telegram.ui.ActionBar.ActionBar actionBar = chat.getActionBar();
-            if (actionBar != null && actionBar.shouldAddToContainer()) {
-                if (actionBar.getParent() != null) {
-                    ((ViewGroup) actionBar.getParent()).removeView(actionBar);
+            if (actionBar != null) {
+                actionBar.setOccupyStatusBar(false);   // no status-bar-height padding
+                actionBar.setVisibility(View.VISIBLE);  // un-hide what isInsideContainer hid
+                if (actionBar.shouldAddToContainer()) {
+                    if (actionBar.getParent() != null) {
+                        ((ViewGroup) actionBar.getParent()).removeView(actionBar);
+                    }
+                    container.addView(actionBar);
                 }
-                container.addView(actionBar);
             }
 
             chat.onResume();
