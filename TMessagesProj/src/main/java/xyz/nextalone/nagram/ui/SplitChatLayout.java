@@ -145,7 +145,7 @@ public class SplitChatLayout extends FrameLayout {
                 LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
         divider = new DividerView(ctx,
-                this::onDrag, this::onDividerDoubleTap, this::closeSplit);
+                this::onDrag, this::onDragEnd, this::onDividerDoubleTap, this::closeSplit);
         addView(divider, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 16));
 
         pane2Container = new PaneContainer(ctx);
@@ -635,12 +635,22 @@ public class SplitChatLayout extends FrameLayout {
         getLocationOnScreen(loc);
         if (getHeight() > getWidth()) { // portrait → vertical drag
             float relY = raw - loc[1];
-            panes.get(0).weight = Math.max(0.25f, Math.min(0.75f, relY / Math.max(1, getHeight())));
+            panes.get(0).weight = Math.max(0.0f, Math.min(1.0f, relY / Math.max(1, getHeight())));
         } else { // landscape → horizontal drag
             float relX = raw - loc[0];
-            panes.get(0).weight = Math.max(0.25f, Math.min(0.75f, relX / Math.max(1, getWidth())));
+            panes.get(0).weight = Math.max(0.0f, Math.min(1.0f, relX / Math.max(1, getWidth())));
         }
         requestLayout();
+    }
+
+    private void onDragEnd() {
+        if (panes.isEmpty()) return;
+        float w = panes.get(0).weight;
+        if (w < 0.15f) {
+            closePane(panes.get(0).dialogId, true);
+        } else if (w > 0.85f) {
+            if (panes.size() > 1) closePane(panes.get(1).dialogId, false);
+        }
     }
 
     private void onDividerDoubleTap() {
@@ -811,10 +821,11 @@ public class SplitChatLayout extends FrameLayout {
     // ══════════════════════════════════════════════════════════════════════════
     public static class DividerView extends View {
         interface OnDrag      { void onDrag(float raw); }
+        interface OnDragEnd   { void onDragEnd(); }
         interface OnDoubleTap { void onDoubleTap(); }
         interface OnLongPress { void onLongPress(); }
 
-        private final OnDrag drag; private final OnDoubleTap dbl; private final OnLongPress lp;
+        private final OnDrag drag; private final OnDragEnd dragEnd; private final OnDoubleTap dbl; private final OnLongPress lp;
         private final Paint track = new Paint(Paint.ANTI_ALIAS_FLAG);
         private final Paint pill  = new Paint(Paint.ANTI_ALIAS_FLAG);
         private final RectF rect  = new RectF();
@@ -822,9 +833,9 @@ public class SplitChatLayout extends FrameLayout {
         private SpringAnimation pressAnim;
         private final Runnable lpRun;
 
-        public DividerView(Context ctx, OnDrag drag, OnDoubleTap dbl, OnLongPress lp) {
+        public DividerView(Context ctx, OnDrag drag, OnDragEnd dragEnd, OnDoubleTap dbl, OnLongPress lp) {
             super(ctx);
-            this.drag = drag; this.dbl = dbl; this.lp = lp;
+            this.drag = drag; this.dragEnd = dragEnd; this.dbl = dbl; this.lp = lp;
             track.setColor(0x44000000);
             pill.setColor(Theme.getColor(Theme.key_actionBarDefault));
             lpRun = () -> {
@@ -866,6 +877,8 @@ public class SplitChatLayout extends FrameLayout {
                         long now = System.currentTimeMillis();
                         if (now - lastTap < 350 && dbl != null) dbl.onDoubleTap();
                         lastTap = now;
+                    } else {
+                        if (dragEnd != null) dragEnd.onDragEnd();
                     }
                     dragging = false; break;
                 case MotionEvent.ACTION_CANCEL:
