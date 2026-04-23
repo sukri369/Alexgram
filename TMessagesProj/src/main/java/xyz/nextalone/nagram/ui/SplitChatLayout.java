@@ -43,20 +43,13 @@ import org.telegram.ui.LaunchActivity;
 
 import java.util.ArrayList;
 
-/**
- * Crash-proof Split Chat layout.
- *
- * Each pane hosts a ChatActivity's view directly (like RightSlidingDialogContainer),
- * referencing the existing actionBarLayout — no new ActionBarLayout instances created.
- */
 public class SplitChatLayout extends FrameLayout {
 
     // ── Pane model ────────────────────────────────────────────────────────────
 
     static class SplitPane {
         long dialogId;
-        ChatActivity fragment;
-        View fragmentView;
+        ActionBarLayout paneLayout;
         FrameLayout container;
         float weight = 0.5f;
     }
@@ -72,6 +65,8 @@ public class SplitChatLayout extends FrameLayout {
     private HorizontalScrollView miniTabScrollView;
     private LinearLayout miniTabBar;
     private LaunchActivity launchActivity;
+
+    private long originDialogId;
     private boolean isAttached = false;
 
     // ── Constructor ───────────────────────────────────────────────────────────
@@ -84,69 +79,42 @@ public class SplitChatLayout extends FrameLayout {
 
     // ── Entry point ───────────────────────────────────────────────────────────
 
+    public void setOriginDialogId(long id) { this.originDialogId = id; }
+
     public void attachToActivity(LaunchActivity activity, long firstDialogId) {
-        this.launchActivity = activity;
-        if (isAttached) {
-            openDialogInNextPane(firstDialogId);
-            return;
-        }
+        this.launchActivity  = activity;
+        this.originDialogId  = firstDialogId;
+        if (isAttached) return;
         isAttached = true;
 
-        // Show picker first, BEFORE we overlay the screen
-        showChatPicker(firstDialogId);
-    }
-
-    /** Called by SplitChatManager after user picks pane-2 dialog. */
-    public void openDialogInNextPane(long dialogId) {
-        if (!isAttached) return;
-
-        if (visiblePanes.isEmpty()) {
-            // First call: build layout + pane 1 (original chat) + pane 2 (picked)
-            // pane 1 dialog is stored in tag
-            long pane1DialogId = (getTag() instanceof Long) ? (Long) getTag() : 0;
-            buildAndShow(pane1DialogId, dialogId);
-        } else if (visiblePanes.size() < 2) {
-            addPane(dialogId, false);
-            animatePaneIn(rightContainer);
-        } else {
-            demoteOldestPane();
-            addPane(dialogId, false);
-            animatePaneIn(rightContainer);
-        }
-    }
-
-    /** Store the originating dialog so we can use it in openDialogInNextPane. */
-    public void setOriginDialogId(long dialogId) {
-        setTag(dialogId);
-    }
-
-    // ── Build ─────────────────────────────────────────────────────────────────
-
-    private void buildAndShow(long pane1DialogId, long pane2DialogId) {
-        buildLayout(launchActivity);
-
-        // Add overlay on top of frameLayout
-        launchActivity.frameLayout.addView(this,
+        // 1. Build skeleton and add to window hierarchy FIRST
+        buildLayout(activity);
+        activity.frameLayout.addView(this,
                 LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
-        addPane(pane1DialogId, true);
-        addPane(pane2DialogId, false);
+        // 2. Left pane = current chat
+        addPane(firstDialogId, true);
 
-        // Entry animation
+        // 3. Right pane = full dialogs list — user taps any chat to open it here
+        addDialogListPane();
+
+        // 4. Entry animation
         setAlpha(0f);
-        setScaleX(0.97f);
-        setScaleY(0.97f);
+        setScaleX(0.96f);
+        setScaleY(0.96f);
         animate().alpha(1f).scaleX(1f).scaleY(1f)
                 .setDuration(300)
                 .setInterpolator(CubicBezierInterpolator.DEFAULT)
                 .start();
     }
 
+    // ── Build skeleton ────────────────────────────────────────────────────────
+
     private void buildLayout(Context ctx) {
         setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundGray));
 
         leftContainer = new FrameLayout(ctx);
-        addView(leftContainer);
+        addView(leftContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
         dividerView = new SplitDividerView(ctx);
         dividerView.setOnDividerDragListener(this::onDividerDragged);
@@ -155,71 +123,73 @@ public class SplitChatLayout extends FrameLayout {
         addView(dividerView);
 
         rightContainer = new FrameLayout(ctx);
-        addView(rightContainer);
+        addView(rightContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
-        // Mini-tab bar
+        // Mini-tab strip (bottom-left, hidden until needed)
         miniTabScrollView = new HorizontalScrollView(ctx);
         miniTabScrollView.setHorizontalScrollBarEnabled(false);
         miniTabScrollView.setOverScrollMode(OVER_SCROLL_NEVER);
         miniTabBar = new LinearLayout(ctx);
         miniTabBar.setOrientation(LinearLayout.HORIZONTAL);
-        miniTabBar.setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(6),
-                AndroidUtilities.dp(8), AndroidUtilities.dp(6));
-        miniTabScrollView.addView(miniTabBar,
-                LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.MATCH_PARENT));
-        addView(miniTabScrollView,
-                LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, 56,
-                        Gravity.BOTTOM | Gravity.START, 4, 0, 4, 8));
+        miniTabBar.setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(6), AndroidUtilities.dp(8), AndroidUtilities.dp(6));
+        miniTabScrollView.addView(miniTabBar, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.MATCH_PARENT));
+        addView(miniTabScrollView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, 56, Gravity.BOTTOM | Gravity.START, 4, 0, 4, 8));
         miniTabScrollView.setVisibility(GONE);
 
-        // Close button
+        // Close button (top-right)
         TextView closeFab = new TextView(ctx);
         closeFab.setText(LocaleController.getString("SplitChatClose", R.string.SplitChatClose));
         closeFab.setTextColor(Theme.getColor(Theme.key_actionBarDefaultTitle));
         closeFab.setTextSize(12);
-        closeFab.setPadding(AndroidUtilities.dp(10), AndroidUtilities.dp(6),
-                AndroidUtilities.dp(10), AndroidUtilities.dp(6));
+        closeFab.setPadding(AndroidUtilities.dp(10), AndroidUtilities.dp(5), AndroidUtilities.dp(10), AndroidUtilities.dp(5));
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(Theme.getColor(Theme.key_actionBarDefault));
-        bg.setCornerRadius(AndroidUtilities.dp(16));
+        bg.setCornerRadius(AndroidUtilities.dp(14));
         closeFab.setBackground(bg);
         closeFab.setOnClickListener(v -> closeSplit());
-        addView(closeFab,
-                LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT,
-                        Gravity.TOP | Gravity.END, 0, 8, 8, 0));
+        addView(closeFab, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP | Gravity.END, 0, 8, 8, 0));
     }
 
-    // ── Layout ────────────────────────────────────────────────────────────────
+    // ── Layout — manual side-by-side panes ───────────────────────────────────
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        // Let FrameLayout lay out mini-tab bar and close button using their LayoutParams gravity
         super.onLayout(changed, l, t, r, b);
-        layoutPanes();
-    }
-
-    private void layoutPanes() {
-        int totalW = getWidth(), totalH = getHeight();
+        // Override pane positions manually
+        int totalW = r - l, totalH = b - t;
         if (totalW == 0 || leftContainer == null) return;
         int divW = AndroidUtilities.dp(4);
         float leftWeight = visiblePanes.isEmpty() ? 0.5f : visiblePanes.get(0).weight;
-        int leftW = (int) ((totalW - divW) * leftWeight);
+        int leftW = Math.max(0, Math.min(totalW - divW, (int) ((totalW - divW) * leftWeight)));
         leftContainer.layout(0, 0, leftW, totalH);
-        dividerView.layout(leftW, 0, leftW + divW, totalH);
+        if (dividerView != null) dividerView.layout(leftW, 0, leftW + divW, totalH);
         rightContainer.layout(leftW + divW, 0, totalW, totalH);
+    }
+
+    private void measureAndLayoutExtras(int totalW, int totalH) {
+        // no-op: handled by FrameLayout super.onLayout via LayoutParams gravity
     }
 
     // ── Pane management ───────────────────────────────────────────────────────
 
     /**
-     * Creates a ChatActivity, calls its lifecycle manually, and adds its view
-     * directly to the pane container — no new ActionBarLayout needed.
+     * Creates a dedicated ActionBarLayout + ChatActivity for a pane.
+     * The layout is added to the container FIRST (so it's in the window),
+     * then the fragment is pushed to it.
      */
     private void addPane(long dialogId, boolean isLeft) {
-        if (dialogId == 0) return;
         SplitPane pane = new SplitPane();
-        pane.dialogId = dialogId;
+        pane.dialogId  = dialogId;
         pane.container = isLeft ? leftContainer : rightContainer;
 
+        // 1. Create ActionBarLayout and add to container (in window hierarchy)
+        ActionBarLayout paneLayout = new ActionBarLayout(launchActivity, false);
+        pane.paneLayout = paneLayout;
+        pane.container.removeAllViews();
+        pane.container.addView(paneLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+
+        // 2. Build ChatActivity args
         Bundle args = new Bundle();
         if (dialogId > 0) {
             args.putLong("user_id", dialogId);
@@ -227,27 +197,96 @@ public class SplitChatLayout extends FrameLayout {
             args.putLong("chat_id", -dialogId);
         }
 
+        // 3. Create and push ChatActivity
+        ChatActivity chat = new ChatActivity(args);
+        chat.isInsideContainer = true;
+
         try {
-            ChatActivity chat = new ChatActivity(args);
-            chat.isInsideContainer = true;
-            chat.setParentLayout(launchActivity.actionBarLayout);
-            if (!chat.onFragmentCreate()) return;
-            View view = chat.createView(launchActivity);
-            if (view == null) return;
-            chat.onResume();
-            pane.fragment = chat;
-            pane.fragmentView = view;
-            pane.container.addView(view,
-                    LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
-            visiblePanes.add(pane);
-            if (dividerView != null) {
-                dividerView.setVisibility(visiblePanes.size() >= 2 ? VISIBLE : GONE);
-            }
-            requestLayout();
+            paneLayout.addFragmentToStack(chat, -1);
+            paneLayout.onResume();
         } catch (Exception e) {
-            android.util.Log.e("SplitChatLayout", "addPane failed", e);
+            android.util.Log.e("SplitChat", "addPane failed id=" + dialogId, e);
+            pane.container.removeAllViews();
+            return;
+        }
+
+        visiblePanes.add(pane);
+        if (dividerView != null)
+            dividerView.setVisibility(visiblePanes.size() >= 2 ? VISIBLE : GONE);
+        requestLayout();
+    }
+
+    /**
+     * Right pane shows the full Dialogs list. Tapping a chat opens it in this pane.
+     */
+    private void addDialogListPane() {
+        SplitPane pane = new SplitPane();
+        pane.dialogId  = 0;
+        pane.container = rightContainer;
+
+        ActionBarLayout paneLayout = new ActionBarLayout(launchActivity, false);
+        pane.paneLayout = paneLayout;
+        rightContainer.removeAllViews();
+        rightContainer.addView(paneLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+
+        Bundle args = new Bundle();
+        args.putBoolean("onlySelect", false);
+        DialogsActivity dialogs = new DialogsActivity(args);
+        // When user taps a dialog, open it inside this pane
+        dialogs.setDelegate((fragment, dids, message, param, notify, scheduleDate, period, topicsFrag) -> {
+            if (dids != null && !dids.isEmpty()) {
+                long did = dids.get(0).dialogId;
+                openChatInRightPane(did);
+            }
+            return true;
+        });
+
+        try {
+            paneLayout.addFragmentToStack(dialogs, -1);
+            paneLayout.onResume();
+        } catch (Exception e) {
+            android.util.Log.e("SplitChat", "addDialogListPane failed", e);
+            rightContainer.removeAllViews();
+            return;
+        }
+
+        visiblePanes.add(pane);
+        if (dividerView != null)
+            dividerView.setVisibility(VISIBLE);
+        requestLayout();
+    }
+
+    /** Opens a ChatActivity inside the right pane's ActionBarLayout. */
+    private void openChatInRightPane(long dialogId) {
+        if (visiblePanes.size() < 2) return;
+        SplitPane rightPane = visiblePanes.get(1);
+        if (rightPane.paneLayout == null) return;
+
+        Bundle args = new Bundle();
+        if (dialogId > 0) args.putLong("user_id", dialogId);
+        else args.putLong("chat_id", -dialogId);
+
+        ChatActivity chat = new ChatActivity(args);
+        chat.isInsideContainer = true;
+        rightPane.paneLayout.presentFragment(new INavigationLayout.NavigationParams(chat).setRemoveLast(false));
+        rightPane.dialogId = dialogId;
+    }
+
+    /** Called from SplitChatManager when a 3rd chat is requested from outside. */
+    public void openDialogInNextPane(long dialogId) {
+        if (visiblePanes.size() < 2) {
+            addPane(dialogId, false);
+            animatePaneIn(rightContainer);
+        } else {
+            demoteOldestPane();
+            AndroidUtilities.runOnUIThread(() -> {
+                addPane(dialogId, false);
+                animatePaneIn(rightContainer);
+            }, 300);
         }
     }
+
+    // ── Demote to mini icon ───────────────────────────────────────────────────
 
     private void demoteOldestPane() {
         if (visiblePanes.isEmpty()) return;
@@ -259,42 +298,38 @@ public class SplitChatLayout extends FrameLayout {
                 .setDuration(260)
                 .setInterpolator(CubicBezierInterpolator.EASE_BOTH)
                 .withEndAction(() -> {
-                    try {
-                        if (old.fragment != null) old.fragment.onPause();
-                    } catch (Exception ignore) {}
+                    try { if (old.paneLayout != null) old.paneLayout.onPause(); } catch (Exception ignore) {}
                     old.container.removeAllViews();
                     old.container.setScaleX(1f);
                     old.container.setScaleY(1f);
                     old.container.setAlpha(1f);
                     addMiniTab(old.dialogId, title);
 
-                    // Shift remaining pane to left
+                    // Shift remaining pane to left container
                     if (!visiblePanes.isEmpty()) {
                         SplitPane rem = visiblePanes.get(0);
-                        if (rem.fragmentView != null && rem.fragmentView.getParent() != leftContainer) {
-                            rightContainer.removeView(rem.fragmentView);
-                            leftContainer.addView(rem.fragmentView,
+                        if (rem.container == rightContainer) {
+                            rightContainer.removeView(rem.paneLayout);
+                            leftContainer.removeAllViews();
+                            leftContainer.addView(rem.paneLayout,
                                     LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+                            rem.container = leftContainer;
                         }
-                        rem.container = leftContainer;
                     }
                     requestLayout();
                 }).start();
     }
 
     private void addMiniTab(long dialogId, String title) {
-        MiniPaneTab tab = new MiniPaneTab(getContext(), dialogId, title,
-                () -> restoreMiniTab(dialogId));
+        MiniPaneTab tab = new MiniPaneTab(getContext(), dialogId, title, () -> restoreMiniTab(dialogId));
         miniTabs.add(tab);
         miniTabBar.addView(tab);
         if (miniTabScrollView.getVisibility() != VISIBLE) {
             miniTabScrollView.setVisibility(VISIBLE);
             miniTabScrollView.setAlpha(0f);
-            miniTabScrollView.animate().alpha(1f).setDuration(200).start();
+            miniTabScrollView.animate().alpha(1f).setDuration(180).start();
         }
-        tab.setScaleX(0.3f);
-        tab.setScaleY(0.3f);
-        tab.setAlpha(0f);
+        tab.setScaleX(0f); tab.setScaleY(0f); tab.setAlpha(0f);
         new SpringAnimation(new FloatValueHolder(0f))
                 .setSpring(new SpringForce(1000f)
                         .setStiffness(SpringForce.STIFFNESS_MEDIUM)
@@ -302,20 +337,22 @@ public class SplitChatLayout extends FrameLayout {
                 .addUpdateListener((a, val, vel) -> {
                     float p = val / 1000f;
                     tab.setScaleX(p); tab.setScaleY(p); tab.setAlpha(p);
-                })
-                .start();
+                }).start();
     }
 
     private void restoreMiniTab(long dialogId) {
         MiniPaneTab found = null;
         for (MiniPaneTab t : miniTabs) if (t.dialogId == dialogId) { found = t; break; }
         if (found == null) return;
-        miniTabs.remove(found);
-        miniTabBar.removeView(found);
+        final MiniPaneTab tab = found;
+        miniTabs.remove(tab);
+        miniTabBar.removeView(tab);
         if (miniTabs.isEmpty()) miniTabScrollView.setVisibility(GONE);
-        if (visiblePanes.size() >= 2) demoteOldestPane();
-        // Post to let demote animation start first
-        AndroidUtilities.runOnUIThread(() -> addPane(dialogId, false), 300);
+        demoteOldestPane();
+        AndroidUtilities.runOnUIThread(() -> {
+            addPane(dialogId, false);
+            animatePaneIn(rightContainer);
+        }, 300);
         performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
     }
 
@@ -323,23 +360,23 @@ public class SplitChatLayout extends FrameLayout {
 
     private void animatePaneIn(FrameLayout pane) {
         pane.setAlpha(0f);
-        pane.setTranslationX(200f);
-        SpringAnimation spring = new SpringAnimation(new FloatValueHolder(200f))
+        pane.setTranslationX(AndroidUtilities.dp(120));
+        new SpringAnimation(new FloatValueHolder(AndroidUtilities.dp(120)))
                 .setSpring(new SpringForce(0f)
                         .setStiffness(SpringForce.STIFFNESS_MEDIUM)
-                        .setDampingRatio(SpringForce.DAMPING_RATIO_LOW_BOUNCY));
-        spring.addUpdateListener((a, val, vel) -> pane.setTranslationX(val));
-        spring.addEndListener((a, canceled, val, vel) -> pane.setTranslationX(0f));
-        spring.start();
+                        .setDampingRatio(SpringForce.DAMPING_RATIO_LOW_BOUNCY))
+                .addUpdateListener((a, val, vel) -> pane.setTranslationX(val))
+                .addEndListener((a, canceled, val, vel) -> pane.setTranslationX(0))
+                .start();
         pane.animate().alpha(1f).setDuration(200).start();
     }
 
-    // ── Divider ───────────────────────────────────────────────────────────────
+    // ── Divider callbacks ─────────────────────────────────────────────────────
 
     private void onDividerDragged(float rawX) {
         int totalW = getWidth();
         if (totalW <= 0 || visiblePanes.isEmpty()) return;
-        float w = Math.max(0.30f, Math.min(0.70f, rawX / totalW));
+        float w = Math.max(0.25f, Math.min(0.75f, rawX / totalW));
         visiblePanes.get(0).weight = w;
         requestLayout();
     }
@@ -347,36 +384,15 @@ public class SplitChatLayout extends FrameLayout {
     private void snapDividerToCenter() {
         if (visiblePanes.isEmpty()) return;
         float cur = visiblePanes.get(0).weight;
-        ValueAnimator anim = ValueAnimator.ofFloat(cur, 0.5f);
-        anim.setDuration(260);
-        anim.setInterpolator(CubicBezierInterpolator.DEFAULT);
-        anim.addUpdateListener(a -> {
-            if (!visiblePanes.isEmpty()) visiblePanes.get(0).weight = (float) a.getAnimatedValue();
+        ValueAnimator a = ValueAnimator.ofFloat(cur, 0.5f);
+        a.setDuration(260);
+        a.setInterpolator(CubicBezierInterpolator.DEFAULT);
+        a.addUpdateListener(va -> {
+            if (!visiblePanes.isEmpty()) visiblePanes.get(0).weight = (float) va.getAnimatedValue();
             requestLayout();
         });
-        anim.start();
+        a.start();
         performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
-    }
-
-    // ── Chat picker ───────────────────────────────────────────────────────────
-
-    private void showChatPicker(long originDialogId) {
-        setTag(originDialogId);
-        if (launchActivity == null) return;
-        Bundle args = new Bundle();
-        args.putInt("dialogsType", 1);
-        args.putBoolean("resetDelegate", false);
-        DialogsActivity picker = new DialogsActivity(args);
-        picker.setDelegate((fragment, dids, message, param, notify, scheduleDate, period, topicsFrag) -> {
-            if (dids != null && !dids.isEmpty()) {
-                long did = dids.get(0).dialogId;
-                SplitChatManager.getInstance().openDialogInSplit(did);
-            }
-            fragment.finishFragment();
-            return true;
-        });
-        launchActivity.actionBarLayout.presentFragment(
-                new INavigationLayout.NavigationParams(picker));
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -395,12 +411,11 @@ public class SplitChatLayout extends FrameLayout {
         return "Chat";
     }
 
-    // ── Close / lifecycle ─────────────────────────────────────────────────────
+    // ── Lifecycle ─────────────────────────────────────────────────────────────
 
     public void closeSplit() {
         isAttached = false;
-        animate().alpha(0f).scaleX(0.96f).scaleY(0.96f)
-                .setDuration(220)
+        animate().alpha(0f).scaleX(0.96f).scaleY(0.96f).setDuration(220)
                 .withEndAction(() -> {
                     onDestroy();
                     if (getParent() instanceof ViewGroup)
@@ -411,24 +426,19 @@ public class SplitChatLayout extends FrameLayout {
 
     public void onPause() {
         for (SplitPane p : visiblePanes) {
-            try { if (p.fragment != null) p.fragment.onPause(); } catch (Exception ignore) {}
+            try { if (p.paneLayout != null) p.paneLayout.onPause(); } catch (Exception ignore) {}
         }
     }
 
     public void onResume() {
         for (SplitPane p : visiblePanes) {
-            try { if (p.fragment != null) p.fragment.onResume(); } catch (Exception ignore) {}
+            try { if (p.paneLayout != null) p.paneLayout.onResume(); } catch (Exception ignore) {}
         }
     }
 
     public void onDestroy() {
         for (SplitPane p : visiblePanes) {
-            try {
-                if (p.fragment != null) {
-                    p.fragment.onPause();
-                    p.fragment.onFragmentDestroy();
-                }
-            } catch (Exception ignore) {}
+            try { if (p.paneLayout != null) p.paneLayout.onPause(); } catch (Exception ignore) {}
         }
         visiblePanes.clear();
         miniTabs.clear();
@@ -443,46 +453,44 @@ public class SplitChatLayout extends FrameLayout {
         interface DividerDoubleTapListener { void onDoubleTap(); }
         interface DividerLongPressListener { void onLongPress(); }
 
-        private DividerDragListener      dragListener;
-        private DividerDoubleTapListener doubleTapListener;
-        private DividerLongPressListener longPressListener;
+        private DividerDragListener      drag;
+        private DividerDoubleTapListener dbl;
+        private DividerLongPressListener lp;
 
-        private final Paint trackPaint  = new Paint(Paint.ANTI_ALIAS_FLAG);
-        private final Paint handlePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        private final RectF handleRect  = new RectF();
+        private final Paint track  = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Paint handle = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final RectF rect   = new RectF();
 
-        private float lastDownX;
-        private long  lastTapTime;
-        private boolean isDragging;
-        private float pressProgress;
+        private float downX, pressP;
+        private long lastTap;
+        private boolean dragging;
         private SpringAnimation pressSpring;
 
-        private final Runnable longPressRunnable = () -> {
-            if (!isDragging && longPressListener != null) {
+        private final Runnable lpRunnable = () -> {
+            if (!dragging && lp != null) {
                 performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
-                longPressListener.onLongPress();
+                lp.onLongPress();
             }
         };
 
         public SplitDividerView(Context ctx) {
             super(ctx);
-            trackPaint.setColor(0x33000000);
-            handlePaint.setColor(Theme.getColor(Theme.key_actionBarDefault));
+            track.setColor(0x28000000);
+            handle.setColor(Theme.getColor(Theme.key_actionBarDefault));
         }
 
-        public void setOnDividerDragListener(DividerDragListener l)          { dragListener = l; }
-        public void setOnDividerDoubleTapListener(DividerDoubleTapListener l) { doubleTapListener = l; }
-        public void setOnDividerLongPressListener(DividerLongPressListener l) { longPressListener = l; }
+        public void setOnDividerDragListener(DividerDragListener l)          { drag = l; }
+        public void setOnDividerDoubleTapListener(DividerDoubleTapListener l) { dbl = l; }
+        public void setOnDividerLongPressListener(DividerLongPressListener l) { lp = l; }
 
         @Override
         protected void onDraw(Canvas canvas) {
-            int w = getWidth(), h = getHeight();
-            canvas.drawRect(0, 0, w, h, trackPaint);
-            float hh = AndroidUtilities.dp(28) + pressProgress * AndroidUtilities.dp(10);
+            canvas.drawRect(0, 0, getWidth(), getHeight(), track);
+            float hh = AndroidUtilities.dp(28) + pressP * AndroidUtilities.dp(12);
             float hw = AndroidUtilities.dp(3);
-            float cx = w / 2f, cy = h / 2f;
-            handleRect.set(cx - hw / 2f, cy - hh / 2f, cx + hw / 2f, cy + hh / 2f);
-            canvas.drawRoundRect(handleRect, AndroidUtilities.dp(3), AndroidUtilities.dp(3), handlePaint);
+            float cx = getWidth() / 2f, cy = getHeight() / 2f;
+            rect.set(cx - hw / 2f, cy - hh / 2f, cx + hw / 2f, cy + hh / 2f);
+            canvas.drawRoundRect(rect, AndroidUtilities.dp(3), AndroidUtilities.dp(3), handle);
         }
 
         @Override
@@ -490,53 +498,42 @@ public class SplitChatLayout extends FrameLayout {
             float x = e.getRawX();
             switch (e.getAction()) {
                 case MotionEvent.ACTION_DOWN:
-                    lastDownX = x; isDragging = false;
-                    postDelayed(longPressRunnable, 500);
-                    springPress(1f);
-                    break;
+                    downX = x; dragging = false;
+                    postDelayed(lpRunnable, 480);
+                    spring(1f); break;
                 case MotionEvent.ACTION_MOVE:
-                    if (Math.abs(x - lastDownX) > AndroidUtilities.dp(4)) {
-                        isDragging = true;
-                        removeCallbacks(longPressRunnable);
+                    if (Math.abs(x - downX) > AndroidUtilities.dp(4)) {
+                        dragging = true; removeCallbacks(lpRunnable);
                     }
-                    if (isDragging && dragListener != null) dragListener.onDrag(x);
+                    if (dragging && drag != null) drag.onDrag(x);
                     break;
                 case MotionEvent.ACTION_UP:
-                    removeCallbacks(longPressRunnable);
-                    springPress(0f);
-                    if (!isDragging) {
+                    removeCallbacks(lpRunnable); spring(0f);
+                    if (!dragging) {
                         long now = System.currentTimeMillis();
-                        if (now - lastTapTime < 350 && doubleTapListener != null)
-                            doubleTapListener.onDoubleTap();
-                        lastTapTime = now;
+                        if (now - lastTap < 340 && dbl != null) dbl.onDoubleTap();
+                        lastTap = now;
                     }
-                    isDragging = false;
-                    break;
+                    dragging = false; break;
                 case MotionEvent.ACTION_CANCEL:
-                    removeCallbacks(longPressRunnable);
-                    springPress(0f);
-                    isDragging = false;
-                    break;
+                    removeCallbacks(lpRunnable); spring(0f); dragging = false; break;
             }
             return true;
         }
 
-        private void springPress(float target) {
+        private void spring(float target) {
             if (pressSpring != null) pressSpring.cancel();
-            pressSpring = new SpringAnimation(new FloatValueHolder(pressProgress * 1000f))
+            pressSpring = new SpringAnimation(new FloatValueHolder(pressP * 1000f))
                     .setSpring(new SpringForce(target * 1000f)
                             .setStiffness(SpringForce.STIFFNESS_MEDIUM)
                             .setDampingRatio(SpringForce.DAMPING_RATIO_MEDIUM_BOUNCY));
-            pressSpring.addUpdateListener((a, val, vel) -> {
-                pressProgress = val / 1000f;
-                invalidate();
-            });
+            pressSpring.addUpdateListener((a, val, vel) -> { pressP = val / 1000f; invalidate(); });
             pressSpring.start();
         }
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // Mini Pane Tab Icon
+    // Mini Pane Icon Tab
     // ══════════════════════════════════════════════════════════════════════════
 
     public static class MiniPaneTab extends FrameLayout {
@@ -551,39 +548,24 @@ public class SplitChatLayout extends FrameLayout {
             lp.setMargins(AndroidUtilities.dp(4), 0, AndroidUtilities.dp(4), 0);
             setLayoutParams(lp);
 
-            BackupImageView avatar = new BackupImageView(ctx);
-            avatar.setRoundRadius(AndroidUtilities.dp(22));
-            AvatarDrawable avatarDrawable = new AvatarDrawable();
+            BackupImageView av = new BackupImageView(ctx);
+            av.setRoundRadius(AndroidUtilities.dp(22));
+            AvatarDrawable ad = new AvatarDrawable();
 
             try {
                 int acc = UserConfig.selectedAccount;
                 if (dialogId > 0) {
                     TLRPC.User u = MessagesController.getInstance(acc).getUser(dialogId);
-                    if (u != null) {
-                        avatarDrawable.setInfo(u);
-                        avatar.setImage(ImageLocation.getForUser(u, ImageLocation.TYPE_SMALL),
-                                "50_50", avatarDrawable, u);
-                    } else {
-                        avatarDrawable.setInfo(0, title, null);
-                        avatar.setImageDrawable(avatarDrawable);
-                    }
+                    if (u != null) { ad.setInfo(u); av.setImage(ImageLocation.getForUser(u, ImageLocation.TYPE_SMALL), "50_50", ad, u); }
+                    else { ad.setInfo(0, title, null); av.setImageDrawable(ad); }
                 } else {
                     TLRPC.Chat c = MessagesController.getInstance(acc).getChat(-dialogId);
-                    if (c != null) {
-                        avatarDrawable.setInfo(c);
-                        avatar.setImage(ImageLocation.getForChat(c, ImageLocation.TYPE_SMALL),
-                                "50_50", avatarDrawable, c);
-                    } else {
-                        avatarDrawable.setInfo(0, title, null);
-                        avatar.setImageDrawable(avatarDrawable);
-                    }
+                    if (c != null) { ad.setInfo(c); av.setImage(ImageLocation.getForChat(c, ImageLocation.TYPE_SMALL), "50_50", ad, c); }
+                    else { ad.setInfo(0, title, null); av.setImageDrawable(ad); }
                 }
-            } catch (Exception e) {
-                avatarDrawable.setInfo(0, title, null);
-                avatar.setImageDrawable(avatarDrawable);
-            }
+            } catch (Exception e) { ad.setInfo(0, title, null); av.setImageDrawable(ad); }
 
-            addView(avatar, LayoutHelper.createFrame(40, 40, Gravity.CENTER));
+            addView(av, LayoutHelper.createFrame(40, 40, Gravity.CENTER));
 
             GradientDrawable ring = new GradientDrawable();
             ring.setShape(GradientDrawable.OVAL);
