@@ -138,6 +138,9 @@ public class SplitChatLayout extends FrameLayout {
     // ── Layout skeleton ───────────────────────────────────────────────────────
 
     private void buildLayout(Context ctx) {
+        setFocusable(true);
+        setFocusableInTouchMode(true);
+        requestFocus();
         setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundGray));
 
         pane1Container = new PaneContainer(ctx);
@@ -676,6 +679,15 @@ public class SplitChatLayout extends FrameLayout {
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
 
+    @Override
+    public boolean dispatchKeyEvent(android.view.KeyEvent event) {
+        if (event.getKeyCode() == android.view.KeyEvent.KEYCODE_BACK && event.getAction() == android.view.KeyEvent.ACTION_UP) {
+            closeSplit();
+            return true;
+        }
+        return super.dispatchKeyEvent(event);
+    }
+
     private void seamlessExitToNormal(long survivingDialogId) {
         if (!built) return;
         built = false;
@@ -696,11 +708,10 @@ public class SplitChatLayout extends FrameLayout {
                 try {
                     org.telegram.ui.ActionBar.INavigationLayout.NavigationParams params = 
                         new org.telegram.ui.ActionBar.INavigationLayout.NavigationParams(chat);
-                    params.setRemoveLast(true);
                     params.setNoAnimation(true);
                     host.actionBarLayout.presentFragment(params);
                 } catch (Exception e) {
-                    host.actionBarLayout.presentFragment(chat, true);
+                    host.actionBarLayout.presentFragment(chat, false);
                 }
             }
         }
@@ -731,11 +742,10 @@ public class SplitChatLayout extends FrameLayout {
                             try {
                                 org.telegram.ui.ActionBar.INavigationLayout.NavigationParams params = 
                                     new org.telegram.ui.ActionBar.INavigationLayout.NavigationParams(chat);
-                                params.setRemoveLast(true);
                                 params.setNoAnimation(true);
                                 host.actionBarLayout.presentFragment(params);
                             } catch (Exception e) {
-                                host.actionBarLayout.presentFragment(chat, true);
+                                host.actionBarLayout.presentFragment(chat, false);
                             }
                         }
                     }
