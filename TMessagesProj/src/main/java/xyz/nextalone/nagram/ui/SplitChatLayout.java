@@ -385,7 +385,7 @@ public class SplitChatLayout extends FrameLayout {
         if (activity == null) return;
 
         java.util.HashSet<Long> excluded = new java.util.HashSet<>();
-        excluded.add(originDialogId);
+        excluded.add(originId);
         for (SplitPane p : panes) excluded.add(p.dialogId);
         for (MiniPaneTab m : minis) excluded.add(m.dialogId);
 
