@@ -58,7 +58,7 @@ public class SplitChatLayout extends FrameLayout {
         long dialogId;
         BaseFragment fragment;
         View fragmentView;
-        FrameLayout container;
+        PaneContainer container;
         float weight = 0.5f;
     }
 
@@ -66,8 +66,8 @@ public class SplitChatLayout extends FrameLayout {
     private final ArrayList<MiniPaneTab> minis = new ArrayList<>();
 
     private View          divider;
-    private FrameLayout   pane1Container;
-    private FrameLayout   pane2Container;
+    private PaneContainer pane1Container;
+    private PaneContainer pane2Container;
     private HorizontalScrollView miniScroll;
     private LinearLayout  miniBar;
     private LaunchActivity host;
@@ -141,7 +141,7 @@ public class SplitChatLayout extends FrameLayout {
     private void buildLayout(Context ctx) {
         setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundGray));
 
-        pane1Container = new FrameLayout(ctx);
+        pane1Container = new PaneContainer(ctx);
         addView(pane1Container, LayoutHelper.createFrame(
                 LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
@@ -149,7 +149,7 @@ public class SplitChatLayout extends FrameLayout {
                 this::onDrag, this::onDividerDoubleTap, this::closeSplit);
         addView(divider, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 16));
 
-        pane2Container = new FrameLayout(ctx);
+        pane2Container = new PaneContainer(ctx);
         addView(pane2Container, LayoutHelper.createFrame(
                 LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
@@ -183,7 +183,7 @@ public class SplitChatLayout extends FrameLayout {
 
     // ── Fragment embedding ────────────────────────────────────────────────────
 
-    private void embedFragment(long dialogId, FrameLayout container, boolean isFirst) {
+    private void embedFragment(long dialogId, PaneContainer container, boolean isFirst) {
         if (dialogId == 0 || container == null || host == null) return;
         try {
             android.os.Bundle args = new android.os.Bundle();
@@ -249,7 +249,7 @@ public class SplitChatLayout extends FrameLayout {
     }
 
     private void swapPane(long dialogId, boolean isFirst) {
-        FrameLayout container = isFirst ? pane1Container : pane2Container;
+        PaneContainer container = isFirst ? pane1Container : pane2Container;
         if (!panes.isEmpty()) {
             int idx = isFirst ? 0 : panes.size() - 1;
             if (idx < panes.size()) {
@@ -392,6 +392,70 @@ public class SplitChatLayout extends FrameLayout {
     public void onDestroy() {
         for (SplitPane p : panes) { try { if (p.fragment != null) { p.fragment.onPause(); p.fragment.onFragmentDestroy(); } } catch (Exception ignore) {} }
         panes.clear(); minis.clear();
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // PaneContainer — like ActionBarLayout.LayoutContainer but standalone.
+    // Places ActionBar at y=0 and positions all other children BELOW it.
+    // This is what prevents messages from overlapping the header.
+    // ══════════════════════════════════════════════════════════════════════════
+    public static class PaneContainer extends FrameLayout {
+        public PaneContainer(Context ctx) {
+            super(ctx);
+            setWillNotDraw(false);
+        }
+
+        @Override
+        protected void onMeasure(int wSpec, int hSpec) {
+            int w = MeasureSpec.getSize(wSpec);
+            int h = MeasureSpec.getSize(hSpec);
+            int actionBarH = 0;
+            // First pass: measure ActionBar (unspecified height so it wraps)
+            for (int i = 0; i < getChildCount(); i++) {
+                View child = getChildAt(i);
+                if (child instanceof org.telegram.ui.ActionBar.ActionBar && child.getVisibility() != GONE) {
+                    child.measure(
+                        MeasureSpec.makeMeasureSpec(w, MeasureSpec.EXACTLY),
+                        MeasureSpec.makeMeasureSpec(h, MeasureSpec.UNSPECIFIED));
+                    actionBarH = child.getMeasuredHeight();
+                    break;
+                }
+            }
+            // Second pass: measure other children with reduced height (below action bar)
+            for (int i = 0; i < getChildCount(); i++) {
+                View child = getChildAt(i);
+                if (!(child instanceof org.telegram.ui.ActionBar.ActionBar)) {
+                    measureChildWithMargins(child, wSpec, 0, hSpec, actionBarH);
+                }
+            }
+            setMeasuredDimension(w, h);
+        }
+
+        @Override
+        protected void onLayout(boolean changed, int l, int t, int r, int b) {
+            int actionBarH = 0;
+            // Layout ActionBar at top
+            for (int i = 0; i < getChildCount(); i++) {
+                View child = getChildAt(i);
+                if (child instanceof org.telegram.ui.ActionBar.ActionBar && child.getVisibility() != GONE) {
+                    child.layout(0, 0, child.getMeasuredWidth(), child.getMeasuredHeight());
+                    actionBarH = child.getMeasuredHeight();
+                    break;
+                }
+            }
+            // Layout all other children below the ActionBar
+            for (int i = 0; i < getChildCount(); i++) {
+                View child = getChildAt(i);
+                if (!(child instanceof org.telegram.ui.ActionBar.ActionBar)) {
+                    FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) child.getLayoutParams();
+                    child.layout(
+                        lp.leftMargin,
+                        lp.topMargin + actionBarH,
+                        lp.leftMargin + child.getMeasuredWidth(),
+                        lp.topMargin + actionBarH + child.getMeasuredHeight());
+                }
+            }
+        }
     }
 
     // ══════════════════════════════════════════════════════════════════════════
