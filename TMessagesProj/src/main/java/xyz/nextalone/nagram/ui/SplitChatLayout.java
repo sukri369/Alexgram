@@ -437,16 +437,37 @@ public class SplitChatLayout extends FrameLayout {
     // ── Demote to mini icon ───────────────────────────────────────────────────
 
     private void demoteToMini(SplitPane pane) {
-        panes.remove(pane);
         String title = labelFor(pane.dialogId);
         pane.container.animate().scaleX(0.2f).scaleY(0.2f).alpha(0f).setDuration(240)
                 .setInterpolator(CubicBezierInterpolator.EASE_BOTH)
                 .withEndAction(() -> {
+                    panes.remove(pane);
                     try { if (pane.fragment != null) { pane.fragment.onPause(); pane.fragment.onFragmentDestroy(); } } catch (Exception ignore) {}
                     pane.container.removeAllViews();
                     pane.container.setScaleX(1f); pane.container.setScaleY(1f); pane.container.setAlpha(1f);
+                    
+                    if (panes.size() == 1 && panes.get(0).container == pane2Container) {
+                        long remId = panes.get(0).dialogId;
+                        panes.clear();
+                        pane2Container.removeAllViews();
+                        embedFragment(remId, pane1Container, true);
+                    }
+                    
                     addMiniTab(pane.dialogId, title);
+                    requestLayout();
                 }).start();
+        
+        if (panes.size() == 2) {
+            boolean isFirst = (pane.container == pane1Container);
+            ValueAnimator a = ValueAnimator.ofFloat(panes.get(0).weight, isFirst ? 0.0f : 1.0f);
+            a.setDuration(240);
+            a.setInterpolator(CubicBezierInterpolator.EASE_BOTH);
+            a.addUpdateListener(anim -> {
+                panes.get(0).weight = (float) anim.getAnimatedValue();
+                requestLayout();
+            });
+            a.start();
+        }
     }
 
     private void addMiniTab(long dialogId, String title) {
@@ -492,36 +513,54 @@ public class SplitChatLayout extends FrameLayout {
             return;
         }
 
-        int divPx   = panes.size() >= 2 ? AndroidUtilities.dp(16) : 0;
-        float w     = panes.size() >= 2 ? Math.max(0.25f, Math.min(0.75f, panes.get(0).weight)) : 1.0f;
+        boolean hasP1 = false, hasP2 = false;
+        for (SplitPane p : panes) {
+            if (p.container == pane1Container) hasP1 = true;
+            if (p.container == pane2Container) hasP2 = true;
+        }
+
+        int divPx   = (hasP1 && hasP2) ? AndroidUtilities.dp(16) : 0;
+        float w     = (hasP1 && hasP2) ? Math.max(0.25f, Math.min(0.75f, panes.get(0).weight)) : 1.0f;
         boolean por = H > W;
 
         if (por) {
-            int p1H = (int) ((H - divPx) * w);
-            int p2H = H - divPx - p1H;
-            pane1Container.measure(
-                MeasureSpec.makeMeasureSpec(W, MeasureSpec.EXACTLY),
-                MeasureSpec.makeMeasureSpec(p1H, MeasureSpec.EXACTLY));
-            if (divider != null)
-                divider.measure(
-                    MeasureSpec.makeMeasureSpec(W, MeasureSpec.EXACTLY),
-                    MeasureSpec.makeMeasureSpec(divPx, MeasureSpec.EXACTLY));
-            pane2Container.measure(
-                MeasureSpec.makeMeasureSpec(W, MeasureSpec.EXACTLY),
-                MeasureSpec.makeMeasureSpec(p2H, MeasureSpec.EXACTLY));
+            if (hasP1 && hasP2) {
+                int p1H = (int) ((H - divPx) * w);
+                int p2H = H - divPx - p1H;
+                pane1Container.measure(MeasureSpec.makeMeasureSpec(W, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(p1H, MeasureSpec.EXACTLY));
+                if (divider != null) divider.measure(MeasureSpec.makeMeasureSpec(W, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(divPx, MeasureSpec.EXACTLY));
+                pane2Container.measure(MeasureSpec.makeMeasureSpec(W, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(p2H, MeasureSpec.EXACTLY));
+            } else if (hasP1) {
+                pane1Container.measure(MeasureSpec.makeMeasureSpec(W, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(H, MeasureSpec.EXACTLY));
+                pane2Container.measure(MeasureSpec.makeMeasureSpec(W, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(0, MeasureSpec.EXACTLY));
+                if (divider != null) divider.measure(MeasureSpec.makeMeasureSpec(W, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(0, MeasureSpec.EXACTLY));
+            } else if (hasP2) {
+                pane1Container.measure(MeasureSpec.makeMeasureSpec(W, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(0, MeasureSpec.EXACTLY));
+                pane2Container.measure(MeasureSpec.makeMeasureSpec(W, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(H, MeasureSpec.EXACTLY));
+                if (divider != null) divider.measure(MeasureSpec.makeMeasureSpec(W, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(0, MeasureSpec.EXACTLY));
+            } else {
+                pane1Container.measure(MeasureSpec.makeMeasureSpec(W, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(0, MeasureSpec.EXACTLY));
+                pane2Container.measure(MeasureSpec.makeMeasureSpec(W, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(0, MeasureSpec.EXACTLY));
+            }
         } else {
-            int p1W = (int) ((W - divPx) * w);
-            int p2W = W - divPx - p1W;
-            pane1Container.measure(
-                MeasureSpec.makeMeasureSpec(p1W, MeasureSpec.EXACTLY),
-                MeasureSpec.makeMeasureSpec(H, MeasureSpec.EXACTLY));
-            if (divider != null)
-                divider.measure(
-                    MeasureSpec.makeMeasureSpec(divPx, MeasureSpec.EXACTLY),
-                    MeasureSpec.makeMeasureSpec(H, MeasureSpec.EXACTLY));
-            pane2Container.measure(
-                MeasureSpec.makeMeasureSpec(p2W, MeasureSpec.EXACTLY),
-                MeasureSpec.makeMeasureSpec(H, MeasureSpec.EXACTLY));
+            if (hasP1 && hasP2) {
+                int p1W = (int) ((W - divPx) * w);
+                int p2W = W - divPx - p1W;
+                pane1Container.measure(MeasureSpec.makeMeasureSpec(p1W, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(H, MeasureSpec.EXACTLY));
+                if (divider != null) divider.measure(MeasureSpec.makeMeasureSpec(divPx, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(H, MeasureSpec.EXACTLY));
+                pane2Container.measure(MeasureSpec.makeMeasureSpec(p2W, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(H, MeasureSpec.EXACTLY));
+            } else if (hasP1) {
+                pane1Container.measure(MeasureSpec.makeMeasureSpec(W, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(H, MeasureSpec.EXACTLY));
+                pane2Container.measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(H, MeasureSpec.EXACTLY));
+                if (divider != null) divider.measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(H, MeasureSpec.EXACTLY));
+            } else if (hasP2) {
+                pane1Container.measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(H, MeasureSpec.EXACTLY));
+                pane2Container.measure(MeasureSpec.makeMeasureSpec(W, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(H, MeasureSpec.EXACTLY));
+                if (divider != null) divider.measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(H, MeasureSpec.EXACTLY));
+            } else {
+                pane1Container.measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(0, MeasureSpec.EXACTLY));
+                pane2Container.measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(0, MeasureSpec.EXACTLY));
+            }
         }
 
         // Measure overlay views (mini bar, close button) at normal MATCH_PARENT
@@ -540,20 +579,50 @@ public class SplitChatLayout extends FrameLayout {
         int W = r - l, H = b - t;
         if (W == 0 || pane1Container == null) return;
 
-        int divPx = divider != null && panes.size() >= 2 ? divider.getMeasuredHeight() : 0;
-        float w   = panes.size() >= 2 ? Math.max(0.25f, Math.min(0.75f, panes.get(0).weight)) : 1.0f;
+        boolean hasP1 = false, hasP2 = false;
+        for (SplitPane p : panes) {
+            if (p.container == pane1Container) hasP1 = true;
+            if (p.container == pane2Container) hasP2 = true;
+        }
+        
+        if (hasP1) pane1Container.setPadding(0, AndroidUtilities.statusBarHeight, 0, 0);
+        if (hasP2) pane2Container.setPadding(0, hasP1 ? 0 : AndroidUtilities.statusBarHeight, 0, 0);
+
+        int divPx = divider != null && hasP1 && hasP2 ? (H > W ? divider.getMeasuredHeight() : divider.getMeasuredWidth()) : 0;
+        float w   = hasP1 && hasP2 ? Math.max(0.25f, Math.min(0.75f, panes.get(0).weight)) : 1.0f;
 
         if (H > W) { // portrait
-            int p1H = (int) ((H - divPx) * w);
-            pane1Container.layout(0, 0, W, p1H);
-            if (divider != null && panes.size() >= 2) divider.layout(0, p1H, W, p1H + divPx);
-            pane2Container.layout(0, p1H + divPx, W, H);
+            if (hasP1 && hasP2) {
+                int p1H = (int) ((H - divPx) * w);
+                pane1Container.layout(0, 0, W, p1H);
+                if (divider != null) divider.layout(0, p1H, W, p1H + divPx);
+                pane2Container.layout(0, p1H + divPx, W, H);
+            } else if (hasP1) {
+                pane1Container.layout(0, 0, W, H);
+                pane2Container.layout(0, 0, 0, 0);
+            } else if (hasP2) {
+                pane1Container.layout(0, 0, 0, 0);
+                pane2Container.layout(0, 0, W, H);
+            } else {
+                pane1Container.layout(0, 0, 0, 0);
+                pane2Container.layout(0, 0, 0, 0);
+            }
         } else { // landscape
-            int divV = divider != null && panes.size() >= 2 ? divider.getMeasuredWidth() : 0;
-            int p1W  = (int) ((W - divV) * w);
-            pane1Container.layout(0, 0, p1W, H);
-            if (divider != null && panes.size() >= 2) divider.layout(p1W, 0, p1W + divV, H);
-            pane2Container.layout(p1W + divV, 0, W, H);
+            if (hasP1 && hasP2) {
+                int p1W = (int) ((W - divPx) * w);
+                pane1Container.layout(0, 0, p1W, H);
+                if (divider != null) divider.layout(p1W, 0, p1W + divPx, H);
+                pane2Container.layout(p1W + divPx, 0, W, H);
+            } else if (hasP1) {
+                pane1Container.layout(0, 0, W, H);
+                pane2Container.layout(0, 0, 0, 0);
+            } else if (hasP2) {
+                pane1Container.layout(0, 0, 0, 0);
+                pane2Container.layout(0, 0, W, H);
+            } else {
+                pane1Container.layout(0, 0, 0, 0);
+                pane2Container.layout(0, 0, 0, 0);
+            }
         }
     }
 
