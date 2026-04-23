@@ -4,13 +4,11 @@ import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.FileLog;
 import org.telegram.ui.LaunchActivity;
 
-/**
- * Singleton that controls Split Chat state.
- */
 public class SplitChatManager {
 
     private static volatile SplitChatManager instance;
     private SplitChatLayout splitLayout;
+    private long pendingOriginId;
 
     private SplitChatManager() {}
 
@@ -28,43 +26,58 @@ public class SplitChatManager {
     }
 
     /**
-     * Called when user taps "Split Chat" from Advanced Tools.
-     * Shows the chat picker first; once user picks, openDialogInSplit() is called.
+     * Called when user taps "Split Chat".
+     * Shows the picker first. The split overlay is built after the user picks.
      */
     public void activateSplitMode(LaunchActivity activity, long currentDialogId) {
         if (activity == null) return;
         try {
-            if (splitLayout == null) {
-                splitLayout = new SplitChatLayout(activity);
-            }
-            splitLayout.setOriginDialogId(currentDialogId);
-            splitLayout.attachToActivity(activity, currentDialogId);
+            AndroidUtilities.runOnUIThread(() -> {
+                try {
+                    if (splitLayout == null) {
+                        splitLayout = new SplitChatLayout(activity);
+                    }
+                    pendingOriginId = currentDialogId;
+                    splitLayout.setOriginDialogId(currentDialogId);
+                    splitLayout.showPickerAndWait(activity, currentDialogId);
+                } catch (Exception e) {
+                    FileLog.e(e);
+                    splitLayout = null;
+                }
+            });
         } catch (Exception e) {
             FileLog.e(e);
         }
     }
 
-    /** Called after the user picks a chat in the picker. */
+    /**
+     * Called from the picker delegate after user selects a chat.
+     * Builds the actual split overlay.
+     */
     public void openDialogInSplit(long dialogId) {
         AndroidUtilities.runOnUIThread(() -> {
-            if (splitLayout != null) {
-                splitLayout.openDialogInNextPane(dialogId);
+            try {
+                if (splitLayout != null) {
+                    if (!splitLayout.built()) {
+                        splitLayout.buildSplit(dialogId);
+                    } else {
+                        splitLayout.openDialogInNextPane(dialogId);
+                    }
+                }
+            } catch (Exception e) {
+                FileLog.e(e);
             }
         });
     }
 
-    /**
-     * Called by SplitChatLayout.closeSplit() when the animation finishes.
-     * Just nulls the reference — does NOT call back into the layout.
-     */
     public void onSplitClosed() {
         splitLayout = null;
     }
 
-    public void onPause()   { if (splitLayout != null) splitLayout.onPause();   }
-    public void onResume()  { if (splitLayout != null) splitLayout.onResume();  }
+    public void onPause()  { if (splitLayout != null) { try { splitLayout.onPause();  } catch (Exception ignore) {} } }
+    public void onResume() { if (splitLayout != null) { try { splitLayout.onResume(); } catch (Exception ignore) {} } }
     public void onDestroy() {
-        if (splitLayout != null) { splitLayout.onDestroy(); splitLayout = null; }
+        if (splitLayout != null) { try { splitLayout.onDestroy(); } catch (Exception ignore) {} splitLayout = null; }
     }
 
     public SplitChatLayout getLayout() { return splitLayout; }
