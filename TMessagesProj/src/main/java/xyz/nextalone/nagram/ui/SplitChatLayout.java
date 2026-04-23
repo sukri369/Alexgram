@@ -69,8 +69,6 @@ public class SplitChatLayout extends FrameLayout {
     private View          divider;
     private PaneContainer pane1Container;
     private PaneContainer pane2Container;
-    private HorizontalScrollView miniScroll;
-    private LinearLayout  miniBar;
     private LaunchActivity host;
     private long          originId;
     private boolean       built = false;
@@ -153,19 +151,6 @@ public class SplitChatLayout extends FrameLayout {
         pane2Container = new PaneContainer(ctx);
         addView(pane2Container, LayoutHelper.createFrame(
                 LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
-
-        miniScroll = new HorizontalScrollView(ctx);
-        miniScroll.setHorizontalScrollBarEnabled(false);
-        miniScroll.setOverScrollMode(OVER_SCROLL_NEVER);
-        miniBar = new LinearLayout(ctx);
-        miniBar.setOrientation(LinearLayout.HORIZONTAL);
-        miniBar.setPadding(AndroidUtilities.dp(6), AndroidUtilities.dp(4),
-                AndroidUtilities.dp(6), AndroidUtilities.dp(4));
-        miniScroll.addView(miniBar, LayoutHelper.createFrame(
-                LayoutHelper.WRAP_CONTENT, LayoutHelper.MATCH_PARENT));
-        addView(miniScroll, LayoutHelper.createFrame(
-                LayoutHelper.WRAP_CONTENT, 52, Gravity.BOTTOM | Gravity.START, 4, 0, 4, 8));
-        miniScroll.setVisibility(GONE);
 
         TextView close = new TextView(ctx);
         close.setText(LocaleController.getString("SplitChatClose", R.string.SplitChatClose));
@@ -473,12 +458,8 @@ public class SplitChatLayout extends FrameLayout {
     private void addMiniTab(long dialogId, String title) {
         MiniPaneTab tab = new MiniPaneTab(getContext(), dialogId, title, () -> restoreMini(dialogId));
         minis.add(tab);
-        miniBar.addView(tab);
-        if (miniScroll.getVisibility() != VISIBLE) {
-            miniScroll.setVisibility(VISIBLE);
-            miniScroll.setAlpha(0f);
-            miniScroll.animate().alpha(1f).setDuration(160).start();
-        }
+        addView(tab, LayoutHelper.createFrame(56, 56, Gravity.BOTTOM | Gravity.END, 0, 0, 16, 72));
+        
         tab.setScaleX(0f); tab.setScaleY(0f); tab.setAlpha(0f);
         new SpringAnimation(new FloatValueHolder(0f))
                 .setSpring(new SpringForce(1000f)
@@ -491,11 +472,23 @@ public class SplitChatLayout extends FrameLayout {
     }
 
     private void restoreMini(long dialogId) {
+        MiniPaneTab toRemove = null;
         for (MiniPaneTab t : minis) {
-            if (t.dialogId == dialogId) { miniBar.removeView(t); minis.remove(t); break; }
+            if (t.dialogId == dialogId) { toRemove = t; break; }
         }
-        if (minis.isEmpty()) miniScroll.setVisibility(GONE);
-        swapPane(dialogId, false);
+        if (toRemove != null) {
+            removeView(toRemove);
+            minis.remove(toRemove);
+        }
+        
+        if (panes.size() == 1) {
+            panes.get(0).weight = 0.5f;
+            embedFragment(dialogId, pane2Container, false);
+            if (divider != null) divider.setVisibility(VISIBLE);
+            requestLayout();
+        } else {
+            swapPane(dialogId, false);
+        }
         performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
     }
 
@@ -837,16 +830,18 @@ public class SplitChatLayout extends FrameLayout {
     // ══════════════════════════════════════════════════════════════════════════
     public static class MiniPaneTab extends FrameLayout {
         final long dialogId;
+        private float downX, downY;
+        private float startTransX, startTransY;
+        private boolean dragging = false;
+        private final Runnable onTap;
+
         public MiniPaneTab(Context ctx, long dialogId, String title, Runnable onTap) {
             super(ctx);
             this.dialogId = dialogId;
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                    AndroidUtilities.dp(44), AndroidUtilities.dp(44));
-            lp.setMargins(AndroidUtilities.dp(4), 0, AndroidUtilities.dp(4), 0);
-            setLayoutParams(lp);
+            this.onTap = onTap;
 
             BackupImageView av = new BackupImageView(ctx);
-            av.setRoundRadius(AndroidUtilities.dp(22));
+            av.setRoundRadius(AndroidUtilities.dp(28));
             AvatarDrawable ad = new AvatarDrawable();
             try {
                 int acc = UserConfig.selectedAccount;
@@ -860,14 +855,47 @@ public class SplitChatLayout extends FrameLayout {
                     else { ad.setInfo(0, title, null); av.setImageDrawable(ad); }
                 }
             } catch (Exception e) { ad.setInfo(0, title, null); av.setImageDrawable(ad); }
-            addView(av, LayoutHelper.createFrame(40, 40, Gravity.CENTER));
+            addView(av, LayoutHelper.createFrame(56, 56, Gravity.CENTER));
 
             GradientDrawable ring = new GradientDrawable();
             ring.setShape(GradientDrawable.OVAL);
             ring.setStroke(AndroidUtilities.dp(2), Theme.getColor(Theme.key_actionBarDefault));
             ring.setColor(Color.TRANSPARENT);
             setBackground(ring);
-            setOnClickListener(v -> { if (onTap != null) onTap.run(); });
+        }
+
+        @Override
+        public boolean onTouchEvent(MotionEvent e) {
+            switch (e.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    downX = e.getRawX();
+                    downY = e.getRawY();
+                    startTransX = getTranslationX();
+                    startTransY = getTranslationY();
+                    dragging = false;
+                    animate().scaleX(0.9f).scaleY(0.9f).setDuration(150).start();
+                    return true;
+                case MotionEvent.ACTION_MOVE:
+                    float dx = e.getRawX() - downX;
+                    float dy = e.getRawY() - downY;
+                    if (!dragging && (Math.abs(dx) > AndroidUtilities.dp(4) || Math.abs(dy) > AndroidUtilities.dp(4))) {
+                        dragging = true;
+                    }
+                    if (dragging) {
+                        setTranslationX(startTransX + dx);
+                        setTranslationY(startTransY + dy);
+                    }
+                    return true;
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    animate().scaleX(1f).scaleY(1f).setDuration(150).start();
+                    if (!dragging && e.getAction() == MotionEvent.ACTION_UP && onTap != null) {
+                        onTap.run();
+                    }
+                    dragging = false;
+                    return true;
+            }
+            return super.onTouchEvent(e);
         }
     }
 }
