@@ -652,6 +652,24 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private String addToGroupAlertString;
     public boolean resetDelegate = true;
 
+    private HashSet<Long> excludedDialogIds;
+
+    public void setExcludedDialogIds(HashSet<Long> ids) {
+        excludedDialogIds = ids;
+        if (viewPages != null) {
+            for (ViewPage page : viewPages) {
+                if (page != null && page.dialogsAdapter != null) {
+                    page.dialogsAdapter.setExcludedDialogIds(ids);
+                    page.dialogsAdapter.notifyDataSetChanged();
+                }
+            }
+        }
+        if (searchViewPager != null && searchViewPager.dialogsSearchAdapter != null) {
+            searchViewPager.dialogsSearchAdapter.setExcludedDialogIds(ids);
+            searchViewPager.dialogsSearchAdapter.notifyDataSetChanged();
+        }
+    }
+
     public static boolean[] dialogsLoaded = new boolean[UserConfig.MAX_ACCOUNT_COUNT];
     private boolean searching;
     private boolean searchWas;

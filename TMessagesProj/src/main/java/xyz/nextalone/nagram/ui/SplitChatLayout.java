@@ -124,17 +124,45 @@ public class SplitChatLayout extends FrameLayout {
         args.putBoolean("onlySelect", true);
         args.putBoolean("resetDelegate", false);
         org.telegram.ui.DialogsActivity picker = new org.telegram.ui.DialogsActivity(args);
+
+        java.util.HashSet<Long> excluded = new java.util.HashSet<>();
+        excluded.add(originId);
+        for (SplitPane p : panes) excluded.add(p.dialogId);
+        for (MiniPaneTab m : minis) excluded.add(m.dialogId);
+        picker.setExcludedDialogIds(excluded);
+
         picker.setDelegate((frag, dids, msg, param, notify, date, period, topicsFrag) -> {
             if (dids != null && !dids.isEmpty()) {
                 long did = dids.get(0).dialogId;
-                if (did == originId) {
+                
+                boolean alreadyOpen = (did == originId);
+                if (!alreadyOpen) {
+                    for (SplitPane p : panes) {
+                        if (p.dialogId == did) {
+                            alreadyOpen = true;
+                            break;
+                        }
+                    }
+                }
+                if (!alreadyOpen) {
+                    for (MiniPaneTab m : minis) {
+                        if (m.dialogId == did) {
+                            alreadyOpen = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (alreadyOpen) {
                     try {
-                        org.telegram.ui.Components.BulletinFactory.of(frag).createErrorBulletin("Cannot select the same chat for split mode").show();
+                        org.telegram.messenger.AndroidUtilities.vibrateCursor(frag.getParentActivity());
+                        org.telegram.ui.Components.BulletinFactory.of(frag).createErrorBulletin("Chat is already open in split mode").show();
                     } catch (Exception ignore) {
-                        android.widget.Toast.makeText(frag.getParentActivity(), "Cannot select the same chat.", android.widget.Toast.LENGTH_SHORT).show();
+                        android.widget.Toast.makeText(frag.getParentActivity(), "Chat is already open.", android.widget.Toast.LENGTH_SHORT).show();
                     }
                     return false;
                 }
+
                 frag.finishFragment();
                 SplitChatManager.getInstance().openDialogInSplit(did);
             } else {
@@ -710,7 +738,7 @@ public class SplitChatLayout extends FrameLayout {
     // ── Lifecycle ─────────────────────────────────────────────────────────────
 
     public boolean onBackPressed() {
-        if (!built) return false;
+        if (!built || getVisibility() != VISIBLE || getAlpha() < 0.1f) return false;
         
         boolean consumed = false;
         

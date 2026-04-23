@@ -171,6 +171,12 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
     private final DialogsActivity dialogsActivity;
     private final Theme.ResourcesProvider resourcesProvider;
 
+    private HashSet<Long> excludedDialogIds;
+
+    public void setExcludedDialogIds(HashSet<Long> ids) {
+        excludedDialogIds = ids;
+    }
+
     private int currentAccount = UserConfig.selectedAccount;
 
     private ArrayList<RecentSearchObject> recentSearchObjects = new ArrayList<>();
@@ -301,6 +307,7 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
         boolean isHiddenScreen = dialogsActivity instanceof HiddenChatsActivity;
 
         if (dialogId != 0) {
+            if (excludedDialogIds != null && excludedDialogIds.contains(dialogId)) return false;
             if (isHidden && !isHiddenScreen) return false;
             if (!isHidden && isHiddenScreen) return false;
         }
@@ -1012,7 +1019,25 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
     }
 
 
-    private void updateSearchResults(final ArrayList<Object> result, final ArrayList<CharSequence> names, final ArrayList<TLRPC.User> encUsers,  final ArrayList<ContactsController.Contact> contacts, final int searchId) {
+    public void updateSearchResults(final ArrayList<Object> result, final ArrayList<CharSequence> names, final ArrayList<TLRPC.User> encUsers, final ArrayList<ContactsController.Contact> contacts, final int searchId) {
+        if (excludedDialogIds != null) {
+            for (int a = 0; a < result.size(); a++) {
+                Object obj = result.get(a);
+                long dialogId = 0;
+                if (obj instanceof TLRPC.User) {
+                    dialogId = ((TLRPC.User) obj).id;
+                } else if (obj instanceof TLRPC.Chat) {
+                    dialogId = -((TLRPC.Chat) obj).id;
+                } else if (obj instanceof TLRPC.EncryptedChat) {
+                    dialogId = DialogObject.makeEncryptedDialogId(((TLRPC.EncryptedChat) obj).id);
+                }
+                if (excludedDialogIds.contains(dialogId)) {
+                    result.remove(a);
+                    names.remove(a);
+                    a--;
+                }
+            }
+        }
         AndroidUtilities.runOnUIThread(() -> {
             waitingResponseCount--;
             if (searchId != lastSearchId) {

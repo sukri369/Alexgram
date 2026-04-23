@@ -144,6 +144,12 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
     private DialogsActivity parentFragment;
     private boolean isTransitionSupport;
 
+    private HashSet<Long> excludedDialogIds;
+
+    public void setExcludedDialogIds(HashSet<Long> ids) {
+        excludedDialogIds = ids;
+    }
+
     private TLRPC.RequestPeerType requestPeerType;
     public boolean isEmpty;
 
@@ -1472,12 +1478,24 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
             boolean isHiddenScreen = parentFragment instanceof HiddenChatsActivity; 
             ArrayList<TLRPC.Dialog> filtered = new ArrayList<>();
             for (TLRPC.Dialog dialog : array) {
+                if (excludedDialogIds != null && excludedDialogIds.contains(dialog.id)) {
+                    continue;
+                }
                 boolean isHidden = HiddenChatsController.getInstance().isHidden(currentAccount, dialog.id);
                 if (isHiddenScreen) {
                     if (isHidden) filtered.add(dialog);
                 } else {
                     if (!isHidden) filtered.add(dialog);
                 }
+            }
+            array = filtered;
+        } else if (excludedDialogIds != null) {
+            ArrayList<TLRPC.Dialog> filtered = new ArrayList<>();
+            for (TLRPC.Dialog dialog : array) {
+                if (excludedDialogIds.contains(dialog.id)) {
+                    continue;
+                }
+                filtered.add(dialog);
             }
             array = filtered;
         }
