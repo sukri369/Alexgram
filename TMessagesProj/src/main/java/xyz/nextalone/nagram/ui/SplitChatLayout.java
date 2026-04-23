@@ -44,7 +44,7 @@ import org.telegram.ui.LaunchActivity;
 import java.util.ArrayList;
 
 /**
- * God-level Split Chat.
+ * Split Chat.
  *
  * Pattern: fragment.setParentLayout(existing) + createView() directly
  * (same as RightSlidingDialogContainer — no new ActionBarLayout = no crashes)
@@ -492,8 +492,8 @@ public class SplitChatLayout extends FrameLayout {
             return;
         }
 
-        int divPx   = AndroidUtilities.dp(16);
-        float w     = panes.isEmpty() ? 0.5f : Math.max(0.25f, Math.min(0.75f, panes.get(0).weight));
+        int divPx   = panes.size() >= 2 ? AndroidUtilities.dp(16) : 0;
+        float w     = panes.size() >= 2 ? Math.max(0.25f, Math.min(0.75f, panes.get(0).weight)) : 1.0f;
         boolean por = H > W;
 
         if (por) {
@@ -540,19 +540,19 @@ public class SplitChatLayout extends FrameLayout {
         int W = r - l, H = b - t;
         if (W == 0 || pane1Container == null) return;
 
-        int divPx = divider != null ? divider.getMeasuredHeight() : AndroidUtilities.dp(16);
-        float w   = panes.isEmpty() ? 0.5f : Math.max(0.25f, Math.min(0.75f, panes.get(0).weight));
+        int divPx = divider != null && panes.size() >= 2 ? divider.getMeasuredHeight() : 0;
+        float w   = panes.size() >= 2 ? Math.max(0.25f, Math.min(0.75f, panes.get(0).weight)) : 1.0f;
 
         if (H > W) { // portrait
             int p1H = (int) ((H - divPx) * w);
             pane1Container.layout(0, 0, W, p1H);
-            if (divider != null) divider.layout(0, p1H, W, p1H + divPx);
+            if (divider != null && panes.size() >= 2) divider.layout(0, p1H, W, p1H + divPx);
             pane2Container.layout(0, p1H + divPx, W, H);
         } else { // landscape
-            int divV = divider != null ? divider.getMeasuredWidth() : AndroidUtilities.dp(16);
+            int divV = divider != null && panes.size() >= 2 ? divider.getMeasuredWidth() : 0;
             int p1W  = (int) ((W - divV) * w);
             pane1Container.layout(0, 0, p1W, H);
-            if (divider != null) divider.layout(p1W, 0, p1W + divV, H);
+            if (divider != null && panes.size() >= 2) divider.layout(p1W, 0, p1W + divV, H);
             pane2Container.layout(p1W + divV, 0, W, H);
         }
     }
