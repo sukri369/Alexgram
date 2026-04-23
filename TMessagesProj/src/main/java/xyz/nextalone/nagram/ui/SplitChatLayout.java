@@ -333,21 +333,27 @@ public class SplitChatLayout extends FrameLayout {
             closeSplit();
             return;
         }
-        if (!isFirst) {
-            SplitPane old = panes.get(1);
-            try { if (old.fragment != null) { old.fragment.onPause(); old.fragment.onFragmentDestroy(); } } catch(Exception ignore){}
-            panes.remove(1);
-            pane2Container.removeAllViews();
-            if (divider != null) divider.setVisibility(GONE);
-        } else {
-            long id2 = panes.get(1).dialogId;
-            SplitPane old2 = panes.get(1);
-            try { if (old2.fragment != null) { old2.fragment.onPause(); old2.fragment.onFragmentDestroy(); } } catch(Exception ignore){}
-            panes.remove(1); 
-            pane2Container.removeAllViews();
-            swapPane(id2, true); 
-        }
-        requestLayout();
+
+        long survivingId = panes.get(isFirst ? 1 : 0).dialogId;
+        float startWeight = panes.get(0).weight;
+        float endWeight = isFirst ? 0f : 1f;
+
+        ValueAnimator a = ValueAnimator.ofFloat(startWeight, endWeight);
+        a.setDuration(240);
+        a.setInterpolator(CubicBezierInterpolator.EASE_BOTH);
+        a.addUpdateListener(anim -> {
+            if (!panes.isEmpty()) {
+                panes.get(0).weight = (float) anim.getAnimatedValue();
+                requestLayout();
+            }
+        });
+        a.addListener(new android.animation.AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(android.animation.Animator animation) {
+                seamlessExitToNormal(survivingId);
+            }
+        });
+        a.start();
     }
 
     private void showPaneMenu(View anchor, long dialogId, boolean isFirst) {
@@ -660,15 +666,68 @@ public class SplitChatLayout extends FrameLayout {
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
 
-    public void closeSplit() {
+    private void seamlessExitToNormal(long survivingDialogId) {
+        if (!built) return;
         built = false;
+
+        for (SplitPane p : panes) {
+            try { if (p.fragment != null) { p.fragment.onPause(); p.fragment.onFragmentDestroy(); } } catch (Exception ignore) {}
+        }
+        panes.clear(); minis.clear();
+
+        if (host != null && host.frameLayout != null) {
+            try { host.frameLayout.removeView(this); } catch (Exception ignore) {}
+            
+            if (survivingDialogId != originId) {
+                android.os.Bundle args = new android.os.Bundle();
+                if (survivingDialogId > 0) args.putLong("user_id", survivingDialogId);
+                else                       args.putLong("chat_id", -survivingDialogId);
+                org.telegram.ui.ChatActivity chat = new org.telegram.ui.ChatActivity(args);
+                try {
+                    org.telegram.ui.ActionBar.INavigationLayout.NavigationParams params = 
+                        new org.telegram.ui.ActionBar.INavigationLayout.NavigationParams(chat);
+                    params.setRemoveLast(true);
+                    params.setNoAnimation(true);
+                    host.actionBarLayout.presentFragment(params);
+                } catch (Exception e) {
+                    host.actionBarLayout.presentFragment(chat, true);
+                }
+            }
+        }
+        SplitChatManager.getInstance().onSplitClosed();
+    }
+
+    public void closeSplit() {
+        if (!built) return;
+        built = false;
+        long activeId = originId;
+        if (!panes.isEmpty()) activeId = panes.get(0).dialogId;
+
         animate().alpha(0f).scaleX(0.96f).scaleY(0.96f).setDuration(200)
                 .withEndAction(() -> {
                     for (SplitPane p : panes) {
                         try { if (p.fragment != null) { p.fragment.onPause(); p.fragment.onFragmentDestroy(); } } catch (Exception ignore) {}
                     }
                     panes.clear(); minis.clear();
-                    if (getParent() instanceof ViewGroup) ((ViewGroup) getParent()).removeView(this);
+                    if (host != null && host.frameLayout != null) {
+                        try { host.frameLayout.removeView(this); } catch (Exception ignore) {}
+                        
+                        if (activeId != originId) {
+                            android.os.Bundle args = new android.os.Bundle();
+                            if (activeId > 0) args.putLong("user_id", activeId);
+                            else              args.putLong("chat_id", -activeId);
+                            org.telegram.ui.ChatActivity chat = new org.telegram.ui.ChatActivity(args);
+                            try {
+                                org.telegram.ui.ActionBar.INavigationLayout.NavigationParams params = 
+                                    new org.telegram.ui.ActionBar.INavigationLayout.NavigationParams(chat);
+                                params.setRemoveLast(true);
+                                params.setNoAnimation(true);
+                                host.actionBarLayout.presentFragment(params);
+                            } catch (Exception e) {
+                                host.actionBarLayout.presentFragment(chat, true);
+                            }
+                        }
+                    }
                     SplitChatManager.getInstance().onSplitClosed();
                 }).start();
     }
