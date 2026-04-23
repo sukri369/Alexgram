@@ -586,6 +586,14 @@ public class SplitChatLayout extends FrameLayout {
             if (p.container == pane1Container) hasP1 = true;
             if (p.container == pane2Container) hasP2 = true;
         }
+
+        if (hasP1 && hasP2) {
+            pane1Container.setRoundMode(H > W ? 1 : 3);
+            pane2Container.setRoundMode(H > W ? 2 : 4);
+        } else {
+            pane1Container.setRoundMode(0);
+            pane2Container.setRoundMode(0);
+        }
         
         if (hasP1) pane1Container.setPadding(0, AndroidUtilities.statusBarHeight, 0, 0);
         if (hasP2) pane2Container.setPadding(0, hasP1 ? 0 : AndroidUtilities.statusBarHeight, 0, 0);
@@ -766,9 +774,35 @@ public class SplitChatLayout extends FrameLayout {
     // This is what prevents messages from overlapping the header.
     // ══════════════════════════════════════════════════════════════════════════
     public static class PaneContainer extends FrameLayout {
+        private int roundMode = 0;
+
         public PaneContainer(Context ctx) {
             super(ctx);
             setWillNotDraw(false);
+            setOutlineProvider(new android.view.ViewOutlineProvider() {
+                @Override
+                public void getOutline(View view, android.graphics.Outline outline) {
+                    if (roundMode == 0) {
+                        outline.setRect(0, 0, view.getWidth(), view.getHeight());
+                        return;
+                    }
+                    int r = AndroidUtilities.dp(16);
+                    int l = 0, t = 0, rght = view.getWidth(), b = view.getHeight();
+                    if (roundMode == 1) t = -r; // top pane, round bottom
+                    if (roundMode == 2) b = view.getHeight() + r; // bottom pane, round top
+                    if (roundMode == 3) l = -r; // left pane, round right
+                    if (roundMode == 4) rght = view.getWidth() + r; // right pane, round left
+                    outline.setRoundRect(l, t, rght, b, r);
+                }
+            });
+            setClipToOutline(true);
+        }
+
+        public void setRoundMode(int mode) {
+            if (this.roundMode != mode) {
+                this.roundMode = mode;
+                invalidateOutline();
+            }
         }
 
         @Override
