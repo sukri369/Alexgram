@@ -158,7 +158,8 @@ public class SplitChatLayout extends FrameLayout {
 
         divider = new DividerView(ctx,
                 this::onDrag, this::onDividerDoubleTap, this::closeSplit);
-        addView(divider);
+        // 16dp touch target — big enough to grab reliably on any screen
+        addView(divider, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 16));
 
         pane2Container = new FrameLayout(ctx);
         addView(pane2Container, LayoutHelper.createFrame(
@@ -208,8 +209,7 @@ public class SplitChatLayout extends FrameLayout {
             else              args.putLong("chat_id", -dialogId);
 
             org.telegram.ui.ChatActivity chat = new org.telegram.ui.ChatActivity(args);
-            chat.isInsideContainer = true;
-            // Use existing layout — same as RightSlidingDialogContainer
+            // Do NOT set isInsideContainer — it suppresses the action bar / header
             chat.setParentLayout(host.actionBarLayout);
 
             if (!chat.onFragmentCreate()) {
@@ -222,17 +222,28 @@ public class SplitChatLayout extends FrameLayout {
                 FileLog.d("SplitChat: createView returned null for " + dialogId);
                 return;
             }
-            chat.onResume();
 
             container.removeAllViews();
+            // Add fragment view first (background layer)
             container.addView(view, LayoutHelper.createFrame(
                     LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+            // Then add action bar on top — this is what ActionBarLayout.presentFragment does
+            if (chat.actionBar != null && chat.actionBar.shouldAddToContainer()) {
+                if (chat.actionBar.getParent() != null) {
+                    ((ViewGroup) chat.actionBar.getParent()).removeView(chat.actionBar);
+                }
+                container.addView(chat.actionBar);
+            }
+
+            chat.onResume();
+            chat.onTransitionAnimationEnd(true, false);
+            chat.onBecomeFullyVisible();
 
             SplitPane pane = new SplitPane();
-            pane.dialogId    = dialogId;
-            pane.fragment    = chat;
+            pane.dialogId     = dialogId;
+            pane.fragment     = chat;
             pane.fragmentView = view;
-            pane.container   = container;
+            pane.container    = container;
             panes.add(pane);
 
         } catch (Exception e) {
@@ -322,19 +333,27 @@ public class SplitChatLayout extends FrameLayout {
         super.onLayout(changed, l, t, r, b);
         int W = r - l, H = b - t;
         if (W == 0 || pane1Container == null) return;
-        int div = AndroidUtilities.dp(5);
+
+        // Use actual divider measurement; fall back to 16dp if not yet measured
+        int divPx = divider != null && divider.getMeasuredHeight() > 0
+                ? divider.getMeasuredHeight()
+                : AndroidUtilities.dp(16);
         float w = panes.isEmpty() ? 0.5f : Math.max(0.25f, Math.min(0.75f, panes.get(0).weight));
 
         if (isPortrait()) {
-            int p1H = (int) ((H - div) * w);
+            int p1H = (int) ((H - divPx) * w);
             pane1Container.layout(0, 0, W, p1H);
-            divider.layout(0, p1H, W, p1H + div);
-            pane2Container.layout(0, p1H + div, W, H);
+            divider.layout(0, p1H, W, p1H + divPx);
+            pane2Container.layout(0, p1H + divPx, W, H);
         } else {
-            int p1W = (int) ((W - div) * w);
+            // landscape: left / right split
+            int divV = divider != null && divider.getMeasuredWidth() > 0
+                    ? divider.getMeasuredWidth()
+                    : AndroidUtilities.dp(16);
+            int p1W = (int) ((W - divV) * w);
             pane1Container.layout(0, 0, p1W, H);
-            divider.layout(p1W, 0, p1W + div, H);
-            pane2Container.layout(p1W + div, 0, W, H);
+            divider.layout(p1W, 0, p1W + divV, H);
+            pane2Container.layout(p1W + divV, 0, W, H);
         }
     }
 
