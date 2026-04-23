@@ -155,7 +155,7 @@ public class SplitChatLayout extends FrameLayout {
 
                 if (alreadyOpen) {
                     try {
-                        org.telegram.messenger.AndroidUtilities.vibrateCursor(frag.getParentActivity());
+                        org.telegram.messenger.AndroidUtilities.vibrateCursor(frag.getFragmentView());
                         org.telegram.ui.Components.BulletinFactory.of(frag).createErrorBulletin("Chat is already open in split mode").show();
                     } catch (Exception ignore) {
                         android.widget.Toast.makeText(frag.getParentActivity(), "Chat is already open.", android.widget.Toast.LENGTH_SHORT).show();
