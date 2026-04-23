@@ -127,6 +127,14 @@ public class SplitChatLayout extends FrameLayout {
         picker.setDelegate((frag, dids, msg, param, notify, date, period, topicsFrag) -> {
             if (dids != null && !dids.isEmpty()) {
                 long did = dids.get(0).dialogId;
+                if (did == originId) {
+                    try {
+                        org.telegram.ui.Components.BulletinFactory.of(frag).createErrorBulletin("Cannot select the same chat for split mode").show();
+                    } catch (Exception ignore) {
+                        android.widget.Toast.makeText(frag.getParentActivity(), "Cannot select the same chat.", android.widget.Toast.LENGTH_SHORT).show();
+                    }
+                    return false;
+                }
                 frag.finishFragment();
                 SplitChatManager.getInstance().openDialogInSplit(did);
             } else {
