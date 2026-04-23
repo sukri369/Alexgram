@@ -257,6 +257,23 @@ public class SplitChatLayout extends FrameLayout {
                     }
                     container.addView(actionBar);
                 }
+
+                // Add God-level Split Options Menu Button (3 dots)
+                ImageView moreBtn = new ImageView(getContext());
+                moreBtn.setColorFilter(new android.graphics.PorterDuffColorFilter(
+                        Theme.getColor(Theme.key_actionBarDefaultIcon), 
+                        android.graphics.PorterDuff.Mode.MULTIPLY));
+                moreBtn.setImageResource(R.drawable.ic_split_more);
+                moreBtn.setScaleType(ImageView.ScaleType.CENTER);
+                moreBtn.setBackground(Theme.createSelectorDrawable(
+                        Theme.getColor(Theme.key_actionBarDefaultSelector), 1));
+                moreBtn.setOnClickListener(v -> showPaneMenu(v, dialogId, isFirst));
+                
+                // Position it at the right, just before the standard 3-dots (which are 48dp wide)
+                FrameLayout.LayoutParams moreLp = LayoutHelper.createFrame(
+                        48, 56, Gravity.RIGHT | Gravity.CENTER_VERTICAL);
+                moreLp.rightMargin = AndroidUtilities.dp(48);
+                actionBar.addView(moreBtn, moreLp);
             }
 
             chat.onResume();
@@ -355,7 +372,7 @@ public class SplitChatLayout extends FrameLayout {
 
         // 1. Expand
         org.telegram.ui.ActionBar.ActionBarMenuSubItem expandItem = new org.telegram.ui.ActionBar.ActionBarMenuSubItem(getContext(), true, false);
-        expandItem.setTextAndIcon("Expand", xyz.nextalone.nagram.R.drawable.ic_split_expand_na);
+        expandItem.setTextAndIcon("Expand", R.drawable.ic_split_expand_na);
         expandItem.setOnClickListener(v -> {
             if (popupWindow[0] != null) popupWindow[0].dismiss();
             if (!panes.isEmpty()) {
@@ -367,22 +384,22 @@ public class SplitChatLayout extends FrameLayout {
 
         // 2. Full screen
         org.telegram.ui.ActionBar.ActionBarMenuSubItem fullItem = new org.telegram.ui.ActionBar.ActionBarMenuSubItem(getContext(), false, false);
-        fullItem.setTextAndIcon("Full Screen", xyz.nextalone.nagram.R.drawable.ic_split_fullscreen_na);
+        fullItem.setTextAndIcon("Full Screen", R.drawable.ic_split_fullscreen_na);
         fullItem.setOnClickListener(v -> {
             if (popupWindow[0] != null) popupWindow[0].dismiss();
-            long otherId = 0;
+            SplitPane otherPane = null;
             for (SplitPane p : panes) {
                 if (p.dialogId != dialogId) {
-                    otherId = p.dialogId; break;
+                    otherPane = p; break;
                 }
             }
-            if (otherId != 0) demoteToMini(otherId);
+            if (otherPane != null) demoteToMini(otherPane);
         });
         popupLayout.addView(fullItem);
 
         // 3. Switch Chat
         org.telegram.ui.ActionBar.ActionBarMenuSubItem switchItem = new org.telegram.ui.ActionBar.ActionBarMenuSubItem(getContext(), false, false);
-        switchItem.setTextAndIcon("Switch Chat", xyz.nextalone.nagram.R.drawable.ic_split_switch_na);
+        switchItem.setTextAndIcon("Switch Chat", R.drawable.ic_split_switch_na);
         switchItem.setOnClickListener(v -> {
             if (popupWindow[0] != null) popupWindow[0].dismiss();
             swapPanes();
@@ -391,7 +408,7 @@ public class SplitChatLayout extends FrameLayout {
 
         // 4. Close Chat
         org.telegram.ui.ActionBar.ActionBarMenuSubItem closeItem = new org.telegram.ui.ActionBar.ActionBarMenuSubItem(getContext(), false, true);
-        closeItem.setTextAndIcon("Close Chat", xyz.nextalone.nagram.R.drawable.ic_split_close_chat_na);
+        closeItem.setTextAndIcon("Close Chat", R.drawable.ic_split_close_chat_na);
         closeItem.setColors(Theme.getColor(Theme.key_text_RedBold), Theme.getColor(Theme.key_text_RedBold));
         closeItem.setOnClickListener(v -> {
             if (popupWindow[0] != null) popupWindow[0].dismiss();
@@ -402,7 +419,7 @@ public class SplitChatLayout extends FrameLayout {
         popupWindow[0] = new org.telegram.ui.ActionBar.ActionBarPopupWindow(popupLayout, LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT);
         popupWindow[0].setOutsideTouchable(true);
         popupWindow[0].setClippingEnabled(true);
-        popupWindow[0].setAnimationStyle(xyz.nextalone.nagram.R.style.PopupAnimation);
+        popupWindow[0].setAnimationStyle(R.style.PopupAnimation);
         popupWindow[0].setFocusable(true);
         popupWindow[0].setInputMethodMode(org.telegram.ui.ActionBar.ActionBarPopupWindow.INPUT_METHOD_NOT_NEEDED);
         popupWindow[0].setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_UNSPECIFIED);
