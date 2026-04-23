@@ -179,7 +179,17 @@ public class SplitChatLayout extends FrameLayout {
             if (dialogId > 0) args.putLong("user_id", dialogId);
             else              args.putLong("chat_id", -dialogId);
 
-            org.telegram.ui.ChatActivity chat = new org.telegram.ui.ChatActivity(args);
+            org.telegram.ui.ChatActivity chat = new org.telegram.ui.ChatActivity(args) {
+                @Override
+                public void finishFragment() {
+                    if (panes.size() > 1) {
+                        boolean first = !panes.isEmpty() && panes.get(0).dialogId == dialogId;
+                        closePane(dialogId, first);
+                    } else {
+                        closeSplit();
+                    }
+                }
+            };
             // DO NOT set isInsideContainer=true — it hides the input bar (ChatActivity line 8601-8602)
             // We'll manually fix the only things isInsideContainer was doing that we need.
             chat.setParentLayout(host.actionBarLayout);
