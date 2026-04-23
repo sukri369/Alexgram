@@ -870,7 +870,6 @@ public class SplitChatLayout extends FrameLayout {
         interface OnLongPress { void onLongPress(); }
 
         private final OnDrag drag; private final OnDragEnd dragEnd; private final OnDoubleTap dbl; private final OnLongPress lp;
-        private final Paint track = new Paint(Paint.ANTI_ALIAS_FLAG);
         private final Paint pill  = new Paint(Paint.ANTI_ALIAS_FLAG);
         private final RectF rect  = new RectF();
         private float downRaw, pressP; private long lastTap; private boolean dragging;
@@ -880,7 +879,6 @@ public class SplitChatLayout extends FrameLayout {
         public DividerView(Context ctx, OnDrag drag, OnDragEnd dragEnd, OnDoubleTap dbl, OnLongPress lp) {
             super(ctx);
             this.drag = drag; this.dragEnd = dragEnd; this.dbl = dbl; this.lp = lp;
-            track.setColor(0x44000000);
             pill.setColor(Theme.getColor(Theme.key_actionBarDefault));
             lpRun = () -> {
                 if (!dragging && lp != null) {
@@ -894,7 +892,6 @@ public class SplitChatLayout extends FrameLayout {
 
         @Override
         protected void onDraw(Canvas canvas) {
-            canvas.drawRect(0, 0, getWidth(), getHeight(), track);
             float big = AndroidUtilities.dp(28) + pressP * AndroidUtilities.dp(10);
             float sm  = AndroidUtilities.dp(3);
             float cx = getWidth() / 2f, cy = getHeight() / 2f;
