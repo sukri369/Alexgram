@@ -183,17 +183,6 @@ public class SplitChatLayout extends FrameLayout {
 
     // ── Fragment embedding ────────────────────────────────────────────────────
 
-    /**
-     * Embeds a ChatActivity view directly into a container.
-     * Uses the RightSlidingDialogContainer pattern: no new ActionBarLayout.
-     *
-     * Key fixes applied here:
-     *  1. isInsideContainer=true → prevents both panes fighting over window insets
-     *  2. Consume window insets on the fragment view → prevents SizeNotifierFrameLayout
-     *     from calculating a fake "keyboard height" (root height - pane height)
-     *  3. occupyStatusBar(isFirst) → only the TOP pane gets status bar height reserved
-     *  4. Force actionBar VISIBLE after isInsideContainer hides it
-     */
     private void embedFragment(long dialogId, FrameLayout container, boolean isFirst) {
         if (dialogId == 0 || container == null || host == null) return;
         try {
@@ -202,8 +191,8 @@ public class SplitChatLayout extends FrameLayout {
             else              args.putLong("chat_id", -dialogId);
 
             org.telegram.ui.ChatActivity chat = new org.telegram.ui.ChatActivity(args);
-            // isInsideContainer prevents this pane from owning nav-bar / status-bar insets
-            chat.isInsideContainer = true;
+            // DO NOT set isInsideContainer=true — it hides the input bar (ChatActivity line 8601-8602)
+            // We'll manually fix the only things isInsideContainer was doing that we need.
             chat.setParentLayout(host.actionBarLayout);
 
             if (!chat.onFragmentCreate()) {
@@ -217,26 +206,24 @@ public class SplitChatLayout extends FrameLayout {
                 return;
             }
 
-            // Block window insets reaching the fragment view.
-            // Without this, SizeNotifierFrameLayout calculates:
-            //   "keyboard height" = rootView.height - pane.height  (always > 0 in split!)
-            // which adds massive bottom padding, hiding input bar + last messages.
-            ViewCompat.setOnApplyWindowInsetsListener(view,
-                    (v, insets) -> WindowInsetsCompat.CONSUMED);
-            view.requestApplyInsets();
+            // Fix: ChatActivity line 5157 sets contentView.setOccupyStatusBar(true) when
+            // isInsideContainer=false. This would make the content view add status-bar-height
+            // top padding internally, conflicting with our pane layout.
+            // We override it here, since our panes manage their own layout.
+            if (view instanceof org.telegram.ui.Components.SizeNotifierFrameLayout) {
+                ((org.telegram.ui.Components.SizeNotifierFrameLayout) view).setOccupyStatusBar(false);
+            }
 
             container.removeAllViews();
             container.addView(view, LayoutHelper.createFrame(
                     LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
-            // isInsideContainer sets actionBar.setVisibility(GONE) in ChatActivity line 4024.
-            // Re-show it and configure status bar occupation:
-            //   pane1 (top/left) = at screen top → needs status bar height reservation
-            //   pane2 (bottom/right) = NOT at screen top → no status bar padding needed
+            // Action bar: replicate what ActionBarLayout.presentFragment() does.
+            // Only pane1 is at the top of the screen — it needs status bar height on its action bar.
+            // Pane2 is BELOW the divider — no status bar height needed there.
             org.telegram.ui.ActionBar.ActionBar actionBar = chat.getActionBar();
             if (actionBar != null) {
                 actionBar.setOccupyStatusBar(isFirst);
-                actionBar.setVisibility(View.VISIBLE);
                 if (actionBar.shouldAddToContainer()) {
                     if (actionBar.getParent() != null) {
                         ((ViewGroup) actionBar.getParent()).removeView(actionBar);
