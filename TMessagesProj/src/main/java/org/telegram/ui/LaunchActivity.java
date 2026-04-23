@@ -8243,6 +8243,11 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
 
     @Override
     public void onBackPressed() {
+        if (xyz.nextalone.nagram.ui.SplitChatManager.getInstance().getActiveLayout() != null) {
+            if (xyz.nextalone.nagram.ui.SplitChatManager.getInstance().getActiveLayout().onBackPressed()) {
+                return;
+            }
+        }
         if (!onBackPressed(true)) {
             return;
         }

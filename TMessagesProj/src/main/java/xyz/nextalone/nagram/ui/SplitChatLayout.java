@@ -709,50 +709,39 @@ public class SplitChatLayout extends FrameLayout {
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
 
-    @Override
-    public boolean dispatchKeyEvent(android.view.KeyEvent event) {
-        if (event.getKeyCode() == android.view.KeyEvent.KEYCODE_BACK) {
-            // First let the view hierarchy try to handle it (e.g. closing keyboard)
-            if (super.dispatchKeyEvent(event)) {
-                return true;
-            }
-            
-            // If nothing consumed it, handle it on ACTION_UP
-            if (event.getAction() == android.view.KeyEvent.ACTION_UP) {
-                boolean consumed = false;
-                
-                // First try the focused pane to close emoji panels, etc.
-                for (int i = panes.size() - 1; i >= 0; i--) {
-                    SplitPane p = panes.get(i);
-                    if (p.fragment != null && p.container != null && p.container.hasFocus()) {
-                        if (!p.fragment.onBackPressed(true)) {
-                            consumed = true;
-                            break;
-                        }
-                    }
-                }
-                
-                // If not consumed by focused, try all panes
-                if (!consumed) {
-                    for (int i = panes.size() - 1; i >= 0; i--) {
-                        SplitPane p = panes.get(i);
-                        if (p.fragment != null && !p.fragment.onBackPressed(true)) {
-                            consumed = true;
-                            break;
-                        }
-                    }
-                }
-                
-                // If no pane consumed the back press, we close the split layout completely
-                if (!consumed) {
-                    closeSplit();
+    public boolean onBackPressed() {
+        if (!built) return false;
+        
+        boolean consumed = false;
+        
+        // First try the focused pane to close emoji panels, etc.
+        for (int i = panes.size() - 1; i >= 0; i--) {
+            SplitPane p = panes.get(i);
+            if (p.fragment != null && p.container != null && p.container.hasFocus()) {
+                if (!p.fragment.onBackPressed(true)) {
+                    consumed = true;
+                    break;
                 }
             }
-            
-            // Always return true for KEYCODE_BACK to prevent it from bubbling up to LaunchActivity
-            return true;
         }
-        return super.dispatchKeyEvent(event);
+        
+        // If not consumed by focused, try all panes
+        if (!consumed) {
+            for (int i = panes.size() - 1; i >= 0; i--) {
+                SplitPane p = panes.get(i);
+                if (p.fragment != null && !p.fragment.onBackPressed(true)) {
+                    consumed = true;
+                    break;
+                }
+            }
+        }
+        
+        // If no pane consumed the back press, we close the split layout completely
+        if (!consumed) {
+            closeSplit();
+        }
+        
+        return true;
     }
 
     @Override
