@@ -34,6 +34,9 @@ public class SplitChatManager {
         try {
             AndroidUtilities.runOnUIThread(() -> {
                 try {
+                    if (splitLayout != null && splitLayout.getContext() != activity) {
+                        splitLayout = null;
+                    }
                     if (splitLayout == null) {
                         splitLayout = new SplitChatLayout(activity);
                     }

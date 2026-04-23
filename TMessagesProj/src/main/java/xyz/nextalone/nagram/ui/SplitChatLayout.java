@@ -459,6 +459,7 @@ public class SplitChatLayout extends FrameLayout {
                     
                     addMiniTab(pane.dialogId, title);
                     requestLayout();
+                    requestFocus();
                 }).start();
         
         if (panes.size() == 2) {
@@ -699,11 +700,19 @@ public class SplitChatLayout extends FrameLayout {
 
     @Override
     public boolean dispatchKeyEvent(android.view.KeyEvent event) {
-        if (event.getKeyCode() == android.view.KeyEvent.KEYCODE_BACK && event.getAction() == android.view.KeyEvent.ACTION_UP) {
-            closeSplit();
+        if (event.getKeyCode() == android.view.KeyEvent.KEYCODE_BACK) {
+            if (event.getAction() == android.view.KeyEvent.ACTION_UP) {
+                closeSplit();
+            }
             return true;
         }
         return super.dispatchKeyEvent(event);
+    }
+
+    @Override
+    public boolean onInterceptTouchEvent(android.view.MotionEvent ev) {
+        if (!hasFocus()) requestFocus();
+        return super.onInterceptTouchEvent(ev);
     }
 
     private void seamlessExitToNormal(long survivingDialogId) {
