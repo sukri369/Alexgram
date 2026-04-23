@@ -104,6 +104,8 @@ public class SplitChatLayout extends FrameLayout {
         buildLayout(host);
         host.frameLayout.addView(this,
                 LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        
+        requestFocus();
 
         embedFragment(originId,      pane1Container, true);
         embedFragment(pane2DialogId, pane2Container, false);
@@ -138,6 +140,7 @@ public class SplitChatLayout extends FrameLayout {
     // ── Layout skeleton ───────────────────────────────────────────────────────
 
     private void buildLayout(Context ctx) {
+        setClickable(true);
         setFocusable(true);
         setFocusableInTouchMode(true);
         requestFocus();
@@ -701,9 +704,44 @@ public class SplitChatLayout extends FrameLayout {
     @Override
     public boolean dispatchKeyEvent(android.view.KeyEvent event) {
         if (event.getKeyCode() == android.view.KeyEvent.KEYCODE_BACK) {
-            if (event.getAction() == android.view.KeyEvent.ACTION_UP) {
-                closeSplit();
+            // First let the view hierarchy try to handle it (e.g. closing keyboard)
+            if (super.dispatchKeyEvent(event)) {
+                return true;
             }
+            
+            // If nothing consumed it, handle it on ACTION_UP
+            if (event.getAction() == android.view.KeyEvent.ACTION_UP) {
+                boolean consumed = false;
+                
+                // First try the focused pane to close emoji panels, etc.
+                for (int i = panes.size() - 1; i >= 0; i--) {
+                    SplitPane p = panes.get(i);
+                    if (p.fragment != null && p.container != null && p.container.hasFocus()) {
+                        if (!p.fragment.onBackPressed(true)) {
+                            consumed = true;
+                            break;
+                        }
+                    }
+                }
+                
+                // If not consumed by focused, try all panes
+                if (!consumed) {
+                    for (int i = panes.size() - 1; i >= 0; i--) {
+                        SplitPane p = panes.get(i);
+                        if (p.fragment != null && !p.fragment.onBackPressed(true)) {
+                            consumed = true;
+                            break;
+                        }
+                    }
+                }
+                
+                // If no pane consumed the back press, we close the split layout completely
+                if (!consumed) {
+                    closeSplit();
+                }
+            }
+            
+            // Always return true for KEYCODE_BACK to prevent it from bubbling up to LaunchActivity
             return true;
         }
         return super.dispatchKeyEvent(event);
@@ -736,9 +774,10 @@ public class SplitChatLayout extends FrameLayout {
                     org.telegram.ui.ActionBar.INavigationLayout.NavigationParams params = 
                         new org.telegram.ui.ActionBar.INavigationLayout.NavigationParams(chat);
                     params.setNoAnimation(true);
+                    params.setRemoveLast(true);
                     host.actionBarLayout.presentFragment(params);
                 } catch (Exception e) {
-                    host.actionBarLayout.presentFragment(chat, false);
+                    host.actionBarLayout.presentFragment(chat, true);
                 }
             }
         }
@@ -770,9 +809,10 @@ public class SplitChatLayout extends FrameLayout {
                                 org.telegram.ui.ActionBar.INavigationLayout.NavigationParams params = 
                                     new org.telegram.ui.ActionBar.INavigationLayout.NavigationParams(chat);
                                 params.setNoAnimation(true);
+                                params.setRemoveLast(true);
                                 host.actionBarLayout.presentFragment(params);
                             } catch (Exception e) {
-                                host.actionBarLayout.presentFragment(chat, false);
+                                host.actionBarLayout.presentFragment(chat, true);
                             }
                         }
                     }
