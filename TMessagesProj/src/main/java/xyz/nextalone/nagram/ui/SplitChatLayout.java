@@ -221,9 +221,18 @@ public class SplitChatLayout extends FrameLayout {
             // Action bar: replicate what ActionBarLayout.presentFragment() does.
             // Only pane1 is at the top of the screen — it needs status bar height on its action bar.
             // Pane2 is BELOW the divider — no status bar height needed there.
+            // Use occupyStatusBar=false for BOTH panes so avatarContainer positions
+            // title identically in both. The status-bar gap for pane1 is handled
+            // by padding on the container instead.
+            if (isFirst) {
+                container.setPadding(0, AndroidUtilities.statusBarHeight, 0, 0);
+            } else {
+                container.setPadding(0, 0, 0, 0);
+            }
+
             org.telegram.ui.ActionBar.ActionBar actionBar = chat.getActionBar();
             if (actionBar != null) {
-                actionBar.setOccupyStatusBar(isFirst);
+                actionBar.setOccupyStatusBar(false); // same for both panes
                 if (actionBar.shouldAddToContainer()) {
                     if (actionBar.getParent() != null) {
                         ((ViewGroup) actionBar.getParent()).removeView(actionBar);
@@ -508,26 +517,28 @@ public class SplitChatLayout extends FrameLayout {
 
         @Override
         protected void onLayout(boolean changed, int l, int t, int r, int b) {
+            // topPad = statusBarHeight for pane1, 0 for pane2
+            int topPad   = getPaddingTop();
             int actionBarH = 0;
-            // Layout ActionBar at top
+            // Layout ActionBar below the top padding
             for (int i = 0; i < getChildCount(); i++) {
                 View child = getChildAt(i);
                 if (child instanceof org.telegram.ui.ActionBar.ActionBar && child.getVisibility() != GONE) {
-                    child.layout(0, 0, child.getMeasuredWidth(), child.getMeasuredHeight());
+                    child.layout(0, topPad, child.getMeasuredWidth(), topPad + child.getMeasuredHeight());
                     actionBarH = child.getMeasuredHeight();
                     break;
                 }
             }
-            // Layout all other children below the ActionBar
+            // Layout all other children below padding + ActionBar
             for (int i = 0; i < getChildCount(); i++) {
                 View child = getChildAt(i);
                 if (!(child instanceof org.telegram.ui.ActionBar.ActionBar)) {
                     FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) child.getLayoutParams();
                     child.layout(
                         lp.leftMargin,
-                        lp.topMargin + actionBarH,
+                        lp.topMargin + topPad + actionBarH,
                         lp.leftMargin + child.getMeasuredWidth(),
-                        lp.topMargin + actionBarH + child.getMeasuredHeight());
+                        lp.topMargin + topPad + actionBarH + child.getMeasuredHeight());
                 }
             }
         }
@@ -562,7 +573,7 @@ public class SplitChatLayout extends FrameLayout {
             };
         }
 
-        private boolean isHorizontal() { return getHeight() > getWidth(); }
+        private boolean isHorizontal() { return getWidth() >= getHeight(); }
 
         @Override
         protected void onDraw(Canvas canvas) {
