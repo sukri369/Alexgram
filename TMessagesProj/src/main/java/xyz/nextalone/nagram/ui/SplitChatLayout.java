@@ -228,11 +228,12 @@ public class SplitChatLayout extends FrameLayout {
             container.addView(view, LayoutHelper.createFrame(
                     LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
             // Then add action bar on top — this is what ActionBarLayout.presentFragment does
-            if (chat.actionBar != null && chat.actionBar.shouldAddToContainer()) {
-                if (chat.actionBar.getParent() != null) {
-                    ((ViewGroup) chat.actionBar.getParent()).removeView(chat.actionBar);
+            org.telegram.ui.ActionBar.ActionBar actionBar = chat.getActionBar();
+            if (actionBar != null && actionBar.shouldAddToContainer()) {
+                if (actionBar.getParent() != null) {
+                    ((ViewGroup) actionBar.getParent()).removeView(actionBar);
                 }
-                container.addView(chat.actionBar);
+                container.addView(actionBar);
             }
 
             chat.onResume();
