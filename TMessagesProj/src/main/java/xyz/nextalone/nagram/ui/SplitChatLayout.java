@@ -742,22 +742,12 @@ public class SplitChatLayout extends FrameLayout {
         
         boolean consumed = false;
         
-        // First try the focused pane to close emoji panels, etc.
+        // Try all panes. If ANY pane has something to close (emoji, etc), it will return false.
         for (int i = panes.size() - 1; i >= 0; i--) {
             SplitPane p = panes.get(i);
-            if (p.fragment != null && p.container != null && p.container.hasFocus()) {
+            if (p.fragment != null) {
+                // If this pane has a popup or something open, consume the back press
                 if (!p.fragment.onBackPressed(true)) {
-                    consumed = true;
-                    break;
-                }
-            }
-        }
-        
-        // If not consumed by focused, try all panes
-        if (!consumed) {
-            for (int i = panes.size() - 1; i >= 0; i--) {
-                SplitPane p = panes.get(i);
-                if (p.fragment != null && !p.fragment.onBackPressed(true)) {
                     consumed = true;
                     break;
                 }
