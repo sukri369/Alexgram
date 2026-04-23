@@ -700,8 +700,9 @@ public class SplitChatLayout extends FrameLayout {
     public void closeSplit() {
         if (!built) return;
         built = false;
-        long activeId = originId;
-        if (!panes.isEmpty()) activeId = panes.get(0).dialogId;
+        long aId = originId;
+        if (!panes.isEmpty()) aId = panes.get(0).dialogId;
+        final long activeId = aId;
 
         animate().alpha(0f).scaleX(0.96f).scaleY(0.96f).setDuration(200)
                 .withEndAction(() -> {
