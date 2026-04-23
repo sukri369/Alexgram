@@ -380,6 +380,58 @@ public class SplitChatLayout extends FrameLayout {
         requestLayout();
     }
 
+    private void switchChat(boolean isFirst) {
+        org.telegram.ui.LaunchActivity activity = (org.telegram.ui.LaunchActivity) getContext();
+        if (activity == null) return;
+
+        java.util.HashSet<Long> excluded = new java.util.HashSet<>();
+        excluded.add(originDialogId);
+        for (SplitPane p : panes) excluded.add(p.dialogId);
+        for (MiniPaneTab m : minis) excluded.add(m.dialogId);
+
+        android.os.Bundle args = new android.os.Bundle();
+        args.putBoolean("onlySelect", true);
+        args.putBoolean("checkCanOpenChat", false);
+        org.telegram.ui.DialogsActivity picker = new org.telegram.ui.DialogsActivity(args);
+        picker.setExcludedDialogIds(excluded);
+        picker.setDelegate((frag, dids, message, param, notify, scheduleDate, scheduleRepeatPeriod, topicsFragment) -> {
+            if (dids != null && !dids.isEmpty()) {
+                long did = dids.get(0).dialogId;
+                frag.finishFragment();
+                replaceChatInPane(did, isFirst);
+            } else {
+                frag.finishFragment();
+            }
+            return true;
+        });
+        activity.getActionBarLayout().presentFragment(picker);
+    }
+
+    private void replaceChatInPane(long newDialogId, boolean isFirst) {
+        int targetIndex = -1;
+        for (int i = 0; i < panes.size(); i++) {
+            SplitPane p = panes.get(i);
+            if (isFirst && p.container == pane1Container) { targetIndex = i; break; }
+            if (!isFirst && p.container == pane2Container) { targetIndex = i; break; }
+        }
+        if (targetIndex != -1) {
+            SplitPane target = panes.get(targetIndex);
+            float oldWeight = target.weight;
+            try { if (target.fragment != null) { target.fragment.onPause(); target.fragment.onFragmentDestroy(); } } catch(Exception ignore){}
+            panes.remove(targetIndex);
+            target.container.removeAllViews();
+            
+            int beforeCount = panes.size();
+            embedFragment(newDialogId, target.container, isFirst);
+            
+            if (panes.size() > beforeCount) {
+                SplitPane newPane = panes.remove(panes.size() - 1);
+                newPane.weight = oldWeight;
+                panes.add(targetIndex, newPane);
+            }
+        }
+    }
+
     private void closePane(long dialogId, boolean isFirst) {
         if (panes.size() <= 1) {
             closeSplit();
@@ -441,12 +493,23 @@ public class SplitChatLayout extends FrameLayout {
         });
         popupLayout.addView(fullItem);
 
-        // 3. Switch Chat
+        // 3. Swap Positions (only if 2 panes)
+        if (panes.size() > 1) {
+            org.telegram.ui.ActionBar.ActionBarMenuSubItem swapItem = new org.telegram.ui.ActionBar.ActionBarMenuSubItem(getContext(), false, false);
+            swapItem.setTextAndIcon("Swap Positions", R.drawable.ic_split_switch_na);
+            swapItem.setOnClickListener(v -> {
+                if (popupWindow[0] != null) popupWindow[0].dismiss();
+                swapPanes();
+            });
+            popupLayout.addView(swapItem);
+        }
+
+        // 3b. Switch Chat (Replace this pane)
         org.telegram.ui.ActionBar.ActionBarMenuSubItem switchItem = new org.telegram.ui.ActionBar.ActionBarMenuSubItem(getContext(), false, false);
         switchItem.setTextAndIcon("Switch Chat", R.drawable.ic_split_switch_na);
         switchItem.setOnClickListener(v -> {
             if (popupWindow[0] != null) popupWindow[0].dismiss();
-            swapPanes();
+            switchChat(isFirst);
         });
         popupLayout.addView(switchItem);
 
