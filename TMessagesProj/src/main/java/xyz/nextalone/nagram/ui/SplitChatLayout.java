@@ -236,6 +236,22 @@ public class SplitChatLayout extends FrameLayout {
             chat.onTransitionAnimationEnd(true, false);
             chat.onBecomeFullyVisible();
 
+            // After a frame, scroll the chat list to the bottom so the latest
+            // message is visible and the input bar is in the correct position.
+            final org.telegram.ui.ChatActivity finalChat = chat;
+            view.post(() -> {
+                try {
+                    java.lang.reflect.Field f = org.telegram.ui.ChatActivity.class.getDeclaredField("chatListView");
+                    f.setAccessible(true);
+                    Object lv = f.get(finalChat);
+                    if (lv instanceof androidx.recyclerview.widget.RecyclerView) {
+                        ((androidx.recyclerview.widget.RecyclerView) lv).scrollToPosition(0);
+                    }
+                } catch (Exception ignore) {}
+                // Force the container to re-measure so fragment sizes are fully correct
+                container.requestLayout();
+            });
+
             SplitPane pane = new SplitPane();
             pane.dialogId     = dialogId;
             pane.fragment     = chat;
@@ -318,26 +334,76 @@ public class SplitChatLayout extends FrameLayout {
     private boolean isPortrait() { return getWidth() > 0 && getHeight() > getWidth(); }
 
     @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        int W = MeasureSpec.getSize(widthMeasureSpec);
+        int H = MeasureSpec.getSize(heightMeasureSpec);
+
+        if (pane1Container == null || W == 0 || H == 0) {
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+            return;
+        }
+
+        int divPx   = AndroidUtilities.dp(16);
+        float w     = panes.isEmpty() ? 0.5f : Math.max(0.25f, Math.min(0.75f, panes.get(0).weight));
+        boolean por = H > W;
+
+        if (por) {
+            int p1H = (int) ((H - divPx) * w);
+            int p2H = H - divPx - p1H;
+            pane1Container.measure(
+                MeasureSpec.makeMeasureSpec(W, MeasureSpec.EXACTLY),
+                MeasureSpec.makeMeasureSpec(p1H, MeasureSpec.EXACTLY));
+            if (divider != null)
+                divider.measure(
+                    MeasureSpec.makeMeasureSpec(W, MeasureSpec.EXACTLY),
+                    MeasureSpec.makeMeasureSpec(divPx, MeasureSpec.EXACTLY));
+            pane2Container.measure(
+                MeasureSpec.makeMeasureSpec(W, MeasureSpec.EXACTLY),
+                MeasureSpec.makeMeasureSpec(p2H, MeasureSpec.EXACTLY));
+        } else {
+            int p1W = (int) ((W - divPx) * w);
+            int p2W = W - divPx - p1W;
+            pane1Container.measure(
+                MeasureSpec.makeMeasureSpec(p1W, MeasureSpec.EXACTLY),
+                MeasureSpec.makeMeasureSpec(H, MeasureSpec.EXACTLY));
+            if (divider != null)
+                divider.measure(
+                    MeasureSpec.makeMeasureSpec(divPx, MeasureSpec.EXACTLY),
+                    MeasureSpec.makeMeasureSpec(H, MeasureSpec.EXACTLY));
+            pane2Container.measure(
+                MeasureSpec.makeMeasureSpec(p2W, MeasureSpec.EXACTLY),
+                MeasureSpec.makeMeasureSpec(H, MeasureSpec.EXACTLY));
+        }
+
+        // Measure overlay views (mini bar, close button) at normal MATCH_PARENT
+        for (int i = 0; i < getChildCount(); i++) {
+            View child = getChildAt(i);
+            if (child != pane1Container && child != pane2Container && child != divider) {
+                measureChildWithMargins(child, widthMeasureSpec, 0, heightMeasureSpec, 0);
+            }
+        }
+        setMeasuredDimension(W, H);
+    }
+
+    @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         super.onLayout(changed, l, t, r, b);
         int W = r - l, H = b - t;
         if (W == 0 || pane1Container == null) return;
 
-        int divPx = divider != null && divider.getMeasuredHeight() > 0
-                ? divider.getMeasuredHeight() : AndroidUtilities.dp(16);
-        float w = panes.isEmpty() ? 0.5f : Math.max(0.25f, Math.min(0.75f, panes.get(0).weight));
+        int divPx = divider != null ? divider.getMeasuredHeight() : AndroidUtilities.dp(16);
+        float w   = panes.isEmpty() ? 0.5f : Math.max(0.25f, Math.min(0.75f, panes.get(0).weight));
 
-        if (isPortrait()) {
+        if (H > W) { // portrait
             int p1H = (int) ((H - divPx) * w);
             pane1Container.layout(0, 0, W, p1H);
-            divider.layout(0, p1H, W, p1H + divPx);
+            if (divider != null) divider.layout(0, p1H, W, p1H + divPx);
             pane2Container.layout(0, p1H + divPx, W, H);
-        } else {
-            int divV = divider != null && divider.getMeasuredWidth() > 0
-                    ? divider.getMeasuredWidth() : AndroidUtilities.dp(16);
-            int p1W = (int) ((W - divV) * w);
+        } else { // landscape
+            int divV = divider != null ? divider.getMeasuredWidth() : AndroidUtilities.dp(16);
+            int p1W  = (int) ((W - divV) * w);
             pane1Container.layout(0, 0, p1W, H);
-            divider.layout(p1W, 0, p1W + divV, H);
+            if (divider != null) divider.layout(p1W, 0, p1W + divV, H);
             pane2Container.layout(p1W + divV, 0, W, H);
         }
     }
@@ -346,8 +412,17 @@ public class SplitChatLayout extends FrameLayout {
 
     private void onDrag(float raw) {
         if (panes.isEmpty()) return;
-        float frac = isPortrait() ? (raw / Math.max(1, getHeight())) : (raw / Math.max(1, getWidth()));
-        panes.get(0).weight = Math.max(0.25f, Math.min(0.75f, frac));
+        // raw is a screen-absolute coordinate (getRawX/Y).
+        // We must subtract this view's screen offset to get a view-local position.
+        int[] loc = new int[2];
+        getLocationOnScreen(loc);
+        if (getHeight() > getWidth()) { // portrait → vertical drag
+            float relY = raw - loc[1];
+            panes.get(0).weight = Math.max(0.25f, Math.min(0.75f, relY / Math.max(1, getHeight())));
+        } else { // landscape → horizontal drag
+            float relX = raw - loc[0];
+            panes.get(0).weight = Math.max(0.25f, Math.min(0.75f, relX / Math.max(1, getWidth())));
+        }
         requestLayout();
     }
 
