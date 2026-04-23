@@ -404,7 +404,7 @@ public class SplitChatLayout extends FrameLayout {
             }
             return true;
         });
-        activity.getActionBarLayout().presentFragment(picker);
+        activity.actionBarLayout.presentFragment(picker);
     }
 
     private void replaceChatInPane(long newDialogId, boolean isFirst) {
