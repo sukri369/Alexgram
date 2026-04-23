@@ -17,6 +17,8 @@ import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.dynamicanimation.animation.FloatValueHolder;
 import androidx.dynamicanimation.animation.SpringAnimation;
 import androidx.dynamicanimation.animation.SpringForce;
@@ -43,11 +45,8 @@ import java.util.ArrayList;
 /**
  * God-level Split Chat.
  *
- * Uses the same technique as RightSlidingDialogContainer:
- *  - fragment.setInPreviewMode(true)
- *  - fragment.setParentLayout(existingLayout)  ← no new ActionBarLayout
- *  - view = fragment.createView(activity)
- *  - addView(view)
+ * Pattern: fragment.setParentLayout(existing) + createView() directly
+ * (same as RightSlidingDialogContainer — no new ActionBarLayout = no crashes)
  *
  * Portrait  → TOP / BOTTOM panes (horizontal divider)
  * Landscape → LEFT / RIGHT panes (vertical divider)
@@ -63,12 +62,12 @@ public class SplitChatLayout extends FrameLayout {
         float weight = 0.5f;
     }
 
-    private final ArrayList<SplitPane> panes   = new ArrayList<>();
-    private final ArrayList<MiniPaneTab> minis  = new ArrayList<>();
+    private final ArrayList<SplitPane> panes  = new ArrayList<>();
+    private final ArrayList<MiniPaneTab> minis = new ArrayList<>();
 
     private View          divider;
-    private FrameLayout   pane1Container;   // top (portrait) or left (landscape)
-    private FrameLayout   pane2Container;   // bottom (portrait) or right (landscape)
+    private FrameLayout   pane1Container;
+    private FrameLayout   pane2Container;
     private HorizontalScrollView miniScroll;
     private LinearLayout  miniBar;
     private LaunchActivity host;
@@ -85,41 +84,31 @@ public class SplitChatLayout extends FrameLayout {
     public void setOriginDialogId(long id) { this.originId = id; }
     public boolean built() { return built; }
 
-    // ── Public entry called by SplitChatManager ───────────────────────────────
+    // ── Public entry ──────────────────────────────────────────────────────────
 
-    /** Step 1: Show picker. The overlay is built in step 2 after user picks. */
     public void showPickerAndWait(LaunchActivity activity, long currentDialogId) {
         this.host     = activity;
         this.originId = currentDialogId;
         if (built) return;
-
         try {
-            // Present DialogsActivity picker on the MAIN actionBarLayout.
-            // After the user selects a chat, SplitChatManager.openDialogInSplit()
-            // calls buildSplit() below.
-            org.telegram.ui.DialogsActivity picker = buildPicker();
             activity.actionBarLayout.presentFragment(
-                    new INavigationLayout.NavigationParams(picker));
+                    new INavigationLayout.NavigationParams(buildPicker()));
         } catch (Exception e) {
             FileLog.e(e);
         }
     }
 
-    /** Step 2: called after user picks pane-2 dialog. Builds the actual overlay. */
     public void buildSplit(long pane2DialogId) {
         if (built || host == null) return;
         built = true;
 
-        // Build skeleton views
         buildLayout(host);
         host.frameLayout.addView(this,
                 LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
-        // Pane 1 = original chat; Pane 2 = chosen chat
-        embedFragment(originId,    pane1Container, true);
+        embedFragment(originId,      pane1Container, true);
         embedFragment(pane2DialogId, pane2Container, false);
 
-        // Entry animation
         setAlpha(0f); setScaleX(0.97f); setScaleY(0.97f);
         animate().alpha(1f).scaleX(1f).scaleY(1f)
                 .setDuration(260).setInterpolator(CubicBezierInterpolator.DEFAULT).start();
@@ -158,14 +147,12 @@ public class SplitChatLayout extends FrameLayout {
 
         divider = new DividerView(ctx,
                 this::onDrag, this::onDividerDoubleTap, this::closeSplit);
-        // 16dp touch target — big enough to grab reliably on any screen
         addView(divider, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 16));
 
         pane2Container = new FrameLayout(ctx);
         addView(pane2Container, LayoutHelper.createFrame(
                 LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
-        // Mini-tab strip (shows minimized chats)
         miniScroll = new HorizontalScrollView(ctx);
         miniScroll.setHorizontalScrollBarEnabled(false);
         miniScroll.setOverScrollMode(OVER_SCROLL_NEVER);
@@ -179,7 +166,6 @@ public class SplitChatLayout extends FrameLayout {
                 LayoutHelper.WRAP_CONTENT, 52, Gravity.BOTTOM | Gravity.START, 4, 0, 4, 8));
         miniScroll.setVisibility(GONE);
 
-        // Close button (top-right)
         TextView close = new TextView(ctx);
         close.setText(LocaleController.getString("SplitChatClose", R.string.SplitChatClose));
         close.setTextColor(Theme.getColor(Theme.key_actionBarDefaultTitle));
@@ -195,11 +181,18 @@ public class SplitChatLayout extends FrameLayout {
                 Gravity.TOP | Gravity.END, 0, 8, 8, 0));
     }
 
-    // ── Fragment embedding (RightSlidingDialogContainer pattern) ──────────────
+    // ── Fragment embedding ────────────────────────────────────────────────────
 
     /**
-     * Embeds a ChatActivity view directly into a container without
-     * creating a new ActionBarLayout. Safe, proven, no crashes.
+     * Embeds a ChatActivity view directly into a container.
+     * Uses the RightSlidingDialogContainer pattern: no new ActionBarLayout.
+     *
+     * Key fixes applied here:
+     *  1. isInsideContainer=true → prevents both panes fighting over window insets
+     *  2. Consume window insets on the fragment view → prevents SizeNotifierFrameLayout
+     *     from calculating a fake "keyboard height" (root height - pane height)
+     *  3. occupyStatusBar(isFirst) → only the TOP pane gets status bar height reserved
+     *  4. Force actionBar VISIBLE after isInsideContainer hides it
      */
     private void embedFragment(long dialogId, FrameLayout container, boolean isFirst) {
         if (dialogId == 0 || container == null || host == null) return;
@@ -209,32 +202,41 @@ public class SplitChatLayout extends FrameLayout {
             else              args.putLong("chat_id", -dialogId);
 
             org.telegram.ui.ChatActivity chat = new org.telegram.ui.ChatActivity(args);
-            // isInsideContainer=true prevents window-inset conflicts between panes
-            // (status bar, nav bar, keyboard — each pane should NOT own these)
+            // isInsideContainer prevents this pane from owning nav-bar / status-bar insets
             chat.isInsideContainer = true;
             chat.setParentLayout(host.actionBarLayout);
 
             if (!chat.onFragmentCreate()) {
-                FileLog.d("SplitChat: onFragmentCreate returned false for " + dialogId);
+                FileLog.d("SplitChat: onFragmentCreate=false id=" + dialogId);
                 return;
             }
 
             View view = chat.createView(host);
             if (view == null) {
-                FileLog.d("SplitChat: createView returned null for " + dialogId);
+                FileLog.d("SplitChat: createView=null id=" + dialogId);
                 return;
             }
+
+            // Block window insets reaching the fragment view.
+            // Without this, SizeNotifierFrameLayout calculates:
+            //   "keyboard height" = rootView.height - pane.height  (always > 0 in split!)
+            // which adds massive bottom padding, hiding input bar + last messages.
+            ViewCompat.setOnApplyWindowInsetsListener(view,
+                    (v, insets) -> WindowInsetsCompat.CONSUMED);
+            view.requestApplyInsets();
 
             container.removeAllViews();
             container.addView(view, LayoutHelper.createFrame(
                     LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
-            // isInsideContainer hides the actionBar (line 4024 in ChatActivity).
-            // We force it back visible and strip status-bar height from it.
+            // isInsideContainer sets actionBar.setVisibility(GONE) in ChatActivity line 4024.
+            // Re-show it and configure status bar occupation:
+            //   pane1 (top/left) = at screen top → needs status bar height reservation
+            //   pane2 (bottom/right) = NOT at screen top → no status bar padding needed
             org.telegram.ui.ActionBar.ActionBar actionBar = chat.getActionBar();
             if (actionBar != null) {
-                actionBar.setOccupyStatusBar(false);   // no status-bar-height padding
-                actionBar.setVisibility(View.VISIBLE);  // un-hide what isInsideContainer hid
+                actionBar.setOccupyStatusBar(isFirst);
+                actionBar.setVisibility(View.VISIBLE);
                 if (actionBar.shouldAddToContainer()) {
                     if (actionBar.getParent() != null) {
                         ((ViewGroup) actionBar.getParent()).removeView(actionBar);
@@ -259,10 +261,8 @@ public class SplitChatLayout extends FrameLayout {
         }
     }
 
-    /** Swap a new chat into the bottom/right pane (called when user taps mini icon). */
     private void swapPane(long dialogId, boolean isFirst) {
         FrameLayout container = isFirst ? pane1Container : pane2Container;
-        // Pause & destroy old fragment
         if (!panes.isEmpty()) {
             int idx = isFirst ? 0 : panes.size() - 1;
             if (idx < panes.size()) {
@@ -276,14 +276,9 @@ public class SplitChatLayout extends FrameLayout {
         if (divider != null) divider.setVisibility(panes.size() >= 2 ? VISIBLE : GONE);
     }
 
-    /** Called by SplitChatManager when a 3rd chat is opened. */
     public void openDialogInNextPane(long dialogId) {
         if (!built) return;
-        // Demote the older pane to mini icon, then open new one
-        if (!panes.isEmpty()) {
-            SplitPane oldest = panes.get(0);
-            demoteToMini(oldest);
-        }
+        if (!panes.isEmpty()) demoteToMini(panes.get(0));
         AndroidUtilities.runOnUIThread(() -> swapPane(dialogId, false), 280);
     }
 
@@ -292,7 +287,6 @@ public class SplitChatLayout extends FrameLayout {
     private void demoteToMini(SplitPane pane) {
         panes.remove(pane);
         String title = labelFor(pane.dialogId);
-
         pane.container.animate().scaleX(0.2f).scaleY(0.2f).alpha(0f).setDuration(240)
                 .setInterpolator(CubicBezierInterpolator.EASE_BOTH)
                 .withEndAction(() -> {
@@ -342,10 +336,8 @@ public class SplitChatLayout extends FrameLayout {
         int W = r - l, H = b - t;
         if (W == 0 || pane1Container == null) return;
 
-        // Use actual divider measurement; fall back to 16dp if not yet measured
         int divPx = divider != null && divider.getMeasuredHeight() > 0
-                ? divider.getMeasuredHeight()
-                : AndroidUtilities.dp(16);
+                ? divider.getMeasuredHeight() : AndroidUtilities.dp(16);
         float w = panes.isEmpty() ? 0.5f : Math.max(0.25f, Math.min(0.75f, panes.get(0).weight));
 
         if (isPortrait()) {
@@ -354,10 +346,8 @@ public class SplitChatLayout extends FrameLayout {
             divider.layout(0, p1H, W, p1H + divPx);
             pane2Container.layout(0, p1H + divPx, W, H);
         } else {
-            // landscape: left / right split
             int divV = divider != null && divider.getMeasuredWidth() > 0
-                    ? divider.getMeasuredWidth()
-                    : AndroidUtilities.dp(16);
+                    ? divider.getMeasuredWidth() : AndroidUtilities.dp(16);
             int p1W = (int) ((W - divV) * w);
             pane1Container.layout(0, 0, p1W, H);
             divider.layout(p1W, 0, p1W + divV, H);
@@ -418,12 +408,12 @@ public class SplitChatLayout extends FrameLayout {
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // Draggable Divider — pill flips orientation with pane direction
+    // Draggable Divider — horizontal pill in portrait, vertical in landscape
     // ══════════════════════════════════════════════════════════════════════════
     public static class DividerView extends View {
-        interface OnDrag       { void onDrag(float raw); }
-        interface OnDoubleTap  { void onDoubleTap(); }
-        interface OnLongPress  { void onLongPress(); }
+        interface OnDrag      { void onDrag(float raw); }
+        interface OnDoubleTap { void onDoubleTap(); }
+        interface OnLongPress { void onLongPress(); }
 
         private final OnDrag drag; private final OnDoubleTap dbl; private final OnLongPress lp;
         private final Paint track = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -436,23 +426,27 @@ public class SplitChatLayout extends FrameLayout {
         public DividerView(Context ctx, OnDrag drag, OnDoubleTap dbl, OnLongPress lp) {
             super(ctx);
             this.drag = drag; this.dbl = dbl; this.lp = lp;
-            track.setColor(0x33000000);
+            track.setColor(0x44000000);
             pill.setColor(Theme.getColor(Theme.key_actionBarDefault));
-            lpRun = () -> { if (!dragging && lp != null) { performHapticFeedback(HapticFeedbackConstants.LONG_PRESS); lp.onLongPress(); } };
+            lpRun = () -> {
+                if (!dragging && lp != null) {
+                    performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+                    lp.onLongPress();
+                }
+            };
         }
 
-        // Horizontal divider when height > width (portrait), vertical otherwise
         private boolean isHorizontal() { return getHeight() > getWidth(); }
 
         @Override
         protected void onDraw(Canvas canvas) {
             canvas.drawRect(0, 0, getWidth(), getHeight(), track);
             float big = AndroidUtilities.dp(28) + pressP * AndroidUtilities.dp(10);
-            float small = AndroidUtilities.dp(3);
+            float sm  = AndroidUtilities.dp(3);
             float cx = getWidth() / 2f, cy = getHeight() / 2f;
             float pw, ph;
-            if (isHorizontal()) { pw = big; ph = small; }
-            else                { pw = small; ph = big; }
+            if (isHorizontal()) { pw = big; ph = sm; }
+            else                 { pw = sm;  ph = big; }
             rect.set(cx - pw / 2f, cy - ph / 2f, cx + pw / 2f, cy + ph / 2f);
             canvas.drawRoundRect(rect, AndroidUtilities.dp(3), AndroidUtilities.dp(3), pill);
         }
