@@ -273,6 +273,13 @@ public class SplitChatLayout extends FrameLayout {
                     }
                 }
             };
+            // Core Fix: Enable Telegram's native 'embedded mode' to fix padding/shadows/gaps.
+            try {
+                java.lang.reflect.Field isic = org.telegram.ui.ChatActivity.class.getDeclaredField("isInsideContainer");
+                isic.setAccessible(true);
+                isic.set(chat, true);
+            } catch (Exception ignore) {}
+
             chat.setParentLayout(host.actionBarLayout);
             chat.setCurrentAccount(account);
 
@@ -287,9 +294,7 @@ public class SplitChatLayout extends FrameLayout {
                 return;
             }
 
-            // Precision Fix for White Strip:
-            // Instead of using isInsideContainer (which hides headers), we manually 
-            // force the contentView to NOT occupy the status bar and clear backgrounds.
+            // Precision Fix for White Strip and UI Visibility:
             if (view instanceof org.telegram.ui.Components.SizeNotifierFrameLayout) {
                 org.telegram.ui.Components.SizeNotifierFrameLayout snfl = (org.telegram.ui.Components.SizeNotifierFrameLayout) view;
                 snfl.setOccupyStatusBar(false);
@@ -297,8 +302,20 @@ public class SplitChatLayout extends FrameLayout {
                 snfl.setClipChildren(false);
                 snfl.setClipToPadding(false);
                 
-                // Keep it false even after internal layout updates
-                snfl.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> snfl.setOccupyStatusBar(false));
+                // Final "God-Level" Guardian: Keep headers and input bars visible even if 
+                // Telegram's internal logic tries to hide them because of 'isInsideContainer'.
+                snfl.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
+                    snfl.setOccupyStatusBar(false);
+                    try {
+                        org.telegram.ui.ActionBar.ActionBar ab = chat.getActionBar();
+                        if (ab != null) ab.setVisibility(View.VISIBLE);
+                        
+                        java.lang.reflect.Field evf = org.telegram.ui.ChatActivity.class.getDeclaredField("chatActivityEnterView");
+                        evf.setAccessible(true);
+                        View enterView = (View) evf.get(chat);
+                        if (enterView != null) enterView.setVisibility(View.VISIBLE);
+                    } catch (Exception ignore) {}
+                });
 
                 // Surgical cleanup of internal top panels
                 try {
@@ -315,9 +332,6 @@ public class SplitChatLayout extends FrameLayout {
                             Object o = f.get(chat);
                             if (o instanceof View) {
                                 ((View) o).setBackground(null);
-                                if (fName.contains("ContextView") && ((View) o).getVisibility() == View.INVISIBLE) {
-                                    ((View) o).setVisibility(View.GONE);
-                                }
                             }
                         } catch (Exception ignore) {}
                     }
