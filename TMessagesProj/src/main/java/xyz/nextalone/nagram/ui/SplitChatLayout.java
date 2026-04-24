@@ -236,6 +236,18 @@ public class SplitChatLayout extends FrameLayout {
                 public void finishFragment() {
                     if (isReplacing) return;
                     
+                    // If account was switched, old fragments might finish themselves.
+                    // We only want to close the split if it's an explicit user action (like Back button).
+                    // If the account doesn't match, it's likely a system-triggered finish.
+                    if (this.getCurrentAccount() != org.telegram.messenger.UserConfig.selectedAccount) {
+                        // Just remove this pane but don't close the whole split if others exist.
+                        if (panes.size() > 1) {
+                            boolean first = !panes.isEmpty() && panes.get(0).dialogId == dialogId;
+                            closePane(dialogId, first);
+                        }
+                        return;
+                    }
+
                     // Verify this fragment is still the active one for this dialog in our panes
                     boolean found = false;
                     for (SplitPane p : panes) {
