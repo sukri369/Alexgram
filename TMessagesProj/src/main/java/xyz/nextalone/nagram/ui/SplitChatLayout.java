@@ -396,7 +396,13 @@ public class SplitChatLayout extends FrameLayout {
         args.putBoolean("allowSwitchAccount", true);
         args.putBoolean("forSplitSwitch", true);
         args.putString("customTitle", "Switch Chat");
-        org.telegram.ui.DialogsActivity picker = new org.telegram.ui.DialogsActivity(args);
+        org.telegram.ui.DialogsActivity picker = new org.telegram.ui.DialogsActivity(args) {
+            @Override
+            public void onFragmentDestroy() {
+                super.onFragmentDestroy();
+                org.telegram.messenger.AndroidUtilities.runOnUIThread(() -> setVisibility(VISIBLE));
+            }
+        };
         picker.setDelegate((frag, dids, message, param, notify, scheduleDate, scheduleRepeatPeriod, topicsFragment) -> {
             if (dids != null && !dids.isEmpty()) {
                 long did = dids.get(0).dialogId;
@@ -407,6 +413,7 @@ public class SplitChatLayout extends FrameLayout {
             }
             return true;
         });
+        setVisibility(GONE);
         activity.actionBarLayout.presentFragment(picker);
     }
 
@@ -420,7 +427,13 @@ public class SplitChatLayout extends FrameLayout {
         args.putBoolean("allowSwitchAccount", true);
         args.putBoolean("forSplitSwitch", true);
         args.putString("customTitle", "Add Chat");
-        org.telegram.ui.DialogsActivity picker = new org.telegram.ui.DialogsActivity(args);
+        org.telegram.ui.DialogsActivity picker = new org.telegram.ui.DialogsActivity(args) {
+            @Override
+            public void onFragmentDestroy() {
+                super.onFragmentDestroy();
+                org.telegram.messenger.AndroidUtilities.runOnUIThread(() -> setVisibility(VISIBLE));
+            }
+        };
         picker.setDelegate((frag, dids, message, param, notify, scheduleDate, scheduleRepeatPeriod, topicsFragment) -> {
             if (dids != null && !dids.isEmpty()) {
                 long did = dids.get(0).dialogId;
@@ -431,6 +444,7 @@ public class SplitChatLayout extends FrameLayout {
             }
             return true;
         });
+        setVisibility(GONE);
         activity.actionBarLayout.presentFragment(picker);
     }
 
