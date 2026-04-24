@@ -235,6 +235,17 @@ public class SplitChatLayout extends FrameLayout {
                 @Override
                 public void finishFragment() {
                     if (isReplacing) return;
+                    
+                    // Verify this fragment is still the active one for this dialog in our panes
+                    boolean found = false;
+                    for (SplitPane p : panes) {
+                        if (p.dialogId == dialogId && p.fragment == this) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) return;
+
                     if (panes.size() > 1) {
                         boolean first = !panes.isEmpty() && panes.get(0).dialogId == dialogId;
                         closePane(dialogId, first);
