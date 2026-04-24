@@ -56,6 +56,7 @@ public class SplitChatLayout extends FrameLayout {
 
     // ─────────────────────────────────────────────────────────────────────────
     static class SplitPane {
+        int account;
         long dialogId;
         BaseFragment fragment;
         View fragmentView;
@@ -71,6 +72,7 @@ public class SplitChatLayout extends FrameLayout {
     private PaneContainer pane2Container;
     private LaunchActivity host;
     private long          originId;
+    private int           originAccount;
     private boolean       built = false;
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -80,7 +82,7 @@ public class SplitChatLayout extends FrameLayout {
         setClipToPadding(false);
     }
 
-    public void setOriginDialogId(long id) { this.originId = id; }
+    public void setOriginDialog(int account, long id) { this.originAccount = account; this.originId = id; }
     public boolean built() { return built; }
 
     // ── Public entry ──────────────────────────────────────────────────────────
@@ -97,7 +99,7 @@ public class SplitChatLayout extends FrameLayout {
         }
     }
 
-    public void buildSplit(long pane2DialogId) {
+    public void buildSplit(int account, long pane2DialogId) {
         if (built || host == null) return;
         built = true;
 
@@ -107,8 +109,8 @@ public class SplitChatLayout extends FrameLayout {
         
         requestFocus();
 
-        embedFragment(originId,      pane1Container, true);
-        embedFragment(pane2DialogId, pane2Container, false);
+        embedFragment(originAccount, originId,      pane1Container, true);
+        embedFragment(account,       pane2DialogId, pane2Container, false);
 
         setAlpha(0f); setScaleX(0.97f); setScaleY(0.97f);
         animate().alpha(1f).scaleX(1f).scaleY(1f)
@@ -165,7 +167,7 @@ public class SplitChatLayout extends FrameLayout {
                 }
 
                 frag.finishFragment();
-                SplitChatManager.getInstance().openDialogInSplit(did);
+                SplitChatManager.getInstance().openDialogInSplit(frag.getCurrentAccount(), did);
             } else {
                 frag.finishFragment();
             }
@@ -212,10 +214,11 @@ public class SplitChatLayout extends FrameLayout {
 
     // ── Fragment embedding ────────────────────────────────────────────────────
 
-    private void embedFragment(long dialogId, PaneContainer container, boolean isFirst) {
+    private void embedFragment(int account, long dialogId, PaneContainer container, boolean isFirst) {
         if (dialogId == 0 || container == null || host == null) return;
         try {
             android.os.Bundle args = new android.os.Bundle();
+            args.putInt("account", account);
             if (dialogId > 0) args.putLong("user_id", dialogId);
             else              args.putLong("chat_id", -dialogId);
 
@@ -233,6 +236,7 @@ public class SplitChatLayout extends FrameLayout {
             // DO NOT set isInsideContainer=true — it hides the input bar (ChatActivity line 8601-8602)
             // We'll manually fix the only things isInsideContainer was doing that we need.
             chat.setParentLayout(host.actionBarLayout);
+            chat.setCurrentAccount(account);
 
             if (!chat.onFragmentCreate()) {
                 FileLog.d("SplitChat: onFragmentCreate=false id=" + dialogId);
@@ -336,6 +340,7 @@ public class SplitChatLayout extends FrameLayout {
             });
 
             SplitPane pane = new SplitPane();
+            pane.account      = account;
             pane.dialogId     = dialogId;
             pane.fragment     = chat;
             pane.fragmentView = view;
@@ -347,7 +352,7 @@ public class SplitChatLayout extends FrameLayout {
         }
     }
 
-    private void swapPane(long dialogId, boolean isFirst) {
+    private void swapPane(int account, long dialogId, boolean isFirst) {
         PaneContainer container = isFirst ? pane1Container : pane2Container;
         if (!panes.isEmpty()) {
             int idx = isFirst ? 0 : panes.size() - 1;
@@ -358,7 +363,7 @@ public class SplitChatLayout extends FrameLayout {
             }
         }
         container.removeAllViews();
-        embedFragment(dialogId, container, isFirst);
+        embedFragment(account, dialogId, container, isFirst);
         if (divider != null) divider.setVisibility(panes.size() >= 2 ? VISIBLE : GONE);
     }
 
@@ -376,8 +381,8 @@ public class SplitChatLayout extends FrameLayout {
         pane1Container.removeAllViews();
         pane2Container.removeAllViews();
         
-        embedFragment(id2, pane1Container, true);
-        embedFragment(id1, pane2Container, false);
+        embedFragment(p2.account, id2, pane1Container, true);
+        embedFragment(p1.account, id1, pane2Container, false);
         requestLayout();
     }
 
@@ -400,7 +405,7 @@ public class SplitChatLayout extends FrameLayout {
             if (dids != null && !dids.isEmpty()) {
                 long did = dids.get(0).dialogId;
                 frag.finishFragment();
-                replaceChatInPane(did, isFirst);
+                replaceChatInPane(frag.getCurrentAccount(), did, isFirst);
             } else {
                 frag.finishFragment();
             }
@@ -409,7 +414,7 @@ public class SplitChatLayout extends FrameLayout {
         activity.actionBarLayout.presentFragment(picker);
     }
 
-    private void replaceChatInPane(long newDialogId, boolean isFirst) {
+    private void replaceChatInPane(int account, long newDialogId, boolean isFirst) {
         int targetIndex = -1;
         for (int i = 0; i < panes.size(); i++) {
             SplitPane p = panes.get(i);
@@ -424,7 +429,7 @@ public class SplitChatLayout extends FrameLayout {
             target.container.removeAllViews();
             
             int beforeCount = panes.size();
-            embedFragment(newDialogId, target.container, isFirst);
+            embedFragment(account, newDialogId, target.container, isFirst);
             
             if (panes.size() > beforeCount) {
                 SplitPane newPane = panes.remove(panes.size() - 1);
@@ -536,16 +541,16 @@ public class SplitChatLayout extends FrameLayout {
         popupWindow[0].showAsDropDown(anchor, 0, -anchor.getMeasuredHeight());
     }
 
-    public void openDialogInNextPane(long dialogId) {
+    public void openDialogInNextPane(int account, long dialogId) {
         if (!built) return;
         if (!panes.isEmpty()) demoteToMini(panes.get(0));
-        AndroidUtilities.runOnUIThread(() -> swapPane(dialogId, false), 280);
+        AndroidUtilities.runOnUIThread(() -> swapPane(account, dialogId, false), 280);
     }
 
     // ── Demote to mini icon ───────────────────────────────────────────────────
 
     private void demoteToMini(SplitPane pane) {
-        String title = labelFor(pane.dialogId);
+        String title = labelFor(pane.account, pane.dialogId);
         pane.container.animate().scaleX(0.2f).scaleY(0.2f).alpha(0f).setDuration(240)
                 .setInterpolator(CubicBezierInterpolator.EASE_BOTH)
                 .withEndAction(() -> {
@@ -556,12 +561,13 @@ public class SplitChatLayout extends FrameLayout {
                     
                     if (panes.size() == 1 && panes.get(0).container == pane2Container) {
                         long remId = panes.get(0).dialogId;
+                        int remAcc = panes.get(0).account;
                         panes.clear();
                         pane2Container.removeAllViews();
-                        embedFragment(remId, pane1Container, true);
+                        embedFragment(remAcc, remId, pane1Container, true);
                     }
                     
-                    addMiniTab(pane.dialogId, title);
+                    addMiniTab(pane.account, pane.dialogId, title);
                     requestLayout();
                     requestFocus();
                 }).start();
@@ -579,8 +585,8 @@ public class SplitChatLayout extends FrameLayout {
         }
     }
 
-    private void addMiniTab(long dialogId, String title) {
-        MiniPaneTab tab = new MiniPaneTab(getContext(), dialogId, title, () -> restoreMini(dialogId));
+    private void addMiniTab(int account, long dialogId, String title) {
+        MiniPaneTab tab = new MiniPaneTab(getContext(), account, dialogId, title, () -> restoreMini(account, dialogId));
         minis.add(tab);
         addView(tab, LayoutHelper.createFrame(56, 56, Gravity.BOTTOM | Gravity.END, 0, 0, 16, 72));
         
@@ -595,10 +601,10 @@ public class SplitChatLayout extends FrameLayout {
                 }).start();
     }
 
-    private void restoreMini(long dialogId) {
+    private void restoreMini(int account, long dialogId) {
         MiniPaneTab toRemove = null;
         for (MiniPaneTab t : minis) {
-            if (t.dialogId == dialogId) { toRemove = t; break; }
+            if (t.dialogId == dialogId && t.account == account) { toRemove = t; break; }
         }
         if (toRemove != null) {
             removeView(toRemove);
@@ -607,11 +613,11 @@ public class SplitChatLayout extends FrameLayout {
         
         if (panes.size() == 1) {
             panes.get(0).weight = 0.5f;
-            embedFragment(dialogId, pane2Container, false);
+            embedFragment(account, dialogId, pane2Container, false);
             if (divider != null) divider.setVisibility(VISIBLE);
             requestLayout();
         } else {
-            swapPane(dialogId, false);
+            swapPane(account, dialogId, false);
         }
         performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
     }
@@ -791,9 +797,8 @@ public class SplitChatLayout extends FrameLayout {
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private String labelFor(long id) {
+    private String labelFor(int acc, long id) {
         try {
-            int acc = UserConfig.selectedAccount;
             if (id > 0) { TLRPC.User u = MessagesController.getInstance(acc).getUser(id); if (u != null && u.first_name != null) return u.first_name; }
             else         { TLRPC.Chat c = MessagesController.getInstance(acc).getChat(-id); if (c != null && c.title != null) return c.title; }
         } catch (Exception ignore) {}
@@ -1082,14 +1087,16 @@ public class SplitChatLayout extends FrameLayout {
     // Mini Pane Icon Tab
     // ══════════════════════════════════════════════════════════════════════════
     public static class MiniPaneTab extends FrameLayout {
+        final int account;
         final long dialogId;
         private float downX, downY;
         private float startTransX, startTransY;
         private boolean dragging = false;
         private final Runnable onTap;
 
-        public MiniPaneTab(Context ctx, long dialogId, String title, Runnable onTap) {
+        public MiniPaneTab(Context ctx, int account, long dialogId, String title, Runnable onTap) {
             super(ctx);
+            this.account = account;
             this.dialogId = dialogId;
             this.onTap = onTap;
 
@@ -1097,7 +1104,7 @@ public class SplitChatLayout extends FrameLayout {
             av.setRoundRadius(AndroidUtilities.dp(28));
             AvatarDrawable ad = new AvatarDrawable();
             try {
-                int acc = UserConfig.selectedAccount;
+                int acc = account;
                 if (dialogId > 0) {
                     TLRPC.User u = MessagesController.getInstance(acc).getUser(dialogId);
                     if (u != null) { ad.setInfo(u); av.setImage(ImageLocation.getForUser(u, ImageLocation.TYPE_SMALL), "50_50", ad, u); }

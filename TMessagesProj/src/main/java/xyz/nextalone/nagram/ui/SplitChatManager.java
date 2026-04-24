@@ -9,6 +9,7 @@ public class SplitChatManager {
     private static volatile SplitChatManager instance;
     private SplitChatLayout splitLayout;
     private long pendingOriginId;
+    private int pendingOriginAccount;
 
     private SplitChatManager() {}
 
@@ -29,7 +30,7 @@ public class SplitChatManager {
      * Called when user taps "Split Chat".
      * Shows the picker first. The split overlay is built after the user picks.
      */
-    public void activateSplitMode(LaunchActivity activity, long currentDialogId) {
+    public void activateSplitMode(LaunchActivity activity, int currentAccount, long currentDialogId) {
         if (activity == null) return;
         try {
             AndroidUtilities.runOnUIThread(() -> {
@@ -41,7 +42,8 @@ public class SplitChatManager {
                         splitLayout = new SplitChatLayout(activity);
                     }
                     pendingOriginId = currentDialogId;
-                    splitLayout.setOriginDialogId(currentDialogId);
+                    pendingOriginAccount = currentAccount;
+                    splitLayout.setOriginDialog(currentAccount, currentDialogId);
                     splitLayout.showPickerAndWait(activity, currentDialogId);
                 } catch (Exception e) {
                     FileLog.e(e);
@@ -57,14 +59,14 @@ public class SplitChatManager {
      * Called from the picker delegate after user selects a chat.
      * Builds the actual split overlay.
      */
-    public void openDialogInSplit(long dialogId) {
+    public void openDialogInSplit(int account, long dialogId) {
         AndroidUtilities.runOnUIThread(() -> {
             try {
                 if (splitLayout != null) {
                     if (!splitLayout.built()) {
-                        splitLayout.buildSplit(dialogId);
+                        splitLayout.buildSplit(account, dialogId);
                     } else {
-                        splitLayout.openDialogInNextPane(dialogId);
+                        splitLayout.openDialogInNextPane(account, dialogId);
                     }
                 }
             } catch (Exception e) {

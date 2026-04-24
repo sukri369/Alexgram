@@ -45654,7 +45654,7 @@ public class ChatActivity extends BaseFragment implements
         } else if (id == nkbtn_split_chat) {
             if (getParentActivity() instanceof org.telegram.ui.LaunchActivity) {
                 xyz.nextalone.nagram.ui.SplitChatManager.getInstance()
-                        .activateSplitMode((org.telegram.ui.LaunchActivity) getParentActivity(), dialog_id);
+                        .activateSplitMode((org.telegram.ui.LaunchActivity) getParentActivity(), currentAccount, dialog_id);
             }
         } else if (id == nkbtn_repeat) {
             repeatMessage(false, false);
