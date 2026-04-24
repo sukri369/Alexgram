@@ -74,6 +74,7 @@ public class SplitChatLayout extends FrameLayout {
     private long          originId;
     private int           originAccount;
     private boolean       built = false;
+    private boolean       isReplacing = false;
 
     // ─────────────────────────────────────────────────────────────────────────
     public SplitChatLayout(Context ctx) {
@@ -233,6 +234,7 @@ public class SplitChatLayout extends FrameLayout {
 
                 @Override
                 public void finishFragment() {
+                    if (isReplacing) return;
                     if (panes.size() > 1) {
                         boolean first = !panes.isEmpty() && panes.get(0).dialogId == dialogId;
                         closePane(dialogId, first);
@@ -482,26 +484,36 @@ public class SplitChatLayout extends FrameLayout {
 
         if (targetIndex == -1) return;
 
-        SplitPane target = panes.get(targetIndex);
-        boolean isFirst = (target.container == pane1Container);
-        float weight = target.weight;
-        PaneContainer container = target.container;
+        isReplacing = true;
+        try {
+            SplitPane target = panes.get(targetIndex);
+            boolean isFirst = (target.container == pane1Container);
+            float weight = target.weight;
+            PaneContainer container = target.container;
 
-        try { if (target.fragment != null) { target.fragment.onPause(); target.fragment.onFragmentDestroy(); } } catch(Exception ignore){}
-        panes.remove(targetIndex);
+            try {
+                if (target.fragment != null) {
+                    target.fragment.onPause();
+                    target.fragment.onFragmentDestroy();
+                }
+            } catch (Exception ignore) {}
+            panes.remove(targetIndex);
 
-        container.removeAllViews();
-        int beforeCount = panes.size();
-        embedFragment(account, newDialogId, container, isFirst);
+            container.removeAllViews();
+            int beforeCount = panes.size();
+            embedFragment(account, newDialogId, container, isFirst);
 
-        if (panes.size() > beforeCount) {
-            SplitPane newPane = panes.remove(panes.size() - 1);
-            newPane.weight = weight;
-            if (targetIndex <= panes.size()) {
-                panes.add(targetIndex, newPane);
-            } else {
-                panes.add(newPane);
+            if (panes.size() > beforeCount) {
+                SplitPane newPane = panes.remove(panes.size() - 1);
+                newPane.weight = weight;
+                if (targetIndex <= panes.size()) {
+                    panes.add(targetIndex, newPane);
+                } else {
+                    panes.add(newPane);
+                }
             }
+        } finally {
+            isReplacing = false;
         }
         requestLayout();
     }
