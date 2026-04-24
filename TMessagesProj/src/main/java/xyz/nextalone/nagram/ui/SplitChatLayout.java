@@ -420,6 +420,7 @@ public class SplitChatLayout extends FrameLayout {
         if (divider != null) divider.setVisibility(panes.size() >= 2 ? VISIBLE : GONE);
     }
 
+
     private void swapPanes() {
         if (panes.size() < 2) return;
         long id1 = panes.get(0).dialogId;
@@ -972,7 +973,7 @@ public class SplitChatLayout extends FrameLayout {
                 return true;
             }
             
-            closeSplit(true); // Close split via back button
+            closeSplit(true);
         }
         
         return true;
@@ -1053,6 +1054,7 @@ public class SplitChatLayout extends FrameLayout {
                             }
                         }
                     }
+                    if (host != null) host.setIgnoreBackUntil(System.currentTimeMillis() + 600);
                     SplitChatManager.getInstance().onSplitClosed();
                 }).start();
         
