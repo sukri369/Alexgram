@@ -224,6 +224,14 @@ public class SplitChatLayout extends FrameLayout {
 
             org.telegram.ui.ChatActivity chat = new org.telegram.ui.ChatActivity(args) {
                 @Override
+                public void didReceivedNotification(int id, int account, Object... args) {
+                    if (id == org.telegram.messenger.NotificationCenter.closeChats) {
+                        return; // Ignore closeChats to prevent split from closing on account switch
+                    }
+                    super.didReceivedNotification(id, account, args);
+                }
+
+                @Override
                 public void finishFragment() {
                     if (panes.size() > 1) {
                         boolean first = !panes.isEmpty() && panes.get(0).dialogId == dialogId;
