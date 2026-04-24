@@ -658,15 +658,16 @@ public class SplitChatLayout extends FrameLayout {
         // 4. Close Chat
         org.telegram.ui.ActionBar.ActionBarMenuSubItem closeItem = new org.telegram.ui.ActionBar.ActionBarMenuSubItem(getContext(), false, true);
         closeItem.setTextAndIcon("Close Chat", R.drawable.ic_split_close_chat_na);
-        closeItem.setColors(Theme.getColor(Theme.key_text_RedBold), Theme.getColor(Theme.key_text_RedBold));
+        int red = 0xFFF44336;
+        closeItem.setTextColor(red);
+        closeItem.setIconColor(red);
         closeItem.setOnClickListener(v -> {
             if (popupWindow[0] != null) popupWindow[0].dismiss();
             closePane(dialogId, isFirst);
         });
         popupLayout.addView(closeItem);
 
-        popupWindow[0] = org.telegram.ui.Components.AlertsCreator.createSimplePopup(anchor, popupLayout);
-        popupWindow[0].show();
+        showPopup(anchor, popupLayout, popupWindow);
     }
 
     private void showDividerMenu(android.view.View anchor) {
@@ -699,8 +700,17 @@ public class SplitChatLayout extends FrameLayout {
         });
         popupLayout.addView(closeItem);
 
-        popupWindow[0] = org.telegram.ui.Components.AlertsCreator.createSimplePopup(anchor, popupLayout);
-        popupWindow[0].show();
+        showPopup(anchor, popupLayout, popupWindow);
+    }
+
+    private void showPopup(android.view.View anchor, org.telegram.ui.ActionBar.ActionBarPopupWindow.ActionBarPopupWindowLayout layout, org.telegram.ui.ActionBar.ActionBarPopupWindow[] popupWindow) {
+        popupWindow[0] = new org.telegram.ui.ActionBar.ActionBarPopupWindow(layout, LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT);
+        popupWindow[0].setOutsideTouchable(true);
+        popupWindow[0].setClippingEnabled(true);
+        popupWindow[0].setFocusable(true);
+        popupWindow[0].setInputMethodMode(org.telegram.ui.ActionBar.ActionBarPopupWindow.INPUT_METHOD_NOT_NEEDED);
+        popupWindow[0].setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_UNSPECIFIED);
+        popupWindow[0].showAsDropDown(anchor, 0, -anchor.getMeasuredHeight());
     }
 
     public void openDialogInNextPane(int account, long dialogId) {
