@@ -399,8 +399,8 @@ public class SplitChatLayout extends FrameLayout {
         picker.setDelegate((frag, dids, message, param, notify, scheduleDate, scheduleRepeatPeriod, topicsFragment) -> {
             if (dids != null && !dids.isEmpty()) {
                 long did = dids.get(0).dialogId;
-                frag.finishFragment();
                 replaceChatInPane(frag.getCurrentAccount(), did, isFirst);
+                frag.finishFragment();
             } else {
                 frag.finishFragment();
             }
@@ -422,8 +422,8 @@ public class SplitChatLayout extends FrameLayout {
         picker.setDelegate((frag, dids, message, param, notify, scheduleDate, scheduleRepeatPeriod, topicsFragment) -> {
             if (dids != null && !dids.isEmpty()) {
                 long did = dids.get(0).dialogId;
-                frag.finishFragment();
                 SplitChatManager.getInstance().openDialogInSplit(frag.getCurrentAccount(), did);
+                frag.finishFragment();
             } else {
                 frag.finishFragment();
             }
@@ -439,22 +439,32 @@ public class SplitChatLayout extends FrameLayout {
             if (isFirst && p.container == pane1Container) { targetIndex = i; break; }
             if (!isFirst && p.container == pane2Container) { targetIndex = i; break; }
         }
+
+        PaneContainer container = isFirst ? pane1Container : pane2Container;
+        float weight = 0.5f;
+
         if (targetIndex != -1) {
             SplitPane target = panes.get(targetIndex);
-            float oldWeight = target.weight;
+            weight = target.weight;
             try { if (target.fragment != null) { target.fragment.onPause(); target.fragment.onFragmentDestroy(); } } catch(Exception ignore){}
             panes.remove(targetIndex);
-            target.container.removeAllViews();
-            
-            int beforeCount = panes.size();
-            embedFragment(account, newDialogId, target.container, isFirst);
-            
-            if (panes.size() > beforeCount) {
-                SplitPane newPane = panes.remove(panes.size() - 1);
-                newPane.weight = oldWeight;
+            container = target.container;
+        }
+
+        container.removeAllViews();
+        int beforeCount = panes.size();
+        embedFragment(account, newDialogId, container, isFirst);
+
+        if (panes.size() > beforeCount) {
+            SplitPane newPane = panes.remove(panes.size() - 1);
+            newPane.weight = weight;
+            if (targetIndex != -1 && targetIndex <= panes.size()) {
                 panes.add(targetIndex, newPane);
+            } else {
+                panes.add(newPane);
             }
         }
+        requestLayout();
     }
 
     private void closePane(long dialogId, boolean isFirst) {

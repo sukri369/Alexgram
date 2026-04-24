@@ -4986,8 +4986,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 args.putBoolean("destroyAfterSelect", true);
                 args.putBoolean("returnAsResult", true);
                 args.putBoolean("forSplitSwitch", true);
+                args.putBoolean("onlyUsers", true);
+                args.putBoolean("checkCanWrite", false);
                 ContactsActivity contactsActivity = new ContactsActivity(args);
                 contactsActivity.setDelegate((user, param, activity) -> {
+                    activity.finishFragment();
                     if (delegate != null) {
                         ArrayList<MessagesStorage.TopicKey> dids = new ArrayList<>();
                         dids.add(MessagesStorage.TopicKey.of(user.id, 0));
