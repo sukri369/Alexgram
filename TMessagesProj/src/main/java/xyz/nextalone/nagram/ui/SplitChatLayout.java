@@ -1158,11 +1158,10 @@ public class SplitChatLayout extends FrameLayout {
                     break;
                 }
             }
-            // Second pass: measure other children with reduced height (below action bar)
             for (int i = 0; i < getChildCount(); i++) {
                 View child = getChildAt(i);
                 if (!(child instanceof org.telegram.ui.ActionBar.ActionBar)) {
-                    measureChildWithMargins(child, wSpec, 0, hSpec, actionBarH);
+                    measureChildWithMargins(child, wSpec, 0, hSpec, 0);
                 }
             }
             setMeasuredDimension(w, h);
@@ -1182,19 +1181,19 @@ public class SplitChatLayout extends FrameLayout {
                     break;
                 }
             }
-            // Layout all other children below padding + ActionBar
+            // Layout all other children starting from the same top as ActionBar
             for (int i = 0; i < getChildCount(); i++) {
                 View child = getChildAt(i);
                 if (!(child instanceof org.telegram.ui.ActionBar.ActionBar)) {
                     FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) child.getLayoutParams();
                     child.layout(
                         lp.leftMargin,
-                        lp.topMargin + topPad + actionBarH,
+                        lp.topMargin + topPad,
                         lp.leftMargin + child.getMeasuredWidth(),
-                        lp.topMargin + topPad + actionBarH + child.getMeasuredHeight());
+                        lp.topMargin + topPad + child.getMeasuredHeight());
                 }
             }
-        }
+    }
     }
 
     // ══════════════════════════════════════════════════════════════════════════
