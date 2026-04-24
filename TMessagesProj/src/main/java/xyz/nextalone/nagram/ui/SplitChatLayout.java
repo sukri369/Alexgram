@@ -923,24 +923,34 @@ public class SplitChatLayout extends FrameLayout {
 
     public boolean onBackPressed() {
         if (!built || getVisibility() != VISIBLE || getAlpha() < 0.1f) return false;
-        if (isPickerActive()) return false; // Don't handle back press if picker is active
+        if (isPickerActive()) return false;
         
         boolean consumed = false;
-        
-        // Try all panes. If ANY pane has something to close (emoji, etc), it will return false.
         for (int i = panes.size() - 1; i >= 0; i--) {
             SplitPane p = panes.get(i);
             if (p.fragment != null) {
-                // If this pane has a popup or something open, consume the back press
-                if (!p.fragment.onBackPressed(true)) {
+                try {
+                    if (!p.fragment.onBackPressed(true)) {
+                        consumed = true;
+                        break;
+                    }
+                } catch (Exception ignore) {
                     consumed = true;
                     break;
                 }
             }
         }
         
-        // If no pane consumed the back press, we close the split layout completely
         if (!consumed) {
+            // If we are in "Full Screen" mode (one pane maximized, others minimized)
+            // pressing back should restore the other panes instead of closing the split.
+            if (!minis.isEmpty()) {
+                MiniPaneTab last = minis.get(minis.size() - 1);
+                restoreMini(last.account, last.dialogId);
+                return true;
+            }
+            
+            // Otherwise, close the split layout.
             closeSplit();
         }
         
@@ -1014,10 +1024,23 @@ public class SplitChatLayout extends FrameLayout {
                             } catch (Exception e) {
                                 host.actionBarLayout.presentFragment(chat, true);
                             }
+                        } else {
+                            // If we are closing without switching to a new chat, 
+                            // make sure we don't leave the app with an empty stack.
+                            if (host.actionBarLayout.getFragmentStack().isEmpty()) {
+                                host.actionBarLayout.addFragmentToStack(new org.telegram.ui.MainTabsActivity());
+                            }
                         }
                     }
                     SplitChatManager.getInstance().onSplitClosed();
                 }).start();
+        
+        // Safety: If animation is somehow blocked, ensure manager is notified
+        AndroidUtilities.runOnUIThread(() -> {
+            if (!built && SplitChatManager.getInstance().isActive()) {
+                SplitChatManager.getInstance().onSplitClosed();
+            }
+        }, 500);
     }
 
     public void onPause()  { for (SplitPane p : panes) { try { if (p.fragment != null) p.fragment.onPause();  } catch (Exception ignore) {} } }
