@@ -357,7 +357,7 @@ public class SplitChatLayout extends FrameLayout {
             org.telegram.ui.ActionBar.ActionBar actionBar = chat.getActionBar();
             if (actionBar != null) {
                 actionBar.setOccupyStatusBar(false); // same for both panes
-                actionBar.setDrawShadow(false); // Remove shadow to prevent white lines
+                actionBar.setCastShadows(false); // Remove shadow to prevent white lines
                 if (actionBar.shouldAddToContainer()) {
                     if (actionBar.getParent() != null) {
                         ((ViewGroup) actionBar.getParent()).removeView(actionBar);
