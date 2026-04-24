@@ -78,8 +78,6 @@ public class SplitChatLayout extends FrameLayout {
     private int           originAccount;
     private boolean       built = false;
     private boolean       isReplacing = false;
-    private View          pane1Menu;
-    private View          pane2Menu;
 
     // ─────────────────────────────────────────────────────────────────────────
     public SplitChatLayout(Context ctx) {
@@ -220,37 +218,6 @@ public class SplitChatLayout extends FrameLayout {
         pane2Container = new PaneContainer(ctx);
         addView(pane2Container, LayoutHelper.createFrame(
                 LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
-
-        pane1Menu = createGodMenu(ctx, 0);
-        pane2Menu = createGodMenu(ctx, 1);
-        addView(pane1Menu);
-        addView(pane2Menu);
-    }
-
-    private View createGodMenu(Context ctx, int index) {
-        FrameLayout container = new FrameLayout(ctx);
-        
-        // Slightly pink background circle
-        android.graphics.drawable.GradientDrawable bg = new android.graphics.drawable.GradientDrawable();
-        bg.setShape(android.graphics.drawable.GradientDrawable.OVAL);
-        bg.setColor(0x15FF69B4); // Ultra-light premium pink
-        container.setBackground(bg);
-        
-        ImageView dots = new ImageView(ctx);
-        dots.setImageResource(R.drawable.ic_split_more);
-        // Premium pink tint for the dots
-        dots.setColorFilter(new android.graphics.PorterDuffColorFilter(0xFFFF69B4, android.graphics.PorterDuff.Mode.SRC_IN));
-        dots.setScaleType(ImageView.ScaleType.CENTER);
-        
-        container.addView(dots, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
-        
-        container.setOnClickListener(v -> {
-            if (panes.size() > index) {
-                showPaneMenu(v, panes.get(index).dialogId, index == 0);
-            }
-        });
-        
-        return container;
     }
 
     // ── Fragment embedding ────────────────────────────────────────────────────
@@ -381,16 +348,24 @@ public class SplitChatLayout extends FrameLayout {
                         android.graphics.PorterDuff.Mode.MULTIPLY));
                 moreBtn.setImageResource(R.drawable.ic_split_more);
                 moreBtn.setScaleType(ImageView.ScaleType.CENTER);
-                moreBtn.setBackground(Theme.createSelectorDrawable(
-                        Theme.getColor(Theme.key_actionBarDefaultSelector), 1));
+                
+                // Pink pill background
+                android.graphics.drawable.GradientDrawable pillBg = new android.graphics.drawable.GradientDrawable();
+                pillBg.setColor(0x25FF69B4); // Premium pink translucency
+                pillBg.setCornerRadius(AndroidUtilities.dp(16));
+                moreBtn.setBackground(pillBg);
+                
+                // Hot pink dots
+                moreBtn.setColorFilter(new android.graphics.PorterDuffColorFilter(
+                        0xFFFF69B4, android.graphics.PorterDuff.Mode.SRC_IN));
+                
                 moreBtn.setOnClickListener(v -> showPaneMenu(v, dialogId, isFirst));
                 
-                // Position it at the right, just before the standard 3-dots (which are 48dp wide)
+                // Position it as a beautiful pill in the header
                 FrameLayout.LayoutParams moreLp = LayoutHelper.createFrame(
-                        48, 56, Gravity.RIGHT | Gravity.CENTER_VERTICAL);
+                        40, 32, Gravity.RIGHT | Gravity.CENTER_VERTICAL);
                 moreLp.rightMargin = AndroidUtilities.dp(48);
-                // Removed the old moreBtn from header to move it under the pill
-                // actionBar.addView(moreBtn, moreLp);
+                actionBar.addView(moreBtn, moreLp);
             }
 
             chat.onResume();
@@ -947,30 +922,6 @@ public class SplitChatLayout extends FrameLayout {
                 pane1Container.layout(0, 0, 0, 0);
                 pane2Container.layout(0, 0, 0, 0);
             }
-        }
-
-        // Layout Menus near the divider pill
-        if (hasP1 && hasP2 && divider != null) {
-            pane1Menu.setVisibility(VISIBLE);
-            pane2Menu.setVisibility(VISIBLE);
-            int mSize = AndroidUtilities.dp(36);
-            int mGap  = AndroidUtilities.dp(40);
-            int cx = W / 2, cy = H / 2;
-            
-            if (H > W) { // Portrait: horizontal divider
-                int divY = (int) ((H - divPx) * Math.max(0.25f, Math.min(0.75f, panes.get(0).weight)));
-                int midY = divY + divPx / 2;
-                pane1Menu.layout(cx - mGap - mSize, midY - mSize / 2, cx - mGap, midY + mSize / 2);
-                pane2Menu.layout(cx + mGap, midY - mSize / 2, cx + mGap + mSize, midY + mSize / 2);
-            } else { // Landscape: vertical divider
-                int divX = (int) ((W - divPx) * Math.max(0.25f, Math.min(0.75f, panes.get(0).weight)));
-                int midX = divX + divPx / 2;
-                pane1Menu.layout(midX - mSize / 2, cy - mGap - mSize, midX + mSize / 2, cy - mGap);
-                pane2Menu.layout(midX - mSize / 2, cy + mGap, midX + mSize / 2, cy + mGap + mSize);
-            }
-        } else {
-            pane1Menu.setVisibility(GONE);
-            pane2Menu.setVisibility(GONE);
         }
     }
 
