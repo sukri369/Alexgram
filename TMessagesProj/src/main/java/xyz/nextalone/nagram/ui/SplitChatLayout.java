@@ -273,13 +273,6 @@ public class SplitChatLayout extends FrameLayout {
                     }
                 }
             };
-            // Core Fix: Enable Telegram's native 'embedded mode' to fix padding/shadows/gaps.
-            try {
-                java.lang.reflect.Field isic = org.telegram.ui.ChatActivity.class.getDeclaredField("isInsideContainer");
-                isic.setAccessible(true);
-                isic.set(chat, true);
-            } catch (Exception ignore) {}
-
             chat.setParentLayout(host.actionBarLayout);
             chat.setCurrentAccount(account);
 
@@ -289,32 +282,25 @@ public class SplitChatLayout extends FrameLayout {
             }
 
             View view = chat.createView(host);
-
-            // Re-enable the input bar which gets hidden by 'isInsideContainer=true'
-            try {
-                java.lang.reflect.Field evf = org.telegram.ui.ChatActivity.class.getDeclaredField("chatActivityEnterView");
-                evf.setAccessible(true);
-                View enterView = (View) evf.get(chat);
-                if (enterView != null) {
-                    enterView.setVisibility(View.VISIBLE);
-                }
-            } catch (Exception ignore) {}
             if (view == null) {
                 FileLog.d("SplitChat: createView=null id=" + dialogId);
                 return;
             }
 
-            // Fix: ChatActivity line 5157 sets contentView.setOccupyStatusBar(true) when
-            // isInsideContainer=false. This would make the content view add status-bar-height
-            // top padding internally, conflicting with our pane layout.
-            // We override it here, since our panes manage their own layout.
+            // Precision Fix for White Strip:
+            // Instead of using isInsideContainer (which hides headers), we manually 
+            // force the contentView to NOT occupy the status bar and clear backgrounds.
             if (view instanceof org.telegram.ui.Components.SizeNotifierFrameLayout) {
-                ((org.telegram.ui.Components.SizeNotifierFrameLayout) view).setOccupyStatusBar(false);
+                org.telegram.ui.Components.SizeNotifierFrameLayout snfl = (org.telegram.ui.Components.SizeNotifierFrameLayout) view;
+                snfl.setOccupyStatusBar(false);
                 view.setBackground(null);
-                ((org.telegram.ui.Components.SizeNotifierFrameLayout) view).setClipChildren(false);
-                ((org.telegram.ui.Components.SizeNotifierFrameLayout) view).setClipToPadding(false);
+                snfl.setClipChildren(false);
+                snfl.setClipToPadding(false);
+                
+                // Keep it false even after internal layout updates
+                snfl.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> snfl.setOccupyStatusBar(false));
 
-                // Surgical fix for the white strip: neutralize ALL top-panel containers
+                // Surgical cleanup of internal top panels
                 try {
                     Class<?> cls = org.telegram.ui.ChatActivity.class;
                     String[] fields = {
@@ -329,29 +315,19 @@ public class SplitChatLayout extends FrameLayout {
                             Object o = f.get(chat);
                             if (o instanceof View) {
                                 ((View) o).setBackground(null);
-                                // Force GONE if not explicitly visible to reclaim space
                                 if (fName.contains("ContextView") && ((View) o).getVisibility() == View.INVISIBLE) {
                                     ((View) o).setVisibility(View.GONE);
                                 }
                             }
                         } catch (Exception ignore) {}
                     }
-
+                    
                     // Recursive cleanup of ANY remaining white backgrounds in children
-                    if (view instanceof ViewGroup) {
-                        ViewGroup vg = (ViewGroup) view;
-                        for (int i = 0; i < vg.getChildCount(); i++) {
-                            View childView = vg.getChildAt(i);
-                            // Don't touch the message list itself, but clear all panels
-                            if (!(childView instanceof org.telegram.ui.Components.RecyclerListView)) {
-                                childView.setBackground(null);
-                                if (childView instanceof ViewGroup) {
-                                    ViewGroup vg2 = (ViewGroup) childView;
-                                    for (int j = 0; j < vg2.getChildCount(); j++) {
-                                        vg2.getChildAt(j).setBackground(null);
-                                    }
-                                }
-                            }
+                    ViewGroup vg = (ViewGroup) view;
+                    for (int i = 0; i < vg.getChildCount(); i++) {
+                        View childView = vg.getChildAt(i);
+                        if (!(childView instanceof org.telegram.ui.Components.RecyclerListView)) {
+                            childView.setBackground(null);
                         }
                     }
                 } catch (Exception ignore) {}
