@@ -295,11 +295,25 @@ public class SplitChatLayout extends FrameLayout {
             // We override it here, since our panes manage their own layout.
             if (view instanceof org.telegram.ui.Components.SizeNotifierFrameLayout) {
                 ((org.telegram.ui.Components.SizeNotifierFrameLayout) view).setOccupyStatusBar(false);
-                // Force transparent background to eliminate the white strip gap
                 view.setBackground(null);
-                // Ensure the chat content can draw under our manual header if needed
                 ((org.telegram.ui.Components.SizeNotifierFrameLayout) view).setClipChildren(false);
                 ((org.telegram.ui.Components.SizeNotifierFrameLayout) view).setClipToPadding(false);
+
+                // Surgical fix for the white strip: hide backgrounds of internal top panels
+                try {
+                    Class<?> cls = org.telegram.ui.ChatActivity.class;
+                    String[] fields = {"topPanelLayout", "topPanelLayoutFade", "fragmentContextView", "fragmentLocationContextView"};
+                    for (String fName : fields) {
+                        try {
+                            java.lang.reflect.Field f = cls.getDeclaredField(fName);
+                            f.setAccessible(true);
+                            Object o = f.get(chat);
+                            if (o instanceof View) {
+                                ((View) o).setBackground(null);
+                            }
+                        } catch (Exception ignore) {}
+                    }
+                } catch (Exception ignore) {}
             }
 
             // Fix: ChatAvatarContainer (the header avatar+title+subtitle) defaults to
