@@ -8269,11 +8269,6 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
 
     public boolean onBackPressed(boolean invoked) {
         if (System.currentTimeMillis() < ignoreBackUntil) return false;
-        if (xyz.nextalone.nagram.ui.SplitChatManager.getInstance().isActive()) {
-            if (xyz.nextalone.nagram.ui.SplitChatManager.getInstance().getLayout().onBackPressed()) {
-                return false;
-            }
-        }
         if (FloatingDebugController.onBackPressed(invoked)) {
             return false;
         }
@@ -8299,6 +8294,11 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         } else if (ArticleViewer.hasInstance() && ArticleViewer.getInstance().isVisible()) {
             if (invoked) ArticleViewer.getInstance().close(true, false);
             return false;
+        }
+        if (xyz.nextalone.nagram.ui.SplitChatManager.getInstance().isActive()) {
+            if (xyz.nextalone.nagram.ui.SplitChatManager.getInstance().getLayout().onBackPressed()) {
+                return false;
+            }
         }
         return true;
     }
