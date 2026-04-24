@@ -299,10 +299,14 @@ public class SplitChatLayout extends FrameLayout {
                 ((org.telegram.ui.Components.SizeNotifierFrameLayout) view).setClipChildren(false);
                 ((org.telegram.ui.Components.SizeNotifierFrameLayout) view).setClipToPadding(false);
 
-                // Surgical fix for the white strip: hide backgrounds of internal top panels
+                // Surgical fix for the white strip: neutralize ALL top-panel containers
                 try {
                     Class<?> cls = org.telegram.ui.ChatActivity.class;
-                    String[] fields = {"topPanelLayout", "topPanelLayoutFade", "fragmentContextView", "fragmentLocationContextView"};
+                    String[] fields = {
+                        "topPanelLayout", "topPanelLayoutFade", "topChatPanelView",
+                        "fragmentContextView", "fragmentLocationContextView",
+                        "fragmentContextViewWrapper", "fragmentLocationContextViewWrapper"
+                    };
                     for (String fName : fields) {
                         try {
                             java.lang.reflect.Field f = cls.getDeclaredField(fName);
@@ -353,6 +357,7 @@ public class SplitChatLayout extends FrameLayout {
             org.telegram.ui.ActionBar.ActionBar actionBar = chat.getActionBar();
             if (actionBar != null) {
                 actionBar.setOccupyStatusBar(false); // same for both panes
+                actionBar.setDrawShadow(false); // Remove shadow to prevent white lines
                 if (actionBar.shouldAddToContainer()) {
                     if (actionBar.getParent() != null) {
                         ((ViewGroup) actionBar.getParent()).removeView(actionBar);
