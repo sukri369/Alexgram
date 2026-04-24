@@ -147,6 +147,7 @@ public class SplitChatLayout extends FrameLayout {
         args.putBoolean("onlySelect", true);
         args.putBoolean("resetDelegate", false);
         args.putBoolean("allowSwitchAccount", true);
+        args.putBoolean("checkCanWrite", false);
         org.telegram.ui.DialogsActivity picker = new org.telegram.ui.DialogsActivity(args);
 
         java.util.HashSet<Long> excluded = new java.util.HashSet<>();
