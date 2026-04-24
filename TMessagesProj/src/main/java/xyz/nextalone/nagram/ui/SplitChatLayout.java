@@ -334,7 +334,7 @@ public class SplitChatLayout extends FrameLayout {
                     container.addView(actionBar);
                 }
 
-                // Add God-level Split Options Menu Button (3 dots)
+                // Add Split Options Menu Button (3 dots)
                 ImageView moreBtn = new ImageView(getContext());
                 moreBtn.setColorFilter(new android.graphics.PorterDuffColorFilter(
                         Theme.getColor(Theme.key_actionBarDefaultIcon), 
@@ -481,18 +481,20 @@ public class SplitChatLayout extends FrameLayout {
         activity.actionBarLayout.presentFragment(picker);
     }
 
-    private void restoreVisibilityIfNeeded() {
-        if (host == null || host.actionBarLayout == null) {
-            setVisibility(VISIBLE);
-            return;
-        }
+    private boolean isPickerActive() {
+        if (host == null || host.actionBarLayout == null) return false;
         java.util.List<org.telegram.ui.ActionBar.BaseFragment> stack = host.actionBarLayout.getFragmentStack();
         for (org.telegram.ui.ActionBar.BaseFragment f : stack) {
             android.os.Bundle args = f.getArguments();
             if (args != null && args.getBoolean("forSplitSwitch", false)) {
-                return; // Still picking (account changed or moved to contacts)
+                return true;
             }
         }
+        return false;
+    }
+
+    private void restoreVisibilityIfNeeded() {
+        if (isPickerActive()) return;
         setVisibility(VISIBLE);
     }
 
@@ -921,6 +923,7 @@ public class SplitChatLayout extends FrameLayout {
 
     public boolean onBackPressed() {
         if (!built || getVisibility() != VISIBLE || getAlpha() < 0.1f) return false;
+        if (isPickerActive()) return false; // Don't handle back press if picker is active
         
         boolean consumed = false;
         
