@@ -387,7 +387,7 @@ public class SplitChatLayout extends FrameLayout {
     }
 
     private void switchChat(long oldDialogId) {
-        org.telegram.ui.LaunchActivity activity = (org.telegram.ui.LaunchActivity) getContext();
+        org.telegram.ui.LaunchActivity activity = (org.telegram.ui.LaunchActivity) org.telegram.messenger.AndroidUtilities.getActivityContext(getContext());
         if (activity == null) return;
 
         android.os.Bundle args = new android.os.Bundle();
@@ -395,6 +395,7 @@ public class SplitChatLayout extends FrameLayout {
         args.putBoolean("checkCanOpenChat", false);
         args.putBoolean("allowSwitchAccount", true);
         args.putBoolean("forSplitSwitch", true);
+        args.putString("customTitle", "Switch Chat");
         org.telegram.ui.DialogsActivity picker = new org.telegram.ui.DialogsActivity(args);
         picker.setDelegate((frag, dids, message, param, notify, scheduleDate, scheduleRepeatPeriod, topicsFragment) -> {
             if (dids != null && !dids.isEmpty()) {
@@ -410,7 +411,7 @@ public class SplitChatLayout extends FrameLayout {
     }
 
     private void addChat() {
-        org.telegram.ui.LaunchActivity activity = (org.telegram.ui.LaunchActivity) getContext();
+        org.telegram.ui.LaunchActivity activity = (org.telegram.ui.LaunchActivity) org.telegram.messenger.AndroidUtilities.getActivityContext(getContext());
         if (activity == null) return;
 
         android.os.Bundle args = new android.os.Bundle();
@@ -418,6 +419,7 @@ public class SplitChatLayout extends FrameLayout {
         args.putBoolean("checkCanOpenChat", false);
         args.putBoolean("allowSwitchAccount", true);
         args.putBoolean("forSplitSwitch", true);
+        args.putString("customTitle", "Add Chat");
         org.telegram.ui.DialogsActivity picker = new org.telegram.ui.DialogsActivity(args);
         picker.setDelegate((frag, dids, message, param, notify, scheduleDate, scheduleRepeatPeriod, topicsFragment) -> {
             if (dids != null && !dids.isEmpty()) {
