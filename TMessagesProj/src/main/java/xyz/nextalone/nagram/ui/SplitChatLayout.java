@@ -74,6 +74,7 @@ public class SplitChatLayout extends FrameLayout {
     private org.telegram.ui.DialogsActivity activePicker;
     private org.telegram.ui.ActionBar.BaseFragment originFragment;
     private long          originId;
+    private long          lastBackTime;
     private int           originAccount;
     private boolean       built = false;
     private boolean       isReplacing = false;
@@ -944,6 +945,10 @@ public class SplitChatLayout extends FrameLayout {
         if (!built || getVisibility() != VISIBLE || getAlpha() < 0.1f) return false;
         if (isPickerActive()) return false;
         
+        long now = System.currentTimeMillis();
+        if (now - lastBackTime < 400) return true;
+        lastBackTime = now;
+        
         boolean consumed = false;
         for (int i = panes.size() - 1; i >= 0; i--) {
             SplitPane p = panes.get(i);
@@ -961,18 +966,13 @@ public class SplitChatLayout extends FrameLayout {
         }
         
         if (!consumed) {
-            // If we are in "Full Screen" mode (one pane maximized, others minimized)
-            // pressing back should restore the other panes instead of closing the split.
             if (!minis.isEmpty()) {
                 MiniPaneTab last = minis.get(minis.size() - 1);
                 restoreMini(last.account, last.dialogId);
                 return true;
             }
             
-            // Otherwise, close the split layout.
-            // Using a tiny delay ensures the back press event finishes its current cycle
-            // before the view is removed and fragments are destroyed.
-            org.telegram.messenger.AndroidUtilities.runOnUIThread(this::closeSplit);
+            closeSplit();
         }
         
         return true;
