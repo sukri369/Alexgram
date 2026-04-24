@@ -386,7 +386,7 @@ public class SplitChatLayout extends FrameLayout {
         requestLayout();
     }
 
-    private void switchChat(boolean isFirst) {
+    private void switchChat(long oldDialogId) {
         org.telegram.ui.LaunchActivity activity = (org.telegram.ui.LaunchActivity) getContext();
         if (activity == null) return;
 
@@ -399,7 +399,7 @@ public class SplitChatLayout extends FrameLayout {
         picker.setDelegate((frag, dids, message, param, notify, scheduleDate, scheduleRepeatPeriod, topicsFragment) -> {
             if (dids != null && !dids.isEmpty()) {
                 long did = dids.get(0).dialogId;
-                replaceChatInPane(frag.getCurrentAccount(), did, isFirst);
+                replaceChatInPane(frag.getCurrentAccount(), did, oldDialogId);
                 frag.finishFragment();
             } else {
                 frag.finishFragment();
@@ -432,24 +432,24 @@ public class SplitChatLayout extends FrameLayout {
         activity.actionBarLayout.presentFragment(picker);
     }
 
-    private void replaceChatInPane(int account, long newDialogId, boolean isFirst) {
+    private void replaceChatInPane(int account, long newDialogId, long oldDialogId) {
         int targetIndex = -1;
         for (int i = 0; i < panes.size(); i++) {
-            SplitPane p = panes.get(i);
-            if (isFirst && p.container == pane1Container) { targetIndex = i; break; }
-            if (!isFirst && p.container == pane2Container) { targetIndex = i; break; }
+            if (panes.get(i).dialogId == oldDialogId) {
+                targetIndex = i;
+                break;
+            }
         }
 
-        PaneContainer container = isFirst ? pane1Container : pane2Container;
-        float weight = 0.5f;
+        if (targetIndex == -1) return;
 
-        if (targetIndex != -1) {
-            SplitPane target = panes.get(targetIndex);
-            weight = target.weight;
-            try { if (target.fragment != null) { target.fragment.onPause(); target.fragment.onFragmentDestroy(); } } catch(Exception ignore){}
-            panes.remove(targetIndex);
-            container = target.container;
-        }
+        SplitPane target = panes.get(targetIndex);
+        boolean isFirst = (target.container == pane1Container);
+        float weight = target.weight;
+        PaneContainer container = target.container;
+
+        try { if (target.fragment != null) { target.fragment.onPause(); target.fragment.onFragmentDestroy(); } } catch(Exception ignore){}
+        panes.remove(targetIndex);
 
         container.removeAllViews();
         int beforeCount = panes.size();
@@ -458,7 +458,7 @@ public class SplitChatLayout extends FrameLayout {
         if (panes.size() > beforeCount) {
             SplitPane newPane = panes.remove(panes.size() - 1);
             newPane.weight = weight;
-            if (targetIndex != -1 && targetIndex <= panes.size()) {
+            if (targetIndex <= panes.size()) {
                 panes.add(targetIndex, newPane);
             } else {
                 panes.add(newPane);
@@ -553,7 +553,7 @@ public class SplitChatLayout extends FrameLayout {
         switchItem.setTextAndIcon("Switch Chat", R.drawable.ic_split_switch_na);
         switchItem.setOnClickListener(v -> {
             if (popupWindow[0] != null) popupWindow[0].dismiss();
-            switchChat(isFirst);
+            switchChat(dialogId);
         });
         popupLayout.addView(switchItem);
 
