@@ -400,7 +400,7 @@ public class SplitChatLayout extends FrameLayout {
             @Override
             public void onFragmentDestroy() {
                 super.onFragmentDestroy();
-                org.telegram.messenger.AndroidUtilities.runOnUIThread(() -> setVisibility(VISIBLE));
+                org.telegram.messenger.AndroidUtilities.runOnUIThread(() -> restoreVisibilityIfNeeded(), 150);
             }
         };
         picker.setDelegate((frag, dids, message, param, notify, scheduleDate, scheduleRepeatPeriod, topicsFragment) -> {
@@ -431,7 +431,7 @@ public class SplitChatLayout extends FrameLayout {
             @Override
             public void onFragmentDestroy() {
                 super.onFragmentDestroy();
-                org.telegram.messenger.AndroidUtilities.runOnUIThread(() -> setVisibility(VISIBLE));
+                org.telegram.messenger.AndroidUtilities.runOnUIThread(() -> restoreVisibilityIfNeeded(), 150);
             }
         };
         picker.setDelegate((frag, dids, message, param, notify, scheduleDate, scheduleRepeatPeriod, topicsFragment) -> {
@@ -446,6 +446,21 @@ public class SplitChatLayout extends FrameLayout {
         });
         setVisibility(GONE);
         activity.actionBarLayout.presentFragment(picker);
+    }
+
+    private void restoreVisibilityIfNeeded() {
+        if (host == null || host.actionBarLayout == null) {
+            setVisibility(VISIBLE);
+            return;
+        }
+        java.util.List<org.telegram.ui.ActionBar.BaseFragment> stack = host.actionBarLayout.getFragmentStack();
+        for (org.telegram.ui.ActionBar.BaseFragment f : stack) {
+            android.os.Bundle args = f.getArguments();
+            if (args != null && args.getBoolean("forSplitSwitch", false)) {
+                return; // Still picking (account changed or moved to contacts)
+            }
+        }
+        setVisibility(VISIBLE);
     }
 
     private void replaceChatInPane(int account, long newDialogId, long oldDialogId) {
