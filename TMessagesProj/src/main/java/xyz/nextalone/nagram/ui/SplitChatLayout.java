@@ -314,8 +314,30 @@ public class SplitChatLayout extends FrameLayout {
                             Object o = f.get(chat);
                             if (o instanceof View) {
                                 ((View) o).setBackground(null);
+                                // Force GONE if not explicitly visible to reclaim space
+                                if (fName.contains("ContextView") && ((View) o).getVisibility() == View.INVISIBLE) {
+                                    ((View) o).setVisibility(View.GONE);
+                                }
                             }
                         } catch (Exception ignore) {}
+                    }
+
+                    // Recursive cleanup of ANY remaining white backgrounds in children
+                    if (view instanceof ViewGroup) {
+                        ViewGroup vg = (ViewGroup) view;
+                        for (int i = 0; i < vg.getChildCount(); i++) {
+                            View childView = vg.getChildAt(i);
+                            // Don't touch the message list itself, but clear all panels
+                            if (!(childView instanceof org.telegram.ui.Components.RecyclerListView)) {
+                                childView.setBackground(null);
+                                if (childView instanceof ViewGroup) {
+                                    ViewGroup vg2 = (ViewGroup) childView;
+                                    for (int j = 0; j < vg2.getChildCount(); j++) {
+                                        vg2.getChildAt(j).setBackground(null);
+                                    }
+                                }
+                            }
+                        }
                     }
                 } catch (Exception ignore) {}
             }
@@ -1212,7 +1234,7 @@ public class SplitChatLayout extends FrameLayout {
                     FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) child.getLayoutParams();
                     child.layout(
                         lp.leftMargin,
-                        lp.topMargin + topPad,
+                        lp.topMargin + topPad - AndroidUtilities.dp(1), // 1dp Overlap to kill any tiny gaps
                         lp.leftMargin + child.getMeasuredWidth(),
                         lp.topMargin + topPad + child.getMeasuredHeight());
                 }
