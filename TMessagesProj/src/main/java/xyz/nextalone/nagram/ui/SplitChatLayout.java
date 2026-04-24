@@ -527,7 +527,7 @@ public class SplitChatLayout extends FrameLayout {
             isReplacing = false;
         }
         requestLayout();
-        restoreVisibilityIfNeeded(); // Ensure visibility is restored after replacement
+        setVisibility(VISIBLE); // Force visibility after successful replacement
     }
 
     private void closePane(long dialogId, boolean isFirst) {
