@@ -390,22 +390,40 @@ public class SplitChatLayout extends FrameLayout {
         org.telegram.ui.LaunchActivity activity = (org.telegram.ui.LaunchActivity) getContext();
         if (activity == null) return;
 
-        java.util.HashSet<Long> excluded = new java.util.HashSet<>();
-        excluded.add(originId);
-        for (SplitPane p : panes) excluded.add(p.dialogId);
-        for (MiniPaneTab m : minis) excluded.add(m.dialogId);
-
         android.os.Bundle args = new android.os.Bundle();
         args.putBoolean("onlySelect", true);
         args.putBoolean("checkCanOpenChat", false);
         args.putBoolean("allowSwitchAccount", true);
+        args.putBoolean("forSplitSwitch", true);
         org.telegram.ui.DialogsActivity picker = new org.telegram.ui.DialogsActivity(args);
-        picker.setExcludedDialogIds(excluded);
         picker.setDelegate((frag, dids, message, param, notify, scheduleDate, scheduleRepeatPeriod, topicsFragment) -> {
             if (dids != null && !dids.isEmpty()) {
                 long did = dids.get(0).dialogId;
                 frag.finishFragment();
                 replaceChatInPane(frag.getCurrentAccount(), did, isFirst);
+            } else {
+                frag.finishFragment();
+            }
+            return true;
+        });
+        activity.actionBarLayout.presentFragment(picker);
+    }
+
+    private void addChat() {
+        org.telegram.ui.LaunchActivity activity = (org.telegram.ui.LaunchActivity) getContext();
+        if (activity == null) return;
+
+        android.os.Bundle args = new android.os.Bundle();
+        args.putBoolean("onlySelect", true);
+        args.putBoolean("checkCanOpenChat", false);
+        args.putBoolean("allowSwitchAccount", true);
+        args.putBoolean("forSplitSwitch", true);
+        org.telegram.ui.DialogsActivity picker = new org.telegram.ui.DialogsActivity(args);
+        picker.setDelegate((frag, dids, message, param, notify, scheduleDate, scheduleRepeatPeriod, topicsFragment) -> {
+            if (dids != null && !dids.isEmpty()) {
+                long did = dids.get(0).dialogId;
+                frag.finishFragment();
+                SplitChatManager.getInstance().openDialogInSplit(frag.getCurrentAccount(), did);
             } else {
                 frag.finishFragment();
             }
@@ -484,6 +502,15 @@ public class SplitChatLayout extends FrameLayout {
             }
         });
         popupLayout.addView(expandItem);
+
+        // 1b. Add Chat (New Pane)
+        org.telegram.ui.ActionBar.ActionBarMenuSubItem addItem = new org.telegram.ui.ActionBar.ActionBarMenuSubItem(getContext(), false, false);
+        addItem.setTextAndIcon("Add Chat", R.drawable.ic_split_add_na);
+        addItem.setOnClickListener(v -> {
+            if (popupWindow[0] != null) popupWindow[0].dismiss();
+            addChat();
+        });
+        popupLayout.addView(addItem);
 
         // 2. Full screen
         org.telegram.ui.ActionBar.ActionBarMenuSubItem fullItem = new org.telegram.ui.ActionBar.ActionBarMenuSubItem(getContext(), false, false);

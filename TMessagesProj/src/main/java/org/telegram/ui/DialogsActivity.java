@@ -4981,6 +4981,22 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 finishPreviewFragment();
                 return;
             }
+            if (onlySelect && arguments != null && arguments.getBoolean("forSplitSwitch", false)) {
+                Bundle args = new Bundle();
+                args.putBoolean("destroyAfterSelect", true);
+                args.putBoolean("returnAsResult", true);
+                args.putBoolean("forSplitSwitch", true);
+                ContactsActivity contactsActivity = new ContactsActivity(args);
+                contactsActivity.setDelegate((user, param, activity) -> {
+                    if (delegate != null) {
+                        ArrayList<MessagesStorage.TopicKey> dids = new ArrayList<>();
+                        dids.add(MessagesStorage.TopicKey.of(user.id, 0));
+                        delegate.didSelectDialogs(DialogsActivity.this, dids, null, false, false, 0, 0, null);
+                    }
+                });
+                presentFragment(contactsActivity);
+                return;
+            }
             if (initialDialogsType == DIALOGS_TYPE_WIDGET) {
                 if (delegate == null || selectedDialogs.isEmpty()) {
                     return;
@@ -8971,7 +8987,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     }
 
     private void updateFloatingButtonVisibility(boolean animated) {
-        final boolean isVisible = !(onlySelect && initialDialogsType != 10 || folderId != 0 || inPreviewMode || (searching && !onlySelect) || floatingButtonHidden);
+        boolean splitSwitch = onlySelect && arguments != null && arguments.getBoolean("forSplitSwitch", false);
+        final boolean isVisible = !(onlySelect && initialDialogsType != 10 && !splitSwitch || folderId != 0 || inPreviewMode || (searching && !onlySelect) || floatingButtonHidden);
 
         if (floatingButton3 != null) {
             floatingButton3.setButtonVisible(isVisible, animated);
