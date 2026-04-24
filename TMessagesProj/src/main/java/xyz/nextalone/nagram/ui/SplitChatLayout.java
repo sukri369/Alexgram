@@ -970,7 +970,9 @@ public class SplitChatLayout extends FrameLayout {
             }
             
             // Otherwise, close the split layout.
-            closeSplit();
+            // Using a tiny delay ensures the back press event finishes its current cycle
+            // before the view is removed and fragments are destroyed.
+            org.telegram.messenger.AndroidUtilities.runOnUIThread(this::closeSplit);
         }
         
         return true;
