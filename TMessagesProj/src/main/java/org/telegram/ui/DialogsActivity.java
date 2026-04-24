@@ -3357,6 +3357,32 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         topPanelLayout = null;
 
         ActionBarMenu menu = actionBar.createMenu();
+        if (allowSwitchAccount && UserConfig.getActivatedAccountsCount() > 1) {
+            switchItem = menu.addItemWithWidth(1, 0, dp(56));
+            AvatarDrawable avatarDrawable = new AvatarDrawable();
+            avatarDrawable.setTextSize(dp(12));
+
+            BackupImageView imageView = new BackupImageView(context);
+            imageView.setRoundRadius(dp(18));
+            switchItem.addView(imageView, LayoutHelper.createFrame(36, 36, Gravity.CENTER));
+
+            TLRPC.User user = getUserConfig().getCurrentUser();
+            avatarDrawable.setInfo(currentAccount, user);
+            imageView.getImageReceiver().setCurrentAccount(currentAccount);
+            Drawable thumb = user != null && user.photo != null && user.photo.strippedBitmap != null ? user.photo.strippedBitmap : avatarDrawable;
+            imageView.setImage(ImageLocation.getForUserOrChat(user, ImageLocation.TYPE_SMALL), "50_50", ImageLocation.getForUserOrChat(user, ImageLocation.TYPE_STRIPPED), "50_50", thumb, user);
+
+            for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+                if (PasscodeHelper.isAccountHidden(a)) continue;
+                TLRPC.User u = AccountInstance.getInstance(a).getUserConfig().getCurrentUser();
+                if (u != null) {
+                    AccountSelectCell cell = new AccountSelectCell(context, false);
+                    cell.setAccount(a, true);
+                    switchItem.addSubItem(10 + a, cell, dp(230), dp(48));
+                }
+            }
+        }
+
         searchItem = menu.addItem(0, R.drawable.outline_header_search).setIsSearchField(true, false);
         searchItem.setOnClickListener(v -> {
             showSearch(true, false, true);
@@ -3384,10 +3410,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             animatorSet.start();
             */
         });
-        if (initialDialogsType == DIALOGS_TYPE_ADD_USERS_TO || isArchive() && getDialogsArray(currentAccount, initialDialogsType, folderId, false).isEmpty()) {
+        if (initialDialogsType == DIALOGS_TYPE_ADD_USERS_TO || (isArchive() && getDialogsArray(currentAccount, initialDialogsType, folderId, false).isEmpty()) || !onlySelect) {
             searchItem.setVisibility(View.GONE);
         }
-        searchItem.setVisibility(View.GONE);
 
         if (!onlySelect && searchString == null && folderId == 0) {
             doneItem = new ActionBarMenuItem(context, null, getThemedColor(Theme.key_actionBarDefaultSelector), getThemedColor(Theme.key_actionBarDefaultIcon), true);
@@ -3457,9 +3482,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             @Override
             public void onSearchExpand() {
                 searching = true;
-                if (switchItem != null) {
-                    switchItem.setVisibility(View.GONE);
-                }
+                // switchItem visibility preserved for split-pane picker
                 createSearchViewPager();
                 if (viewPages[0] != null) {
                     if (searchString != null) {
@@ -3503,9 +3526,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
             @Override
             public boolean canCollapseSearch() {
-                if (switchItem != null) {
-                    switchItem.setVisibility(View.VISIBLE);
-                }
+                // switchItem visibility preserved for split-pane picker
                 if (searchString != null) {
                     finishFragment();
                     return false;
@@ -4034,31 +4055,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             });
         }
 
-        if (allowSwitchAccount && UserConfig.getActivatedAccountsCount() > 1) {
-            switchItem = menu.addItemWithWidth(1, 0, dp(56));
-            AvatarDrawable avatarDrawable = new AvatarDrawable();
-            avatarDrawable.setTextSize(dp(12));
-
-            BackupImageView imageView = new BackupImageView(context);
-            imageView.setRoundRadius(dp(18));
-            switchItem.addView(imageView, LayoutHelper.createFrame(36, 36, Gravity.CENTER));
-
-            TLRPC.User user = getUserConfig().getCurrentUser();
-            avatarDrawable.setInfo(currentAccount, user);
-            imageView.getImageReceiver().setCurrentAccount(currentAccount);
-            Drawable thumb = user != null && user.photo != null && user.photo.strippedBitmap != null ? user.photo.strippedBitmap : avatarDrawable;
-            imageView.setImage(ImageLocation.getForUserOrChat(user, ImageLocation.TYPE_SMALL), "50_50", ImageLocation.getForUserOrChat(user, ImageLocation.TYPE_STRIPPED), "50_50", thumb, user);
-
-            for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-                if (PasscodeHelper.isAccountHidden(a)) continue;
-                TLRPC.User u = AccountInstance.getInstance(a).getUserConfig().getCurrentUser();
-                if (u != null) {
-                    AccountSelectCell cell = new AccountSelectCell(context, false);
-                    cell.setAccount(a, true);
-                    switchItem.addSubItem(10 + a, cell, dp(230), dp(48));
-                }
-            }
-        }
 //        createActionMode(null);
 
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
@@ -4120,6 +4116,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
                     DialogsActivity dialogsActivity = new DialogsActivity(arguments);
                     dialogsActivity.setDelegate(oldDelegate);
+                    dialogsActivity.setExcludedDialogIds(excludedDialogIds);
                     launchActivity.presentFragment(dialogsActivity, false, true);
                 } else if (id == add_to_folder) {
                     FiltersListBottomSheet sheet = new FiltersListBottomSheet(DialogsActivity.this, selectedDialogs);

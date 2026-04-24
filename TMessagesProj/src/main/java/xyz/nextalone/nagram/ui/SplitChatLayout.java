@@ -123,6 +123,7 @@ public class SplitChatLayout extends FrameLayout {
         android.os.Bundle args = new android.os.Bundle();
         args.putBoolean("onlySelect", true);
         args.putBoolean("resetDelegate", false);
+        args.putBoolean("allowSwitchAccount", true);
         org.telegram.ui.DialogsActivity picker = new org.telegram.ui.DialogsActivity(args);
 
         java.util.HashSet<Long> excluded = new java.util.HashSet<>();
@@ -392,6 +393,7 @@ public class SplitChatLayout extends FrameLayout {
         android.os.Bundle args = new android.os.Bundle();
         args.putBoolean("onlySelect", true);
         args.putBoolean("checkCanOpenChat", false);
+        args.putBoolean("allowSwitchAccount", true);
         org.telegram.ui.DialogsActivity picker = new org.telegram.ui.DialogsActivity(args);
         picker.setExcludedDialogIds(excluded);
         picker.setDelegate((frag, dids, message, param, notify, scheduleDate, scheduleRepeatPeriod, topicsFragment) -> {
