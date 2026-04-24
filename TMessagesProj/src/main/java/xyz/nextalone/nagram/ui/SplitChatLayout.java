@@ -502,31 +502,32 @@ public class SplitChatLayout extends FrameLayout {
             float weight = target.weight;
             PaneContainer container = target.container;
 
-            try {
-                if (target.fragment != null) {
-                    target.fragment.onPause();
-                    target.fragment.onFragmentDestroy();
-                }
-            } catch (Exception ignore) {}
-            panes.remove(targetIndex);
-
+            // 1. Embed new fragment first (it will be added to the end of 'panes' list)
             container.removeAllViews();
             int beforeCount = panes.size();
             embedFragment(account, newDialogId, container, isFirst);
 
             if (panes.size() > beforeCount) {
+                // 2. Get the newly added pane
                 SplitPane newPane = panes.remove(panes.size() - 1);
                 newPane.weight = weight;
-                if (targetIndex <= panes.size()) {
-                    panes.add(targetIndex, newPane);
-                } else {
-                    panes.add(newPane);
-                }
+
+                // 3. Destroy old fragment safely
+                try {
+                    if (target.fragment != null) {
+                        target.fragment.onPause();
+                        target.fragment.onFragmentDestroy();
+                    }
+                } catch (Exception ignore) {}
+
+                // 4. Atomic swap in the list
+                panes.set(targetIndex, newPane);
             }
         } finally {
             isReplacing = false;
         }
         requestLayout();
+        restoreVisibilityIfNeeded(); // Ensure visibility is restored after replacement
     }
 
     private void closePane(long dialogId, boolean isFirst) {
