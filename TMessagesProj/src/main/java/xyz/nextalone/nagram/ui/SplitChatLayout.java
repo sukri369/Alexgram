@@ -1005,7 +1005,7 @@ public class SplitChatLayout extends FrameLayout {
                     org.telegram.ui.ActionBar.INavigationLayout.NavigationParams params = 
                         new org.telegram.ui.ActionBar.INavigationLayout.NavigationParams(chat);
                     params.setNoAnimation(true);
-                    params.setRemoveLast(true);
+                    params.setRemoveLast(false); // DO NOT remove the last fragment (MainTabs)
                     host.actionBarLayout.presentFragment(params);
                 } catch (Exception e) {
                     host.actionBarLayout.presentFragment(chat, true);
@@ -1040,7 +1040,7 @@ public class SplitChatLayout extends FrameLayout {
                                 org.telegram.ui.ActionBar.INavigationLayout.NavigationParams params = 
                                     new org.telegram.ui.ActionBar.INavigationLayout.NavigationParams(chat);
                                 params.setNoAnimation(true);
-                                params.setRemoveLast(true);
+                                params.setRemoveLast(false); // DO NOT remove the last fragment (MainTabs)
                                 host.actionBarLayout.presentFragment(params);
                             } catch (Exception e) {
                                 host.actionBarLayout.presentFragment(chat, true);
