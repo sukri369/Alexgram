@@ -211,7 +211,7 @@ public class SplitChatLayout extends FrameLayout {
                 LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
         divider = new DividerView(ctx,
-                this::onDrag, this::onDragEnd, this::onDividerDoubleTap, this::closeSplit);
+                this::onDrag, this::onDragEnd, this::onDividerDoubleTap, this::showDividerMenu);
         addView(divider, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 16));
 
         pane2Container = new PaneContainer(ctx);
@@ -665,15 +665,42 @@ public class SplitChatLayout extends FrameLayout {
         });
         popupLayout.addView(closeItem);
 
-        popupWindow[0] = new org.telegram.ui.ActionBar.ActionBarPopupWindow(popupLayout, LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT);
-        popupWindow[0].setOutsideTouchable(true);
-        popupWindow[0].setClippingEnabled(true);
-        popupWindow[0].setAnimationStyle(R.style.PopupAnimation);
-        popupWindow[0].setFocusable(true);
-        popupWindow[0].setInputMethodMode(org.telegram.ui.ActionBar.ActionBarPopupWindow.INPUT_METHOD_NOT_NEEDED);
-        popupWindow[0].setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_UNSPECIFIED);
+        popupWindow[0] = org.telegram.ui.Components.AlertsCreator.createSimplePopup(anchor, popupLayout);
+        popupWindow[0].show();
+    }
+
+    private void showDividerMenu(android.view.View anchor) {
+        org.telegram.ui.ActionBar.ActionBarPopupWindow.ActionBarPopupWindowLayout popupLayout = 
+            new org.telegram.ui.ActionBar.ActionBarPopupWindow.ActionBarPopupWindowLayout(getContext());
         
-        popupWindow[0].showAsDropDown(anchor, 0, -anchor.getMeasuredHeight());
+        final org.telegram.ui.ActionBar.ActionBarPopupWindow[] popupWindow = new org.telegram.ui.ActionBar.ActionBarPopupWindow[1];
+
+        // 1. Reset Position
+        org.telegram.ui.ActionBar.ActionBarMenuSubItem resetItem = new org.telegram.ui.ActionBar.ActionBarMenuSubItem(getContext(), true, false);
+        resetItem.setTextAndIcon("Reset Position", R.drawable.msg_reset);
+        resetItem.setOnClickListener(v -> {
+            if (popupWindow[0] != null) popupWindow[0].dismiss();
+            onDividerDoubleTap();
+        });
+        popupLayout.addView(resetItem);
+
+        // 2. Close Split Chat (Premium Red)
+        org.telegram.ui.ActionBar.ActionBarMenuSubItem closeItem = new org.telegram.ui.ActionBar.ActionBarMenuSubItem(getContext(), false, false);
+        closeItem.setTextAndIcon("Close Split Chat", R.drawable.ic_split_close_chat_na);
+        
+        // Apply Red Color to both text and icon
+        int red = 0xFFF44336;
+        closeItem.setTextColor(red);
+        closeItem.setIconColor(red);
+        
+        closeItem.setOnClickListener(v -> {
+            if (popupWindow[0] != null) popupWindow[0].dismiss();
+            closeSplit(true);
+        });
+        popupLayout.addView(closeItem);
+
+        popupWindow[0] = org.telegram.ui.Components.AlertsCreator.createSimplePopup(anchor, popupLayout);
+        popupWindow[0].show();
     }
 
     public void openDialogInNextPane(int account, long dialogId) {
@@ -1171,7 +1198,7 @@ public class SplitChatLayout extends FrameLayout {
         interface OnDrag      { void onDrag(float raw); }
         interface OnDragEnd   { void onDragEnd(); }
         interface OnDoubleTap { void onDoubleTap(); }
-        interface OnLongPress { void onLongPress(); }
+        interface OnLongPress { void onLongPress(View anchor); }
 
         private final OnDrag drag; private final OnDragEnd dragEnd; private final OnDoubleTap dbl; private final OnLongPress lp;
         private final Paint pill  = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -1187,7 +1214,7 @@ public class SplitChatLayout extends FrameLayout {
             lpRun = () -> {
                 if (!dragging && lp != null) {
                     performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
-                    lp.onLongPress();
+                    lp.onLongPress(this);
                 }
             };
         }
