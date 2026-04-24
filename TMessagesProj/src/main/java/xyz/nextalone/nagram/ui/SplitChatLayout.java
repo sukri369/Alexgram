@@ -273,8 +273,13 @@ public class SplitChatLayout extends FrameLayout {
                     }
                 }
             };
-            // DO NOT set isInsideContainer=true — it hides the input bar (ChatActivity line 8601-8602)
-            // We'll manually fix the only things isInsideContainer was doing that we need.
+            // Core Fix: Enable Telegram's native 'embedded mode' to fix padding/shadows/gaps.
+            try {
+                java.lang.reflect.Field isic = org.telegram.ui.ChatActivity.class.getDeclaredField("isInsideContainer");
+                isic.setAccessible(true);
+                isic.set(chat, true);
+            } catch (Exception ignore) {}
+
             chat.setParentLayout(host.actionBarLayout);
             chat.setCurrentAccount(account);
 
@@ -284,6 +289,16 @@ public class SplitChatLayout extends FrameLayout {
             }
 
             View view = chat.createView(host);
+
+            // Re-enable the input bar which gets hidden by 'isInsideContainer=true'
+            try {
+                java.lang.reflect.Field evf = org.telegram.ui.ChatActivity.class.getDeclaredField("chatActivityEnterView");
+                evf.setAccessible(true);
+                View enterView = (View) evf.get(chat);
+                if (enterView != null) {
+                    enterView.setVisibility(View.VISIBLE);
+                }
+            } catch (Exception ignore) {}
             if (view == null) {
                 FileLog.d("SplitChat: createView=null id=" + dialogId);
                 return;
