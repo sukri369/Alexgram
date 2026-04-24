@@ -972,7 +972,7 @@ public class SplitChatLayout extends FrameLayout {
                 return true;
             }
             
-            closeSplit();
+            closeSplit(true); // Close split via back button
         }
         
         return true;
@@ -1015,7 +1015,9 @@ public class SplitChatLayout extends FrameLayout {
         SplitChatManager.getInstance().onSplitClosed();
     }
 
-    public void closeSplit() {
+    public void closeSplit() { closeSplit(false); }
+
+    public void closeSplit(boolean fromBack) {
         if (!built) return;
         built = false;
         long aId = originId;
@@ -1031,7 +1033,7 @@ public class SplitChatLayout extends FrameLayout {
                     if (host != null && host.frameLayout != null) {
                         try { host.frameLayout.removeView(this); } catch (Exception ignore) {}
                         
-                        if (activeId != originId) {
+                        if (!fromBack && activeId != originId) {
                             android.os.Bundle args = new android.os.Bundle();
                             if (activeId > 0) args.putLong("user_id", activeId);
                             else              args.putLong("chat_id", -activeId);
@@ -1040,14 +1042,12 @@ public class SplitChatLayout extends FrameLayout {
                                 org.telegram.ui.ActionBar.INavigationLayout.NavigationParams params = 
                                     new org.telegram.ui.ActionBar.INavigationLayout.NavigationParams(chat);
                                 params.setNoAnimation(true);
-                                params.setRemoveLast(false); // DO NOT remove the last fragment (MainTabs)
+                                params.setRemoveLast(false);
                                 host.actionBarLayout.presentFragment(params);
                             } catch (Exception e) {
                                 host.actionBarLayout.presentFragment(chat, true);
                             }
                         } else {
-                            // If we are closing without switching to a new chat, 
-                            // make sure we don't leave the app with an empty stack.
                             if (host.actionBarLayout.getFragmentStack().isEmpty()) {
                                 host.actionBarLayout.addFragmentToStack(new org.telegram.ui.MainTabsActivity());
                             }
@@ -1056,7 +1056,6 @@ public class SplitChatLayout extends FrameLayout {
                     SplitChatManager.getInstance().onSplitClosed();
                 }).start();
         
-        // Safety: If animation is somehow blocked, ensure manager is notified
         AndroidUtilities.runOnUIThread(() -> {
             if (!built && SplitChatManager.getInstance().isActive()) {
                 SplitChatManager.getInstance().onSplitClosed();
