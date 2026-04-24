@@ -71,6 +71,7 @@ public class SplitChatLayout extends FrameLayout {
     private PaneContainer pane1Container;
     private PaneContainer pane2Container;
     private LaunchActivity host;
+    private org.telegram.ui.DialogsActivity activePicker;
     private long          originId;
     private int           originAccount;
     private boolean       built = false;
@@ -88,13 +89,13 @@ public class SplitChatLayout extends FrameLayout {
 
     // ── Public entry ──────────────────────────────────────────────────────────
 
-    public void showPickerAndWait(LaunchActivity activity, long currentDialogId) {
         this.host     = activity;
         this.originId = currentDialogId;
         if (built) return;
         try {
+            activePicker = buildPicker();
             activity.actionBarLayout.presentFragment(
-                    new INavigationLayout.NavigationParams(buildPicker()));
+                    new INavigationLayout.NavigationParams(activePicker));
         } catch (Exception e) {
             FileLog.e(e);
         }
@@ -103,6 +104,11 @@ public class SplitChatLayout extends FrameLayout {
     public void buildSplit(int account, long pane2DialogId) {
         if (built || host == null) return;
         built = true;
+
+        if (activePicker != null) {
+            activePicker.finishFragment();
+            activePicker = null;
+        }
 
         buildLayout(host);
         host.frameLayout.addView(this,
