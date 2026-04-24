@@ -89,15 +89,16 @@ public class SplitChatLayout extends FrameLayout {
 
     // ── Public entry ──────────────────────────────────────────────────────────
 
+    public void showPickerAndWait(org.telegram.ui.LaunchActivity activity, long currentDialogId) {
         this.host     = activity;
         this.originId = currentDialogId;
         if (built) return;
         try {
             activePicker = buildPicker();
             activity.actionBarLayout.presentFragment(
-                    new INavigationLayout.NavigationParams(activePicker));
+                    new org.telegram.ui.ActionBar.INavigationLayout.NavigationParams(activePicker));
         } catch (Exception e) {
-            FileLog.e(e);
+            org.telegram.messenger.FileLog.e(e);
         }
     }
 
