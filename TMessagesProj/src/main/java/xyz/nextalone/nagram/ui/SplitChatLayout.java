@@ -219,19 +219,6 @@ public class SplitChatLayout extends FrameLayout {
         addView(pane2Container, LayoutHelper.createFrame(
                 LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
-        TextView close = new TextView(ctx);
-        close.setText(LocaleController.getString("SplitChatClose", R.string.SplitChatClose));
-        close.setTextColor(Theme.getColor(Theme.key_actionBarDefaultTitle));
-        close.setTextSize(12);
-        close.setPadding(AndroidUtilities.dp(10), AndroidUtilities.dp(5),
-                AndroidUtilities.dp(10), AndroidUtilities.dp(5));
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(Theme.getColor(Theme.key_actionBarDefault));
-        bg.setCornerRadius(AndroidUtilities.dp(14));
-        close.setBackground(bg);
-        close.setOnClickListener(v -> closeSplit());
-        addView(close, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT,
-                Gravity.TOP | Gravity.END, 0, 8, 8, 0));
     }
 
     // ── Fragment embedding ────────────────────────────────────────────────────
