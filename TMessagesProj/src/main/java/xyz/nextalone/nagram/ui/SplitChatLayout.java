@@ -379,6 +379,22 @@ public class SplitChatLayout extends FrameLayout {
                     FileLog.e("SplitChat: failed to intercept SNFL delegate", e);
                 }
 
+                // Double-Shift: Disable Telegram's automatic AdjustPan panning.
+                // ChatActivity uses AdjustPanLayoutHelper to "pan" (shift) the entire view up,
+                // which conflicts with our SNFL bottom-padding logic and causes a double-gap.
+                try {
+                    java.lang.reflect.Field apf = org.telegram.ui.ChatActivity.class.getDeclaredField("adjustPanLayoutHelper");
+                    apf.setAccessible(true);
+                    Object helper = apf.get(chat);
+                    if (helper != null) {
+                        java.lang.reflect.Method sem = helper.getClass().getDeclaredMethod("setEnabled", boolean.class);
+                        sem.setAccessible(true);
+                        sem.invoke(helper, false);
+                    }
+                } catch (Exception e) {
+                    FileLog.e("SplitChat: failed to disable adjustPanLayoutHelper", e);
+                }
+
                 snfl.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
                     snfl.setOccupyStatusBar(false);
                     try {
