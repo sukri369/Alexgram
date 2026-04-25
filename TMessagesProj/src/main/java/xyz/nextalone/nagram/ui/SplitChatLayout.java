@@ -1307,22 +1307,24 @@ public class SplitChatLayout extends FrameLayout {
         protected void onMeasure(int wSpec, int hSpec) {
             int w = MeasureSpec.getSize(wSpec);
             int h = MeasureSpec.getSize(hSpec);
+            int botPad = getPaddingBottom();
             int actionBarH = 0;
-            // First pass: measure ActionBar (unspecified height so it wraps)
+            // Pass 1: Measure ActionBar
             for (int i = 0; i < getChildCount(); i++) {
                 View child = getChildAt(i);
                 if (child instanceof org.telegram.ui.ActionBar.ActionBar && child.getVisibility() != GONE) {
-                    child.measure(
-                        MeasureSpec.makeMeasureSpec(w, MeasureSpec.EXACTLY),
-                        MeasureSpec.makeMeasureSpec(h, MeasureSpec.UNSPECIFIED));
+                    child.measure(MeasureSpec.makeMeasureSpec(w, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
                     actionBarH = child.getMeasuredHeight();
                     break;
                 }
             }
+            // Pass 2: Force-Fill all other children to the available height
+            int childH = Math.max(0, h - botPad);
             for (int i = 0; i < getChildCount(); i++) {
                 View child = getChildAt(i);
                 if (!(child instanceof org.telegram.ui.ActionBar.ActionBar)) {
-                    measureChildWithMargins(child, wSpec, 0, hSpec, 0);
+                    child.measure(MeasureSpec.makeMeasureSpec(w, MeasureSpec.EXACTLY),
+                                 MeasureSpec.makeMeasureSpec(childH, MeasureSpec.EXACTLY));
                 }
             }
             setMeasuredDimension(w, h);
