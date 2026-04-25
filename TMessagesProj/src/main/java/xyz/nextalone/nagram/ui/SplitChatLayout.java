@@ -18,6 +18,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.core.view.OnApplyWindowInsetsListener;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.dynamicanimation.animation.FloatValueHolder;
@@ -84,6 +85,48 @@ public class SplitChatLayout extends FrameLayout {
         super(ctx);
         setClipChildren(false);
         setClipToPadding(false);
+
+        // Precision Keyboard Handling: 
+        // We must intercept and adjust insets before they reach the panes.
+        ViewCompat.setOnApplyWindowInsetsListener(this, (v, insets) -> {
+            if (!built) return insets;
+
+            int[] loc = new int[2];
+            getLocationOnScreen(loc);
+            int screenH = AndroidUtilities.displayMetrics.heightPixels;
+            
+            // 1. Top Pane: Should NEVER see the keyboard bottom inset
+            if (pane1Container != null) {
+                WindowInsetsCompat topInsets = new WindowInsetsCompat.Builder(insets)
+                        .setInsets(WindowInsetsCompat.Type.systemBars(), 
+                                androidx.core.graphics.Insets.of(
+                                        insets.getInsets(WindowInsetsCompat.Type.systemBars()).left,
+                                        insets.getInsets(WindowInsetsCompat.Type.systemBars()).top,
+                                        insets.getInsets(WindowInsetsCompat.Type.systemBars()).right,
+                                        0)) // Zero keyboard for top
+                        .build();
+                ViewCompat.dispatchApplyWindowInsets(pane1Container, topInsets);
+            }
+
+            // 2. Bottom Pane: Should only see the PORTION of the keyboard that overlaps it
+            if (pane2Container != null) {
+                int kbBottom = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom;
+                if (kbBottom > 0) {
+                    int p2TopOnScreen = loc[1] + pane2Container.getTop();
+                    int overlap = Math.max(0, (p2TopOnScreen + pane2Container.getHeight()) - (screenH - kbBottom));
+                    
+                    WindowInsetsCompat botInsets = new WindowInsetsCompat.Builder(insets)
+                            .setInsets(WindowInsetsCompat.Type.ime(), 
+                                    androidx.core.graphics.Insets.of(0, 0, 0, overlap))
+                            .build();
+                    ViewCompat.dispatchApplyWindowInsets(pane2Container, botInsets);
+                } else {
+                    ViewCompat.dispatchApplyWindowInsets(pane2Container, insets);
+                }
+            }
+
+            return insets.consumeSystemWindowInsets();
+        });
     }
 
     public void setOriginDialog(int account, long id) { this.originAccount = account; this.originId = id; }
