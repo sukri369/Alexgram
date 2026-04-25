@@ -752,7 +752,7 @@ public class SplitChatLayout extends FrameLayout {
 
     private void showPopup(android.view.View anchor, org.telegram.ui.ActionBar.ActionBarPopupWindow.ActionBarPopupWindowLayout layout, org.telegram.ui.ActionBar.ActionBarPopupWindow[] popupWindow) {
         // Set a standard minimum width to fix the "slider" selection highlight width
-        layout.setMinWidth(AndroidUtilities.dp(196));
+        layout.setMinimumWidth(AndroidUtilities.dp(196));
         
         popupWindow[0] = new org.telegram.ui.ActionBar.ActionBarPopupWindow(layout, LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT);
         popupWindow[0].setOutsideTouchable(true);
