@@ -305,11 +305,13 @@ public class SplitChatLayout extends FrameLayout {
                     }
                 }
             };
-            // Core Fix: Enable Telegram's native 'embedded mode' to fix padding/shadows/gaps.
+            // Ghost Space Fix (God-Level): Do NOT set isInsideContainer = true.
+            // When true, Telegram forces an extra bottom padding equal to the navigation bar height,
+            // which causes a gap in split-screen panes.
             try {
                 java.lang.reflect.Field isic = org.telegram.ui.ChatActivity.class.getDeclaredField("isInsideContainer");
                 isic.setAccessible(true);
-                isic.set(chat, true);
+                isic.set(chat, false); 
             } catch (Exception ignore) {}
 
             chat.setParentLayout(host.actionBarLayout);
@@ -333,26 +335,6 @@ public class SplitChatLayout extends FrameLayout {
                 view.setBackground(null);
                 snfl.setClipChildren(false);
                 snfl.setClipToPadding(false);
-                
-                // Final "God-Level" Guardian: Keep headers and input bars visible even if 
-                // Telegram's internal logic tries to hide them because of 'isInsideContainer'.
-                // Precision Fix for Keyboard Spacing (God-Level Interceptor):
-                // Telegram's SNFL detects the GLOBAL keyboard height and assumes the chat is full-screen.
-                // We must intercept the size change notification and provide a LOCAL overlap height instead.
-                try {
-                    java.lang.reflect.Field delegateField = org.telegram.ui.Components.SizeNotifierFrameLayout.class.getDeclaredField("delegate");
-                    delegateField.setAccessible(true);
-                    final org.telegram.ui.Components.SizeNotifierFrameLayout.SizeNotifierFrameLayoutDelegate originalDelegate = 
-                        (org.telegram.ui.Components.SizeNotifierFrameLayout.SizeNotifierFrameLayoutDelegate) delegateField.get(snfl);
-                    
-                    snfl.setDelegate((keyboardHeight, isWidthGreater) -> {
-                        if (originalDelegate != null) {
-                            originalDelegate.onSizeChanged(keyboardHeight, isWidthGreater);
-                        }
-                    });
-                } catch (Exception e) {
-                    FileLog.e("SplitChat: failed to intercept SNFL delegate", e);
-                }
 
                 // Double-Shift: Disable Telegram's automatic AdjustPan panning.
                 // ChatActivity uses AdjustPanLayoutHelper to "pan" (shift) the entire view up,
