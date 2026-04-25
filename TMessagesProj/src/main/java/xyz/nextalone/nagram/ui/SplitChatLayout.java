@@ -1086,20 +1086,20 @@ public class SplitChatLayout extends FrameLayout {
         if (host != null && host.frameLayout != null) {
             try { host.frameLayout.removeView(this); } catch (Exception ignore) {}
             
-            if (survivingDialogId != originId) {
-                android.os.Bundle args = new android.os.Bundle();
-                if (survivingDialogId > 0) args.putLong("user_id", survivingDialogId);
-                else                       args.putLong("chat_id", -survivingDialogId);
-                org.telegram.ui.ChatActivity chat = new org.telegram.ui.ChatActivity(args);
-                try {
-                    org.telegram.ui.ActionBar.INavigationLayout.NavigationParams params = 
-                        new org.telegram.ui.ActionBar.INavigationLayout.NavigationParams(chat);
-                    params.setNoAnimation(true);
-                    params.setRemoveLast(false); // DO NOT remove the last fragment (MainTabs)
-                    host.actionBarLayout.presentFragment(params);
-                } catch (Exception e) {
-                    host.actionBarLayout.presentFragment(chat, true);
-                }
+            // Unified fix for seamless exit: 
+            // Always present the surviving chat with NO animation, regardless of whether it was the origin chat.
+            android.os.Bundle args = new android.os.Bundle();
+            if (survivingDialogId > 0) args.putLong("user_id", survivingDialogId);
+            else                       args.putLong("chat_id", -survivingDialogId);
+            org.telegram.ui.ChatActivity chat = new org.telegram.ui.ChatActivity(args);
+            try {
+                org.telegram.ui.ActionBar.INavigationLayout.NavigationParams params = 
+                    new org.telegram.ui.ActionBar.INavigationLayout.NavigationParams(chat);
+                params.setNoAnimation(true); // Force 0ms animation for "God-level" seamlessness
+                params.setRemoveLast(false);
+                host.actionBarLayout.presentFragment(params);
+            } catch (Exception e) {
+                host.actionBarLayout.presentFragment(chat, false); // Revert to no-anim boolean
             }
         }
         SplitChatManager.getInstance().onSplitClosed();
