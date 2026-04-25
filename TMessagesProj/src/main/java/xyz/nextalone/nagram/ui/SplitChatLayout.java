@@ -1275,6 +1275,7 @@ public class SplitChatLayout extends FrameLayout {
         protected void onMeasure(int wSpec, int hSpec) {
             int w = MeasureSpec.getSize(wSpec);
             int h = MeasureSpec.getSize(hSpec);
+            int topPad = getPaddingTop();
             int actionBarH = 0;
 
             // Pass 1: Measure ActionBar
@@ -1289,13 +1290,13 @@ public class SplitChatLayout extends FrameLayout {
             }
 
             // Pass 2: Full-Stretch Measure all other children
-            // We force them to fill the ENTIRE pane height.
-            // Keyboard spacing is handled INTERNALLY by the chat fragment using our intercepted insets.
+            // We subtract topPad (status bar) to ensure the bottom of the chat isn't cut off.
+            int childH = Math.max(0, h - topPad);
             for (int i = 0; i < getChildCount(); i++) {
                 View child = getChildAt(i);
                 if (!(child instanceof org.telegram.ui.ActionBar.ActionBar)) {
                     child.measure(MeasureSpec.makeMeasureSpec(w, MeasureSpec.EXACTLY),
-                                 MeasureSpec.makeMeasureSpec(h, MeasureSpec.EXACTLY));
+                                 MeasureSpec.makeMeasureSpec(childH, MeasureSpec.EXACTLY));
                 }
             }
             setMeasuredDimension(w, h);
