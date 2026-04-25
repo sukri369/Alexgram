@@ -361,11 +361,15 @@ public class SplitChatLayout extends FrameLayout {
                         if (keyboardHeight > 0) {
                             int[] loc = new int[2];
                             snfl.getLocationOnScreen(loc);
-                            int screenH = AndroidUtilities.displayMetrics.heightPixels;
-                            // Calculate overlap: pane_bottom - keyboard_top
+                            
+                            // Precision Fix: Use the actual visible display frame to find the keyboard top.
+                            // This is the ONLY reliable way to handle systems with nav-bars/cutouts.
+                            android.graphics.Rect r = new android.graphics.Rect();
+                            snfl.getWindowVisibleDisplayFrame(r);
+                            
                             int snflBottomOnScreen = loc[1] + snfl.getHeight();
-                            int kbTopOnScreen = screenH - keyboardHeight;
-                            fixedHeight = Math.max(0, snflBottomOnScreen - kbTopOnScreen);
+                            // Overlap = SNFL bottom - Keyboard top (r.bottom)
+                            fixedHeight = Math.max(0, snflBottomOnScreen - r.bottom);
                         }
                         if (originalDelegate != null) {
                             originalDelegate.onSizeChanged(fixedHeight, isWidthGreater);
