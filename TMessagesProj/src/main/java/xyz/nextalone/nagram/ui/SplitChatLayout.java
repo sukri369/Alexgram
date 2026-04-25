@@ -706,14 +706,6 @@ public class SplitChatLayout extends FrameLayout {
         });
         popupLayout.addView(expandItem);
 
-        // 1b. Add Chat (New Pane)
-        org.telegram.ui.ActionBar.ActionBarMenuSubItem addItem = new org.telegram.ui.ActionBar.ActionBarMenuSubItem(getContext(), false, false);
-        addItem.setTextAndIcon("Add Chat", R.drawable.ic_split_add_na);
-        addItem.setOnClickListener(v -> {
-            if (popupWindow[0] != null) popupWindow[0].dismiss();
-            addChat();
-        });
-        popupLayout.addView(addItem);
 
         // 2. Full screen
         org.telegram.ui.ActionBar.ActionBarMenuSubItem fullItem = new org.telegram.ui.ActionBar.ActionBarMenuSubItem(getContext(), false, false);
@@ -743,7 +735,7 @@ public class SplitChatLayout extends FrameLayout {
 
         // 3b. Switch Chat (Replace this pane)
         org.telegram.ui.ActionBar.ActionBarMenuSubItem switchItem = new org.telegram.ui.ActionBar.ActionBarMenuSubItem(getContext(), false, false);
-        switchItem.setTextAndIcon("Switch Chat", R.drawable.ic_split_switch_na);
+        switchItem.setTextAndIcon("Switch Chat", R.drawable.ic_split_replace_na);
         switchItem.setOnClickListener(v -> {
             if (popupWindow[0] != null) popupWindow[0].dismiss();
             switchChat(dialogId);
