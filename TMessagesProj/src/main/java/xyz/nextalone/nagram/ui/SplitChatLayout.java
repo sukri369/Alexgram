@@ -1265,13 +1265,14 @@ public class SplitChatLayout extends FrameLayout {
             if (ime.bottom > 0) {
                 int[] loc = new int[2];
                 getLocationOnScreen(loc);
+                int paneBottomOnScreen = loc[1] + getHeight();
                 
-                android.graphics.Rect r = new android.graphics.Rect();
-                getWindowVisibleDisplayFrame(r);
+                // Pure Math Fix: Keyboard Top = Screen Height - IME Bottom Inset
+                int screenH = org.telegram.messenger.AndroidUtilities.displayMetrics.heightPixels;
+                int keyboardTopOnScreen = screenH - ime.bottom;
                 
-                int viewBottomOnScreen = loc[1] + getHeight();
-                //Inset Fix: Translate global keyboard insets to local pane coordinates.
-                int fixedImeBottom = Math.max(0, viewBottomOnScreen - r.bottom);
+                // Local Overlap = How much of the keyboard is inside our pane
+                int fixedImeBottom = Math.max(0, paneBottomOnScreen - keyboardTopOnScreen);
                 
                 androidx.core.view.WindowInsetsCompat fixedCompat = new androidx.core.view.WindowInsetsCompat.Builder(compat)
                     .setInsets(androidx.core.view.WindowInsetsCompat.Type.ime(), androidx.core.graphics.Insets.of(ime.left, ime.top, ime.right, fixedImeBottom))
