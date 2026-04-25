@@ -108,21 +108,22 @@ public class SplitChatLayout extends FrameLayout {
                 ViewCompat.dispatchApplyWindowInsets(pane1Container, topInsets);
             }
 
-            // 2. Bottom Pane: Should only see the PORTION of the keyboard that overlaps it
+            // 2. Bottom Pane: Manually apply padding for the keyboard overlap.
+            // We have neutralized Telegram's internal logic, so we are now 100% in control.
             if (pane2Container != null) {
                 int kbBottom = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom;
+                int overlap = 0;
                 if (kbBottom > 0) {
                     int p2TopOnScreen = loc[1] + pane2Container.getTop();
-                    int overlap = Math.max(0, (p2TopOnScreen + pane2Container.getHeight()) - (screenH - kbBottom));
+                    int p2BottomOnScreen = p2TopOnScreen + pane2Container.getHeight();
                     
-                    WindowInsetsCompat botInsets = new WindowInsetsCompat.Builder(insets)
-                            .setInsets(WindowInsetsCompat.Type.ime(), 
-                                    androidx.core.graphics.Insets.of(0, 0, 0, overlap))
-                            .build();
-                    ViewCompat.dispatchApplyWindowInsets(pane2Container, botInsets);
-                } else {
-                    ViewCompat.dispatchApplyWindowInsets(pane2Container, insets);
+                    android.graphics.Rect r = new android.graphics.Rect();
+                    getWindowVisibleDisplayFrame(r);
+                    
+                    // The overlap is the distance between the pane's bottom and the keyboard top (r.bottom)
+                    overlap = Math.max(0, p2BottomOnScreen - r.bottom);
                 }
+                pane2Container.setPadding(0, 0, 0, overlap);
             }
 
             return insets.consumeSystemWindowInsets();
@@ -357,22 +358,11 @@ public class SplitChatLayout extends FrameLayout {
                         (org.telegram.ui.Components.SizeNotifierFrameLayout.SizeNotifierFrameLayoutDelegate) delegateField.get(snfl);
                     
                     snfl.setDelegate((keyboardHeight, isWidthGreater) -> {
-                        int fixedHeight = keyboardHeight;
-                        if (keyboardHeight > 0) {
-                            int[] loc = new int[2];
-                            snfl.getLocationOnScreen(loc);
-                            
-                            // Precision Fix: Use the actual visible display frame to find the keyboard top.
-                            // This is the ONLY reliable way to handle systems with nav-bars/cutouts.
-                            android.graphics.Rect r = new android.graphics.Rect();
-                            snfl.getWindowVisibleDisplayFrame(r);
-                            
-                            int snflBottomOnScreen = loc[1] + snfl.getHeight();
-                            // Overlap = SNFL bottom - Keyboard top (r.bottom)
-                            fixedHeight = Math.max(0, snflBottomOnScreen - r.bottom);
-                        }
+                        // Absolute Control Fix: We force the internal chat to see ZERO keyboard height.
+                        // This prevents Telegram from adding its own bottom padding.
+                        // We will handle the actual spacing ourselves at the container level.
                         if (originalDelegate != null) {
-                            originalDelegate.onSizeChanged(fixedHeight, isWidthGreater);
+                            originalDelegate.onSizeChanged(0, isWidthGreater);
                         }
                     });
                 } catch (Exception e) {
