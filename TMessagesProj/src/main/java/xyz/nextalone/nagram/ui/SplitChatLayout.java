@@ -347,6 +347,34 @@ public class SplitChatLayout extends FrameLayout {
                 
                 // Final "God-Level" Guardian: Keep headers and input bars visible even if 
                 // Telegram's internal logic tries to hide them because of 'isInsideContainer'.
+                // Precision Fix for Keyboard Spacing (God-Level Interceptor):
+                // Telegram's SNFL detects the GLOBAL keyboard height and assumes the chat is full-screen.
+                // We must intercept the size change notification and provide a LOCAL overlap height instead.
+                try {
+                    java.lang.reflect.Field delegateField = org.telegram.ui.Components.SizeNotifierFrameLayout.class.getDeclaredField("delegate");
+                    delegateField.setAccessible(true);
+                    final org.telegram.ui.Components.SizeNotifierFrameLayout.SizeNotifierFrameLayoutDelegate originalDelegate = 
+                        (org.telegram.ui.Components.SizeNotifierFrameLayout.SizeNotifierFrameLayoutDelegate) delegateField.get(snfl);
+                    
+                    snfl.setDelegate((keyboardHeight, isWidthGreater) -> {
+                        int fixedHeight = keyboardHeight;
+                        if (keyboardHeight > 0) {
+                            int[] loc = new int[2];
+                            snfl.getLocationOnScreen(loc);
+                            int screenH = AndroidUtilities.displayMetrics.heightPixels;
+                            // Calculate overlap: pane_bottom - keyboard_top
+                            int snflBottomOnScreen = loc[1] + snfl.getHeight();
+                            int kbTopOnScreen = screenH - keyboardHeight;
+                            fixedHeight = Math.max(0, snflBottomOnScreen - kbTopOnScreen);
+                        }
+                        if (originalDelegate != null) {
+                            originalDelegate.onSizeChanged(fixedHeight, isWidthGreater);
+                        }
+                    });
+                } catch (Exception e) {
+                    FileLog.e("SplitChat: failed to intercept SNFL delegate", e);
+                }
+
                 snfl.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
                     snfl.setOccupyStatusBar(false);
                     try {
