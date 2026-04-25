@@ -108,22 +108,10 @@ public class SplitChatLayout extends FrameLayout {
                 ViewCompat.dispatchApplyWindowInsets(pane1Container, topInsets);
             }
 
-            // 2. Bottom Pane: Manually apply padding for the keyboard overlap.
-            // We have neutralized Telegram's internal logic, so we are now 100% in control.
+            // 2. Bottom Pane: Simply dispatch the insets.
+            // The PaneContainer will handle the localization and the chat will handle the padding internally.
             if (pane2Container != null) {
-                int kbBottom = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom;
-                int overlap = 0;
-                if (kbBottom > 0) {
-                    int p2TopOnScreen = loc[1] + pane2Container.getTop();
-                    int p2BottomOnScreen = p2TopOnScreen + pane2Container.getHeight();
-                    
-                    android.graphics.Rect r = new android.graphics.Rect();
-                    getWindowVisibleDisplayFrame(r);
-                    
-                    // The overlap is the distance between the pane's bottom and the keyboard top (r.bottom)
-                    overlap = Math.max(0, p2BottomOnScreen - r.bottom);
-                }
-                pane2Container.setPadding(0, 0, 0, overlap);
+                ViewCompat.dispatchApplyWindowInsets(pane2Container, insets);
             }
 
             return insets.consumeSystemWindowInsets();
@@ -358,11 +346,8 @@ public class SplitChatLayout extends FrameLayout {
                         (org.telegram.ui.Components.SizeNotifierFrameLayout.SizeNotifierFrameLayoutDelegate) delegateField.get(snfl);
                     
                     snfl.setDelegate((keyboardHeight, isWidthGreater) -> {
-                        // Absolute Control Fix: We force the internal chat to see ZERO keyboard height.
-                        // This prevents Telegram from adding its own bottom padding.
-                        // We will handle the actual spacing ourselves at the container level.
                         if (originalDelegate != null) {
-                            originalDelegate.onSizeChanged(0, isWidthGreater);
+                            originalDelegate.onSizeChanged(keyboardHeight, isWidthGreater);
                         }
                     });
                 } catch (Exception e) {
@@ -1307,24 +1292,27 @@ public class SplitChatLayout extends FrameLayout {
         protected void onMeasure(int wSpec, int hSpec) {
             int w = MeasureSpec.getSize(wSpec);
             int h = MeasureSpec.getSize(hSpec);
-            int botPad = getPaddingBottom();
             int actionBarH = 0;
+
             // Pass 1: Measure ActionBar
             for (int i = 0; i < getChildCount(); i++) {
                 View child = getChildAt(i);
                 if (child instanceof org.telegram.ui.ActionBar.ActionBar && child.getVisibility() != GONE) {
-                    child.measure(MeasureSpec.makeMeasureSpec(w, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
+                    child.measure(MeasureSpec.makeMeasureSpec(w, MeasureSpec.EXACTLY), 
+                                 MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
                     actionBarH = child.getMeasuredHeight();
                     break;
                 }
             }
-            // Pass 2: Force-Fill all other children to the available height
-            int childH = Math.max(0, h - botPad);
+
+            // Pass 2: Full-Stretch Measure all other children
+            // We force them to fill the ENTIRE pane height.
+            // Keyboard spacing is handled INTERNALLY by the chat fragment using our intercepted insets.
             for (int i = 0; i < getChildCount(); i++) {
                 View child = getChildAt(i);
                 if (!(child instanceof org.telegram.ui.ActionBar.ActionBar)) {
                     child.measure(MeasureSpec.makeMeasureSpec(w, MeasureSpec.EXACTLY),
-                                 MeasureSpec.makeMeasureSpec(childH, MeasureSpec.EXACTLY));
+                                 MeasureSpec.makeMeasureSpec(h, MeasureSpec.EXACTLY));
                 }
             }
             setMeasuredDimension(w, h);
