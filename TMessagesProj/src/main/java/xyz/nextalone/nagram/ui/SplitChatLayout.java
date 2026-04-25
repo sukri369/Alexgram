@@ -1282,6 +1282,30 @@ public class SplitChatLayout extends FrameLayout {
             setClipToOutline(true);
         }
 
+        @Override
+        public android.view.WindowInsets dispatchApplyWindowInsets(android.view.WindowInsets insets) {
+            androidx.core.view.WindowInsetsCompat compat = androidx.core.view.WindowInsetsCompat.toWindowInsetsCompat(insets);
+            androidx.core.graphics.Insets ime = compat.getInsets(androidx.core.view.WindowInsetsCompat.Type.ime());
+            
+            if (ime.bottom > 0) {
+                int[] loc = new int[2];
+                getLocationOnScreen(loc);
+                
+                android.graphics.Rect r = new android.graphics.Rect();
+                getWindowVisibleDisplayFrame(r);
+                
+                int viewBottomOnScreen = loc[1] + getHeight();
+                //Inset Fix: Translate global keyboard insets to local pane coordinates.
+                int fixedImeBottom = Math.max(0, viewBottomOnScreen - r.bottom);
+                
+                androidx.core.view.WindowInsetsCompat fixedCompat = new androidx.core.view.WindowInsetsCompat.Builder(compat)
+                    .setInsets(androidx.core.view.WindowInsetsCompat.Type.ime(), androidx.core.graphics.Insets.of(ime.left, ime.top, ime.right, fixedImeBottom))
+                    .build();
+                return super.dispatchApplyWindowInsets(fixedCompat.toWindowInsets());
+            }
+            return super.dispatchApplyWindowInsets(insets);
+        }
+
         public void setRoundMode(int mode) {
             if (this.roundMode != mode) {
                 this.roundMode = mode;
