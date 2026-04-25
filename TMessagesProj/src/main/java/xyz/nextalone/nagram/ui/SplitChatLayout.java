@@ -753,11 +753,18 @@ public class SplitChatLayout extends FrameLayout {
     private void showPopup(android.view.View anchor, org.telegram.ui.ActionBar.ActionBarPopupWindow.ActionBarPopupWindowLayout layout, org.telegram.ui.ActionBar.ActionBarPopupWindow[] popupWindow) {
         popupWindow[0] = new org.telegram.ui.ActionBar.ActionBarPopupWindow(layout, LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT);
         popupWindow[0].setOutsideTouchable(true);
-        popupWindow[0].setClippingEnabled(true);
+        popupWindow[0].setClippingEnabled(false); // Allow popup to span across split panes
         popupWindow[0].setFocusable(true);
+        
+        // Fix: Force measure to ensure the "slider" (selection highlight) covers full width
+        layout.measure(View.MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(1000), View.MeasureSpec.AT_MOST),
+                      View.MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(1000), View.MeasureSpec.AT_MOST));
+        
         popupWindow[0].setInputMethodMode(org.telegram.ui.ActionBar.ActionBarPopupWindow.INPUT_METHOD_NOT_NEEDED);
         popupWindow[0].setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_UNSPECIFIED);
-        popupWindow[0].showAsDropDown(anchor, 0, -anchor.getMeasuredHeight());
+        
+        // Show below the pill button
+        popupWindow[0].showAsDropDown(anchor, 0, 0);
     }
 
     public void openDialogInNextPane(int account, long dialogId) {
