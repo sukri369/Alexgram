@@ -1150,7 +1150,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             }
             if (isPlaying) {
                 updateAmbientMode();
-                AndroidUtilities.runOnUIThread(this, 500);
+                AndroidUtilities.runOnUIThread(this, 150);
             }
             // Do not reschedule when paused; it will be restarted on next play event
         }
@@ -2359,8 +2359,8 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
 
         public AmbientModeView(Context context) {
             super(context);
-            alphaAnimated = new AnimatedFloat(this, 0, 250, CubicBezierInterpolator.DEFAULT);
-            crossfade = new AnimatedFloat(this, 0, 500, CubicBezierInterpolator.DEFAULT);
+            alphaAnimated = new AnimatedFloat(this, 0, 150, CubicBezierInterpolator.DEFAULT);
+            crossfade = new AnimatedFloat(this, 0, 200, CubicBezierInterpolator.DEFAULT);
             
             paint.setDither(true);
             paint.setAntiAlias(true);
@@ -2376,6 +2376,9 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         public void setAmbientEnabled(boolean enabled) {
             if (this.isAmbientEnabled != enabled) {
                 this.isAmbientEnabled = enabled;
+                if (!enabled) {
+                    alphaAnimated.set(0f, true);
+                }
                 invalidate();
             }
         }
@@ -2493,7 +2496,11 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             Canvas c = new Canvas(this.bitmap);
             c.drawBitmap(newBitmap, 0, 0, null);
             crossfade.set(0f, true);
-            crossfade.set(1f);
+            if (prevBitmap == null) {
+                crossfade.set(1f, true);
+            } else {
+                crossfade.set(1f);
+            }
             invalidate();
         }
     }
@@ -11701,7 +11708,9 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             return;
         }
         boolean enabled = NaConfig.INSTANCE.getAmbientMode().Bool();
-        ambientModeView.setAmbientEnabled(enabled);
+        if (ambientModeView != null) {
+            ambientModeView.setAmbientEnabled(enabled);
+        }
         if (!enabled) {
             return;
         }
