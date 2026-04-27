@@ -1163,8 +1163,9 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         if (ambientModeView != null) {
             ambientModeView.setAmbientEnabled(enabled);
             if (enabled && isPlaying) {
+                updateAmbientMode();
                 AndroidUtilities.cancelRunOnUIThread(ambientUpdateRunnable);
-                AndroidUtilities.runOnUIThread(ambientUpdateRunnable);
+                AndroidUtilities.runOnUIThread(ambientUpdateRunnable, 100);
             } else if (!enabled) {
                 AndroidUtilities.cancelRunOnUIThread(ambientUpdateRunnable);
                 ambientModeView.setBitmap(null);
@@ -2392,6 +2393,9 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         @Override
         public void invalidate() {
             super.invalidate();
+            if (windowView != null) {
+                windowView.invalidate();
+            }
             if (containerView != null) {
                 containerView.invalidate();
             }
