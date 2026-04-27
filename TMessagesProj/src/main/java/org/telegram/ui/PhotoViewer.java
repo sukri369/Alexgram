@@ -1150,7 +1150,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             }
             if (isPlaying) {
                 updateAmbientMode();
-                AndroidUtilities.runOnUIThread(this, 400);
+                AndroidUtilities.runOnUIThread(this, 1000);
             }
         }
     };
@@ -1167,7 +1167,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             if (enabled && isPlaying) {
                 updateAmbientMode();
                 AndroidUtilities.cancelRunOnUIThread(ambientUpdateRunnable);
-                AndroidUtilities.runOnUIThread(ambientUpdateRunnable, 400);
+                AndroidUtilities.runOnUIThread(ambientUpdateRunnable, 1000);
             } else if (!enabled) {
                 AndroidUtilities.cancelRunOnUIThread(ambientUpdateRunnable);
                 isAmbientBlurring = false;
@@ -2381,15 +2381,18 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         public AmbientModeView(Context context) {
             super(context);
             setWillNotDraw(false);
-            alphaAnimated = new AnimatedFloat(this, 0, 400, CubicBezierInterpolator.EASE_OUT);
-            crossfade = new AnimatedFloat(this, 0, 400, CubicBezierInterpolator.EASE_OUT);
+            alphaAnimated = new AnimatedFloat(this, 0, 600, CubicBezierInterpolator.EASE_OUT);
+            crossfade = new AnimatedFloat(this, 0, 1000, CubicBezierInterpolator.EASE_OUT);
             
             paint.setDither(true);
             paint.setAntiAlias(true);
             paint.setFilterBitmap(true);
 
+            gradientPaint.setDither(true);
+            gradientPaint.setAntiAlias(true);
+
             ColorMatrix colorMatrix = new ColorMatrix();
-            colorMatrix.setSaturation(1.6f);
+            colorMatrix.setSaturation(1.8f);
             paint.setColorFilter(new ColorMatrixColorFilter(colorMatrix));
         }
 
@@ -2457,8 +2460,8 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 videoCenterY = aspectRatioFrameLayout.getY() + aspectRatioFrameLayout.getHeight() / 2f;
             }
 
-            float scaleX = (videoWidth / bitmap.getWidth()) * 4.4f;
-            float scaleY = (videoHeight / bitmap.getHeight()) * 4.4f;
+            float scaleX = (videoWidth / bitmap.getWidth()) * 3.0f;
+            float scaleY = (videoHeight / bitmap.getHeight()) * 3.0f;
             float cf = crossfade.set(1f);
 
             matrix.reset();
@@ -2478,10 +2481,10 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             
             int sc = canvas.saveLayer(0, 0, viewWidth, viewHeight, null);
             if (prevBitmap != null && cf < 1f) {
-                paint.setAlpha((int) (alpha * 160 * (1f - cf)));
+                paint.setAlpha((int) (alpha * 140 * (1f - cf)));
                 canvas.drawBitmap(prevBitmap, matrix, paint);
             }
-            paint.setAlpha((int) (alpha * 160 * cf));
+            paint.setAlpha((int) (alpha * 140 * cf));
             canvas.drawBitmap(bitmap, matrix, paint);
             canvas.restoreToCount(sc);
 
@@ -2511,7 +2514,15 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                     prevBitmap = Bitmap.createBitmap(this.bitmap.getWidth(), this.bitmap.getHeight(), Bitmap.Config.ARGB_8888);
                 }
                 Canvas c = new Canvas(prevBitmap);
-                c.drawBitmap(this.bitmap, 0, 0, null);
+                float currentCf = crossfade.get();
+                if (currentCf > 0 && currentCf < 1f) {
+                    copyPaint.setAlpha((int) (255 * (1f - currentCf)));
+                    c.drawBitmap(prevBitmap, 0, 0, copyPaint);
+                    copyPaint.setAlpha((int) (255 * currentCf));
+                    c.drawBitmap(this.bitmap, 0, 0, copyPaint);
+                } else {
+                    c.drawBitmap(this.bitmap, 0, 0, null);
+                }
             }
             if (this.bitmap == null) {
                 this.bitmap = Bitmap.createBitmap(newBitmap.getWidth(), newBitmap.getHeight(), Bitmap.Config.ARGB_8888);
@@ -11714,7 +11725,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 final Bitmap bitmapToBlur = Bitmap.createBitmap(ambientBitmap);
                 isAmbientBlurring = true;
                 Utilities.globalQueue.postRunnable(() -> {
-                    Utilities.stackBlurBitmap(bitmapToBlur, 25);
+                    Utilities.stackBlurBitmap(bitmapToBlur, 40);
                     AndroidUtilities.runOnUIThread(() -> {
                         isAmbientBlurring = false;
                         if (ambientModeView != null) {
@@ -11735,7 +11746,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                     if (result == PixelCopy.SUCCESS && ambientBitmap != null && !ambientBitmap.isRecycled()) {
                         final Bitmap bitmapToBlur = Bitmap.createBitmap(ambientBitmap);
                         Utilities.globalQueue.postRunnable(() -> {
-                            Utilities.stackBlurBitmap(bitmapToBlur, 25);
+                            Utilities.stackBlurBitmap(bitmapToBlur, 40);
                             AndroidUtilities.runOnUIThread(() -> {
                                 isAmbientBlurring = false;
                                 if (ambientModeView != null) {
