@@ -194,7 +194,16 @@ public class PopupSwipeBackLayout extends FrameLayout {
             return;
         }
 
-        ActionBarPopupWindow.ActionBarPopupWindowLayout p = (ActionBarPopupWindow.ActionBarPopupWindowLayout) getParent();
+        ActionBarPopupWindow.ActionBarPopupWindowLayout p = null;
+        for (android.view.ViewParent parent = getParent(); parent != null; parent = parent.getParent()) {
+            if (parent instanceof ActionBarPopupWindow.ActionBarPopupWindowLayout) {
+                p = (ActionBarPopupWindow.ActionBarPopupWindowLayout) parent;
+                break;
+            }
+        }
+        if (p == null) {
+            return;
+        }
         float w = fW + (tW - fW) * transitionProgress;
         float h = fH + (tH - fH) * transitionProgress;
         w += p.getPaddingLeft() + p.getPaddingRight();
