@@ -2446,8 +2446,6 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 }
             }
 
-            float viewWidth = getMeasuredWidth();
-            float viewHeight = getMeasuredHeight();
             float videoWidth, videoHeight;
 
             if (viewWidth / viewHeight > videoRatio) {
