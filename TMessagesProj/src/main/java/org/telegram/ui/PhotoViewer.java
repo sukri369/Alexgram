@@ -1155,6 +1155,8 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         }
     };
 
+    private boolean isAmbientBlurring;
+
     private void syncAmbientState() {
         syncAmbientState(NaConfig.INSTANCE.getAmbientMode().Bool());
     }
@@ -2508,15 +2510,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                     prevBitmap = Bitmap.createBitmap(this.bitmap.getWidth(), this.bitmap.getHeight(), Bitmap.Config.ARGB_8888);
                 }
                 Canvas c = new Canvas(prevBitmap);
-                float cf = crossfade.get();
-                if (cf > 0 && cf < 1f) {
-                    copyPaint.setAlpha((int) (255 * (1f - cf)));
-                    c.drawBitmap(prevBitmap, 0, 0, copyPaint);
-                    copyPaint.setAlpha((int) (255 * cf));
-                    c.drawBitmap(this.bitmap, 0, 0, copyPaint);
-                } else {
-                    c.drawBitmap(this.bitmap, 0, 0, null);
-                }
+                c.drawBitmap(this.bitmap, 0, 0, null);
             }
             if (this.bitmap == null) {
                 this.bitmap = Bitmap.createBitmap(newBitmap.getWidth(), newBitmap.getHeight(), Bitmap.Config.ARGB_8888);
@@ -11704,23 +11698,35 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
     }
 
     private void updateAmbientMode() {
-        if (ambientModeView == null || !isPlaying || !ambientModeView.isAmbientEnabled) {
+        if (ambientModeView == null || !isPlaying || !ambientModeView.isAmbientEnabled || isAmbientBlurring) {
             return;
         }
         if (ambientBitmap == null || ambientBitmap.isRecycled() || ambientBitmap.getWidth() != 64) {
-            ambientBitmap = Bitmap.createBitmap(64, 64, Bitmap.Config.ARGB_8888);
+            try {
+                ambientBitmap = Bitmap.createBitmap(64, 64, Bitmap.Config.ARGB_8888);
+            } catch (Throwable e) {
+                return;
+            }
         }
 
         if (videoTextureView != null && videoTextureView.isAvailable()) {
-            videoTextureView.getBitmap(ambientBitmap);
-            final Bitmap bitmapToBlur = Bitmap.createBitmap(ambientBitmap);
-            Utilities.globalQueue.postRunnable(() -> {
-                Utilities.stackBlurBitmap(bitmapToBlur, 18);
-                AndroidUtilities.runOnUIThread(() -> {
-                    ambientModeView.setBitmap(bitmapToBlur);
-                    bitmapToBlur.recycle();
+            try {
+                videoTextureView.getBitmap(ambientBitmap);
+                final Bitmap bitmapToBlur = Bitmap.createBitmap(ambientBitmap);
+                isAmbientBlurring = true;
+                Utilities.globalQueue.postRunnable(() -> {
+                    Utilities.stackBlurBitmap(bitmapToBlur, 18);
+                    AndroidUtilities.runOnUIThread(() -> {
+                        isAmbientBlurring = false;
+                        if (ambientModeView != null) {
+                            ambientModeView.setBitmap(bitmapToBlur);
+                        }
+                        bitmapToBlur.recycle();
+                    });
                 });
-            });
+            } catch (Throwable ignore) {
+                isAmbientBlurring = false;
+            }
         } else if (videoSurfaceView != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             Surface surface = videoSurfaceView.getHolder().getSurface();
             if (surface != null && surface.isValid()) {
