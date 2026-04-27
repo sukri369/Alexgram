@@ -2380,8 +2380,8 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         public AmbientModeView(Context context) {
             super(context);
             setWillNotDraw(false);
-            alphaAnimated = new AnimatedFloat(this, 0, 400, CubicBezierInterpolator.EASE_OUT_QUINT);
-            crossfade = new AnimatedFloat(this, 0, 600, CubicBezierInterpolator.EASE_OUT_QUINT);
+            alphaAnimated = new AnimatedFloat(this, 0, 300, CubicBezierInterpolator.EASE_OUT);
+            crossfade = new AnimatedFloat(this, 0, 180, CubicBezierInterpolator.EASE_OUT);
             
             paint.setDither(true);
             paint.setAntiAlias(true);
@@ -2415,13 +2415,6 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             }
         }
 
-        @Override
-        protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-            super.onSizeChanged(w, h, oldw, oldh);
-            radialGradient = new RadialGradient(w / 2f, h / 2f, Math.max(w, h) * 0.5f,
-                    new int[]{0x00000000, 0xFF000000}, new float[]{0.3f, 1.0f}, Shader.TileMode.CLAMP);
-            gradientPaint.setShader(radialGradient);
-        }
 
         @Override
         protected void onDraw(Canvas canvas) {
@@ -2463,8 +2456,8 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 videoCenterY = aspectRatioFrameLayout.getY() + aspectRatioFrameLayout.getHeight() / 2f;
             }
 
-            float scaleX = (videoWidth / bitmap.getWidth()) * 3.0f;
-            float scaleY = (videoHeight / bitmap.getHeight()) * 3.0f;
+            float scaleX = (videoWidth / bitmap.getWidth()) * 2.5f;
+            float scaleY = (videoHeight / bitmap.getHeight()) * 2.5f;
             float cf = crossfade.set(1f);
 
             matrix.reset();
@@ -2474,17 +2467,17 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             if (videoCenterX != lastCenterX || videoCenterY != lastCenterY || viewWidth != lastW || viewHeight != lastH) {
                 lastCenterX = videoCenterX;
                 lastCenterY = videoCenterY;
-                lastW = viewWidth;
-                lastH = viewHeight;
-                radialGradient = new RadialGradient(videoCenterX, videoCenterY, Math.max(viewWidth, viewHeight) * 1.0f,
-                        new int[]{0x00000000, 0x00000000, 0x7F000000, 0xFF000000}, new float[]{0.0f, 0.35f, 0.7f, 1.0f}, Shader.TileMode.CLAMP);
+                lastW = (int)viewWidth;
+                lastH = (int)viewHeight;
+                radialGradient = new RadialGradient(videoCenterX, videoCenterY, Math.max(viewWidth, viewHeight) * 0.9f,
+                        new int[]{0x00000000, 0x00000000, 0x00000000, 0xFF000000}, new float[]{0.0f, 0.4f, 0.6f, 1.0f}, Shader.TileMode.CLAMP);
                 gradientPaint.setShader(radialGradient);
             }
             if (prevBitmap != null && cf < 1f) {
-                paint.setAlpha((int) (alpha * 140 * (1f - cf)));
+                paint.setAlpha((int) (alpha * 160 * (1f - cf)));
                 canvas.drawBitmap(prevBitmap, matrix, paint);
             }
-            paint.setAlpha((int) (alpha * 140 * cf));
+            paint.setAlpha((int) (alpha * 160 * cf));
             canvas.drawBitmap(bitmap, matrix, paint);
 
             gradientPaint.setAlpha((int) (alpha * 255));
@@ -11716,7 +11709,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 final Bitmap bitmapToBlur = Bitmap.createBitmap(ambientBitmap);
                 isAmbientBlurring = true;
                 Utilities.globalQueue.postRunnable(() -> {
-                    Utilities.stackBlurBitmap(bitmapToBlur, 18);
+                    Utilities.stackBlurBitmap(bitmapToBlur, 25);
                     AndroidUtilities.runOnUIThread(() -> {
                         isAmbientBlurring = false;
                         if (ambientModeView != null) {
@@ -11737,7 +11730,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                     if (result == PixelCopy.SUCCESS && ambientBitmap != null && !ambientBitmap.isRecycled()) {
                         final Bitmap bitmapToBlur = Bitmap.createBitmap(ambientBitmap);
                         Utilities.globalQueue.postRunnable(() -> {
-                            Utilities.stackBlurBitmap(bitmapToBlur, 18);
+                            Utilities.stackBlurBitmap(bitmapToBlur, 25);
                             AndroidUtilities.runOnUIThread(() -> {
                                 isAmbientBlurring = false;
                                 if (ambientModeView != null) {
