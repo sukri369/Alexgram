@@ -1145,15 +1145,14 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
     private final Runnable ambientUpdateRunnable = new Runnable() {
         @Override
         public void run() {
-            if (videoPlayer == null) {
+            if (videoPlayer == null || !NaConfig.INSTANCE.getAmbientMode().Bool()) {
                 return;
             }
             if (isPlaying) {
                 updateAmbientMode();
                 AndroidUtilities.runOnUIThread(this, 500);
-            } else {
-                AndroidUtilities.runOnUIThread(this, 1000);
             }
+            // Do not reschedule when paused; it will be restarted on next play event
         }
     };
     private boolean allowShowFullscreenButton;
@@ -6215,7 +6214,18 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                         ambientModeView.setAmbientEnabled(enabled);
                     }
                     if (enabled) {
-                        AndroidUtilities.runOnUIThread(ambientUpdateRunnable);
+                        // Cancel any previously scheduled runnable before posting a new one
+                        AndroidUtilities.cancelRunOnUIThread(ambientUpdateRunnable);
+                        if (isPlaying) {
+                            AndroidUtilities.runOnUIThread(ambientUpdateRunnable);
+                        }
+                    } else {
+                        // Cancel the runnable immediately so it stops polling
+                        AndroidUtilities.cancelRunOnUIThread(ambientUpdateRunnable);
+                        // Clear the bitmap immediately so the fade-out starts at once
+                        if (ambientModeView != null) {
+                            ambientModeView.setBitmap(null);
+                        }
                     }
                     if (ambientItem != null) {
                         ambientItem.getImageView().setVisibility(View.VISIBLE);
@@ -10973,6 +10983,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 playerWasPlaying = true;
                 AndroidUtilities.runOnUIThread(updateProgressRunnable);
                 if (NaConfig.INSTANCE.getAmbientMode().Bool()) {
+                    AndroidUtilities.cancelRunOnUIThread(ambientUpdateRunnable);
                     AndroidUtilities.runOnUIThread(ambientUpdateRunnable);
                 }
             }
@@ -11274,7 +11285,8 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                     if (ambientModeView != null) {
                         ambientModeView.setAmbientEnabled(NaConfig.INSTANCE.getAmbientMode().Bool());
                     }
-                    if (NaConfig.INSTANCE.getAmbientMode().Bool()) {
+                    if (NaConfig.INSTANCE.getAmbientMode().Bool() && isPlaying) {
+                        AndroidUtilities.cancelRunOnUIThread(ambientUpdateRunnable);
                         AndroidUtilities.runOnUIThread(ambientUpdateRunnable);
                     }
                     if (aspectRatioFrameLayout != null) {
@@ -11312,6 +11324,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                         AndroidUtilities.runOnUIThread(() -> firstFrameView.updateAlpha(), 64);
                     }
                     if (NaConfig.INSTANCE.getAmbientMode().Bool()) {
+                        AndroidUtilities.cancelRunOnUIThread(ambientUpdateRunnable);
                         AndroidUtilities.runOnUIThread(ambientUpdateRunnable);
                     }
                 }
