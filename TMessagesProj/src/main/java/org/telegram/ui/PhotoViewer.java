@@ -1145,12 +1145,12 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
     private final Runnable ambientUpdateRunnable = new Runnable() {
         @Override
         public void run() {
-            if (videoPlayer == null || !NaConfig.INSTANCE.getAmbientMode().Bool()) {
+            if (videoPlayer == null || ambientModeView == null || !ambientModeView.isAmbientEnabled) {
                 return;
             }
             if (isPlaying) {
                 updateAmbientMode();
-                AndroidUtilities.runOnUIThread(this, 150);
+                AndroidUtilities.runOnUIThread(this, 100);
             }
             // Do not reschedule when paused; it will be restarted on next play event
         }
@@ -2372,6 +2372,14 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         }
 
         private final Paint copyPaint = new Paint(Paint.FILTER_BITMAP_FLAG);
+        
+        @Override
+        public void invalidate() {
+            super.invalidate();
+            if (containerView != null) {
+                containerView.invalidate();
+            }
+        }
 
         public void setAmbientEnabled(boolean enabled) {
             if (this.isAmbientEnabled != enabled) {
@@ -2463,7 +2471,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         }
 
         public void setBitmap(Bitmap newBitmap) {
-            if (newBitmap == null || newBitmap.isRecycled()) {
+            if (!isAmbientEnabled || newBitmap == null || newBitmap.isRecycled()) {
                 if (bitmap != null) {
                     bitmap.recycle();
                     bitmap = null;
@@ -6224,6 +6232,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                         // Cancel any previously scheduled runnable before posting a new one
                         AndroidUtilities.cancelRunOnUIThread(ambientUpdateRunnable);
                         if (isPlaying) {
+                            updateAmbientMode();
                             AndroidUtilities.runOnUIThread(ambientUpdateRunnable);
                         }
                     } else {
@@ -11711,7 +11720,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         if (ambientModeView != null) {
             ambientModeView.setAmbientEnabled(enabled);
         }
-        if (!enabled) {
+        if (ambientModeView == null || !ambientModeView.isAmbientEnabled) {
             return;
         }
         if (ambientBitmap == null || ambientBitmap.isRecycled() || ambientBitmap.getWidth() != 64) {
