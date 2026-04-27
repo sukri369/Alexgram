@@ -1150,7 +1150,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             }
             if (isPlaying) {
                 updateAmbientMode();
-                AndroidUtilities.runOnUIThread(this, 300);
+                AndroidUtilities.runOnUIThread(this, 400);
             }
         }
     };
@@ -1167,7 +1167,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             if (enabled && isPlaying) {
                 updateAmbientMode();
                 AndroidUtilities.cancelRunOnUIThread(ambientUpdateRunnable);
-                AndroidUtilities.runOnUIThread(ambientUpdateRunnable, 300);
+                AndroidUtilities.runOnUIThread(ambientUpdateRunnable, 400);
             } else if (!enabled) {
                 AndroidUtilities.cancelRunOnUIThread(ambientUpdateRunnable);
                 isAmbientBlurring = false;
@@ -2381,8 +2381,8 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         public AmbientModeView(Context context) {
             super(context);
             setWillNotDraw(false);
-            alphaAnimated = new AnimatedFloat(this, 0, 300, CubicBezierInterpolator.EASE_OUT);
-            crossfade = new AnimatedFloat(this, 0, 300, CubicBezierInterpolator.EASE_OUT);
+            alphaAnimated = new AnimatedFloat(this, 0, 400, CubicBezierInterpolator.EASE_OUT);
+            crossfade = new AnimatedFloat(this, 0, 400, CubicBezierInterpolator.EASE_OUT);
             
             paint.setDither(true);
             paint.setAntiAlias(true);
@@ -2457,8 +2457,8 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 videoCenterY = aspectRatioFrameLayout.getY() + aspectRatioFrameLayout.getHeight() / 2f;
             }
 
-            float scaleX = (videoWidth / bitmap.getWidth()) * 2.2f;
-            float scaleY = (videoHeight / bitmap.getHeight()) * 2.2f;
+            float scaleX = (videoWidth / bitmap.getWidth()) * 4.4f;
+            float scaleY = (videoHeight / bitmap.getHeight()) * 4.4f;
             float cf = crossfade.set(1f);
 
             matrix.reset();
@@ -2476,12 +2476,14 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             shaderMatrix.postTranslate(videoCenterX, videoCenterY);
             radialGradient.setLocalMatrix(shaderMatrix);
             
+            int sc = canvas.saveLayer(0, 0, viewWidth, viewHeight, null);
             if (prevBitmap != null && cf < 1f) {
                 paint.setAlpha((int) (alpha * 160 * (1f - cf)));
                 canvas.drawBitmap(prevBitmap, matrix, paint);
             }
             paint.setAlpha((int) (alpha * 160 * cf));
             canvas.drawBitmap(bitmap, matrix, paint);
+            canvas.restoreToCount(sc);
 
             gradientPaint.setAlpha((int) (alpha * 255));
             canvas.drawRect(0, 0, viewWidth, viewHeight, gradientPaint);
@@ -11698,9 +11700,9 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         if (ambientModeView == null || !isPlaying || !ambientModeView.isAmbientEnabled || isAmbientBlurring) {
             return;
         }
-        if (ambientBitmap == null || ambientBitmap.isRecycled() || ambientBitmap.getWidth() != 64) {
+        if (ambientBitmap == null || ambientBitmap.isRecycled() || ambientBitmap.getWidth() != 32) {
             try {
-                ambientBitmap = Bitmap.createBitmap(64, 64, Bitmap.Config.ARGB_8888);
+                ambientBitmap = Bitmap.createBitmap(32, 32, Bitmap.Config.ARGB_8888);
             } catch (Throwable e) {
                 return;
             }
