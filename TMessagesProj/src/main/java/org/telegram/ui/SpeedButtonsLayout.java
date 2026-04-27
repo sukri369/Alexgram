@@ -49,6 +49,24 @@ public class SpeedButtonsLayout extends PopupSwipeBackLayout {
         mainLayout = new LinearLayout(context);
         mainLayout.setOrientation(LinearLayout.VERTICAL);
 
+        addOnSwipeBackProgressListener((layout, toProgress, progress) -> {
+            if (getParent() instanceof ViewGroup) {
+                ViewGroup parent = (ViewGroup) getParent();
+                for (int i = 0; i < parent.getChildCount(); i++) {
+                    View child = parent.getChildAt(i);
+                    if (child != this) {
+                        child.setAlpha(1f - progress);
+                        child.setTranslationY(AndroidUtilities.dp(16) * progress);
+                        if (progress >= 1f) {
+                            child.setVisibility(GONE);
+                        } else if (child.getVisibility() != VISIBLE) {
+                            child.setVisibility(VISIBLE);
+                        }
+                    }
+                }
+            }
+        });
+
         for (int i = 0; i < 5; i++) {
             int icon;
             String text;
@@ -76,42 +94,44 @@ public class SpeedButtonsLayout extends PopupSwipeBackLayout {
             }
 
             ActionBarMenuSubItem item = ActionBarMenuItem.addItem(mainLayout, icon, text, false, null);
-            item.setColors(0xfffafafa, 0xfffafafa);
+            item.setColors(0xffffffff, 0xffffffff);
             item.setOnClickListener((view) -> {
                 callback.onSpeedSelected(speed, true, true);
             });
-            item.setSelectorColor(0x0fffffff);
+            item.setSelectorColor(0x1affffff);
             speedItems[i] = item;
         }
 
-        customItem = ActionBarMenuItem.addItem(false, false, mainLayout, 0, new GenericPathDrawable("M20 13C20 15.2091 19.1046 17.2091 17.6569 18.6569L19.0711 20.0711C20.8807 18.2614 22 15.7614 22 13 22 7.47715 17.5228 3 12 3 6.47715 3 2 7.47715 2 13 2 15.7614 3.11929 18.2614 4.92893 20.0711L6.34315 18.6569C4.89543 17.2091 4 15.2091 4 13 4 8.58172 7.58172 5 12 5 16.4183 5 20 8.58172 20 13ZM15.293 8.29297 10.793 12.793 12.2072 14.2072 16.7072 9.70718 15.293 8.29297Z", 24, 24), LocaleController.getString("PollV2PollDurationOptionCustom", R.string.PollV2PollDurationOptionCustom), false, null);
-        customItem.setColors(0xfffafafa, 0xfffafafa);
+        customItem = new ActionBarMenuSubItem(context, false, false);
+        customItem.setTextAndIcon(LocaleController.getString("PollV2PollDurationOptionCustom", R.string.PollV2PollDurationOptionCustom), new GenericPathDrawable("M20 13C20 15.2091 19.1046 17.2091 17.6569 18.6569L19.0711 20.0711C20.8807 18.2614 22 15.7614 22 13 22 7.47715 17.5228 3 12 3 6.47715 3 2 7.47715 2 13 2 15.7614 3.11929 18.2614 4.92893 20.0711L6.34315 18.6569C4.89543 17.2091 4 15.2091 4 13 4 8.58172 7.58172 5 12 5 16.4183 5 20 8.58172 20 13ZM15.293 8.29297 10.793 12.793 12.2072 14.2072 16.7072 9.70718 15.293 8.29297Z", 24, 24));
+        customItem.setColors(0xffffffff, 0xffffffff);
         customItem.setOnClickListener((view) -> {
             openForeground(1);
+            try {
+                view.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP);
+            } catch (Exception ignore) {}
         });
-        customItem.setSelectorColor(0x0fffffff);
-
-        FrameLayout gap = new FrameLayout(context);
-        gap.setMinimumWidth(AndroidUtilities.dp(196));
-        gap.setBackgroundColor(0xff181818);
-        mainLayout.addView(gap, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 8));
+        customItem.setSelectorColor(0x1affffff);
+        mainLayout.addView(customItem, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 48));
 
         addView(mainLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
         customLayout = new LinearLayout(context);
         customLayout.setOrientation(LinearLayout.VERTICAL);
-        customLayout.setBackgroundColor(0xff181818);
+        customLayout.setPadding(0, AndroidUtilities.dp(8), 0, AndroidUtilities.dp(8));
 
-        ActionBarMenuSubItem backItem = ActionBarMenuItem.addItem(customLayout, R.drawable.ic_ab_back, LocaleController.getString("Back", R.string.Back), false, null);
-        backItem.setColors(0xfffafafa, 0xfffafafa);
+        ActionBarMenuSubItem backItem = new ActionBarMenuSubItem(context, false, false);
+        backItem.setTextAndIcon(LocaleController.getString("Back", R.string.Back), R.drawable.ic_ab_back);
+        backItem.setColors(0xffffffff, 0xffffffff);
         backItem.setOnClickListener((view) -> closeForeground());
-        backItem.setSelectorColor(0x0fffffff);
+        backItem.setSelectorColor(0x1affffff);
+        customLayout.addView(backItem, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 48));
 
         speedSlider = new CustomSpeedSlider(context, null);
         speedSlider.setOnValueChange((value, isFinal) -> {
             callback.onSpeedSelected(speedSlider.getSpeed(value), isFinal, false);
         });
-        customLayout.addView(speedSlider, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 44, 8, 8, 8, 8));
+        customLayout.addView(speedSlider, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 50, 16, 8, 16, 8));
 
         addView(customLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
     }
@@ -130,13 +150,13 @@ public class SpeedButtonsLayout extends PopupSwipeBackLayout {
                 speedItems[a].setColors(0xff6BB6F9, 0xff6BB6F9);
                 custom = false;
             } else {
-                speedItems[a].setColors(0xfffafafa, 0xfffafafa);
+                speedItems[a].setColors(0xffffffff, 0xffffffff);
             }
         }
         if (custom) {
             customItem.setColors(0xff6BB6F9, 0xff6BB6F9);
         } else {
-            customItem.setColors(0xfffafafa, 0xfffafafa);
+            customItem.setColors(0xffffffff, 0xffffffff);
         }
         speedSlider.setSpeed(currentVideoSpeed, false);
     }
@@ -193,24 +213,24 @@ public class SpeedButtonsLayout extends PopupSwipeBackLayout {
     private static class GenericPathDrawable extends Drawable {
         private final Path path;
         private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        private final float vWidth;
-        private final float vHeight;
+        private final int width;
+        private final int height;
 
         public GenericPathDrawable(String pathData, int width, int height) {
             this.path = PathParser.createPathFromPathData(pathData);
-            this.vWidth = width;
-            this.vHeight = height;
+            this.width = width;
+            this.height = height;
             paint.setColor(0xffffffff);
             paint.setStyle(Paint.Style.FILL);
+            paint.setAntiAlias(true);
         }
 
         @Override
         public void draw(Canvas canvas) {
             Rect bounds = getBounds();
-            if (bounds.width() == 0 || bounds.height() == 0) return;
             canvas.save();
-            canvas.translate(bounds.left, bounds.top);
-            float scale = Math.min(bounds.width() / vWidth, bounds.height() / vHeight);
+            float scale = Math.min((float) bounds.width() / width, (float) bounds.height() / height) * 0.8f;
+            canvas.translate(bounds.centerX() - (width * scale) / 2f, bounds.centerY() - (height * scale) / 2f);
             canvas.scale(scale, scale);
             canvas.drawPath(path, paint);
             canvas.restore();
@@ -233,7 +253,7 @@ public class SpeedButtonsLayout extends PopupSwipeBackLayout {
 
         @Override
         public int getIntrinsicWidth() {
-            return AndroidUtilities.dp(vWidth);
+            return AndroidUtilities.dp(width);
         }
 
         @Override
