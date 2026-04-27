@@ -1150,7 +1150,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             }
             if (isPlaying) {
                 updateAmbientMode();
-                AndroidUtilities.runOnUIThread(this, 100);
+                AndroidUtilities.runOnUIThread(this, 150);
             }
         }
     };
@@ -1165,7 +1165,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             if (enabled && isPlaying) {
                 updateAmbientMode();
                 AndroidUtilities.cancelRunOnUIThread(ambientUpdateRunnable);
-                AndroidUtilities.runOnUIThread(ambientUpdateRunnable, 100);
+                AndroidUtilities.runOnUIThread(ambientUpdateRunnable, 150);
             } else if (!enabled) {
                 AndroidUtilities.cancelRunOnUIThread(ambientUpdateRunnable);
                 ambientModeView.setBitmap(null);
