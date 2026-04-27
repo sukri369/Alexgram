@@ -1152,9 +1152,25 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 updateAmbientMode();
                 AndroidUtilities.runOnUIThread(this, 100);
             }
-            // Do not reschedule when paused; it will be restarted on next play event
         }
     };
+
+    private void syncAmbientState() {
+        syncAmbientState(NaConfig.INSTANCE.getAmbientMode().Bool());
+    }
+
+    private void syncAmbientState(boolean enabled) {
+        if (ambientModeView != null) {
+            ambientModeView.setAmbientEnabled(enabled);
+            if (enabled && isPlaying) {
+                AndroidUtilities.cancelRunOnUIThread(ambientUpdateRunnable);
+                AndroidUtilities.runOnUIThread(ambientUpdateRunnable);
+            } else if (!enabled) {
+                AndroidUtilities.cancelRunOnUIThread(ambientUpdateRunnable);
+                ambientModeView.setBitmap(null);
+            }
+        }
+    }
     private boolean allowShowFullscreenButton;
     private int[] pipPosition = new int[2];
     private boolean pipAnimationInProgress;
@@ -6225,24 +6241,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 } else if (id == gallery_menu_ambient) {
                     boolean enabled = !NaConfig.INSTANCE.getAmbientMode().Bool();
                     NaConfig.INSTANCE.getAmbientMode().setConfigBool(enabled);
-                    if (ambientModeView != null) {
-                        ambientModeView.setAmbientEnabled(enabled);
-                    }
-                    if (enabled) {
-                        // Cancel any previously scheduled runnable before posting a new one
-                        AndroidUtilities.cancelRunOnUIThread(ambientUpdateRunnable);
-                        if (isPlaying) {
-                            updateAmbientMode();
-                            AndroidUtilities.runOnUIThread(ambientUpdateRunnable);
-                        }
-                    } else {
-                        // Cancel the runnable immediately so it stops polling
-                        AndroidUtilities.cancelRunOnUIThread(ambientUpdateRunnable);
-                        // Clear the bitmap immediately so the fade-out starts at once
-                        if (ambientModeView != null) {
-                            ambientModeView.setBitmap(null);
-                        }
-                    }
+                    syncAmbientState(enabled);
                     if (ambientItem != null) {
                         ambientItem.getImageView().setVisibility(View.VISIBLE);
                         ambientItem.setEnabledByColor(enabled, 0xFFFFFFFF, 0xFF73B4EC);
@@ -10998,10 +10997,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 photoProgressViews[0].setIndexedAlpha(1, !isCurrentVideo && (!isAccessibilityEnabled() || playerWasPlaying) && ((playerAutoStarted && !playerWasPlaying) || !isActionBarVisible) ? 0f : 1f, false);
                 playerWasPlaying = true;
                 AndroidUtilities.runOnUIThread(updateProgressRunnable);
-                if (NaConfig.INSTANCE.getAmbientMode().Bool()) {
-                    AndroidUtilities.cancelRunOnUIThread(ambientUpdateRunnable);
-                    AndroidUtilities.runOnUIThread(ambientUpdateRunnable);
-                }
+                syncAmbientState();
             }
         } else if (isPlaying || playbackState == ExoPlayer.STATE_ENDED) {
             if (currentEditMode != EDIT_MODE_PAINT) {
@@ -11298,13 +11294,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
 
                 @Override
                 public void onVideoSizeChanged(int width, int height, int unappliedRotationDegrees, float pixelWidthHeightRatio) {
-                    if (ambientModeView != null) {
-                        ambientModeView.setAmbientEnabled(NaConfig.INSTANCE.getAmbientMode().Bool());
-                    }
-                    if (NaConfig.INSTANCE.getAmbientMode().Bool() && isPlaying) {
-                        AndroidUtilities.cancelRunOnUIThread(ambientUpdateRunnable);
-                        AndroidUtilities.runOnUIThread(ambientUpdateRunnable);
-                    }
+                    syncAmbientState();
                     if (aspectRatioFrameLayout != null) {
                         if (unappliedRotationDegrees == 90 || unappliedRotationDegrees == 270) {
                             int temp = width;
@@ -11339,10 +11329,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                     if (firstFrameView != null && (videoPlayer == null || !videoPlayer.isLooping())) {
                         AndroidUtilities.runOnUIThread(() -> firstFrameView.updateAlpha(), 64);
                     }
-                    if (NaConfig.INSTANCE.getAmbientMode().Bool()) {
-                        AndroidUtilities.cancelRunOnUIThread(ambientUpdateRunnable);
-                        AndroidUtilities.runOnUIThread(ambientUpdateRunnable);
-                    }
+                    syncAmbientState();
                 }
 
                 @Override
@@ -11713,14 +11700,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
     }
 
     private void updateAmbientMode() {
-        if (ambientModeView == null || !isPlaying) {
-            return;
-        }
-        boolean enabled = NaConfig.INSTANCE.getAmbientMode().Bool();
-        if (ambientModeView != null) {
-            ambientModeView.setAmbientEnabled(enabled);
-        }
-        if (ambientModeView == null || !ambientModeView.isAmbientEnabled) {
+        if (ambientModeView == null || !isPlaying || !ambientModeView.isAmbientEnabled) {
             return;
         }
         if (ambientBitmap == null || ambientBitmap.isRecycled() || ambientBitmap.getWidth() != 64) {
