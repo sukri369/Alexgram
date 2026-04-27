@@ -1150,7 +1150,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             }
             if (isPlaying) {
                 updateAmbientMode();
-                AndroidUtilities.runOnUIThread(this, 150);
+                AndroidUtilities.runOnUIThread(this, 200);
             }
         }
     };
@@ -1167,9 +1167,10 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             if (enabled && isPlaying) {
                 updateAmbientMode();
                 AndroidUtilities.cancelRunOnUIThread(ambientUpdateRunnable);
-                AndroidUtilities.runOnUIThread(ambientUpdateRunnable, 150);
+                AndroidUtilities.runOnUIThread(ambientUpdateRunnable, 200);
             } else if (!enabled) {
                 AndroidUtilities.cancelRunOnUIThread(ambientUpdateRunnable);
+                isAmbientBlurring = false;
                 ambientModeView.setBitmap(null);
             }
         }
@@ -2378,8 +2379,8 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
 
         public AmbientModeView(Context context) {
             super(context);
-            alphaAnimated = new AnimatedFloat(this, 0, 150, CubicBezierInterpolator.DEFAULT);
-            crossfade = new AnimatedFloat(this, 0, 200, CubicBezierInterpolator.DEFAULT);
+            alphaAnimated = new AnimatedFloat(this, 0, 400, CubicBezierInterpolator.EASE_OUT_QUINT);
+            crossfade = new AnimatedFloat(this, 0, 600, CubicBezierInterpolator.EASE_OUT_QUINT);
             
             paint.setDither(true);
             paint.setAntiAlias(true);
@@ -2476,12 +2477,12 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                         new int[]{0x00000000, 0x00000000, 0x7F000000, 0xFF000000}, new float[]{0.0f, 0.35f, 0.7f, 1.0f}, Shader.TileMode.CLAMP);
                 gradientPaint.setShader(radialGradient);
             }
-
+            float cf = crossfade.set(1f);
             if (prevBitmap != null && cf < 1f) {
-                paint.setAlpha((int) (alpha * 100 * (1f - cf)));
+                paint.setAlpha((int) (alpha * 120 * (1f - cf)));
                 canvas.drawBitmap(prevBitmap, matrix, paint);
             }
-            paint.setAlpha((int) (alpha * 100 * cf));
+            paint.setAlpha((int) (alpha * 120 * cf));
             canvas.drawBitmap(bitmap, matrix, paint);
 
             gradientPaint.setAlpha((int) (alpha * 255));
@@ -11727,19 +11728,26 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             } catch (Throwable ignore) {
                 isAmbientBlurring = false;
             }
-        } else if (videoSurfaceView != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        } else if (videoSurfaceView != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && videoPlayer != null) {
+            if (isAmbientBlurring) return;
             Surface surface = videoSurfaceView.getHolder().getSurface();
             if (surface != null && surface.isValid()) {
+                isAmbientBlurring = true;
                 PixelCopy.request(videoSurfaceView, ambientBitmap, result -> {
                     if (result == PixelCopy.SUCCESS && ambientBitmap != null && !ambientBitmap.isRecycled()) {
                         final Bitmap bitmapToBlur = Bitmap.createBitmap(ambientBitmap);
                         Utilities.globalQueue.postRunnable(() -> {
                             Utilities.stackBlurBitmap(bitmapToBlur, 18);
                             AndroidUtilities.runOnUIThread(() -> {
-                                ambientModeView.setBitmap(bitmapToBlur);
+                                isAmbientBlurring = false;
+                                if (ambientModeView != null) {
+                                    ambientModeView.setBitmap(bitmapToBlur);
+                                }
                                 bitmapToBlur.recycle();
                             });
                         });
+                    } else {
+                        isAmbientBlurring = false;
                     }
                 }, new Handler(Looper.getMainLooper()));
             }
