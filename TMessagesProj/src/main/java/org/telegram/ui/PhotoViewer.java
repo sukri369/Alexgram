@@ -2379,6 +2379,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
 
         public AmbientModeView(Context context) {
             super(context);
+            setWillNotDraw(false);
             alphaAnimated = new AnimatedFloat(this, 0, 400, CubicBezierInterpolator.EASE_OUT_QUINT);
             crossfade = new AnimatedFloat(this, 0, 600, CubicBezierInterpolator.EASE_OUT_QUINT);
             
@@ -2424,10 +2425,14 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
 
         @Override
         protected void onDraw(Canvas canvas) {
+            int viewWidth = getMeasuredWidth();
+            int viewHeight = getMeasuredHeight();
+            if (viewWidth == 0 || viewHeight == 0) return;
+
             float alpha = alphaAnimated.set(isAmbientEnabled && bitmap != null && !bitmap.isRecycled() ? 1f : 0f);
             if (alpha <= 0 || bitmap == null || bitmap.isRecycled()) return;
 
-            paint.setAlpha((int) (alpha * 100));
+            paint.setAlpha((int) (alpha * 140));
 
             float videoRatio = 1f;
             if (videoPlayer != null && videoPlayer.player != null) {
@@ -2478,10 +2483,10 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 gradientPaint.setShader(radialGradient);
             }
             if (prevBitmap != null && cf < 1f) {
-                paint.setAlpha((int) (alpha * 120 * (1f - cf)));
+                paint.setAlpha((int) (alpha * 140 * (1f - cf)));
                 canvas.drawBitmap(prevBitmap, matrix, paint);
             }
-            paint.setAlpha((int) (alpha * 120 * cf));
+            paint.setAlpha((int) (alpha * 140 * cf));
             canvas.drawBitmap(bitmap, matrix, paint);
 
             gradientPaint.setAlpha((int) (alpha * 255));
@@ -5100,9 +5105,6 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                     blackPaint.setAlpha(backgroundDrawable.getAlpha());
                     canvas.drawRect(0, getMeasuredHeight(), getMeasuredWidth(), getMeasuredHeight() + insets.bottom, blackPaint);
                 }
-                if (ambientModeView != null) {
-                    ambientModeView.draw(canvas);
-                }
             }
 
             @Override
@@ -5301,6 +5303,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                         WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS;
 
         ambientModeView = new AmbientModeView(activity);
+        windowView.addView(ambientModeView, 0, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
         paintingOverlay = new PaintingOverlay(parentActivity);
         containerView.addView(paintingOverlay, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
