@@ -2477,7 +2477,6 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                         new int[]{0x00000000, 0x00000000, 0x7F000000, 0xFF000000}, new float[]{0.0f, 0.35f, 0.7f, 1.0f}, Shader.TileMode.CLAMP);
                 gradientPaint.setShader(radialGradient);
             }
-            float cf = crossfade.set(1f);
             if (prevBitmap != null && cf < 1f) {
                 paint.setAlpha((int) (alpha * 120 * (1f - cf)));
                 canvas.drawBitmap(prevBitmap, matrix, paint);
