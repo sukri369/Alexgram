@@ -1150,7 +1150,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             }
             if (isPlaying) {
                 updateAmbientMode();
-                AndroidUtilities.runOnUIThread(this, 200);
+                AndroidUtilities.runOnUIThread(this, 300);
             }
         }
     };
@@ -1167,7 +1167,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             if (enabled && isPlaying) {
                 updateAmbientMode();
                 AndroidUtilities.cancelRunOnUIThread(ambientUpdateRunnable);
-                AndroidUtilities.runOnUIThread(ambientUpdateRunnable, 200);
+                AndroidUtilities.runOnUIThread(ambientUpdateRunnable, 300);
             } else if (!enabled) {
                 AndroidUtilities.cancelRunOnUIThread(ambientUpdateRunnable);
                 isAmbientBlurring = false;
@@ -2367,9 +2367,10 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
     private class AmbientModeView extends View {
         private Bitmap bitmap;
         private Bitmap prevBitmap;
+        private final Matrix matrix = new Matrix();
+        private final Matrix shaderMatrix = new Matrix();
         private final Paint paint = new Paint(Paint.FILTER_BITMAP_FLAG);
         private final Paint gradientPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        private final Matrix matrix = new Matrix();
         private final AnimatedFloat alphaAnimated;
         private final AnimatedFloat crossfade;
         private boolean isAmbientEnabled;
@@ -2381,7 +2382,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             super(context);
             setWillNotDraw(false);
             alphaAnimated = new AnimatedFloat(this, 0, 300, CubicBezierInterpolator.EASE_OUT);
-            crossfade = new AnimatedFloat(this, 0, 180, CubicBezierInterpolator.EASE_OUT);
+            crossfade = new AnimatedFloat(this, 0, 300, CubicBezierInterpolator.EASE_OUT);
             
             paint.setDither(true);
             paint.setAntiAlias(true);
@@ -2456,23 +2457,25 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 videoCenterY = aspectRatioFrameLayout.getY() + aspectRatioFrameLayout.getHeight() / 2f;
             }
 
-            float scaleX = (videoWidth / bitmap.getWidth()) * 2.5f;
-            float scaleY = (videoHeight / bitmap.getHeight()) * 2.5f;
+            float scaleX = (videoWidth / bitmap.getWidth()) * 2.2f;
+            float scaleY = (videoHeight / bitmap.getHeight()) * 2.2f;
             float cf = crossfade.set(1f);
 
             matrix.reset();
             matrix.postScale(scaleX, scaleY);
             matrix.postTranslate(videoCenterX - (bitmap.getWidth() * scaleX) / 2f, videoCenterY - (bitmap.getHeight() * scaleY) / 2f);
 
-            if (videoCenterX != lastCenterX || videoCenterY != lastCenterY || viewWidth != lastW || viewHeight != lastH) {
-                lastCenterX = videoCenterX;
-                lastCenterY = videoCenterY;
+            if (radialGradient == null || viewWidth != lastW || viewHeight != lastH) {
                 lastW = (int)viewWidth;
                 lastH = (int)viewHeight;
-                radialGradient = new RadialGradient(videoCenterX, videoCenterY, Math.max(viewWidth, viewHeight) * 0.9f,
-                        new int[]{0x00000000, 0x00000000, 0x00000000, 0xFF000000}, new float[]{0.0f, 0.4f, 0.6f, 1.0f}, Shader.TileMode.CLAMP);
+                radialGradient = new RadialGradient(0, 0, Math.max(viewWidth, viewHeight) * 1.5f,
+                        new int[]{0x00000000, 0x00000000, 0x00000000, 0xFF000000}, new float[]{0.0f, 0.3f, 0.5f, 1.0f}, Shader.TileMode.CLAMP);
                 gradientPaint.setShader(radialGradient);
             }
+            shaderMatrix.reset();
+            shaderMatrix.postTranslate(videoCenterX, videoCenterY);
+            radialGradient.setLocalMatrix(shaderMatrix);
+            
             if (prevBitmap != null && cf < 1f) {
                 paint.setAlpha((int) (alpha * 160 * (1f - cf)));
                 canvas.drawBitmap(prevBitmap, matrix, paint);
