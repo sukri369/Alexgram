@@ -194,7 +194,8 @@ public class SpecialForwardActivity extends BaseFragment {
                  selectedMessage = messages.get(position);
                  selectedPosition = position;
                  if (commentView != null) {
-                     commentView.setText(org.telegram.ui.Components.ChatActivityEnterView.applyMessageEntities(selectedMessage.messageOwner.entities, selectedMessage.messageText != null ? selectedMessage.messageText : "", commentView.getPaint().getFontMetricsInt()));
+                     CharSequence textToEdit = (selectedMessage.isPhoto() || selectedMessage.isVideo() || selectedMessage.isDocument()) ? selectedMessage.messageOwner.message : selectedMessage.messageText;
+                     commentView.setText(org.telegram.ui.Components.ChatActivityEnterView.applyMessageEntities(selectedMessage.messageOwner.entities, textToEdit != null ? textToEdit : "", commentView.getPaint().getFontMetricsInt()));
                      if (commentView.getText().length() > 0) {
                         commentView.setSelection(commentView.getText().length());
                      }
@@ -364,10 +365,14 @@ public class SpecialForwardActivity extends BaseFragment {
             if (messageClone == null) return source;
 
             messageClone.dialog_id = source.getDialogId();
+            messageClone.attachPath = source.messageOwner.attachPath;
+            messageClone.params = source.messageOwner.params;
             
             MessageObject newObj = new MessageObject(UserConfig.selectedAccount, messageClone, false, false);
             newObj.messageText = source.messageText; 
             newObj.caption = source.caption;
+            newObj.videoEditedInfo = source.videoEditedInfo;
+            newObj.type = source.type;
             return newObj;
         } catch (Exception e) {
             FileLog.e(e);
