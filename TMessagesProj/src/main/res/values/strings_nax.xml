@@ -382,4 +382,15 @@
     <string name="usePollinationsAi">Use Pollinations.ai</string>
     <string name="usePollinationsAiAbout">Use Pollinations.ai for free AI Reply, Summarize, and AI Assistance. No API key required.</string>
     <string name="AmbientMode">Ambient Mode</string>
+    <string name="SpecialForward">Special Forward</string>
+    <string name="SpecialForwardAbout">Enable an advanced forward menu with message editing and filtering options.</string>
+    <string name="SpecialForwardTitle">Special forward</string>
+    <string name="SpecialForwardEditHint">Edit Message</string>
+    <string name="SpecialForwardResetAll">Reset all</string>
+    <string name="SpecialForwardReplaceAllTexts">Replace all texts</string>
+    <string name="SpecialForwardReplaceAllLinks">Replace all links</string>
+    <string name="SpecialForwardDeleteAllLinks">Delete all links</string>
+    <string name="SpecialForwardDeleteAllCaptions">Delete all media captions</string>
+    <string name="SpecialForwardAsFile">Forward as file</string>
+    <string name="SpecialForwardResetSuccess">Messages reset</string>
 </resources>

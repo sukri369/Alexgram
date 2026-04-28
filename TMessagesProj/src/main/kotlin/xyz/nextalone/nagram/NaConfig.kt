@@ -172,6 +172,12 @@ object NaConfig {
             ConfigItem.configTypeBool,
             false
         )
+    val specialForward =
+        addConfig(
+            "SpecialForward",
+            ConfigItem.configTypeBool,
+            false
+        )
     val showNoQuoteForward =
         addConfig(
             "NoQuoteForward",
