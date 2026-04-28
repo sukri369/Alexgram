@@ -636,6 +636,8 @@ public class SpecialForwardActivity extends BaseFragment {
     }
 
     private void forwardMessages() {
+        if (messages.isEmpty()) return;
+
         Bundle args = new Bundle();
         args.putBoolean("onlySelect", true);
         args.putInt("dialogsType", DialogsActivity.DIALOGS_TYPE_FORWARD);
@@ -645,47 +647,75 @@ public class SpecialForwardActivity extends BaseFragment {
             public boolean didSelectDialogs(DialogsActivity fragment, ArrayList<MessagesStorage.TopicKey> dids, CharSequence message, boolean param, boolean notify, int scheduleDate, int scheduleRepeatPeriod, TopicsFragment topicsFragment) {
                  if (dids == null || dids.isEmpty()) return false;
                  
+                 fragment.finishFragment();
+                 finishFragment(); 
+                 
                  for (int i = 0; i < dids.size(); i++) {
-                     long peer = dids.get(i).dialogId; 
+                     MessagesStorage.TopicKey key = dids.get(i);
+                     long peer = key.dialogId; 
+                     long topicId = key.topicId;
                      
                      for (int j = 0; j < messages.size(); j++) {
                          MessageObject msg = messages.get(j);
+                         if (msg == null || msg.messageOwner == null) continue;
                      
-                         // Create SendMessageParams manually to ensure edited content is sent
-                         SendMessageParams params;
-                     
-                         if (msg.messageOwner.attachPath != null) {
-                             // Replaced media
-                             if (msg.isVideo()) {
-                                 params = SendMessageParams.of((TLRPC.TL_document) null, null, msg.messageOwner.attachPath, peer, null, null, msg.caption != null ? msg.caption.toString() : "", msg.messageOwner.entities, null, null, notify, scheduleDate, scheduleRepeatPeriod, 0, null, null, false);
+                         String caption = msg.caption != null ? msg.caption.toString() : "";
+                         String attachPath = msg.messageOwner.attachPath;
+                         ArrayList<TLRPC.MessageEntity> entities = msg.messageOwner.entities;
+
+                         // 1. Handle Replaced Media (Local Path present)
+                         if (!TextUtils.isEmpty(attachPath) && !attachPath.startsWith("http")) {
+                             if (msg.isVideo() || msg.isRoundVideo()) {
+                                 SendMessagesHelper.prepareSendingVideo(getAccountInstance(), attachPath, msg.videoEditedInfo, null, null, peer, null, null, null, null, entities, 0, null, notify, scheduleDate, scheduleRepeatPeriod, false, false, caption, null, 0, 0, 0, topicId, null, false);
+                             } else if (msg.isPhoto()) {
+                                 SendMessagesHelper.prepareSendingPhoto(getAccountInstance(), attachPath, null, null, peer, null, null, null, null, entities, null, null, 0, null, null, notify, scheduleDate, scheduleRepeatPeriod, 0, false, caption, null, 0, 0, 0, topicId, null);
                              } else {
-                                 params = SendMessageParams.of((TLRPC.TL_photo) null, msg.messageOwner.attachPath, peer, null, null, msg.caption != null ? msg.caption.toString() : "", msg.messageOwner.entities, null, null, notify, scheduleDate, scheduleRepeatPeriod, 0, null, false);
+                                 // Document or other file
+                                 ArrayList<String> paths = new ArrayList<>();
+                                 paths.add(attachPath);
+                                 SendMessagesHelper.prepareSendingDocuments(getAccountInstance(), paths, paths, null, caption, entities, null, peer, null, null, null, null, null, notify, scheduleDate, scheduleRepeatPeriod, null, null, 0, 0, false, 0, topicId, null, null, null, null, false);
                              }
-                         } else if (msg.isPhoto()) {
-                             params = SendMessageParams.of((TLRPC.TL_photo) msg.messageOwner.media.photo, null, peer, null, null, msg.caption != null ? msg.caption.toString() : "", null, null, null, notify, scheduleDate, scheduleRepeatPeriod, 0, null, false);
-                         } else if (msg.isDocument()) {
-                             params = SendMessageParams.of((TLRPC.TL_document) msg.messageOwner.media.document, null, null, peer, null, null, msg.caption != null ? msg.caption.toString() : "", null, null, null, notify, scheduleDate, scheduleRepeatPeriod, 0, null, null, false);
-                         } else if (msg.messageText != null && !TextUtils.isEmpty(msg.messageText)) {
-                             // Text message
-                             params = SendMessageParams.of(msg.messageText.toString(), peer, null, null, null, true, null, null, null, notify, scheduleDate, scheduleRepeatPeriod, null, false);
-                         } else {
-                             // Fallback for other types
-                             params = SendMessageParams.of(msg);
-                             if (msg.caption != null) params.caption = msg.caption.toString();
-                             else if (msg.messageText != null) params.caption = msg.messageText.toString(); 
-                             params.peer = peer;
+                             continue;
                          }
 
-                         if (msg.messageOwner != null) {
-                             params.entities = msg.messageOwner.entities;
+                         // 2. Handle Forwarding/Editing Original Media
+                         SendMessageParams params = null;
+                         if (msg.isPhoto()) {
+                             TLRPC.TL_photo photo = null;
+                             if (msg.messageOwner.media instanceof TLRPC.TL_messageMediaPhoto) {
+                                 photo = (TLRPC.TL_photo) msg.messageOwner.media.photo;
+                             }
+                             if (photo != null) {
+                                 params = SendMessageParams.of(photo, null, peer, null, null, caption, entities, null, null, notify, scheduleDate, scheduleRepeatPeriod, 0, null, false);
+                             }
+                         } else if (msg.isVideo() || msg.isDocument()) {
+                             TLRPC.TL_document document = null;
+                             if (msg.messageOwner.media instanceof TLRPC.TL_messageMediaDocument) {
+                                 document = (TLRPC.TL_document) msg.messageOwner.media.document;
+                             }
+                             if (document != null) {
+                                 params = SendMessageParams.of(document, msg.videoEditedInfo, null, peer, null, null, caption, entities, null, null, notify, scheduleDate, scheduleRepeatPeriod, 0, null, null, false);
+                             }
                          }
-                     
-                         SendMessagesHelper.getInstance(UserConfig.selectedAccount).sendMessage(params);
+                         
+                         if (params == null) {
+                             if (msg.messageText != null && !TextUtils.isEmpty(msg.messageText)) {
+                                 params = SendMessageParams.of(msg.messageText.toString(), peer, null, null, null, true, entities, null, null, notify, scheduleDate, scheduleRepeatPeriod, null, false);
+                             } else {
+                                 // Fallback: Resend as is
+                                 params = SendMessageParams.of(msg);
+                                 params.peer = peer;
+                                 params.caption = caption;
+                                 params.entities = entities;
+                             }
+                         }
+
+                         if (params != null) {
+                             params.monoForumPeer = topicId;
+                             getAccountInstance().getSendMessagesHelper().sendMessage(params);
+                         }
                      }
                  }
-                 
-                 fragment.finishFragment();
-                 finishFragment(); // Close special forward
                  return true;
             }
         });
