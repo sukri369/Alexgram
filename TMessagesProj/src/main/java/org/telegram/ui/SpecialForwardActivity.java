@@ -31,6 +31,8 @@ import org.telegram.messenger.SendMessagesHelper.SendMessageParams;
 import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.FileLog;
+import org.telegram.messenger.FileLoader;
+import org.telegram.messenger.ImageLocation;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.MessagesStorage;
@@ -182,9 +184,10 @@ public class SpecialForwardActivity extends BaseFragment {
                          mediaPreviewContainer.setVisibility(View.VISIBLE);
                          mediaPreviewText.setText(selectedMessage.getFileName() != null ? selectedMessage.getFileName() : "Media");
                          if (selectedMessage.isPhoto() || selectedMessage.isVideo()) {
-                             mediaPreviewImage.setImage(selectedMessage.photoThumbs != null && !selectedMessage.photoThumbs.isEmpty() ? selectedMessage.photoThumbs.get(0) : null, "50_50", null, null, selectedMessage);
+                             TLRPC.PhotoSize photoSize = FileLoader.getClosestPhotoSizeWithSize(selectedMessage.photoThumbs, AndroidUtilities.dp(50));
+                             mediaPreviewImage.setImage(ImageLocation.getForObject(photoSize, selectedMessage.photoThumbsObject), "50_50", null, selectedMessage);
                          } else {
-                             mediaPreviewImage.setImageResource(R.drawable.msg_document);
+                             mediaPreviewImage.setImageResource(R.drawable.baseline_insert_drive_file_24);
                          }
                      } else {
                          mediaPreviewContainer.setVisibility(View.GONE);
