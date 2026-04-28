@@ -185,7 +185,7 @@ public class SpecialForwardActivity extends BaseFragment {
                          mediaPreviewText.setText(selectedMessage.getFileName() != null ? selectedMessage.getFileName() : "Media");
                          if (selectedMessage.isPhoto() || selectedMessage.isVideo()) {
                              TLRPC.PhotoSize photoSize = FileLoader.getClosestPhotoSizeWithSize(selectedMessage.photoThumbs, AndroidUtilities.dp(50));
-                             mediaPreviewImage.setImage(ImageLocation.getForObject(photoSize, selectedMessage.photoThumbsObject), "50_50", null, selectedMessage);
+                             mediaPreviewImage.setImage(ImageLocation.getForObject(photoSize, selectedMessage.photoThumbsObject), "50_50", (Drawable) null, selectedMessage);
                          } else {
                              mediaPreviewImage.setImageResource(R.drawable.baseline_insert_drive_file_24);
                          }
