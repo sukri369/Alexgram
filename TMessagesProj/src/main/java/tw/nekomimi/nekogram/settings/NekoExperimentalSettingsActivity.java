@@ -147,7 +147,7 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
     private final AbstractConfigCell enhancedVideoBitrateRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getEnhancedVideoBitrate()));
     private final AbstractConfigCell musicGraphRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getMusicGraph(), getString(R.string.MusicGraphInfo)));
     private final AbstractConfigCell sendVideoAsRoundRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getSendVideoAsRound()));
-    private final AbstractConfigCell specialForwardRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getSpecialForward(), getString(R.string.SpecialForward), getString(R.string.SpecialForwardAbout)));
+    private final AbstractConfigCell specialForwardRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getSpecialForward(), getString(R.string.SpecialForwardAbout), getString(R.string.SpecialForward)));
     private final AbstractConfigCell customAudioBitrateRow = cellGroup.appendCell(new ConfigCellCustom("customGroupVoipAudioBitrate", CellGroup.ITEM_TYPE_TEXT_SETTINGS_CELL, true));
     private final AbstractConfigCell playerDecoderRow = cellGroup.appendCell(new ConfigCellSelectBox(null, NaConfig.INSTANCE.getPlayerDecoder(), new String[]{
             getString(R.string.VideoPlayerDecoderHardware),

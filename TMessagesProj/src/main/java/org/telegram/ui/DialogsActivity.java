@@ -598,6 +598,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     @Nullable
     private ActionBarMenuSubItem hideChatItem;
 
+    private FrameLayout unreadPillView;
+    private TextView unreadPillText;
+    private float unreadPillAlpha;
+    private ValueAnimator unreadPillAnimator;
+
     private float additionalFloatingTranslation;
     private float floatingButtonPanOffset;
 
@@ -5383,6 +5388,49 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             filterTabsView.setPadding(0, dp(7), 0, dp(7));
             filterTabsView.setBlurredBackground(filterTabsViewBackground);
             contentView.addView(filterTabsView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 36 + 7 + 7, Gravity.TOP, 4, 0, 4, 0));
+
+            unreadPillView = new FrameLayout(context) {
+                @Override
+                public void setAlpha(float alpha) {
+                    super.setAlpha(alpha);
+                    setVisibility(alpha > 0 ? VISIBLE : GONE);
+                }
+            };
+            unreadPillView.setAlpha(0);
+            unreadPillView.setVisibility(View.GONE);
+            unreadPillView.setClickable(true);
+
+            BlurredBackgroundDrawable unreadPillBackground = iBlur3FactoryLiquidGlass.create(unreadPillView, BlurredBackgroundProviderImpl.topPanel(resourceProvider));
+            unreadPillBackground.setRadius(dp(18));
+            unreadPillView.setBackground(unreadPillBackground);
+
+            LinearLayout unreadPillLayout = new LinearLayout(context);
+            unreadPillLayout.setOrientation(LinearLayout.HORIZONTAL);
+            unreadPillLayout.setGravity(Gravity.CENTER_VERTICAL);
+            unreadPillLayout.setPadding(dp(12), 0, dp(8), 0);
+            unreadPillView.addView(unreadPillLayout, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, 36, Gravity.CENTER));
+
+            ImageView filterIcon = new ImageView(context);
+            filterIcon.setImageResource(R.drawable.msg_filter);
+            filterIcon.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_windowBackgroundWhiteBlueText), PorterDuff.Mode.SRC_IN));
+            unreadPillLayout.addView(filterIcon, LayoutHelper.createLinear(18, 18));
+
+            unreadPillText = new TextView(context);
+            unreadPillText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
+            unreadPillText.setTypeface(AndroidUtilities.bold());
+            unreadPillText.setTextColor(getThemedColor(Theme.key_windowBackgroundWhiteBlueText));
+            unreadPillText.setText(LocaleController.getString(R.string.FilterNameUnread));
+            unreadPillLayout.addView(unreadPillText, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_VERTICAL, 8, 0, 8, 0));
+
+            ImageView closeIcon = new ImageView(context);
+            closeIcon.setImageResource(R.drawable.msg_close);
+            closeIcon.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_windowBackgroundWhiteBlueText), PorterDuff.Mode.SRC_IN));
+            closeIcon.setPadding(dp(4), dp(4), dp(4), dp(4));
+            closeIcon.setBackground(Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector), 1));
+            unreadPillLayout.addView(closeIcon, LayoutHelper.createLinear(24, 24));
+            closeIcon.setOnClickListener(v -> onDoubleTapOnChats());
+
+            contentView.addView(unreadPillView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, 36, Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, 52, 0, 0));
         }
 
         if (fragmentSearchField != null) {
@@ -6783,6 +6831,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
         if (filterTabsView != null) {
             filterTabsView.setTranslationY(totalOffset - searchOffset);
+            if (unreadPillView != null) {
+                unreadPillView.setTranslationY(filterTabsView.getTranslationY());
+            }
             filtersTabVisibility = filterTabsView.getAlpha();
             filtersTabHeight = dp(36 + 7) * filtersTabVisibility;
             totalOffset += filtersTabHeight;
@@ -7215,6 +7266,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     @Override
     public void onResume() {
         super.onResume();
+        if (unreadPillView != null) {
+            boolean visible = viewPages != null && viewPages[0] != null && viewPages[0].dialogsAdapter != null && viewPages[0].dialogsAdapter.isOnlyUnread();
+            updateUnreadPillVisibility(visible, false);
+        }
         if (fragmentView != null) {
             fragmentView.post(() -> {
                 initAIAssistance();
@@ -14177,7 +14232,43 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     @Override
     public void onDoubleTapOnChats() {
         if (viewPages == null || viewPages[0] == null || viewPages[0].dialogsAdapter == null) return;
-        viewPages[0].dialogsAdapter.setOnlyUnread(!viewPages[0].dialogsAdapter.isOnlyUnread());
+        boolean newState = !viewPages[0].dialogsAdapter.isOnlyUnread();
+        viewPages[0].dialogsAdapter.setOnlyUnread(newState);
+        updateUnreadPillVisibility(newState, true);
+    }
+
+    private void updateUnreadPillVisibility(boolean visible, boolean animated) {
+        if (unreadPillView == null) return;
+        if (unreadPillAnimator != null) {
+            unreadPillAnimator.cancel();
+            unreadPillAnimator = null;
+        }
+        if (visible && unreadPillText != null && viewPages != null && viewPages[0] != null && viewPages[0].dialogsAdapter != null) {
+            int count = viewPages[0].dialogsAdapter.getDialogsCount();
+            if (count > 0) {
+                unreadPillText.setText(LocaleController.getString(R.string.FilterNameUnread) + " (" + count + ")");
+            } else {
+                unreadPillText.setText(LocaleController.getString(R.string.FilterNameUnread));
+            }
+        }
+        float targetAlpha = visible ? 1.0f : 0.0f;
+        if (animated) {
+            unreadPillAnimator = ValueAnimator.ofFloat(unreadPillAlpha, targetAlpha);
+            unreadPillAnimator.addUpdateListener(animation -> {
+                unreadPillAlpha = (float) animation.getAnimatedValue();
+                unreadPillView.setAlpha(unreadPillAlpha);
+                unreadPillView.setScaleX(0.8f + 0.2f * unreadPillAlpha);
+                unreadPillView.setScaleY(0.8f + 0.2f * unreadPillAlpha);
+            });
+            unreadPillAnimator.setDuration(250);
+            unreadPillAnimator.setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT);
+            unreadPillAnimator.start();
+        } else {
+            unreadPillAlpha = targetAlpha;
+            unreadPillView.setAlpha(unreadPillAlpha);
+            unreadPillView.setScaleX(0.8f + 0.2f * unreadPillAlpha);
+            unreadPillView.setScaleY(0.8f + 0.2f * unreadPillAlpha);
+        }
     }
 
     private void switchTheme(Theme.ThemeInfo themeInfo, boolean toDark) {
