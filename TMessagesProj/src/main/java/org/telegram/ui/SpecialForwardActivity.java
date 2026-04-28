@@ -47,13 +47,16 @@ import org.telegram.ui.ActionBar.ActionBarMenuItem;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
+import org.telegram.ui.Components.BackupImageView;
 import org.telegram.ui.Components.EditTextBoldCursor;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
-
 import org.telegram.ui.Components.ItemOptions;
-
+import org.telegram.ui.Components.TextStyleSpan;
+import org.telegram.messenger.Utilities;
+import android.text.SpannableStringBuilder;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -69,6 +72,11 @@ public class SpecialForwardActivity extends BaseFragment {
     private MessageObject selectedMessage;
     private int selectedPosition = -1;
     private boolean forwardAsFile = false;
+
+    private FrameLayout mediaPreviewContainer;
+    private BackupImageView mediaPreviewImage;
+    private TextView mediaPreviewText;
+    private ImageView mediaPreviewClose;
 
     private final static int edit_item = 1;
 
@@ -160,10 +168,28 @@ public class SpecialForwardActivity extends BaseFragment {
                  selectedPosition = position;
                  if (commentView != null) {
                      CharSequence text = selectedMessage.caption != null ? selectedMessage.caption : selectedMessage.messageText;
-                     commentView.setText(text != null ? text.toString() : "");
+                     SpannableStringBuilder stringBuilder = new SpannableStringBuilder(text != null ? text : "");
+                     if (selectedMessage.messageOwner.entities != null) {
+                         MediaDataController.addTextStyleRuns(selectedMessage.messageOwner.entities, text, stringBuilder);
+                     }
+                     commentView.setText(stringBuilder);
                      if (commentView.getText().length() > 0) {
                         commentView.setSelection(commentView.getText().length());
                      }
+                     
+                     // Show media preview if exists
+                     if (selectedMessage.isPhoto() || selectedMessage.isVideo() || selectedMessage.isDocument()) {
+                         mediaPreviewContainer.setVisibility(View.VISIBLE);
+                         mediaPreviewText.setText(selectedMessage.getFileName() != null ? selectedMessage.getFileName() : "Media");
+                         if (selectedMessage.isPhoto() || selectedMessage.isVideo()) {
+                             mediaPreviewImage.setImage(selectedMessage.photoThumbs != null && !selectedMessage.photoThumbs.isEmpty() ? selectedMessage.photoThumbs.get(0) : null, "50_50", null, null, selectedMessage);
+                         } else {
+                             mediaPreviewImage.setImageResource(R.drawable.msg_document);
+                         }
+                     } else {
+                         mediaPreviewContainer.setVisibility(View.GONE);
+                     }
+                     
                      AndroidUtilities.showKeyboard(commentView);
                  }
             }
@@ -173,6 +199,31 @@ public class SpecialForwardActivity extends BaseFragment {
         // Bottom Edit/Send View (Floating Input Bar style to match image 2)
         bottomView = new FrameLayout(context);
         bottomView.setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(2), AndroidUtilities.dp(8), AndroidUtilities.dp(12));
+
+        // Media Preview (Above input bar)
+        mediaPreviewContainer = new FrameLayout(context);
+        mediaPreviewContainer.setBackground(Theme.createRoundRectDrawable(AndroidUtilities.dp(12), Theme.getColor(Theme.key_chat_messagePanelBackground)));
+        mediaPreviewContainer.setVisibility(View.GONE);
+        bottomView.addView(mediaPreviewContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 50, Gravity.BOTTOM, 0, 0, 0, 52));
+
+        mediaPreviewImage = new BackupImageView(context);
+        mediaPreviewImage.setRoundRadius(AndroidUtilities.dp(4));
+        mediaPreviewContainer.addView(mediaPreviewImage, LayoutHelper.createFrame(40, 40, Gravity.CENTER_VERTICAL | Gravity.LEFT, 5, 0, 0, 0));
+
+        mediaPreviewText = new TextView(context);
+        mediaPreviewText.setTextColor(Theme.getColor(Theme.key_chat_messagePanelText));
+        mediaPreviewText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
+        mediaPreviewText.setSingleLine(true);
+        mediaPreviewText.setEllipsize(TextUtils.TruncateAt.END);
+        mediaPreviewContainer.addView(mediaPreviewText, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_VERTICAL | Gravity.LEFT, 50, 0, 40, 0));
+
+        mediaPreviewClose = new ImageView(context);
+        mediaPreviewClose.setImageResource(R.drawable.msg_panel_clear);
+        mediaPreviewClose.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chat_messagePanelIcons), PorterDuff.Mode.MULTIPLY));
+        mediaPreviewClose.setScaleType(ImageView.ScaleType.CENTER);
+        mediaPreviewClose.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelector), 1));
+        mediaPreviewClose.setOnClickListener(v -> mediaPreviewContainer.setVisibility(View.GONE));
+        mediaPreviewContainer.addView(mediaPreviewClose, LayoutHelper.createFrame(36, 36, Gravity.CENTER_VERTICAL | Gravity.RIGHT, 0, 0, 4, 0));
         
         FrameLayout panelContainer = new FrameLayout(context);
         panelContainer.setBackground(Theme.createRoundRectDrawable(AndroidUtilities.dp(24), Theme.getColor(Theme.key_chat_messagePanelBackground)));
@@ -269,31 +320,36 @@ public class SpecialForwardActivity extends BaseFragment {
     }
 
     private void saveCurrentEdit() {
-         if (selectedMessage != null && commentView != null) {
-             String newText = commentView.getText().toString();
-             if (selectedMessage.caption != null) {
-                 selectedMessage.caption = newText;
-             } else {
-                 selectedMessage.messageText = newText;
-             }
-             if (selectedMessage.messageOwner != null) {
-                 selectedMessage.messageOwner.message = newText;
-             }
-             
-             MessageObject newObj = recreateMessageObject(selectedMessage);
-             if (newObj != null) {
-                 messages.set(selectedPosition, newObj);
-                 selectedMessage = newObj; 
-             }
+        if (selectedMessage != null && commentView != null) {
+            CharSequence[] textArr = new CharSequence[]{commentView.getText()};
+            ArrayList<TLRPC.MessageEntity> entities = MediaDataController.getInstance(currentAccount).getEntities(textArr, true);
+            CharSequence newText = textArr[0];
+            
+            if (selectedMessage.caption != null || selectedMessage.isPhoto() || selectedMessage.isVideo() || selectedMessage.isDocument()) {
+                selectedMessage.caption = newText;
+            } else {
+                selectedMessage.messageText = newText;
+            }
+            if (selectedMessage.messageOwner != null) {
+                selectedMessage.messageOwner.entities = entities;
+                selectedMessage.messageOwner.message = newText.toString();
+            }
+            
+            MessageObject newObj = recreateMessageObject(selectedMessage);
+            if (newObj != null) {
+                messages.set(selectedPosition, newObj);
+                selectedMessage = newObj; 
+            }
 
-             if (selectedPosition != -1) {
-                 listAdapter.notifyItemChanged(selectedPosition);
-             }
-             commentView.setText("");
-             selectedMessage = null;
-             selectedPosition = -1;
-             AndroidUtilities.hideKeyboard(commentView);
-         }
+            if (selectedPosition != -1) {
+                listAdapter.notifyItemChanged(selectedPosition);
+            }
+            commentView.setText("");
+            mediaPreviewContainer.setVisibility(View.GONE);
+            selectedMessage = null;
+            selectedPosition = -1;
+            AndroidUtilities.hideKeyboard(commentView);
+        }
     }
 
     private void showEditOptions() {
@@ -555,6 +611,10 @@ public class SpecialForwardActivity extends BaseFragment {
                              if (msg.caption != null) params.caption = msg.caption.toString();
                              else if (msg.messageText != null) params.caption = msg.messageText.toString(); 
                              params.peer = peer;
+                         }
+
+                         if (msg.messageOwner != null) {
+                             params.entities = msg.messageOwner.entities;
                          }
                      
                          SendMessagesHelper.getInstance(UserConfig.selectedAccount).sendMessage(params);
