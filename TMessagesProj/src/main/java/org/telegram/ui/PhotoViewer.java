@@ -6296,6 +6296,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         videoItem.getPopupLayout().setFitItems(true);
         videoItem.setLayoutInScreen(true);
         videoItem.setSubMenuOpenSide(0);
+        videoItem.setMenuXOffset(dp(-8));
 
         speedItem = new ActionBarMenuSlider.SpeedSlider(activityContext, resourcesProvider);
         speedItem.setStops(new float[]{0.5f, 1.0f, 1.5f, 2.0f, 2.5f});
