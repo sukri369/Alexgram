@@ -18,6 +18,7 @@ import android.view.ViewGroup;
 import android.view.ActionMode;
 import android.view.Menu;
 import android.view.MenuItem;
+import java.io.File;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -90,6 +91,23 @@ public class SpecialForwardActivity extends BaseFragment {
     private final static int edit_item = 1;
 
     private ChatMessageCell.ChatMessageCellDelegate chatMessageCellDelegate;
+
+    private PhotoViewer.PhotoViewerProvider photoViewerProvider = new PhotoViewer.EmptyPhotoViewerProvider() {
+        @Override
+        public PhotoViewer.PlaceProviderObject getPlaceForPhoto(MessageObject messageObject, TLRPC.FileLocation fileLocation, int index, boolean needPreview, boolean closing) {
+            if (mediaPreviewImage == null || selectedMessage == null || !selectedMessage.equals(messageObject)) return null;
+            int[] coords = new int[2];
+            mediaPreviewImage.getLocationInWindow(coords);
+            PhotoViewer.PlaceProviderObject object = new PhotoViewer.PlaceProviderObject();
+            object.viewX = coords[0];
+            object.viewY = coords[1];
+            object.parentView = mediaPreviewImage;
+            object.imageReceiver = mediaPreviewImage.getImageReceiver();
+            object.thumb = object.imageReceiver.getBitmapSafe();
+            object.radius = mediaPreviewImage.getImageReceiver().getRoundRadius();
+            return object;
+        }
+    };
 
     public SpecialForwardActivity(ArrayList<MessageObject> sourceMessages) {
         this.messages = new ArrayList<>();
@@ -215,8 +233,8 @@ public class SpecialForwardActivity extends BaseFragment {
         mediaPreviewImage.setRoundRadius(AndroidUtilities.dp(4));
         mediaPreviewImage.setOnClickListener(v -> {
             if (selectedMessage != null) {
-                PhotoViewer.getInstance().setParentActivity(getParentActivity());
-                PhotoViewer.getInstance().openPhoto(selectedMessage, new PhotoViewer.EmptyPhotoViewerProvider());
+                PhotoViewer.getInstance().setParentActivity(SpecialForwardActivity.this);
+                PhotoViewer.getInstance().openPhoto(selectedMessage, 0, 0, 0, photoViewerProvider, true);
             }
         });
         mediaPreviewContainer.addView(mediaPreviewImage, LayoutHelper.createFrame(40, 40, Gravity.CENTER_VERTICAL | Gravity.LEFT, 5, 0, 0, 0));
@@ -258,16 +276,16 @@ public class SpecialForwardActivity extends BaseFragment {
         
         commentView = new org.telegram.ui.Components.EditTextCaption(context, null) {
             @Override
-            protected void extendActionMode(ActionMode actionMode, Menu menu) {
+             protected void extendActionMode(ActionMode actionMode, Menu menu) {
                 if (menu.findItem(R.id.menu_bold) != null) return;
-                menu.add(Menu.NONE, R.id.menu_bold, Menu.NONE, LocaleController.getString("Bold", R.string.Bold)).setIcon(R.drawable.msg_bold);
-                menu.add(Menu.NONE, R.id.menu_italic, Menu.NONE, LocaleController.getString("Italic", R.string.Italic)).setIcon(R.drawable.msg_italic);
-                menu.add(Menu.NONE, R.id.menu_mono, Menu.NONE, LocaleController.getString("Mono", R.string.Mono)).setIcon(R.drawable.msg_mono);
-                menu.add(Menu.NONE, R.id.menu_strike, Menu.NONE, LocaleController.getString("Strike", R.string.Strike)).setIcon(R.drawable.msg_strike);
-                menu.add(Menu.NONE, R.id.menu_underline, Menu.NONE, LocaleController.getString("Underline", R.string.Underline)).setIcon(R.drawable.msg_underline);
-                menu.add(Menu.NONE, R.id.menu_spoiler, Menu.NONE, LocaleController.getString("Spoiler", R.string.Spoiler)).setIcon(R.drawable.msg_spoiler);
-                menu.add(Menu.NONE, R.id.menu_quote, Menu.NONE, LocaleController.getString("Quote", R.string.Quote)).setIcon(R.drawable.msg_quote);
-                menu.add(Menu.NONE, R.id.menu_link, Menu.NONE, LocaleController.getString("CreateLink", R.string.CreateLink)).setIcon(R.drawable.msg_link);
+                menu.add(Menu.NONE, R.id.menu_bold, Menu.NONE, LocaleController.getString("Bold", R.string.Bold)).setIcon(R.drawable.baseline_format_bold_24);
+                menu.add(Menu.NONE, R.id.menu_italic, Menu.NONE, LocaleController.getString("Italic", R.string.Italic)).setIcon(R.drawable.baseline_format_italic_24);
+                menu.add(Menu.NONE, R.id.menu_mono, Menu.NONE, LocaleController.getString("Mono", R.string.Mono)).setIcon(R.drawable.baseline_code_24);
+                menu.add(Menu.NONE, R.id.menu_strike, Menu.NONE, LocaleController.getString("Strike", R.string.Strike)).setIcon(R.drawable.baseline_strikethrough_s_24);
+                menu.add(Menu.NONE, R.id.menu_underline, Menu.NONE, LocaleController.getString("Underline", R.string.Underline)).setIcon(R.drawable.baseline_format_underlined_24);
+                menu.add(Menu.NONE, R.id.menu_spoiler, Menu.NONE, LocaleController.getString("Spoiler", R.string.Spoiler)).setIcon(R.drawable.msg_secret_solar);
+                menu.add(Menu.NONE, R.id.menu_quote, Menu.NONE, LocaleController.getString("Quote", R.string.Quote)).setIcon(R.drawable.msg_share_quote_solar);
+                menu.add(Menu.NONE, R.id.menu_link, Menu.NONE, LocaleController.getString("CreateLink", R.string.CreateLink)).setIcon(R.drawable.msg_link2_solar);
                 menu.add(Menu.NONE, R.id.menu_regular, Menu.NONE, LocaleController.getString("Regular", R.string.Regular));
                 if (menu.findItem(R.id.menu_change_font) == null) {
                     menu.add(Menu.NONE, R.id.menu_change_font, Menu.NONE, LocaleController.getString("ChangeFont", R.string.ChangeFont)).setIcon(R.drawable.msg_edit);
@@ -734,8 +752,8 @@ public class SpecialForwardActivity extends BaseFragment {
     private void onMediaReplaced(MediaController.PhotoEntry photoEntry) {
         if (selectedMessage == null) return;
         
-        mediaPreviewImage.setImage(ImageLocation.getForPath(photoEntry.path), "50_50", null, null);
-        mediaPreviewText.setText(photoEntry.fileName != null ? photoEntry.fileName : "Replaced Media");
+        mediaPreviewImage.setImage(ImageLocation.getForPath(photoEntry.path), "50_50", (Drawable) null, selectedMessage);
+        mediaPreviewText.setText(new File(photoEntry.path).getName());
         
         selectedMessage.messageOwner.attachPath = photoEntry.path;
         if (photoEntry.isVideo) {
