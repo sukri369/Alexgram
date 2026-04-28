@@ -33,8 +33,9 @@ import org.telegram.ui.Components.SpeedIconDrawable;
 public class SpeedButtonsLayout {
 
     private final ActionBarMenuSubItem[] speedItems = new ActionBarMenuSubItem[5];
-    private final ActionBarMenuSubItem customItem;
-    private final CustomSpeedSlider speedSlider;
+    private ActionBarMenuSubItem customItem;
+    private TextView header;
+    private CustomSpeedSlider speedSlider;
     private final Callback callback;
 
     public SpeedButtonsLayout(Context context, ActionBarMenuItem parentItem, Callback callback) {
@@ -96,7 +97,7 @@ public class SpeedButtonsLayout {
         headerSeparator.setBackgroundColor(0xff181818);
         sliderContainer.addView(headerSeparator, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 1));
 
-        TextView header = new TextView(context);
+        header = new TextView(context);
         header.setText(LocaleController.getString("PollV2PollDurationOptionCustom", R.string.PollV2PollDurationOptionCustom).toUpperCase());
         header.setTextColor(0xff888888);
         header.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
@@ -132,12 +133,22 @@ public class SpeedButtonsLayout {
                 speedItems[a].setColors(0xffffffff, 0xffffffff);
             }
         }
+        speedSlider.setSpeed(currentVideoSpeed, false);
+
         if (custom) {
             customItem.setColors(0xff6BB6F9, 0xff6BB6F9);
+            if (currentVideoSpeed > 3.0f) {
+                customItem.setText(LocaleController.getString("PollV2PollDurationOptionCustom", R.string.PollV2PollDurationOptionCustom));
+                header.setText(SpeedIconDrawable.formatNumber(currentVideoSpeed) + "x");
+            } else {
+                customItem.setText(SpeedIconDrawable.formatNumber(currentVideoSpeed) + "x");
+                header.setText(LocaleController.getString("PollV2PollDurationOptionCustom", R.string.PollV2PollDurationOptionCustom).toUpperCase());
+            }
         } else {
             customItem.setColors(0xffffffff, 0xffffffff);
+            customItem.setText(LocaleController.getString("PollV2PollDurationOptionCustom", R.string.PollV2PollDurationOptionCustom));
+            header.setText(LocaleController.getString("PollV2PollDurationOptionCustom", R.string.PollV2PollDurationOptionCustom).toUpperCase());
         }
-        speedSlider.setSpeed(currentVideoSpeed, false);
     }
 
     public void setVisibility(int visibility) {

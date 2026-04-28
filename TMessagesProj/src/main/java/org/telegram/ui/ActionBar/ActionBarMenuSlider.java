@@ -61,6 +61,7 @@ public class ActionBarMenuSlider extends FrameLayout {
 
     private AnimatedTextView.AnimatedTextDrawable leftTextDrawable;
     private AnimatedTextView.AnimatedTextDrawable rightTextDrawable;
+    private String rightLabelOverride;
 
     private AnimatedFloat blurBitmapAlpha = new AnimatedFloat(1, this, 0, 320, CubicBezierInterpolator.EASE_OUT_QUINT);
     private Bitmap blurBitmap;
@@ -222,7 +223,12 @@ public class ActionBarMenuSlider extends FrameLayout {
     }
 
     protected String getRightStringValue(float value) {
-        return null;
+        return rightLabelOverride;
+    }
+
+    public void setRightLabelOverride(String s) {
+        rightLabelOverride = s;
+        setValue(value, false);
     }
 
     protected int getColorValue(float value) {
@@ -605,6 +611,8 @@ public class ActionBarMenuSlider extends FrameLayout {
 
         @Override
         protected String getRightStringValue(float value) {
+            String override = super.getRightStringValue(value);
+            if (override != null) return override;
             if (label == null) return null;
             return SpeedIconDrawable.formatNumber(MIN_SPEED + value * (MAX_SPEED - MIN_SPEED)) + "x";
         }

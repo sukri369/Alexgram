@@ -9233,6 +9233,26 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             }
         }
         speedItem.setSpeed(currentVideoSpeed, animated);
+
+        boolean isPreset = false;
+        float[] presets = {0.2f, 0.5f, 1.0f, 1.5f, 2.0f};
+        for (float p : presets) {
+            if (Math.abs(currentVideoSpeed - p) < 0.01f) {
+                isPreset = true;
+                break;
+            }
+        }
+
+        if (!isPreset) {
+            if (currentVideoSpeed > 3.0f) {
+                speedItem.setRightLabelOverride(null); // Show speed value
+            } else {
+                speedItem.setRightLabelOverride(LocaleController.getString("PollV2PollDurationOptionCustom", R.string.PollV2PollDurationOptionCustom));
+            }
+        } else {
+            speedItem.setRightLabelOverride(null);
+        }
+
         chooseSpeedLayout.update(currentVideoSpeed, isFinal);
     }
 
