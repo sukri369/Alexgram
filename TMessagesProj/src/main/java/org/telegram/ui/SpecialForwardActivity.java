@@ -185,24 +185,23 @@ public class SpecialForwardActivity extends BaseFragment {
         attachButton.setImageResource(R.drawable.ic_ab_other); 
         attachButton.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chat_messagePanelIcons), PorterDuff.Mode.MULTIPLY));
         attachButton.setScaleType(ImageView.ScaleType.CENTER);
-        attachButton.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelectorSDK21), 1));
+        attachButton.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelector), 1));
         attachButton.setOnClickListener(v -> showEditOptions());
         bottomView.addView(attachButton, LayoutHelper.createFrame(48, 48, Gravity.BOTTOM | Gravity.LEFT, 2, 0, 0, 2));
         
         // Rounded background for the input field
         View textFieldBackground = new View(context);
-        textFieldBackground.setBackground(Theme.createRoundRectDrawable(AndroidUtilities.dp(18), Theme.getColor(Theme.key_chat_messagePanelBackground)));
-        // Note: Using a slightly different shade or shadow would be better, but we'll stick to themed keys.
-        // Actually, many themes use key_chat_messagePanelBackground for the whole bar and key_windowBackgroundWhite for the field.
+        textFieldBackground.setBackground(Theme.createRoundRectDrawable(AndroidUtilities.dp(18), Theme.getColor(Theme.key_windowBackgroundWhite)));
+        bottomView.addView(textFieldBackground, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 36, Gravity.BOTTOM | Gravity.LEFT, 48, 0, 48, 6));
         
         commentView = new EditTextBoldCursor(context);
-        commentView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 18);
+        commentView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
         commentView.setHint(LocaleController.getString(R.string.SpecialForwardEditHint));
         commentView.setTextColor(Theme.getColor(Theme.key_chat_messagePanelText));
         commentView.setHintTextColor(Theme.getColor(Theme.key_chat_messagePanelHint));
         commentView.setCursorColor(Theme.getColor(Theme.key_chat_messagePanelCursor));
         commentView.setBackgroundDrawable(null);
-        commentView.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(11), AndroidUtilities.dp(12), AndroidUtilities.dp(12));
+        commentView.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(8), AndroidUtilities.dp(12), AndroidUtilities.dp(8));
         commentView.setMaxLines(4);
         commentView.setGravity(Gravity.BOTTOM);
         commentView.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
@@ -213,7 +212,7 @@ public class SpecialForwardActivity extends BaseFragment {
         saveButton.setImageResource(R.drawable.baseline_check_24); 
         saveButton.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chat_messagePanelSend), PorterDuff.Mode.MULTIPLY));
         saveButton.setScaleType(ImageView.ScaleType.CENTER);
-        saveButton.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelectorSDK21), 1));
+        saveButton.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelector), 1));
         saveButton.setOnClickListener(v -> {
              saveCurrentEdit();
         });
