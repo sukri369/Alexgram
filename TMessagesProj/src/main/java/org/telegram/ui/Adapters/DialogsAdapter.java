@@ -1484,20 +1484,20 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
 
         MessagesController messagesController = MessagesController.getInstance(currentAccount);
         ArrayList<TLRPC.Dialog> array = parentFragment.getDialogsArray(currentAccount, dialogsType, folderId, dialogsListFrozen);
+        if (array != null && onlyUnread) {
+            ArrayList<TLRPC.Dialog> filtered = new ArrayList<>();
+            for (int i = 0; i < array.size(); i++) {
+                TLRPC.Dialog dialog = array.get(i);
+                if (dialog.unread_count > 0 || dialog.unread_mentions_count > 0 || dialog.unread_reactions_count > 0 || messagesController.isDialogUnread(dialog.id)) {
+                    filtered.add(dialog);
+                }
+            }
+            array = filtered;
+        }
+
         if (array == null) {
             array = new ArrayList<>();
-        } else {
-            if (onlyUnread) {
-                ArrayList<TLRPC.Dialog> filtered = new ArrayList<>();
-                for (int i = 0; i < array.size(); i++) {
-                    TLRPC.Dialog dialog = array.get(i);
-                    if (dialog.unread_count > 0 || dialog.unread_mentions_count > 0 || dialog.unread_reactions_count > 0 || messagesController.isDialogUnread(dialog.id)) {
-                        filtered.add(dialog);
-                    }
-                }
-                array = filtered;
-            }
-            if (dialogsType == 0) {
+        } else if (dialogsType == 0) {
             boolean isHiddenScreen = parentFragment instanceof HiddenChatsActivity; 
             ArrayList<TLRPC.Dialog> filtered = new ArrayList<>();
             for (TLRPC.Dialog dialog : array) {
