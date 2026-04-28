@@ -255,7 +255,7 @@ public class SpecialForwardActivity extends BaseFragment {
         mediaPreviewContainer.addView(mediaPreviewClose, LayoutHelper.createFrame(36, 36, Gravity.CENTER_VERTICAL | Gravity.RIGHT, 0, 0, 4, 0));
 
         ImageView mediaReplace = new ImageView(context);
-        mediaReplace.setImageResource(R.drawable.msg_edit);
+        mediaReplace.setImageResource(R.drawable.input_attach_solar);
         mediaReplace.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chat_messagePanelIcons), PorterDuff.Mode.MULTIPLY));
         mediaReplace.setScaleType(ImageView.ScaleType.CENTER);
         mediaReplace.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelector), 1));
@@ -326,7 +326,7 @@ public class SpecialForwardActivity extends BaseFragment {
         menuButton.setOnClickListener(v -> showEditOptions());
         panelContainer.addView(menuButton, LayoutHelper.createFrame(44, 48, Gravity.BOTTOM | Gravity.RIGHT));
 
-        frameLayout.addView(bottomView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM));
+        frameLayout.addView(bottomView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, 0, 0, 84, 0));
 
         // Floating Action Button
         sendButton = new ImageView(context);
@@ -342,7 +342,7 @@ public class SpecialForwardActivity extends BaseFragment {
              }
              forwardMessages();
         });
-        frameLayout.addView(sendButton, LayoutHelper.createFrame(56, 56, Gravity.BOTTOM | Gravity.RIGHT, 0, 0, 16, 72)); 
+        frameLayout.addView(sendButton, LayoutHelper.createFrame(56, 56, Gravity.BOTTOM | Gravity.RIGHT, 0, 0, 16, 16)); 
 
         return fragmentView;
     }
@@ -756,40 +756,43 @@ public class SpecialForwardActivity extends BaseFragment {
         public int getItemViewType(int position) { return 0; }
     }
     private void openPhotoPicker() {
-        HashMap<Object, Object> selectedPhotos = new HashMap<>();
-        ArrayList<Object> selectedPhotosOrder = new ArrayList<>();
-        PhotoPickerActivity fragment = new PhotoPickerActivity(0, null, selectedPhotos, selectedPhotosOrder, 0, false, null, false);
-        fragment.setDelegate(new PhotoPickerActivity.PhotoPickerActivityDelegate() {
+        PhotoAlbumPickerActivity fragment = new PhotoAlbumPickerActivity(PhotoAlbumPickerActivity.SELECT_TYPE_ALL, true, true, null);
+        fragment.setMaxSelectedPhotos(1, false);
+        fragment.setDelegate(new PhotoAlbumPickerActivity.PhotoAlbumPickerActivityDelegate() {
             @Override
-            public void selectedPhotosChanged() {}
+            public void didSelectPhotos(ArrayList<SendMessagesHelper.SendingMediaInfo> photos, boolean notify, int scheduleDate) {
+                if (photos != null && !photos.isEmpty()) {
+                    onMediaReplaced(photos.get(0));
+                }
+            }
 
             @Override
-            public void actionButtonPressed(boolean canceled, boolean notify, int scheduleDate, int scheduleRepeatPeriod) {
-                if (canceled || selectedPhotos.isEmpty()) return;
-                Object photo = selectedPhotosOrder.get(0);
-                if (photo instanceof MediaController.PhotoEntry) {
-                    onMediaReplaced((MediaController.PhotoEntry) photo);
-                }
-                fragment.finishFragment();
+            public void startPhotoSelectActivity() {
             }
-            
-            @Override
-            public void onCaptionChanged(CharSequence caption) {}
         });
         presentFragment(fragment);
     }
 
-    private void onMediaReplaced(MediaController.PhotoEntry photoEntry) {
+    private void onMediaReplaced(SendMessagesHelper.SendingMediaInfo info) {
         if (selectedMessage == null) return;
         
-        mediaPreviewImage.setImage(ImageLocation.getForPath(photoEntry.path), "50_50", (Drawable) null, selectedMessage);
-        mediaPreviewText.setText(new File(photoEntry.path).getName());
+        mediaPreviewImage.setImage(ImageLocation.getForPath(info.path), "50_50", (Drawable) null, selectedMessage);
+        mediaPreviewText.setText(new File(info.path).getName());
         
-        selectedMessage.messageOwner.attachPath = photoEntry.path;
-        if (photoEntry.isVideo) {
+        selectedMessage.messageOwner.attachPath = info.path;
+        selectedMessage.videoEditedInfo = info.videoEditedInfo;
+        if (info.isVideo) {
             selectedMessage.type = MessageObject.TYPE_VIDEO;
+            if (selectedMessage.messageOwner.media == null || !(selectedMessage.messageOwner.media instanceof TLRPC.TL_messageMediaDocument)) {
+                selectedMessage.messageOwner.media = new TLRPC.TL_messageMediaDocument();
+                selectedMessage.messageOwner.media.document = new TLRPC.TL_document();
+            }
         } else {
             selectedMessage.type = MessageObject.TYPE_PHOTO;
+            if (selectedMessage.messageOwner.media == null || !(selectedMessage.messageOwner.media instanceof TLRPC.TL_messageMediaPhoto)) {
+                selectedMessage.messageOwner.media = new TLRPC.TL_messageMediaPhoto();
+                selectedMessage.messageOwner.media.photo = new TLRPC.TL_photo();
+            }
         }
         
         if (selectedPosition != -1) {
