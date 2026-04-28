@@ -68,7 +68,7 @@ public class SpecialForwardActivity extends BaseFragment {
     private ArrayList<MessageObject> originalMessages;
     private RecyclerListView listView;
     private ListAdapter listAdapter;
-    private EditTextBoldCursor commentView;
+    private org.telegram.ui.Components.EditTextCaption commentView;
     private FrameLayout bottomView;
     private ImageView sendButton;
     private MessageObject selectedMessage;
@@ -169,12 +169,7 @@ public class SpecialForwardActivity extends BaseFragment {
                  selectedMessage = messages.get(position);
                  selectedPosition = position;
                  if (commentView != null) {
-                     CharSequence text = selectedMessage.caption != null ? selectedMessage.caption : selectedMessage.messageText;
-                     SpannableStringBuilder stringBuilder = new SpannableStringBuilder(text != null ? text : "");
-                     if (selectedMessage.messageOwner.entities != null) {
-                         MediaDataController.addTextStyleRuns(selectedMessage.messageOwner.entities, text, stringBuilder);
-                     }
-                     commentView.setText(stringBuilder);
+                     commentView.setText(org.telegram.ui.Components.ChatActivityEnterView.applyMessageEntities(selectedMessage.messageOwner.entities, selectedMessage.messageText != null ? selectedMessage.messageText : "", commentView.getPaint().getFontMetricsInt()));
                      if (commentView.getText().length() > 0) {
                         commentView.setSelection(commentView.getText().length());
                      }
@@ -240,7 +235,8 @@ public class SpecialForwardActivity extends BaseFragment {
         emojiButton.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelector), 1));
         panelContainer.addView(emojiButton, LayoutHelper.createFrame(48, 48, Gravity.BOTTOM | Gravity.LEFT));
         
-        commentView = new EditTextBoldCursor(context);
+        commentView = new org.telegram.ui.Components.EditTextCaption(context, null);
+        commentView.setWindowView(getParentActivity().getWindow().getDecorView());
         commentView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 18);
         commentView.setHint(LocaleController.getString(R.string.SpecialForwardEditHint));
         commentView.setTextColor(Theme.getColor(Theme.key_chat_messagePanelText));
