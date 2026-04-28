@@ -152,7 +152,7 @@ public class SpecialForwardActivity extends BaseFragment {
         listView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
         listView.setAdapter(listAdapter = new ListAdapter(context));
         listView.setVerticalScrollBarEnabled(false);
-        listView.setPadding(0, 0, 0, AndroidUtilities.dp(56));
+        listView.setPadding(0, 0, 0, AndroidUtilities.dp(64));
         listView.setClipToPadding(false);
         listView.setOnItemClickListener((view, position) -> {
             if (position >= 0 && position < messages.size()) {
@@ -168,46 +168,38 @@ public class SpecialForwardActivity extends BaseFragment {
                  }
             }
         });
-        frameLayout.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.TOP | Gravity.LEFT, 0, 0, 0, 48));
+        frameLayout.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.TOP | Gravity.LEFT, 0, 0, 0, 0));
 
-        // Bottom Edit/Send View (Input Bar style)
-        bottomView = new FrameLayout(context) {
-            @Override
-            protected void onDraw(Canvas canvas) {
-                canvas.drawLine(0, 0, getWidth(), 0, Theme.dividerPaint);
-            }
-        };
-        bottomView.setWillNotDraw(false);
-        bottomView.setBackgroundColor(Theme.getColor(Theme.key_chat_messagePanelBackground));
+        // Bottom Edit/Send View (Floating Input Bar style to match image 2)
+        bottomView = new FrameLayout(context);
+        bottomView.setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(2), AndroidUtilities.dp(8), AndroidUtilities.dp(12));
         
-        // Attachment/Menu Button (Left) - Using ic_ab_other as requested
-        ImageView attachButton = new ImageView(context);
-        attachButton.setImageResource(R.drawable.ic_ab_other); 
-        attachButton.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chat_messagePanelIcons), PorterDuff.Mode.MULTIPLY));
-        attachButton.setScaleType(ImageView.ScaleType.CENTER);
-        attachButton.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelector), 1));
-        attachButton.setOnClickListener(v -> showEditOptions());
-        bottomView.addView(attachButton, LayoutHelper.createFrame(48, 48, Gravity.BOTTOM | Gravity.LEFT, 2, 0, 0, 2));
-        
-        // Rounded background for the input field
-        View textFieldBackground = new View(context);
-        textFieldBackground.setBackground(Theme.createRoundRectDrawable(AndroidUtilities.dp(18), Theme.getColor(Theme.key_windowBackgroundWhite)));
-        bottomView.addView(textFieldBackground, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 36, Gravity.BOTTOM | Gravity.LEFT, 48, 0, 48, 6));
+        FrameLayout panelContainer = new FrameLayout(context);
+        panelContainer.setBackground(Theme.createRoundRectDrawable(AndroidUtilities.dp(24), Theme.getColor(Theme.key_chat_messagePanelBackground)));
+        bottomView.addView(panelContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM));
+
+        // Emoji Button (Left) - Decoration to match chat bar look
+        ImageView emojiButton = new ImageView(context);
+        emojiButton.setImageResource(R.drawable.msg_smile); 
+        emojiButton.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chat_messagePanelIcons), PorterDuff.Mode.MULTIPLY));
+        emojiButton.setScaleType(ImageView.ScaleType.CENTER);
+        emojiButton.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelector), 1));
+        panelContainer.addView(emojiButton, LayoutHelper.createFrame(48, 48, Gravity.BOTTOM | Gravity.LEFT));
         
         commentView = new EditTextBoldCursor(context);
-        commentView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
+        commentView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 18);
         commentView.setHint(LocaleController.getString(R.string.SpecialForwardEditHint));
         commentView.setTextColor(Theme.getColor(Theme.key_chat_messagePanelText));
         commentView.setHintTextColor(Theme.getColor(Theme.key_chat_messagePanelHint));
         commentView.setCursorColor(Theme.getColor(Theme.key_chat_messagePanelCursor));
         commentView.setBackgroundDrawable(null);
-        commentView.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(8), AndroidUtilities.dp(12), AndroidUtilities.dp(8));
+        commentView.setPadding(0, AndroidUtilities.dp(11), 0, AndroidUtilities.dp(12));
         commentView.setMaxLines(4);
         commentView.setGravity(Gravity.BOTTOM);
         commentView.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
-        bottomView.addView(commentView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM | Gravity.LEFT, 48, 0, 48, 0));
+        panelContainer.addView(commentView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM | Gravity.LEFT, 48, 0, 88, 0));
 
-        // Save/Update Button (Right) - Using Check icon
+        // Save Button (Right 1)
         ImageView saveButton = new ImageView(context);
         saveButton.setImageResource(R.drawable.baseline_check_24); 
         saveButton.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chat_messagePanelSend), PorterDuff.Mode.MULTIPLY));
@@ -216,7 +208,16 @@ public class SpecialForwardActivity extends BaseFragment {
         saveButton.setOnClickListener(v -> {
              saveCurrentEdit();
         });
-        bottomView.addView(saveButton, LayoutHelper.createFrame(48, 48, Gravity.BOTTOM | Gravity.RIGHT, 0, 0, 0, 2));
+        panelContainer.addView(saveButton, LayoutHelper.createFrame(44, 48, Gravity.BOTTOM | Gravity.RIGHT, 0, 0, 44, 0));
+
+        // Menu Button (Right 2)
+        ImageView menuButton = new ImageView(context);
+        menuButton.setImageResource(R.drawable.ic_ab_other); 
+        menuButton.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chat_messagePanelIcons), PorterDuff.Mode.MULTIPLY));
+        menuButton.setScaleType(ImageView.ScaleType.CENTER);
+        menuButton.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelector), 1));
+        menuButton.setOnClickListener(v -> showEditOptions());
+        panelContainer.addView(menuButton, LayoutHelper.createFrame(44, 48, Gravity.BOTTOM | Gravity.RIGHT));
 
         frameLayout.addView(bottomView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM));
 
@@ -234,7 +235,7 @@ public class SpecialForwardActivity extends BaseFragment {
              }
              forwardMessages();
         });
-        frameLayout.addView(sendButton, LayoutHelper.createFrame(56, 56, Gravity.BOTTOM | Gravity.RIGHT, 0, 0, 16, 64)); 
+        frameLayout.addView(sendButton, LayoutHelper.createFrame(56, 56, Gravity.BOTTOM | Gravity.RIGHT, 0, 0, 16, 72)); 
 
         return fragmentView;
     }
