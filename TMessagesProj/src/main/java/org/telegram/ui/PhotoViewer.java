@@ -9244,8 +9244,9 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         }
 
         if (!isPreset) {
+            String speedText = SpeedIconDrawable.formatNumber(currentVideoSpeed) + "x";
             if (currentVideoSpeed > 3.0f || !isFinal) {
-                speedItem.setRightLabelOverride(null); // Show speed value while sliding or if > 3x
+                speedItem.setRightLabelOverride(speedText); // Force the exact speed string
             } else {
                 speedItem.setRightLabelOverride(LocaleController.getString("PollV2PollDurationOptionCustom", R.string.PollV2PollDurationOptionCustom));
             }
