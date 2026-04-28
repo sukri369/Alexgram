@@ -178,9 +178,9 @@ public class SpecialForwardActivity extends BaseFragment {
         panelContainer.setBackground(Theme.createRoundRectDrawable(AndroidUtilities.dp(24), Theme.getColor(Theme.key_chat_messagePanelBackground)));
         bottomView.addView(panelContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM));
 
-        // Emoji Button (Left) - Decoration to match chat bar look
+        // Emoji Button (Left) - Using input_smile_solar found in resources
         ImageView emojiButton = new ImageView(context);
-        emojiButton.setImageResource(R.drawable.msg_smile); 
+        emojiButton.setImageResource(R.drawable.input_smile_solar); 
         emojiButton.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chat_messagePanelIcons), PorterDuff.Mode.MULTIPLY));
         emojiButton.setScaleType(ImageView.ScaleType.CENTER);
         emojiButton.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelector), 1));
