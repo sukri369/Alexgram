@@ -1488,7 +1488,7 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
             ArrayList<TLRPC.Dialog> filtered = new ArrayList<>();
             for (int i = 0; i < array.size(); i++) {
                 TLRPC.Dialog dialog = array.get(i);
-                if (dialog.unread_count > 0 || dialog.unread_mentions_count > 0 || dialog.unread_reactions_count > 0 || messagesController.isDialogUnread(dialog.id)) {
+                if (dialog.unread_count > 0 || dialog.unread_mentions_count > 0 || dialog.unread_reactions_count > 0 || dialog.unread_mark) {
                     filtered.add(dialog);
                 }
             }
