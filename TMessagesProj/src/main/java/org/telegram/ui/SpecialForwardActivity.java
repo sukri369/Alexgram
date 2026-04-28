@@ -652,8 +652,8 @@ public class SpecialForwardActivity extends BaseFragment {
             public boolean didSelectDialogs(DialogsActivity fragment, ArrayList<MessagesStorage.TopicKey> dids, CharSequence message, boolean param, boolean notify, int scheduleDate, int scheduleRepeatPeriod, TopicsFragment topicsFragment) {
                  if (dids == null || dids.isEmpty()) return false;
                  
-                 fragment.finishFragment();
-                 finishFragment(); 
+                  fragment.finishFragment();
+                  removeSelfFromStack(); 
                  
                  for (int i = 0; i < dids.size(); i++) {
                      MessagesStorage.TopicKey key = dids.get(i);

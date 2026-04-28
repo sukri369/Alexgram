@@ -10998,9 +10998,9 @@ public class ChatActivity extends BaseFragment implements
         if (currentEncryptedChat == null && getDialogId() != UserObject.VERIFY && NaConfig.INSTANCE.getActionBarButtonForward().Bool()) {
             actionModeViews.add(actionMode.addItemWithWidth(forward, R.drawable.msg_forward_noquote, AndroidUtilities.dp(54), LocaleController.getString(R.string.Forward)));
         }
-        if (currentEncryptedChat == null && NaConfig.INSTANCE.getSpecialForward().Bool()) {
+/*        if (currentEncryptedChat == null && NaConfig.INSTANCE.getSpecialForward().Bool()) {
             actionModeViews.add(actionMode.addItemWithWidth(nkbtn_special_forward, R.drawable.nk_special_forward, AndroidUtilities.dp(54), LocaleController.getString(R.string.SpecialForward)));
-        }
+        } */
         actionModeViews.add(actionMode.addItemWithWidth(delete, R.drawable.msg_delete, AndroidUtilities.dp(54), LocaleController.getString(R.string.Delete)));
 
         if (currentEncryptedChat == null) {
@@ -11017,7 +11017,7 @@ public class ChatActivity extends BaseFragment implements
 
         if (currentEncryptedChat == null && !noforward) {
             actionModeOtherItem.addSubItem(nkbtn_forward_noquote, R.drawable.msg_forward_noquote, LocaleController.getString(R.string.NoQuoteForward));
-            actionModeOtherItem.addSubItem(nkbtn_special_forward, R.drawable.nk_special_forward, LocaleController.getString(R.string.SpecialForward));
+            // actionModeOtherItem.addSubItem(nkbtn_special_forward, R.drawable.nk_special_forward, LocaleController.getString(R.string.SpecialForward));
         }
         actionModeOtherItem.addSubItem(nkbtn_translate, LlmConfig.llmIsDefaultProvider() ? R.drawable.magic_stick_solar : R.drawable.ic_translate, LocaleController.getString(R.string.Translate));
         actionModeOtherItem.addSubItem(nkbtn_sharemessage, R.drawable.msg_shareout, LocaleController.getString(R.string.ShareMessages));
@@ -11040,7 +11040,7 @@ public class ChatActivity extends BaseFragment implements
         actionMode.setItemVisibility(star, selectedMessagesCanStarIds[0].size() + selectedMessagesCanStarIds[1].size() != 0 ? View.VISIBLE : View.GONE);
         actionMode.setItemVisibility(combine_message, selectedMessagesCanCopyIds[0].size() + selectedMessagesCanCopyIds[1].size() != 0 ? View.VISIBLE : View.GONE);
         actionMode.setItemVisibility(forward, NaConfig.INSTANCE.getActionBarButtonForward().Bool() ? View.VISIBLE : View.GONE);
-        actionMode.setItemVisibility(nkbtn_special_forward, NaConfig.INSTANCE.getSpecialForward().Bool() ? View.VISIBLE : View.GONE);
+        // actionMode.setItemVisibility(nkbtn_special_forward, NaConfig.INSTANCE.getSpecialForward().Bool() ? View.VISIBLE : View.GONE);
         actionMode.setItemVisibility(delete, cantDeleteMessagesCount == 0 ? View.VISIBLE : View.GONE);
         actionMode.setItemVisibility(tag_message, getUserConfig().isPremium() ? View.VISIBLE : View.GONE);
         actionMode.setItemVisibility(share, View.GONE);
@@ -33510,7 +33510,7 @@ public class ChatActivity extends BaseFragment implements
                 actionModeOtherItem.showSubItem(nkbtn_forward_noquote);
             }
             if (NaConfig.INSTANCE.getSpecialForward().Bool()) {
-                actionModeOtherItem.showSubItem(nkbtn_special_forward);
+                // actionModeOtherItem.showSubItem(nkbtn_special_forward);
             }
         }
         actionMode.setItemVisibility(delete, View.VISIBLE);
@@ -48110,11 +48110,11 @@ public class ChatActivity extends BaseFragment implements
                         options.add(nkbtn_repeatascopy);
                         icons.add(R.drawable.msg_repeat);
                     }
-                    if (NaConfig.INSTANCE.getSpecialForward().Bool() && selectedObject.canForwardMessage() && !isAyuDeleted && !noforwards) {
+/*                    if (NaConfig.INSTANCE.getSpecialForward().Bool() && selectedObject.canForwardMessage() && !isAyuDeleted && !noforwards) {
                         items.add(LocaleController.getString(R.string.SpecialForward));
                         options.add(nkbtn_special_forward);
                         icons.add(R.drawable.nk_special_forward);
-                    }
+                    } */
                     if (NekoConfig.showDeleteDownloadedFile.Bool() && getMessageHelper().messageObjectIsFile(type, selectedObject)) {
                         items.add(LocaleController.getString(R.string.DeleteDownloadedFile));
                         options.add(nkbtn_deldlcache);
