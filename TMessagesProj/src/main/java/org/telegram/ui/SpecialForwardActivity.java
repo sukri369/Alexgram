@@ -522,58 +522,28 @@ public class SpecialForwardActivity extends BaseFragment {
                  for (int i = 0; i < dids.size(); i++) {
                      long peer = dids.get(i).dialogId; 
                      
-                     if (forwardAsFile) {
-                         ArrayList<SendMessagesHelper.SendingMediaInfo> mediaInfos = new ArrayList<>();
-                         for (int j = 0; j < messages.size(); j++) {
-                             MessageObject msg = messages.get(j);
-                             if (msg.isPhoto() || msg.isVideo() || msg.isDocument()) {
-                                 SendMessagesHelper.SendingMediaInfo info = new SendMessagesHelper.SendingMediaInfo();
-                                 if (msg.isPhoto() && msg.messageOwner.media.photo instanceof TLRPC.TL_photo) {
-                                     info.photo = (TLRPC.TL_photo) msg.messageOwner.media.photo;
-                                 } else if (msg.isDocument() && msg.messageOwner.media.document instanceof TLRPC.TL_document) {
-                                     info.document = (TLRPC.TL_document) msg.messageOwner.media.document;
-                                 } else if (msg.isVideo() && msg.messageOwner.media.document instanceof TLRPC.TL_document) {
-                                     info.document = (TLRPC.TL_document) msg.messageOwner.media.document;
-                                 }
-                                 info.caption = msg.caption != null ? msg.caption.toString() : (msg.messageText != null ? msg.messageText.toString() : "");
-                                 info.entities = msg.messageOwner.entities;
-                                 mediaInfos.add(info);
-                             } else {
-                                 // For non-media, send as is
-                                 SendMessageParams params = SendMessageParams.of(msg);
-                                 params.peer = peer;
-                                 if (msg.caption != null) params.caption = msg.caption.toString();
-                                 else if (msg.messageText != null) params.caption = msg.messageText.toString();
-                                 SendMessagesHelper.getInstance(UserConfig.selectedAccount).sendMessage(params);
-                             }
+                     for (int j = 0; j < messages.size(); j++) {
+                         MessageObject msg = messages.get(j);
+                     
+                         // Create SendMessageParams manually to ensure edited content is sent
+                         SendMessageParams params;
+                     
+                         if (msg.isPhoto()) {
+                             params = SendMessageParams.of((TLRPC.TL_photo) msg.messageOwner.media.photo, null, peer, null, null, msg.caption != null ? msg.caption.toString() : "", null, null, null, notify, scheduleDate, scheduleRepeatPeriod, 0, null, false);
+                         } else if (msg.isDocument()) {
+                             params = SendMessageParams.of((TLRPC.TL_document) msg.messageOwner.media.document, null, null, peer, null, null, msg.caption != null ? msg.caption.toString() : "", null, null, null, notify, scheduleDate, scheduleRepeatPeriod, 0, null, null, false);
+                         } else if (msg.messageText != null && !TextUtils.isEmpty(msg.messageText)) {
+                             // Text message
+                             params = SendMessageParams.of(msg.messageText.toString(), peer, null, null, null, true, null, null, null, notify, scheduleDate, scheduleRepeatPeriod, null, false);
+                         } else {
+                             // Fallback for other types
+                             params = SendMessageParams.of(msg);
+                             if (msg.caption != null) params.caption = msg.caption.toString();
+                             else if (msg.messageText != null) params.caption = msg.messageText.toString(); 
+                             params.peer = peer;
                          }
-                         if (!mediaInfos.isEmpty()) {
-                             SendMessagesHelper.prepareSendingMedia(getAccountInstance(), mediaInfos, peer, null, null, null, null, true, mediaInfos.size() > 1, null, null, notify, scheduleDate, scheduleRepeatPeriod, 0, false, null, null, 0, 0, false, 0, 0, null, null, false);
-                         }
-                     } else {
-                         for (int j = 0; j < messages.size(); j++) {
-                             MessageObject msg = messages.get(j);
-                         
-                             // Create SendMessageParams manually to ensure edited content is sent
-                             SendMessageParams params;
-                         
-                             if (msg.isPhoto()) {
-                                 params = SendMessageParams.of((TLRPC.TL_photo) msg.messageOwner.media.photo, null, peer, null, null, msg.caption != null ? msg.caption.toString() : "", null, null, null, notify, scheduleDate, scheduleRepeatPeriod, 0, null, false);
-                             } else if (msg.isDocument()) {
-                                 params = SendMessageParams.of((TLRPC.TL_document) msg.messageOwner.media.document, null, null, peer, null, null, msg.caption != null ? msg.caption.toString() : "", null, null, null, notify, scheduleDate, scheduleRepeatPeriod, 0, null, null, false);
-                             } else if (msg.messageText != null && !TextUtils.isEmpty(msg.messageText)) {
-                                 // Text message
-                                 params = SendMessageParams.of(msg.messageText.toString(), peer, null, null, null, true, null, null, null, notify, scheduleDate, scheduleRepeatPeriod, null, false);
-                             } else {
-                                 // Fallback for other types
-                                 params = SendMessageParams.of(msg);
-                                 if (msg.caption != null) params.caption = msg.caption.toString();
-                                 else if (msg.messageText != null) params.caption = msg.messageText.toString(); 
-                                 params.peer = peer;
-                             }
-                         
-                             SendMessagesHelper.getInstance(UserConfig.selectedAccount).sendMessage(params);
-                         }
+                     
+                         SendMessagesHelper.getInstance(UserConfig.selectedAccount).sendMessage(params);
                      }
                  }
                  
