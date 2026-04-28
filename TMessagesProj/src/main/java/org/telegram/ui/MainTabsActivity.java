@@ -133,6 +133,8 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
     private BlurredBackgroundDrawable tabsViewBackground;
     private View fadeView;
 
+    private long lastChatsClickTime;
+
     public MainTabsActivity() {
         super();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -337,6 +339,19 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
                 }
                 if (viewPager.isManualScrolling() || viewPager.isTouch()) {
                     return;
+                }
+
+                if (tabIndex == INDEX_CHATS && NaConfig.INSTANCE.getDoubleTapOnChatsToFilterUnread().Bool()) {
+                    long currentTime = System.currentTimeMillis();
+                    if (currentTime - lastChatsClickTime < ViewConfiguration.getDoubleTapTimeout()) {
+                        final BaseFragment fragment = getCurrentVisibleFragment();
+                        if (fragment instanceof MainTabsActivity.TabFragmentDelegate) {
+                            ((MainTabsActivity.TabFragmentDelegate) fragment).onDoubleTapOnChats();
+                        }
+                        lastChatsClickTime = 0;
+                        return;
+                    }
+                    lastChatsClickTime = currentTime;
                 }
 
                 if (viewPager.getCurrentPosition() == position) {
@@ -783,6 +798,10 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
 
         }
 
+        default void onDoubleTapOnChats() {
+
+        }
+
         default BlurredBackgroundSourceRenderNode getGlassSource() {
             return null;
         }
@@ -1022,6 +1041,11 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
         @Override
         public void setTabsVisible(boolean visible) {
             MainTabsActivity.this.setTabsVisible(visible);
+        }
+
+        @Override
+        public void onDoubleTapOnChats() {
+            // No-op or call local implementation if needed.
         }
     }
 

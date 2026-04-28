@@ -99,6 +99,13 @@ object NaConfig {
             ConfigItem.configTypeBool,
             true
         )
+
+    val doubleTapOnChatsToFilterUnread =
+        addConfig(
+            "DoubleTapOnChatsToFilterUnread",
+            ConfigItem.configTypeBool,
+            false
+        )
     val showTextCreateMention =
         addConfig(
             "TextCreateMention",

@@ -14174,6 +14174,12 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         scrollToTop(true, true);
     }
 
+    @Override
+    public void onDoubleTapOnChats() {
+        if (viewPages == null || viewPages[0] == null || viewPages[0].dialogsAdapter == null) return;
+        viewPages[0].dialogsAdapter.setOnlyUnread(!viewPages[0].dialogsAdapter.isOnlyUnread());
+    }
+
     private void switchTheme(Theme.ThemeInfo themeInfo, boolean toDark) {
         if (optionsItem == null) return;
         int[] pos = new int[2];
