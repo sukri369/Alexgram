@@ -152,7 +152,7 @@ public class SpecialForwardActivity extends BaseFragment {
         listView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
         listView.setAdapter(listAdapter = new ListAdapter(context));
         listView.setVerticalScrollBarEnabled(false);
-        listView.setPadding(0, 0, 0, AndroidUtilities.dp(48));
+        listView.setPadding(0, 0, 0, AndroidUtilities.dp(56));
         listView.setClipToPadding(false);
         listView.setOnItemClickListener((view, position) -> {
             if (position >= 0 && position < messages.size()) {
@@ -170,42 +170,56 @@ public class SpecialForwardActivity extends BaseFragment {
         });
         frameLayout.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.TOP | Gravity.LEFT, 0, 0, 0, 48));
 
-        // Bottom Edit/Send View
-        bottomView = new FrameLayout(context);
-        bottomView.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
+        // Bottom Edit/Send View (Input Bar style)
+        bottomView = new FrameLayout(context) {
+            @Override
+            protected void onDraw(Canvas canvas) {
+                canvas.drawLine(0, 0, getWidth(), 0, Theme.dividerPaint);
+            }
+        };
+        bottomView.setWillNotDraw(false);
+        bottomView.setBackgroundColor(Theme.getColor(Theme.key_chat_messagePanelBackground));
         
-        // Attachment/Menu Button (Left)
+        // Attachment/Menu Button (Left) - Using ic_ab_other as requested
         ImageView attachButton = new ImageView(context);
         attachButton.setImageResource(R.drawable.ic_ab_other); 
-        attachButton.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_windowBackgroundWhiteGrayIcon), PorterDuff.Mode.MULTIPLY));
+        attachButton.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chat_messagePanelIcons), PorterDuff.Mode.MULTIPLY));
         attachButton.setScaleType(ImageView.ScaleType.CENTER);
+        attachButton.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelectorSDK21), 1));
         attachButton.setOnClickListener(v -> showEditOptions());
-        bottomView.addView(attachButton, LayoutHelper.createFrame(48, 48, Gravity.CENTER_VERTICAL | Gravity.LEFT));
+        bottomView.addView(attachButton, LayoutHelper.createFrame(48, 48, Gravity.BOTTOM | Gravity.LEFT, 2, 0, 0, 2));
+        
+        // Rounded background for the input field
+        View textFieldBackground = new View(context);
+        textFieldBackground.setBackground(Theme.createRoundRectDrawable(AndroidUtilities.dp(18), Theme.getColor(Theme.key_chat_messagePanelBackground)));
+        // Note: Using a slightly different shade or shadow would be better, but we'll stick to themed keys.
+        // Actually, many themes use key_chat_messagePanelBackground for the whole bar and key_windowBackgroundWhite for the field.
         
         commentView = new EditTextBoldCursor(context);
-        commentView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
+        commentView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 18);
         commentView.setHint(LocaleController.getString(R.string.SpecialForwardEditHint));
-        commentView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
-        commentView.setHintTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteHintText));
+        commentView.setTextColor(Theme.getColor(Theme.key_chat_messagePanelText));
+        commentView.setHintTextColor(Theme.getColor(Theme.key_chat_messagePanelHint));
+        commentView.setCursorColor(Theme.getColor(Theme.key_chat_messagePanelCursor));
         commentView.setBackgroundDrawable(null);
-        commentView.setPadding(0, 0, 0, 0);
+        commentView.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(11), AndroidUtilities.dp(12), AndroidUtilities.dp(12));
         commentView.setMaxLines(4);
-        commentView.setGravity(Gravity.CENTER_VERTICAL | Gravity.LEFT);
+        commentView.setGravity(Gravity.BOTTOM);
         commentView.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
-        // Shift input field to make space for attach button (48dp + 8dp margin = 56dp)
-        bottomView.addView(commentView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_VERTICAL | Gravity.LEFT, 56, 0, 48, 0));
+        bottomView.addView(commentView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM | Gravity.LEFT, 48, 0, 48, 0));
 
-        // Save/Update Button (Right)
+        // Save/Update Button (Right) - Using Check icon
         ImageView saveButton = new ImageView(context);
         saveButton.setImageResource(R.drawable.baseline_check_24); 
-        saveButton.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText), PorterDuff.Mode.MULTIPLY));
+        saveButton.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chat_messagePanelSend), PorterDuff.Mode.MULTIPLY));
         saveButton.setScaleType(ImageView.ScaleType.CENTER);
+        saveButton.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelectorSDK21), 1));
         saveButton.setOnClickListener(v -> {
              saveCurrentEdit();
         });
-        bottomView.addView(saveButton, LayoutHelper.createFrame(48, 48, Gravity.CENTER_VERTICAL | Gravity.RIGHT));
+        bottomView.addView(saveButton, LayoutHelper.createFrame(48, 48, Gravity.BOTTOM | Gravity.RIGHT, 0, 0, 0, 2));
 
-        frameLayout.addView(bottomView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 48, Gravity.BOTTOM | Gravity.LEFT));
+        frameLayout.addView(bottomView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM));
 
         // Floating Action Button
         sendButton = new ImageView(context);
