@@ -56,12 +56,25 @@ public class SpeedButtonsLayout extends PopupSwipeBackLayout {
                 for (int i = 0; i < parent.getChildCount(); i++) {
                     View child = parent.getChildAt(i);
                     if (child != this) {
-                        child.setAlpha(1f - progress);
+                        child.setAlpha(Math.max(0f, 1f - progress));
                         child.setTranslationY(AndroidUtilities.dp(16) * progress);
                         if (progress >= 1f) {
-                            child.setVisibility(GONE);
-                        } else if (child.getVisibility() != VISIBLE) {
-                            child.setVisibility(VISIBLE);
+                            if (child.getVisibility() != GONE) {
+                                child.setVisibility(GONE);
+                            }
+                        } else {
+                            if (child.getVisibility() != VISIBLE) {
+                                child.setVisibility(VISIBLE);
+                            }
+                        }
+                        if (progress > 0 && progress < 1) {
+                            if (child.getLayerType() != View.LAYER_TYPE_HARDWARE) {
+                                child.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+                            }
+                        } else {
+                            if (child.getLayerType() != View.LAYER_TYPE_NONE) {
+                                child.setLayerType(View.LAYER_TYPE_NONE, null);
+                            }
                         }
                     }
                 }
@@ -119,7 +132,7 @@ public class SpeedButtonsLayout extends PopupSwipeBackLayout {
 
         customLayout = new LinearLayout(context);
         customLayout.setOrientation(LinearLayout.VERTICAL);
-        customLayout.setPadding(0, AndroidUtilities.dp(8), 0, AndroidUtilities.dp(8));
+        customLayout.setPadding(0, AndroidUtilities.dp(4), 0, AndroidUtilities.dp(12));
 
         ActionBarMenuSubItem backItem = new ActionBarMenuSubItem(context, false, false);
         backItem.setTextAndIcon(LocaleController.getString("Back", R.string.Back), R.drawable.ic_ab_back);
@@ -128,11 +141,28 @@ public class SpeedButtonsLayout extends PopupSwipeBackLayout {
         backItem.setSelectorColor(0x1affffff);
         customLayout.addView(backItem, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 48));
 
+        View headerView = new View(context) {
+            private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            private final Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            {
+                textPaint.setColor(0xff888888);
+                textPaint.setTextSize(AndroidUtilities.dp(12));
+                textPaint.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+            }
+
+            @Override
+            protected void onDraw(Canvas canvas) {
+                String text = LocaleController.getString("PollV2PollDurationOptionCustom", R.string.PollV2PollDurationOptionCustom).toUpperCase();
+                canvas.drawText(text, AndroidUtilities.dp(21), AndroidUtilities.dp(18), textPaint);
+            }
+        };
+        customLayout.addView(headerView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 24));
+
         speedSlider = new CustomSpeedSlider(context, null);
         speedSlider.setOnValueChange((value, isFinal) -> {
             callback.onSpeedSelected(speedSlider.getSpeed(value), isFinal, false);
         });
-        customLayout.addView(speedSlider, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 50, 16, 8, 16, 8));
+        customLayout.addView(speedSlider, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 50, 4, 0, 4, 0));
 
         addView(customLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
     }
@@ -203,11 +233,18 @@ public class SpeedButtonsLayout extends PopupSwipeBackLayout {
         @Override
         protected int getColorValue(float value) {
             final float speed = getSpeed(value);
-            return ColorUtils.blendARGB(
-                0xff6BB6F9,
-                0xff3196f0,
-                MathUtils.clamp((speed - 1f) / (16f - 1f), 0, 1)
-            );
+            if (speed <= 1f) {
+                return ColorUtils.blendARGB(0xffffffff, 0xff6BB6F9, MathUtils.clamp((speed - 0.2f) / 0.8f, 0, 1));
+            }
+            return ColorUtils.blendARGB(0xff6BB6F9, 0xff3196f0, MathUtils.clamp((speed - 1f) / 15f, 0, 1));
+        }
+
+        @Override
+        public void invalidate() {
+            super.invalidate();
+            if (getParent() != null) {
+                ((View) getParent()).invalidate();
+            }
         }
     }
 
