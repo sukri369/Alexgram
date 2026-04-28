@@ -9,6 +9,7 @@ import android.graphics.Path;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -84,8 +85,8 @@ public class SpeedButtonsLayout {
         backItem.setTextAndIcon(LocaleController.getString("Back", R.string.Back), R.drawable.ic_ab_back);
         backItem.setColors(0xffffffff, 0xffffffff);
         backItem.setOnClickListener((view) -> {
-            if (parentItem.getPopupLayout() != null) {
-                parentItem.getPopupLayout().getSwipeBackLayout().closeForeground();
+            if (parentItem.getPopupLayout() != null && parentItem.getPopupLayout().getSwipeBack() != null) {
+                parentItem.getPopupLayout().getSwipeBack().closeForeground();
             }
         });
         backItem.setSelectorColor(0x1affffff);
