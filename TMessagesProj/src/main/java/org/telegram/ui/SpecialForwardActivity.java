@@ -15,6 +15,9 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ActionMode;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -59,8 +62,12 @@ import org.telegram.messenger.Utilities;
 import android.text.SpannableStringBuilder;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.telegram.ui.PhotoViewer;
+import org.telegram.ui.PhotoPickerActivity;
+import org.telegram.messenger.MediaController;
 
 public class SpecialForwardActivity extends BaseFragment {
 
@@ -206,6 +213,12 @@ public class SpecialForwardActivity extends BaseFragment {
 
         mediaPreviewImage = new BackupImageView(context);
         mediaPreviewImage.setRoundRadius(AndroidUtilities.dp(4));
+        mediaPreviewImage.setOnClickListener(v -> {
+            if (selectedMessage != null) {
+                PhotoViewer.getInstance().setParentActivity(getParentActivity());
+                PhotoViewer.getInstance().openPhoto(selectedMessage, new PhotoViewer.EmptyPhotoViewerProvider());
+            }
+        });
         mediaPreviewContainer.addView(mediaPreviewImage, LayoutHelper.createFrame(40, 40, Gravity.CENTER_VERTICAL | Gravity.LEFT, 5, 0, 0, 0));
 
         mediaPreviewText = new TextView(context);
@@ -222,6 +235,14 @@ public class SpecialForwardActivity extends BaseFragment {
         mediaPreviewClose.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelector), 1));
         mediaPreviewClose.setOnClickListener(v -> mediaPreviewContainer.setVisibility(View.GONE));
         mediaPreviewContainer.addView(mediaPreviewClose, LayoutHelper.createFrame(36, 36, Gravity.CENTER_VERTICAL | Gravity.RIGHT, 0, 0, 4, 0));
+
+        ImageView mediaReplace = new ImageView(context);
+        mediaReplace.setImageResource(R.drawable.msg_edit);
+        mediaReplace.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chat_messagePanelIcons), PorterDuff.Mode.MULTIPLY));
+        mediaReplace.setScaleType(ImageView.ScaleType.CENTER);
+        mediaReplace.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelector), 1));
+        mediaReplace.setOnClickListener(v -> openPhotoPicker());
+        mediaPreviewContainer.addView(mediaReplace, LayoutHelper.createFrame(36, 36, Gravity.CENTER_VERTICAL | Gravity.RIGHT, 0, 0, 44, 0));
         
         FrameLayout panelContainer = new FrameLayout(context);
         panelContainer.setBackground(Theme.createRoundRectDrawable(AndroidUtilities.dp(24), Theme.getColor(Theme.key_chat_messagePanelBackground)));
@@ -235,8 +256,26 @@ public class SpecialForwardActivity extends BaseFragment {
         emojiButton.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelector), 1));
         panelContainer.addView(emojiButton, LayoutHelper.createFrame(48, 48, Gravity.BOTTOM | Gravity.LEFT));
         
-        commentView = new org.telegram.ui.Components.EditTextCaption(context, null);
+        commentView = new org.telegram.ui.Components.EditTextCaption(context, null) {
+            @Override
+            protected void extendActionMode(ActionMode actionMode, Menu menu) {
+                if (menu.findItem(R.id.menu_bold) != null) return;
+                menu.add(Menu.NONE, R.id.menu_bold, Menu.NONE, LocaleController.getString("Bold", R.string.Bold)).setIcon(R.drawable.msg_bold);
+                menu.add(Menu.NONE, R.id.menu_italic, Menu.NONE, LocaleController.getString("Italic", R.string.Italic)).setIcon(R.drawable.msg_italic);
+                menu.add(Menu.NONE, R.id.menu_mono, Menu.NONE, LocaleController.getString("Mono", R.string.Mono)).setIcon(R.drawable.msg_mono);
+                menu.add(Menu.NONE, R.id.menu_strike, Menu.NONE, LocaleController.getString("Strike", R.string.Strike)).setIcon(R.drawable.msg_strike);
+                menu.add(Menu.NONE, R.id.menu_underline, Menu.NONE, LocaleController.getString("Underline", R.string.Underline)).setIcon(R.drawable.msg_underline);
+                menu.add(Menu.NONE, R.id.menu_spoiler, Menu.NONE, LocaleController.getString("Spoiler", R.string.Spoiler)).setIcon(R.drawable.msg_spoiler);
+                menu.add(Menu.NONE, R.id.menu_quote, Menu.NONE, LocaleController.getString("Quote", R.string.Quote)).setIcon(R.drawable.msg_quote);
+                menu.add(Menu.NONE, R.id.menu_link, Menu.NONE, LocaleController.getString("CreateLink", R.string.CreateLink)).setIcon(R.drawable.msg_link);
+                menu.add(Menu.NONE, R.id.menu_regular, Menu.NONE, LocaleController.getString("Regular", R.string.Regular));
+                if (menu.findItem(R.id.menu_change_font) == null) {
+                    menu.add(Menu.NONE, R.id.menu_change_font, Menu.NONE, LocaleController.getString("ChangeFont", R.string.ChangeFont)).setIcon(R.drawable.msg_edit);
+                }
+            }
+        };
         commentView.setWindowView(getParentActivity().getWindow().getDecorView());
+        commentView.quoteColor = Theme.getColor(Theme.key_chat_inQuote);
         commentView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 18);
         commentView.setHint(LocaleController.getString(R.string.SpecialForwardEditHint));
         commentView.setTextColor(Theme.getColor(Theme.key_chat_messagePanelText));
@@ -597,7 +636,14 @@ public class SpecialForwardActivity extends BaseFragment {
                          // Create SendMessageParams manually to ensure edited content is sent
                          SendMessageParams params;
                      
-                         if (msg.isPhoto()) {
+                         if (msg.messageOwner.attachPath != null) {
+                             // Replaced media
+                             if (msg.isVideo()) {
+                                 params = SendMessageParams.of((TLRPC.TL_document) null, null, msg.messageOwner.attachPath, peer, null, null, msg.caption != null ? msg.caption.toString() : "", msg.messageOwner.entities, null, null, notify, scheduleDate, scheduleRepeatPeriod, 0, null, null, false);
+                             } else {
+                                 params = SendMessageParams.of((TLRPC.TL_photo) null, msg.messageOwner.attachPath, peer, null, null, msg.caption != null ? msg.caption.toString() : "", msg.messageOwner.entities, null, null, notify, scheduleDate, scheduleRepeatPeriod, 0, null, false);
+                             }
+                         } else if (msg.isPhoto()) {
                              params = SendMessageParams.of((TLRPC.TL_photo) msg.messageOwner.media.photo, null, peer, null, null, msg.caption != null ? msg.caption.toString() : "", null, null, null, notify, scheduleDate, scheduleRepeatPeriod, 0, null, false);
                          } else if (msg.isDocument()) {
                              params = SendMessageParams.of((TLRPC.TL_document) msg.messageOwner.media.document, null, null, peer, null, null, msg.caption != null ? msg.caption.toString() : "", null, null, null, notify, scheduleDate, scheduleRepeatPeriod, 0, null, null, false);
@@ -660,5 +706,48 @@ public class SpecialForwardActivity extends BaseFragment {
         }
         @Override
         public int getItemViewType(int position) { return 0; }
+    }
+    private void openPhotoPicker() {
+        HashMap<Object, Object> selectedPhotos = new HashMap<>();
+        ArrayList<Object> selectedPhotosOrder = new ArrayList<>();
+        PhotoPickerActivity fragment = new PhotoPickerActivity(0, null, selectedPhotos, selectedPhotosOrder, 0, false, null, false);
+        fragment.setDelegate(new PhotoPickerActivity.PhotoPickerActivityDelegate() {
+            @Override
+            public void selectedPhotosChanged() {}
+
+            @Override
+            public void actionButtonPressed(boolean canceled, boolean notify, int scheduleDate, int scheduleRepeatPeriod) {
+                if (canceled || selectedPhotos.isEmpty()) return;
+                Object photo = selectedPhotosOrder.get(0);
+                if (photo instanceof MediaController.PhotoEntry) {
+                    onMediaReplaced((MediaController.PhotoEntry) photo);
+                }
+                fragment.finishFragment();
+            }
+            
+            @Override
+            public void onCaptionChanged(CharSequence caption) {}
+        });
+        presentFragment(fragment);
+    }
+
+    private void onMediaReplaced(MediaController.PhotoEntry photoEntry) {
+        if (selectedMessage == null) return;
+        
+        mediaPreviewImage.setImage(ImageLocation.getForPath(photoEntry.path), "50_50", null, null);
+        mediaPreviewText.setText(photoEntry.fileName != null ? photoEntry.fileName : "Replaced Media");
+        
+        selectedMessage.messageOwner.attachPath = photoEntry.path;
+        if (photoEntry.isVideo) {
+            selectedMessage.type = MessageObject.TYPE_VIDEO;
+        } else {
+            selectedMessage.type = MessageObject.TYPE_PHOTO;
+        }
+        
+        if (selectedPosition != -1) {
+            listAdapter.notifyItemChanged(selectedPosition);
+        }
+        
+        Toast.makeText(getParentActivity(), "Media replaced!", Toast.LENGTH_SHORT).show();
     }
 }
