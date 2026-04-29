@@ -49367,7 +49367,7 @@ public class ChatActivity extends BaseFragment implements
                                     // Make it beautiful: Parse Markdown using Telegram's internal parser
                                     CharSequence formattedResult = tw.nekomimi.nekogram.helpers.EntitiesHelper.parseMarkdown(processedResult);
                                     // Handle Emojis
-                                    formattedResult = org.telegram.messenger.Emoji.replaceEmoji(formattedResult, summaryView.getPaint().getFontMetricsInt(), AndroidUtilities.dp(20), false);
+                                    formattedResult = org.telegram.messenger.Emoji.replaceEmoji(formattedResult, summaryView.getPaint().getFontMetricsInt(), false);
                                     
                                     summaryView.setText(formattedResult);
                                     summaryView.setTextSize(16);
