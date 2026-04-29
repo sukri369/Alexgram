@@ -5390,6 +5390,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             filterTabsView.setBlurredBackground(filterTabsViewBackground);
             contentView.addView(filterTabsView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 36 + 7 + 7, Gravity.TOP, 4, 0, 4, 0));
 
+        if (unreadPillView == null) {
             unreadPillView = new FrameLayout(context) {
                 @Override
                 public void setAlpha(float alpha) {
@@ -5399,17 +5400,13 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             };
             unreadPillView.setAlpha(0);
             unreadPillView.setVisibility(View.GONE);
-            unreadPillView.setClickable(true);
-
-            BlurredBackgroundDrawable unreadPillBackground = iBlur3FactoryLiquidGlass.create(unreadPillView, BlurredBackgroundProviderImpl.topPanel(resourceProvider));
-            unreadPillBackground.setRadius(dp(18));
-            unreadPillView.setBackground(unreadPillBackground);
 
             LinearLayout unreadPillLayout = new LinearLayout(context);
             unreadPillLayout.setOrientation(LinearLayout.HORIZONTAL);
-            unreadPillLayout.setGravity(Gravity.CENTER_VERTICAL);
-            unreadPillLayout.setPadding(dp(12), 0, dp(8), 0);
-            unreadPillView.addView(unreadPillLayout, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, 36, Gravity.CENTER));
+            unreadPillLayout.setGravity(Gravity.CENTER);
+            unreadPillLayout.setPadding(dp(8), dp(4), dp(8), dp(4));
+            unreadPillLayout.setBackground(iBlur3FactoryLiquidGlass.create(unreadPillLayout, BlurredBackgroundProviderImpl.topPanel(resourceProvider)));
+            unreadPillView.addView(unreadPillLayout, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, 32, Gravity.CENTER));
 
             ImageView filterIcon = new ImageView(context);
             filterIcon.setImageResource(R.drawable.ic_filter_list);
@@ -5438,7 +5435,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 }
                 updateUnreadPillVisibility(false, true);
             });
+        }
 
+        if (fragmentSearchField != null && unreadPillView != null) {
+            AndroidUtilities.removeFromParent(unreadPillView);
+            fragmentSearchField.addAdditionalIcon(unreadPillView);
         }
 
         if (fragmentSearchField != null) {
@@ -6850,13 +6851,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         }
 
         if (unreadPillView != null) {
-            float tabsY = totalOffset - searchOffset;
-            float currentFoldersH = (filterTabsView != null && filterTabsView.getVisibility() == View.VISIBLE) ? dp(50) : 0;
-            float pillY = tabsY + currentFoldersH + dp(8);
-            unreadPillView.setTranslationY(Math.max(dp(56 + 8), pillY));
             unreadPillView.setAlpha(unreadPillAlpha * (1f - searchAnimationProgress));
             unreadPillView.setVisibility(unreadPillView.getAlpha() > 0 && !searchIsShowed ? View.VISIBLE : View.GONE);
-            unreadPillView.bringToFront();
         }
 
         if (topPanelLayout != null) {
