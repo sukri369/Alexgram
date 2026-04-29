@@ -334,25 +334,97 @@ public class AIAssistanceHelper {
         }
 
         if (messages != null && !messages.isEmpty()) {
-            int added = 0;
             sb.append("Recent interactions:\n");
-            for (int i = 0; i < messages.size() && added < 3; i++) {
+            // If there's only one message, it's likely a "Summarize" or specific "Reply" action
+            boolean isSingleMessage = messages.size() == 1;
+            int limit = isSingleMessage ? 1 : 3;
+            int added = 0;
+            for (int i = 0; i < messages.size() && added < limit; i++) {
                 MessageObject messageObject = messages.get(i);
                 if (messageObject == null) {
                     continue;
                 }
-                CharSequence text = messageObject.messageText;
-                if (TextUtils.isEmpty(text) && messageObject.caption != null) {
-                    text = messageObject.caption;
-                }
-                if (!TextUtils.isEmpty(text)) {
-                    String sample = text.toString();
-                    if (sample.length() > 160) {
-                        sample = sample.substring(0, 160) + "...";
+                String content = getMessageContent(messageObject);
+                if (!TextUtils.isEmpty(content)) {
+                    // For single message (Summarize), don't truncate or truncate much later
+                    if (!isSingleMessage && content.length() > 300) {
+                        content = content.substring(0, 300) + "...";
                     }
-                    sb.append("- ").append(sample.replace('\n', ' ')).append("\n");
+                    sb.append("- ").append(content.replace('\n', ' ')).append("\n");
                     added++;
                 }
+            }
+        }
+
+        return sb.toString();
+    }
+
+    public static String getMessageContent(MessageObject messageObject) {
+        return getMessageContent(messageObject, 0);
+    }
+
+    private static String getMessageContent(MessageObject messageObject, int depth) {
+        if (messageObject == null || depth > 1) return "";
+        StringBuilder sb = new StringBuilder();
+
+        // 1. Text or Caption
+        CharSequence text = messageObject.messageText;
+        if (TextUtils.isEmpty(text) && messageObject.caption != null) {
+            text = messageObject.caption;
+        }
+        if (!TextUtils.isEmpty(text)) {
+            sb.append(text);
+        }
+
+        // 2. Polls
+        if (messageObject.isPoll() && messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaPoll) {
+            TLRPC.Poll poll = ((TLRPC.TL_messageMediaPoll) messageObject.messageOwner.media).poll;
+            if (sb.length() > 0) sb.append("\n");
+            sb.append("Poll: ").append(poll.question.text);
+            for (TLRPC.PollAnswer answer : poll.answers) {
+                sb.append("\n- ").append(answer.text.text);
+            }
+        }
+
+        // 3. Link Description
+        if (messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaWebPage) {
+            TLRPC.WebPage webPage = messageObject.messageOwner.media.webpage;
+            if (webPage != null) {
+                if (sb.length() > 0) sb.append("\n");
+                sb.append("Web Page: ");
+                if (!TextUtils.isEmpty(webPage.title)) sb.append(webPage.title).append(" - ");
+                if (!TextUtils.isEmpty(webPage.description)) sb.append(webPage.description);
+                if (!TextUtils.isEmpty(webPage.url)) sb.append(" (").append(webPage.url).append(")");
+            }
+        }
+
+        // 4. Transcription
+        if (!TextUtils.isEmpty(messageObject.getVoiceTranscription())) {
+            if (sb.length() > 0) sb.append("\n");
+            sb.append("Transcription: ").append(messageObject.messageOwner.voiceTranscription);
+        }
+
+        // 5. Media fallback if still empty
+        if (sb.length() == 0) {
+            if (messageObject.type == MessageObject.TYPE_PHOTO) sb.append("[Photo]");
+            else if (messageObject.type == MessageObject.TYPE_VIDEO) sb.append("[Video]");
+            else if (messageObject.type == MessageObject.TYPE_ROUND_VIDEO) sb.append("[Video Note]");
+            else if (messageObject.type == MessageObject.TYPE_VOICE) sb.append("[Voice Message]");
+            else if (messageObject.type == MessageObject.TYPE_STICKER) sb.append("[Sticker]");
+            else if (messageObject.type == MessageObject.TYPE_GIF) sb.append("[GIF]");
+            else if (messageObject.type == MessageObject.TYPE_FILE) {
+                String name = messageObject.getDocumentName();
+                sb.append("[File").append(!TextUtils.isEmpty(name) ? ": " + name : "").append("]");
+            }
+            else if (messageObject.type == MessageObject.TYPE_GEO) sb.append("[Location]");
+            else if (messageObject.type == MessageObject.TYPE_CONTACT) sb.append("[Contact]");
+        }
+
+        // 6. Quoted message (only for top level)
+        if (depth == 0 && messageObject.replyMessageObject != null) {
+            String quotedContent = getMessageContent(messageObject.replyMessageObject, depth + 1);
+            if (!TextUtils.isEmpty(quotedContent)) {
+                sb.append("\n(Replying to: ").append(quotedContent).append(")");
             }
         }
 

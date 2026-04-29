@@ -49362,14 +49362,21 @@ public class ChatActivity extends BaseFragment implements
 
                                 if (getParentActivity() != null) {
                                     android.widget.TextView summaryView = new android.widget.TextView(getParentActivity());
+                                    // Pre-process common Markdown bullet points to look better
+                                    String processedResult = result.replaceAll("(?m)^[\\*\\-] ", "• ");
                                     // Make it beautiful: Parse Markdown using Telegram's internal parser
-                                    CharSequence formattedResult = tw.nekomimi.nekogram.helpers.EntitiesHelper.parseMarkdown(result);
+                                    CharSequence formattedResult = tw.nekomimi.nekogram.helpers.EntitiesHelper.parseMarkdown(processedResult);
+                                    // Handle Emojis
+                                    formattedResult = org.telegram.messenger.Emoji.replaceEmoji(formattedResult, summaryView.getPaint().getFontMetricsInt(), AndroidUtilities.dp(20), false);
+                                    
                                     summaryView.setText(formattedResult);
                                     summaryView.setTextSize(16);
                                     summaryView.setTextColor(getThemedColor(Theme.key_dialogTextBlack));
+                                    summaryView.setLinkTextColor(getThemedColor(Theme.key_chat_messageLinkIn));
                                     summaryView.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(8), AndroidUtilities.dp(24), AndroidUtilities.dp(8));
                                     summaryView.setTextIsSelectable(true);
-                                    summaryView.setMovementMethod(new android.text.method.ScrollingMovementMethod());
+                                    summaryView.setMovementMethod(android.text.method.LinkMovementMethod.getInstance());
+                                    summaryView.setLineSpacing(AndroidUtilities.dp(2), 1.0f);
 
                                     android.widget.ScrollView scrollView = new android.widget.ScrollView(getParentActivity());
                                     scrollView.addView(summaryView);
@@ -49964,16 +49971,6 @@ public class ChatActivity extends BaseFragment implements
 
     private void startAiGeneration(String userPrompt, MessageObject originalMessage, ChatAnimeAssistantView.AssistantRequestCallback callback) {
         try {
-            // 1. Get Text Context
-            String messageText = originalMessage.messageText != null ? originalMessage.messageText.toString() : "";
-            if (android.text.TextUtils.isEmpty(messageText) && originalMessage.caption != null) {
-                messageText = originalMessage.caption.toString();
-            }
-
-            // 2. Get Image Context (if available) - This part is not fully implemented in Helper yet for multi-modal,
-            // but for now we follow the same pattern of building context.
-            // Actually, AIAssistanceHelper.buildContext currently takes a list of messages.
-            
             String context = AIAssistanceHelper.buildContext(this, currentAccount, dialog_id, originalMessage != null ? new java.util.ArrayList<>(java.util.Collections.singletonList(originalMessage)) : null);
             AIAssistanceHelper.requestReply(currentAccount, userPrompt, context, callback);
         } catch (Throwable e) {
