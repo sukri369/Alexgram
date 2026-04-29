@@ -61,6 +61,7 @@ import android.text.style.ImageSpan;
 import android.util.LongSparseArray;
 import android.util.Property;
 import android.util.StateSet;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.HapticFeedbackConstants;
 import android.view.KeyEvent;
@@ -5411,7 +5412,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             unreadPillView.addView(unreadPillLayout, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, 36, Gravity.CENTER));
 
             ImageView filterIcon = new ImageView(context);
-            filterIcon.setImageResource(R.drawable.msg_filter);
+            filterIcon.setImageResource(R.drawable.ic_filter_list);
             filterIcon.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_windowBackgroundWhiteBlueText), PorterDuff.Mode.SRC_IN));
             unreadPillLayout.addView(filterIcon, LayoutHelper.createLinear(18, 18));
 
@@ -5423,7 +5424,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             unreadPillLayout.addView(unreadPillText, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_VERTICAL, 8, 0, 8, 0));
 
             ImageView closeIcon = new ImageView(context);
-            closeIcon.setImageResource(R.drawable.msg_close);
+            closeIcon.setImageResource(R.drawable.baseline_close_24);
             closeIcon.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_windowBackgroundWhiteBlueText), PorterDuff.Mode.SRC_IN));
             closeIcon.setPadding(dp(4), dp(4), dp(4), dp(4));
             closeIcon.setBackground(Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector), 1));
