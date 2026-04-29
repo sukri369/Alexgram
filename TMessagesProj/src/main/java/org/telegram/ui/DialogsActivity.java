@@ -5389,6 +5389,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             filterTabsView.setPadding(0, dp(7), 0, dp(7));
             filterTabsView.setBlurredBackground(filterTabsViewBackground);
             contentView.addView(filterTabsView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 36 + 7 + 7, Gravity.TOP, 4, 0, 4, 0));
+        }
 
         if (unreadPillView == null) {
             unreadPillView = new FrameLayout(context) {
@@ -5895,10 +5896,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
         ViewCompat.setOnApplyWindowInsetsListener(fragmentView, this::onApplyWindowInsets);
         initAIAssistance();
-        if (unreadPillView != null && unreadPillView.getParent() == null) {
-            contentView.addView(unreadPillView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, 36, Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, 0, 0, 0));
-        }
-
         return fragmentView;
     }
 
