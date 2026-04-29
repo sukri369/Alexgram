@@ -5431,7 +5431,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             unreadPillLayout.addView(closeIcon, LayoutHelper.createLinear(24, 24));
             closeIcon.setOnClickListener(v -> onDoubleTapOnChats());
 
-            contentView.addView(unreadPillView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, 36, Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, 52, 0, 0));
+            contentView.addView(unreadPillView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, 36, Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, 0, 0, 0));
         }
 
         if (fragmentSearchField != null) {
@@ -6831,9 +6831,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         float fadeViewT = totalOffset;
 
         if (filterTabsView != null) {
-            filterTabsView.setTranslationY(totalOffset - searchOffset);
+            float tabsY = totalOffset - searchOffset;
+            filterTabsView.setTranslationY(tabsY);
             if (unreadPillView != null) {
-                unreadPillView.setTranslationY(filterTabsView.getTranslationY());
+                float foldersBottom = tabsY + (filterTabsView.getVisibility() == View.VISIBLE ? dp(50) : 0);
+                unreadPillView.setTranslationY(Math.max(dp(52), foldersBottom + dp(4)));
             }
             filtersTabVisibility = filterTabsView.getAlpha();
             filtersTabHeight = dp(36 + 7) * filtersTabVisibility;
