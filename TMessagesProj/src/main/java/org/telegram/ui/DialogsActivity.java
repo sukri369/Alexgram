@@ -6840,15 +6840,17 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         if (filterTabsView != null) {
             float tabsY = totalOffset - searchOffset;
             filterTabsView.setTranslationY(tabsY);
-            if (unreadPillView != null) {
-                float storiesH = hasStories ? (dp(DialogStoriesCell.HEIGHT_IN_DP) * (1f - searchAnimationProgress)) : 0;
-                float fixedY = storiesH + (searchTabsHeight * searchAnimationProgress) + tabsYOffset + (filterTabsView.getVisibility() == View.VISIBLE ? dp(50) : 0);
-                unreadPillView.setTranslationY(fixedY - searchOffset + dp(8));
-                unreadPillView.bringToFront();
-            }
             filtersTabVisibility = filterTabsView.getAlpha();
             filtersTabHeight = dp(36 + 7) * filtersTabVisibility;
             totalOffset += filtersTabHeight;
+        }
+
+        if (unreadPillView != null) {
+            float storiesH = hasStories ? (dp(DialogStoriesCell.HEIGHT_IN_DP) * (1f - searchAnimationProgress)) : 0;
+            float foldersH = (filterTabsView != null && filterTabsView.getVisibility() == View.VISIBLE) ? dp(50) : 0;
+            float fixedY = storiesH + (searchTabsHeight * searchAnimationProgress) + tabsYOffset + foldersH;
+            unreadPillView.setTranslationY(fixedY - searchOffset + dp(8));
+            unreadPillView.bringToFront();
         }
 
         if (topPanelLayout != null) {
@@ -14251,6 +14253,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     private void updateUnreadPillVisibility(boolean visible, boolean animated) {
         if (unreadPillView == null) return;
+        updateUnreadPillColors();
         if (unreadPillAnimator != null) {
             unreadPillAnimator.cancel();
             unreadPillAnimator = null;
@@ -14280,6 +14283,24 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             unreadPillView.setAlpha(unreadPillAlpha);
             unreadPillView.setScaleX(0.8f + 0.2f * unreadPillAlpha);
             unreadPillView.setScaleY(0.8f + 0.2f * unreadPillAlpha);
+        }
+    }
+
+    private void updateUnreadPillColors() {
+        if (unreadPillView == null || unreadPillText == null) return;
+        int textColor = getThemedColor(Theme.key_windowBackgroundWhiteBlueText);
+        unreadPillText.setTextColor(textColor);
+        for (int i = 0; i < unreadPillView.getChildCount(); i++) {
+            View child = unreadPillView.getChildAt(i);
+            if (child instanceof ViewGroup) {
+                ViewGroup group = (ViewGroup) child;
+                for (int j = 0; j < group.getChildCount(); j++) {
+                    View inner = group.getChildAt(j);
+                    if (inner instanceof ImageView) {
+                        ((ImageView) inner).setColorFilter(new PorterDuffColorFilter(textColor, PorterDuff.Mode.SRC_IN));
+                    }
+                }
+            }
         }
     }
 
