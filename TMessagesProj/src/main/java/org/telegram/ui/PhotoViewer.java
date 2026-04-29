@@ -16782,6 +16782,9 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         } else {
             menuItem.setSubItemShown(gallery_menu_create_sticker, false);
         }
+        if (ambientItem != null) {
+            menuItem.setSubItemShown(gallery_menu_ambient, (isVideo && !isLivePhoto) || isEmbedVideo);
+        }
         setMenuItemIcon(false, true);
 
         if (currentPlaceObject != null) {
