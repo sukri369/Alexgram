@@ -6846,11 +6846,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         }
 
         if (unreadPillView != null) {
-            float storiesH = hasStories ? (dp(DialogStoriesCell.HEIGHT_IN_DP) * (1f - searchAnimationProgress)) : 0;
-            float searchH = (fragmentSearchField != null && fragmentSearchField.getVisibility() == View.VISIBLE) ? dp(52) : 0;
-            float foldersH = (filterTabsView != null && filterTabsView.getVisibility() == View.VISIBLE) ? dp(50) : 0;
-            float headerBottom = (totalOffset - searchOffset) + storiesH + searchH + foldersH;
-            unreadPillView.setTranslationY(Math.max(dp(56 + 8), headerBottom + dp(8)));
+            float tabsY = totalOffset - searchOffset;
+            float currentFoldersH = (filterTabsView != null && filterTabsView.getVisibility() == View.VISIBLE) ? dp(50) : 0;
+            float pillY = tabsY + currentFoldersH + dp(8);
+            unreadPillView.setTranslationY(Math.max(dp(56 + 8), pillY));
             unreadPillView.setAlpha(unreadPillAlpha * (1f - searchAnimationProgress));
             unreadPillView.setVisibility(unreadPillView.getAlpha() > 0 && !searchIsShowed ? View.VISIBLE : View.GONE);
             unreadPillView.bringToFront();
