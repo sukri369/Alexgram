@@ -5429,9 +5429,12 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             closeIcon.setPadding(dp(4), dp(4), dp(4), dp(4));
             closeIcon.setBackground(Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector), 1));
             unreadPillLayout.addView(closeIcon, LayoutHelper.createLinear(24, 24));
-            closeIcon.setOnClickListener(v -> onDoubleTapOnChats());
+            closeIcon.setOnClickListener(v -> {
+                if (viewPages == null || viewPages[0] == null || viewPages[0].dialogsAdapter == null) return;
+                viewPages[0].dialogsAdapter.setOnlyUnread(false);
+                updateUnreadPillVisibility(false, true);
+            });
 
-            contentView.addView(unreadPillView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, 36, Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, 0, 0, 0));
         }
 
         if (fragmentSearchField != null) {
@@ -5887,6 +5890,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
         ViewCompat.setOnApplyWindowInsetsListener(fragmentView, this::onApplyWindowInsets);
         initAIAssistance();
+        if (unreadPillView != null && unreadPillView.getParent() == null) {
+            contentView.addView(unreadPillView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, 36, Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, 0, 0, 0));
+        }
+
         return fragmentView;
     }
 
@@ -6834,8 +6841,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             float tabsY = totalOffset - searchOffset;
             filterTabsView.setTranslationY(tabsY);
             if (unreadPillView != null) {
-                float foldersBottom = tabsY + (filterTabsView.getVisibility() == View.VISIBLE ? dp(50) : 0);
-                unreadPillView.setTranslationY(Math.max(dp(52), foldersBottom + dp(4)));
+                float storiesH = hasStories ? (dp(DialogStoriesCell.HEIGHT_IN_DP) * (1f - searchAnimationProgress)) : 0;
+                float fixedY = storiesH + (searchTabsHeight * searchAnimationProgress) + tabsYOffset + (filterTabsView.getVisibility() == View.VISIBLE ? dp(50) : 0);
+                unreadPillView.setTranslationY(fixedY - searchOffset + dp(8));
+                unreadPillView.bringToFront();
             }
             filtersTabVisibility = filterTabsView.getAlpha();
             filtersTabHeight = dp(36 + 7) * filtersTabVisibility;
