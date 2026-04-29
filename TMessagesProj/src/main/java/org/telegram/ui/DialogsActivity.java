@@ -505,6 +505,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     private float contactsAlpha = 1f;
     private ValueAnimator contactsAlphaAnimator;
+    private boolean onlyUnread;
     protected ViewPage[] viewPages;
     private ActionBarMenuItem passcodeItem;
     private ActionBarMenuItem downloadsItem;
@@ -4929,6 +4930,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             if (viewPage.dialogsType == DIALOGS_TYPE_FORWARD) {
                 viewPage.dialogsAdapter.setAllowForwardAsStories(getMessagesController().storiesEnabled() && delegate != null && delegate.canSelectStories());
             }
+            viewPage.dialogsAdapter.setOnlyUnread(onlyUnread);
 
             if (AndroidUtilities.isTablet() && openedDialogId.dialogId != 0) {
                 viewPage.dialogsAdapter.setOpenedDialogId(openedDialogId.dialogId);
@@ -5405,8 +5407,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             LinearLayout unreadPillLayout = new LinearLayout(context);
             unreadPillLayout.setOrientation(LinearLayout.HORIZONTAL);
             unreadPillLayout.setGravity(Gravity.CENTER);
-            unreadPillLayout.setPadding(dp(8), dp(4), dp(8), dp(4));
-            unreadPillLayout.setBackground(iBlur3FactoryLiquidGlass.create(unreadPillLayout, BlurredBackgroundProviderImpl.topPanel(resourceProvider)));
+            unreadPillLayout.setPadding(dp(12), dp(4), dp(8), dp(4));
+            BlurredBackgroundDrawable unreadPillBackground = iBlur3FactoryLiquidGlass.create(unreadPillLayout, BlurredBackgroundProviderImpl.topPanel(resourceProvider));
+            unreadPillBackground.setRadius(dp(16));
+            unreadPillLayout.setBackground(unreadPillBackground);
             unreadPillView.addView(unreadPillLayout, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, 32, Gravity.CENTER));
 
             ImageView filterIcon = new ImageView(context);
@@ -5429,6 +5433,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             unreadPillLayout.addView(closeIcon, LayoutHelper.createLinear(24, 24));
             closeIcon.setOnClickListener(v -> {
                 if (viewPages == null) return;
+                onlyUnread = false;
                 for (ViewPage page : viewPages) {
                     if (page != null && page.dialogsAdapter != null) {
                         page.dialogsAdapter.setOnlyUnread(false);
@@ -14245,13 +14250,13 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     @Override
     public void onDoubleTapOnChats() {
         if (viewPages == null || viewPages[0] == null || viewPages[0].dialogsAdapter == null) return;
-        boolean newState = !viewPages[0].dialogsAdapter.isOnlyUnread();
+        onlyUnread = !viewPages[0].dialogsAdapter.isOnlyUnread();
         for (ViewPage page : viewPages) {
             if (page != null && page.dialogsAdapter != null) {
-                page.dialogsAdapter.setOnlyUnread(newState);
+                page.dialogsAdapter.setOnlyUnread(onlyUnread);
             }
         }
-        updateUnreadPillVisibility(newState, true);
+        updateUnreadPillVisibility(onlyUnread, true);
     }
 
     private void updateUnreadPillVisibility(boolean visible, boolean animated) {
