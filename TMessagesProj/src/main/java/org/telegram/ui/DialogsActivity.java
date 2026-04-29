@@ -5430,8 +5430,12 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             closeIcon.setBackground(Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector), 1));
             unreadPillLayout.addView(closeIcon, LayoutHelper.createLinear(24, 24));
             closeIcon.setOnClickListener(v -> {
-                if (viewPages == null || viewPages[0] == null || viewPages[0].dialogsAdapter == null) return;
-                viewPages[0].dialogsAdapter.setOnlyUnread(false);
+                if (viewPages == null) return;
+                for (ViewPage page : viewPages) {
+                    if (page != null && page.dialogsAdapter != null) {
+                        page.dialogsAdapter.setOnlyUnread(false);
+                    }
+                }
                 updateUnreadPillVisibility(false, true);
             });
 
@@ -14247,9 +14251,13 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     @Override
     public void onDoubleTapOnChats() {
-        if (viewPages == null || viewPages[0] == null || viewPages[0].dialogsAdapter == null) return;
-        boolean newState = !viewPages[0].dialogsAdapter.isOnlyUnread();
-        viewPages[0].dialogsAdapter.setOnlyUnread(newState);
+        if (viewPages == null) return;
+        boolean newState = !viewPages[viewPager.getCurrentItem()].dialogsAdapter.isOnlyUnread();
+        for (ViewPage page : viewPages) {
+            if (page != null && page.dialogsAdapter != null) {
+                page.dialogsAdapter.setOnlyUnread(newState);
+            }
+        }
         updateUnreadPillVisibility(newState, true);
     }
 
