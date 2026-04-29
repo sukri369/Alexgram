@@ -14251,8 +14251,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     @Override
     public void onDoubleTapOnChats() {
-        if (viewPages == null) return;
-        boolean newState = !viewPages[viewPager.getCurrentItem()].dialogsAdapter.isOnlyUnread();
+        if (viewPages == null || viewPages[0] == null || viewPages[0].dialogsAdapter == null) return;
+        boolean newState = !viewPages[0].dialogsAdapter.isOnlyUnread();
         for (ViewPage page : viewPages) {
             if (page != null && page.dialogsAdapter != null) {
                 page.dialogsAdapter.setOnlyUnread(newState);
