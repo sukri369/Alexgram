@@ -45,10 +45,10 @@ public class AIAssistanceHelper {
     }
 
     public static void requestReply(int currentAccount, String prompt, String chatContext, ChatAnimeAssistantView.AssistantRequestCallback callback) {
-        requestReply(currentAccount, prompt, chatContext, false, callback);
+        requestReply(currentAccount, prompt, chatContext, false, null, callback);
     }
 
-    public static void requestReply(int currentAccount, String prompt, String chatContext, boolean isSummarize, ChatAnimeAssistantView.AssistantRequestCallback callback) {
+    public static void requestReply(int currentAccount, String prompt, String chatContext, boolean isSummarize, File imageFile, ChatAnimeAssistantView.AssistantRequestCallback callback) {
         final String decoratedPrompt;
         if (isSummarize) {
             decoratedPrompt = "System: You are an expert AI summarizer for Alexgram.\n\n" + prompt;
@@ -61,7 +61,7 @@ public class AIAssistanceHelper {
         }
 
         if (NaConfig.INSTANCE.getUsePollinationsAi().Bool()) {
-            callAiApi("https://text.pollinations.ai/v1/chat/completions", null, "openai", decoratedPrompt, chatContext, null, new AiGenerationCallback() {
+            callAiApi("https://text.pollinations.ai/v1/chat/completions", null, "openai", decoratedPrompt, chatContext, imageFile, new AiGenerationCallback() {
                 @Override
                 public void onSuccess(String result) {
                     AndroidUtilities.runOnUIThread(() -> callback.onSuccess(result));
@@ -86,7 +86,7 @@ public class AIAssistanceHelper {
             return;
         }
 
-        callAiApi(url1, key1, "gpt-4o", decoratedPrompt, chatContext, null, new AiGenerationCallback() {
+        callAiApi(url1, key1, "gpt-4o", decoratedPrompt, chatContext, imageFile, new AiGenerationCallback() {
             @Override
             public void onSuccess(String result) {
                 AndroidUtilities.runOnUIThread(() -> callback.onSuccess(result));
@@ -102,7 +102,7 @@ public class AIAssistanceHelper {
                         return;
                     }
 
-                    callAiApi(url2, key2, "gpt-4o", decoratedPrompt, chatContext, null, new AiGenerationCallback() {
+                    callAiApi(url2, key2, "gpt-4o", decoratedPrompt, chatContext, imageFile, new AiGenerationCallback() {
                         @Override
                         public void onSuccess(String result) {
                             AndroidUtilities.runOnUIThread(() -> callback.onSuccess(result));

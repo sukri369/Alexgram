@@ -49377,7 +49377,14 @@ public class ChatActivity extends BaseFragment implements
                     messageObjectsFinal.add(messageToSummarize);
 
                     String context = AIAssistanceHelper.buildContext(ChatActivity.this, currentAccountFinal, dialogIdFinal, messageObjectsFinal, true);
-                    AIAssistanceHelper.requestReply(currentAccountFinal, prompt, context, true, new ChatAnimeAssistantView.AssistantRequestCallback() {
+                    File imageFile = null;
+                    if (messageToSummarize.isPhoto()) {
+                        imageFile = FileLoader.getInstance(currentAccountFinal).getPathToMessage(messageToSummarize.messageOwner);
+                        if (imageFile != null && !imageFile.exists()) {
+                            imageFile = null;
+                        }
+                    }
+                    AIAssistanceHelper.requestReply(currentAccountFinal, prompt, context, true, imageFile, new ChatAnimeAssistantView.AssistantRequestCallback() {
                         @Override
                         public void onSuccess(String result) {
                             AndroidUtilities.runOnUIThread(() -> {
@@ -49997,7 +50004,14 @@ public class ChatActivity extends BaseFragment implements
     private void startAiGeneration(String userPrompt, MessageObject originalMessage, ChatAnimeAssistantView.AssistantRequestCallback callback) {
         try {
             String context = AIAssistanceHelper.buildContext(this, currentAccount, dialog_id, originalMessage != null ? new java.util.ArrayList<>(java.util.Collections.singletonList(originalMessage)) : null, false);
-            AIAssistanceHelper.requestReply(currentAccount, userPrompt, context, callback);
+            File imageFile = null;
+            if (originalMessage != null && originalMessage.isPhoto()) {
+                imageFile = FileLoader.getInstance(currentAccount).getPathToMessage(originalMessage.messageOwner);
+                if (imageFile != null && !imageFile.exists()) {
+                    imageFile = null;
+                }
+            }
+            AIAssistanceHelper.requestReply(currentAccount, userPrompt, context, false, imageFile, callback);
         } catch (Throwable e) {
             callback.onError("Start Gen Crash: " + e.getMessage());
         }
