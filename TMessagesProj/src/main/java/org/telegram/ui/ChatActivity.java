@@ -49342,20 +49342,21 @@ public class ChatActivity extends BaseFragment implements
                 try {
                     String userInstruction = inputField.getText().toString().trim();
                     String prompt = "Task:\n"
-                            + "Transform the input text into a clear, concise, and well-structured summary.\n\n"
+                            + "Transform the input text and any attached images into a clear, concise, and well-structured summary.\n\n"
                             + "Strict Rules:\n"
-                            + "- **NO METADATA**: Do NOT mention the user name, chat name, or app names in the output.\n"
-                            + "- **CONTENT ONLY**: Focus exclusively on the message content.\n"
-                            + "- **FORMATTING**: Use Bold for emphasis, > for quotes of important phrases, and clean bullets.\n\n"
+                            + "- **VISUAL AWARENESS**: If an image is provided, summarize its visual content in detail. Ignore technical tags like [Photo], [Video], or [Premium Emoji] in the text context.\n"
+                            + "- **NO METADATA**: Do NOT mention user names, chat names, or technical tags in the final summary.\n"
+                            + "- **CONTENT ONLY**: Focus exclusively on the message meaning and visual insights.\n"
+                            + "- **FORMATTING**: Use Bold for emphasis, > for quotes of important phrases, and clean bullets (•).\n\n"
                             + "Formatting Guidelines:\n"
                             + "- Use **Bold** for key terms and headlines.\n"
-                            + "- Use `> ` for direct quotes or critical insights from the text.\n"
-                            + "- Use modern for bullet points.\n"
+                            + "- Use `> ` for direct quotes or critical insights.\n"
+                            + "- Use • for bullet points.\n"
                             + "- Use short paragraphs for explanations.\n"
                             + "- Keep spacing clean for easy scanning.\n\n"
                             + "Optimization:\n"
                             + "- Keep sentences sharp, minimal, and impactful.\n"
-                            + "- If input is short, return a tighter refined version instead of over-formatting.\n"
+                            + "- If input is short, return a tighter refined version.\n"
                             + "- If input is long, compress aggressively without losing key meaning.\n\n"
                             + "Output:\n"
                             + "Return only the final formatted summary. No explanations, no extra text.";
@@ -49380,9 +49381,11 @@ public class ChatActivity extends BaseFragment implements
                     File imageFile = null;
                     if (messageToSummarize.isPhoto()) {
                         imageFile = FileLoader.getInstance(currentAccountFinal).getPathToMessage(messageToSummarize.messageOwner);
-                        if (imageFile != null && !imageFile.exists()) {
-                            imageFile = null;
-                        }
+                    } else if (messageToSummarize.isVideo() || messageToSummarize.isRoundVideo() || messageToSummarize.isGif()) {
+                        imageFile = FileLoader.getInstance(currentAccountFinal).getPathToMessage(messageToSummarize.messageOwner, true);
+                    }
+                    if (imageFile != null && !imageFile.exists()) {
+                        imageFile = null;
                     }
                     AIAssistanceHelper.requestReply(currentAccountFinal, prompt, context, true, imageFile, new ChatAnimeAssistantView.AssistantRequestCallback() {
                         @Override

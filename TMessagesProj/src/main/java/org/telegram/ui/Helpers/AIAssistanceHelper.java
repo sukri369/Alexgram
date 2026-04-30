@@ -49,19 +49,10 @@ public class AIAssistanceHelper {
     }
 
     public static void requestReply(int currentAccount, String prompt, String chatContext, boolean isSummarize, File imageFile, ChatAnimeAssistantView.AssistantRequestCallback callback) {
-        final String decoratedPrompt;
-        if (isSummarize) {
-            decoratedPrompt = "System: You are an expert AI summarizer for Alexgram.\n\n" + prompt;
-        } else {
-            decoratedPrompt = "Persona: You are Alexgram's anime-style floating assistant. " +
-                    "Tone: friendly, playful, slightly teasing but respectful. " +
-                    "Keep responses concise, practical, and conversational. " +
-                    "Identity rule: when the user asks about 'my name' or 'who am I', refer to the account owner from context, never other chat participants. " +
-                    "User prompt: " + prompt;
-        }
+        final String decoratedPrompt = prompt;
 
         if (NaConfig.INSTANCE.getUsePollinationsAi().Bool()) {
-            callAiApi("https://text.pollinations.ai/v1/chat/completions", null, "openai", decoratedPrompt, chatContext, imageFile, new AiGenerationCallback() {
+            callAiApi("https://text.pollinations.ai/v1/chat/completions", null, "openai", decoratedPrompt, chatContext, isSummarize, imageFile, new AiGenerationCallback() {
                 @Override
                 public void onSuccess(String result) {
                     AndroidUtilities.runOnUIThread(() -> callback.onSuccess(result));
@@ -86,7 +77,7 @@ public class AIAssistanceHelper {
             return;
         }
 
-        callAiApi(url1, key1, "gpt-4o", decoratedPrompt, chatContext, imageFile, new AiGenerationCallback() {
+        callAiApi(url1, key1, "gpt-4o", decoratedPrompt, chatContext, isSummarize, imageFile, new AiGenerationCallback() {
             @Override
             public void onSuccess(String result) {
                 AndroidUtilities.runOnUIThread(() -> callback.onSuccess(result));
@@ -102,7 +93,7 @@ public class AIAssistanceHelper {
                         return;
                     }
 
-                    callAiApi(url2, key2, "gpt-4o", decoratedPrompt, chatContext, imageFile, new AiGenerationCallback() {
+                    callAiApi(url2, key2, "gpt-4o", decoratedPrompt, chatContext, isSummarize, imageFile, new AiGenerationCallback() {
                         @Override
                         public void onSuccess(String result) {
                             AndroidUtilities.runOnUIThread(() -> callback.onSuccess(result));
@@ -120,7 +111,7 @@ public class AIAssistanceHelper {
         });
     }
 
-    public static void callAiApi(String apiUrl, String apiKey, String model, String userPrompt, String originalMessageText, File imageFile, AiGenerationCallback callback) {
+    public static void callAiApi(String apiUrl, String apiKey, String model, String userPrompt, String originalMessageText, boolean isSummarize, File imageFile, AiGenerationCallback callback) {
         if (TextUtils.isEmpty(apiUrl)) {
             callback.onError("API URL is not configured.");
             return;
@@ -150,7 +141,11 @@ public class AIAssistanceHelper {
                 JSONObject contentObj = new JSONObject();
                 JSONArray parts = new JSONArray();
 
-                String combinedText = "System Instruction: You are a helpful assistant replying to a message in a chat.\n\n" +
+                String systemInstruction = isSummarize ?
+                        "You are an expert AI summarizer for Alexgram. Your goal is to provide God-level, concise summaries of messages and visual content." :
+                        "You are Alexgram's anime-style floating assistant. Tone: friendly, playful, slightly teasing. Identity rule: when the user asks about 'my name' or 'who am I', refer to the account owner from context.";
+
+                String combinedText = "System Instruction: " + systemInstruction + "\n\n" +
                         "Context Message:\n---\n" + (originalMessageText != null ? originalMessageText : "") + "\n---\n\n" +
                         "User Request: " + userPrompt;
                 
@@ -184,7 +179,11 @@ public class AIAssistanceHelper {
 
                 JSONObject systemMsg = new JSONObject();
                 systemMsg.put("role", "system");
-                systemMsg.put("content", "You are a helpful assistant replying to a message in a chat.");
+                if (isSummarize) {
+                     systemMsg.put("content", "You are an expert AI summarizer for Alexgram. Your goal is to provide God-level, concise summaries of messages and visual content.");
+                } else {
+                     systemMsg.put("content", "You are Alexgram's anime-style floating assistant. Tone: friendly, playful, slightly teasing. Identity rule: when the user asks about 'my name' or 'who am I', refer to the account owner from context.");
+                }
                 messages.put(systemMsg);
 
                 JSONObject userMsg = new JSONObject();
