@@ -504,4 +504,37 @@ public class AIAssistanceHelper {
 
         return sb.toString();
     }
+
+    public interface ImageDownloadCallback {
+        void onSuccess(android.graphics.Bitmap bitmap);
+        void onError(String error);
+    }
+
+    public static void downloadImage(String url, ImageDownloadCallback callback) {
+        okhttp3.Request request = new okhttp3.Request.Builder()
+                .url(url)
+                .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(@androidx.annotation.NonNull okhttp3.Call call, @androidx.annotation.NonNull java.io.IOException e) {
+                callback.onError(e.getMessage());
+            }
+
+            @Override
+            public void onResponse(@androidx.annotation.NonNull okhttp3.Call call, @androidx.annotation.NonNull okhttp3.Response response) throws java.io.IOException {
+                if (!response.isSuccessful()) {
+                    callback.onError("HTTP " + response.code());
+                    return;
+                }
+                byte[] bytes = response.body().bytes();
+                android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                if (bitmap != null) {
+                    org.telegram.messenger.AndroidUtilities.runOnUIThread(() -> callback.onSuccess(bitmap));
+                } else {
+                    callback.onError("Failed to decode bitmap");
+                }
+            }
+        });
+    }
 }

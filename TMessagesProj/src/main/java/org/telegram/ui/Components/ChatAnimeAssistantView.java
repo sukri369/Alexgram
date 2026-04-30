@@ -1654,26 +1654,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
              }
         };
 
-        imageView.getImageReceiver().setAllowLoadingOnAttachedOnly(false);
-        imageView.getImageReceiver().setDelegate(new org.telegram.messenger.ImageReceiver.ImageReceiverDelegate() {
-            @Override
-            public void didSetImage(org.telegram.messenger.ImageReceiver imageReceiver, boolean set, boolean thumb, boolean memCache) {
-                if (set) {
-                    AndroidUtilities.cancelRunOnUIThread(showErrorRunnable);
-                    progressView.animate().alpha(0f).setDuration(280).withEndAction(() -> progressView.setVisibility(GONE)).start();
-                    errorText.setVisibility(GONE);
-                }
-            }
-
-            @Override
-            public void didSetImageBitmap(int type, String key, android.graphics.drawable.Drawable drawable) {
-                if (drawable != null) {
-                    AndroidUtilities.cancelRunOnUIThread(showErrorRunnable);
-                    progressView.animate().alpha(0f).setDuration(280).withEndAction(() -> progressView.setVisibility(GONE)).start();
-                    errorText.setVisibility(GONE);
-                }
-            }
-        });
+        // No delegate needed as we handle it manually
 
         Runnable loadAction = () -> {
             AndroidUtilities.cancelRunOnUIThread(showErrorRunnable);
@@ -1681,7 +1662,21 @@ public class ChatAnimeAssistantView extends FrameLayout {
             progressView.setVisibility(VISIBLE);
             progressView.setAlpha(1.0f);
             String imageUrl = baseUrl + "&seed=" + (System.currentTimeMillis() + (long)(Math.random() * 10000));
-            imageView.setImage(imageUrl, "220_220", null);
+            
+            AIAssistanceHelper.downloadImage(imageUrl, new AIAssistanceHelper.ImageDownloadCallback() {
+                @Override
+                public void onSuccess(android.graphics.Bitmap bitmap) {
+                    AndroidUtilities.cancelRunOnUIThread(showErrorRunnable);
+                    imageView.setImageBitmap(bitmap);
+                    progressView.animate().alpha(0f).setDuration(280).withEndAction(() -> progressView.setVisibility(GONE)).start();
+                    errorText.setVisibility(GONE);
+                }
+
+                @Override
+                public void onError(String error) {
+                    AndroidUtilities.runOnUIThread(showErrorRunnable);
+                }
+            });
             // Wait up to 60 seconds for image generation
             AndroidUtilities.runOnUIThread(showErrorRunnable, 60000);
         };
