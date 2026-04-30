@@ -45,6 +45,7 @@ import org.telegram.ui.Components.BackupImageView;
 import org.telegram.ui.Components.RadialProgressView;
 import org.telegram.ui.Components.chat.MiniChatAssistantView;
 import org.telegram.ui.Helpers.AIAssistanceHelper;
+import tw.nekomimi.nekogram.helpers.EntitiesHelper;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -1703,6 +1704,8 @@ public class ChatAnimeAssistantView extends FrameLayout {
         tv.setMaxWidth(AndroidUtilities.dp(260));
         tv.setBackground(Theme.createRoundRectDrawable(AndroidUtilities.dp(14), isUser ? 0xF0368EFF : 0xF0495D7A));
         tv.setLongClickable(true);
+        tv.setMovementMethod(android.text.method.LinkMovementMethod.getInstance());
+        tv.setLinkTextColor(0xFF64B5F6); // Professional light blue for links
         tv.setOnLongClickListener(v -> {
             CharSequence value = tv.getText();
             if (!TextUtils.isEmpty(value)) {

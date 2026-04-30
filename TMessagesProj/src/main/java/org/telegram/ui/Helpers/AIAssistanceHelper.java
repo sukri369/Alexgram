@@ -43,6 +43,18 @@ public class AIAssistanceHelper {
             .connectTimeout(90, TimeUnit.SECONDS)
             .readTimeout(90, TimeUnit.SECONDS)
             .writeTimeout(90, TimeUnit.SECONDS)
+            .addInterceptor(chain -> {
+                okhttp3.Request request = chain.request();
+                okhttp3.Response response = chain.proceed(request);
+                int tryCount = 0;
+                while (!response.isSuccessful() && response.code() >= 502 && response.code() <= 504 && tryCount < 3) {
+                    tryCount++;
+                    response.close();
+                    try { Thread.sleep(2000); } catch (Exception ignored) {}
+                    response = chain.proceed(request);
+                }
+                return response;
+            })
             .build();
 
     public static class HistoryItem {
@@ -157,6 +169,7 @@ public class AIAssistanceHelper {
                 systemInstruction = "You are Alexgram's Advanced AI Assistant in 'Deep Discussion' mode. Act as an expert on the provided topic summary. Provide deep insights and answer follow-up questions with precision and professional clarity. Use Markdown to structure your analysis.";
             } else {
                 systemInstruction = "You are Alexgram's Advanced AI Assistant. You are a highly professional, intelligent, and helpful companion. Your goal is to provide insightful, accurate, and concise information while maintaining a sophisticated yet approachable tone. Use Markdown (bold, italic, code blocks, quotes) and appropriate Emojis to structure your responses elegantly. Identity rule: when asked about 'my name' or 'who am I', refer to the account owner from the provided context.\n\n" +
+                        "FORMATTING RULE: Avoid using Markdown tables. Instead, use bullet points, numbered lists, and bold headers to present structured data, as tables are difficult to read in a mobile chat interface.\n\n" +
                         "IMAGE GENERATION: If the user asks to 'create', 'generate', 'draw', or 'make' an image or picture, you must generate a detailed descriptive prompt for it and return ONLY the following format: [GEN_IMAGE: your_detailed_description]. Do not add any other conversational text if you are generating an image.";
             }
 
@@ -293,6 +306,11 @@ public class AIAssistanceHelper {
                         }
                         String responseBody = response.body().string();
                         if (!response.isSuccessful()) {
+                            // Professional auto-retry for transient server errors (502, 503, 504)
+                            if (response.code() >= 502 && response.code() <= 504) {
+                                // We can't easily retry from inside here without recursion or a retry interceptor
+                                // But we can at least explain it better or tell the user it's a temporary server overload.
+                            }
                             callback.onError("HTTP " + response.code() + ": " + responseBody);
                             return;
                         }
