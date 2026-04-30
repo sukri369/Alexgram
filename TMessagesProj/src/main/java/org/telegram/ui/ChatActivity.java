@@ -9629,8 +9629,8 @@ public class ChatActivity extends BaseFragment implements
             
             chatAnimeAssistantView.setAssistantRequestDelegate(new ChatAnimeAssistantView.AssistantRequestDelegate() {
                 @Override
-                public void onRequest(String prompt, ChatAnimeAssistantView.AssistantRequestCallback callback) {
-                    requestAnimeAssistantReply(prompt, callback);
+                public void onRequest(String prompt, List<AIAssistanceHelper.HistoryItem> history, ChatAnimeAssistantView.AssistantRequestCallback callback) {
+                    requestAnimeAssistantReply(prompt, history, callback);
                 }
 
                 @Override
@@ -49747,13 +49747,13 @@ public class ChatActivity extends BaseFragment implements
         return result;
     }
 
-    private void requestAnimeAssistantReply(String prompt, ChatAnimeAssistantView.AssistantRequestCallback callback) {
+    private void requestAnimeAssistantReply(String prompt, List<AIAssistanceHelper.HistoryItem> history, ChatAnimeAssistantView.AssistantRequestCallback callback) {
         String context = AIAssistanceHelper.buildContext(this, currentAccount, dialog_id, messages, false);
         if (chatAnimeAssistantView != null && !TextUtils.isEmpty(chatAnimeAssistantView.getActiveTopicContext())) {
             context += "\n\nActive Discussion Topic Summary:\n" + chatAnimeAssistantView.getActiveTopicContext();
             context += "\n\nUser is now chatting to know more about this topic. Be helpful and provide more details based on this summary.";
         }
-        AIAssistanceHelper.requestReply(currentAccount, prompt, context, callback);
+        AIAssistanceHelper.requestReply(currentAccount, prompt, context, false, null, history, callback);
     }
 
 

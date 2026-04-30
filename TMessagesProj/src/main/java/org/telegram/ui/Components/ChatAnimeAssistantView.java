@@ -35,6 +35,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
@@ -60,7 +62,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
     }
 
     public interface AssistantRequestDelegate {
-        void onRequest(String prompt, AssistantRequestCallback callback);
+        void onRequest(String prompt, List<AIAssistanceHelper.HistoryItem> history, AssistantRequestCallback callback);
 
         default void onAutoReplyToggleChanged(long dialogId, boolean enabled) {
         }
@@ -91,6 +93,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
     private final TextView title;
     private final TextView subtitle;
     private String activeTopicContext;
+    private final List<AIAssistanceHelper.HistoryItem> conversationHistory = new ArrayList<>();
 
     private final Runnable frameRunnable = new Runnable() {
         @Override
@@ -357,14 +360,52 @@ public class ChatAnimeAssistantView extends FrameLayout {
             }
         });
 
-        addMessageBubble("Hi, I am Alexgram Assistant. Tap me and ask anything.", false, false);
-        addMessageBubble("Try long-press to switch my style.", false, false);
+        loadHistory();
 
         lastFrameTime = SystemClock.uptimeMillis();
         if (preferences.getBoolean("assistant_enabled", false)) {
             postOnAnimation(frameRunnable);
         } else {
             setVisibility(GONE);
+        }
+    }
+
+    private void saveHistory() {
+        try {
+            JSONArray array = new JSONArray();
+            for (AIAssistanceHelper.HistoryItem item : conversationHistory) {
+                JSONObject obj = new JSONObject();
+                obj.put("t", item.text);
+                obj.put("u", item.isUser);
+                array.put(obj);
+            }
+            preferences.edit().putString("history_" + assistantDialogId, array.toString()).apply();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadHistory() {
+        String saved = preferences.getString("history_" + assistantDialogId, null);
+        if (saved != null) {
+            try {
+                JSONArray array = new JSONArray(saved);
+                conversationHistory.clear();
+                bubblesContainer.removeAllViews();
+                messageViews.clear();
+                for (int i = 0; i < array.length(); i++) {
+                    JSONObject obj = array.getJSONObject(i);
+                    String text = obj.getString("t");
+                    boolean isUser = obj.getBoolean("u");
+                    conversationHistory.add(new AIAssistanceHelper.HistoryItem(text, isUser));
+                    addMessageBubble(text, isUser, false);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            addMessageBubble("Hi, I am Alexgram Assistant. Tap me and ask anything.", false, false);
+            addMessageBubble("Try long-press to switch my style.", false, false);
         }
     }
 
@@ -531,6 +572,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
         if (!TextUtils.isEmpty(activeTopicContext)) {
             popupMenu.getMenu().add(Menu.NONE, 4, order++, "Exit Discussion");
         }
+        popupMenu.getMenu().add(Menu.NONE, 5, order++, "Clear Chat Memory");
         popupMenu.getMenu().add(Menu.NONE, 3, order, "Focus Chat Panel");
         popupMenu.setOnMenuItemClickListener(item -> {
             final int itemId = item.getItemId();
@@ -560,6 +602,11 @@ public class ChatAnimeAssistantView extends FrameLayout {
                 clearActiveTopic();
                 showReactionBubble("RESET");
                 addMessageBubble("Discussion cleared. I'm back to regular mode.", false, true);
+                return true;
+            } else if (itemId == 5) {
+                clearHistory();
+                showReactionBubble("🗑️");
+                addMessageBubble("Chat history cleared.", false, true);
                 return true;
             }
             return false;
@@ -597,6 +644,16 @@ public class ChatAnimeAssistantView extends FrameLayout {
         }
     }
 
+    public void clearHistory() {
+        conversationHistory.clear();
+        messageViews.clear();
+        bubblesContainer.removeAllViews();
+        preferences.edit().remove("history_" + assistantDialogId).apply();
+        addMessageBubble("Hi, I am Alexgram Assistant. Tap me and ask anything.", false, false);
+        addMessageBubble("Try long-press to switch my style.", false, false);
+        clearActiveTopic();
+    }
+
     public void onDestroy() {
         paused = true;
         removeCallbacks(frameRunnable);
@@ -604,6 +661,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
             AndroidUtilities.cancelRunOnUIThread(typingRunnable);
             typingRunnable = null;
         }
+        clearHistory();
     }
 
     public void onTypingStateChanged(boolean active) {
@@ -757,10 +815,20 @@ public class ChatAnimeAssistantView extends FrameLayout {
             return;
         }
 
-        assistantRequestDelegate.onRequest(prompt, new AssistantRequestCallback() {
+        final List<AIAssistanceHelper.HistoryItem> historyCopy = new ArrayList<>(conversationHistory);
+        conversationHistory.add(new AIAssistanceHelper.HistoryItem(prompt, true));
+        saveHistory();
+
+        assistantRequestDelegate.onRequest(prompt, historyCopy, new AssistantRequestCallback() {
             @Override
             public void onSuccess(String response) {
-                AndroidUtilities.runOnUIThread(() -> hideTypingBubble(TextUtils.isEmpty(response) ? "I could not generate a response right now." : response));
+                AndroidUtilities.runOnUIThread(() -> {
+                    hideTypingBubble(TextUtils.isEmpty(response) ? "I could not generate a response right now." : response);
+                    if (!TextUtils.isEmpty(response)) {
+                        conversationHistory.add(new AIAssistanceHelper.HistoryItem(response, false));
+                        saveHistory();
+                    }
+                });
             }
 
             @Override

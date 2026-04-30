@@ -3199,9 +3199,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 chatAnimeAssistantView = new ChatAnimeAssistantView(context, (SizeNotifierFrameLayout) fragmentView, 0);
                 chatAnimeAssistantView.setAssistantRequestDelegate(new ChatAnimeAssistantView.AssistantRequestDelegate() {
                     @Override
-                    public void onRequest(String prompt, ChatAnimeAssistantView.AssistantRequestCallback callback) {
+                    public void onRequest(String prompt, List<AIAssistanceHelper.HistoryItem> history, ChatAnimeAssistantView.AssistantRequestCallback callback) {
                         String contextString = AIAssistanceHelper.buildContext(DialogsActivity.this, currentAccount, 0, null, false);
-                        AIAssistanceHelper.requestReply(currentAccount, prompt, contextString, callback);
+                        AIAssistanceHelper.requestReply(currentAccount, prompt, contextString, false, null, history, callback);
                     }
                     @Override
                     public void onAutoReplyToggleChanged(long dialogId, boolean enabled) { }

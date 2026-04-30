@@ -39,20 +39,29 @@ import xyz.nextalone.nagram.NaConfig;
 
 public class AIAssistanceHelper {
 
+    public static class HistoryItem {
+        public final String text;
+        public final boolean isUser;
+        public HistoryItem(String text, boolean isUser) {
+            this.text = text;
+            this.isUser = isUser;
+        }
+    }
+
     public interface AiGenerationCallback {
         void onSuccess(String result);
         void onError(String error);
     }
 
     public static void requestReply(int currentAccount, String prompt, String chatContext, ChatAnimeAssistantView.AssistantRequestCallback callback) {
-        requestReply(currentAccount, prompt, chatContext, false, null, callback);
+        requestReply(currentAccount, prompt, chatContext, false, null, null, callback);
     }
 
-    public static void requestReply(int currentAccount, String prompt, String chatContext, boolean isSummarize, File imageFile, ChatAnimeAssistantView.AssistantRequestCallback callback) {
+    public static void requestReply(int currentAccount, String prompt, String chatContext, boolean isSummarize, File imageFile, List<HistoryItem> history, ChatAnimeAssistantView.AssistantRequestCallback callback) {
         final String decoratedPrompt = prompt;
 
         if (NaConfig.INSTANCE.getUsePollinationsAi().Bool()) {
-            callAiApi("https://text.pollinations.ai/v1/chat/completions", null, "openai", decoratedPrompt, chatContext, isSummarize, imageFile, new AiGenerationCallback() {
+            callAiApi("https://text.pollinations.ai/v1/chat/completions", null, "openai", decoratedPrompt, chatContext, isSummarize, imageFile, history, new AiGenerationCallback() {
                 @Override
                 public void onSuccess(String result) {
                     AndroidUtilities.runOnUIThread(() -> callback.onSuccess(result));
@@ -77,7 +86,7 @@ public class AIAssistanceHelper {
             return;
         }
 
-        callAiApi(url1, key1, "gpt-4o", decoratedPrompt, chatContext, isSummarize, imageFile, new AiGenerationCallback() {
+        callAiApi(url1, key1, "gpt-4o", decoratedPrompt, chatContext, isSummarize, imageFile, history, new AiGenerationCallback() {
             @Override
             public void onSuccess(String result) {
                 AndroidUtilities.runOnUIThread(() -> callback.onSuccess(result));
@@ -93,7 +102,7 @@ public class AIAssistanceHelper {
                         return;
                     }
 
-                    callAiApi(url2, key2, "gpt-4o", decoratedPrompt, chatContext, isSummarize, imageFile, new AiGenerationCallback() {
+                    callAiApi(url2, key2, "gpt-4o", decoratedPrompt, chatContext, isSummarize, imageFile, history, new AiGenerationCallback() {
                         @Override
                         public void onSuccess(String result) {
                             AndroidUtilities.runOnUIThread(() -> callback.onSuccess(result));
@@ -111,7 +120,7 @@ public class AIAssistanceHelper {
         });
     }
 
-    public static void callAiApi(String apiUrl, String apiKey, String model, String userPrompt, String originalMessageText, boolean isSummarize, File imageFile, AiGenerationCallback callback) {
+    public static void callAiApi(String apiUrl, String apiKey, String model, String userPrompt, String originalMessageText, boolean isSummarize, File imageFile, List<HistoryItem> history, AiGenerationCallback callback) {
         if (TextUtils.isEmpty(apiUrl)) {
             callback.onError("API URL is not configured.");
             return;
@@ -136,31 +145,49 @@ public class AIAssistanceHelper {
 
             JSONObject jsonBody = new JSONObject();
 
-            if (isGeminiNative) {
-                JSONArray contents = new JSONArray();
-                JSONObject contentObj = new JSONObject();
-                JSONArray parts = new JSONArray();
+            String systemInstruction;
+            if (isSummarize) {
+                systemInstruction = "You are the Advanced AI Content Analyst for Alexgram. Your mission is to provide professional, executive-level summaries of messages and visual content. Be concise, highlight key points accurately, and maintain a formal, professional tone.";
+            } else if (originalMessageText != null && originalMessageText.contains("Active Discussion Topic Summary:")) {
+                systemInstruction = "You are Alexgram's Advanced AI Assistant in 'Deep Discussion' mode. Act as an expert on the provided topic summary. Provide deep insights and answer follow-up questions with precision and professional clarity. Use Markdown to structure your analysis.";
+            } else {
+                systemInstruction = "You are Alexgram's Advanced AI Assistant. You are a highly professional, intelligent, and helpful companion. Your goal is to provide insightful, accurate, and concise information while maintaining a sophisticated yet approachable tone. Use Markdown (bold, italic, code blocks, quotes) and appropriate Emojis to structure your responses elegantly. Identity rule: when asked about 'my name' or 'who am I', refer to the account owner from the provided context.";
+            }
 
-                String systemInstruction;
-                if (isSummarize) {
-                    systemInstruction = "You are an expert AI summarizer for Alexgram. Your goal is to provide God-level, concise summaries of messages and visual content.";
-                } else if (originalMessageText != null && originalMessageText.contains("Active Discussion Topic Summary:")) {
-                    systemInstruction = "You are Alexgram's anime-style floating assistant currently in 'Deep Discussion' mode. " +
-                            "A summary of the current topic is provided in the context. " +
-                            "Stay playful and friendly, but act as an expert on this specific topic. Use Markdown (bold, italic, quotes) to structure your insights.";
-                } else {
-                    systemInstruction = "You are Alexgram's anime-style floating assistant. Tone: friendly, playful, slightly teasing. " +
-                            "Use Markdown (bold, italic, quotes) and Emojis to make your messages look premium and organized. " +
-                            "Identity rule: when the user asks about 'my name' or 'who am I', refer to the account owner from context.";
+            if (isGeminiNative) {
+                JSONObject systemInstructionObj = new JSONObject();
+                JSONArray siParts = new JSONArray();
+                JSONObject siTextPart = new JSONObject();
+                siTextPart.put("text", systemInstruction);
+                siParts.put(siTextPart);
+                systemInstructionObj.put("parts", siParts);
+                jsonBody.put("system_instruction", systemInstructionObj);
+
+                JSONArray contents = new JSONArray();
+
+                // Add history
+                if (history != null) {
+                    for (HistoryItem item : history) {
+                        JSONObject contentObj = new JSONObject();
+                        contentObj.put("role", item.isUser ? "user" : "model");
+                        JSONArray parts = new JSONArray();
+                        JSONObject textPart = new JSONObject();
+                        textPart.put("text", item.text);
+                        parts.put(textPart);
+                        contentObj.put("parts", parts);
+                        contents.put(contentObj);
+                    }
                 }
 
-                String combinedText = "System Instruction: " + systemInstruction + "\n\n" +
-                        "Context Message:\n---\n" + (originalMessageText != null ? originalMessageText : "") + "\n---\n\n" +
-                        "User Request: " + userPrompt;
-                
-                JSONObject textPart = new JSONObject();
-                textPart.put("text", combinedText);
-                parts.put(textPart);
+                // Add current prompt with context
+                JSONObject currentContentObj = new JSONObject();
+                currentContentObj.put("role", "user");
+                JSONArray currentParts = new JSONArray();
+
+                JSONObject contextPart = new JSONObject();
+                String contextText = "Context Data:\n---\n" + (originalMessageText != null ? originalMessageText : "No specific context.") + "\n---\n\nUser Request: " + userPrompt;
+                contextPart.put("text", contextText);
+                currentParts.put(contextPart);
 
                 if (imageFile != null) {
                     try {
@@ -172,13 +199,13 @@ public class AIAssistanceHelper {
                             inlineData.put("mime_type", "image/jpeg");
                             inlineData.put("data", base64Image);
                             imagePart.put("inline_data", inlineData);
-                            parts.put(imagePart);
+                            currentParts.put(imagePart);
                         }
                     } catch (Throwable e) { /* ignore image error */ }
                 }
 
-                contentObj.put("parts", parts);
-                contents.put(contentObj);
+                currentContentObj.put("parts", currentParts);
+                contents.put(currentContentObj);
                 jsonBody.put("contents", contents);
 
             } else {
@@ -188,18 +215,17 @@ public class AIAssistanceHelper {
 
                 JSONObject systemMsg = new JSONObject();
                 systemMsg.put("role", "system");
-                if (isSummarize) {
-                     systemMsg.put("content", "You are an expert AI summarizer for Alexgram. Your goal is to provide God-level, concise summaries of messages and visual content.");
-                } else if (originalMessageText != null && originalMessageText.contains("Active Discussion Topic Summary:")) {
-                     systemMsg.put("content", "You are Alexgram's anime-style floating assistant currently in 'Deep Discussion' mode. " +
-                             "A summary of the current topic is provided in the context. " +
-                             "Stay playful and friendly, but act as an expert on this specific topic. Use Markdown (bold, italic, quotes) to structure your insights.");
-                } else {
-                     systemMsg.put("content", "You are Alexgram's anime-style floating assistant. Tone: friendly, playful, slightly teasing. " +
-                             "Use Markdown (bold, italic, quotes) and Emojis to make your messages look premium and organized. " +
-                             "Identity rule: when the user asks about 'my name' or 'who am I', refer to the account owner from context.");
-                }
+                systemMsg.put("content", systemInstruction);
                 messages.put(systemMsg);
+
+                if (history != null) {
+                    for (HistoryItem item : history) {
+                        JSONObject msg = new JSONObject();
+                        msg.put("role", item.isUser ? "user" : "assistant");
+                        msg.put("content", item.text);
+                        messages.put(msg);
+                    }
+                }
 
                 JSONObject userMsg = new JSONObject();
                 userMsg.put("role", "user");
@@ -208,7 +234,7 @@ public class AIAssistanceHelper {
 
                 JSONObject textPart = new JSONObject();
                 textPart.put("type", "text");
-                String content = "Context Message:\n---\n" + (originalMessageText != null ? originalMessageText : "") + "\n---\n\nUser Instruction: " + userPrompt;
+                String content = "Context Data:\n---\n" + (originalMessageText != null ? originalMessageText : "No specific context.") + "\n---\n\nUser Request: " + userPrompt;
                 textPart.put("text", content);
                 contentArray.put(textPart);
 
