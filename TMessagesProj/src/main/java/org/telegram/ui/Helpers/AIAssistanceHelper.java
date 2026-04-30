@@ -39,6 +39,11 @@ import java.util.concurrent.TimeUnit;
 import xyz.nextalone.nagram.NaConfig;
 
 public class AIAssistanceHelper {
+    private static final OkHttpClient client = new OkHttpClient.Builder()
+            .connectTimeout(90, TimeUnit.SECONDS)
+            .readTimeout(90, TimeUnit.SECONDS)
+            .writeTimeout(90, TimeUnit.SECONDS)
+            .build();
 
     public static class HistoryItem {
         public final String text;
@@ -143,11 +148,6 @@ public class AIAssistanceHelper {
         }
 
         try {
-            OkHttpClient client = new OkHttpClient.Builder()
-                    .connectTimeout(30, TimeUnit.SECONDS)
-                    .readTimeout(60, TimeUnit.SECONDS)
-                    .build();
-
             JSONObject jsonBody = new JSONObject();
 
             String systemInstruction;

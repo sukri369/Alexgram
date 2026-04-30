@@ -840,7 +840,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
                     if (isQuotaOrRateLimitError(error)) {
                         hideTypingBubble("API quota reached. Please top up or wait, then try again.");
                     } else {
-                        hideTypingBubble("Oops, network mood swing. Please try again.");
+                        hideTypingBubble("Connection issue: " + (error != null && error.length() > 50 ? error.substring(0, 50) + "..." : error));
                     }
                 });
             }
@@ -1616,15 +1616,22 @@ public class ChatAnimeAssistantView extends FrameLayout {
         
         final BackupImageView imageView = new BackupImageView(getContext());
         imageView.setRoundRadius(AndroidUtilities.dp(14));
-        //  pulsing placeholder background
         imageView.setBackground(Theme.createRoundRectDrawable(AndroidUtilities.dp(14), 0x22FFFFFF));
         
         final RadialProgressView progressView = new RadialProgressView(getContext());
         progressView.setSize(AndroidUtilities.dp(30));
         progressView.setProgressColor(0xFFFFFFFF);
+
+        final TextView errorText = new TextView(getContext());
+        errorText.setText("Tap to Retry");
+        errorText.setTextColor(0xAAFFFFFF);
+        errorText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 10);
+        errorText.setGravity(Gravity.CENTER);
+        errorText.setVisibility(GONE);
         
         container.addView(imageView, LayoutHelper.createFrame(220, 220));
         container.addView(progressView, LayoutHelper.createFrame(30, 30, Gravity.CENTER));
+        container.addView(errorText, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER));
         
         LinearLayout.LayoutParams lp = LayoutHelper.createLinear(220, 220);
         lp.gravity = Gravity.LEFT;
@@ -1637,19 +1644,36 @@ public class ChatAnimeAssistantView extends FrameLayout {
             bubblesContainer.removeView(remove);
         }
 
-        String encodedPrompt = android.net.Uri.encode(prompt);
-        String imageUrl = "https://image.pollinations.ai/prompt/" + encodedPrompt + "?width=1024&height=1024&nologo=true&seed=" + System.currentTimeMillis();
+        final String encodedPrompt = android.net.Uri.encode(prompt);
+        final String baseUrl = "https://image.pollinations.ai/prompt/" + encodedPrompt + "?width=1024&height=1024&nologo=true";
         
         imageView.getImageReceiver().setDelegate((imageReceiver, set, thumb, memCache) -> {
             if (set && !thumb) {
                 progressView.animate().alpha(0f).setDuration(280).withEndAction(() -> progressView.setVisibility(GONE)).start();
+                errorText.setVisibility(GONE);
+            } else if (!set && !thumb && !memCache) {
+                progressView.setVisibility(GONE);
+                errorText.setVisibility(VISIBLE);
             }
         });
 
-        imageView.setImage(imageUrl, null, null);
-        imageView.setOnClickListener(v -> {
-             AndroidUtilities.addToClipboard(imageUrl);
-             showReactionBubble("📋");
+        Runnable loadAction = () -> {
+            errorText.setVisibility(GONE);
+            progressView.setVisibility(VISIBLE);
+            progressView.setAlpha(1.0f);
+            String imageUrl = baseUrl + "&seed=" + System.currentTimeMillis();
+            imageView.setImage(imageUrl, null, null);
+        };
+
+        loadAction.run();
+
+        container.setOnClickListener(v -> {
+            if (errorText.getVisibility() == VISIBLE) {
+                loadAction.run();
+            } else {
+                AndroidUtilities.addToClipboard(baseUrl);
+                showReactionBubble("📋");
+            }
         });
 
         bubblesScrollView.post(() -> bubblesScrollView.fullScroll(View.FOCUS_DOWN));
