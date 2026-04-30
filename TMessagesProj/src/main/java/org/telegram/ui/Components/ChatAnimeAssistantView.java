@@ -1562,16 +1562,28 @@ public class ChatAnimeAssistantView extends FrameLayout {
                 @Override
                 public void run() {
                     if (index[0] <= chars.length) {
-                        tv.setText(new String(chars, 0, index[0]));
+                        String current = new String(chars, 0, index[0]);
+                        // Parse Markdown and Emojis dynamically
+                        CharSequence formatted = tw.nekomimi.nekogram.helpers.EntitiesHelper.parseMarkdown(current);
+                        formatted = org.telegram.messenger.Emoji.replaceEmoji(formatted, tv.getPaint().getFontMetricsInt(), false);
+                        tv.setText(formatted);
+                        
                         index[0] += Math.max(1, chars.length / 40);
                         AndroidUtilities.runOnUIThread(this, 18);
+                    } else {
+                        // Final full parse to ensure everything is matched
+                        CharSequence formatted = tw.nekomimi.nekogram.helpers.EntitiesHelper.parseMarkdown(text);
+                        formatted = org.telegram.messenger.Emoji.replaceEmoji(formatted, tv.getPaint().getFontMetricsInt(), false);
+                        tv.setText(formatted);
                     }
                     bubblesScrollView.post(() -> bubblesScrollView.fullScroll(View.FOCUS_DOWN));
                 }
             };
             AndroidUtilities.runOnUIThread(typer);
         } else {
-            tv.setText(text);
+            CharSequence formatted = tw.nekomimi.nekogram.helpers.EntitiesHelper.parseMarkdown(text);
+            formatted = org.telegram.messenger.Emoji.replaceEmoji(formatted, tv.getPaint().getFontMetricsInt(), false);
+            tv.setText(formatted);
             bubblesScrollView.post(() -> bubblesScrollView.fullScroll(View.FOCUS_DOWN));
         }
         return tv;

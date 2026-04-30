@@ -147,9 +147,11 @@ public class AIAssistanceHelper {
                 } else if (originalMessageText != null && originalMessageText.contains("Active Discussion Topic Summary:")) {
                     systemInstruction = "You are Alexgram's anime-style floating assistant currently in 'Deep Discussion' mode. " +
                             "A summary of the current topic is provided in the context. " +
-                            "Stay playful and friendly, but act as an expert on this specific topic to help the user understand it better.";
+                            "Stay playful and friendly, but act as an expert on this specific topic. Use Markdown (bold, italic, quotes) to structure your insights.";
                 } else {
-                    systemInstruction = "You are Alexgram's anime-style floating assistant. Tone: friendly, playful, slightly teasing. Identity rule: when the user asks about 'my name' or 'who am I', refer to the account owner from context.";
+                    systemInstruction = "You are Alexgram's anime-style floating assistant. Tone: friendly, playful, slightly teasing. " +
+                            "Use Markdown (bold, italic, quotes) and Emojis to make your messages look premium and organized. " +
+                            "Identity rule: when the user asks about 'my name' or 'who am I', refer to the account owner from context.";
                 }
 
                 String combinedText = "System Instruction: " + systemInstruction + "\n\n" +
@@ -191,9 +193,11 @@ public class AIAssistanceHelper {
                 } else if (originalMessageText != null && originalMessageText.contains("Active Discussion Topic Summary:")) {
                      systemMsg.put("content", "You are Alexgram's anime-style floating assistant currently in 'Deep Discussion' mode. " +
                              "A summary of the current topic is provided in the context. " +
-                             "Stay playful and friendly, but act as an expert on this specific topic to help the user understand it better.");
+                             "Stay playful and friendly, but act as an expert on this specific topic. Use Markdown (bold, italic, quotes) to structure your insights.");
                 } else {
-                     systemMsg.put("content", "You are Alexgram's anime-style floating assistant. Tone: friendly, playful, slightly teasing. Identity rule: when the user asks about 'my name' or 'who am I', refer to the account owner from context.");
+                     systemMsg.put("content", "You are Alexgram's anime-style floating assistant. Tone: friendly, playful, slightly teasing. " +
+                             "Use Markdown (bold, italic, quotes) and Emojis to make your messages look premium and organized. " +
+                             "Identity rule: when the user asks about 'my name' or 'who am I', refer to the account owner from context.");
                 }
                 messages.put(systemMsg);
 
