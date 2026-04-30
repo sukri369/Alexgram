@@ -49341,18 +49341,48 @@ public class ChatActivity extends BaseFragment implements
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
                 try {
                     String userInstruction = inputField.getText().toString().trim();
-                    String prompt = "Please summarize the following message concisely and beautifully, using bullet points or paragraphs as appropriate to make it easy to read.";
+                    String prompt = "You are an elite AI summarization engine built for high-quality UI experiences.\n\n"
+
++ "Task:\n"
++ "Transform the input text into a clear, concise, and well-structured summary.\n\n"
+
++ "Core Rules:\n"
++ "- Extract only key ideas, insights, and essential information.\n"
++ "- Remove redundancy, filler, and low-value content.\n"
++ "- Preserve the original meaning, tone, and intent.\n"
++ "- Adapt structure dynamically based on content type.\n\n"
+
++ "Formatting Guidelines:\n"
++ "- Use bullet points for highlights, lists, or steps.\n"
++ "- Use short paragraphs for explanations.\n"
++ "- Add section headers only when they improve clarity.\n"
++ "- Keep spacing clean for easy scanning.\n\n"
+
++ "Optimization:\n"
++ "- Keep sentences sharp, minimal, and impactful.\n"
++ "- Prioritize clarity over complexity.\n"
++ "- If input is short, return a tighter refined version instead of over-formatting.\n"
++ "- If input is long, compress aggressively without losing key meaning.\n\n"
+
++ "Output:\n"
++ "Return only the final formatted summary. No explanations, no extra text.";
                     if (!android.text.TextUtils.isEmpty(userInstruction)) {
-                        prompt = "Please summarize the following message based on this instruction: " + userInstruction;
+                        prompt = "Summarize based on: " + userInstruction;
                     }
 
                     // Show loading
                     final android.widget.ProgressBar progressBar = new android.widget.ProgressBar(getParentActivity());
-                    container.addView(progressBar, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, android.view.Gravity.CENTER, 0, 16, 0, 0));
-                    inputField.setEnabled(false);
+                    progressBar.setIndeterminate(true);
+                    container.removeAllViews();
+                    container.addView(progressBar, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, android.view.Gravity.CENTER, 0, 16, 0, 16));
                     dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
 
-                    startAiGeneration(prompt, messageToSummarize, new ChatAnimeAssistantView.AssistantRequestCallback() {
+                    final long dialogIdFinal = dialogId;
+                    final int currentAccountFinal = currentAccount;
+                    final ArrayList<MessageObject> messageObjectsFinal = messageObjects;
+
+                    String context = AIAssistanceHelper.buildContext(ChatActivity.this, currentAccountFinal, dialogIdFinal, messageObjectsFinal);
+                    AIAssistanceHelper.requestReply(currentAccountFinal, prompt, context, true, new ChatAnimeAssistantView.AssistantRequestCallback() {
                         @Override
                         public void onSuccess(String result) {
                             AndroidUtilities.runOnUIThread(() -> {

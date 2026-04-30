@@ -45,12 +45,39 @@ public class AIAssistanceHelper {
     }
 
     public static void requestReply(int currentAccount, String prompt, String chatContext, ChatAnimeAssistantView.AssistantRequestCallback callback) {
-        final String decoratedPrompt = "Persona: You are Alexgram's anime-style floating assistant. " +
-                "Tone: friendly, playful, slightly teasing but respectful. " +
-                "Keep responses concise, practical, and conversational. " +
-                "Identity rule: when the user asks about 'my name' or 'who am I', refer to the account owner from context, never other chat participants. " +
-                "User prompt: " + prompt;
+        requestReply(currentAccount, prompt, chatContext, false, callback);
+    }
 
+    public static void requestReply(int currentAccount, String prompt, String chatContext, boolean isSummarize, ChatAnimeAssistantView.AssistantRequestCallback callback) {
+        final String decoratedPrompt;
+        if (isSummarize) {
+            decoratedPrompt = "System: You are an expert AI summarizer for Alexgram.\n\n"
+                    + "Task:\n"
+                    + "Transform the input text into a clear, concise, and well-structured summary.\n\n"
+                    + "Core Rules:\n"
+                    + "- Extract only key ideas, insights, and essential information.\n"
+                    + "- Remove redundancy, filler, and low-value content.\n"
+                    + "- Preserve the original meaning, tone, and intent.\n"
+                    + "- Adapt structure dynamically based on content type.\n\n"
+                    + "Formatting Guidelines:\n"
+                    + "- Use bullet points for highlights, lists, or steps.\n"
+                    + "- Use short paragraphs for explanations.\n"
+                    + "- Add section headers only when they improve clarity.\n"
+                    + "- Keep spacing clean for easy scanning.\n\n"
+                    + "Optimization:\n"
+                    + "- Keep sentences sharp, minimal, and impactful.\n"
+                    + "- Prioritize clarity over complexity.\n"
+                    + "- If input is short, return a tighter refined version instead of over-formatting.\n"
+                    + "- If input is long, compress aggressively without losing key meaning.\n\n"
+                    + "Output:\n"
+                    + "Content: " + prompt;
+        } else {
+            decoratedPrompt = "Persona: You are Alexgram's anime-style floating assistant. " +
+                    "Tone: friendly, playful, slightly teasing but respectful. " +
+                    "Keep responses concise, practical, and conversational. " +
+                    "Identity rule: when the user asks about 'my name' or 'who am I', refer to the account owner from context, never other chat participants. " +
+                    "User prompt: " + prompt;
+        }
 
         if (NaConfig.INSTANCE.getUsePollinationsAi().Bool()) {
             callAiApi("https://text.pollinations.ai/v1/chat/completions", null, "openai", decoratedPrompt, chatContext, null, new AiGenerationCallback() {
@@ -374,6 +401,24 @@ public class AIAssistanceHelper {
         }
         if (!TextUtils.isEmpty(text)) {
             sb.append(text);
+        }
+
+        // 1.5. Custom Emojis (Premium)
+        if (messageObject.messageOwner.entities != null) {
+            boolean hasCustom = false;
+            for (TLRPC.MessageEntity entity : messageObject.messageOwner.entities) {
+                if (entity instanceof TLRPC.TL_messageEntityCustomEmoji) {
+                    hasCustom = true;
+                    break;
+                }
+            }
+            if (hasCustom) {
+                if (sb.length() > 0 && !sb.toString().trim().isEmpty()) {
+                    sb.append(" [Premium Emoji]");
+                } else {
+                    sb.append("[Premium Emoji]");
+                }
+            }
         }
 
         // 2. Polls
