@@ -208,6 +208,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
         panelContainer.setClipToPadding(false);
         panelContainer.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(14), AndroidUtilities.dp(14), AndroidUtilities.dp(12));
 
+        final android.graphics.drawable.GradientDrawable panelShape = new android.graphics.drawable.GradientDrawable();
         panelShape.setCornerRadius(AndroidUtilities.dp(40));
         panelShape.setColor(0xFA192B43);
         panelShape.setStroke(AndroidUtilities.dp(1), 0x66FFFFFF);
