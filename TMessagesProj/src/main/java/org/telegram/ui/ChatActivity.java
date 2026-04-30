@@ -49747,6 +49747,10 @@ public class ChatActivity extends BaseFragment implements
         return result;
     }
 
+    private void requestAnimeAssistantReply(String prompt, ChatAnimeAssistantView.AssistantRequestCallback callback) {
+        requestAnimeAssistantReply(prompt, null, callback);
+    }
+
     private void requestAnimeAssistantReply(String prompt, List<AIAssistanceHelper.HistoryItem> history, ChatAnimeAssistantView.AssistantRequestCallback callback) {
         String context = AIAssistanceHelper.buildContext(this, currentAccount, dialog_id, messages, false);
         if (chatAnimeAssistantView != null && !TextUtils.isEmpty(chatAnimeAssistantView.getActiveTopicContext())) {

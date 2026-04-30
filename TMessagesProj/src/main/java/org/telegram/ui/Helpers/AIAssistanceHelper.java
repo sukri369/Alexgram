@@ -58,6 +58,10 @@ public class AIAssistanceHelper {
         requestReply(currentAccount, prompt, chatContext, false, null, null, callback);
     }
 
+    public static void requestReply(int currentAccount, String prompt, String chatContext, boolean isSummarize, File imageFile, ChatAnimeAssistantView.AssistantRequestCallback callback) {
+        requestReply(currentAccount, prompt, chatContext, isSummarize, imageFile, null, callback);
+    }
+
     public static void requestReply(int currentAccount, String prompt, String chatContext, boolean isSummarize, File imageFile, List<HistoryItem> history, ChatAnimeAssistantView.AssistantRequestCallback callback) {
         final String decoratedPrompt = prompt;
 
