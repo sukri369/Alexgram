@@ -88,6 +88,9 @@ public class ChatAnimeAssistantView extends FrameLayout {
     private final boolean showAutoReplyOption;
     private final boolean autoReplySupported;
     private final String autoReplyUnsupportedMessage;
+    private final TextView title;
+    private final TextView subtitle;
+    private String activeTopicContext;
 
     private final Runnable frameRunnable = new Runnable() {
         @Override
@@ -212,14 +215,14 @@ public class ChatAnimeAssistantView extends FrameLayout {
         panelContent.setOrientation(LinearLayout.VERTICAL);
         panelContainer.addView(panelContent, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
-        final TextView title = new TextView(context);
+        title = new TextView(context);
         title.setText("Alexgram Assistance");
         title.setTextColor(Color.WHITE);
         title.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
         title.setTypeface(AndroidUtilities.bold());
         panelContent.addView(title, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
-        final TextView subtitle = new TextView(context);
+        subtitle = new TextView(context);
         subtitle.setText("Friendly mode online");
         subtitle.setTextColor(0xBBE0ECFF);
         subtitle.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
@@ -525,9 +528,13 @@ public class ChatAnimeAssistantView extends FrameLayout {
             popupMenu.getMenu().add(Menu.NONE, 1, order++, autoReplyEnabled ? "Auto Reply Mode: ON" : "Auto Reply Mode: OFF");
         }
         popupMenu.getMenu().add(Menu.NONE, 2, order++, "Switch Style");
+        if (!TextUtils.isEmpty(activeTopicContext)) {
+            popupMenu.getMenu().add(Menu.NONE, 4, order++, "Exit Discussion");
+        }
         popupMenu.getMenu().add(Menu.NONE, 3, order, "Focus Chat Panel");
         popupMenu.setOnMenuItemClickListener(item -> {
-            if (item.getItemId() == 1) {
+            final int itemId = item.getItemId();
+            if (itemId == 1) {
                 if (!autoReplySupported) {
                     showReactionBubble("INFO");
                     addMessageBubble(autoReplyUnsupportedMessage, false, true);
@@ -541,13 +548,18 @@ public class ChatAnimeAssistantView extends FrameLayout {
                 showReactionBubble(autoReplyEnabled ? "ON" : "OFF");
                 characterView.onTap();
                 return true;
-            } else if (item.getItemId() == 2) {
+            } else if (itemId == 2) {
                 characterView.cycleSkin();
                 showReactionBubble("STYLE");
                 return true;
-            } else if (item.getItemId() == 3) {
+            } else if (itemId == 3) {
                 showPanel();
                 focusInputAndShowKeyboard();
+                return true;
+            } else if (itemId == 4) {
+                clearActiveTopic();
+                showReactionBubble("RESET");
+                addMessageBubble("Discussion cleared. I'm back to regular mode.", false, true);
                 return true;
             }
             return false;
@@ -679,6 +691,25 @@ public class ChatAnimeAssistantView extends FrameLayout {
             customBottomOffset = offsetPx;
             requestLayout();
         }
+    }
+
+    public void startTopicDiscussion(String topicSummary) {
+        this.activeTopicContext = topicSummary;
+        showPanel();
+        title.setText("Deep Discussion");
+        subtitle.setText("Exploring the summary context");
+        addMessageBubble("I've loaded the summary context. What would you like to know more about?", false, true);
+        focusInputAndShowKeyboard();
+    }
+
+    public String getActiveTopicContext() {
+        return activeTopicContext;
+    }
+
+    public void clearActiveTopic() {
+        this.activeTopicContext = null;
+        title.setText("Alexgram Assistance");
+        subtitle.setText("Friendly mode online");
     }
 
     @Override

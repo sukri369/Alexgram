@@ -49420,6 +49420,11 @@ public class ChatActivity extends BaseFragment implements
                                     resultBuilder.setTitle("Summary Result");
                                     resultBuilder.setView(scrollView);
                                     resultBuilder.setPositiveButton("Close", null);
+                                    resultBuilder.setNegativeButton("Continue Chat", (d, w) -> {
+                                        if (chatAnimeAssistantView != null) {
+                                            chatAnimeAssistantView.startTopicDiscussion(result);
+                                        }
+                                    });
                                     resultBuilder.setNeutralButton("Copy", (d, w) -> {
                                         android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getParentActivity().getSystemService(android.content.Context.CLIPBOARD_SERVICE);
                                         // Copy raw markdown text so it can be pasted with formatting elsewhere or re-rendered
@@ -49744,6 +49749,10 @@ public class ChatActivity extends BaseFragment implements
 
     private void requestAnimeAssistantReply(String prompt, ChatAnimeAssistantView.AssistantRequestCallback callback) {
         String context = AIAssistanceHelper.buildContext(this, currentAccount, dialog_id, messages, false);
+        if (chatAnimeAssistantView != null && !TextUtils.isEmpty(chatAnimeAssistantView.getActiveTopicContext())) {
+            context += "\n\nActive Discussion Topic Summary:\n" + chatAnimeAssistantView.getActiveTopicContext();
+            context += "\n\nUser is now chatting to know more about this topic. Be helpful and provide more details based on this summary.";
+        }
         AIAssistanceHelper.requestReply(currentAccount, prompt, context, callback);
     }
 

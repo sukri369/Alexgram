@@ -141,9 +141,16 @@ public class AIAssistanceHelper {
                 JSONObject contentObj = new JSONObject();
                 JSONArray parts = new JSONArray();
 
-                String systemInstruction = isSummarize ?
-                        "You are an expert AI summarizer for Alexgram. Your goal is to provide God-level, concise summaries of messages and visual content." :
-                        "You are Alexgram's anime-style floating assistant. Tone: friendly, playful, slightly teasing. Identity rule: when the user asks about 'my name' or 'who am I', refer to the account owner from context.";
+                String systemInstruction;
+                if (isSummarize) {
+                    systemInstruction = "You are an expert AI summarizer for Alexgram. Your goal is to provide God-level, concise summaries of messages and visual content.";
+                } else if (originalMessageText != null && originalMessageText.contains("Active Discussion Topic Summary:")) {
+                    systemInstruction = "You are Alexgram's anime-style floating assistant currently in 'Deep Discussion' mode. " +
+                            "A summary of the current topic is provided in the context. " +
+                            "Stay playful and friendly, but act as an expert on this specific topic to help the user understand it better.";
+                } else {
+                    systemInstruction = "You are Alexgram's anime-style floating assistant. Tone: friendly, playful, slightly teasing. Identity rule: when the user asks about 'my name' or 'who am I', refer to the account owner from context.";
+                }
 
                 String combinedText = "System Instruction: " + systemInstruction + "\n\n" +
                         "Context Message:\n---\n" + (originalMessageText != null ? originalMessageText : "") + "\n---\n\n" +
@@ -181,6 +188,10 @@ public class AIAssistanceHelper {
                 systemMsg.put("role", "system");
                 if (isSummarize) {
                      systemMsg.put("content", "You are an expert AI summarizer for Alexgram. Your goal is to provide God-level, concise summaries of messages and visual content.");
+                } else if (originalMessageText != null && originalMessageText.contains("Active Discussion Topic Summary:")) {
+                     systemMsg.put("content", "You are Alexgram's anime-style floating assistant currently in 'Deep Discussion' mode. " +
+                             "A summary of the current topic is provided in the context. " +
+                             "Stay playful and friendly, but act as an expert on this specific topic to help the user understand it better.");
                 } else {
                      systemMsg.put("content", "You are Alexgram's anime-style floating assistant. Tone: friendly, playful, slightly teasing. Identity rule: when the user asks about 'my name' or 'who am I', refer to the account owner from context.");
                 }
