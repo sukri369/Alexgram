@@ -42,6 +42,7 @@ import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.BackupImageView;
+import org.telegram.ui.Components.RadialProgressView;
 import org.telegram.ui.Components.chat.MiniChatAssistantView;
 import org.telegram.ui.Helpers.AIAssistanceHelper;
 
@@ -1611,14 +1612,25 @@ public class ChatAnimeAssistantView extends FrameLayout {
     }
 
     private void addImageBubble(String prompt) {
+        final FrameLayout container = new FrameLayout(getContext());
+        
         final BackupImageView imageView = new BackupImageView(getContext());
         imageView.setRoundRadius(AndroidUtilities.dp(14));
+        //  pulsing placeholder background
+        imageView.setBackground(Theme.createRoundRectDrawable(AndroidUtilities.dp(14), 0x22FFFFFF));
+        
+        final RadialProgressView progressView = new RadialProgressView(getContext());
+        progressView.setSize(AndroidUtilities.dp(30));
+        progressView.setProgressColor(0xFFFFFFFF);
+        
+        container.addView(imageView, LayoutHelper.createFrame(220, 220));
+        container.addView(progressView, LayoutHelper.createFrame(30, 30, Gravity.CENTER));
         
         LinearLayout.LayoutParams lp = LayoutHelper.createLinear(220, 220);
         lp.gravity = Gravity.LEFT;
         lp.topMargin = AndroidUtilities.dp(5);
-        bubblesContainer.addView(imageView, lp);
-        messageViews.add(imageView);
+        bubblesContainer.addView(container, lp);
+        messageViews.add(container);
         
         while (messageViews.size() > MAX_BUBBLES) {
             View remove = messageViews.remove(0);
@@ -1628,9 +1640,14 @@ public class ChatAnimeAssistantView extends FrameLayout {
         String encodedPrompt = android.net.Uri.encode(prompt);
         String imageUrl = "https://image.pollinations.ai/prompt/" + encodedPrompt + "?width=1024&height=1024&nologo=true&seed=" + System.currentTimeMillis();
         
+        imageView.getImageReceiver().setDelegate((imageReceiver, set, thumb, memCache) -> {
+            if (set && !thumb) {
+                progressView.animate().alpha(0f).setDuration(280).withEndAction(() -> progressView.setVisibility(GONE)).start();
+            }
+        });
+
         imageView.setImage(imageUrl, null, null);
         imageView.setOnClickListener(v -> {
-             // Maybe show full screen or copy URL
              AndroidUtilities.addToClipboard(imageUrl);
              showReactionBubble("📋");
         });
