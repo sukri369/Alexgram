@@ -42,6 +42,7 @@ import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.chat.MiniChatAssistantView;
+import org.telegram.ui.Helpers.AIAssistanceHelper;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
