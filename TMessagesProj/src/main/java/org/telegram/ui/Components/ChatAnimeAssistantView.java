@@ -41,6 +41,7 @@ import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.ui.ActionBar.Theme;
+import org.telegram.ui.Components.BackupImageView;
 import org.telegram.ui.Components.chat.MiniChatAssistantView;
 import org.telegram.ui.Helpers.AIAssistanceHelper;
 
@@ -1593,8 +1594,48 @@ public class ChatAnimeAssistantView extends FrameLayout {
                 }
             }
         }
+        
+        if (text != null && text.contains("[GEN_IMAGE:")) {
+            int start = text.indexOf("[GEN_IMAGE:") + 11;
+            int end = text.lastIndexOf("]");
+            if (end > start) {
+                String prompt = text.substring(start, end).trim();
+                addImageBubble(prompt);
+                showReactionBubble("🎨");
+                return;
+            }
+        }
+
         addMessageBubble(text, false, true);
         showReactionBubble("✨");
+    }
+
+    private void addImageBubble(String prompt) {
+        final BackupImageView imageView = new BackupImageView(getContext());
+        imageView.setRoundRadius(AndroidUtilities.dp(14));
+        
+        LinearLayout.LayoutParams lp = LayoutHelper.createLinear(220, 220);
+        lp.gravity = Gravity.LEFT;
+        lp.topMargin = AndroidUtilities.dp(5);
+        bubblesContainer.addView(imageView, lp);
+        messageViews.add(imageView);
+        
+        while (messageViews.size() > MAX_BUBBLES) {
+            View remove = messageViews.remove(0);
+            bubblesContainer.removeView(remove);
+        }
+
+        String encodedPrompt = android.net.Uri.encode(prompt);
+        String imageUrl = "https://image.pollinations.ai/prompt/" + encodedPrompt + "?width=1024&height=1024&nologo=true&seed=" + System.currentTimeMillis();
+        
+        imageView.setImage(imageUrl, null, null);
+        imageView.setOnClickListener(v -> {
+             // Maybe show full screen or copy URL
+             AndroidUtilities.addToClipboard(imageUrl);
+             showReactionBubble("📋");
+        });
+
+        bubblesScrollView.post(() -> bubblesScrollView.fullScroll(View.FOCUS_DOWN));
     }
 
     private TextView addMessageBubble(String text, boolean isUser, boolean typewriter) {

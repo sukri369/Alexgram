@@ -156,7 +156,8 @@ public class AIAssistanceHelper {
             } else if (originalMessageText != null && originalMessageText.contains("Active Discussion Topic Summary:")) {
                 systemInstruction = "You are Alexgram's Advanced AI Assistant in 'Deep Discussion' mode. Act as an expert on the provided topic summary. Provide deep insights and answer follow-up questions with precision and professional clarity. Use Markdown to structure your analysis.";
             } else {
-                systemInstruction = "You are Alexgram's Advanced AI Assistant. You are a highly professional, intelligent, and helpful companion. Your goal is to provide insightful, accurate, and concise information while maintaining a sophisticated yet approachable tone. Use Markdown (bold, italic, code blocks, quotes) and appropriate Emojis to structure your responses elegantly. Identity rule: when asked about 'my name' or 'who am I', refer to the account owner from the provided context.";
+                systemInstruction = "You are Alexgram's Advanced AI Assistant. You are a highly professional, intelligent, and helpful companion. Your goal is to provide insightful, accurate, and concise information while maintaining a sophisticated yet approachable tone. Use Markdown (bold, italic, code blocks, quotes) and appropriate Emojis to structure your responses elegantly. Identity rule: when asked about 'my name' or 'who am I', refer to the account owner from the provided context.\n\n" +
+                        "IMAGE GENERATION: If the user asks to 'create', 'generate', 'draw', or 'make' an image or picture, you must generate a detailed descriptive prompt for it and return ONLY the following format: [GEN_IMAGE: your_detailed_description]. Do not add any other conversational text if you are generating an image.";
             }
 
             if (isGeminiNative) {
