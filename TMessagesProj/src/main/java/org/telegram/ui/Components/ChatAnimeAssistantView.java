@@ -196,10 +196,10 @@ public class ChatAnimeAssistantView extends FrameLayout {
 
         panelContainer = blurParent != null ? new BlurredFrameLayout(context, blurParent) : new FrameLayout(context);
         if (panelContainer instanceof BlurredFrameLayout) {
-            ((BlurredFrameLayout) panelContainer).backgroundColor = 0xAA152235;
+            ((BlurredFrameLayout) panelContainer).backgroundColor = 0xFA152235;
             ((BlurredFrameLayout) panelContainer).drawBlur = SharedConfig.getDevicePerformanceClass() != SharedConfig.PERFORMANCE_CLASS_LOW;
         } else {
-            panelContainer.setBackgroundColor(0xEE17263D);
+            panelContainer.setBackgroundColor(0xFA17263D);
         }
         panelContainer.setVisibility(GONE);
         panelContainer.setAlpha(0f);
@@ -208,9 +208,8 @@ public class ChatAnimeAssistantView extends FrameLayout {
         panelContainer.setClipToPadding(false);
         panelContainer.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(14), AndroidUtilities.dp(14), AndroidUtilities.dp(12));
 
-        final GradientDrawable panelShape = new GradientDrawable();
         panelShape.setCornerRadius(AndroidUtilities.dp(40));
-        panelShape.setColor(0xB8192B43);
+        panelShape.setColor(0xFA192B43);
         panelShape.setStroke(AndroidUtilities.dp(1), 0x66FFFFFF);
         panelContainer.setBackground(panelShape);
         if (android.os.Build.VERSION.SDK_INT >= 21) {
@@ -1685,7 +1684,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
         tv.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
         tv.setPadding(AndroidUtilities.dp(10), AndroidUtilities.dp(8), AndroidUtilities.dp(10), AndroidUtilities.dp(8));
         tv.setMaxWidth(AndroidUtilities.dp(260));
-        tv.setBackground(Theme.createRoundRectDrawable(AndroidUtilities.dp(14), isUser ? 0xD9368EFF : 0x99495D7A));
+        tv.setBackground(Theme.createRoundRectDrawable(AndroidUtilities.dp(14), isUser ? 0xF0368EFF : 0xF0495D7A));
         tv.setLongClickable(true);
         tv.setOnLongClickListener(v -> {
             CharSequence value = tv.getText();
