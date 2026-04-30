@@ -3200,7 +3200,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 chatAnimeAssistantView.setAssistantRequestDelegate(new ChatAnimeAssistantView.AssistantRequestDelegate() {
                     @Override
                     public void onRequest(String prompt, ChatAnimeAssistantView.AssistantRequestCallback callback) {
-                        String contextString = AIAssistanceHelper.buildContext(DialogsActivity.this, currentAccount, 0, null);
+                        String contextString = AIAssistanceHelper.buildContext(DialogsActivity.this, currentAccount, 0, null, false);
                         AIAssistanceHelper.requestReply(currentAccount, prompt, contextString, callback);
                     }
                     @Override

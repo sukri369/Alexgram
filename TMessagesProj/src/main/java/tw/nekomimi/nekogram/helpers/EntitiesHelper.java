@@ -24,7 +24,9 @@ public class EntitiesHelper {
             Pattern.compile("[_]{2}([^_\\n]+)[_]{2}"), // italic
             Pattern.compile("[~]{2}([^~\\n]+)[~]{2}"), // strike
             Pattern.compile("[|]{2}([^|\\n]+)[|]{2}"), // spoiler
-            Pattern.compile("\\[([^]]+?)]\\(" + LinkifyPort.WEB_URL_REGEX + "\\)")}; // link
+            Pattern.compile("\\[([^]]+?)]\\(" + LinkifyPort.WEB_URL_REGEX + "\\)"), // link
+            Pattern.compile("(^|\n)>[ ]?(.*)"), // quote
+            Pattern.compile("(^|\n)[-*][ ](.*)")}; // bullet
 
     public static CharSequence parseMarkdown(CharSequence text) {
         var message = new CharSequence[]{text};
@@ -66,14 +68,23 @@ public class EntitiesHelper {
                     }
                 }
 
-                var destination = new SpannableStringBuilder(spannable.subSequence(m.start(i == 0 ? 2 : 1), m.end(i == 0 ? 2 : 1)));
+                SpannableStringBuilder destination;
+                if (i == 9) {
+                    destination = new SpannableStringBuilder(m.group(1));
+                    destination.append(m.group(2));
+                } else if (i == 10) {
+                    destination = new SpannableStringBuilder(m.group(1));
+                    destination.append("• ").append(m.group(2));
+                } else {
+                    destination = new SpannableStringBuilder(spannable.subSequence(m.start(i == 0 ? 2 : 1), m.end(i == 0 ? 2 : 1)));
+                }
                 if (destination.length() > 0) {
                     if (i == 0) {
                         if (destination.charAt(destination.length() - 1) == '\n') {
                             destination = (SpannableStringBuilder) destination.subSequence(0, destination.length() - 1);
                         }
                         destination.setSpan(new CodeHighlighting.Span(true, 0, null, m.group(1), destination.toString()), 0, destination.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                    } else if (i < 8) {
+                    } else if (i < 8 || i == 9) {
                         var run = new TextStyleSpan.TextStyleRun();
                         switch (i) {
                             case 1:
@@ -93,9 +104,13 @@ public class EntitiesHelper {
                             case 7:
                                 run.flags |= TextStyleSpan.FLAG_STYLE_SPOILER;
                                 break;
+                            case 9:
+                                run.flags |= TextStyleSpan.FLAG_STYLE_QUOTE;
+                                break;
                         }
-                        MediaDataController.addStyleToText(new TextStyleSpan(run), 0, destination.length(), destination, true);
-                    } else {
+                        int startOffset = (i == 9) ? m.group(1).length() : 0;
+                        MediaDataController.addStyleToText(new TextStyleSpan(run), startOffset, destination.length(), destination, true);
+                    } else if (i == 8) {
                         destination.setSpan(new URLSpanReplacement(m.group(2)), 0, destination.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                     }
                 }

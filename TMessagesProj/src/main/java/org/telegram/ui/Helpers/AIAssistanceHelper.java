@@ -315,30 +315,32 @@ public class AIAssistanceHelper {
         }
     }
 
-    public static String buildContext(@Nullable BaseFragment fragment, int currentAccount, long dialogId, @Nullable ArrayList<MessageObject> messages) {
+    public static String buildContext(@Nullable BaseFragment fragment, int currentAccount, long dialogId, @Nullable ArrayList<MessageObject> messages, boolean isSummarize) {
         StringBuilder sb = new StringBuilder(512);
-        sb.append("You are replying inside Alexgram assistant.\n");
-        long ownerId = UserConfig.getInstance(currentAccount).getClientUserId();
-        TLRPC.User ownerUser = MessagesController.getInstance(currentAccount).getUser(ownerId);
-        if (ownerUser != null) {
-            sb.append("Account owner (this is the user you assist): ")
-                    .append(UserObject.getForcedFirstName(ownerUser));
-            if (!TextUtils.isEmpty(ownerUser.username)) {
-                sb.append(" (@").append(ownerUser.username).append(")");
+        if (!isSummarize) {
+            sb.append("You are replying inside Alexgram assistant.\n");
+            long ownerId = UserConfig.getInstance(currentAccount).getClientUserId();
+            TLRPC.User ownerUser = MessagesController.getInstance(currentAccount).getUser(ownerId);
+            if (ownerUser != null) {
+                sb.append("Account owner (this is the user you assist): ")
+                        .append(UserObject.getForcedFirstName(ownerUser));
+                if (!TextUtils.isEmpty(ownerUser.username)) {
+                    sb.append(" (@").append(ownerUser.username).append(")");
+                }
+                sb.append("\n");
             }
-            sb.append("\n");
-        }
 
-        if (dialogId != 0) {
-            TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(dialogId);
-            TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-dialogId);
-            if (user != null) {
-                sb.append("Dialog with user: ").append(UserObject.getForcedFirstName(user)).append("\n");
-            } else if (chat != null) {
-                sb.append("Dialog in chat: ").append(chat.title).append("\n");
+            if (dialogId != 0) {
+                TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(dialogId);
+                TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-dialogId);
+                if (user != null) {
+                    sb.append("Dialog with user: ").append(UserObject.getForcedFirstName(user)).append("\n");
+                } else if (chat != null) {
+                    sb.append("Dialog in chat: ").append(chat.title).append("\n");
+                }
+            } else {
+                sb.append("Current Location: App Home Screen (Chat List)\n");
             }
-        } else {
-            sb.append("Current Location: App Home Screen (Chat List)\n");
         }
 
         if (messages != null && !messages.isEmpty()) {

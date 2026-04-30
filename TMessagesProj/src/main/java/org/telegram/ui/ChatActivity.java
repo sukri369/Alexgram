@@ -49343,19 +49343,18 @@ public class ChatActivity extends BaseFragment implements
                     String userInstruction = inputField.getText().toString().trim();
                     String prompt = "Task:\n"
                             + "Transform the input text into a clear, concise, and well-structured summary.\n\n"
-                            + "Core Rules:\n"
-                            + "- Extract only key ideas, insights, and essential information.\n"
-                            + "- Remove redundancy, filler, and low-value content.\n"
-                            + "- Preserve the original meaning, tone, and intent.\n"
-                            + "- Adapt structure dynamically based on content type.\n\n"
+                            + "Strict Rules:\n"
+                            + "- **NO METADATA**: Do NOT mention the user name, chat name, or app names in the output.\n"
+                            + "- **CONTENT ONLY**: Focus exclusively on the message content.\n"
+                            + "- **FORMATTING**: Use Bold for emphasis, > for quotes of important phrases, and clean bullets.\n\n"
                             + "Formatting Guidelines:\n"
-                            + "- Use bullet points for highlights, lists, or steps.\n"
+                            + "- Use **Bold** for key terms and headlines.\n"
+                            + "- Use `> ` for direct quotes or critical insights from the text.\n"
+                            + "- Use modern for bullet points.\n"
                             + "- Use short paragraphs for explanations.\n"
-                            + "- Add section headers only when they improve clarity.\n"
                             + "- Keep spacing clean for easy scanning.\n\n"
                             + "Optimization:\n"
                             + "- Keep sentences sharp, minimal, and impactful.\n"
-                            + "- Prioritize clarity over complexity.\n"
                             + "- If input is short, return a tighter refined version instead of over-formatting.\n"
                             + "- If input is long, compress aggressively without losing key meaning.\n\n"
                             + "Output:\n"
@@ -49377,7 +49376,7 @@ public class ChatActivity extends BaseFragment implements
                     final ArrayList<MessageObject> messageObjectsFinal = new ArrayList<>();
                     messageObjectsFinal.add(messageToSummarize);
 
-                    String context = AIAssistanceHelper.buildContext(ChatActivity.this, currentAccountFinal, dialogIdFinal, messageObjectsFinal);
+                    String context = AIAssistanceHelper.buildContext(ChatActivity.this, currentAccountFinal, dialogIdFinal, messageObjectsFinal, true);
                     AIAssistanceHelper.requestReply(currentAccountFinal, prompt, context, true, new ChatAnimeAssistantView.AssistantRequestCallback() {
                         @Override
                         public void onSuccess(String result) {
@@ -49734,7 +49733,7 @@ public class ChatActivity extends BaseFragment implements
     }
 
     private void requestAnimeAssistantReply(String prompt, ChatAnimeAssistantView.AssistantRequestCallback callback) {
-        String context = AIAssistanceHelper.buildContext(this, currentAccount, dialog_id, messages);
+        String context = AIAssistanceHelper.buildContext(this, currentAccount, dialog_id, messages, false);
         AIAssistanceHelper.requestReply(currentAccount, prompt, context, callback);
     }
 
@@ -49997,7 +49996,7 @@ public class ChatActivity extends BaseFragment implements
 
     private void startAiGeneration(String userPrompt, MessageObject originalMessage, ChatAnimeAssistantView.AssistantRequestCallback callback) {
         try {
-            String context = AIAssistanceHelper.buildContext(this, currentAccount, dialog_id, originalMessage != null ? new java.util.ArrayList<>(java.util.Collections.singletonList(originalMessage)) : null);
+            String context = AIAssistanceHelper.buildContext(this, currentAccount, dialog_id, originalMessage != null ? new java.util.ArrayList<>(java.util.Collections.singletonList(originalMessage)) : null, false);
             AIAssistanceHelper.requestReply(currentAccount, userPrompt, context, callback);
         } catch (Throwable e) {
             callback.onError("Start Gen Crash: " + e.getMessage());
