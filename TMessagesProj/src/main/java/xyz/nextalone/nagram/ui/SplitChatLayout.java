@@ -1071,20 +1071,20 @@ public class SplitChatLayout extends FrameLayout {
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
 
-    public boolean onBackPressed() {
+    public boolean onBackPressed(boolean invoked) {
         if (!built || getVisibility() != VISIBLE || getAlpha() < 0.1f) return false;
         if (isPickerActive()) return false;
         
         long now = System.currentTimeMillis();
-        if (now - lastBackTime < 400) return true;
-        lastBackTime = now;
+        if (invoked && now - lastBackTime < 400) return true;
+        if (invoked) lastBackTime = now;
         
         boolean consumed = false;
         for (int i = panes.size() - 1; i >= 0; i--) {
             SplitPane p = panes.get(i);
             if (p.fragment != null) {
                 try {
-                    if (!p.fragment.onBackPressed(true)) {
+                    if (!p.fragment.onBackPressed(invoked)) {
                         consumed = true;
                         break;
                     }
@@ -1097,15 +1097,18 @@ public class SplitChatLayout extends FrameLayout {
         
         if (!consumed) {
             if (!minis.isEmpty()) {
-                MiniPaneTab last = minis.get(minis.size() - 1);
-                restoreMini(last.account, last.dialogId);
+                if (invoked) {
+                    MiniPaneTab last = minis.get(minis.size() - 1);
+                    restoreMini(last.account, last.dialogId);
+                }
                 return true;
             }
             
-            closeSplit(true);
+            if (invoked) closeSplit(true);
+            return true;
         }
         
-        return true;
+        return consumed;
     }
 
     @Override

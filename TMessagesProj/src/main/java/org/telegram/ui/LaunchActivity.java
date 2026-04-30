@@ -8296,7 +8296,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             return false;
         }
         if (xyz.nextalone.nagram.ui.SplitChatManager.getInstance().isActive()) {
-            if (xyz.nextalone.nagram.ui.SplitChatManager.getInstance().getLayout().onBackPressed()) {
+            if (xyz.nextalone.nagram.ui.SplitChatManager.getInstance().getLayout().onBackPressed(invoked)) {
                 return false;
             }
         }
