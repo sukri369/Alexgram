@@ -441,17 +441,27 @@ public class AIAssistanceHelper {
         if (messageObject == null || depth > 1) return "";
         StringBuilder sb = new StringBuilder();
 
+        // 0. Forward Info (Helpful for AI context)
+        if (messageObject.messageOwner != null && messageObject.messageOwner.fwd_from != null) {
+            sb.append("[Forwarded Content]\n");
+        }
+
         // 1. Text or Caption
         CharSequence text = messageObject.messageText;
-        if (TextUtils.isEmpty(text) && messageObject.caption != null) {
-            text = messageObject.caption;
+        if (TextUtils.isEmpty(text)) {
+            if (!TextUtils.isEmpty(messageObject.caption)) {
+                text = messageObject.caption;
+            } else if (messageObject.messageOwner != null && !TextUtils.isEmpty(messageObject.messageOwner.message)) {
+                text = messageObject.messageOwner.message;
+            }
         }
+
         if (!TextUtils.isEmpty(text)) {
             sb.append(text);
         }
 
         // 1.5. Custom Emojis (Premium)
-        if (messageObject.messageOwner.entities != null) {
+        if (messageObject.messageOwner != null && messageObject.messageOwner.entities != null) {
             boolean hasCustom = false;
             for (TLRPC.MessageEntity entity : messageObject.messageOwner.entities) {
                 if (entity instanceof TLRPC.TL_messageEntityCustomEmoji) {
@@ -469,17 +479,19 @@ public class AIAssistanceHelper {
         }
 
         // 2. Polls
-        if (messageObject.isPoll() && messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaPoll) {
+        if (messageObject.isPoll() && messageObject.messageOwner != null && messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaPoll) {
             TLRPC.Poll poll = ((TLRPC.TL_messageMediaPoll) messageObject.messageOwner.media).poll;
             if (sb.length() > 0) sb.append("\n");
             sb.append("Poll: ").append(poll.question.text);
-            for (TLRPC.PollAnswer answer : poll.answers) {
-                sb.append("\n- ").append(answer.text.text);
+            if (poll.answers != null) {
+                for (TLRPC.PollAnswer answer : poll.answers) {
+                    sb.append("\n- ").append(answer.text.text);
+                }
             }
         }
 
         // 3. Link Description
-        if (messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaWebPage) {
+        if (messageObject.messageOwner != null && messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaWebPage) {
             TLRPC.WebPage webPage = messageObject.messageOwner.media.webpage;
             if (webPage != null) {
                 if (sb.length() > 0) sb.append("\n");
@@ -496,27 +508,34 @@ public class AIAssistanceHelper {
             sb.append("Transcription: ").append(messageObject.messageOwner.voiceTranscription);
         }
 
-        // 5. Media fallback if still empty
-        if (sb.length() == 0) {
-            if (messageObject.type == MessageObject.TYPE_PHOTO) sb.append("[Photo]");
-            else if (messageObject.type == MessageObject.TYPE_VIDEO) sb.append("[Video]");
-            else if (messageObject.type == MessageObject.TYPE_ROUND_VIDEO) sb.append("[Video Note]");
-            else if (messageObject.type == MessageObject.TYPE_VOICE) sb.append("[Voice Message]");
-            else if (messageObject.type == MessageObject.TYPE_STICKER) sb.append("[Sticker]");
-            else if (messageObject.type == MessageObject.TYPE_GIF) sb.append("[GIF]");
+        // 5. Media fallback if still empty or media-heavy
+        if (sb.length() == 0 || (messageObject.messageOwner != null && messageObject.messageOwner.media != null && TextUtils.isEmpty(text))) {
+            String tag = null;
+            if (messageObject.type == MessageObject.TYPE_PHOTO) tag = "[Photo]";
+            else if (messageObject.type == MessageObject.TYPE_VIDEO) tag = "[Video]";
+            else if (messageObject.type == MessageObject.TYPE_ROUND_VIDEO) tag = "[Video Note]";
+            else if (messageObject.type == MessageObject.TYPE_VOICE) tag = "[Voice Message]";
+            else if (messageObject.type == MessageObject.TYPE_STICKER) tag = "[Sticker]";
+            else if (messageObject.type == MessageObject.TYPE_GIF) tag = "[GIF]";
             else if (messageObject.type == MessageObject.TYPE_FILE) {
                 String name = messageObject.getDocumentName();
-                sb.append("[File").append(!TextUtils.isEmpty(name) ? ": " + name : "").append("]");
+                tag = "[File" + (!TextUtils.isEmpty(name) ? ": " + name : "") + "]";
             }
-            else if (messageObject.type == MessageObject.TYPE_GEO) sb.append("[Location]");
-            else if (messageObject.type == MessageObject.TYPE_CONTACT) sb.append("[Contact]");
+            else if (messageObject.type == MessageObject.TYPE_GEO) tag = "[Location]";
+            else if (messageObject.type == MessageObject.TYPE_CONTACT) tag = "[Contact]";
+
+            if (tag != null) {
+                if (sb.length() > 0) sb.append("\n").append(tag);
+                else sb.append(tag);
+            }
         }
 
         // 6. Quoted message (only for top level)
         if (depth == 0 && messageObject.replyMessageObject != null) {
             String quotedContent = getMessageContent(messageObject.replyMessageObject, depth + 1);
             if (!TextUtils.isEmpty(quotedContent)) {
-                sb.append("\n(Replying to: ").append(quotedContent).append(")");
+                if (sb.length() > 0) sb.append("\n");
+                sb.append("(Replying to: ").append(quotedContent).append(")");
             }
         }
 

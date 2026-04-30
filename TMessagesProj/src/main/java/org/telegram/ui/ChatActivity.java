@@ -49345,6 +49345,7 @@ public class ChatActivity extends BaseFragment implements
                             + "Transform the input text and any attached images into a clear, concise, and well-structured summary.\n\n"
                             + "Strict Rules:\n"
                             + "- **VISUAL AWARENESS**: If an image is provided, summarize its visual content in detail. Ignore technical tags like [Photo], [Video], or [Premium Emoji] in the text context.\n"
+                            + "- **MEDIA FALLBACK**: If no image file is provided but a [Photo] or [Video] tag is present, summarize the provided text/caption and explicitly note that you were unable to analyze the media directly.\n"
                             + "- **NO METADATA**: Do NOT mention user names, chat names, or technical tags in the final summary.\n"
                             + "- **CONTENT ONLY**: Focus exclusively on the message meaning and visual insights.\n"
                             + "- **FORMATTING**: Use Bold for emphasis, > for quotes of important phrases, and clean bullets (•).\n\n"
@@ -49379,6 +49380,7 @@ public class ChatActivity extends BaseFragment implements
 
                     String context = AIAssistanceHelper.buildContext(ChatActivity.this, currentAccountFinal, dialogIdFinal, messageObjectsFinal, true);
                     File imageFile = null;
+                    boolean hasMedia = messageToSummarize.isPhoto() || messageToSummarize.isVideo() || messageToSummarize.isRoundVideo() || messageToSummarize.isGif();
                     if (messageToSummarize.isPhoto()) {
                         imageFile = FileLoader.getInstance(currentAccountFinal).getPathToMessage(messageToSummarize.messageOwner);
                     } else if (messageToSummarize.isVideo() || messageToSummarize.isRoundVideo() || messageToSummarize.isGif()) {
@@ -49386,6 +49388,9 @@ public class ChatActivity extends BaseFragment implements
                     }
                     if (imageFile != null && !imageFile.exists()) {
                         imageFile = null;
+                    }
+                    if (hasMedia && imageFile == null) {
+                        context += "\n\n[System Note: The media file (Photo/Video) is not available for visual analysis. Please summarize based ONLY on the provided caption/text and mention that media analysis was not possible.]";
                     }
                     AIAssistanceHelper.requestReply(currentAccountFinal, prompt, context, true, imageFile, new ChatAnimeAssistantView.AssistantRequestCallback() {
                         @Override
