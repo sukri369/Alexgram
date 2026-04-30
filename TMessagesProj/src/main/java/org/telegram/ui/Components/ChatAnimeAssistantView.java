@@ -1647,22 +1647,30 @@ public class ChatAnimeAssistantView extends FrameLayout {
         final String encodedPrompt = android.net.Uri.encode(prompt);
         final String baseUrl = "https://image.pollinations.ai/prompt/" + encodedPrompt + "?width=1024&height=1024&nologo=true";
         
+        final Runnable showErrorRunnable = () -> {
+             if (progressView.getVisibility() == VISIBLE) {
+                 progressView.setVisibility(GONE);
+                 errorText.setVisibility(VISIBLE);
+             }
+        };
+
         imageView.getImageReceiver().setDelegate((imageReceiver, set, thumb, memCache) -> {
-            if (set && !thumb) {
+            if (set) {
+                AndroidUtilities.cancelRunOnUIThread(showErrorRunnable);
                 progressView.animate().alpha(0f).setDuration(280).withEndAction(() -> progressView.setVisibility(GONE)).start();
                 errorText.setVisibility(GONE);
-            } else if (!set && !thumb && !memCache) {
-                progressView.setVisibility(GONE);
-                errorText.setVisibility(VISIBLE);
             }
         });
 
         Runnable loadAction = () -> {
+            AndroidUtilities.cancelRunOnUIThread(showErrorRunnable);
             errorText.setVisibility(GONE);
             progressView.setVisibility(VISIBLE);
             progressView.setAlpha(1.0f);
-            String imageUrl = baseUrl + "&seed=" + System.currentTimeMillis();
+            String imageUrl = baseUrl + "&seed=" + (System.currentTimeMillis() + (long)(Math.random() * 1000));
             imageView.setImage(imageUrl, null, null);
+            // Wait up to 45 seconds for image generation
+            AndroidUtilities.runOnUIThread(showErrorRunnable, 45000);
         };
 
         loadAction.run();
