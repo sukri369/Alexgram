@@ -49425,11 +49425,15 @@ public class ChatActivity extends BaseFragment implements
                                     resultBuilder.setTitle("Summary Result");
                                     resultBuilder.setView(scrollView);
                                     resultBuilder.setPositiveButton("Close", null);
-                                    resultBuilder.setNegativeButton("Continue Chat", (d, w) -> {
-                                        if (chatAnimeAssistantView != null) {
-                                            chatAnimeAssistantView.startTopicDiscussion(result);
-                                        }
-                                    });
+
+                                    android.content.SharedPreferences aiPrefs = org.telegram.messenger.ApplicationLoader.applicationContext.getSharedPreferences("ai_assistant_prefs", android.content.Context.MODE_PRIVATE);
+                                    if (aiPrefs.getBoolean("assistant_enabled", false)) {
+                                        resultBuilder.setNegativeButton("Continue Chat", (d, w) -> {
+                                            if (chatAnimeAssistantView != null) {
+                                                chatAnimeAssistantView.startTopicDiscussion(result);
+                                            }
+                                        });
+                                    }
                                     resultBuilder.setNeutralButton("Copy", (d, w) -> {
                                         android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getParentActivity().getSystemService(android.content.Context.CLIPBOARD_SERVICE);
                                         // Copy raw markdown text so it can be pasted with formatting elsewhere or re-rendered
