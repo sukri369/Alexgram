@@ -49341,33 +49341,28 @@ public class ChatActivity extends BaseFragment implements
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
                 try {
                     String userInstruction = inputField.getText().toString().trim();
-                    String prompt = "You are an elite AI summarization engine built for high-quality UI experiences.\n\n"
+                    String prompt = "Task:\n"
+                            + "Transform the input text into a clear, concise, and well-structured summary.\n\n"
+                            + "Core Rules:\n"
+                            + "- Extract only key ideas, insights, and essential information.\n"
+                            + "- Remove redundancy, filler, and low-value content.\n"
+                            + "- Preserve the original meaning, tone, and intent.\n"
+                            + "- Adapt structure dynamically based on content type.\n\n"
+                            + "Formatting Guidelines:\n"
+                            + "- Use bullet points for highlights, lists, or steps.\n"
+                            + "- Use short paragraphs for explanations.\n"
+                            + "- Add section headers only when they improve clarity.\n"
+                            + "- Keep spacing clean for easy scanning.\n\n"
+                            + "Optimization:\n"
+                            + "- Keep sentences sharp, minimal, and impactful.\n"
+                            + "- Prioritize clarity over complexity.\n"
+                            + "- If input is short, return a tighter refined version instead of over-formatting.\n"
+                            + "- If input is long, compress aggressively without losing key meaning.\n\n"
+                            + "Output:\n"
+                            + "Return only the final formatted summary. No explanations, no extra text.";
 
-+ "Task:\n"
-+ "Transform the input text into a clear, concise, and well-structured summary.\n\n"
-
-+ "Core Rules:\n"
-+ "- Extract only key ideas, insights, and essential information.\n"
-+ "- Remove redundancy, filler, and low-value content.\n"
-+ "- Preserve the original meaning, tone, and intent.\n"
-+ "- Adapt structure dynamically based on content type.\n\n"
-
-+ "Formatting Guidelines:\n"
-+ "- Use bullet points for highlights, lists, or steps.\n"
-+ "- Use short paragraphs for explanations.\n"
-+ "- Add section headers only when they improve clarity.\n"
-+ "- Keep spacing clean for easy scanning.\n\n"
-
-+ "Optimization:\n"
-+ "- Keep sentences sharp, minimal, and impactful.\n"
-+ "- Prioritize clarity over complexity.\n"
-+ "- If input is short, return a tighter refined version instead of over-formatting.\n"
-+ "- If input is long, compress aggressively without losing key meaning.\n\n"
-
-+ "Output:\n"
-+ "Return only the final formatted summary. No explanations, no extra text.";
                     if (!android.text.TextUtils.isEmpty(userInstruction)) {
-                        prompt = "Summarize based on: " + userInstruction;
+                        prompt += "\n\nAdditional Instruction: " + userInstruction;
                     }
 
                     // Show loading
@@ -49377,9 +49372,10 @@ public class ChatActivity extends BaseFragment implements
                     container.addView(progressBar, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, android.view.Gravity.CENTER, 0, 16, 0, 16));
                     dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
 
-                    final long dialogIdFinal = dialogId;
+                    final long dialogIdFinal = dialog_id;
                     final int currentAccountFinal = currentAccount;
-                    final ArrayList<MessageObject> messageObjectsFinal = messageObjects;
+                    final ArrayList<MessageObject> messageObjectsFinal = new ArrayList<>();
+                    messageObjectsFinal.add(messageToSummarize);
 
                     String context = AIAssistanceHelper.buildContext(ChatActivity.this, currentAccountFinal, dialogIdFinal, messageObjectsFinal);
                     AIAssistanceHelper.requestReply(currentAccountFinal, prompt, context, true, new ChatAnimeAssistantView.AssistantRequestCallback() {

@@ -51,26 +51,7 @@ public class AIAssistanceHelper {
     public static void requestReply(int currentAccount, String prompt, String chatContext, boolean isSummarize, ChatAnimeAssistantView.AssistantRequestCallback callback) {
         final String decoratedPrompt;
         if (isSummarize) {
-            decoratedPrompt = "System: You are an expert AI summarizer for Alexgram.\n\n"
-                    + "Task:\n"
-                    + "Transform the input text into a clear, concise, and well-structured summary.\n\n"
-                    + "Core Rules:\n"
-                    + "- Extract only key ideas, insights, and essential information.\n"
-                    + "- Remove redundancy, filler, and low-value content.\n"
-                    + "- Preserve the original meaning, tone, and intent.\n"
-                    + "- Adapt structure dynamically based on content type.\n\n"
-                    + "Formatting Guidelines:\n"
-                    + "- Use bullet points for highlights, lists, or steps.\n"
-                    + "- Use short paragraphs for explanations.\n"
-                    + "- Add section headers only when they improve clarity.\n"
-                    + "- Keep spacing clean for easy scanning.\n\n"
-                    + "Optimization:\n"
-                    + "- Keep sentences sharp, minimal, and impactful.\n"
-                    + "- Prioritize clarity over complexity.\n"
-                    + "- If input is short, return a tighter refined version instead of over-formatting.\n"
-                    + "- If input is long, compress aggressively without losing key meaning.\n\n"
-                    + "Output:\n"
-                    + "Content: " + prompt;
+            decoratedPrompt = "System: You are an expert AI summarizer for Alexgram.\n\n" + prompt;
         } else {
             decoratedPrompt = "Persona: You are Alexgram's anime-style floating assistant. " +
                     "Tone: friendly, playful, slightly teasing but respectful. " +
