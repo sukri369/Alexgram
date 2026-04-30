@@ -446,83 +446,89 @@ public class AIAssistanceHelper {
             sb.append("[Forwarded Content]\n");
         }
 
-        // 1. Text or Caption
-        CharSequence text = messageObject.messageText;
-        if (TextUtils.isEmpty(text)) {
-            if (!TextUtils.isEmpty(messageObject.caption)) {
-                text = messageObject.caption;
-            } else if (messageObject.messageOwner != null && !TextUtils.isEmpty(messageObject.messageOwner.message)) {
-                text = messageObject.messageOwner.message;
+        // 1. Text Extraction - Aggressive multi-source collection
+        StringBuilder contentBuilder = new StringBuilder();
+        
+        // Source A: Standard Message Text (parsed entities, etc)
+        if (!TextUtils.isEmpty(messageObject.messageText)) {
+            contentBuilder.append(messageObject.messageText);
+        }
+        
+        // Source B: Caption (for photos/videos)
+        if (!TextUtils.isEmpty(messageObject.caption)) {
+            String caption = messageObject.caption.toString();
+            if (contentBuilder.indexOf(caption) == -1) {
+                if (contentBuilder.length() > 0) contentBuilder.append("\n");
+                contentBuilder.append(caption);
+            }
+        }
+        
+        // Source C: Raw Message Body (fallback for non-standard forwards)
+        if (messageObject.messageOwner != null && !TextUtils.isEmpty(messageObject.messageOwner.message)) {
+            String rawMsg = messageObject.messageOwner.message;
+            if (contentBuilder.indexOf(rawMsg) == -1) {
+                if (contentBuilder.length() > 0) contentBuilder.append("\n");
+                contentBuilder.append(rawMsg);
             }
         }
 
-        if (!TextUtils.isEmpty(text)) {
-            sb.append(text);
+        // Source D: WebPage Previews (Loot Alerts often put details here)
+        TLRPC.WebPage webPage = null;
+        if (messageObject.messageOwner != null && messageObject.messageOwner.media != null) {
+            if (messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaWebPage) {
+                webPage = messageObject.messageOwner.media.webpage;
+            }
+        }
+        if (webPage != null) {
+            if (!TextUtils.isEmpty(webPage.title) && contentBuilder.indexOf(webPage.title) == -1) {
+                if (contentBuilder.length() > 0) contentBuilder.append("\n");
+                contentBuilder.append("Link Title: ").append(webPage.title);
+            }
+            if (!TextUtils.isEmpty(webPage.description) && contentBuilder.indexOf(webPage.description) == -1) {
+                if (contentBuilder.length() > 0) contentBuilder.append("\n");
+                contentBuilder.append("Link Details: ").append(webPage.description);
+            }
         }
 
-        // 1.5. Custom Emojis (Premium)
-        if (messageObject.messageOwner != null && messageObject.messageOwner.entities != null) {
-            boolean hasCustom = false;
-            for (TLRPC.MessageEntity entity : messageObject.messageOwner.entities) {
-                if (entity instanceof TLRPC.TL_messageEntityCustomEmoji) {
-                    hasCustom = true;
-                    break;
-                }
-            }
-            if (hasCustom) {
-                if (sb.length() > 0 && !sb.toString().trim().isEmpty()) {
-                    sb.append(" [Premium Emoji]");
-                } else {
-                    sb.append("[Premium Emoji]");
-                }
-            }
+        String finalContent = contentBuilder.toString().trim();
+        if (!TextUtils.isEmpty(finalContent)) {
+            sb.append(finalContent);
         }
 
         // 2. Polls
         if (messageObject.isPoll() && messageObject.messageOwner != null && messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaPoll) {
             TLRPC.Poll poll = ((TLRPC.TL_messageMediaPoll) messageObject.messageOwner.media).poll;
             if (sb.length() > 0) sb.append("\n");
-            sb.append("Poll: ").append(poll.question.text);
+            sb.append("Poll Question: ").append(poll.question.text);
             if (poll.answers != null) {
                 for (TLRPC.PollAnswer answer : poll.answers) {
-                    sb.append("\n- ").append(answer.text.text);
+                    sb.append("\n- Choice: ").append(answer.text.text);
                 }
             }
         }
 
-        // 3. Link Description
-        if (messageObject.messageOwner != null && messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaWebPage) {
-            TLRPC.WebPage webPage = messageObject.messageOwner.media.webpage;
-            if (webPage != null) {
-                if (sb.length() > 0) sb.append("\n");
-                sb.append("Web Page: ");
-                if (!TextUtils.isEmpty(webPage.title)) sb.append(webPage.title).append(" - ");
-                if (!TextUtils.isEmpty(webPage.description)) sb.append(webPage.description);
-                if (!TextUtils.isEmpty(webPage.url)) sb.append(" (").append(webPage.url).append(")");
-            }
-        }
-
-        // 4. Transcription
+        // 3. Transcription (for voice/video notes)
         if (!TextUtils.isEmpty(messageObject.getVoiceTranscription())) {
             if (sb.length() > 0) sb.append("\n");
-            sb.append("Transcription: ").append(messageObject.messageOwner.voiceTranscription);
+            sb.append("Voice Transcription: ").append(messageObject.messageOwner.voiceTranscription);
         }
 
-        // 5. Media fallback if still empty or media-heavy
-        if (sb.length() == 0 || (messageObject.messageOwner != null && messageObject.messageOwner.media != null && TextUtils.isEmpty(text))) {
+        // 4. Media Fallback (Always add if text is thin or media is present)
+        boolean hasMedia = messageObject.messageOwner != null && messageObject.messageOwner.media != null;
+        if (sb.length() == 0 || (hasMedia && finalContent.length() < 20)) {
             String tag = null;
-            if (messageObject.type == MessageObject.TYPE_PHOTO) tag = "[Photo]";
-            else if (messageObject.type == MessageObject.TYPE_VIDEO) tag = "[Video]";
-            else if (messageObject.type == MessageObject.TYPE_ROUND_VIDEO) tag = "[Video Note]";
+            if (messageObject.type == MessageObject.TYPE_PHOTO) tag = "[Photo Content]";
+            else if (messageObject.type == MessageObject.TYPE_VIDEO) tag = "[Video Content]";
+            else if (messageObject.type == MessageObject.TYPE_ROUND_VIDEO) tag = "[Video Note Content]";
             else if (messageObject.type == MessageObject.TYPE_VOICE) tag = "[Voice Message]";
             else if (messageObject.type == MessageObject.TYPE_STICKER) tag = "[Sticker]";
-            else if (messageObject.type == MessageObject.TYPE_GIF) tag = "[GIF]";
+            else if (messageObject.type == MessageObject.TYPE_GIF) tag = "[GIF Animation]";
             else if (messageObject.type == MessageObject.TYPE_FILE) {
                 String name = messageObject.getDocumentName();
-                tag = "[File" + (!TextUtils.isEmpty(name) ? ": " + name : "") + "]";
+                tag = "[File Attachment" + (!TextUtils.isEmpty(name) ? ": " + name : "") + "]";
             }
-            else if (messageObject.type == MessageObject.TYPE_GEO) tag = "[Location]";
-            else if (messageObject.type == MessageObject.TYPE_CONTACT) tag = "[Contact]";
+            else if (messageObject.type == MessageObject.TYPE_GEO) tag = "[Location Data]";
+            else if (messageObject.type == MessageObject.TYPE_CONTACT) tag = "[Contact Info]";
 
             if (tag != null) {
                 if (sb.length() > 0) sb.append("\n").append(tag);
@@ -530,12 +536,12 @@ public class AIAssistanceHelper {
             }
         }
 
-        // 6. Quoted message (only for top level)
+        // 5. Quoted/Replied Message (one level deep)
         if (depth == 0 && messageObject.replyMessageObject != null) {
             String quotedContent = getMessageContent(messageObject.replyMessageObject, depth + 1);
             if (!TextUtils.isEmpty(quotedContent)) {
                 if (sb.length() > 0) sb.append("\n");
-                sb.append("(Replying to: ").append(quotedContent).append(")");
+                sb.append("(This is a reply to: ").append(quotedContent).append(")");
             }
         }
 
