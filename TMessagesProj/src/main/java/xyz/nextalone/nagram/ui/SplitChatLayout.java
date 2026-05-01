@@ -95,26 +95,20 @@ public class SplitChatLayout extends FrameLayout {
             getLocationOnScreen(loc);
             int screenH = AndroidUtilities.displayMetrics.heightPixels;
             
-            // 1. Top Pane: Should NEVER see the keyboard bottom inset
+            // 1. Top Pane: Keyboard is never relevant for the top pane in split mode
             if (pane1Container != null) {
                 WindowInsetsCompat topInsets = new WindowInsetsCompat.Builder(insets)
-                        .setInsets(WindowInsetsCompat.Type.systemBars(), 
-                                androidx.core.graphics.Insets.of(
-                                        insets.getInsets(WindowInsetsCompat.Type.systemBars()).left,
-                                        insets.getInsets(WindowInsetsCompat.Type.systemBars()).top,
-                                        insets.getInsets(WindowInsetsCompat.Type.systemBars()).right,
-                                        0)) // Zero keyboard for top
+                        .setInsets(WindowInsetsCompat.Type.ime(), androidx.core.graphics.Insets.NONE)
                         .build();
                 ViewCompat.dispatchApplyWindowInsets(pane1Container, topInsets);
             }
 
-            // 2. Bottom Pane: Simply dispatch the insets.
-            // The PaneContainer will handle the localization and the chat will handle the padding internally.
+            // 2. Bottom Pane: Standard dispatch
             if (pane2Container != null) {
                 ViewCompat.dispatchApplyWindowInsets(pane2Container, insets);
             }
 
-            return insets.consumeSystemWindowInsets();
+            return insets;
         });
     }
 
@@ -127,9 +121,15 @@ public class SplitChatLayout extends FrameLayout {
         this.host     = activity;
         this.originId = currentDialogId;
         
-        java.util.List<org.telegram.ui.ActionBar.BaseFragment> stack = activity.actionBarLayout.getFragmentStack();
-        if (!stack.isEmpty()) {
-            this.originFragment = stack.get(stack.size() - 1);
+        this.originFragment = null;
+        if (activity.rightActionBarLayout != null && !activity.rightActionBarLayout.getFragmentStack().isEmpty()) {
+            this.originFragment = activity.rightActionBarLayout.getFragmentStack().get(activity.rightActionBarLayout.getFragmentStack().size() - 1);
+        }
+        if (this.originFragment == null || !(this.originFragment instanceof org.telegram.ui.ChatActivity)) {
+            java.util.List<org.telegram.ui.ActionBar.BaseFragment> stack = activity.actionBarLayout.getFragmentStack();
+            if (!stack.isEmpty()) {
+                this.originFragment = stack.get(stack.size() - 1);
+            }
         }
 
         if (built) return;
@@ -152,7 +152,14 @@ public class SplitChatLayout extends FrameLayout {
         }
         
         if (originFragment != null) {
-            originFragment.removeSelfFromStack();
+            org.telegram.ui.ActionBar.INavigationLayout parent = originFragment.getParentLayout();
+            boolean canRemove = true;
+            if (parent == host.actionBarLayout && parent.getFragmentStack().size() <= 1) {
+                canRemove = false;
+            }
+            if (canRemove) {
+                originFragment.removeSelfFromStack();
+            }
             originFragment = null;
         }
 
@@ -1315,7 +1322,12 @@ public class SplitChatLayout extends FrameLayout {
             for (int i = 0; i < getChildCount(); i++) {
                 View child = getChildAt(i);
                 if (!(child instanceof org.telegram.ui.ActionBar.ActionBar)) {
-                    FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) child.getLayoutParams();
+                    android.view.ViewGroup.LayoutParams genericLp = child.getLayoutParams();
+                    if (!(genericLp instanceof FrameLayout.LayoutParams)) {
+                        genericLp = LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT);
+                        child.setLayoutParams(genericLp);
+                    }
+                    FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) genericLp;
                     child.layout(
                         lp.leftMargin,
                         lp.topMargin + topPad - AndroidUtilities.dp(1), // 1dp Overlap to kill any tiny gaps
