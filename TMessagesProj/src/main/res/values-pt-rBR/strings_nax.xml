@@ -358,4 +358,18 @@
     <string name="AllowForwardingRestrictionOnboardingMessage">Para garantir uma experiência perfeita ao contornar as restrições de encaminhamento, certifique-se de que a mídia foi totalmente baixada antes de encaminhar. Isso permite que o aplicativo faça o re-upload e entregue seu conteúdo com segurança, sem bloqueios do lado do servidor.</string>
     <string name="V8DAudio">Ilusão sonora espacial de 360 graus</string>
     <string name="V8DAudioAbout">Efeito sonoro Dolby 8D</string>
+
+    <string name="SpecialForward">Encaminhamento Especial</string>
+    <string name="SpecialForwardAbout">Ative um menu de encaminhamento avançado com opções de edição e filtragem de mensagens.</string>
+    <string name="SpecialForwardTitle">Encaminhamento especial</string>
+    <string name="SpecialForwardEditHint">Editar Mensagem</string>
+    <string name="SpecialForwardResetAll">Redefinir tudo</string>
+    <string name="SpecialForwardReplaceAllTexts">Substituir todos os textos</string>
+    <string name="SpecialForwardReplaceAllLinks">Substituir todos os links</string>
+    <string name="SpecialForwardDeleteAllLinks">Excluir todos os links</string>
+    <string name="SpecialForwardDeleteAllCaptions">Excluir todas as legendas de mídia</string>
+    <string name="SpecialForwardAsFile">Encaminhar como arquivo</string>
+    <string name="SpecialForwardResetSuccess">Mensagens redefinidas</string>
+    <string name="DoubleTapOnChatsToFilterUnread">Toque duplo nos chats para filtrar não lidos</string>
+    <string name="AmbientMode">Modo Ambiente</string>
 </resources>

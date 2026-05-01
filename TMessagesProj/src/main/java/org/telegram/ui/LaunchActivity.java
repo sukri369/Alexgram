@@ -8240,9 +8240,12 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             FileLog.e(e);
         }
     }
+    private long ignoreBackUntil;
+    public void setIgnoreBackUntil(long time) { this.ignoreBackUntil = time; }
 
     @Override
     public void onBackPressed() {
+        if (System.currentTimeMillis() < ignoreBackUntil) return;
         if (!onBackPressed(true)) {
             return;
         }
@@ -8265,6 +8268,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
     }
 
     public boolean onBackPressed(boolean invoked) {
+        if (System.currentTimeMillis() < ignoreBackUntil) return false;
         if (FloatingDebugController.onBackPressed(invoked)) {
             return false;
         }
@@ -8290,6 +8294,11 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         } else if (ArticleViewer.hasInstance() && ArticleViewer.getInstance().isVisible()) {
             if (invoked) ArticleViewer.getInstance().close(true, false);
             return false;
+        }
+        if (xyz.nextalone.nagram.ui.SplitChatManager.getInstance().isActive()) {
+            if (xyz.nextalone.nagram.ui.SplitChatManager.getInstance().getLayout().onBackPressed(invoked)) {
+                return false;
+            }
         }
         return true;
     }

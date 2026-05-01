@@ -65,6 +65,8 @@ public class VoiceChanger {
     }
 
     public static void process(ByteBuffer buffer, int count) {
+        if (buffer == null || count <= 0) return;
+
         int effect = NaConfig.INSTANCE.getVoiceChangerEffectValue();
         if (effect == EFFECT_NONE) {
             if (currentEffect != EFFECT_NONE) clearState();
@@ -72,68 +74,97 @@ public class VoiceChanger {
             return;
         }
 
-        if (count <= 0) return;
         if (currentEffect != effect) {
             setEffect(effect);
         }
 
-        buffer.order(ByteOrder.LITTLE_ENDIAN);
-        buffer.rewind();
+        try {
+            buffer.order(ByteOrder.LITTLE_ENDIAN);
+            
+            // On some devices (Samsung), the buffer limit might be set to a previous read length.
+            // Ensure the limit is sufficient for the current count.
+            if (buffer.limit() < count) {
+                if (count <= buffer.capacity()) {
+                    buffer.limit(count);
+                } else {
+                    count = buffer.capacity();
+                    buffer.limit(count);
+                }
+            }
+            
+            buffer.rewind();
 
-        short[] pcm = new short[count / 2];
-        buffer.asShortBuffer().get(pcm);
+            int shortCount = count / 2;
+            short[] pcm = new short[shortCount];
+            java.nio.ShortBuffer shortBuffer = buffer.asShortBuffer();
+            
+            if (shortBuffer.remaining() < shortCount) {
+                shortCount = shortBuffer.remaining();
+                if (shortCount <= 0) return;
+                pcm = new short[shortCount];
+            }
+            
+            shortBuffer.get(pcm);
 
-        switch (effect) {
-            case EFFECT_ROBOTIC:
-                applyRobotic(pcm);
-                break;
-            case EFFECT_ALIEN:
-                applyAlien(pcm);
-                break;
-            case EFFECT_HOARSENESS:
-                applyHoarseness(pcm);
-                break;
-            case EFFECT_MODULATION:
-                applyModulation(pcm);
-                break;
-            case EFFECT_CHILD:
-                applyPerfectChild(pcm);
-                break;
-            case EFFECT_MOUSE:
-                applyPerfectMouse(pcm);
-                break;
-            case EFFECT_MAN:
-                applyPerfectMan(pcm);
-                break;
-            case EFFECT_WOMAN:
-                applyPerfectWoman(pcm);
-                break;
-            case EFFECT_MONSTER:
-                applyPerfectMonster(pcm);
-                break;
-            case EFFECT_ECHO:
-                applyEcho(pcm, 0.35f, 0.45f);
-                break;
-            case EFFECT_NOISE:
-                applyNoise(pcm, 0.08f);
-                break;
-            case EFFECT_HELIUM:
-                applyPitchShift(pcm, 1.85f);
-                applyHighPass(pcm, 0.6f);
-                break;
-            case EFFECT_HEXAFLUORIDE:
-                applyPitchShift(pcm, 0.55f);
-                applyLowPass(pcm, 0.5f);
-                break;
-            case EFFECT_CAVE:
-                applyEcho(pcm, 0.65f, 0.55f);
-                applyLowPass(pcm, 0.8f);
-                break;
+            switch (effect) {
+                case EFFECT_ROBOTIC:
+                    applyRobotic(pcm);
+                    break;
+                case EFFECT_ALIEN:
+                    applyAlien(pcm);
+                    break;
+                case EFFECT_HOARSENESS:
+                    applyHoarseness(pcm);
+                    break;
+                case EFFECT_MODULATION:
+                    applyModulation(pcm);
+                    break;
+                case EFFECT_CHILD:
+                    applyPerfectChild(pcm);
+                    break;
+                case EFFECT_MOUSE:
+                    applyPerfectMouse(pcm);
+                    break;
+                case EFFECT_MAN:
+                    applyPerfectMan(pcm);
+                    break;
+                case EFFECT_WOMAN:
+                    applyPerfectWoman(pcm);
+                    break;
+                case EFFECT_MONSTER:
+                    applyPerfectMonster(pcm);
+                    break;
+                case EFFECT_ECHO:
+                    applyEcho(pcm, 0.35f, 0.45f);
+                    break;
+                case EFFECT_NOISE:
+                    applyNoise(pcm, 0.08f);
+                    break;
+                case EFFECT_HELIUM:
+                    applyPitchShift(pcm, 1.85f);
+                    applyHighPass(pcm, 0.6f);
+                    break;
+                case EFFECT_HEXAFLUORIDE:
+                    applyPitchShift(pcm, 0.55f);
+                    applyLowPass(pcm, 0.5f);
+                    break;
+                case EFFECT_CAVE:
+                    applyEcho(pcm, 0.65f, 0.55f);
+                    applyLowPass(pcm, 0.8f);
+                    break;
+            }
+
+            buffer.rewind();
+            java.nio.ShortBuffer outShortBuffer = buffer.asShortBuffer();
+            if (outShortBuffer.remaining() >= pcm.length) {
+                outShortBuffer.put(pcm);
+            }
+            buffer.position(Math.min(count, buffer.capacity()));
+        } catch (java.nio.BufferUnderflowException e) {
+            FileLog.e("VoiceChanger: BufferUnderflowException! count=" + count + " pos=" + buffer.position() + " lim=" + buffer.limit() + " cap=" + buffer.capacity(), e);
+        } catch (Exception e) {
+            FileLog.e(e);
         }
-
-        buffer.rewind();
-        buffer.asShortBuffer().put(pcm);
-        buffer.position(Math.min(count, buffer.capacity()));
     }
 
     // --- Complex Effects ---

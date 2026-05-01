@@ -328,6 +328,7 @@
     <string name="StorageSettings">Storage</string>
     <string name="MainTabsSettingsHeader">Main Tabs</string>
     <string name="MainTabsHideTitles">Hide Titles</string>
+    <string name="DoubleTapOnChatsToFilterUnread">Double-Tap On Chats To Filter Unread Chats</string>
     <string name="PasscodeShowMessagePreviewWhenLocked">Show Message Previews</string>
     <string name="PasscodeShowMessagePreviewWhenLockedAbout">Shows notification content even when passcode lock is active.</string>
     <string name="StickerSavedHint">Sticker saved to gallery.</string>
@@ -377,4 +378,19 @@
 
     <string name="V8DAudio">Spatial 360 Degree Sound Illusion</string>
     <string name="V8DAudioAbout">Dolby 8D Sound Effect</string>
+
+    <string name="usePollinationsAi">Use Pollinations.ai</string>
+    <string name="usePollinationsAiAbout">Use Pollinations.ai for free AI Reply, Summarize, and AI Assistance. No API key required.</string>
+    <string name="AmbientMode">Ambient Mode</string>
+    <string name="SpecialForward">Special Forward</string>
+    <string name="SpecialForwardAbout">Enable an advanced forward menu with message editing and filtering options.</string>
+    <string name="SpecialForwardTitle">Special forward</string>
+    <string name="SpecialForwardEditHint">Edit Message</string>
+    <string name="SpecialForwardResetAll">Reset all</string>
+    <string name="SpecialForwardReplaceAllTexts">Replace all texts</string>
+    <string name="SpecialForwardReplaceAllLinks">Replace all links</string>
+    <string name="SpecialForwardDeleteAllLinks">Delete all links</string>
+    <string name="SpecialForwardDeleteAllCaptions">Delete all media captions</string>
+    <string name="SpecialForwardAsFile">Forward as file</string>
+    <string name="SpecialForwardResetSuccess">Messages reset</string>
 </resources>

@@ -471,6 +471,7 @@ public class ChatActivity extends BaseFragment implements
     private final static int nkbtn_hide = 2009;
     private final static int nkbtn_savemessage = 2010;
     private final static int nkbtn_forward_noquote = 2011;
+    private final static int nkbtn_special_forward = 2060;
     private final static int nkbtn_sharemessage = 2030;
 
     // chat click menu buttons
@@ -501,6 +502,7 @@ public class ChatActivity extends BaseFragment implements
     private final static int nkbtn_voice_changer = 2104;
     private final static int nkbtn_advanced_tool = 2106;
     private final static int nkbtn_change_font = 2107;
+    private final static int nkbtn_split_chat = 2108;
     private final static int send_video_as_round = 1846;
 
     public int shareAlertDebugMode = DEBUG_SHARE_ALERT_MODE_NORMAL;
@@ -4905,6 +4907,11 @@ public class ChatActivity extends BaseFragment implements
                     actionBar.actionBarMenuOnItemClick.onItemClick(import_chat);
                 });
             }
+            ActionBarMenuSubItem splitChatItem = ActionBarMenuItem.addItem(advancedToolsLayout, R.drawable.ic_split_chat_na, LocaleController.getString("SplitChat", R.string.SplitChat), false, getResourceProvider());
+            splitChatItem.setOnClickListener(v -> {
+                headerItem.closeSubMenu();
+                actionBar.actionBarMenuOnItemClick.onItemClick(nkbtn_split_chat);
+            });
             headerItem.lazilyAddSwipeBackItem(R.drawable.ic_advanced_tool_na, null, "Advanced Tool", advancedToolsLayout);
             headerItem.lazilyAddColoredGap();
 
@@ -9622,8 +9629,8 @@ public class ChatActivity extends BaseFragment implements
             
             chatAnimeAssistantView.setAssistantRequestDelegate(new ChatAnimeAssistantView.AssistantRequestDelegate() {
                 @Override
-                public void onRequest(String prompt, ChatAnimeAssistantView.AssistantRequestCallback callback) {
-                    requestAnimeAssistantReply(prompt, callback);
+                public void onRequest(String prompt, List<AIAssistanceHelper.HistoryItem> history, ChatAnimeAssistantView.AssistantRequestCallback callback) {
+                    requestAnimeAssistantReply(prompt, history, callback);
                 }
 
                 @Override
@@ -10991,6 +10998,9 @@ public class ChatActivity extends BaseFragment implements
         if (currentEncryptedChat == null && getDialogId() != UserObject.VERIFY && NaConfig.INSTANCE.getActionBarButtonForward().Bool()) {
             actionModeViews.add(actionMode.addItemWithWidth(forward, R.drawable.msg_forward_noquote, AndroidUtilities.dp(54), LocaleController.getString(R.string.Forward)));
         }
+        if (currentEncryptedChat == null && NaConfig.INSTANCE.getSpecialForward().Bool()) {
+            actionModeViews.add(actionMode.addItemWithWidth(nkbtn_special_forward, R.drawable.nk_special_forward, AndroidUtilities.dp(54), LocaleController.getString(R.string.SpecialForward)));
+        }
         actionModeViews.add(actionMode.addItemWithWidth(delete, R.drawable.msg_delete, AndroidUtilities.dp(54), LocaleController.getString(R.string.Delete)));
 
         if (currentEncryptedChat == null) {
@@ -11007,6 +11017,7 @@ public class ChatActivity extends BaseFragment implements
 
         if (currentEncryptedChat == null && !noforward) {
             actionModeOtherItem.addSubItem(nkbtn_forward_noquote, R.drawable.msg_forward_noquote, LocaleController.getString(R.string.NoQuoteForward));
+            actionModeOtherItem.addSubItem(nkbtn_special_forward, R.drawable.nk_special_forward, LocaleController.getString(R.string.SpecialForward));
         }
         actionModeOtherItem.addSubItem(nkbtn_translate, LlmConfig.llmIsDefaultProvider() ? R.drawable.magic_stick_solar : R.drawable.ic_translate, LocaleController.getString(R.string.Translate));
         actionModeOtherItem.addSubItem(nkbtn_sharemessage, R.drawable.msg_shareout, LocaleController.getString(R.string.ShareMessages));
@@ -11029,6 +11040,7 @@ public class ChatActivity extends BaseFragment implements
         actionMode.setItemVisibility(star, selectedMessagesCanStarIds[0].size() + selectedMessagesCanStarIds[1].size() != 0 ? View.VISIBLE : View.GONE);
         actionMode.setItemVisibility(combine_message, selectedMessagesCanCopyIds[0].size() + selectedMessagesCanCopyIds[1].size() != 0 ? View.VISIBLE : View.GONE);
         actionMode.setItemVisibility(forward, NaConfig.INSTANCE.getActionBarButtonForward().Bool() ? View.VISIBLE : View.GONE);
+        actionMode.setItemVisibility(nkbtn_special_forward, NaConfig.INSTANCE.getSpecialForward().Bool() ? View.VISIBLE : View.GONE);
         actionMode.setItemVisibility(delete, cantDeleteMessagesCount == 0 ? View.VISIBLE : View.GONE);
         actionMode.setItemVisibility(tag_message, getUserConfig().isPremium() ? View.VISIBLE : View.GONE);
         actionMode.setItemVisibility(share, View.GONE);
@@ -13077,6 +13089,15 @@ public class ChatActivity extends BaseFragment implements
         updatePinnedMessageView(true);
         updateVisibleRows();
         updateSelectedMessageReactions();
+    }
+    private void openSpecialForwardActivity() {
+        ArrayList<MessageObject> messages = new ArrayList<>();
+        for (int a = 0; a < selectedMessagesIds.length; a++) {
+            for (int b = 0; b < selectedMessagesIds[a].size(); b++) {
+                messages.add(selectedMessagesIds[a].valueAt(b));
+            }
+        }
+        presentFragment(new SpecialForwardActivity(messages));
     }
 
     public void openForward(boolean fromActionBar) {
@@ -33484,8 +33505,13 @@ public class ChatActivity extends BaseFragment implements
         if (item != null) {
             item.setVisibility(View.VISIBLE);
         }
-        if (chatMode != MODE_SCHEDULED && actionModeOtherItem != null && NaConfig.INSTANCE.getShowNoQuoteForward().Bool()) {
-            actionModeOtherItem.showSubItem(nkbtn_forward_noquote);
+        if (chatMode != MODE_SCHEDULED && actionModeOtherItem != null) {
+            if (NaConfig.INSTANCE.getShowNoQuoteForward().Bool()) {
+                actionModeOtherItem.showSubItem(nkbtn_forward_noquote);
+            }
+            if (NaConfig.INSTANCE.getSpecialForward().Bool()) {
+                actionModeOtherItem.showSubItem(nkbtn_special_forward);
+            }
         }
         actionMode.setItemVisibility(delete, View.VISIBLE);
         actionsButtonsLayout.bringToFront();
@@ -45545,6 +45571,9 @@ public class ChatActivity extends BaseFragment implements
                 messagePreviewParams.hideCaption = noForwardCaption;
             }
             openForward(true);
+        } else if (id == nkbtn_special_forward) {
+            openSpecialForwardActivity();
+            hideActionMode();
         } else if (id == nkbtn_change_font) {
             chatActivityEnterView.getEditField().makeSelectedChangeFont();
         } else if (id == nkactionbarbtn_reply) {
@@ -45645,6 +45674,11 @@ public class ChatActivity extends BaseFragment implements
             if (!getMessagesController().checkCanOpenChat(args, ChatActivity.this))
                 return;
             presentFragment(new ChatActivity(args), true);
+        } else if (id == nkbtn_split_chat) {
+            if (getParentActivity() instanceof org.telegram.ui.LaunchActivity) {
+                xyz.nextalone.nagram.ui.SplitChatManager.getInstance()
+                        .activateSplitMode((org.telegram.ui.LaunchActivity) getParentActivity(), currentAccount, dialog_id);
+            }
         } else if (id == nkbtn_repeat) {
             repeatMessage(false, false);
             clearSelectionMode();
@@ -45721,6 +45755,10 @@ public class ChatActivity extends BaseFragment implements
             }
             case nkbtn_repeatascopy: {
                 repeatMessage(false, true);
+                break;
+            }
+            case nkbtn_special_forward: {
+                openSpecialForwardActivity();
                 break;
             }
             case nkbtn_forward_nocaption:
@@ -48072,6 +48110,11 @@ public class ChatActivity extends BaseFragment implements
                         options.add(nkbtn_repeatascopy);
                         icons.add(R.drawable.msg_repeat);
                     }
+/*                    if (NaConfig.INSTANCE.getSpecialForward().Bool() && selectedObject.canForwardMessage() && !isAyuDeleted && !noforwards) {
+                        items.add(LocaleController.getString(R.string.SpecialForward));
+                        options.add(nkbtn_special_forward);
+                        icons.add(R.drawable.nk_special_forward);
+                    } */
                     if (NekoConfig.showDeleteDownloadedFile.Bool() && getMessageHelper().messageObjectIsFile(type, selectedObject)) {
                         items.add(LocaleController.getString(R.string.DeleteDownloadedFile));
                         options.add(nkbtn_deldlcache);
@@ -49298,18 +49341,58 @@ public class ChatActivity extends BaseFragment implements
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
                 try {
                     String userInstruction = inputField.getText().toString().trim();
-                    String prompt = "Please summarize the following message concisely and beautifully, using bullet points or paragraphs as appropriate to make it easy to read.";
+                    String prompt = "Task:\n"
+                            + "Transform the input text and any attached images into a clear, concise, and well-structured summary.\n\n"
+                            + "Strict Rules:\n"
+                            + "- **VISUAL AWARENESS**: If an image is provided, summarize its visual content in detail. Ignore technical tags like [Photo], [Video], or [Premium Emoji] in the text context.\n"
+                            + "- **MEDIA FALLBACK**: If no image file is provided but a [Photo] or [Video] tag is present, summarize the provided text/caption and explicitly note that you were unable to analyze the media directly.\n"
+                            + "- **NO METADATA**: Do NOT mention user names, chat names, or technical tags in the final summary.\n"
+                            + "- **CONTENT ONLY**: Focus exclusively on the message meaning and visual insights.\n"
+                            + "- **FORMATTING**: Use Bold for emphasis, > for quotes of important phrases, and clean bullets (•).\n\n"
+                            + "Formatting Guidelines:\n"
+                            + "- Use **Bold** for key terms and headlines.\n"
+                            + "- Use `> ` for direct quotes or critical insights.\n"
+                            + "- Use • for bullet points.\n"
+                            + "- Use short paragraphs for explanations.\n"
+                            + "- Keep spacing clean for easy scanning.\n\n"
+                            + "Optimization:\n"
+                            + "- Keep sentences sharp, minimal, and impactful.\n"
+                            + "- If input is short, return a tighter refined version.\n"
+                            + "- If input is long, compress aggressively without losing key meaning.\n\n"
+                            + "Output:\n"
+                            + "Return only the final formatted summary. No explanations, no extra text.";
+
                     if (!android.text.TextUtils.isEmpty(userInstruction)) {
-                        prompt = "Please summarize the following message based on this instruction: " + userInstruction;
+                        prompt += "\n\nAdditional Instruction: " + userInstruction;
                     }
 
                     // Show loading
                     final android.widget.ProgressBar progressBar = new android.widget.ProgressBar(getParentActivity());
-                    container.addView(progressBar, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, android.view.Gravity.CENTER, 0, 16, 0, 0));
-                    inputField.setEnabled(false);
+                    progressBar.setIndeterminate(true);
+                    container.removeAllViews();
+                    container.addView(progressBar, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, android.view.Gravity.CENTER, 0, 16, 0, 16));
                     dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
 
-                    startAiGeneration(prompt, messageToSummarize, new ChatAnimeAssistantView.AssistantRequestCallback() {
+                    final long dialogIdFinal = dialog_id;
+                    final int currentAccountFinal = currentAccount;
+                    final ArrayList<MessageObject> messageObjectsFinal = new ArrayList<>();
+                    messageObjectsFinal.add(messageToSummarize);
+
+                    String context = AIAssistanceHelper.buildContext(ChatActivity.this, currentAccountFinal, dialogIdFinal, messageObjectsFinal, true);
+                    File imageFile = null;
+                    boolean hasMedia = messageToSummarize.isPhoto() || messageToSummarize.isVideo() || messageToSummarize.isRoundVideo() || messageToSummarize.isGif();
+                    if (messageToSummarize.isPhoto()) {
+                        imageFile = FileLoader.getInstance(currentAccountFinal).getPathToMessage(messageToSummarize.messageOwner);
+                    } else if (messageToSummarize.isVideo() || messageToSummarize.isRoundVideo() || messageToSummarize.isGif()) {
+                        imageFile = FileLoader.getInstance(currentAccountFinal).getPathToMessage(messageToSummarize.messageOwner, true);
+                    }
+                    if (imageFile != null && !imageFile.exists()) {
+                        imageFile = null;
+                    }
+                    if (hasMedia && imageFile == null) {
+                        context += "\n\n[System Note: The media file (Photo/Video) is not available for visual analysis. Please summarize based ONLY on the provided caption/text and mention that media analysis was not possible.]";
+                    }
+                    AIAssistanceHelper.requestReply(currentAccountFinal, prompt, context, true, imageFile, new ChatAnimeAssistantView.AssistantRequestCallback() {
                         @Override
                         public void onSuccess(String result) {
                             AndroidUtilities.runOnUIThread(() -> {
@@ -49319,14 +49402,21 @@ public class ChatActivity extends BaseFragment implements
 
                                 if (getParentActivity() != null) {
                                     android.widget.TextView summaryView = new android.widget.TextView(getParentActivity());
+                                    // Pre-process common Markdown bullet points to look better
+                                    String processedResult = result.replaceAll("(?m)^[\\*\\-] ", "• ");
                                     // Make it beautiful: Parse Markdown using Telegram's internal parser
-                                    CharSequence formattedResult = tw.nekomimi.nekogram.helpers.EntitiesHelper.parseMarkdown(result);
+                                    CharSequence formattedResult = tw.nekomimi.nekogram.helpers.EntitiesHelper.parseMarkdown(processedResult);
+                                    // Handle Emojis
+                                    formattedResult = org.telegram.messenger.Emoji.replaceEmoji(formattedResult, summaryView.getPaint().getFontMetricsInt(), false);
+                                    
                                     summaryView.setText(formattedResult);
                                     summaryView.setTextSize(16);
                                     summaryView.setTextColor(getThemedColor(Theme.key_dialogTextBlack));
+                                    summaryView.setLinkTextColor(getThemedColor(Theme.key_chat_messageLinkIn));
                                     summaryView.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(8), AndroidUtilities.dp(24), AndroidUtilities.dp(8));
                                     summaryView.setTextIsSelectable(true);
-                                    summaryView.setMovementMethod(new android.text.method.ScrollingMovementMethod());
+                                    summaryView.setMovementMethod(android.text.method.LinkMovementMethod.getInstance());
+                                    summaryView.setLineSpacing(AndroidUtilities.dp(2), 1.0f);
 
                                     android.widget.ScrollView scrollView = new android.widget.ScrollView(getParentActivity());
                                     scrollView.addView(summaryView);
@@ -49335,6 +49425,15 @@ public class ChatActivity extends BaseFragment implements
                                     resultBuilder.setTitle("Summary Result");
                                     resultBuilder.setView(scrollView);
                                     resultBuilder.setPositiveButton("Close", null);
+
+                                    android.content.SharedPreferences aiPrefs = org.telegram.messenger.ApplicationLoader.applicationContext.getSharedPreferences("ai_assistant_prefs", android.content.Context.MODE_PRIVATE);
+                                    if (aiPrefs.getBoolean("assistant_enabled", false)) {
+                                        resultBuilder.setNegativeButton("Continue Chat", (d, w) -> {
+                                            if (chatAnimeAssistantView != null) {
+                                                chatAnimeAssistantView.startTopicDiscussion(result);
+                                            }
+                                        });
+                                    }
                                     resultBuilder.setNeutralButton("Copy", (d, w) -> {
                                         android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getParentActivity().getSystemService(android.content.Context.CLIPBOARD_SERVICE);
                                         // Copy raw markdown text so it can be pasted with formatting elsewhere or re-rendered
@@ -49658,8 +49757,16 @@ public class ChatActivity extends BaseFragment implements
     }
 
     private void requestAnimeAssistantReply(String prompt, ChatAnimeAssistantView.AssistantRequestCallback callback) {
-        String context = AIAssistanceHelper.buildContext(this, currentAccount, dialog_id, messages);
-        AIAssistanceHelper.requestReply(currentAccount, prompt, context, callback);
+        requestAnimeAssistantReply(prompt, null, callback);
+    }
+
+    private void requestAnimeAssistantReply(String prompt, List<AIAssistanceHelper.HistoryItem> history, ChatAnimeAssistantView.AssistantRequestCallback callback) {
+        String context = AIAssistanceHelper.buildContext(this, currentAccount, dialog_id, messages, false);
+        if (chatAnimeAssistantView != null && !TextUtils.isEmpty(chatAnimeAssistantView.getActiveTopicContext())) {
+            context += "\n\nActive Discussion Topic Summary:\n" + chatAnimeAssistantView.getActiveTopicContext();
+            context += "\n\nUser is now chatting to know more about this topic. Be helpful and provide more details based on this summary.";
+        }
+        AIAssistanceHelper.requestReply(currentAccount, prompt, context, false, null, history, callback);
     }
 
 
@@ -49921,18 +50028,15 @@ public class ChatActivity extends BaseFragment implements
 
     private void startAiGeneration(String userPrompt, MessageObject originalMessage, ChatAnimeAssistantView.AssistantRequestCallback callback) {
         try {
-            // 1. Get Text Context
-            String messageText = originalMessage.messageText != null ? originalMessage.messageText.toString() : "";
-            if (android.text.TextUtils.isEmpty(messageText) && originalMessage.caption != null) {
-                messageText = originalMessage.caption.toString();
+            String context = AIAssistanceHelper.buildContext(this, currentAccount, dialog_id, originalMessage != null ? new java.util.ArrayList<>(java.util.Collections.singletonList(originalMessage)) : null, false);
+            File imageFile = null;
+            if (originalMessage != null && originalMessage.isPhoto()) {
+                imageFile = FileLoader.getInstance(currentAccount).getPathToMessage(originalMessage.messageOwner);
+                if (imageFile != null && !imageFile.exists()) {
+                    imageFile = null;
+                }
             }
-
-            // 2. Get Image Context (if available) - This part is not fully implemented in Helper yet for multi-modal,
-            // but for now we follow the same pattern of building context.
-            // Actually, AIAssistanceHelper.buildContext currently takes a list of messages.
-            
-            String context = AIAssistanceHelper.buildContext(this, currentAccount, dialog_id, originalMessage != null ? new java.util.ArrayList<>(java.util.Collections.singletonList(originalMessage)) : null);
-            AIAssistanceHelper.requestReply(currentAccount, userPrompt, context, callback);
+            AIAssistanceHelper.requestReply(currentAccount, userPrompt, context, false, imageFile, callback);
         } catch (Throwable e) {
             callback.onError("Start Gen Crash: " + e.getMessage());
         }

@@ -33,11 +33,38 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import xyz.nextalone.nagram.NaConfig;
 
 public class AIAssistanceHelper {
+    private static final OkHttpClient client = new OkHttpClient.Builder()
+            .connectTimeout(90, TimeUnit.SECONDS)
+            .readTimeout(90, TimeUnit.SECONDS)
+            .writeTimeout(90, TimeUnit.SECONDS)
+            .addInterceptor(chain -> {
+                okhttp3.Request request = chain.request();
+                okhttp3.Response response = chain.proceed(request);
+                int tryCount = 0;
+                while (!response.isSuccessful() && response.code() >= 502 && response.code() <= 504 && tryCount < 3) {
+                    tryCount++;
+                    response.close();
+                    try { Thread.sleep(2000); } catch (Exception ignored) {}
+                    response = chain.proceed(request);
+                }
+                return response;
+            })
+            .build();
+
+    public static class HistoryItem {
+        public final String text;
+        public final boolean isUser;
+        public HistoryItem(String text, boolean isUser) {
+            this.text = text;
+            this.isUser = isUser;
+        }
+    }
 
     public interface AiGenerationCallback {
         void onSuccess(String result);
@@ -45,11 +72,30 @@ public class AIAssistanceHelper {
     }
 
     public static void requestReply(int currentAccount, String prompt, String chatContext, ChatAnimeAssistantView.AssistantRequestCallback callback) {
-        final String decoratedPrompt = "Persona: You are Alexgram's anime-style floating assistant. " +
-                "Tone: friendly, playful, slightly teasing but respectful. " +
-                "Keep responses concise, practical, and conversational. " +
-                "Identity rule: when the user asks about 'my name' or 'who am I', refer to the account owner from context, never other chat participants. " +
-                "User prompt: " + prompt;
+        requestReply(currentAccount, prompt, chatContext, false, null, null, callback);
+    }
+
+    public static void requestReply(int currentAccount, String prompt, String chatContext, boolean isSummarize, File imageFile, ChatAnimeAssistantView.AssistantRequestCallback callback) {
+        requestReply(currentAccount, prompt, chatContext, isSummarize, imageFile, null, callback);
+    }
+
+    public static void requestReply(int currentAccount, String prompt, String chatContext, boolean isSummarize, File imageFile, List<HistoryItem> history, ChatAnimeAssistantView.AssistantRequestCallback callback) {
+        final String decoratedPrompt = prompt;
+
+        if (NaConfig.INSTANCE.getUsePollinationsAi().Bool()) {
+            callAiApi("https://text.pollinations.ai/v1/chat/completions", null, "openai", decoratedPrompt, chatContext, isSummarize, imageFile, history, new AiGenerationCallback() {
+                @Override
+                public void onSuccess(String result) {
+                    AndroidUtilities.runOnUIThread(() -> callback.onSuccess(result));
+                }
+
+                @Override
+                public void onError(String error) {
+                    AndroidUtilities.runOnUIThread(() -> callback.onError(error));
+                }
+            });
+            return;
+        }
 
         final String url1;
         final String key1;
@@ -62,7 +108,7 @@ public class AIAssistanceHelper {
             return;
         }
 
-        callAiApi(url1, key1, decoratedPrompt, chatContext, null, new AiGenerationCallback() {
+        callAiApi(url1, key1, "gpt-4o", decoratedPrompt, chatContext, isSummarize, imageFile, history, new AiGenerationCallback() {
             @Override
             public void onSuccess(String result) {
                 AndroidUtilities.runOnUIThread(() -> callback.onSuccess(result));
@@ -78,7 +124,7 @@ public class AIAssistanceHelper {
                         return;
                     }
 
-                    callAiApi(url2, key2, decoratedPrompt, chatContext, null, new AiGenerationCallback() {
+                    callAiApi(url2, key2, "gpt-4o", decoratedPrompt, chatContext, isSummarize, imageFile, history, new AiGenerationCallback() {
                         @Override
                         public void onSuccess(String result) {
                             AndroidUtilities.runOnUIThread(() -> callback.onSuccess(result));
@@ -96,7 +142,7 @@ public class AIAssistanceHelper {
         });
     }
 
-    public static void callAiApi(String apiUrl, String apiKey, String userPrompt, String originalMessageText, File imageFile, AiGenerationCallback callback) {
+    public static void callAiApi(String apiUrl, String apiKey, String model, String userPrompt, String originalMessageText, boolean isSummarize, File imageFile, List<HistoryItem> history, AiGenerationCallback callback) {
         if (TextUtils.isEmpty(apiUrl)) {
             callback.onError("API URL is not configured.");
             return;
@@ -114,25 +160,53 @@ public class AIAssistanceHelper {
         }
 
         try {
-            OkHttpClient client = new OkHttpClient.Builder()
-                    .connectTimeout(30, TimeUnit.SECONDS)
-                    .readTimeout(60, TimeUnit.SECONDS)
-                    .build();
-
             JSONObject jsonBody = new JSONObject();
 
-            if (isGeminiNative) {
-                JSONArray contents = new JSONArray();
-                JSONObject contentObj = new JSONObject();
-                JSONArray parts = new JSONArray();
+            String systemInstruction;
+            if (isSummarize) {
+                systemInstruction = "You are the Advanced AI Content Analyst for Alexgram. Your mission is to provide professional, executive-level summaries of messages and visual content. Be concise, highlight key points accurately, and maintain a formal, professional tone.";
+            } else if (originalMessageText != null && originalMessageText.contains("Active Discussion Topic Summary:")) {
+                systemInstruction = "You are Alexgram's Advanced AI Assistant in 'Deep Discussion' mode. Act as an expert on the provided topic summary. Provide deep insights and answer follow-up questions with precision and professional clarity. Use Markdown to structure your analysis.";
+            } else {
+                systemInstruction = "You are Alexgram's Advanced AI Assistant. You are a highly professional, intelligent, and helpful companion. Your goal is to provide insightful, accurate, and concise information while maintaining a sophisticated yet approachable tone. Use Markdown (bold, italic, code blocks, quotes) and appropriate Emojis to structure your responses elegantly. Identity rule: when asked about 'my name' or 'who am I', refer to the account owner from the provided context.\n\n" +
+                        "FORMATTING RULE: Avoid using Markdown tables. Instead, use bullet points, numbered lists, and bold headers to present structured data, as tables are difficult to read in a mobile chat interface.\n\n" +
+                        "IMAGE GENERATION: If the user asks to 'create', 'generate', 'draw', or 'make' an image or picture, you must generate a detailed descriptive prompt for it and return ONLY the following format: [GEN_IMAGE: your_detailed_description]. Do not add any other conversational text if you are generating an image.";
+            }
 
-                String combinedText = "System Instruction: You are a helpful assistant replying to a message in a chat.\n\n" +
-                        "Context Message:\n---\n" + (originalMessageText != null ? originalMessageText : "") + "\n---\n\n" +
-                        "User Request: " + userPrompt;
-                
-                JSONObject textPart = new JSONObject();
-                textPart.put("text", combinedText);
-                parts.put(textPart);
+            if (isGeminiNative) {
+                JSONObject systemInstructionObj = new JSONObject();
+                JSONArray siParts = new JSONArray();
+                JSONObject siTextPart = new JSONObject();
+                siTextPart.put("text", systemInstruction);
+                siParts.put(siTextPart);
+                systemInstructionObj.put("parts", siParts);
+                jsonBody.put("system_instruction", systemInstructionObj);
+
+                JSONArray contents = new JSONArray();
+
+                // Add history
+                if (history != null) {
+                    for (HistoryItem item : history) {
+                        JSONObject contentObj = new JSONObject();
+                        contentObj.put("role", item.isUser ? "user" : "model");
+                        JSONArray parts = new JSONArray();
+                        JSONObject textPart = new JSONObject();
+                        textPart.put("text", item.text);
+                        parts.put(textPart);
+                        contentObj.put("parts", parts);
+                        contents.put(contentObj);
+                    }
+                }
+
+                // Add current prompt with context
+                JSONObject currentContentObj = new JSONObject();
+                currentContentObj.put("role", "user");
+                JSONArray currentParts = new JSONArray();
+
+                JSONObject contextPart = new JSONObject();
+                String contextText = "Context Data:\n---\n" + (originalMessageText != null ? originalMessageText : "No specific context.") + "\n---\n\nUser Request: " + userPrompt;
+                contextPart.put("text", contextText);
+                currentParts.put(contextPart);
 
                 if (imageFile != null) {
                     try {
@@ -144,24 +218,33 @@ public class AIAssistanceHelper {
                             inlineData.put("mime_type", "image/jpeg");
                             inlineData.put("data", base64Image);
                             imagePart.put("inline_data", inlineData);
-                            parts.put(imagePart);
+                            currentParts.put(imagePart);
                         }
                     } catch (Throwable e) { /* ignore image error */ }
                 }
 
-                contentObj.put("parts", parts);
-                contents.put(contentObj);
+                currentContentObj.put("parts", currentParts);
+                contents.put(currentContentObj);
                 jsonBody.put("contents", contents);
 
             } else {
-                jsonBody.put("model", "gpt-4o"); 
+                jsonBody.put("model", model != null ? model : "gpt-4o"); 
 
                 JSONArray messages = new JSONArray();
 
                 JSONObject systemMsg = new JSONObject();
                 systemMsg.put("role", "system");
-                systemMsg.put("content", "You are a helpful assistant replying to a message in a chat.");
+                systemMsg.put("content", systemInstruction);
                 messages.put(systemMsg);
+
+                if (history != null) {
+                    for (HistoryItem item : history) {
+                        JSONObject msg = new JSONObject();
+                        msg.put("role", item.isUser ? "user" : "assistant");
+                        msg.put("content", item.text);
+                        messages.put(msg);
+                    }
+                }
 
                 JSONObject userMsg = new JSONObject();
                 userMsg.put("role", "user");
@@ -170,7 +253,7 @@ public class AIAssistanceHelper {
 
                 JSONObject textPart = new JSONObject();
                 textPart.put("type", "text");
-                String content = "Context Message:\n---\n" + (originalMessageText != null ? originalMessageText : "") + "\n---\n\nUser Instruction: " + userPrompt;
+                String content = "Context Data:\n---\n" + (originalMessageText != null ? originalMessageText : "No specific context.") + "\n---\n\nUser Request: " + userPrompt;
                 textPart.put("text", content);
                 contentArray.put(textPart);
 
@@ -223,6 +306,11 @@ public class AIAssistanceHelper {
                         }
                         String responseBody = response.body().string();
                         if (!response.isSuccessful()) {
+                            // Professional auto-retry for transient server errors (502, 503, 504)
+                            if (response.code() >= 502 && response.code() <= 504) {
+                                // We can't easily retry from inside here without recursion or a retry interceptor
+                                // But we can at least explain it better or tell the user it's a temporary server overload.
+                            }
                             callback.onError("HTTP " + response.code() + ": " + responseBody);
                             return;
                         }
@@ -291,55 +379,205 @@ public class AIAssistanceHelper {
         }
     }
 
-    public static String buildContext(@Nullable BaseFragment fragment, int currentAccount, long dialogId, @Nullable ArrayList<MessageObject> messages) {
+    public static String buildContext(@Nullable BaseFragment fragment, int currentAccount, long dialogId, @Nullable ArrayList<MessageObject> messages, boolean isSummarize) {
         StringBuilder sb = new StringBuilder(512);
-        sb.append("You are replying inside Alexgram assistant.\n");
-        long ownerId = UserConfig.getInstance(currentAccount).getClientUserId();
-        TLRPC.User ownerUser = MessagesController.getInstance(currentAccount).getUser(ownerId);
-        if (ownerUser != null) {
-            sb.append("Account owner (this is the user you assist): ")
-                    .append(UserObject.getForcedFirstName(ownerUser));
-            if (!TextUtils.isEmpty(ownerUser.username)) {
-                sb.append(" (@").append(ownerUser.username).append(")");
+        if (!isSummarize) {
+            sb.append("You are replying inside Alexgram assistant.\n");
+            long ownerId = UserConfig.getInstance(currentAccount).getClientUserId();
+            TLRPC.User ownerUser = MessagesController.getInstance(currentAccount).getUser(ownerId);
+            if (ownerUser != null) {
+                sb.append("Account owner (this is the user you assist): ")
+                        .append(UserObject.getForcedFirstName(ownerUser));
+                if (!TextUtils.isEmpty(ownerUser.username)) {
+                    sb.append(" (@").append(ownerUser.username).append(")");
+                }
+                sb.append("\n");
             }
-            sb.append("\n");
-        }
 
-        if (dialogId != 0) {
-            TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(dialogId);
-            TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-dialogId);
-            if (user != null) {
-                sb.append("Dialog with user: ").append(UserObject.getForcedFirstName(user)).append("\n");
-            } else if (chat != null) {
-                sb.append("Dialog in chat: ").append(chat.title).append("\n");
+            if (dialogId != 0) {
+                TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(dialogId);
+                TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-dialogId);
+                if (user != null) {
+                    sb.append("Dialog with user: ").append(UserObject.getForcedFirstName(user)).append("\n");
+                } else if (chat != null) {
+                    sb.append("Dialog in chat: ").append(chat.title).append("\n");
+                }
+            } else {
+                sb.append("Current Location: App Home Screen (Chat List)\n");
             }
-        } else {
-            sb.append("Current Location: App Home Screen (Chat List)\n");
         }
 
         if (messages != null && !messages.isEmpty()) {
-            int added = 0;
             sb.append("Recent interactions:\n");
-            for (int i = 0; i < messages.size() && added < 3; i++) {
+            // If there's only one message, it's likely a "Summarize" or specific "Reply" action
+            boolean isSingleMessage = messages.size() == 1;
+            int limit = isSingleMessage ? 1 : 3;
+            int added = 0;
+            for (int i = 0; i < messages.size() && added < limit; i++) {
                 MessageObject messageObject = messages.get(i);
                 if (messageObject == null) {
                     continue;
                 }
-                CharSequence text = messageObject.messageText;
-                if (TextUtils.isEmpty(text) && messageObject.caption != null) {
-                    text = messageObject.caption;
-                }
-                if (!TextUtils.isEmpty(text)) {
-                    String sample = text.toString();
-                    if (sample.length() > 160) {
-                        sample = sample.substring(0, 160) + "...";
+                String content = getMessageContent(messageObject);
+                if (!TextUtils.isEmpty(content)) {
+                    // For single message (Summarize), don't truncate or truncate much later
+                    if (!isSingleMessage && content.length() > 300) {
+                        content = content.substring(0, 300) + "...";
                     }
-                    sb.append("- ").append(sample.replace('\n', ' ')).append("\n");
+                    sb.append("- ").append(content.replace('\n', ' ')).append("\n");
                     added++;
                 }
             }
         }
 
         return sb.toString();
+    }
+
+    public static String getMessageContent(MessageObject messageObject) {
+        return getMessageContent(messageObject, 0);
+    }
+
+    private static String getMessageContent(MessageObject messageObject, int depth) {
+        if (messageObject == null || depth > 1) return "";
+        StringBuilder sb = new StringBuilder();
+
+        // 0. Forward Info (Helpful for AI context)
+        if (messageObject.messageOwner != null && messageObject.messageOwner.fwd_from != null) {
+            sb.append("[Forwarded Content]\n");
+        }
+
+        // 1. Text Extraction - Aggressive multi-source collection
+        StringBuilder contentBuilder = new StringBuilder();
+        
+        // Source A: Standard Message Text (parsed entities, etc)
+        if (!TextUtils.isEmpty(messageObject.messageText)) {
+            contentBuilder.append(messageObject.messageText);
+        }
+        
+        // Source B: Caption (for photos/videos)
+        if (!TextUtils.isEmpty(messageObject.caption)) {
+            String caption = messageObject.caption.toString();
+            if (contentBuilder.indexOf(caption) == -1) {
+                if (contentBuilder.length() > 0) contentBuilder.append("\n");
+                contentBuilder.append(caption);
+            }
+        }
+        
+        // Source C: Raw Message Body (fallback for non-standard forwards)
+        if (messageObject.messageOwner != null && !TextUtils.isEmpty(messageObject.messageOwner.message)) {
+            String rawMsg = messageObject.messageOwner.message;
+            if (contentBuilder.indexOf(rawMsg) == -1) {
+                if (contentBuilder.length() > 0) contentBuilder.append("\n");
+                contentBuilder.append(rawMsg);
+            }
+        }
+
+        // Source D: WebPage Previews (Loot Alerts often put details here)
+        TLRPC.WebPage webPage = null;
+        if (messageObject.messageOwner != null && messageObject.messageOwner.media != null) {
+            if (messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaWebPage) {
+                webPage = messageObject.messageOwner.media.webpage;
+            }
+        }
+        if (webPage != null) {
+            if (!TextUtils.isEmpty(webPage.title) && contentBuilder.indexOf(webPage.title) == -1) {
+                if (contentBuilder.length() > 0) contentBuilder.append("\n");
+                contentBuilder.append("Link Title: ").append(webPage.title);
+            }
+            if (!TextUtils.isEmpty(webPage.description) && contentBuilder.indexOf(webPage.description) == -1) {
+                if (contentBuilder.length() > 0) contentBuilder.append("\n");
+                contentBuilder.append("Link Details: ").append(webPage.description);
+            }
+        }
+
+        String finalContent = contentBuilder.toString().trim();
+        if (!TextUtils.isEmpty(finalContent)) {
+            sb.append(finalContent);
+        }
+
+        // 2. Polls
+        if (messageObject.isPoll() && messageObject.messageOwner != null && messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaPoll) {
+            TLRPC.Poll poll = ((TLRPC.TL_messageMediaPoll) messageObject.messageOwner.media).poll;
+            if (sb.length() > 0) sb.append("\n");
+            sb.append("Poll Question: ").append(poll.question.text);
+            if (poll.answers != null) {
+                for (TLRPC.PollAnswer answer : poll.answers) {
+                    sb.append("\n- Choice: ").append(answer.text.text);
+                }
+            }
+        }
+
+        // 3. Transcription (for voice/video notes)
+        if (!TextUtils.isEmpty(messageObject.getVoiceTranscription())) {
+            if (sb.length() > 0) sb.append("\n");
+            sb.append("Voice Transcription: ").append(messageObject.messageOwner.voiceTranscription);
+        }
+
+        // 4. Media Fallback (Always add if text is thin or media is present)
+        boolean hasMedia = messageObject.messageOwner != null && messageObject.messageOwner.media != null;
+        if (sb.length() == 0 || (hasMedia && finalContent.length() < 20)) {
+            String tag = null;
+            if (messageObject.type == MessageObject.TYPE_PHOTO) tag = "[Photo Content]";
+            else if (messageObject.type == MessageObject.TYPE_VIDEO) tag = "[Video Content]";
+            else if (messageObject.type == MessageObject.TYPE_ROUND_VIDEO) tag = "[Video Note Content]";
+            else if (messageObject.type == MessageObject.TYPE_VOICE) tag = "[Voice Message]";
+            else if (messageObject.type == MessageObject.TYPE_STICKER) tag = "[Sticker]";
+            else if (messageObject.type == MessageObject.TYPE_GIF) tag = "[GIF Animation]";
+            else if (messageObject.type == MessageObject.TYPE_FILE) {
+                String name = messageObject.getDocumentName();
+                tag = "[File Attachment" + (!TextUtils.isEmpty(name) ? ": " + name : "") + "]";
+            }
+            else if (messageObject.type == MessageObject.TYPE_GEO) tag = "[Location Data]";
+            else if (messageObject.type == MessageObject.TYPE_CONTACT) tag = "[Contact Info]";
+
+            if (tag != null) {
+                if (sb.length() > 0) sb.append("\n").append(tag);
+                else sb.append(tag);
+            }
+        }
+
+        // 5. Quoted/Replied Message (one level deep)
+        if (depth == 0 && messageObject.replyMessageObject != null) {
+            String quotedContent = getMessageContent(messageObject.replyMessageObject, depth + 1);
+            if (!TextUtils.isEmpty(quotedContent)) {
+                if (sb.length() > 0) sb.append("\n");
+                sb.append("(This is a reply to: ").append(quotedContent).append(")");
+            }
+        }
+
+        return sb.toString();
+    }
+
+    public interface ImageDownloadCallback {
+        void onSuccess(android.graphics.Bitmap bitmap);
+        void onError(String error);
+    }
+
+    public static void downloadImage(String url, ImageDownloadCallback callback) {
+        okhttp3.Request request = new okhttp3.Request.Builder()
+                .url(url)
+                .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(@androidx.annotation.NonNull okhttp3.Call call, @androidx.annotation.NonNull java.io.IOException e) {
+                callback.onError(e.getMessage());
+            }
+
+            @Override
+            public void onResponse(@androidx.annotation.NonNull okhttp3.Call call, @androidx.annotation.NonNull okhttp3.Response response) throws java.io.IOException {
+                if (!response.isSuccessful()) {
+                    callback.onError("HTTP " + response.code());
+                    return;
+                }
+                byte[] bytes = response.body().bytes();
+                android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                if (bitmap != null) {
+                    org.telegram.messenger.AndroidUtilities.runOnUIThread(() -> callback.onSuccess(bitmap));
+                } else {
+                    callback.onError("Failed to decode bitmap");
+                }
+            }
+        });
     }
 }

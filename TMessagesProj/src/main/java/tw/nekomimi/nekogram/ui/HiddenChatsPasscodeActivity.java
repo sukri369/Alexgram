@@ -9,6 +9,7 @@ import android.view.View;
 import android.text.method.PasswordTransformationMethod;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import androidx.annotation.IntDef;
@@ -208,8 +209,19 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
         backgroundView = new CyberBackgroundView(context);
         root.addView(backgroundView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
+        LinearLayout mainContent = new LinearLayout(context);
+        mainContent.setOrientation(LinearLayout.VERTICAL);
+        root.addView(mainContent, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+
+        ScrollView scrollWrapper = new ScrollView(context);
+        scrollWrapper.setFillViewport(true);
+        mainContent.addView(scrollWrapper, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 0, 1.0f));
+
+        FrameLayout topLayout = new FrameLayout(context);
+        scrollWrapper.addView(topLayout, LayoutHelper.createScroll(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.NO_GRAVITY));
+
         containerView = new HudContainerView(context);
-        root.addView(containerView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP, 28, 64, 28, 0));
+        topLayout.addView(containerView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER, 28, 20, 28, 20));
 
         LinearLayout content = new LinearLayout(context);
         content.setOrientation(LinearLayout.VERTICAL);
@@ -308,7 +320,7 @@ public class HiddenChatsPasscodeActivity extends BaseFragment {
 
         keyboardView = new CustomPhoneKeyboardView(context);
         keyboardView.setBackgroundColor(0);
-        root.addView(keyboardView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, CustomPhoneKeyboardView.KEYBOARD_HEIGHT_DP, Gravity.BOTTOM, 8, 0, 8, 16));
+        mainContent.addView(keyboardView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, CustomPhoneKeyboardView.KEYBOARD_HEIGHT_DP, Gravity.BOTTOM, 8, 0, 8, 16));
 
         root.setOnClickListener(v -> focusFirstEmptyField());
 

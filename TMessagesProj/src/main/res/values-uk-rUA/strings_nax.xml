@@ -318,4 +318,18 @@
     <string name="StickerCopied">Стікер скопійовано в буфер обміну.</string>
     <string name="StrokeOnViews">Ефекти відблисків</string>
     <string name="HideBottomNavigationBar">Приховати нижню панель навігації</string>
+
+    <string name="SpecialForward">Спеціальне пересилання</string>
+    <string name="SpecialForwardAbout">Увімкнути розширене меню пересилання з параметрами редагування та фільтрації повідомлень.</string>
+    <string name="SpecialForwardTitle">Спеціальне пересилання</string>
+    <string name="SpecialForwardEditHint">Редагувати повідомлення</string>
+    <string name="SpecialForwardResetAll">Скинути все</string>
+    <string name="SpecialForwardReplaceAllTexts">Замінити всі тексти</string>
+    <string name="SpecialForwardReplaceAllLinks">Замінити всі посилання</string>
+    <string name="SpecialForwardDeleteAllLinks">Видалити всі посилання</string>
+    <string name="SpecialForwardDeleteAllCaptions">Видалити всі підписи медіа</string>
+    <string name="SpecialForwardAsFile">Переслати як файл</string>
+    <string name="SpecialForwardResetSuccess">Повідомлення скинуто</string>
+    <string name="DoubleTapOnChatsToFilterUnread">Подвійне натискання на чати для фільтрації непрочитаних</string>
+    <string name="AmbientMode">Режим Ambient</string>
 </resources>

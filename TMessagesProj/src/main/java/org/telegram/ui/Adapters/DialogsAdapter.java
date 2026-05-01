@@ -144,8 +144,26 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
     private DialogsActivity parentFragment;
     private boolean isTransitionSupport;
 
+    private HashSet<Long> excludedDialogIds;
+
+    public void setExcludedDialogIds(HashSet<Long> ids) {
+        excludedDialogIds = ids;
+    }
+
     private TLRPC.RequestPeerType requestPeerType;
     public boolean isEmpty;
+    private boolean onlyUnread;
+
+    public void setOnlyUnread(boolean unread) {
+        if (onlyUnread != unread) {
+            onlyUnread = unread;
+            updateList(null);
+        }
+    }
+
+    public boolean isOnlyUnread() {
+        return onlyUnread;
+    }
 
     public DialogsAdapter(DialogsActivity fragment, Context context, int type, int folder, boolean onlySelect, ArrayList<Long> selected, int account, TLRPC.RequestPeerType requestPeerType) {
         mContext = context;
@@ -1466,18 +1484,41 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
 
         MessagesController messagesController = MessagesController.getInstance(currentAccount);
         ArrayList<TLRPC.Dialog> array = parentFragment.getDialogsArray(currentAccount, dialogsType, folderId, dialogsListFrozen);
+        if (array != null && onlyUnread) {
+            ArrayList<TLRPC.Dialog> filtered = new ArrayList<>();
+            for (int i = 0; i < array.size(); i++) {
+                TLRPC.Dialog dialog = array.get(i);
+                if (dialog.unread_count > 0 || dialog.unread_mentions_count > 0 || dialog.unread_reactions_count > 0 || dialog.unread_mark) {
+                    filtered.add(dialog);
+                }
+            }
+            array = filtered;
+        }
+
         if (array == null) {
             array = new ArrayList<>();
         } else if (dialogsType == 0) {
             boolean isHiddenScreen = parentFragment instanceof HiddenChatsActivity; 
             ArrayList<TLRPC.Dialog> filtered = new ArrayList<>();
             for (TLRPC.Dialog dialog : array) {
+                if (excludedDialogIds != null && excludedDialogIds.contains(dialog.id)) {
+                    continue;
+                }
                 boolean isHidden = HiddenChatsController.getInstance().isHidden(currentAccount, dialog.id);
                 if (isHiddenScreen) {
                     if (isHidden) filtered.add(dialog);
                 } else {
                     if (!isHidden) filtered.add(dialog);
                 }
+            }
+            array = filtered;
+        } else if (excludedDialogIds != null) {
+            ArrayList<TLRPC.Dialog> filtered = new ArrayList<>();
+            for (TLRPC.Dialog dialog : array) {
+                if (excludedDialogIds.contains(dialog.id)) {
+                    continue;
+                }
+                filtered.add(dialog);
             }
             array = filtered;
         }

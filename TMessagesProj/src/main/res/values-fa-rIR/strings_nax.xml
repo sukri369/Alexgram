@@ -269,4 +269,18 @@
     <string name="StarFallInChatDescription">نمایش انیمیشن شهاب سنگ در چت‌ها.</string>
     <string name="NekoX">تنظیمات NekoX</string>
     <string name="ProviderTelegramAPI">API رسمی تلگرام</string>
+
+    <string name="SpecialForward">ارسال ویژه</string>
+    <string name="SpecialForwardAbout">فعال کردن منوی پیشرفته ارسال با گزینه‌های ویرایش و فیلتر پیام‌ها.</string>
+    <string name="SpecialForwardTitle">ارسال ویژه</string>
+    <string name="SpecialForwardEditHint">ویرایش پیام</string>
+    <string name="SpecialForwardResetAll">بازنشانی همه</string>
+    <string name="SpecialForwardReplaceAllTexts">جایگزینی همه متن‌ها</string>
+    <string name="SpecialForwardReplaceAllLinks">جایگزینی همه لینک‌ها</string>
+    <string name="SpecialForwardDeleteAllLinks">حذف همه لینک‌ها</string>
+    <string name="SpecialForwardDeleteAllCaptions">حذف همه کپشن‌های رسانه</string>
+    <string name="SpecialForwardAsFile">ارسال به عنوان فایل</string>
+    <string name="SpecialForwardResetSuccess">پیام‌ها بازنشانی شدند</string>
+    <string name="DoubleTapOnChatsToFilterUnread">دو بار ضربه روی گفتگوها برای فیلتر خوانده‌نشده‌ها</string>
+    <string name="AmbientMode">حالت محیطی</string>
 </resources>

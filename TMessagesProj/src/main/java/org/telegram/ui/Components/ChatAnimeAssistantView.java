@@ -35,11 +35,17 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.ui.ActionBar.Theme;
+import org.telegram.ui.Components.BackupImageView;
+import org.telegram.ui.Components.RadialProgressView;
 import org.telegram.ui.Components.chat.MiniChatAssistantView;
+import org.telegram.ui.Helpers.AIAssistanceHelper;
+import tw.nekomimi.nekogram.helpers.EntitiesHelper;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -60,7 +66,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
     }
 
     public interface AssistantRequestDelegate {
-        void onRequest(String prompt, AssistantRequestCallback callback);
+        void onRequest(String prompt, List<AIAssistanceHelper.HistoryItem> history, AssistantRequestCallback callback);
 
         default void onAutoReplyToggleChanged(long dialogId, boolean enabled) {
         }
@@ -88,6 +94,10 @@ public class ChatAnimeAssistantView extends FrameLayout {
     private final boolean showAutoReplyOption;
     private final boolean autoReplySupported;
     private final String autoReplyUnsupportedMessage;
+    private final TextView title;
+    private final TextView subtitle;
+    private String activeTopicContext;
+    private final List<AIAssistanceHelper.HistoryItem> conversationHistory = new ArrayList<>();
 
     private final Runnable frameRunnable = new Runnable() {
         @Override
@@ -187,10 +197,10 @@ public class ChatAnimeAssistantView extends FrameLayout {
 
         panelContainer = blurParent != null ? new BlurredFrameLayout(context, blurParent) : new FrameLayout(context);
         if (panelContainer instanceof BlurredFrameLayout) {
-            ((BlurredFrameLayout) panelContainer).backgroundColor = 0xAA152235;
+            ((BlurredFrameLayout) panelContainer).backgroundColor = 0xFA152235;
             ((BlurredFrameLayout) panelContainer).drawBlur = SharedConfig.getDevicePerformanceClass() != SharedConfig.PERFORMANCE_CLASS_LOW;
         } else {
-            panelContainer.setBackgroundColor(0xEE17263D);
+            panelContainer.setBackgroundColor(0xFA17263D);
         }
         panelContainer.setVisibility(GONE);
         panelContainer.setAlpha(0f);
@@ -199,9 +209,9 @@ public class ChatAnimeAssistantView extends FrameLayout {
         panelContainer.setClipToPadding(false);
         panelContainer.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(14), AndroidUtilities.dp(14), AndroidUtilities.dp(12));
 
-        final GradientDrawable panelShape = new GradientDrawable();
+        final android.graphics.drawable.GradientDrawable panelShape = new android.graphics.drawable.GradientDrawable();
         panelShape.setCornerRadius(AndroidUtilities.dp(40));
-        panelShape.setColor(0xB8192B43);
+        panelShape.setColor(0xFA192B43);
         panelShape.setStroke(AndroidUtilities.dp(1), 0x66FFFFFF);
         panelContainer.setBackground(panelShape);
         if (android.os.Build.VERSION.SDK_INT >= 21) {
@@ -212,14 +222,14 @@ public class ChatAnimeAssistantView extends FrameLayout {
         panelContent.setOrientation(LinearLayout.VERTICAL);
         panelContainer.addView(panelContent, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
-        final TextView title = new TextView(context);
+        title = new TextView(context);
         title.setText("Alexgram Assistance");
         title.setTextColor(Color.WHITE);
         title.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
         title.setTypeface(AndroidUtilities.bold());
         panelContent.addView(title, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
-        final TextView subtitle = new TextView(context);
+        subtitle = new TextView(context);
         subtitle.setText("Friendly mode online");
         subtitle.setTextColor(0xBBE0ECFF);
         subtitle.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
@@ -354,14 +364,52 @@ public class ChatAnimeAssistantView extends FrameLayout {
             }
         });
 
-        addMessageBubble("Hi, I am Alexgram Assistant. Tap me and ask anything.", false, false);
-        addMessageBubble("Try long-press to switch my style.", false, false);
+        loadHistory();
 
         lastFrameTime = SystemClock.uptimeMillis();
         if (preferences.getBoolean("assistant_enabled", false)) {
             postOnAnimation(frameRunnable);
         } else {
             setVisibility(GONE);
+        }
+    }
+
+    private void saveHistory() {
+        try {
+            JSONArray array = new JSONArray();
+            for (AIAssistanceHelper.HistoryItem item : conversationHistory) {
+                JSONObject obj = new JSONObject();
+                obj.put("t", item.text);
+                obj.put("u", item.isUser);
+                array.put(obj);
+            }
+            preferences.edit().putString("history_" + assistantDialogId, array.toString()).apply();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadHistory() {
+        String saved = preferences.getString("history_" + assistantDialogId, null);
+        if (saved != null) {
+            try {
+                JSONArray array = new JSONArray(saved);
+                conversationHistory.clear();
+                bubblesContainer.removeAllViews();
+                messageViews.clear();
+                for (int i = 0; i < array.length(); i++) {
+                    JSONObject obj = array.getJSONObject(i);
+                    String text = obj.getString("t");
+                    boolean isUser = obj.getBoolean("u");
+                    conversationHistory.add(new AIAssistanceHelper.HistoryItem(text, isUser));
+                    addMessageBubble(text, isUser, false);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            addMessageBubble("Hi, I am Alexgram Assistant. Tap me and ask anything.", false, false);
+            addMessageBubble("Try long-press to switch my style.", false, false);
         }
     }
 
@@ -525,9 +573,14 @@ public class ChatAnimeAssistantView extends FrameLayout {
             popupMenu.getMenu().add(Menu.NONE, 1, order++, autoReplyEnabled ? "Auto Reply Mode: ON" : "Auto Reply Mode: OFF");
         }
         popupMenu.getMenu().add(Menu.NONE, 2, order++, "Switch Style");
+        if (!TextUtils.isEmpty(activeTopicContext)) {
+            popupMenu.getMenu().add(Menu.NONE, 4, order++, "Exit Discussion");
+        }
+        popupMenu.getMenu().add(Menu.NONE, 5, order++, "Clear Chat Memory");
         popupMenu.getMenu().add(Menu.NONE, 3, order, "Focus Chat Panel");
         popupMenu.setOnMenuItemClickListener(item -> {
-            if (item.getItemId() == 1) {
+            final int itemId = item.getItemId();
+            if (itemId == 1) {
                 if (!autoReplySupported) {
                     showReactionBubble("INFO");
                     addMessageBubble(autoReplyUnsupportedMessage, false, true);
@@ -541,13 +594,23 @@ public class ChatAnimeAssistantView extends FrameLayout {
                 showReactionBubble(autoReplyEnabled ? "ON" : "OFF");
                 characterView.onTap();
                 return true;
-            } else if (item.getItemId() == 2) {
+            } else if (itemId == 2) {
                 characterView.cycleSkin();
                 showReactionBubble("STYLE");
                 return true;
-            } else if (item.getItemId() == 3) {
+            } else if (itemId == 3) {
                 showPanel();
                 focusInputAndShowKeyboard();
+                return true;
+            } else if (itemId == 4) {
+                clearActiveTopic();
+                showReactionBubble("RESET");
+                addMessageBubble("Discussion cleared. I'm back to regular mode.", false, true);
+                return true;
+            } else if (itemId == 5) {
+                clearHistory();
+                showReactionBubble("🗑️");
+                addMessageBubble("Chat history cleared.", false, true);
                 return true;
             }
             return false;
@@ -585,6 +648,16 @@ public class ChatAnimeAssistantView extends FrameLayout {
         }
     }
 
+    public void clearHistory() {
+        conversationHistory.clear();
+        messageViews.clear();
+        bubblesContainer.removeAllViews();
+        preferences.edit().remove("history_" + assistantDialogId).apply();
+        addMessageBubble("Hi, I am Alexgram Assistant. Tap me and ask anything.", false, false);
+        addMessageBubble("Try long-press to switch my style.", false, false);
+        clearActiveTopic();
+    }
+
     public void onDestroy() {
         paused = true;
         removeCallbacks(frameRunnable);
@@ -592,6 +665,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
             AndroidUtilities.cancelRunOnUIThread(typingRunnable);
             typingRunnable = null;
         }
+        clearHistory();
     }
 
     public void onTypingStateChanged(boolean active) {
@@ -681,6 +755,25 @@ public class ChatAnimeAssistantView extends FrameLayout {
         }
     }
 
+    public void startTopicDiscussion(String topicSummary) {
+        this.activeTopicContext = topicSummary;
+        showPanel();
+        title.setText("Deep Discussion");
+        subtitle.setText("Exploring the summary context");
+        addMessageBubble("I've loaded the summary context. What would you like to know more about?", false, true);
+        focusInputAndShowKeyboard();
+    }
+
+    public String getActiveTopicContext() {
+        return activeTopicContext;
+    }
+
+    public void clearActiveTopic() {
+        this.activeTopicContext = null;
+        title.setText("Alexgram Assistance");
+        subtitle.setText("Friendly mode online");
+    }
+
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
@@ -726,10 +819,20 @@ public class ChatAnimeAssistantView extends FrameLayout {
             return;
         }
 
-        assistantRequestDelegate.onRequest(prompt, new AssistantRequestCallback() {
+        final List<AIAssistanceHelper.HistoryItem> historyCopy = new ArrayList<>(conversationHistory);
+        conversationHistory.add(new AIAssistanceHelper.HistoryItem(prompt, true));
+        saveHistory();
+
+        assistantRequestDelegate.onRequest(prompt, historyCopy, new AssistantRequestCallback() {
             @Override
             public void onSuccess(String response) {
-                AndroidUtilities.runOnUIThread(() -> hideTypingBubble(TextUtils.isEmpty(response) ? "I could not generate a response right now." : response));
+                AndroidUtilities.runOnUIThread(() -> {
+                    hideTypingBubble(TextUtils.isEmpty(response) ? "I could not generate a response right now." : response);
+                    if (!TextUtils.isEmpty(response)) {
+                        conversationHistory.add(new AIAssistanceHelper.HistoryItem(response, false));
+                        saveHistory();
+                    }
+                });
             }
 
             @Override
@@ -738,7 +841,7 @@ public class ChatAnimeAssistantView extends FrameLayout {
                     if (isQuotaOrRateLimitError(error)) {
                         hideTypingBubble("API quota reached. Please top up or wait, then try again.");
                     } else {
-                        hideTypingBubble("Oops, network mood swing. Please try again.");
+                        hideTypingBubble("Connection issue: " + (error != null && error.length() > 50 ? error.substring(0, 50) + "..." : error));
                     }
                 });
             }
@@ -1493,8 +1596,104 @@ public class ChatAnimeAssistantView extends FrameLayout {
                 }
             }
         }
+        
+        if (text != null && text.contains("[GEN_IMAGE:")) {
+            int start = text.indexOf("[GEN_IMAGE:") + 11;
+            int end = text.lastIndexOf("]");
+            if (end > start) {
+                String prompt = text.substring(start, end).trim();
+                addImageBubble(prompt);
+                showReactionBubble("🎨");
+                return;
+            }
+        }
+
         addMessageBubble(text, false, true);
         showReactionBubble("✨");
+    }
+
+    private void addImageBubble(String prompt) {
+        final FrameLayout container = new FrameLayout(getContext());
+        
+        final BackupImageView imageView = new BackupImageView(getContext());
+        imageView.setRoundRadius(AndroidUtilities.dp(14));
+        imageView.setBackground(Theme.createRoundRectDrawable(AndroidUtilities.dp(14), 0x22FFFFFF));
+        
+        final RadialProgressView progressView = new RadialProgressView(getContext());
+        progressView.setSize(AndroidUtilities.dp(30));
+        progressView.setProgressColor(0xFFFFFFFF);
+
+        final TextView errorText = new TextView(getContext());
+        errorText.setText("Tap to Retry");
+        errorText.setTextColor(0xAAFFFFFF);
+        errorText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 10);
+        errorText.setGravity(Gravity.CENTER);
+        errorText.setVisibility(GONE);
+        
+        container.addView(imageView, LayoutHelper.createFrame(220, 220));
+        container.addView(progressView, LayoutHelper.createFrame(30, 30, Gravity.CENTER));
+        container.addView(errorText, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER));
+        
+        LinearLayout.LayoutParams lp = LayoutHelper.createLinear(220, 220);
+        lp.gravity = Gravity.LEFT;
+        lp.topMargin = AndroidUtilities.dp(5);
+        bubblesContainer.addView(container, lp);
+        messageViews.add(container);
+        
+        while (messageViews.size() > MAX_BUBBLES) {
+            View remove = messageViews.remove(0);
+            bubblesContainer.removeView(remove);
+        }
+
+        final String encodedPrompt = android.net.Uri.encode(prompt);
+        final String baseUrl = "https://image.pollinations.ai/prompt/" + encodedPrompt + "?width=1024&height=1024&nologo=true";
+        
+        final Runnable showErrorRunnable = () -> {
+             if (progressView.getVisibility() == VISIBLE) {
+                 progressView.setVisibility(GONE);
+                 errorText.setVisibility(VISIBLE);
+             }
+        };
+
+        // No delegate needed as we handle it manually
+
+        Runnable loadAction = () -> {
+            AndroidUtilities.cancelRunOnUIThread(showErrorRunnable);
+            errorText.setVisibility(GONE);
+            progressView.setVisibility(VISIBLE);
+            progressView.setAlpha(1.0f);
+            String imageUrl = baseUrl + "&seed=" + (System.currentTimeMillis() + (long)(Math.random() * 10000));
+            
+            AIAssistanceHelper.downloadImage(imageUrl, new AIAssistanceHelper.ImageDownloadCallback() {
+                @Override
+                public void onSuccess(android.graphics.Bitmap bitmap) {
+                    AndroidUtilities.cancelRunOnUIThread(showErrorRunnable);
+                    imageView.setImageBitmap(bitmap);
+                    progressView.animate().alpha(0f).setDuration(280).withEndAction(() -> progressView.setVisibility(GONE)).start();
+                    errorText.setVisibility(GONE);
+                }
+
+                @Override
+                public void onError(String error) {
+                    AndroidUtilities.runOnUIThread(showErrorRunnable);
+                }
+            });
+            // Wait up to 60 seconds for image generation
+            AndroidUtilities.runOnUIThread(showErrorRunnable, 60000);
+        };
+
+        container.post(loadAction);
+
+        container.setOnClickListener(v -> {
+            if (errorText.getVisibility() == VISIBLE) {
+                loadAction.run();
+            } else {
+                AndroidUtilities.addToClipboard(baseUrl);
+                showReactionBubble("📋");
+            }
+        });
+
+        bubblesScrollView.post(() -> bubblesScrollView.fullScroll(View.FOCUS_DOWN));
     }
 
     private TextView addMessageBubble(String text, boolean isUser, boolean typewriter) {
@@ -1503,8 +1702,10 @@ public class ChatAnimeAssistantView extends FrameLayout {
         tv.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
         tv.setPadding(AndroidUtilities.dp(10), AndroidUtilities.dp(8), AndroidUtilities.dp(10), AndroidUtilities.dp(8));
         tv.setMaxWidth(AndroidUtilities.dp(260));
-        tv.setBackground(Theme.createRoundRectDrawable(AndroidUtilities.dp(14), isUser ? 0xD9368EFF : 0x99495D7A));
+        tv.setBackground(Theme.createRoundRectDrawable(AndroidUtilities.dp(14), isUser ? 0xF0368EFF : 0xF0495D7A));
         tv.setLongClickable(true);
+        tv.setMovementMethod(android.text.method.LinkMovementMethod.getInstance());
+        tv.setLinkTextColor(0xFF64B5F6); // Professional light blue for links
         tv.setOnLongClickListener(v -> {
             CharSequence value = tv.getText();
             if (!TextUtils.isEmpty(value)) {
@@ -1531,16 +1732,28 @@ public class ChatAnimeAssistantView extends FrameLayout {
                 @Override
                 public void run() {
                     if (index[0] <= chars.length) {
-                        tv.setText(new String(chars, 0, index[0]));
+                        String current = new String(chars, 0, index[0]);
+                        // Parse Markdown and Emojis dynamically
+                        CharSequence formatted = tw.nekomimi.nekogram.helpers.EntitiesHelper.parseMarkdown(current);
+                        formatted = org.telegram.messenger.Emoji.replaceEmoji(formatted, tv.getPaint().getFontMetricsInt(), false);
+                        tv.setText(formatted);
+                        
                         index[0] += Math.max(1, chars.length / 40);
                         AndroidUtilities.runOnUIThread(this, 18);
+                    } else {
+                        // Final full parse to ensure everything is matched
+                        CharSequence formatted = tw.nekomimi.nekogram.helpers.EntitiesHelper.parseMarkdown(text);
+                        formatted = org.telegram.messenger.Emoji.replaceEmoji(formatted, tv.getPaint().getFontMetricsInt(), false);
+                        tv.setText(formatted);
                     }
                     bubblesScrollView.post(() -> bubblesScrollView.fullScroll(View.FOCUS_DOWN));
                 }
             };
             AndroidUtilities.runOnUIThread(typer);
         } else {
-            tv.setText(text);
+            CharSequence formatted = tw.nekomimi.nekogram.helpers.EntitiesHelper.parseMarkdown(text);
+            formatted = org.telegram.messenger.Emoji.replaceEmoji(formatted, tv.getPaint().getFontMetricsInt(), false);
+            tv.setText(formatted);
             bubblesScrollView.post(() -> bubblesScrollView.fullScroll(View.FOCUS_DOWN));
         }
         return tv;

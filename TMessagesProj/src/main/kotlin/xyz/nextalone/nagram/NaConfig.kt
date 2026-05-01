@@ -99,6 +99,13 @@ object NaConfig {
             ConfigItem.configTypeBool,
             true
         )
+
+    val doubleTapOnChatsToFilterUnread =
+        addConfig(
+            "DoubleTapOnChatsToFilterUnread",
+            ConfigItem.configTypeBool,
+            false
+        )
     val showTextCreateMention =
         addConfig(
             "TextCreateMention",
@@ -158,6 +165,18 @@ object NaConfig {
             "SendVideoAsRound",
             ConfigItem.configTypeBool,
             true
+        )
+    val ambientMode =
+        addConfig(
+            "AmbientMode",
+            ConfigItem.configTypeBool,
+            false
+        )
+    val specialForward =
+        addConfig(
+            "SpecialForward",
+            ConfigItem.configTypeBool,
+            false
         )
     val showNoQuoteForward =
         addConfig(
@@ -1515,6 +1534,12 @@ object NaConfig {
     val enableSummarizeChat =
         addConfig(
             "enableSummarizeChat",
+            ConfigItem.configTypeBool,
+            false
+        )
+    val usePollinationsAi =
+        addConfig(
+            "usePollinationsAi",
             ConfigItem.configTypeBool,
             false
         )

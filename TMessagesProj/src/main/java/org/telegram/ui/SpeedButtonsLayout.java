@@ -1,109 +1,259 @@
 package org.telegram.ui;
 
 import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.ColorFilter;
+import android.graphics.Paint;
+import android.graphics.Path;
+import android.graphics.PixelFormat;
+import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
-import android.widget.FrameLayout;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.core.graphics.ColorUtils;
+import androidx.core.graphics.PathParser;
 import androidx.core.math.MathUtils;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.LocaleController;
-import org.telegram.messenger.MediaController;
 import org.telegram.messenger.R;
 import org.telegram.ui.ActionBar.ActionBarMenuItem;
 import org.telegram.ui.ActionBar.ActionBarMenuSlider;
 import org.telegram.ui.ActionBar.ActionBarMenuSubItem;
-import org.telegram.ui.ActionBar.ActionBarPopupWindow;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.LayoutHelper;
-import org.telegram.ui.Components.PopupSwipeBackLayout;
 import org.telegram.ui.Components.SpeedIconDrawable;
 
-public class SpeedButtonsLayout extends LinearLayout {
+public class SpeedButtonsLayout {
 
-    ActionBarMenuSubItem[] speedItems = new ActionBarMenuSubItem[5];
-    public SpeedButtonsLayout(Context context, Callback callback) {
-        super(context);
-        setOrientation(VERTICAL);
+    private final ActionBarMenuSubItem[] speedItems = new ActionBarMenuSubItem[5];
+    private ActionBarMenuSubItem customItem;
+    private TextView header;
+    private CustomSpeedSlider speedSlider;
+    private final Callback callback;
 
-        ActionBarMenuSubItem item = ActionBarMenuItem.addItem(this, R.drawable.msg_speed_0_2, LocaleController.getString(R.string.SpeedVerySlow), false, null);
-        item.setColors(0xfffafafa, 0xfffafafa);
-        item.setOnClickListener((view) -> {
-            callback.onSpeedSelected(0.2f, true, true);
-        });
-        item.setSelectorColor(0x0fffffff);
-        speedItems[0] = item;
+    public SpeedButtonsLayout(Context context, ActionBarMenuItem parentItem, Callback callback) {
+        this.callback = callback;
 
-        item = ActionBarMenuItem.addItem(this, R.drawable.msg_speed_slow, LocaleController.getString(R.string.SpeedSlow), false, null);
-        item.setColors(0xfffafafa, 0xfffafafa);
-        item.setOnClickListener((view) -> {
-            callback.onSpeedSelected(0.5f, true, true);
-        });
-        item.setSelectorColor(0x0fffffff);
-        speedItems[1] = item;
-
-        item = ActionBarMenuItem.addItem(this, R.drawable.msg_speed_normal, LocaleController.getString(R.string.SpeedNormal), false, null);
-        item.setColors(0xfffafafa, 0xfffafafa);
-        item.setOnClickListener((view) -> {
-            callback.onSpeedSelected(1f, true, true);
-        });
-        item.setSelectorColor(0x0fffffff);
-        speedItems[2] = item;
-
-        item = ActionBarMenuItem.addItem(this, R.drawable.msg_speed_fast, LocaleController.getString(R.string.SpeedFast), false, null);
-        item.setColors(0xfffafafa, 0xfffafafa);
-        item.setOnClickListener((view) -> {
-            callback.onSpeedSelected(1.5f, true, true);
-        });
-        item.setSelectorColor(0x0fffffff);
-        speedItems[3] = item;
-
-        item = ActionBarMenuItem.addItem(this, R.drawable.msg_speed_superfast, LocaleController.getString(R.string.SpeedVeryFast), false, null);
-        item.setColors(0xfffafafa, 0xfffafafa);
-        item.setOnClickListener((view) -> {
-            callback.onSpeedSelected(2f, true, true);
-        });
-        item.setSelectorColor(0x0fffffff);
-        speedItems[4] = item;
-
-        FrameLayout gap = new FrameLayout(context) {
-            @Override
-            protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-                super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        for (int i = 0; i < 5; i++) {
+            int icon;
+            String text;
+            float speed;
+            if (i == 0) {
+                icon = R.drawable.msg_speed_0_2;
+                text = LocaleController.getString(R.string.SpeedVerySlow);
+                speed = 0.2f;
+            } else if (i == 1) {
+                icon = R.drawable.msg_speed_slow;
+                text = LocaleController.getString(R.string.SpeedSlow);
+                speed = 0.5f;
+            } else if (i == 2) {
+                icon = R.drawable.msg_speed_normal;
+                text = LocaleController.getString(R.string.SpeedNormal);
+                speed = 1.0f;
+            } else if (i == 3) {
+                icon = R.drawable.msg_speed_fast;
+                text = LocaleController.getString(R.string.SpeedFast);
+                speed = 1.5f;
+            } else {
+                icon = R.drawable.msg_speed_superfast;
+                text = LocaleController.getString(R.string.SpeedVeryFast);
+                speed = 2.0f;
             }
-        };
-        gap.setMinimumWidth(AndroidUtilities.dp(196));
-        gap.setBackgroundColor(0xff181818);
-        addView(gap);
-        LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) gap.getLayoutParams();
-        if (LocaleController.isRTL) {
-            layoutParams.gravity = Gravity.RIGHT;
+
+            ActionBarMenuSubItem item = parentItem.addSubItem(0, icon, text);
+            item.setColors(0xffffffff, 0xffffffff);
+            item.setOnClickListener((view) -> {
+                callback.onSpeedSelected(speed, true, true);
+            });
+            item.setSelectorColor(0x1affffff);
+            speedItems[i] = item;
         }
-        layoutParams.width = LayoutHelper.MATCH_PARENT;
-        layoutParams.height = AndroidUtilities.dp(8);
-        gap.setLayoutParams(layoutParams);
+
+        // Custom Slider Container
+        LinearLayout sliderContainer = new LinearLayout(context);
+        sliderContainer.setOrientation(LinearLayout.VERTICAL);
+        sliderContainer.setPadding(0, 0, 0, AndroidUtilities.dp(8));
+        sliderContainer.setBackgroundColor(0xff222222);
+
+        ActionBarMenuSubItem backItem = new ActionBarMenuSubItem(context, false, false);
+        backItem.setTextAndIcon(LocaleController.getString("Back", R.string.Back), R.drawable.ic_ab_back);
+        backItem.setColors(0xffffffff, 0xffffffff);
+        backItem.setOnClickListener((view) -> {
+            if (parentItem.getPopupLayout() != null && parentItem.getPopupLayout().getSwipeBack() != null) {
+                parentItem.getPopupLayout().getSwipeBack().closeForeground();
+            }
+        });
+        backItem.setSelectorColor(0x1affffff);
+        sliderContainer.addView(backItem, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 48));
+
+        View headerSeparator = new View(context);
+        headerSeparator.setBackgroundColor(0xff181818);
+        sliderContainer.addView(headerSeparator, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 1));
+
+        header = new TextView(context);
+        header.setText(LocaleController.getString("PollV2PollDurationOptionCustom", R.string.PollV2PollDurationOptionCustom).toUpperCase());
+        header.setTextColor(0xff888888);
+        header.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
+        header.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+        header.setPadding(AndroidUtilities.dp(21), AndroidUtilities.dp(16), AndroidUtilities.dp(21), AndroidUtilities.dp(8));
+        sliderContainer.addView(header);
+
+        speedSlider = new CustomSpeedSlider(context, null);
+        speedSlider.setOnValueChange((value, isFinal) -> {
+            callback.onSpeedSelected(speedSlider.getSpeed(value), isFinal, false);
+        });
+        sliderContainer.addView(speedSlider, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 50, 4, 0, 4, 4));
+
+        customItem = parentItem.addSwipeBackItem(0, new GenericPathDrawable("M20 13C20 15.2091 19.1046 17.2091 17.6569 18.6569L19.0711 20.0711C20.8807 18.2614 22 15.7614 22 13 22 7.47715 17.5228 3 12 3 6.47715 3 2 7.47715 2 13 2 15.7614 3.11929 18.2614 4.92893 20.0711L6.34315 18.6569C4.89543 17.2091 4 15.2091 4 13 4 8.58172 7.58172 5 12 5 16.4183 5 20 8.58172 20 13ZM15.293 8.29297 10.793 12.793 12.2072 14.2072 16.7072 9.70718 15.293 8.29297Z", 24, 24), LocaleController.getString("PollV2PollDurationOptionCustom", R.string.PollV2PollDurationOptionCustom), sliderContainer);
+        customItem.setColors(0xffffffff, 0xffffffff);
+        customItem.setSelectorColor(0x1affffff);
     }
 
     public void update(float currentVideoSpeed, boolean isFinal) {
+        boolean custom = true;
         for (int a = 0; a < speedItems.length; a++) {
-            if (isFinal && (
-                    a == 0 && Math.abs(currentVideoSpeed - 0.2f) < 0.01f ||
-                            a == 1 && Math.abs(currentVideoSpeed - 0.5f) < 0.1f ||
-                            a == 2 && Math.abs(currentVideoSpeed - 1.0f) < 0.1f ||
-                            a == 3 && Math.abs(currentVideoSpeed - 1.5f) < 0.1f ||
-                            a == 4 && Math.abs(currentVideoSpeed - 2.0f) < 0.1f
-            )) {
+            boolean selected = false;
+            if (a == 0 && Math.abs(currentVideoSpeed - 0.2f) < 0.01f) selected = true;
+            else if (a == 1 && Math.abs(currentVideoSpeed - 0.5f) < 0.1f) selected = true;
+            else if (a == 2 && Math.abs(currentVideoSpeed - 1.0f) < 0.1f) selected = true;
+            else if (a == 3 && Math.abs(currentVideoSpeed - 1.5f) < 0.1f) selected = true;
+            else if (a == 4 && Math.abs(currentVideoSpeed - 2.0f) < 0.1f) selected = true;
+
+            if (selected) {
                 speedItems[a].setColors(0xff6BB6F9, 0xff6BB6F9);
+                custom = false;
             } else {
-                speedItems[a].setColors(0xfffafafa, 0xfffafafa);
+                speedItems[a].setColors(0xffffffff, 0xffffffff);
             }
         }
+        speedSlider.setSpeed(currentVideoSpeed, false);
+
+        if (custom) {
+            customItem.setColors(0xff6BB6F9, 0xff6BB6F9);
+            if (currentVideoSpeed > 3.0f) {
+                customItem.setText(LocaleController.getString("PollV2PollDurationOptionCustom", R.string.PollV2PollDurationOptionCustom));
+                header.setText(SpeedIconDrawable.formatNumber(currentVideoSpeed) + "x");
+            } else {
+                customItem.setText(SpeedIconDrawable.formatNumber(currentVideoSpeed) + "x");
+                header.setText(LocaleController.getString("PollV2PollDurationOptionCustom", R.string.PollV2PollDurationOptionCustom).toUpperCase());
+            }
+        } else {
+            customItem.setColors(0xffffffff, 0xffffffff);
+            customItem.setText(LocaleController.getString("PollV2PollDurationOptionCustom", R.string.PollV2PollDurationOptionCustom));
+            header.setText(LocaleController.getString("PollV2PollDurationOptionCustom", R.string.PollV2PollDurationOptionCustom).toUpperCase());
+        }
+    }
+
+    public void setVisibility(int visibility) {
+        for (ActionBarMenuSubItem item : speedItems) {
+            item.setVisibility(visibility);
+        }
+        customItem.setVisibility(visibility);
     }
 
     public interface Callback {
         void onSpeedSelected(float speed, boolean isFinal, boolean closeMenu);
+    }
+
+    private static class CustomSpeedSlider extends ActionBarMenuSlider.SpeedSlider {
+        public static final float MIN_SPEED = 0.2f;
+        public static final float MAX_SPEED = 16.0f;
+
+        public CustomSpeedSlider(Context context, Theme.ResourcesProvider resourcesProvider) {
+            super(context, resourcesProvider);
+        }
+
+        @Override
+        public float getSpeed(float value) {
+            return MIN_SPEED + (MAX_SPEED - MIN_SPEED) * value;
+        }
+
+        @Override
+        public float getSpeed() {
+            return getSpeed(getValue());
+        }
+
+        @Override
+        public void setSpeed(float speed, boolean animated) {
+            setValue((speed - MIN_SPEED) / (MAX_SPEED - MIN_SPEED), animated);
+        }
+
+        @Override
+        protected String getLeftStringValue(float value) {
+            return SpeedIconDrawable.formatNumber(getSpeed(value)) + "x";
+        }
+
+        @Override
+        protected String getRightStringValue(float value) {
+            return null;
+        }
+
+        @Override
+        protected int getColorValue(float value) {
+            final float speed = getSpeed(value);
+            if (speed <= 1f) {
+                return ColorUtils.blendARGB(0xffffffff, 0xff6BB6F9, MathUtils.clamp((speed - 0.2f) / 0.8f, 0, 1));
+            }
+            return ColorUtils.blendARGB(0xff6BB6F9, 0xff3196f0, MathUtils.clamp((speed - 1f) / 15f, 0, 1));
+        }
+    }
+
+    private static class GenericPathDrawable extends Drawable {
+        private final Path path;
+        private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final int width;
+        private final int height;
+
+        public GenericPathDrawable(String pathData, int width, int height) {
+            this.path = PathParser.createPathFromPathData(pathData);
+            this.width = width;
+            this.height = height;
+            paint.setColor(0xffffffff);
+            paint.setStyle(Paint.Style.FILL);
+            paint.setAntiAlias(true);
+        }
+
+        @Override
+        public void draw(Canvas canvas) {
+            Rect bounds = getBounds();
+            canvas.save();
+            float scale = Math.min((float) bounds.width() / width, (float) bounds.height() / height) * 0.8f;
+            canvas.translate(bounds.centerX() - (width * scale) / 2f, bounds.centerY() - (height * scale) / 2f);
+            canvas.scale(scale, scale);
+            canvas.drawPath(path, paint);
+            canvas.restore();
+        }
+
+        @Override
+        public void setAlpha(int alpha) {
+            paint.setAlpha(alpha);
+        }
+
+        @Override
+        public void setColorFilter(ColorFilter colorFilter) {
+            paint.setColorFilter(colorFilter);
+        }
+
+        @Override
+        public int getOpacity() {
+            return PixelFormat.TRANSLUCENT;
+        }
+
+        @Override
+        public int getIntrinsicWidth() {
+            return AndroidUtilities.dp(width);
+        }
+
+        @Override
+        public int getIntrinsicHeight() {
+            return AndroidUtilities.dp(height);
+        }
     }
 }

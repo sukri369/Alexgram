@@ -355,4 +355,18 @@
     <string name="AllowForwardingRestrictionOnboardingMessage">Para garantizar una experiencia fluida al eludir las restricciones de reenvío, asegúrese de que el medio se haya descargado por completo antes de reenviarlo. Esto permite que la aplicación vuelva a cargar y entregue su contenido de forma segura sin bloqueos por parte del servidor.</string>
     <string name="V8DAudio">Ilusión sonora espacial de 360 grados</string>
     <string name="V8DAudioAbout">Efecto de sonido Dolby 8D</string>
+
+    <string name="SpecialForward">Reenvío Especial</string>
+    <string name="SpecialForwardAbout">Habilita un menú de reenvío avanzado con opciones de edición y filtrado de mensajes.</string>
+    <string name="SpecialForwardTitle">Reenvío especial</string>
+    <string name="SpecialForwardEditHint">Editar Mensaje</string>
+    <string name="SpecialForwardResetAll">Restablecer todo</string>
+    <string name="SpecialForwardReplaceAllTexts">Reemplazar todos los textos</string>
+    <string name="SpecialForwardReplaceAllLinks">Reemplazar todos los enlaces</string>
+    <string name="SpecialForwardDeleteAllLinks">Eliminar todos los enlaces</string>
+    <string name="SpecialForwardDeleteAllCaptions">Eliminar todos los títulos multimedia</string>
+    <string name="SpecialForwardAsFile">Reenviar como archivo</string>
+    <string name="SpecialForwardResetSuccess">Mensajes restablecidos</string>
+    <string name="DoubleTapOnChatsToFilterUnread">Doble toque en chats para filtrar no leídos</string>
+    <string name="AmbientMode">Modo Ambiente</string>
 </resources>
