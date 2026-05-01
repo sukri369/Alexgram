@@ -319,4 +319,18 @@
     <string name="StickerCopied">Stiker disalin ke papan klip.</string>
     <string name="StrokeOnViews">Efek silau</string>
     <string name="HideBottomNavigationBar">Sembunyikan Bilah Navigasi Bawah</string>
+
+    <string name="SpecialForward">Teruskan Khusus</string>
+    <string name="SpecialForwardAbout">Aktifkan menu teruskan lanjutan dengan opsi pengeditan dan pemfilteran pesan.</string>
+    <string name="SpecialForwardTitle">Teruskan khusus</string>
+    <string name="SpecialForwardEditHint">Edit Pesan</string>
+    <string name="SpecialForwardResetAll">Setel ulang semua</string>
+    <string name="SpecialForwardReplaceAllTexts">Ganti semua teks</string>
+    <string name="SpecialForwardReplaceAllLinks">Ganti semua tautan</string>
+    <string name="SpecialForwardDeleteAllLinks">Hapus semua tautan</string>
+    <string name="SpecialForwardDeleteAllCaptions">Hapus semua keterangan media</string>
+    <string name="SpecialForwardAsFile">Teruskan sebagai file</string>
+    <string name="SpecialForwardResetSuccess">Pesan disetel ulang</string>
+    <string name="DoubleTapOnChatsToFilterUnread">Ketuk Ganda Pada Obrolan Untuk Memfilter Obrolan Belum Dibaca</string>
+    <string name="AmbientMode">Mode Ambien</string>
 </resources>

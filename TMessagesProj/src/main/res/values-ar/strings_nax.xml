@@ -43,4 +43,18 @@
     <string name="StarFallInChatDescription">إظهار الرسوم المتحركة للنجوم المتساقطة في الدردشات.</string>
     <string name="NekoX">إعدادات NekoX</string>
     <string name="ProviderTelegramAPI">واجهة برمجة تطبيقات تيليجرام الرسمية</string>
+
+    <string name="SpecialForward">تحويل خاص</string>
+    <string name="SpecialForwardAbout">تمكين قائمة تحويل متقدمة مع خيارات تحرير وتصفية الرسائل.</string>
+    <string name="SpecialForwardTitle">تحويل خاص</string>
+    <string name="SpecialForwardEditHint">تعديل الرسالة</string>
+    <string name="SpecialForwardResetAll">إعادة تعيين الكل</string>
+    <string name="SpecialForwardReplaceAllTexts">استبدال كل النصوص</string>
+    <string name="SpecialForwardReplaceAllLinks">استبدال كل الروابط</string>
+    <string name="SpecialForwardDeleteAllLinks">حذف كل الروابط</string>
+    <string name="SpecialForwardDeleteAllCaptions">حذف جميع تسميات الوسائط</string>
+    <string name="SpecialForwardAsFile">تحويل كملف</string>
+    <string name="SpecialForwardResetSuccess">تمت إعادة تعيين الرسائل</string>
+    <string name="DoubleTapOnChatsToFilterUnread">انقر نقرًا مزدوجًا على الدردشات لتصفية غير المقروءة</string>
+    <string name="AmbientMode">الوضع المحيط</string>
 </resources>

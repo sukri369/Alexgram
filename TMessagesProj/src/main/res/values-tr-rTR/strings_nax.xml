@@ -364,4 +364,18 @@
     <string name="StarFallInChatDescription">Sohbetlerde yıldız kayması animasyonunu göster.</string>
     <string name="NekoX">NekoX Ayarları</string>
     <string name="ProviderTelegramAPI">Telegram Resmi API</string>
+
+    <string name="SpecialForward">Özel İletme</string>
+    <string name="SpecialForwardAbout">Mesaj düzenleme ve filtreleme seçenekleriyle gelişmiş bir iletme menüsünü etkinleştirin.</string>
+    <string name="SpecialForwardTitle">Özel iletme</string>
+    <string name="SpecialForwardEditHint">Mesajı Düzenle</string>
+    <string name="SpecialForwardResetAll">Tümünü sıfırla</string>
+    <string name="SpecialForwardReplaceAllTexts">Tüm metinleri değiştir</string>
+    <string name="SpecialForwardReplaceAllLinks">Tüm bağlantıları değiştir</string>
+    <string name="SpecialForwardDeleteAllLinks">Tüm bağlantıları sil</string>
+    <string name="SpecialForwardDeleteAllCaptions">Tüm medya altyazılarını sil</string>
+    <string name="SpecialForwardAsFile">Dosya olarak ilet</string>
+    <string name="SpecialForwardResetSuccess">Mesajlar sıfırlandı</string>
+    <string name="DoubleTapOnChatsToFilterUnread">Okunmayanları Filtrelemek İçin Sohbetlere Çift Dokunun</string>
+    <string name="AmbientMode">Ortam Modu</string>
 </resources>

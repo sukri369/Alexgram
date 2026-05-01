@@ -361,4 +361,18 @@ Non possiamo aiutarti in questo caso; se hai problemi di accesso, contatta il Su
     <string name="AllowForwardingRestrictionOnboardingMessage">Per garantire un\'esperienza fluida durante il bypass delle restrizioni di inoltro, assicurati che il file multimediale sia completamente scaricato prima dell\'inoltro. Ciò consente all\'app di ricaricare e consegnare in modo sicuro i tuoi contenuti senza blocchi lato server.</string>
     <string name="V8DAudio">Illusione sonora spaziale a 360 gradi</string>
     <string name="V8DAudioAbout">Effetto sonoro Dolby 8D</string>
+
+    <string name="SpecialForward">Inoltro Speciale</string>
+    <string name="SpecialForwardAbout">Abilita un menu di inoltro avanzato con opzioni di modifica e filtraggio dei messaggi.</string>
+    <string name="SpecialForwardTitle">Inoltro speciale</string>
+    <string name="SpecialForwardEditHint">Modifica Messaggio</string>
+    <string name="SpecialForwardResetAll">Ripristina tutto</string>
+    <string name="SpecialForwardReplaceAllTexts">Sostituisci tutti i testi</string>
+    <string name="SpecialForwardReplaceAllLinks">Sostituisci tutti i link</string>
+    <string name="SpecialForwardDeleteAllLinks">Elimina tutti i link</string>
+    <string name="SpecialForwardDeleteAllCaptions">Elimina tutte le didascalie dei media</string>
+    <string name="SpecialForwardAsFile">Inoltra come file</string>
+    <string name="SpecialForwardResetSuccess">Messaggi ripristinati</string>
+    <string name="DoubleTapOnChatsToFilterUnread">Doppio tocco sulle chat per filtrare le non lette</string>
+    <string name="AmbientMode">Modalità Ambiente</string>
 </resources>

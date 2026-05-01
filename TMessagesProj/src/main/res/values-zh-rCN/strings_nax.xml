@@ -362,4 +362,18 @@
     <string name="AllowForwardingRestrictionOnboardingMessage">为了确保在绕过转发限制时获得无缝体验，请确保在转发前已完全下载媒体文件。这允许应用程序安全地重新上传并分发您的内容，而不会受到服务器端拦截。</string>
     <string name="V8DAudio">360 度空间声场错觉</string>
     <string name="V8DAudioAbout">Dolby 8D 音效</string>
+
+    <string name="SpecialForward">特殊转发</string>
+    <string name="SpecialForwardAbout">启用具有消息编辑和过滤选项的高级转发菜单。</string>
+    <string name="SpecialForwardTitle">特殊转发</string>
+    <string name="SpecialForwardEditHint">编辑消息</string>
+    <string name="SpecialForwardResetAll">全部重置</string>
+    <string name="SpecialForwardReplaceAllTexts">替换所有文本</string>
+    <string name="SpecialForwardReplaceAllLinks">替换所有链接</string>
+    <string name="SpecialForwardDeleteAllLinks">删除所有链接</string>
+    <string name="SpecialForwardDeleteAllCaptions">删除所有媒体标题</string>
+    <string name="SpecialForwardAsFile">作为文件转发</string>
+    <string name="SpecialForwardResetSuccess">消息已重置</string>
+    <string name="DoubleTapOnChatsToFilterUnread">双击聊天列表以过滤未读聊天</string>
+    <string name="AmbientMode">环境模式</string>
 </resources>

@@ -327,4 +327,18 @@
     <string name="CenterActionBarTitleOff">オフ</string>
     <string name="TabletModeOn">オン</string>
     <string name="TabletModeOff">オフ</string>
+
+    <string name="SpecialForward">特別な転送</string>
+    <string name="SpecialForwardAbout">メッセージの編集とフィルタリングオプションを備えた高度な転送メニューを有効にします。</string>
+    <string name="SpecialForwardTitle">特別な転送</string>
+    <string name="SpecialForwardEditHint">メッセージを編集</string>
+    <string name="SpecialForwardResetAll">すべてリセット</string>
+    <string name="SpecialForwardReplaceAllTexts">すべてのテキストを置換</string>
+    <string name="SpecialForwardReplaceAllLinks">すべてのリンクを置換</string>
+    <string name="SpecialForwardDeleteAllLinks">すべてのリンクを削除</string>
+    <string name="SpecialForwardDeleteAllCaptions">すべてのメディアキャプションを削除</string>
+    <string name="SpecialForwardAsFile">ファイルとして転送</string>
+    <string name="SpecialForwardResetSuccess">メッセージがリセットされました</string>
+    <string name="DoubleTapOnChatsToFilterUnread">チャットをダブルタップして未読をフィルタリング</string>
+    <string name="AmbientMode">アンビエントモード</string>
 </resources>

@@ -329,4 +329,18 @@
     <string name="TabletModeOn">開啟</string>
     <string name="TabletModeOff">關閉</string>
     <string name="HideTabsOnScroll">捲動時隱藏底部導航欄</string>
+
+    <string name="SpecialForward">特殊轉發</string>
+    <string name="SpecialForwardAbout">啟用具有訊息編輯和過濾選項的進階轉發選單。</string>
+    <string name="SpecialForwardTitle">特殊轉發</string>
+    <string name="SpecialForwardEditHint">編輯訊息</string>
+    <string name="SpecialForwardResetAll">全部重置</string>
+    <string name="SpecialForwardReplaceAllTexts">替換所有文字</string>
+    <string name="SpecialForwardReplaceAllLinks">替換所有連結</string>
+    <string name="SpecialForwardDeleteAllLinks">刪除所有連結</string>
+    <string name="SpecialForwardDeleteAllCaptions">刪除所有媒體標題</string>
+    <string name="SpecialForwardAsFile">作為檔案轉發</string>
+    <string name="SpecialForwardResetSuccess">訊息已重置</string>
+    <string name="DoubleTapOnChatsToFilterUnread">雙擊聊天列表以過濾未讀聊天</string>
+    <string name="AmbientMode">環境模式</string>
 </resources>

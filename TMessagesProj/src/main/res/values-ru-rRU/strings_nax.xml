@@ -362,4 +362,18 @@
     <string name="AllowForwardingRestrictionOnboardingMessage">Чтобы обеспечить беспрепятственный обход ограничений на пересылку, убедитесь, что медиафайл полностью загружен перед пересылкой. Это позволяет приложению безопасно повторно загрузить и доставить ваш контент без блокировок со стороны сервера.</string>
     <string name="V8DAudio">Пространственная иллюзия звука на 360 градусов</string>
     <string name="V8DAudioAbout">Звуковой эффект Dolby 8D</string>
+
+    <string name="SpecialForward">Специальная пересылка</string>
+    <string name="SpecialForwardAbout">Включить расширенное меню пересылки с опциями редактирования и фильтрации.</string>
+    <string name="SpecialForwardTitle">Специальная пересылка</string>
+    <string name="SpecialForwardEditHint">Редактировать сообщение</string>
+    <string name="SpecialForwardResetAll">Сбросить всё</string>
+    <string name="SpecialForwardReplaceAllTexts">Заменить все тексты</string>
+    <string name="SpecialForwardReplaceAllLinks">Заменить все ссылки</string>
+    <string name="SpecialForwardDeleteAllLinks">Удалить все ссылки</string>
+    <string name="SpecialForwardDeleteAllCaptions">Удалить все подписи медиа</string>
+    <string name="SpecialForwardAsFile">Переслать как файл</string>
+    <string name="SpecialForwardResetSuccess">Сообщения сброшены</string>
+    <string name="DoubleTapOnChatsToFilterUnread">Двойное нажатие на чаты для фильтрации непрочитанных</string>
+    <string name="AmbientMode">Режим Ambient</string>
 </resources>
