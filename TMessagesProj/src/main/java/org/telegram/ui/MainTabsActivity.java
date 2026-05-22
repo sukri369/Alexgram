@@ -133,7 +133,7 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
     private MainTabsLayout tabsView;
     private BlurredBackgroundDrawable tabsViewBackground;
     private View fadeView;
-    private boolean lastHideContacts = NaConfig.INSTANCE.getMainTabsHideContacts().Bool();
+    private boolean lastHideContacts = false;
 
     public MainTabsActivity() {
         super();
@@ -1028,6 +1028,9 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
         public void setTabsVisible(boolean visible) {
             animatorTabsVisible.setValue(visible, true);
         }
+
+        @Override
+        public void onDoubleTapOnChats() { }
     }
 
 

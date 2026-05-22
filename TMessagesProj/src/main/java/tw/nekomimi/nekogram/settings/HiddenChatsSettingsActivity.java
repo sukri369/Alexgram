@@ -160,7 +160,7 @@ public class HiddenChatsSettingsActivity extends BaseFragment {
             container.addView(createGuideItem(context, R.drawable.msg_folders_private_solar, 0xFF00bcd4, "Hide Chats", "Long-press any chat in the chat list, open the 3-dot menu and select 'Add to Hidden Chats'."));
             container.addView(createGuideItem(context, R.drawable.msg_search, 0xFFf06292, "Access Hidden Chats", "Long-press on the Nagram header on the main screen to quickly access your Hidden Chats."));
             container.addView(createGuideItem(context, R.drawable.msg_permissions_solar, 0xFFba68c8, "Privacy", "Chats added to Hidden Chats are automatically muted to ensure maximum privacy."));
-            container.addView(createGuideItem(context, R.drawable.outline_shield_lock_24, 0xFF4db6ac, "Security", "Your hidden chats are strictly protected by a 4-digit passcode, and optionally your fingerprint."));
+            container.addView(createGuideItem(context, R.drawable.outline_header_lock_24, 0xFF4db6ac, "Security", "Your hidden chats are strictly protected by a 4-digit passcode, and optionally your fingerprint."));
 
             TextView btn = new TextView(context);
             btn.setText("Got It");

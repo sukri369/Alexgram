@@ -17623,7 +17623,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     drawable = drawable.mutate();
                     drawable.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_undo_infoColor), PorterDuff.Mode.SRC_IN));
                 }
-                CharSequence text = AndroidUtilities.replaceSingleTag(getString(added ? R.string.ShadowBanChannelAdded : R.string.ShadowBanChannelRemoved), () -> presentFragment(ShadowBanListActivity.forChannels()));
+                CharSequence text = AndroidUtilities.replaceSingleTag(getString(added ? R.string.ShadowBanChannelAdded : R.string.ShadowBanChannelRemoved), () -> presentFragment(new org.telegram.ui.PrivacyUsersActivity(org.telegram.ui.PrivacyUsersActivity.TYPE_BLOCKED_CHANNELS, new java.util.ArrayList<Long>(), false, false)));
                 BulletinFactory.of(this).createSimpleBulletin(drawable, text).show();
             }
             return;
