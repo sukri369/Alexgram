@@ -539,6 +539,7 @@ public class DeleteMessagesBottomSheet extends BottomSheetWithRecyclerListView {
                 !defaultBannedRights.send_inline ||
                 !defaultBannedRights.embed_links ||
                 !defaultBannedRights.send_polls ||
+                !defaultBannedRights.send_reactions ||
                 !defaultBannedRights.change_info ||
                 !defaultBannedRights.invite_users ||
                 !defaultBannedRights.pin_messages ||
@@ -570,6 +571,7 @@ public class DeleteMessagesBottomSheet extends BottomSheetWithRecyclerListView {
         bannedRights.send_inline = left.send_inline || right.send_inline;
         bannedRights.embed_links = left.embed_links || right.embed_links;
         bannedRights.send_polls = left.send_polls || right.send_polls;
+        bannedRights.send_reactions = left.send_reactions || right.send_reactions;
         bannedRights.change_info = left.change_info || right.change_info;
         bannedRights.invite_users = left.invite_users || right.invite_users;
         bannedRights.pin_messages = left.pin_messages || right.pin_messages;
@@ -591,6 +593,7 @@ public class DeleteMessagesBottomSheet extends BottomSheetWithRecyclerListView {
                 !bannedRights.send_inline && !defaultBannedRights.send_inline ||
                 !bannedRights.embed_links && !bannedRights.send_plain && !defaultBannedRights.embed_links && !defaultBannedRights.send_plain ||
                 !bannedRights.send_polls && !defaultBannedRights.send_polls ||
+                !bannedRights.send_reactions && !defaultBannedRights.send_reactions ||
                 !bannedRights.change_info && !defaultBannedRights.change_info ||
                 !bannedRights.invite_users && !defaultBannedRights.invite_users ||
                 !bannedRights.pin_messages && !defaultBannedRights.pin_messages ||
@@ -717,8 +720,9 @@ public class DeleteMessagesBottomSheet extends BottomSheetWithRecyclerListView {
 
     private boolean allDefaultMediaBanned() {
         return defaultBannedRights.send_photos && defaultBannedRights.send_videos && defaultBannedRights.send_stickers
-                && defaultBannedRights.send_audios && defaultBannedRights.send_docs && defaultBannedRights.send_voices &&
-                defaultBannedRights.send_roundvideos && defaultBannedRights.embed_links && defaultBannedRights.send_polls;
+                && defaultBannedRights.send_audios && defaultBannedRights.send_docs && defaultBannedRights.send_voices
+                && defaultBannedRights.send_roundvideos && defaultBannedRights.embed_links && defaultBannedRights.send_polls
+                && defaultBannedRights.send_reactions;
     }
 
     private void fillAction(ArrayList<UItem> items, Action action) {
@@ -828,6 +832,7 @@ public class DeleteMessagesBottomSheet extends BottomSheetWithRecyclerListView {
                             bannedRights.send_roundvideos = !enabled;
                             bannedRights.embed_links = !enabled;
                             bannedRights.send_polls = !enabled;
+                            bannedRights.send_reactions = !enabled;
                             onRestrictionsChanged();
 
                             adapter.update(true);
@@ -871,7 +876,7 @@ public class DeleteMessagesBottomSheet extends BottomSheetWithRecyclerListView {
                             .setPad(1));
                     items.add(UItem.asRoundCheckbox(RIGHT_SEND_REACTIONS, getString(R.string.UserRestrictionsSendReactions))
                             .setChecked(!bannedRights.send_reactions && !defaultBannedRights.send_reactions)
-                            .setLocked(defaultBannedRights.send_audios)
+                            .setLocked(defaultBannedRights.send_reactions)
                             .setPad(1));
                 }
 
@@ -1080,10 +1085,16 @@ public class DeleteMessagesBottomSheet extends BottomSheetWithRecyclerListView {
             adapter.update(true);
             applyScrolledPosition(true);
         } else if (item.id == OPTION_DELETE) {
-            restrictUserCollapsed = !restrictUserCollapsed;
+            restrictUserCollapsed = false;
+
+            final boolean newValue = !restrictUserDeleteAllMessages;
+            restrictUserDeleteAllMessages = newValue;
+            restrictUserDeleteAllReactions = newValue;
+
             saveScrollPosition();
             adapter.update(true);
             applyScrolledPosition(true);
+            updateTitleAnimated();
         } else if (item.viewType == VIEW_TYPE_SHADOW_COLLAPSE_BUTTON) {
             restrict = !restrict;
             banOrRestrict.setFilter(restrict ? restrictFilter : banFilter);
