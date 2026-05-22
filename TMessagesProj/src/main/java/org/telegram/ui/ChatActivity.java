@@ -31953,6 +31953,7 @@ public class ChatActivity extends BaseFragment implements
 			boolean addGap = false;
 
 			if (optionsView == null) {
+				if (isReactionsViewAvailable) {
 					ReactedHeaderView reactedView = new ReactedHeaderView(contentView.getContext(), currentAccount, primaryMessage, dialog_id);
 
 					int count = 0;

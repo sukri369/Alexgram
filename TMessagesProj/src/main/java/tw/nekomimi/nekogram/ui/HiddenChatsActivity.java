@@ -60,6 +60,7 @@ public class HiddenChatsActivity extends DialogsActivity {
                 picker.setDelegate((fragment, dids, message, param, notify, scheduleDate, scheduleRepeatPeriod, topicsFragment) -> {
                     for (MessagesStorage.TopicKey topicKey : dids) {
                         HiddenChatsController.getInstance().hide(currentAccount, topicKey.dialogId);
+                    }
                     fragment.finishFragment();
                     if (viewPages != null && viewPages.length > 0 && viewPages[0] != null && viewPages[0].dialogsAdapter != null) {
                         viewPages[0].dialogsAdapter.notifyDataSetChanged();
