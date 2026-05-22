@@ -36643,7 +36643,7 @@ public class ChatActivity extends BaseFragment implements
 		return messageSuggestionParams;
 	}
 
-	public org.telegram.ui.Adapters.ChatActivityAdapter getChatAdapter() { return chatAdapter; }
+	public ChatActivityAdapter getChatAdapter() { return chatAdapter; }
 
 	public MessageObject.GroupedMessages getSelectedObjectGroup() {
 		return selectedObjectGroup;
