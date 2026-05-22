@@ -372,6 +372,7 @@ import me.vkryl.core.reference.ReferenceList;
 import tw.nekomimi.nekogram.BackButtonMenuRecent;
 import tw.nekomimi.nekogram.NekoConfig;
 import tw.nekomimi.nekogram.filters.AyuFilter;
+import tw.nekomimi.nekogram.filters.ReactionFilter;
 import tw.nekomimi.nekogram.filters.RegexFilterEditActivity;
 import tw.nekomimi.nekogram.helpers.ChatsHelper;
 import tw.nekomimi.nekogram.helpers.MessageHelper;
@@ -11430,7 +11431,7 @@ public class ChatActivity extends BaseFragment implements
 		if (getParentActivity() == null) {
 			return;
 		}
-		// reactionsMentionCount = ReactionFilter.markHiddenUnreadReactionsAsRead(getMessagesController(), currentAccount, dialog_id, getTopicId(), messages, reactionsMentionCount);
+		reactionsMentionCount = ReactionFilter.markHiddenUnreadReactionsAsRead(getMessagesController(), currentAccount, dialog_id, getTopicId(), messages, reactionsMentionCount);
 		boolean visible = reactionsMentionCount > 0 && (chatMode == 0 || chatMode == MODE_SUGGESTIONS);
 		sideControlsButtonsLayout.showButton(ChatActivitySideControlsButtonsLayout.BUTTON_REACTIONS, visible, animated);
 		sideControlsButtonsLayout.setButtonCount(ChatActivitySideControlsButtonsLayout.BUTTON_REACTIONS, reactionsMentionCount, animated);
@@ -16723,6 +16724,9 @@ public class ChatActivity extends BaseFragment implements
 					}
 					updatePollVotesMentionButton(true);
 				}
+				if (messageObject != null && fragmentOpened && openAnimationEnded && (chatListItemAnimator == null || !chatListItemAnimator.isRunning()) && ReactionFilter.shouldFilter(currentAccount, dialog_id) && ReactionFilter.markHiddenUnreadReactionsAsRead(getMessagesController(), currentAccount, dialog_id, getTopicId(), messageObject, reactionsMentionCount, newReactionsMentionCount -> reactionsMentionCount = newReactionsMentionCount)) {
+					updateReactionsMentionButton(true);
+				}
 				if (messageObject != null && fragmentOpened && openAnimationEnded && (chatListItemAnimator == null || !chatListItemAnimator.isRunning()) && messageCell.checkUnreadReactions(clipTop, chatListView.getMeasuredHeight() - blurredViewBottomOffset)) {
 					reactionsMentionCount--;
 					getMessagesStorage().markMessageReactionsAsRead(getDialogId(), getTopicId(), messageObject.getId());
@@ -16757,6 +16761,9 @@ public class ChatActivity extends BaseFragment implements
 					maxVisibleId = Math.max(maxVisibleId, messageObject.getId());
 				}
 				hasTopicSeparator = cell.topicSeparator != null;
+				if (messageObject != null && fragmentOpened && openAnimationEnded && (chatListItemAnimator == null || !chatListItemAnimator.isRunning()) && ReactionFilter.shouldFilter(currentAccount, dialog_id) && ReactionFilter.markHiddenUnreadReactionsAsRead(getMessagesController(), currentAccount, dialog_id, getTopicId(), messageObject, reactionsMentionCount, newReactionsMentionCount -> reactionsMentionCount = newReactionsMentionCount)) {
+					updateReactionsMentionButton(true);
+				}
 				if (messageObject != null && fragmentOpened && openAnimationEnded && (chatListItemAnimator == null || !chatListItemAnimator.isRunning()) && cell.checkUnreadReactions(clipTop, chatListView.getMeasuredHeight() - blurredViewBottomOffset)) {
 					reactionsMentionCount--;
 					getMessagesStorage().markMessageReactionsAsRead(getDialogId(), getTopicId(), messageObject.getId());
@@ -31956,19 +31963,10 @@ public class ChatActivity extends BaseFragment implements
 				if (isReactionsViewAvailable) {
 					ReactedHeaderView reactedView = new ReactedHeaderView(contentView.getContext(), currentAccount, primaryMessage, dialog_id);
 
-					int count = 0;
-					java.util.List<TLRPC.ReactionCount> visibleReactionCounts = new java.util.ArrayList<>();
-					boolean hasReactionsFromOtherUsers = false;
-					if (primaryMessage.messageOwner.reactions != null) {
-						for (int a = 0; a < primaryMessage.messageOwner.reactions.results.size(); a++) {
-							TLRPC.ReactionCount result = primaryMessage.messageOwner.reactions.results.get(a);
-							count += result.count;
-							visibleReactionCounts.add(result);
-						}
-						if (count > 0 && (primaryMessage.messageOwner.reactions.recent_reactions.size() > 1 || (primaryMessage.messageOwner.reactions.recent_reactions.size() == 1 && !MessagesController.getInstance(currentAccount).isMyPeer(primaryMessage.messageOwner.reactions.recent_reactions.get(0).peer_id)))) {
-							hasReactionsFromOtherUsers = true;
-						}
-					}
+					var reactionCountResult = ReactionFilter.getReactionCountResult(currentAccount, primaryMessage.getDialogId(), primaryMessage.messageOwner.reactions);
+					int count = reactionCountResult.totalCount();
+					var visibleReactionCounts = reactionCountResult.counts();
+					boolean hasReactionsFromOtherUsers = reactionCountResult.hasReactionsFromOtherUsers();
 
 					final boolean canDeleteReactions = hasReactionsFromOtherUsers && ChatObject.canUserDoAdminAction(currentChat, ChatObject.ACTION_DELETE_MESSAGES);
 					final View tapAndHoldView;
