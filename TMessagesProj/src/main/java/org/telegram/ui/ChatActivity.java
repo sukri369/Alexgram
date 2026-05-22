@@ -36650,7 +36650,7 @@ public class ChatActivity extends BaseFragment implements
 	}
 
 	public java.util.ArrayList<MessageObject> getChatAdapterMessages() {
-		return chatAdapter != null ? chatAdapter.messages : null;
+		return chatAdapter != null ? chatAdapter.getMessages() : null;
 	}
 
 	public TLRPC.Chat getCurrentChat() {

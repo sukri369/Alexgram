@@ -229,6 +229,11 @@ public class MessagesController extends BaseController implements NotificationCe
         }
     }
 
+    public boolean isMyPeer(TLRPC.Peer peer) {
+        return peer != null && peer.user_id == getUserConfig().getClientUserId();
+    }
+
+
     public ChannelBoostsController getBoostsController() {
         if (channelBoostsControler != null) {
             return channelBoostsControler;

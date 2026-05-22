@@ -61,12 +61,35 @@ public interface ChatActivityInterface {
 
     Theme.ResourcesProvider getResourceProvider();
 
-    int getCurrentAccount();
-    NotificationCenter getNotificationCenter();
-    MessagesController getMessagesController();
-    Activity getParentActivity();
-    MessageObject getMessageForTranslate();
-    MessageObject.GroupedMessages getSelectedObjectGroup();
-    java.util.ArrayList<MessageObject> getChatAdapterMessages();
-    MessageHelper getMessageHelper();
+    default int getCurrentAccount() {
+        return 0;
+    }
+
+    default NotificationCenter getNotificationCenter() {
+        return null;
+    }
+
+    default MessagesController getMessagesController() {
+        return null;
+    }
+
+    default Activity getParentActivity() {
+        return null;
+    }
+
+    default MessageObject getMessageForTranslate() {
+        return null;
+    }
+
+    default MessageObject.GroupedMessages getSelectedObjectGroup() {
+        return null;
+    }
+
+    default java.util.ArrayList<MessageObject> getChatAdapterMessages() {
+        return null;
+    }
+
+    default MessageHelper getMessageHelper() {
+        return null;
+    }
 }

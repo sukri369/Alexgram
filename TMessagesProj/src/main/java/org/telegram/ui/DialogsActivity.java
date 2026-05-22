@@ -367,7 +367,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         public DialogsRecyclerView listView;
         public RecyclerListViewScroller scroller;
         private LinearLayoutManager layoutManager;
-        private DialogsAdapter dialogsAdapter;
+        public DialogsAdapter dialogsAdapter;
         private ItemTouchHelper itemTouchhelper;
         private SwipeController swipeController;
         private int selectedType;
