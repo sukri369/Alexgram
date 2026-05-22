@@ -58,10 +58,10 @@ import android.text.Spanned;
 import android.text.TextPaint;
 import android.text.TextUtils;
 import android.text.style.ImageSpan;
+import android.util.Log;
 import android.util.LongSparseArray;
 import android.util.Property;
 import android.util.StateSet;
-import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.HapticFeedbackConstants;
 import android.view.KeyEvent;
@@ -140,9 +140,6 @@ import org.telegram.tgnet.tl.TL_account;
 import org.telegram.tgnet.tl.TL_chatlists;
 import org.telegram.tgnet.tl.TL_stars;
 import org.telegram.tgnet.tl.TL_stories;
-import org.telegram.ui.Components.ChatAnimeAssistantView;
-import org.telegram.ui.Components.chat.MiniChatAssistantView;
-import org.telegram.ui.Helpers.AIAssistanceHelper;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.ActionBarMenu;
 import org.telegram.ui.ActionBar.ActionBarMenuItem;
@@ -193,6 +190,7 @@ import org.telegram.ui.Components.FragmentFloatingButton;
 import org.telegram.ui.Components.FragmentSearchField;
 import org.telegram.ui.Components.ImageUpdater;
 import org.telegram.ui.Components.PermissionRequest;
+import org.telegram.ui.Components.ShareAlert;
 import org.telegram.ui.Components.UItem;
 import org.telegram.ui.Components.blur3.Blur3HashImpl;
 import org.telegram.ui.Components.blur3.BlurredBackgroundDrawableViewFactory;
@@ -277,10 +275,10 @@ import me.vkryl.android.animator.FactorAnimator;
 
 import tw.nekomimi.nekogram.BackButtonMenuRecent;
 import tw.nekomimi.nekogram.NekoConfig;
-import tw.nekomimi.nekogram.helpers.HiddenChatsController;
 import tw.nekomimi.nekogram.helpers.MainTabsHelper;
 import tw.nekomimi.nekogram.helpers.PasscodeHelper;
 import tw.nekomimi.nekogram.helpers.TypefaceHelper;
+import tw.nekomimi.nekogram.helpers.remote.EmojiHelper;
 import tw.nekomimi.nekogram.settings.GhostModeActivity;
 import tw.nekomimi.nekogram.ui.BookmarkManagerActivity;
 import xyz.nextalone.nagram.NaConfig;
@@ -321,19 +319,15 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             this, CubicBezierInterpolator.EASE_OUT_QUINT, 350);
     private final BoolAnimator animatorForwardButtonVisible = new BoolAnimator(ANIMATOR_ID_FORWARD_BUTTON_VISIBLE,
             this, CubicBezierInterpolator.EASE_OUT_QUINT, 350);
-    protected final BoolAnimator animatorFilterTabsVisible = new BoolAnimator(ANIMATOR_ID_FILTER_TABS_VISIBLE,
+    private final BoolAnimator animatorFilterTabsVisible = new BoolAnimator(ANIMATOR_ID_FILTER_TABS_VISIBLE,
             this, CubicBezierInterpolator.EASE_OUT_QUINT, 350);
     private final BoolAnimator animatorSearchFilterTabsVisible = new BoolAnimator(ANIMATOR_ID_SEARCH_FILTER_TABS_VISIBLE,
             this, CubicBezierInterpolator.EASE_OUT_QUINT, 350);
 
-    private ChatAnimeAssistantView chatAnimeAssistantView;
-    private MiniChatAssistantView miniChatAssistantView;
-    private SharedPreferences.OnSharedPreferenceChangeListener aiPreferenceListener;
-
 
     private final WindowInsetsStateHolder windowInsetsStateHolder = new WindowInsetsStateHolder(this::checkInsets);
 
-    protected boolean canShowFilterTabsView;
+    private boolean canShowFilterTabsView;
     private int initialSearchType = -1;
 
     private final String ACTION_MODE_SEARCH_DIALOGS_TAG = "search_dialogs_action_mode";
@@ -359,7 +353,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private boolean storiesOverscrollCalled;
     private boolean wasDrawn;
     public boolean hasMainTabs;
-    private String customTitle;
 
     public MessagesStorage.TopicKey getOpenedDialogId() {
         return openedDialogId;
@@ -505,8 +498,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     private float contactsAlpha = 1f;
     private ValueAnimator contactsAlphaAnimator;
-    private boolean onlyUnread;
-    protected ViewPage[] viewPages;
+    private ViewPage[] viewPages;
     private ActionBarMenuItem passcodeItem;
     private ActionBarMenuItem downloadsItem;
     private DownloadProgressIcon downloadProgressIcon;
@@ -522,12 +514,12 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private HintView2 storyPremiumHint;
     private boolean canShowStoryHint;
     private boolean storyHintShown;
-    protected FragmentFloatingButton floatingButton3;
-    protected FragmentFloatingButton floatingButtonStories;
+    private FragmentFloatingButton floatingButton3;
+    private FragmentFloatingButton floatingButtonStories;
     private ChatAvatarContainer avatarContainer;
     private int undoViewIndex;
     private UndoView[] undoView = new UndoView[2];
-    protected FilterTabsView filterTabsView;
+    private FilterTabsView filterTabsView;
     private boolean askingForPermissions;
     private int searchViewPagerIndex;
     @Nullable
@@ -597,13 +589,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private ActionBarMenuSubItem readItem;
     @Nullable
     private ActionBarMenuSubItem blockItem;
-    @Nullable
-    private ActionBarMenuSubItem hideChatItem;
-
-    private FrameLayout unreadPillView;
-    private TextView unreadPillText;
-    private float unreadPillAlpha;
-    private ValueAnimator unreadPillAnimator;
 
     private float additionalFloatingTranslation;
     private float floatingButtonPanOffset;
@@ -659,24 +644,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private String addToGroupAlertString;
     public boolean resetDelegate = true;
 
-    private HashSet<Long> excludedDialogIds;
-
-    public void setExcludedDialogIds(HashSet<Long> ids) {
-        excludedDialogIds = ids;
-        if (viewPages != null) {
-            for (ViewPage page : viewPages) {
-                if (page != null && page.dialogsAdapter != null) {
-                    page.dialogsAdapter.setExcludedDialogIds(ids);
-                    page.dialogsAdapter.notifyDataSetChanged();
-                }
-            }
-        }
-        if (searchViewPager != null && searchViewPager.dialogsSearchAdapter != null) {
-            searchViewPager.dialogsSearchAdapter.setExcludedDialogIds(ids);
-            searchViewPager.dialogsSearchAdapter.notifyDataSetChanged();
-        }
-    }
-
     public static boolean[] dialogsLoaded = new boolean[UserConfig.MAX_ACCOUNT_COUNT];
     private boolean searching;
     private boolean searchWas;
@@ -727,7 +694,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private final static int pin2 = 108;
     private final static int add_to_folder = 109;
     private final static int remove_from_folder = 110;
-    private final static int hide_chat = 111;
 
     private final static int select_all = 1000;
 
@@ -887,7 +853,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 h += storiesHeight * (1f - searchAnimationProgress) * (1f - rightSlidingProgress) * (1f - progressToActionMode);
             }
             h += storiesOverscroll;
-            h += dp(SEARCH_FIELD_HEIGHT) * (1f - progressToActionMode) * (1f - searchAnimationProgress) * (1f - rightSlidingProgress);
+            h += getIdleSearchFieldHeight() * (1f - progressToActionMode) * (1f - searchAnimationProgress) * (1f - rightSlidingProgress);
 
             return (int) h;
         }
@@ -1065,8 +1031,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             tabsYOffset = 0;
             storiesYOffset = 0;
             tabsYOffset -= Math.min(
-                dp(hasStories ? DialogStoriesCell.HEIGHT_IN_DP : 0) + dp(SEARCH_FIELD_HEIGHT) + scrollYOffset,
-                progressToActionMode * (dp(hasStories ? DialogStoriesCell.HEIGHT_IN_DP : 0) + dp(SEARCH_FIELD_HEIGHT))
+                dp(hasStories ? DialogStoriesCell.HEIGHT_IN_DP : 0) + getIdleSearchFieldHeight() + scrollYOffset,
+                progressToActionMode * (dp(hasStories ? DialogStoriesCell.HEIGHT_IN_DP : 0) + getIdleSearchFieldHeight())
             );
             storiesYOffset = tabsYOffset;
             if ((rightSlidingDialogContainer != null && rightSlidingDialogContainer.hasFragment())) {
@@ -1092,7 +1058,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 if (hasStories) {
                     addH += dp(DialogStoriesCell.HEIGHT_IN_DP);
                 }
-                addH += dp(SEARCH_FIELD_HEIGHT);
+                addH += getIdleSearchFieldHeight();
                 addH *= rightSlidingDialogContainer.openedProgress;
 
                 viewPages[0].setTranslationY(rightFragmentOffset - addH);
@@ -1191,7 +1157,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         if (hasStories) {
                             h += dp(DialogStoriesCell.HEIGHT_IN_DP);
                         }
-                        h += dp(SEARCH_FIELD_HEIGHT);
+                        h += getIdleSearchFieldHeight();
                     }
                     h += actionModeAdditionalHeight;
                     if (actionBarColorAnimator == null) {
@@ -1302,7 +1268,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 if (child == fragmentSearchField || child == searchTabsAndFiltersLayout || child == dialogStoriesCell) {
                     childTop = actionBar.getMeasuredHeight();
                     if (child != fragmentSearchField && child != dialogStoriesCell && child != searchTabsAndFiltersLayout) {
-                        childTop += dp(SEARCH_FIELD_HEIGHT);
+                        childTop += getIdleSearchFieldHeight();
                     }
                     //if (rightSlidingDialogContainer != null && rightSlidingDialogContainer.hasFragment() && (child == searchTabsView || child == filtersView)) {
                     //    childTop -= dp(SEARCH_FIELD_HEIGHT);
@@ -1327,7 +1293,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     childTop = 0;
                 } else if (child == topPanelLayout || child == topBubblesFadeView || child == filterTabsView) {
                     childTop += actionBar.getMeasuredHeight();
-                    childTop += dp(SEARCH_FIELD_HEIGHT);
+                    childTop += getIdleSearchFieldHeight();
                 } else if (dialogStoriesCell != null && dialogStoriesCell.getPremiumHint() == child) {
                     continue;
                 }
@@ -2066,7 +2032,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 t += dp(DialogStoriesCell.HEIGHT_IN_DP);
             }
             if (!actionModeFullyShowed) {
-                t += dp(SEARCH_FIELD_HEIGHT);
+                t += getIdleSearchFieldHeight();
             }
             additionalPadding = 0;
 
@@ -2385,7 +2351,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         offset += dp(DialogStoriesCell.HEIGHT_IN_DP);
                     }
                     if (backward) {
-                        offset += dp(SEARCH_FIELD_HEIGHT);
+                        offset += getIdleSearchFieldHeight();
                         // offset += canShowFilterTabsView ? dp(50) : 0;
                     }
                     if (p >= 0) {
@@ -2830,6 +2796,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     }
 
 
+    private NotificationCenter.ObserversGroup observersGroup;
+    private NotificationCenter.ObserversGroup globalObserversGroup;
+
     @Override
     public boolean onFragmentCreate() {
         super.onFragmentCreate();
@@ -2867,7 +2836,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             closeFragment = arguments.getBoolean("closeFragment", true);
             allowGlobalSearch = arguments.getBoolean("allowGlobalSearch", true);
             hasMainTabs = arguments.getBoolean("hasMainTabs", false);
-            customTitle = arguments.getString("customTitle");
 
             byte[] requestPeerTypeBytes = arguments.getByteArray("requestPeerType");
             if (requestPeerTypeBytes != null) {
@@ -2886,64 +2854,68 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             SharedConfig.loadProxyList();
         }
 
+        observersGroup = getNotificationCenter().createObserversGroup(this);
+        globalObserversGroup = NotificationCenter.getGlobalInstance().createObserversGroup(this);
+
         if (searchString == null) {
             currentConnectionState = getConnectionsManager().getConnectionState();
 
-            getNotificationCenter().addObserver(this, NotificationCenter.dialogsNeedReload);
-            NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.emojiLoaded);
+            globalObserversGroup.add(NotificationCenter.emojiLoaded);
             if (!onlySelect) {
-                NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.closeSearchByActiveAction);
-                NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.proxySettingsChanged);
-                getNotificationCenter().addObserver(this, NotificationCenter.filterSettingsUpdated);
-                getNotificationCenter().addObserver(this, NotificationCenter.dialogFiltersUpdated);
-                getNotificationCenter().addObserver(this, NotificationCenter.dialogsUnreadCounterChanged);
+                globalObserversGroup.add(NotificationCenter.closeSearchByActiveAction);
+                globalObserversGroup.add(NotificationCenter.proxySettingsChanged);
+                observersGroup.add(NotificationCenter.filterSettingsUpdated);
+                observersGroup.add(NotificationCenter.dialogsUnreadCounterChanged);
             }
-            getNotificationCenter().addObserver(this, NotificationCenter.updateInterfaces);
-            getNotificationCenter().addObserver(this, NotificationCenter.encryptedChatUpdated);
-            getNotificationCenter().addObserver(this, NotificationCenter.contactsDidLoad);
-            getNotificationCenter().addObserver(this, NotificationCenter.appDidLogout);
-            getNotificationCenter().addObserver(this, NotificationCenter.openedChatChanged);
-            getNotificationCenter().addObserver(this, NotificationCenter.notificationsSettingsUpdated);
-            getNotificationCenter().addObserver(this, NotificationCenter.messageReceivedByAck);
-            getNotificationCenter().addObserver(this, NotificationCenter.messageReceivedByServer);
-            getNotificationCenter().addObserver(this, NotificationCenter.messageSendError);
-            getNotificationCenter().addObserver(this, NotificationCenter.needReloadRecentDialogsSearch);
-            getNotificationCenter().addObserver(this, NotificationCenter.replyMessagesDidLoad);
-            getNotificationCenter().addObserver(this, NotificationCenter.topicsDidLoaded);
-            getNotificationCenter().addObserver(this, NotificationCenter.reloadHints);
-            getNotificationCenter().addObserver(this, NotificationCenter.didUpdateConnectionState);
-            getNotificationCenter().addObserver(this, NotificationCenter.onDownloadingFilesChanged);
-            getNotificationCenter().addObserver(this, NotificationCenter.needDeleteDialog);
-            getNotificationCenter().addObserver(this, NotificationCenter.folderBecomeEmpty);
-            getNotificationCenter().addObserver(this, NotificationCenter.newSuggestionsAvailable);
-            getNotificationCenter().addObserver(this, NotificationCenter.dialogsUnreadReactionsCounterChanged);
-            getNotificationCenter().addObserver(this, NotificationCenter.dialogsUnreadPollVotesCounterChanged);
-            getNotificationCenter().addObserver(this, NotificationCenter.forceImportContactsStart);
-            getNotificationCenter().addObserver(this, NotificationCenter.userEmojiStatusUpdated);
-            getNotificationCenter().addObserver(this, NotificationCenter.currentUserPremiumStatusChanged);
-            getNotificationCenter().addObserver(this, NotificationCenter.mainUserInfoChanged);
+            observersGroup
+                .add(NotificationCenter.dialogsNeedReload)
+                .add(NotificationCenter.dialogFiltersUpdated)
+                .add(NotificationCenter.updateInterfaces)
+                .add(NotificationCenter.encryptedChatUpdated)
+                .add(NotificationCenter.contactsDidLoad)
+                .add(NotificationCenter.appDidLogout)
+                .add(NotificationCenter.openedChatChanged)
+                .add(NotificationCenter.notificationsSettingsUpdated)
+                .add(NotificationCenter.messageReceivedByAck)
+                .add(NotificationCenter.messageReceivedByServer)
+                .add(NotificationCenter.messageSendError)
+                .add(NotificationCenter.needReloadRecentDialogsSearch)
+                .add(NotificationCenter.replyMessagesDidLoad)
+                .add(NotificationCenter.topicsDidLoaded)
+                .add(NotificationCenter.reloadHints)
+                .add(NotificationCenter.didUpdateConnectionState)
+                .add(NotificationCenter.onDownloadingFilesChanged)
+                .add(NotificationCenter.needDeleteDialog)
+                .add(NotificationCenter.folderBecomeEmpty)
+                .add(NotificationCenter.newSuggestionsAvailable)
+                .add(NotificationCenter.dialogsUnreadReactionsCounterChanged)
+                .add(NotificationCenter.dialogsUnreadPollVotesCounterChanged)
+                .add(NotificationCenter.forceImportContactsStart)
+                .add(NotificationCenter.userEmojiStatusUpdated)
+                .add(NotificationCenter.currentUserPremiumStatusChanged)
+                .add(NotificationCenter.mainUserInfoChanged);
 
-            NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.didSetPasscode);
+            globalObserversGroup.add(NotificationCenter.didSetPasscode);
         }
-        getNotificationCenter().addObserver(this, NotificationCenter.messagesDeleted);
-
-        getNotificationCenter().addObserver(this, NotificationCenter.onDatabaseMigration);
-        getNotificationCenter().addObserver(this, NotificationCenter.onDatabaseOpened);
-        getNotificationCenter().addObserver(this, NotificationCenter.didClearDatabase);
-        getNotificationCenter().addObserver(this, NotificationCenter.onDatabaseReset);
-        getNotificationCenter().addObserver(this, NotificationCenter.storiesUpdated);
-        getNotificationCenter().addObserver(this, NotificationCenter.storiesEnabledUpdate);
-        getNotificationCenter().addObserver(this, NotificationCenter.unconfirmedAuthUpdate);
-        getNotificationCenter().addObserver(this, NotificationCenter.premiumPromoUpdated);
+        observersGroup
+            .add(NotificationCenter.messagesDeleted)
+            .add(NotificationCenter.onDatabaseMigration)
+            .add(NotificationCenter.onDatabaseOpened)
+            .add(NotificationCenter.didClearDatabase)
+            .add(NotificationCenter.onDatabaseReset)
+            .add(NotificationCenter.storiesUpdated)
+            .add(NotificationCenter.storiesEnabledUpdate)
+            .add(NotificationCenter.unconfirmedAuthUpdate)
+            .add(NotificationCenter.premiumPromoUpdated)
+            .add(NotificationCenter.starBalanceUpdated)
+            .add(NotificationCenter.starSubscriptionsLoaded)
+            .add(NotificationCenter.appConfigUpdated)
+            .add(NotificationCenter.activeAuctionsUpdated);
 
         if (initialDialogsType == DIALOGS_TYPE_DEFAULT) {
-            getNotificationCenter().addObserver(this, NotificationCenter.chatlistFolderUpdate);
-            getNotificationCenter().addObserver(this, NotificationCenter.dialogTranslate);
+            observersGroup.add(NotificationCenter.chatlistFolderUpdate);
+            observersGroup.add(NotificationCenter.dialogTranslate);
         }
-        getNotificationCenter().addObserver(this, NotificationCenter.starBalanceUpdated);
-        getNotificationCenter().addObserver(this, NotificationCenter.starSubscriptionsLoaded);
-        getNotificationCenter().addObserver(this, NotificationCenter.appConfigUpdated);
-        getNotificationCenter().addObserver(this, NotificationCenter.activeAuctionsUpdated);
 
         loadDialogs(getAccountInstance());
         getMessagesController().getStoriesController().loadAllStories();
@@ -3096,70 +3068,14 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     @Override
     public void onFragmentDestroy() {
         super.onFragmentDestroy();
-        if (chatAnimeAssistantView != null) {
-            chatAnimeAssistantView.onDestroy();
+        if (observersGroup != null) {
+            observersGroup.removeAllObservers();
+            observersGroup = null;
         }
-        if (aiPreferenceListener != null) {
-            SharedPreferences aiPrefs = ApplicationLoader.applicationContext.getSharedPreferences("ai_assistant_prefs", Context.MODE_PRIVATE);
-            aiPrefs.unregisterOnSharedPreferenceChangeListener(aiPreferenceListener);
-            aiPreferenceListener = null;
+        if (globalObserversGroup != null) {
+            globalObserversGroup.removeAllObservers();
+            globalObserversGroup = null;
         }
-        if (searchString == null) {
-            getNotificationCenter().removeObserver(this, NotificationCenter.dialogsNeedReload);
-            NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.emojiLoaded);
-            if (!onlySelect) {
-                NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.closeSearchByActiveAction);
-                NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.proxySettingsChanged);
-                getNotificationCenter().removeObserver(this, NotificationCenter.filterSettingsUpdated);
-                getNotificationCenter().removeObserver(this, NotificationCenter.dialogFiltersUpdated);
-                getNotificationCenter().removeObserver(this, NotificationCenter.dialogsUnreadCounterChanged);
-            }
-            getNotificationCenter().removeObserver(this, NotificationCenter.updateInterfaces);
-            getNotificationCenter().removeObserver(this, NotificationCenter.encryptedChatUpdated);
-            getNotificationCenter().removeObserver(this, NotificationCenter.contactsDidLoad);
-            getNotificationCenter().removeObserver(this, NotificationCenter.appDidLogout);
-            getNotificationCenter().removeObserver(this, NotificationCenter.openedChatChanged);
-            getNotificationCenter().removeObserver(this, NotificationCenter.notificationsSettingsUpdated);
-            getNotificationCenter().removeObserver(this, NotificationCenter.messageReceivedByAck);
-            getNotificationCenter().removeObserver(this, NotificationCenter.messageReceivedByServer);
-            getNotificationCenter().removeObserver(this, NotificationCenter.messageSendError);
-            getNotificationCenter().removeObserver(this, NotificationCenter.needReloadRecentDialogsSearch);
-            getNotificationCenter().removeObserver(this, NotificationCenter.replyMessagesDidLoad);
-            getNotificationCenter().removeObserver(this, NotificationCenter.topicsDidLoaded);
-            getNotificationCenter().removeObserver(this, NotificationCenter.reloadHints);
-            getNotificationCenter().removeObserver(this, NotificationCenter.didUpdateConnectionState);
-            getNotificationCenter().removeObserver(this, NotificationCenter.onDownloadingFilesChanged);
-            getNotificationCenter().removeObserver(this, NotificationCenter.needDeleteDialog);
-            getNotificationCenter().removeObserver(this, NotificationCenter.folderBecomeEmpty);
-            getNotificationCenter().removeObserver(this, NotificationCenter.newSuggestionsAvailable);
-            getNotificationCenter().removeObserver(this, NotificationCenter.dialogsUnreadReactionsCounterChanged);
-            getNotificationCenter().removeObserver(this, NotificationCenter.dialogsUnreadPollVotesCounterChanged);
-            getNotificationCenter().removeObserver(this, NotificationCenter.forceImportContactsStart);
-            getNotificationCenter().removeObserver(this, NotificationCenter.userEmojiStatusUpdated);
-            getNotificationCenter().removeObserver(this, NotificationCenter.currentUserPremiumStatusChanged);
-            getNotificationCenter().removeObserver(this, NotificationCenter.mainUserInfoChanged);
-
-            NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.didSetPasscode);
-        }
-        getNotificationCenter().removeObserver(this, NotificationCenter.messagesDeleted);
-
-        getNotificationCenter().removeObserver(this, NotificationCenter.onDatabaseMigration);
-        getNotificationCenter().removeObserver(this, NotificationCenter.onDatabaseOpened);
-        getNotificationCenter().removeObserver(this, NotificationCenter.didClearDatabase);
-        getNotificationCenter().removeObserver(this, NotificationCenter.onDatabaseReset);
-        getNotificationCenter().removeObserver(this, NotificationCenter.storiesUpdated);
-        getNotificationCenter().removeObserver(this, NotificationCenter.storiesEnabledUpdate);
-        getNotificationCenter().removeObserver(this, NotificationCenter.unconfirmedAuthUpdate);
-        getNotificationCenter().removeObserver(this, NotificationCenter.premiumPromoUpdated);
-
-        if (initialDialogsType == DIALOGS_TYPE_DEFAULT) {
-            getNotificationCenter().removeObserver(this, NotificationCenter.chatlistFolderUpdate);
-            getNotificationCenter().removeObserver(this, NotificationCenter.dialogTranslate);
-        }
-        getNotificationCenter().removeObserver(this, NotificationCenter.starBalanceUpdated);
-        getNotificationCenter().removeObserver(this, NotificationCenter.starSubscriptionsLoaded);
-        getNotificationCenter().removeObserver(this, NotificationCenter.appConfigUpdated);
-        getNotificationCenter().removeObserver(this, NotificationCenter.activeAuctionsUpdated);
 
         if (commentView != null) {
             commentView.onDestroy();
@@ -3170,70 +3086,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         notificationsLocker.unlock();
         delegate = null;
         SuggestClearDatabaseBottomSheet.dismissDialog();
-    }
-
-    private void initAIAssistance() {
-        if (fragmentView == null) {
-            return;
-        }
-
-        SharedPreferences aiPrefs = ApplicationLoader.applicationContext.getSharedPreferences("ai_assistant_prefs", Context.MODE_PRIVATE);
-        boolean enabled = aiPrefs.getBoolean("assistant_enabled", false);
-        updateAIAssistanceVisibility(enabled);
-        
-        if (aiPreferenceListener == null) {
-            aiPreferenceListener = (prefs, key) -> {
-                if ("assistant_enabled".equals(key)) {
-                    AndroidUtilities.runOnUIThread(() -> updateAIAssistanceVisibility(prefs.getBoolean(key, false)));
-                }
-            };
-            aiPrefs.registerOnSharedPreferenceChangeListener(aiPreferenceListener);
-        }
-    }
-
-    private void updateAIAssistanceVisibility(boolean enabled) {
-        if (enabled) {
-            if (chatAnimeAssistantView == null) {
-                Context context = getParentActivity();
-                if (context == null) return;
-                chatAnimeAssistantView = new ChatAnimeAssistantView(context, (SizeNotifierFrameLayout) fragmentView, 0);
-                chatAnimeAssistantView.setAssistantRequestDelegate(new ChatAnimeAssistantView.AssistantRequestDelegate() {
-                    @Override
-                    public void onRequest(String prompt, List<AIAssistanceHelper.HistoryItem> history, ChatAnimeAssistantView.AssistantRequestCallback callback) {
-                        String contextString = AIAssistanceHelper.buildContext(DialogsActivity.this, currentAccount, 0, null, false);
-                        AIAssistanceHelper.requestReply(currentAccount, prompt, contextString, false, null, history, callback);
-                    }
-                    @Override
-                    public void onAutoReplyToggleChanged(long dialogId, boolean enabled) { }
-                });
-                miniChatAssistantView = new MiniChatAssistantView(context);
-                miniChatAssistantView.setOnClickListener(v -> chatAnimeAssistantView.showPanel());
-                chatAnimeAssistantView.setMiniView(miniChatAssistantView);
-            }
-            if (chatAnimeAssistantView.getParent() == null) {
-                ((FrameLayout) fragmentView).addView(chatAnimeAssistantView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
-            }
-            if (miniChatAssistantView.getParent() == null) {
-                ((FrameLayout) fragmentView).addView(miniChatAssistantView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_VERTICAL | Gravity.RIGHT, 0, 0, 16, 0));
-            }
-            chatAnimeAssistantView.setVisibility(View.VISIBLE);
-            miniChatAssistantView.setVisibility(View.VISIBLE);
-            chatAnimeAssistantView.bringToFront();
-            miniChatAssistantView.bringToFront();
-        } else {
-            if (chatAnimeAssistantView != null) {
-                chatAnimeAssistantView.setVisibility(View.GONE);
-                if (chatAnimeAssistantView.getParent() != null) {
-                    ((FrameLayout) fragmentView).removeView(chatAnimeAssistantView);
-                }
-            }
-            if (miniChatAssistantView != null) {
-                miniChatAssistantView.setVisibility(View.GONE);
-                if (miniChatAssistantView.getParent() != null) {
-                    ((FrameLayout) fragmentView).removeView(miniChatAssistantView);
-                }
-            }
-        }
     }
 
     @Override
@@ -3364,32 +3216,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         topPanelLayout = null;
 
         ActionBarMenu menu = actionBar.createMenu();
-        if (allowSwitchAccount && UserConfig.getActivatedAccountsCount() > 1) {
-            switchItem = menu.addItemWithWidth(1, 0, dp(56));
-            AvatarDrawable avatarDrawable = new AvatarDrawable();
-            avatarDrawable.setTextSize(dp(12));
-
-            BackupImageView imageView = new BackupImageView(context);
-            imageView.setRoundRadius(dp(18));
-            switchItem.addView(imageView, LayoutHelper.createFrame(36, 36, Gravity.CENTER));
-
-            TLRPC.User user = getUserConfig().getCurrentUser();
-            avatarDrawable.setInfo(currentAccount, user);
-            imageView.getImageReceiver().setCurrentAccount(currentAccount);
-            Drawable thumb = user != null && user.photo != null && user.photo.strippedBitmap != null ? user.photo.strippedBitmap : avatarDrawable;
-            imageView.setImage(ImageLocation.getForUserOrChat(user, ImageLocation.TYPE_SMALL), "50_50", ImageLocation.getForUserOrChat(user, ImageLocation.TYPE_STRIPPED), "50_50", thumb, user);
-
-            for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-                if (PasscodeHelper.isAccountHidden(a)) continue;
-                TLRPC.User u = AccountInstance.getInstance(a).getUserConfig().getCurrentUser();
-                if (u != null) {
-                    AccountSelectCell cell = new AccountSelectCell(context, false);
-                    cell.setAccount(a, true);
-                    switchItem.addSubItem(10 + a, cell, dp(230), dp(48));
-                }
-            }
-        }
-
         searchItem = menu.addItem(0, R.drawable.outline_header_search).setIsSearchField(true, false);
         searchItem.setOnClickListener(v -> {
             showSearch(true, false, true);
@@ -3417,9 +3243,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             animatorSet.start();
             */
         });
-        if (initialDialogsType == DIALOGS_TYPE_ADD_USERS_TO || (isArchive() && getDialogsArray(currentAccount, initialDialogsType, folderId, false).isEmpty()) || !onlySelect) {
+        if (initialDialogsType == DIALOGS_TYPE_ADD_USERS_TO || isArchive() && getDialogsArray(currentAccount, initialDialogsType, folderId, false).isEmpty()) {
             searchItem.setVisibility(View.GONE);
         }
+        searchItem.setVisibility(View.GONE);
 
         if (!onlySelect && searchString == null && folderId == 0) {
             doneItem = new ActionBarMenuItem(context, null, getThemedColor(Theme.key_actionBarDefaultSelector), getThemedColor(Theme.key_actionBarDefaultIcon), true);
@@ -3451,7 +3278,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         fragmentSearchField = new FragmentSearchField(context, resourceProvider) {
             @Override
             public boolean dispatchTouchEvent(MotionEvent ev) {
-                if (ev.getAction() == MotionEvent.ACTION_DOWN && getAlpha() < 1) {
+                if (ev.getAction() == MotionEvent.ACTION_DOWN && getAlpha() < 0.25f) {
                     return false;
                 }
                 return super.dispatchTouchEvent(ev);
@@ -3489,7 +3316,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             @Override
             public void onSearchExpand() {
                 searching = true;
-                // switchItem visibility preserved for split-pane picker
+                if (switchItem != null) {
+                    switchItem.setVisibility(View.GONE);
+                }
                 createSearchViewPager();
                 if (viewPages[0] != null) {
                     if (searchString != null) {
@@ -3533,7 +3362,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
             @Override
             public boolean canCollapseSearch() {
-                // switchItem visibility preserved for split-pane picker
+                if (switchItem != null) {
+                    switchItem.setVisibility(View.VISIBLE);
+                }
                 if (searchString != null) {
                     finishFragment();
                     return false;
@@ -3607,6 +3438,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
         if (initialDialogsType == DIALOGS_TYPE_DEFAULT) {
             optionsItem = menu.addItem(4, R.drawable.ic_ab_other);
+            optionsItem.setContentDescription(LocaleController.getString(R.string.AccDescrMoreOptions));
             optionsItem.setOnClickListener(v -> {
                 getContactsController().loadGlobalPrivacySetting();
                 showItemOptions();
@@ -3639,9 +3471,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             } else if (isReplyTo) {
                 actionBar.setTitle(actionBarTitleNax = LocaleController.getString(R.string.ReplyToDialog));
             } else if (isQuote) {
-                actionBar.setTitle(actionBarTitleNax = LocaleController.getString(R.string.QuoteTo));
-            } else if (customTitle != null) {
-                actionBar.setTitle(actionBarTitleNax = customTitle);
+                actionBar.setTitle(actionBarTitleNax = getString(R.string.QuoteTo));
             } else if (initialDialogsType == DIALOGS_TYPE_FORWARD && selectAlertString == null) {
                 actionBar.setTitle(actionBarTitleNax = getString(R.string.ForwardTo));
             } else if (initialDialogsType == DIALOGS_TYPE_WIDGET) {
@@ -3697,13 +3527,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 statusDrawable.center = true;
                 actionBar.setTitle(actionBarTitleNax = TypefaceHelper.getTitleText(currentAccount), statusDrawable);
                 actionBar.setOnLongClickListener(v -> {
-                    if (HiddenChatsController.getInstance().hasPasscode()) {
-                        presentFragment(new tw.nekomimi.nekogram.ui.HiddenChatsPasscodeActivity(tw.nekomimi.nekogram.ui.HiddenChatsPasscodeActivity.MODE_UNLOCK_CHATS));
-                        return true;
-                    } else if (HiddenChatsController.getInstance().hasHiddenChats()) {
-                        presentFragment(new tw.nekomimi.nekogram.settings.HiddenChatsSettingsActivity());
-                        return true;
-                    }
                     if (NekoConfig.hideAllTab.Bool() && filterTabsView != null && filterTabsView.getCurrentTabId() != Integer.MAX_VALUE) {
                         filterTabsView.toggleAllTabs(true);
                         filterTabsView.selectDefaultTab();
@@ -3910,12 +3733,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     shareEmpty[0] = true;
 
                     ArrayList<TLRPC.Dialog> dialogs = new ArrayList<>(defaultTab ? getMessagesController().getDialogs(folderId) : getMessagesController().getAllDialogs());
-                    for (int i = 0; i < dialogs.size(); i++) {
-                        if (HiddenChatsController.getInstance().isHidden(currentAccount, dialogs.get(i).id)) {
-                            dialogs.remove(i);
-                            i--;
-                        }
-                    }
                     MessagesController.DialogFilter filter = null;
                     if (dialogFilter != null) {
                         filter = getMessagesController().getDialogFilters().get(tabView.getId());
@@ -4054,7 +3871,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 public void onTabSelected(FilterTabsView.Tab tab, boolean forward, boolean animated) {
                     if (actionBar == null) return;
                     if (NaConfig.INSTANCE.getFolderNameAsTitle().Bool()) {
-                        actionBar.setTitleAnimatedX(tab.isDefault ? actionBarTitleNax : tab.realTitle, tab.isDefault ? statusDrawable : null, forward, 250);
+                        actionBar.setTitleAnimatedX(tab.isDefault ? actionBarTitleNax : EmojiHelper.removeEmojiSpans(tab.realTitle), tab.isDefault ? statusDrawable : null, forward, 250);
                     } else {
                         actionBar.setTitle(actionBarTitleNax, statusDrawable);
                     }
@@ -4062,6 +3879,31 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             });
         }
 
+        if (allowSwitchAccount && UserConfig.getActivatedAccountsCount() > 1) {
+            switchItem = menu.addItemWithWidth(1, 0, dp(56));
+            AvatarDrawable avatarDrawable = new AvatarDrawable();
+            avatarDrawable.setTextSize(dp(12));
+
+            BackupImageView imageView = new BackupImageView(context);
+            imageView.setRoundRadius(dp(18));
+            switchItem.addView(imageView, LayoutHelper.createFrame(36, 36, Gravity.CENTER));
+
+            TLRPC.User user = getUserConfig().getCurrentUser();
+            avatarDrawable.setInfo(currentAccount, user);
+            imageView.getImageReceiver().setCurrentAccount(currentAccount);
+            Drawable thumb = user != null && user.photo != null && user.photo.strippedBitmap != null ? user.photo.strippedBitmap : avatarDrawable;
+            imageView.setImage(ImageLocation.getForUserOrChat(currentAccount, user, ImageLocation.TYPE_SMALL), "50_50", ImageLocation.getForUserOrChat(user, ImageLocation.TYPE_STRIPPED), "50_50", thumb, user);
+
+            for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+                if (PasscodeHelper.isAccountHidden(a)) continue;
+                TLRPC.User u = AccountInstance.getInstance(a).getUserConfig().getCurrentUser();
+                if (u != null) {
+                    AccountSelectCell cell = new AccountSelectCell(context, false);
+                    cell.setAccount(a, true);
+                    switchItem.addSubItem(10 + a, cell, dp(230), dp(48));
+                }
+            }
+        }
 //        createActionMode(null);
 
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
@@ -4123,7 +3965,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
                     DialogsActivity dialogsActivity = new DialogsActivity(arguments);
                     dialogsActivity.setDelegate(oldDelegate);
-                    dialogsActivity.setExcludedDialogIds(excludedDialogIds);
                     launchActivity.presentFragment(dialogsActivity, false, true);
                 } else if (id == add_to_folder) {
                     FiltersListBottomSheet sheet = new FiltersListBottomSheet(DialogsActivity.this, selectedDialogs);
@@ -4221,7 +4062,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         undoView.showWithAction(did, UndoView.ACTION_REMOVED_FROM_FOLDER, neverShow.size(), filter, null, null);
                     }
                     hideActionMode(false);
-                } else if (id == pin || id == read || id == delete || id == clear || id == mute || id == archive || id == block || id == archive2 || id == pin2 || id == hide_chat) {
+                } else if (id == pin || id == read || id == delete || id == clear || id == mute || id == archive || id == block || id == archive2 || id == pin2) {
                     performSelectedDialogsAction(selectedDialogs, id, true, false);
                 } else if (id == select_all) {
                     final int initialSelectedCount = selectedDialogs.size();
@@ -4398,9 +4239,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
                 @Override
                 public int scrollVerticallyBy(int dy, RecyclerView.Recycler recycler, RecyclerView.State state) {
-                    if (chatAnimeAssistantView != null) {
-                        chatAnimeAssistantView.onChatScrolled(dy);
-                    }
                     if (viewPage.listView.fastScrollAnimationRunning) {
                         return 0;
                     }
@@ -4414,24 +4252,25 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         }
                     }
                     int measuredDy = dy;
-                    if (dy > 0 && storiesOverscroll != 0) {
+                    if (dy > 0 && storiesOverscroll != 0 && !(actionBar != null && actionBar.isActionModeShowed())) {
                         float newOverscroll = storiesOverscroll - dy;
                         if (newOverscroll < 0) {
                             measuredDy = (int) -newOverscroll;
                             newOverscroll = 0;
                         } else {
-                           measuredDy = 0;
+                            measuredDy = 0;
                         }
                         setStoriesOvercroll(viewPage, newOverscroll);
                         return super.scrollVerticallyBy(measuredDy, recycler, state);
                     }
+                    final boolean hasStories = DialogsActivity.this.hasStories && !(actionBar != null && actionBar.isActionModeShowed());
                     int pTop = viewPage.listView.getPaddingTop();
                     int realTopPadding = pTop;
                     if (hasStories && !rightSlidingDialogContainer.hasFragment() && !fixScrollYAfterArchiveOpened) {
                         pTop -= dp(DialogStoriesCell.HEIGHT_IN_DP);
                     }
-                    boolean hasHidenArchive = !fixScrollYAfterArchiveOpened && viewPage.dialogsType == DIALOGS_TYPE_DEFAULT && !onlySelect && folderId == 0 && getMessagesController().hasHiddenArchive() && viewPage.archivePullViewState == ARCHIVE_ITEM_STATE_HIDDEN;
-                    if ((hasHidenArchive || (hasStories && !rightSlidingDialogContainer.hasFragment())) && dy < 0) {
+                    boolean hasHiddenArchive = !fixScrollYAfterArchiveOpened && viewPage.dialogsType == DIALOGS_TYPE_DEFAULT && !onlySelect && folderId == 0 && getMessagesController().hasHiddenArchive() && viewPage.archivePullViewState == ARCHIVE_ITEM_STATE_HIDDEN;
+                    if ((hasHiddenArchive || (hasStories && !rightSlidingDialogContainer.hasFragment())) && dy < 0) {
                         viewPage.listView.setOverScrollMode(View.OVER_SCROLL_ALWAYS);
                         int currentPosition = viewPage.layoutManager.findFirstVisibleItemPosition();
                         if (currentPosition == 0) {
@@ -4444,25 +4283,25 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                             View view = viewPage.layoutManager.findViewByPosition(currentPosition);
                             if (view != null && currentPosition < 10) {
                                 int viewsH = 0;
-                                for (int i = hasHidenArchive ? 1 : 0; i < currentPosition; i++) {
+                                for (int i = hasHiddenArchive ? 1 : 0; i < currentPosition; i++) {
                                     viewsH += viewPage.dialogsAdapter.getItemHeight(i);
                                 }
                                 int canScrollDy = -(view.getTop() - pTop) + viewsH;
-                                if (!rightSlidingDialogContainer.hasFragment()) {
-                                    canScrollDy -= dp(SEARCH_FIELD_HEIGHT);
+                                if (!rightSlidingDialogContainer.hasFragment() && !(actionBar != null && actionBar.isActionModeShowed())) {
+                                    canScrollDy -= getIdleSearchFieldHeight();
                                 }
                                 if (hasStories && (viewPage.scroller.isRunning() || dialogStoriesCell.isExpanded()) && !rightSlidingDialogContainer.hasFragment() && !fixScrollYAfterArchiveOpened) {
                                     canScrollDy += dp(DialogStoriesCell.HEIGHT_IN_DP);
                                 }
-                                if ((viewPage.scroller.isRunning() || dialogStoriesCell.isExpanded()) && !rightSlidingDialogContainer.hasFragment() && !fixScrollYAfterArchiveOpened) {
-                                    canScrollDy += dp(SEARCH_FIELD_HEIGHT);
+                                if ((viewPage.scroller.isRunning() || dialogStoriesCell.isExpanded()) && !rightSlidingDialogContainer.hasFragment() && !fixScrollYAfterArchiveOpened && !(actionBar != null && actionBar.isActionModeShowed())) {
+                                    canScrollDy += getIdleSearchFieldHeight();
                                 }
                                 int positiveDy = Math.abs(dy);
                                 if (canScrollDy < positiveDy) {
                                     measuredDy = -canScrollDy;
                                 }
                             }
-                        } else if (currentPosition == 0 && hasHidenArchive) {
+                        } else if (currentPosition == 0 && hasHiddenArchive) {
                             View v = viewPage.layoutManager.findViewByPosition(currentPosition);
                             float k = 1f + ((v.getTop() - realTopPadding) / (float) v.getMeasuredHeight());
                             if (k > 1f) {
@@ -4476,7 +4315,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                             if (undoView[0] != null && undoView[0].getVisibility() == View.VISIBLE) {
                                 undoView[0].hide(true, 1);
                             }
-                        } else if (((currentPosition == 1 && hasHidenArchive) || currentPosition == 0) && hasStories && isDragging && !rightSlidingDialogContainer.hasFragment()) {
+                        } else if (((currentPosition == 1 && hasHiddenArchive) || currentPosition == 0) && hasStories && isDragging && !rightSlidingDialogContainer.hasFragment()) {
                             if (scrollYOffset == 0) {
                                 viewPage.listView.setOverScrollMode(View.OVER_SCROLL_ALWAYS);
                             } else {
@@ -4783,10 +4622,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                                 }
                                 if (changed && scrollUpdated && (goingDown || scrollingManually)) {
                                     hideFloatingButton(goingDown);
-                                    if (NaConfig.INSTANCE.getHideTabsOnScroll().Bool()) {
-                                        NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.setTabsVisible, !goingDown);
-                                        NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.setTabsVisible, !goingDown);
-                                    }
                                 }
                                 prevPosition = firstVisiblePosition;
                                 prevTop = firstViewTop;
@@ -4822,7 +4657,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         if (applyScrollY) {
                             int maxScrollYOffset = getMaxScrollYOffset();
                             if (!(filterTabsView != null && filterTabsView.getVisibility() == View.VISIBLE && animatorFilterTabsVisible.getValue())) {
-                                maxScrollYOffset = dp(SEARCH_FIELD_HEIGHT);
+                                maxScrollYOffset = getIdleSearchFieldHeight();
                             }
                             if (newTranslation < -maxScrollYOffset) {
                                 newTranslation = -maxScrollYOffset;
@@ -4930,7 +4765,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             if (viewPage.dialogsType == DIALOGS_TYPE_FORWARD) {
                 viewPage.dialogsAdapter.setAllowForwardAsStories(getMessagesController().storiesEnabled() && delegate != null && delegate.canSelectStories());
             }
-            viewPage.dialogsAdapter.setOnlyUnread(onlyUnread);
 
             if (AndroidUtilities.isTablet() && openedDialogId.dialogId != 0) {
                 viewPage.dialogsAdapter.setOpenedDialogId(openedDialogId.dialogId);
@@ -4978,6 +4812,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         searchTabsAndFiltersLayout.addView(filtersView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.TOP));
 
         floatingButtonStories = new FragmentFloatingButton(context, resourceProvider, true);
+        floatingButtonStories.setContentDescription(getString(R.string.StoryPrivacyButtonPost));
         floatingButtonStories.setImageResource(R.drawable.outline_fab_story_24);
         floatingButtonStories.setOnClickListener(v -> openStoriesRecorder());
         contentView.addView(floatingButtonStories, FragmentFloatingButton.createSubButtonLayoutParams());
@@ -4987,25 +4822,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         floatingButton3.setOnClickListener(v -> {
             if (parentLayout != null && parentLayout.isInPreviewMode()) {
                 finishPreviewFragment();
-                return;
-            }
-            if (onlySelect && arguments != null && arguments.getBoolean("forSplitSwitch", false)) {
-                Bundle args = new Bundle();
-                args.putBoolean("destroyAfterSelect", true);
-                args.putBoolean("returnAsResult", true);
-                args.putBoolean("forSplitSwitch", true);
-                args.putBoolean("onlyUsers", true);
-                args.putBoolean("checkCanWrite", false);
-                ContactsActivity contactsActivity = new ContactsActivity(args);
-                contactsActivity.setDelegate((user, param, activity) -> {
-                    activity.finishFragment();
-                    if (delegate != null) {
-                        ArrayList<MessagesStorage.TopicKey> dids = new ArrayList<>();
-                        dids.add(MessagesStorage.TopicKey.of(user.id, 0));
-                        delegate.didSelectDialogs(DialogsActivity.this, dids, null, false, false, 0, 0, null);
-                    }
-                });
-                presentFragment(contactsActivity);
                 return;
             }
             if (initialDialogsType == DIALOGS_TYPE_WIDGET) {
@@ -5393,61 +5209,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             contentView.addView(filterTabsView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 36 + 7 + 7, Gravity.TOP, 4, 0, 4, 0));
         }
 
-        if (unreadPillView == null) {
-            unreadPillView = new FrameLayout(context) {
-                @Override
-                public void setAlpha(float alpha) {
-                    super.setAlpha(alpha);
-                    setVisibility(alpha > 0 ? VISIBLE : GONE);
-                }
-            };
-            unreadPillView.setAlpha(0);
-            unreadPillView.setVisibility(View.GONE);
-
-            LinearLayout unreadPillLayout = new LinearLayout(context);
-            unreadPillLayout.setOrientation(LinearLayout.HORIZONTAL);
-            unreadPillLayout.setGravity(Gravity.CENTER);
-            unreadPillLayout.setPadding(dp(12), dp(4), dp(8), dp(4));
-            BlurredBackgroundDrawable unreadPillBackground = iBlur3FactoryLiquidGlass.create(unreadPillLayout, BlurredBackgroundProviderImpl.topPanel(resourceProvider));
-            unreadPillBackground.setRadius(dp(16));
-            unreadPillLayout.setBackground(unreadPillBackground);
-            unreadPillView.addView(unreadPillLayout, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, 32, Gravity.CENTER));
-
-            ImageView filterIcon = new ImageView(context);
-            filterIcon.setImageResource(R.drawable.ic_filter_list);
-            filterIcon.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_windowBackgroundWhiteBlueText), PorterDuff.Mode.SRC_IN));
-            unreadPillLayout.addView(filterIcon, LayoutHelper.createLinear(18, 18));
-
-            unreadPillText = new TextView(context);
-            unreadPillText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
-            unreadPillText.setTypeface(AndroidUtilities.bold());
-            unreadPillText.setTextColor(getThemedColor(Theme.key_windowBackgroundWhiteBlueText));
-            unreadPillText.setText(LocaleController.getString(R.string.FilterNameUnread));
-            unreadPillLayout.addView(unreadPillText, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_VERTICAL, 8, 0, 8, 0));
-
-            ImageView closeIcon = new ImageView(context);
-            closeIcon.setImageResource(R.drawable.baseline_close_24);
-            closeIcon.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_windowBackgroundWhiteBlueText), PorterDuff.Mode.SRC_IN));
-            closeIcon.setPadding(dp(4), dp(4), dp(4), dp(4));
-            closeIcon.setBackground(Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector), 1));
-            unreadPillLayout.addView(closeIcon, LayoutHelper.createLinear(24, 24));
-            closeIcon.setOnClickListener(v -> {
-                if (viewPages == null) return;
-                onlyUnread = false;
-                for (ViewPage page : viewPages) {
-                    if (page != null && page.dialogsAdapter != null) {
-                        page.dialogsAdapter.setOnlyUnread(false);
-                    }
-                }
-                updateUnreadPillVisibility(false, true);
-            });
-        }
-
-        if (fragmentSearchField != null && unreadPillView != null) {
-            AndroidUtilities.removeFromParent(unreadPillView);
-            fragmentSearchField.addAdditionalIcon(unreadPillView);
-        }
-
         if (fragmentSearchField != null) {
             fragmentSearchField.setupBlurredBackground(iBlur3FactoryLiquidGlass.create(fragmentSearchField, BlurredBackgroundProviderImpl.topPanel(resourceProvider)));
         }
@@ -5459,10 +5220,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 filterOptions = ItemOptions.makeOptions(DialogsActivity.this, view)
                     .setViewAdditionalOffsets(0, dp(8), 0, 0)
                     .setScrimViewBackground(Theme.createRoundRectDrawable(
-                        dp(6),
-                        canShowFilterTabsView ? dp(6) : 0,
+                        dp(12), dp(12),
                         getThemedColor(Theme.key_windowBackgroundWhite)
-                    ));
+                    ))
+                    .translate(0, dp(8));
                 if (UserObject.isService(dialogId)) {
                     BotWebViewVibrationEffect.APP_ERROR.vibrate();
                     return;
@@ -5900,7 +5661,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         checkUi_searchFieldStyle();
 
         ViewCompat.setOnApplyWindowInsetsListener(fragmentView, this::onApplyWindowInsets);
-        initAIAssistance();
         return fragmentView;
     }
 
@@ -6013,9 +5773,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     private int getMaxScrollYOffset() {
         if (hasStories) {
-            return dp(DialogStoriesCell.HEIGHT_IN_DP) + dp(SEARCH_FIELD_HEIGHT);
+            return dp(DialogStoriesCell.HEIGHT_IN_DP) + getIdleSearchFieldHeight();
         } else {
-            return dp(SEARCH_FIELD_HEIGHT);
+            return getIdleSearchFieldHeight();
         }
     }
 
@@ -6100,11 +5860,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private void clearCacheHintVisible() {
         MessagesController.getGlobalMainSettings().edit().remove("cache_hint_showafter").remove("cache_hint_period").apply();
     }
-
-//    @Override
-//    public ActionBar getActionBar() {
-//        return rightSlidingDialogContainer != null && rightSlidingDialogContainer.currentActionBarView != null && rightSlidingDialogContainer.isOpenned ? rightSlidingDialogContainer.currentActionBarView : super.getActionBar();
-//    }
 
     public void showSelectStatusDialog() {
         if (selectAnimatedEmojiDialog != null || SharedConfig.appLocked || (hasStories && !dialogStoriesCell.isExpanded())) {
@@ -6845,22 +6600,17 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         float fadeViewT = totalOffset;
 
         if (filterTabsView != null) {
-            float tabsY = totalOffset - searchOffset;
-            filterTabsView.setTranslationY(tabsY);
+            filterTabsView.setTranslationY(totalOffset - searchOffset);
             filtersTabVisibility = filterTabsView.getAlpha();
             filtersTabHeight = dp(36 + 7) * filtersTabVisibility;
             totalOffset += filtersTabHeight;
         }
 
-        if (unreadPillView != null) {
-            unreadPillView.setAlpha(unreadPillAlpha * (1f - searchAnimationProgress));
-            unreadPillView.setVisibility(unreadPillView.getAlpha() > 0 && !searchIsShowed ? View.VISIBLE : View.GONE);
-        }
-
         if (topPanelLayout != null) {
+            final float searchTopPanelOffset = dp(SEARCH_FIELD_HEIGHT) - getIdleSearchFieldHeight();
             topPanelLayout.setTranslationY(lerp(
                 totalOffset - searchOffset,
-                -dp(3) - (searchTabsView == null ? dp(44) : 0),
+                searchTopPanelOffset - dp(3) - (searchTabsView == null ? dp(44) : 0),
                 animatorSearchVisible.getFloatValue()));
             topPanelsVisibility = topPanelLayout.getMetadata().getTotalVisibility();
             topPanelsHeight = topPanelLayout.getAnimatedHeightWithPadding(0);
@@ -7004,7 +6754,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         readItem = otherItem.addSubItem(read, R.drawable.msg_markread, LocaleController.getString(R.string.MarkAsRead));
         clearItem = otherItem.addSubItem(clear, R.drawable.msg_clear, LocaleController.getString(R.string.ClearHistory));
         blockItem = otherItem.addSubItem(block, R.drawable.msg_block, LocaleController.getString(R.string.BlockUser));
-        hideChatItem = otherItem.addSubItem(hide_chat, R.drawable.msg_hidden, tw.nekomimi.nekogram.helpers.HiddenChatsController.getInstance().isLocked() ? getString(R.string.HideChat) : getString(R.string.UnhideChat));
         otherItem.addSubItem(select_all, R.drawable.msg_select_between_solar, LocaleController.getString(R.string.SelectAll));
 
         muteItem.setOnLongClickListener(e -> {
@@ -7107,7 +6856,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             filterOptions.dismiss();
             filterOptions = null;
         }
-        ArrayList<MessagesController.DialogFilter> filters = getMessagesController().getDialogFilters();
+        final ArrayList<MessagesController.DialogFilter> filters = getMessagesController().getDialogFilters();
         if (filters.size() > 1) {
             if (force || filterTabsView.getVisibility() != View.VISIBLE) {
                 boolean animatedUpdateItems = animated;
@@ -7284,18 +7033,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     @Override
     public void onResume() {
         super.onResume();
-        if (unreadPillView != null) {
-            boolean visible = viewPages != null && viewPages[0] != null && viewPages[0].dialogsAdapter != null && viewPages[0].dialogsAdapter.isOnlyUnread();
-            updateUnreadPillVisibility(visible, false);
-        }
-        if (fragmentView != null) {
-            fragmentView.post(() -> {
-                initAIAssistance();
-                if (chatAnimeAssistantView != null) {
-                    chatAnimeAssistantView.onResume();
-                }
-            });
-        }
         if (dialogStoriesCell != null) {
             dialogStoriesCell.onResume();
         }
@@ -7376,10 +7113,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             if (getParentActivity() == null) {
                 return;
             }
-            if (MessagesController.getGlobalNotificationsSettings().getBoolean("askedAboutMiuiLockscreen", false)) {
-                return;
-            }
-            showDialog(new AlertDialog.Builder(getParentActivity())
+            if (!MessagesController.getGlobalNotificationsSettings().getBoolean("askedAboutMiuiLockscreen", false)) {
+                showDialog(new AlertDialog.Builder(getParentActivity())
                     .setTopAnimation(R.raw.permission_request_apk, AlertsCreator.PERMISSIONS_REQUEST_TOP_ICON_SIZE, false, getThemedColor(Theme.key_dialogTopBackground))
                     .setMessage(getString(R.string.PermissionXiaomiLockscreen))
                     .setPositiveButton(getString(R.string.PermissionOpenSettings), (dialog, which) -> {
@@ -7400,29 +7135,29 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     })
                     .setNegativeButton(getString(R.string.ContactsPermissionAlertNotNow), (dialog, which) -> MessagesController.getGlobalNotificationsSettings().edit().putBoolean("askedAboutMiuiLockscreen", true).commit())
                     .create());
+            }
         } else if (folderId == 0 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE && !notificationManager.canUseFullScreenIntent()) {
             if (getParentActivity() == null) {
                 return;
             }
-            if (MessagesController.getGlobalNotificationsSettings().getBoolean("askedAboutFSILockscreen", false)) {
-                return;
-            }
-            showDialog(new AlertDialog.Builder(getParentActivity())
-                .setTopAnimation(R.raw.permission_request_apk, AlertsCreator.PERMISSIONS_REQUEST_TOP_ICON_SIZE, false, getThemedColor(Theme.key_dialogTopBackground))
-                .setMessage(getString(R.string.PermissionFSILockscreen))
-                .setPositiveButton(getString(R.string.PermissionOpenSettings), (dialog, which) -> {
-                    Intent intent = new Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT);
-                    intent.setData(Uri.parse("package:" + ApplicationLoader.applicationContext.getPackageName()));
-                    if (intent != null) {
-                        try {
-                            getParentActivity().startActivity(intent);
-                        } catch (Exception x) {
-                            FileLog.e(x);
+            if (!MessagesController.getGlobalNotificationsSettings().getBoolean("askedAboutFSILockscreen", false)) {
+                showDialog(new AlertDialog.Builder(getParentActivity())
+                    .setTopAnimation(R.raw.permission_request_apk, AlertsCreator.PERMISSIONS_REQUEST_TOP_ICON_SIZE, false, getThemedColor(Theme.key_dialogTopBackground))
+                    .setMessage(getString(R.string.PermissionFSILockscreen))
+                    .setPositiveButton(getString(R.string.PermissionOpenSettings), (dialog, which) -> {
+                        Intent intent = new Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT);
+                        intent.setData(Uri.parse("package:" + ApplicationLoader.applicationContext.getPackageName()));
+                        if (intent != null) {
+                            try {
+                                getParentActivity().startActivity(intent);
+                            } catch (Exception x) {
+                                FileLog.e(x);
+                            }
                         }
-                    }
-                })
-                .setNegativeButton(getString(R.string.ContactsPermissionAlertNotNow), (dialog, which) -> MessagesController.getGlobalNotificationsSettings().edit().putBoolean("askedAboutFSILockscreen", true).commit())
-                .create());
+                    })
+                    .setNegativeButton(getString(R.string.ContactsPermissionAlertNotNow), (dialog, which) -> MessagesController.getGlobalNotificationsSettings().edit().putBoolean("askedAboutFSILockscreen", true).commit())
+                    .create());
+            }
         }
         showFiltersHint();
         if (viewPages != null) {
@@ -7462,7 +7197,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     (filterTabsView != null && filterTabsView.getVisibility() == View.VISIBLE ? filterTabsView.getMeasuredHeight() : 0) +
                     (topPanelLayout != null ? topPanelLayout.getHeight() : 0) +
                     (dialogStoriesCell != null && dialogStoriesCellVisible ? (int) ((1f - dialogStoriesCell.getCollapsedProgress()) * dp(DialogStoriesCell.HEIGHT_IN_DP)) : 0) +
-                    (dp(SEARCH_FIELD_HEIGHT))
+                    (getIdleSearchFieldHeight())
                 );
             }
 
@@ -7516,9 +7251,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     @Override
     public void onPause() {
         super.onPause();
-        if (chatAnimeAssistantView != null) {
-            chatAnimeAssistantView.onPause();
-        }
         if (storiesBulletin != null) {
             storiesBulletin.hide();
             storiesBulletin = null;
@@ -7578,9 +7310,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             }
             return false;
         } else if (animatorSearchVisible.getValue()) {
-            if (searchViewPager != null && searchViewPager.onBackPressed()) {
-                return false;
-            }
             if (invoked) {
                 fragmentSearchField.editText.getText().clear();
                 fragmentSearchFieldWatcher.toggleSearch(false);
@@ -8296,7 +8025,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             if (!validateSlowModeDialog(dialogId)) {
                 return;
             }
-            if (!getMessagesController().isForum(dialogId) && (!selectedDialogs.isEmpty() || (initialDialogsType == DIALOGS_TYPE_FORWARD && selectAlertString != null))) {
+            if ((!getMessagesController().isForum(dialogId) || isBotForumWithEmptyTopics(dialogId)) && (!selectedDialogs.isEmpty() || (initialDialogsType == DIALOGS_TYPE_FORWARD && selectAlertString != null))) {
                 if (!selectedDialogs.contains(dialogId) && !checkCanWrite(dialogId)) {
                     return;
                 }
@@ -8307,7 +8036,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 }
                 updateSelectedCount();
             } else {
-                if (canSelectTopics && (getMessagesController().isForum(dialogId) || getMessagesController().isMonoForumWithManageRights(dialogId))) {
+                if (canSelectTopics && (getMessagesController().isForum(dialogId) && !isBotForumWithEmptyTopics(dialogId) || getMessagesController().isMonoForumWithManageRights(dialogId))) {
                     Bundle bundle = new Bundle();
                     bundle.putLong("chat_id", -dialogId);
                     bundle.putBoolean("for_select", true);
@@ -8469,6 +8198,22 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 }
             }
         }
+    }
+
+    private boolean isBotForumWithEmptyTopics(long dialogId) {
+        if (dialogId < 0) {
+            return false;
+        }
+        final TLRPC.User user = getMessagesController().getUser(dialogId);
+        if (!UserObject.isBotForum(user)) {
+            return false;
+        }
+
+        final ArrayList<TLRPC.TL_forumTopic> topics = MessagesController.getInstance(currentAccount)
+                .getTopicsController().getTopics(-user.id);
+
+        return (topics == null || topics.isEmpty())
+            && MessagesController.getInstance(currentAccount).getTopicsController().endIsReached(-user.id);
     }
 
     public static ChatActivity highlightFoundQuote(ChatActivity chatActivity, MessageObject message) {
@@ -9063,8 +8808,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     }
 
     private void updateFloatingButtonVisibility(boolean animated) {
-        boolean splitSwitch = onlySelect && arguments != null && arguments.getBoolean("forSplitSwitch", false);
-        final boolean isVisible = !(onlySelect && initialDialogsType != 10 && !splitSwitch || folderId != 0 || inPreviewMode || (searching && !onlySelect) || floatingButtonHidden);
+        final boolean isVisible = !(onlySelect && initialDialogsType != 10 || folderId != 0 || inPreviewMode || (searching && !onlySelect) || floatingButtonHidden);
 
         if (floatingButton3 != null) {
             floatingButton3.setButtonVisible(isVisible, animated);
@@ -9087,12 +8831,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             if (storyHint != null) {
                 storyHint.setTranslationY(baseTranslationY - dp(52));
             }
-        }
-        if (chatAnimeAssistantView != null) {
-            chatAnimeAssistantView.setTranslationY(baseTranslationY);
-        }
-        if (miniChatAssistantView != null) {
-            miniChatAssistantView.setTranslationY(baseTranslationY);
         }
     }
 
@@ -9258,7 +8996,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 viewPages[i].listView.cancelClickRunnables(true);
             }
         }
-        translateListHeight = Math.max(0, dp((hasStories ? DialogStoriesCell.HEIGHT_IN_DP : 0) + SEARCH_FIELD_HEIGHT) + scrollYOffset);
+        translateListHeight = Math.max(0, dp(hasStories ? DialogStoriesCell.HEIGHT_IN_DP : 0) + getIdleSearchFieldHeight() + scrollYOffset);
         float finalTranslateListHeight = translateListHeight;
         actionBarColorAnimator = ValueAnimator.ofFloat(progressToActionMode, 0);
         actionBarColorAnimator.addUpdateListener(valueAnimator -> {
@@ -9284,7 +9022,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 invalidateScrollY = true;
                 fixScrollYAfterArchiveOpened = true;
                 fragmentView.invalidate();
-                scrollAdditionalOffset = -(dp((hasStories ? DialogStoriesCell.HEIGHT_IN_DP : 0) + SEARCH_FIELD_HEIGHT) - finalTranslateListHeight);
+                scrollAdditionalOffset = -(dp(hasStories ? DialogStoriesCell.HEIGHT_IN_DP : 0) + getIdleSearchFieldHeight() - finalTranslateListHeight);
                 viewPages[0].setTranslationY(0);
                 for (int i = 0; i < viewPages.length; i++) {
                     if (viewPages[i] != null) {
@@ -9363,22 +9101,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     }
 
     private void performSelectedDialogsAction(ArrayList<Long> selectedDialogs, int action, boolean alert, boolean longPress) {
-        if (action == hide_chat) {
-            tw.nekomimi.nekogram.helpers.HiddenChatsController controller = tw.nekomimi.nekogram.helpers.HiddenChatsController.getInstance();
-            boolean hide = !controller.isHidden(currentAccount, selectedDialogs.get(0));
-            for (int a = 0; a < selectedDialogs.size(); a++) {
-                long dialogId = selectedDialogs.get(a);
-                if (hide) {
-                    controller.hide(currentAccount, dialogId);
-                    getNotificationsController().setDialogNotificationsSettings(dialogId, 0, NotificationsController.SETTING_MUTE_FOREVER);
-                } else {
-                    controller.unhide(currentAccount, dialogId);
-                }
-            }
-            hideActionMode(true);
-            updateVisibleRows(MessagesController.UPDATE_MASK_SELECT_DIALOG);
-            return;
-        }
         performSelectedDialogsAction(selectedDialogs, action, alert, longPress, null);
     }
 
@@ -9965,8 +9687,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         canClearCacheCount = 0;
         int cantBlockCount = 0;
         canReportSpamCount = 0;
-        int canHideCount = 0;
-        int canUnhideCount = 0;
         if (hide) {
             return;
         }
@@ -10065,11 +9785,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 canClearHistoryCount++;
                 canDeleteCount++;
             }
-            if (tw.nekomimi.nekogram.helpers.HiddenChatsController.getInstance().isHidden(dialog.id)) {
-                canUnhideCount++;
-            } else {
-                canHideCount++;
-            }
         }
         if (deleteItem != null) {
             if (canDeleteCount != count) {
@@ -10118,18 +9833,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             } else {
                 archiveItem.setVisibility(View.GONE);
                 archive2Item.setVisibility(View.GONE);
-            }
-        }
-        if (hideChatItem != null) {
-            if (canUnhideCount != 0 && canHideCount != 0) {
-                hideChatItem.setVisibility(View.GONE);
-            } else {
-                hideChatItem.setVisibility(View.VISIBLE);
-                if (canUnhideCount != 0) {
-                    hideChatItem.setTextAndIcon(getString(R.string.UnhideChat), R.drawable.msg_unhidden);
-                } else {
-                    hideChatItem.setTextAndIcon(getString(R.string.HideChat), R.drawable.msg_hidden);
-                }
             }
         }
         if (pinItem != null && pin2Item != null) {
@@ -10279,7 +9982,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     viewPages[i].listView.cancelClickRunnables(true);
                 }
             }
-            translateListHeight = Math.max(0, dp((hasStories ? DialogStoriesCell.HEIGHT_IN_DP : 0) + SEARCH_FIELD_HEIGHT) + scrollYOffset);
+            translateListHeight = Math.max(0, dp(hasStories ? DialogStoriesCell.HEIGHT_IN_DP : 0) + getIdleSearchFieldHeight() + scrollYOffset);
             if (translateListHeight != 0) {
                 actionModeAdditionalHeight = (int) translateListHeight;
                 fragmentView.requestLayout();
@@ -10306,7 +10009,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     actionBarColorAnimator = null;
                     actionModeAdditionalHeight = 0;
                     actionModeFullyShowed = true;
-                    scrollAdditionalOffset = dp((hasStories ? DialogStoriesCell.HEIGHT_IN_DP : 0) + SEARCH_FIELD_HEIGHT) - finalTranslateListHeight;
+                    scrollAdditionalOffset = dp(hasStories ? DialogStoriesCell.HEIGHT_IN_DP : 0) + getIdleSearchFieldHeight() - finalTranslateListHeight;
                     viewPages[0].setTranslationY(0);
                     for (int i = 0; i < viewPages.length; i++) {
                         if (viewPages[i] != null) {
@@ -10470,7 +10173,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         boolean proxyEnabled = preferences.getBoolean("proxy_enabled", false);
         final boolean connected = currentConnectionState == ConnectionsManager.ConnectionStateConnected || currentConnectionState == ConnectionsManager.ConnectionStateUpdating;
         if (proxyEnabled) {
-            proxyMenuSubItem.setSubtext(getString(connected ? R.string.MenuProxyConnected : R.string.MenuProxyConnecting));
+            proxyMenuSubItem.setSubtext(getString(proxyEnabled ? (connected ? R.string.MenuProxyConnected : R.string.MenuProxyConnecting) : R.string.MenuProxyDisabled));
         } else {
             proxyMenuSubItem.setSubtext(null);
         }
@@ -10524,9 +10227,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         if (commentView != null) {
             animatorForwardButtonVisible.setValue(!selectedDialogs.isEmpty(), true);
             if (selectedDialogs.isEmpty()) {
-                if (customTitle != null) {
-                    actionBar.setTitle(actionBarTitleNax = customTitle);
-                } else if (initialDialogsType == DIALOGS_TYPE_FORWARD && selectAlertString == null) {
+                if (initialDialogsType == DIALOGS_TYPE_FORWARD && selectAlertString == null) {
                     actionBar.setTitle(actionBarTitleNax = LocaleController.getString(R.string.ForwardTo));
                 } else {
                     actionBar.setTitle(actionBarTitleNax = LocaleController.getString(R.string.SelectChat));
@@ -11190,24 +10891,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         if (frozen && frozenDialogsList != null) {
             return frozenDialogsList;
         }
-        ArrayList<TLRPC.Dialog> dialogsArray = getDialogsArrayInternal(currentAccount, dialogsType, folderId, frozen);
-
-        // Alexgram Hidden Chats
-        if (tw.nekomimi.nekogram.helpers.HiddenChatsController.getInstance().isLocked() && !(this instanceof tw.nekomimi.nekogram.ui.HiddenChatsActivity)) {
-             ArrayList<TLRPC.Dialog> filtered = new ArrayList<>();
-             for (int a = 0; a < dialogsArray.size(); a++) {
-                  TLRPC.Dialog dialog = dialogsArray.get(a);
-                  if (!tw.nekomimi.nekogram.helpers.HiddenChatsController.getInstance().isHidden(currentAccount, dialog.id)) {
-                       filtered.add(dialog);
-                  }
-             }
-             return filtered;
-        }
-
-        return dialogsArray;
-    }
-
-    private ArrayList<TLRPC.Dialog> getDialogsArrayInternal(int currentAccount, int dialogsType, int folderId, boolean frozen) {
         MessagesController messagesController = AccountInstance.getInstance(currentAccount).getMessagesController();
         if (dialogsType == DIALOGS_TYPE_DEFAULT) {
             return messagesController.getDialogs(folderId);
@@ -11300,6 +10983,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             return botShareDialogs;
         } else if (dialogsType == DIALOGS_TYPE_BOT_REQUEST_PEER) {
             ArrayList<TLRPC.Dialog> dialogs = new ArrayList<>();
+            TLRPC.User bot = messagesController.getUser(requestPeerBotId);
             if (requestPeerType instanceof TLRPC.TL_requestPeerTypeUser) {
                 ConcurrentHashMap<Long, TLRPC.User> users = messagesController.getUsers();
                 for (TLRPC.Dialog dialog : messagesController.dialogsUsersOnly) {
@@ -11320,7 +11004,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             } else if (requestPeerType instanceof TLRPC.TL_requestPeerTypeChat || requestPeerType instanceof TLRPC.TL_requestPeerTypeBroadcast) {
                 ConcurrentHashMap<Long, TLRPC.Chat> chats = messagesController.getChats();
                 ArrayList<TLRPC.Dialog> sourceDialogs = requestPeerType instanceof TLRPC.TL_requestPeerTypeChat ? messagesController.dialogsGroupsOnly : messagesController.dialogsChannelsOnly;
-                TLRPC.User bot = messagesController.getUser(requestPeerBotId);
                 for (TLRPC.Dialog dialog : sourceDialogs) {
                     TLRPC.Chat chat = getMessagesController().getChat(-dialog.id);
                     if (meetRequestPeerRequirements(bot, chat)) {
@@ -11463,11 +11146,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         }
     }
 
-    protected void updateVisibleRows(int mask) {
+    private void updateVisibleRows(int mask) {
         updateVisibleRows(mask, true);
     }
 
-    protected void updateVisibleRows(int mask, boolean animated) {
+    private void updateVisibleRows(int mask, boolean animated) {
         if ((dialogsListFrozen && (mask & MessagesController.UPDATE_MASK_REORDER) == 0) || isPaused) {
             return;
         }
@@ -13435,7 +13118,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                                         src.renameTo(destFile);
                                         final String oldKey = avatar.volume_id + "_" + avatar.local_id + "@50_50";
                                         final String newKey = small.location.volume_id + "_" + small.location.local_id + "@50_50";
-                                        ImageLoader.getInstance().replaceImageInCache(oldKey, newKey, ImageLocation.getForUserOrChat(user, ImageLocation.TYPE_SMALL), false);
+                                        ImageLoader.getInstance().replaceImageInCache(oldKey, newKey, ImageLocation.getForUserOrChat(currentAccount, user, ImageLocation.TYPE_SMALL), false);
                                     }
 
                                     if (videoSize != null && videoPath != null) {
@@ -13726,7 +13409,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     channelPrefs.edit().putBoolean("channel_intro", true).apply();
                 }
             });
-            if (hideBottomNavigationBar && !NaConfig.INSTANCE.getHideContacts().Bool()) {
+            if (hideBottomNavigationBar || MainTabsHelper.isContactsTabHidden()) {
                 io.add(R.drawable.msg_contacts, getString(R.string.Contacts), () -> {
                     Bundle args = new Bundle();
                     args.putBoolean("needPhonebook", true);
@@ -14054,7 +13737,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         }
 
         final int maxScrollWithoutSearch = getMaxScrollYOffsetWithoutSearch();
-        final float alphaByScrollOffset = 1f - MathUtils.clamp((-scrollYOffset - maxScrollWithoutSearch) / dp(SEARCH_FIELD_HEIGHT), 0, 1);
+        final float alphaByScrollOffset = shouldShowIdleSearchField() ? 1f - MathUtils.clamp((-scrollYOffset - maxScrollWithoutSearch) / dp(SEARCH_FIELD_HEIGHT), 0, 1) : 0f;
 
         final float actionModeVisible = Math.max(progressToActionMode, animatorActionModeVisible.getFloatValue());
         final float searchFieldVisible = animatorSearchVisible.getFloatValue();
@@ -14189,7 +13872,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         final int mainTabTop = mainTabBottom - dp(MainTabsHelper.getMainTabsHeight());
 
         final int actionBarHeight = actionBar.getMeasuredHeight()
-            + dp(DialogsActivity.SEARCH_FIELD_HEIGHT)
+            + getIdleSearchFieldHeight()
             + dp(hasStories ? DialogStoriesCell.HEIGHT_IN_DP : 0)
             + (filterTabsView != null && filterTabsView.getVisibility() == View.VISIBLE ? filterTabsView.getMeasuredHeight() : 0)
             + (topPanelLayout != null && topPanelLayout.getVisibility() == View.VISIBLE ? topPanelLayout.getSumHeightOfAllVisibleChild() : 0)
@@ -14245,71 +13928,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     @Override
     public void onParentScrollToTop() {
         scrollToTop(true, true);
-    }
-
-    @Override
-    public void onDoubleTapOnChats() {
-        if (viewPages == null || viewPages[0] == null || viewPages[0].dialogsAdapter == null) return;
-        onlyUnread = !viewPages[0].dialogsAdapter.isOnlyUnread();
-        for (ViewPage page : viewPages) {
-            if (page != null && page.dialogsAdapter != null) {
-                page.dialogsAdapter.setOnlyUnread(onlyUnread);
-            }
-        }
-        updateUnreadPillVisibility(onlyUnread, true);
-    }
-
-    private void updateUnreadPillVisibility(boolean visible, boolean animated) {
-        if (unreadPillView == null) return;
-        updateUnreadPillColors();
-        if (unreadPillAnimator != null) {
-            unreadPillAnimator.cancel();
-            unreadPillAnimator = null;
-        }
-        if (visible && unreadPillText != null && viewPages != null && viewPages[0] != null && viewPages[0].dialogsAdapter != null) {
-            int count = viewPages[0].dialogsAdapter.getDialogsCount();
-            if (count > 0) {
-                unreadPillText.setText(LocaleController.getString(R.string.FilterNameUnread) + " (" + count + ")");
-            } else {
-                unreadPillText.setText(LocaleController.getString(R.string.FilterNameUnread));
-            }
-        }
-        float targetAlpha = visible ? 1.0f : 0.0f;
-        if (animated) {
-            unreadPillAnimator = ValueAnimator.ofFloat(unreadPillAlpha, targetAlpha);
-            unreadPillAnimator.addUpdateListener(animation -> {
-                unreadPillAlpha = (float) animation.getAnimatedValue();
-                unreadPillView.setAlpha(unreadPillAlpha);
-                unreadPillView.setScaleX(0.8f + 0.2f * unreadPillAlpha);
-                unreadPillView.setScaleY(0.8f + 0.2f * unreadPillAlpha);
-            });
-            unreadPillAnimator.setDuration(250);
-            unreadPillAnimator.setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT);
-            unreadPillAnimator.start();
-        } else {
-            unreadPillAlpha = targetAlpha;
-            unreadPillView.setAlpha(unreadPillAlpha);
-            unreadPillView.setScaleX(0.8f + 0.2f * unreadPillAlpha);
-            unreadPillView.setScaleY(0.8f + 0.2f * unreadPillAlpha);
-        }
-    }
-
-    private void updateUnreadPillColors() {
-        if (unreadPillView == null || unreadPillText == null) return;
-        int textColor = getThemedColor(Theme.key_windowBackgroundWhiteBlueText);
-        unreadPillText.setTextColor(textColor);
-        for (int i = 0; i < unreadPillView.getChildCount(); i++) {
-            View child = unreadPillView.getChildAt(i);
-            if (child instanceof ViewGroup) {
-                ViewGroup group = (ViewGroup) child;
-                for (int j = 0; j < group.getChildCount(); j++) {
-                    View inner = group.getChildAt(j);
-                    if (inner instanceof ImageView) {
-                        ((ImageView) inner).setColorFilter(new PorterDuffColorFilter(textColor, PorterDuff.Mode.SRC_IN));
-                    }
-                }
-            }
-        }
     }
 
     private void switchTheme(Theme.ThemeInfo themeInfo, boolean toDark) {
@@ -14416,6 +14034,14 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 showOrUpdateActionMode(dialog.id, view);
             }
         }
+    }
+
+    private boolean shouldShowIdleSearchField() {
+        return !NaConfig.INSTANCE.getHideDialogsSearchField().Bool();
+    }
+
+    private int getIdleSearchFieldHeight() {
+        return shouldShowIdleSearchField() ? dp(SEARCH_FIELD_HEIGHT) : 0;
     }
 
 }

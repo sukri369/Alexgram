@@ -346,7 +346,6 @@ public class AnimatedTextView extends View {
                 ellipsizeGradientMatrix.reset();
                 ellipsizeGradientMatrix.postTranslate(bounds.right - rightPadding - w, 0);
                 ellipsizeGradient.setLocalMatrix(ellipsizeGradientMatrix);
-                canvas.save();
                 canvas.drawRect(bounds.right - rightPadding - w, bounds.top, bounds.right - rightPadding + AndroidUtilities.dp(1), bounds.bottom, ellipsizePaint);
                 if (ellipsizeByGradientBothSides) {
                     ellipsizeGradientMatrix.reset();
@@ -355,7 +354,6 @@ public class AnimatedTextView extends View {
                     ellipsizeGradient.setLocalMatrix(ellipsizeGradientMatrix);
                     canvas.drawRect(bounds.left - AndroidUtilities.dp(1), bounds.top, bounds.left + w, bounds.bottom, ellipsizePaint);
                 }
-                canvas.restore();
                 canvas.restore();
             }
         }
