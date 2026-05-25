@@ -344,6 +344,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private boolean rightFragmentTransitionInProgress;
     private boolean rightFragmentTransitionIsOpen;
     private boolean allowGlobalSearch = true;
+    // [Alexgram: Hidden Chats] - Start
+    private String customTitle;
+    // [Alexgram: Hidden Chats] - End
 
     private TLRPC.RequestPeerType requestPeerType;
     private long requestPeerBotId;
@@ -2859,6 +2862,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             closeFragment = arguments.getBoolean("closeFragment", true);
             allowGlobalSearch = arguments.getBoolean("allowGlobalSearch", true);
             hasMainTabs = arguments.getBoolean("hasMainTabs", false);
+            // [Alexgram: Hidden Chats] - Start
+            customTitle = arguments.getString("customTitle");
+            // [Alexgram: Hidden Chats] - End
 
             byte[] requestPeerTypeBytes = arguments.getByteArray("requestPeerType");
             if (requestPeerTypeBytes != null) {
@@ -3501,6 +3507,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         searchItem.setContentDescription(getString(R.string.Search));
         if (onlySelect) {
             actionBar.setBackButtonImage(R.drawable.ic_ab_back);
+            // [Alexgram: Hidden Chats] - Start
+            if (customTitle != null) {
+                actionBar.setTitle(actionBarTitleNax = customTitle);
+            } else // [Alexgram: Hidden Chats] - End
             if (initialDialogsType == DIALOGS_TYPE_BOT_SELECT_VERIFY) {
                 actionBar.setTitle(actionBarTitleNax = getString(R.string.BotChooseChatToVerify));
             } else if (isReplyTo) {
@@ -10326,7 +10336,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             animatorForwardButtonVisible.setValue(!selectedDialogs.isEmpty(), true);
             updateShareTopViewRecipients();
             if (selectedDialogs.isEmpty()) {
-                final String title = LocaleController.getString(initialDialogsType == 3 && selectAlertString == null ? R.string.ForwardTo : R.string.SelectChat);
+                // [Alexgram: Hidden Chats] - Start
+                final String title = customTitle != null ? customTitle : LocaleController.getString(initialDialogsType == 3 && selectAlertString == null ? R.string.ForwardTo : R.string.SelectChat);
+                // [Alexgram: Hidden Chats] - End
                 actionBarTitleNax = title;
                 if (wasSelectedDialogsEmpty == selectedDialogs.isEmpty()) {
                     actionBar.setTitle(title);
