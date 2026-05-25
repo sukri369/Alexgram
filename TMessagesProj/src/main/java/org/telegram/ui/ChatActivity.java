@@ -110,6 +110,10 @@ import android.widget.LinearLayout;
 import android.widget.Space;
 import android.widget.TextView;
 
+// [Alexgram: Advanced Tools] - Start
+import xyz.nextalone.nagram.ui.VoiceChangerSelectAlert;
+// [Alexgram: Advanced Tools] - End
+
 import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -1747,6 +1751,14 @@ public class ChatActivity extends BaseFragment implements
 	private final static int charge_fee = 72;
 
 	private final static int chat_menu_topic_create = 73;
+
+	// [Alexgram: Advanced Tools] - Start
+	private final static int nkbtn_voice_changer = 2104;
+	private final static int nkbtn_change_font = 2107;
+	private final static int nkbtn_split_chat = 2108;
+	private final static int export_chat = 136;
+	private final static int import_chat = 137;
+	// [Alexgram: Advanced Tools] - End
 
 	private final static int id_chat_compose_panel = 1000;
 	private final static int to_the_beginning = 200;
@@ -4281,6 +4293,21 @@ public class ChatActivity extends BaseFragment implements
 					if (!getMessagesController().getTranslateController().toggleTranslatingDialog(getDialogId(), true)) {
 						updateTopPanel(true);
 					}
+				// [Alexgram: Advanced Tools] - Start
+				} else if (id == nkbtn_voice_changer) {
+					showDialog(new VoiceChangerSelectAlert(getParentActivity()));
+				} else if (id == nkbtn_change_font) {
+					chatActivityEnterView.getEditField().makeSelectedChangeFont();
+				} else if (id == nkbtn_split_chat) {
+					if (getParentActivity() instanceof org.telegram.ui.LaunchActivity) {
+						xyz.nextalone.nagram.ui.SplitChatManager.getInstance()
+								.activateSplitMode((org.telegram.ui.LaunchActivity) getParentActivity(), currentAccount, dialog_id);
+					}
+				} else if (id == export_chat) {
+					xyz.nextalone.nagram.utils.ChatExportImport.exportChat(getParentActivity(), messages, avatarContainer.getTitle());
+				} else if (id == import_chat) {
+					xyz.nextalone.nagram.utils.ChatExportImport.importChat(ChatActivity.this, 137);
+				// [Alexgram: Advanced Tools] - End
 				} else if (id == call || id == video_call) {
 					if (currentUser != null && getParentActivity() != null) {
 						VoIPHelper.startCall(currentUser, id == video_call, userInfo != null && userInfo.video_calls_available, getParentActivity(), getMessagesController().getUserFull(currentUser.id), getAccountInstance());
@@ -4725,6 +4752,47 @@ public class ChatActivity extends BaseFragment implements
 				});
 				muteItemGap = headerItem.lazilyAddColoredGap();
 			}
+
+			// [Alexgram: Advanced Tools] - Start
+			ActionBarPopupWindow.ActionBarPopupWindowLayout advancedToolsLayout = new ActionBarPopupWindow.ActionBarPopupWindowLayout(context, 0, getResourceProvider());
+			advancedToolsLayout.setFitItems(true);
+			ActionBarMenuSubItem backItem = ActionBarMenuItem.addItem(advancedToolsLayout, R.drawable.msg_arrow_back, LocaleController.getString(R.string.Back), false, getResourceProvider());
+			backItem.setOnClickListener(v -> {
+				if (headerItem.getPopupLayout() != null && headerItem.getPopupLayout().getSwipeBack() != null) {
+					headerItem.getPopupLayout().getSwipeBack().closeForeground();
+				}
+			});
+			ActionBarMenuItem.addColoredGap(advancedToolsLayout, getResourceProvider());
+			ActionBarMenuSubItem voiceChangerItem = ActionBarMenuItem.addItem(advancedToolsLayout, R.drawable.ic_voice_changer_na, LocaleController.getString("VoiceChanger", R.string.VoiceChanger), false, getResourceProvider());
+			voiceChangerItem.setOnClickListener(v -> {
+				headerItem.closeSubMenu();
+				actionBar.actionBarMenuOnItemClick.onItemClick(nkbtn_voice_changer);
+			});
+			ActionBarMenuSubItem changeFontItem = ActionBarMenuItem.addItem(advancedToolsLayout, R.drawable.nk_change_font_na, LocaleController.getString(R.string.ChangeFont), false, getResourceProvider());
+			changeFontItem.setOnClickListener(v -> {
+				headerItem.closeSubMenu();
+				actionBar.actionBarMenuOnItemClick.onItemClick(nkbtn_change_font);
+			});
+			if (chatMode == 0 && (!isThreadChat() || isTopic) && !isReport()) {
+				ActionBarMenuSubItem exportItem = ActionBarMenuItem.addItem(advancedToolsLayout, R.drawable.ic_export_chat_na, LocaleController.getString(R.string.ExportChat), false, getResourceProvider());
+				exportItem.setOnClickListener(v -> {
+					headerItem.closeSubMenu();
+					actionBar.actionBarMenuOnItemClick.onItemClick(export_chat);
+				});
+				ActionBarMenuSubItem importItem = ActionBarMenuItem.addItem(advancedToolsLayout, R.drawable.ic_import_chat_na, LocaleController.getString(R.string.ImportChat), false, getResourceProvider());
+				importItem.setOnClickListener(v -> {
+					headerItem.closeSubMenu();
+					actionBar.actionBarMenuOnItemClick.onItemClick(import_chat);
+				});
+			}
+			ActionBarMenuSubItem splitChatItem = ActionBarMenuItem.addItem(advancedToolsLayout, R.drawable.ic_split_chat_na, LocaleController.getString("SplitChat", R.string.SplitChat), false, getResourceProvider());
+			splitChatItem.setOnClickListener(v -> {
+				headerItem.closeSubMenu();
+				actionBar.actionBarMenuOnItemClick.onItemClick(nkbtn_split_chat);
+			});
+			headerItem.lazilyAddSwipeBackItem(R.drawable.ic_advanced_tool_na, null, "Advanced Tool", advancedToolsLayout);
+			headerItem.lazilyAddColoredGap();
+			// [Alexgram: Advanced Tools] - End
 
 			if (ChatObject.hasAdminRights(currentChat)) {
 				boolean hasAtLeastOneOption = false;
@@ -21060,6 +21128,10 @@ public class ChatActivity extends BaseFragment implements
 				if (chatAttachAlert != null) {
 					chatAttachAlert.onPollAttachFilePicker(data);
 				}
+			} else if (requestCode == 137) {
+				// [Alexgram: Advanced Tools] - Start
+				xyz.nextalone.nagram.utils.ChatExportImport.handleImportResult(getParentActivity(), dialog_id, data.getData());
+				// [Alexgram: Advanced Tools] - End
 			}
 		}
 	}
