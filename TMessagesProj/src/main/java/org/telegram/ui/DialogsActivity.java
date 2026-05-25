@@ -4669,6 +4669,12 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                                 }
                                 if (changed && scrollUpdated && (goingDown || scrollingManually)) {
                                     hideFloatingButton(goingDown);
+                                    // [Alexgram: Hide Navigation Bar on Scroll] - Start
+                                    if (NaConfig.INSTANCE.getHideTabsOnScroll().Bool()) {
+                                        NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.setTabsVisible, !goingDown);
+                                        NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.setTabsVisible, !goingDown);
+                                    }
+                                    // [Alexgram: Hide Navigation Bar on Scroll] - End
                                 }
                                 prevPosition = firstVisiblePosition;
                                 prevTop = firstViewTop;

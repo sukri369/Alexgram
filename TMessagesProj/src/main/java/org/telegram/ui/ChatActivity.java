@@ -408,6 +408,9 @@ import tw.nekomimi.nekogram.utils.AlertUtil;
 import tw.nekomimi.nekogram.utils.AndroidUtil;
 import tw.nekomimi.nekogram.utils.ProxyUtil;
 import xyz.nextalone.nagram.NaConfig;
+// [Alexgram: Star Fall Decoration] - Start
+import xyz.nextalone.nagram.StarFallView;
+// [Alexgram: Star Fall Decoration] - End
 import xyz.nextalone.nagram.ToggleResult;
 import xyz.nextalone.nagram.helper.BookmarksHelper;
 import xyz.nextalone.nagram.helper.DoubleTap;
@@ -5050,6 +5053,14 @@ public class ChatActivity extends BaseFragment implements
 		scrimBlur3Factory.setSourceRootView(viewPositionWatcher, contentView);
 
 		contentView.setOccupyStatusBar(!inBubbleMode && !isInsideContainer && !inPreviewMode);
+		// [Alexgram: Star Fall Decoration] - Start
+		if (NaConfig.INSTANCE.getStarFallInChat().Bool()) {
+			StarFallView starFallView = new StarFallView(context);
+			contentView.addView(starFallView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+			starFallView.setClickable(false);
+			starFallView.setFocusable(false);
+		}
+		// [Alexgram: Star Fall Decoration] - End
 
 		fadeDrawable = new BlurredBackgroundWithFadeDrawable(
 				navbarContentDrawableFactory.create(chatInputViewsContainer, null));
