@@ -99,6 +99,9 @@ public class ProxyListActivity extends BaseFragment implements NotificationCente
     private int proxyEndRow;
     @Keep
     private int proxyAddRow;
+    // [Alexgram: Free Proxy] - Start
+    private int freeProxyRow;
+    // [Alexgram: Free Proxy] - End
     private int proxyShadowRow;
     @Keep
     private int callsRow;
@@ -564,6 +567,10 @@ public class ProxyListActivity extends BaseFragment implements NotificationCente
                 ConnectionsManager.setProxySettings(useProxySettings, SharedConfig.currentProxy.address, SharedConfig.currentProxy.port, SharedConfig.currentProxy.username, SharedConfig.currentProxy.password, SharedConfig.currentProxy.secret);
             } else if (position == proxyAddRow) {
                 presentFragment(new ProxySettingsActivity());
+            // [Alexgram: Free Proxy] - Start
+            } else if (position == freeProxyRow) {
+                presentFragment(new tw.nekomimi.nekogram.settings.FreeProxyActivity());
+            // [Alexgram: Free Proxy] - End
             } else if (position == deleteAllRow) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
                 builder.setMessage(getString(R.string.DeleteAllProxiesConfirm));
@@ -758,6 +765,9 @@ public class ProxyListActivity extends BaseFragment implements NotificationCente
             proxyEndRow = -1;
         }
         proxyAddRow = rowCount++;
+        // [Alexgram: Free Proxy] - Start
+        freeProxyRow = rowCount++;
+        // [Alexgram: Free Proxy] - End
         proxyShadowRow = rowCount++;
         if (SharedConfig.currentProxy == null || SharedConfig.currentProxy.secret.isEmpty()) {
             boolean change = callsRow == -1;
@@ -962,7 +972,11 @@ public class ProxyListActivity extends BaseFragment implements NotificationCente
                     TextSettingsCell textCell = (TextSettingsCell) holder.itemView;
                     textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     if (position == proxyAddRow) {
-                        textCell.setText(getString(R.string.AddProxy), deleteAllRow != -1);
+                        textCell.setText(getString(R.string.AddProxy), true);
+                    // [Alexgram: Free Proxy] - Start
+                    } else if (position == freeProxyRow) {
+                        textCell.setText(getString("FreeProxy", R.string.FreeProxy), deleteAllRow != -1);
+                    // [Alexgram: Free Proxy] - End
                     } else if (position == deleteAllRow) {
                         textCell.setTextColor(Theme.getColor(Theme.key_text_RedRegular));
                         textCell.setText(getString(R.string.DeleteAllProxies), false);
@@ -1068,7 +1082,11 @@ public class ProxyListActivity extends BaseFragment implements NotificationCente
         @Override
         public boolean isEnabled(RecyclerView.ViewHolder holder) {
             int position = holder.getAdapterPosition();
-            return position == useProxyRow || position == rotationRow || position == callsRow || position == proxyAddRow || position == deleteAllRow || position >= proxyStartRow && position < proxyEndRow;
+            return position == useProxyRow || position == rotationRow || position == callsRow || position == proxyAddRow || 
+                    // [Alexgram: Free Proxy] - Start
+                    position == freeProxyRow || 
+                    // [Alexgram: Free Proxy] - End
+                    position == deleteAllRow || position >= proxyStartRow && position < proxyEndRow;
         }
 
         @Override
@@ -1116,6 +1134,10 @@ public class ProxyListActivity extends BaseFragment implements NotificationCente
                 return -2;
             } else if (position == proxyAddRow) {
                 return -3;
+            // [Alexgram: Free Proxy] - Start
+            } else if (position == freeProxyRow) {
+                return -12;
+            // [Alexgram: Free Proxy] - End
             } else if (position == useProxyRow) {
                 return -4;
             } else if (position == callsRow) {
@@ -1141,7 +1163,11 @@ public class ProxyListActivity extends BaseFragment implements NotificationCente
         public int getItemViewType(int position) {
             if (position == useProxyShadowRow || position == proxyShadowRow) {
                 return VIEW_TYPE_SHADOW;
-            } else if (position == proxyAddRow || position == deleteAllRow) {
+            } else if (position == proxyAddRow || 
+                    // [Alexgram: Free Proxy] - Start
+                    position == freeProxyRow || 
+                    // [Alexgram: Free Proxy] - End
+                    position == deleteAllRow) {
                 return VIEW_TYPE_TEXT_SETTING;
             } else if (position == useProxyRow || position == rotationRow || position == callsRow) {
                 return VIEW_TYPE_TEXT_CHECK;
