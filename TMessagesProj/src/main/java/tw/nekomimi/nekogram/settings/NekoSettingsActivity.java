@@ -376,61 +376,169 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         return new ListAdapter(context);
     }
 
-    private class ListAdapter extends BaseListAdapter {
+	// [Alexgram: A-Settings UI] - Start
+	private class ListAdapter extends BaseListAdapter {
 
-        public ListAdapter(Context context) {
-            super(context);
-        }
+		public ListAdapter(Context context) {
+			super(context);
+		}
 
-        @Override
-        public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position, boolean partial) {
-            int viewType = holder.getItemViewType();
-            switch (viewType) {
-                case TYPE_SHADOW: {
-                    holder.itemView.setBackground(Theme.getThemedDrawable(mContext, R.drawable.greydivider, Theme.key_windowBackgroundGrayShadow));
-                    break;
-                }
-                case TYPE_TEXT: {
-                    TextCell textCell = (TextCell) holder.itemView;
-                    if (position == chatRow) {
-                        textCell.setTextAndIcon(getString(R.string.Chat), R.drawable.msg_discussion, true);
-                    } else if (position == generalRow) {
-                        textCell.setTextAndIcon(getString(R.string.General), R.drawable.msg_theme, true);
-                    } else if (position == translatorRow) {
-                        textCell.setTextAndIcon(getString(R.string.TranslatorSettings), R.drawable.ic_translate, true);
-                    } else if (position == passcodeRow) {
-                        textCell.setTextAndIcon(getString(R.string.PasscodeNeko), R.drawable.msg_permissions, true);
-                    } else if (position == experimentRow) {
-                        textCell.setTextAndIcon(getString(R.string.Experimental), R.drawable.msg_fave, true);
-                    } else if (position == importSettingsRow) {
-                        textCell.setTextAndIcon(getString(R.string.ImportSettings), R.drawable.msg_photo_settings_solar, true);
-                    } else if (position == exportSettingsRow) {
-                        textCell.setTextAndIcon(getString(R.string.BackupSettings), R.drawable.msg_instant_link_solar, true);
-                    } else if (position == resetSettingsRow) {
-                        textCell.setTextAndIcon(getString(R.string.ResetSettings), R.drawable.msg_reset_solar, true);
-                    } else if (position == appRestartRow) {
-                        textCell.setTextAndIcon(getString(R.string.RestartApp), R.drawable.msg_retry_solar, true);
-                    } else if (position == aboutRow) {
-                        textCell.setTextAndIcon(getString(R.string.About), R.drawable.msg_info, true);
-                    }
-                    break;
-                }
+		@NonNull
+		@Override
+		public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+			if (viewType == 100) {
+				View view = new CardItemCell(mContext);
+				view.setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
+				return new RecyclerListView.Holder(view);
+			}
+			return super.onCreateViewHolder(parent, viewType);
+		}
 
-            }
-        }
+		@Override
+		public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position, boolean partial) {
+			int viewType = holder.getItemViewType();
+			if (viewType == 100) {
+				CardItemCell cell = (CardItemCell) holder.itemView;
+				String title = "";
+				int iconRes = 0;
+				boolean first = false;
+				boolean last = false;
 
-        @Override
-        public int getItemViewType(int position) {
-            if (position == categoriesEndRow || position == nSettingsEndRow) {
-                return TYPE_SHADOW;
-            } else if (position == chatRow || position == generalRow || position == passcodeRow || position == experimentRow || position == translatorRow ||
-                    position == importSettingsRow || position == exportSettingsRow || position == resetSettingsRow || position == appRestartRow ||
-                    position == aboutRow) {
-                return TYPE_TEXT;
-            }
-            return TYPE_SHADOW;
-        }
-    }
+				if (position == generalRow) {
+					title = getString(R.string.General);
+					iconRes = R.drawable.msg_colors_solar;
+					first = true;
+					last = false;
+				} else if (position == translatorRow) {
+					title = getString(R.string.TranslatorSettings);
+					iconRes = R.drawable.ic_translate;
+					first = false;
+					last = false;
+				} else if (position == chatRow) {
+					title = getString(R.string.Chat);
+					iconRes = R.drawable.msg_discussion_solar;
+					first = false;
+					last = false;
+				} else if (position == passcodeRow) {
+					title = getString(R.string.PasscodeNeko);
+					iconRes = R.drawable.msg_secret_solar;
+					first = false;
+					last = false;
+				} else if (position == experimentRow) {
+					title = getString(R.string.Experimental);
+					iconRes = R.drawable.msg_fave_solar;
+					first = false;
+					last = true;
+				} else if (position == importSettingsRow) {
+					title = getString(R.string.ImportSettings);
+					iconRes = R.drawable.msg_photo_settings_solar;
+					first = true;
+					last = false;
+				} else if (position == exportSettingsRow) {
+					title = getString(R.string.BackupSettings);
+					iconRes = R.drawable.msg_shareout_solar;
+					first = false;
+					last = false;
+				} else if (position == resetSettingsRow) {
+					title = getString(R.string.ResetSettings);
+					iconRes = R.drawable.msg_reset_solar;
+					first = false;
+					last = false;
+				} else if (position == appRestartRow) {
+					title = getString(R.string.RestartApp);
+					iconRes = R.drawable.msg_retry_solar;
+					first = false;
+					last = true;
+				} else if (position == aboutRow) {
+					title = getString(R.string.About);
+					iconRes = R.drawable.msg_info_solar;
+					first = true;
+					last = true;
+				}
+
+				cell.setData(title, iconRes, first, last);
+			} else {
+				super.onBindViewHolder(holder, position, partial);
+			}
+		}
+
+		@Override
+		public int getItemViewType(int position) {
+			if (position == categoriesEndRow || position == nSettingsEndRow) {
+				return TYPE_SHADOW;
+			} else if (position == chatRow || position == generalRow || position == passcodeRow || position == experimentRow || position == translatorRow ||
+					position == importSettingsRow || position == exportSettingsRow || position == resetSettingsRow || position == appRestartRow ||
+					position == aboutRow) {
+				return 100;
+			}
+			return TYPE_SHADOW;
+		}
+	}
+
+	private class CardItemCell extends FrameLayout {
+		private final LinearLayout container;
+		private final ImageView iconView;
+		private final TextView titleView;
+		private final ImageView arrowView;
+		private final View divider;
+
+		public CardItemCell(Context context) {
+			super(context);
+			setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
+			setPadding(dp(16), 0, dp(16), 0);
+
+			container = new LinearLayout(context);
+			container.setOrientation(LinearLayout.HORIZONTAL);
+			container.setGravity(Gravity.CENTER_VERTICAL);
+			container.setPadding(dp(16), dp(16), dp(16), dp(16));
+
+			iconView = new ImageView(context);
+			iconView.setScaleType(ImageView.ScaleType.CENTER);
+			container.addView(iconView, LayoutHelper.createLinear(24, 24));
+
+			titleView = new TextView(context);
+			titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
+			titleView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+			titleView.setPadding(dp(16), 0, 0, 0);
+			container.addView(titleView, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f));
+
+			arrowView = new ImageView(context);
+			arrowView.setImageResource(R.drawable.msg_arrowright);
+			container.addView(arrowView, LayoutHelper.createLinear(20, 20));
+
+			addView(container, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+
+			divider = new View(context);
+			addView(divider, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 1, Gravity.BOTTOM, 56, 0, 16, 0));
+		}
+
+		public void setData(String title, int iconRes, boolean first, boolean last) {
+			titleView.setText(title);
+			iconView.setImageResource(iconRes);
+
+			GradientDrawable bg = new GradientDrawable();
+			bg.setColor(NekoSettingsActivity.this.cardBg);
+			float r = dp(16);
+			bg.setCornerRadii(new float[]{
+					first ? r : 0, first ? r : 0,
+					first ? r : 0, first ? r : 0,
+					last ? r : 0, last ? r : 0,
+					last ? r : 0, last ? r : 0
+			});
+			container.setBackground(bg);
+
+			int titleColor = NekoSettingsActivity.this.isDark ? Color.WHITE : 0xFF1A1A2E;
+			titleView.setTextColor(titleColor);
+
+			int iconColor = NekoSettingsActivity.this.isDark ? Color.WHITE : 0xFF1A1A2E;
+			iconView.setColorFilter(new PorterDuffColorFilter(iconColor, PorterDuff.Mode.SRC_IN));
+			arrowView.setColorFilter(new PorterDuffColorFilter(NekoSettingsActivity.this.isDark ? 0x33FFFFFF : 0x22000000, PorterDuff.Mode.SRC_IN));
+
+			divider.setBackgroundColor(NekoSettingsActivity.this.dividerColor);
+			divider.setVisibility(last ? GONE : VISIBLE);
+		}
+	}
+	// [Alexgram: A-Settings UI] - End
 
     private DocumentSelectActivity getDocumentSelectActivity(Activity parent) {
         try {
