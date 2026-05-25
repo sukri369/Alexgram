@@ -12212,6 +12212,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         } catch (Throwable e) {
             FileLog.e(e);
         }
+        return null;
     }
 
     // [Alexgram: Ambient Mode] - Start
