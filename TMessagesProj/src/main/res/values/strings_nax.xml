@@ -393,4 +393,15 @@
     <string name="SpecialForwardDeleteAllCaptions">Delete all media captions</string>
     <string name="SpecialForwardAsFile">Forward as file</string>
     <string name="SpecialForwardResetSuccess">Messages reset</string>
+    <!-- [Alexgram: AI Reply] - Start -->
+    <string name="AiAssistanceSettings">AI Assistance Settings</string>
+    <string name="enableAIReply">AI Reply</string>
+    <string name="enableSummarizeChat">Summarize Chat</string>
+    <string name="aiModelUrl">AI Model URL 1</string>
+    <string name="aiApiKey">AI API Key 1</string>
+    <string name="TestAiApi">Test API Connection 1</string>
+    <string name="aiModelUrl2">AI Model URL 2 (Failover)</string>
+    <string name="aiApiKey2">AI API Key 2 (Failover)</string>
+    <string name="TestAiApi2">Test API Connection 2</string>
+    <!-- [Alexgram: AI Reply] - End -->
 </resources>
