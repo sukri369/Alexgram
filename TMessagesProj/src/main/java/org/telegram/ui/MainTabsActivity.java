@@ -134,6 +134,9 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
     private BlurredBackgroundDrawable tabsViewBackground;
     private View fadeView;
     private boolean lastHideContacts = false;
+    // [Alexgram: Double Tap On Chats To Filter Unread Chats] - Start
+    private long lastChatsClickTime;
+    // [Alexgram: Double Tap On Chats To Filter Unread Chats] - End
 
     public MainTabsActivity() {
         super();
@@ -319,6 +322,21 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
                 if (viewPager.isManualScrolling() || viewPager.isTouch()) {
                     return;
                 }
+
+                // [Alexgram: Double Tap On Chats To Filter Unread Chats] - Start
+                if (tabIndex == INDEX_CHATS && NaConfig.INSTANCE.getDoubleTapOnChatsToFilterUnread().Bool()) {
+                    long currentTime = System.currentTimeMillis();
+                    if (currentTime - lastChatsClickTime < ViewConfiguration.getDoubleTapTimeout()) {
+                        final BaseFragment fragment = getCurrentVisibleFragment();
+                        if (fragment instanceof MainTabsActivity.TabFragmentDelegate) {
+                            ((MainTabsActivity.TabFragmentDelegate) fragment).onDoubleTapOnChats();
+                        }
+                        lastChatsClickTime = 0;
+                        return;
+                    }
+                    lastChatsClickTime = currentTime;
+                }
+                // [Alexgram: Double Tap On Chats To Filter Unread Chats] - End
 
                 if (viewPager.getCurrentPosition() == position) {
                     final BaseFragment fragment = getCurrentVisibleFragment();
@@ -794,6 +812,12 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
         default void onParentScrollToTop() {
 
         }
+
+        // [Alexgram: Double Tap On Chats To Filter Unread Chats] - Start
+        default void onDoubleTapOnChats() {
+
+        }
+        // [Alexgram: Double Tap On Chats To Filter Unread Chats] - End
 
         default BlurredBackgroundSourceRenderNode getGlassSource() {
             return null;

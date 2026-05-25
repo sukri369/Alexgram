@@ -504,6 +504,13 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     private FragmentSearchField fragmentSearchField;
     private SearchTextWatcher fragmentSearchFieldWatcher;
+    // [Alexgram: Double Tap On Chats To Filter Unread Chats] - Start
+    private boolean onlyUnread;
+    private FrameLayout unreadPillView;
+    private TextView unreadPillText;
+    private ValueAnimator unreadPillAnimator;
+    private float unreadPillAlpha;
+    // [Alexgram: Double Tap On Chats To Filter Unread Chats] - End
 
     private SearchTabsAndFiltersLayout searchTabsAndFiltersLayout;
     private ViewPagerFixed.TabsView searchTabsView;
@@ -4818,6 +4825,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             if (viewPage.dialogsType == DIALOGS_TYPE_FORWARD) {
                 viewPage.dialogsAdapter.setAllowForwardAsStories(getMessagesController().storiesEnabled() && delegate != null && delegate.canSelectStories());
             }
+            // [Alexgram: Double Tap On Chats To Filter Unread Chats] - Start
+            viewPage.dialogsAdapter.setOnlyUnread(onlyUnread);
+            // [Alexgram: Double Tap On Chats To Filter Unread Chats] - End
 
             if (AndroidUtilities.isTablet() && openedDialogId.dialogId != 0) {
                 viewPage.dialogsAdapter.setOpenedDialogId(openedDialogId.dialogId);
@@ -5274,6 +5284,63 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             filterTabsView.setBlurredBackground(filterTabsViewBackground);
             contentView.addView(filterTabsView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 36 + 7 + 7, Gravity.TOP, 4, 0, 4, 0));
         }
+
+        // [Alexgram: Double Tap On Chats To Filter Unread Chats] - Start
+        if (unreadPillView == null) {
+            unreadPillView = new FrameLayout(context) {
+                @Override
+                public void setAlpha(float alpha) {
+                    super.setAlpha(alpha);
+                    setVisibility(alpha > 0 ? VISIBLE : GONE);
+                }
+            };
+            unreadPillView.setAlpha(0);
+            unreadPillView.setVisibility(View.GONE);
+
+            LinearLayout unreadPillLayout = new LinearLayout(context);
+            unreadPillLayout.setOrientation(LinearLayout.HORIZONTAL);
+            unreadPillLayout.setGravity(Gravity.CENTER);
+            unreadPillLayout.setPadding(dp(12), dp(4), dp(8), dp(4));
+            BlurredBackgroundDrawable unreadPillBackground = iBlur3FactoryLiquidGlass.create(unreadPillLayout, BlurredBackgroundProviderImpl.topPanel(resourceProvider));
+            unreadPillBackground.setRadius(dp(16));
+            unreadPillLayout.setBackground(unreadPillBackground);
+            unreadPillView.addView(unreadPillLayout, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, 32, Gravity.CENTER));
+
+            ImageView filterIcon = new ImageView(context);
+            filterIcon.setImageResource(R.drawable.ic_filter_list);
+            filterIcon.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_windowBackgroundWhiteBlueText), PorterDuff.Mode.SRC_IN));
+            unreadPillLayout.addView(filterIcon, LayoutHelper.createLinear(18, 18));
+
+            unreadPillText = new TextView(context);
+            unreadPillText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
+            unreadPillText.setTypeface(AndroidUtilities.bold());
+            unreadPillText.setTextColor(getThemedColor(Theme.key_windowBackgroundWhiteBlueText));
+            unreadPillText.setText(LocaleController.getString(R.string.FilterNameUnread));
+            unreadPillLayout.addView(unreadPillText, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_VERTICAL, 8, 0, 8, 0));
+
+            ImageView closeIcon = new ImageView(context);
+            closeIcon.setImageResource(R.drawable.baseline_close_24);
+            closeIcon.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_windowBackgroundWhiteBlueText), PorterDuff.Mode.SRC_IN));
+            closeIcon.setPadding(dp(4), dp(4), dp(4), dp(4));
+            closeIcon.setBackground(Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector), 1));
+            unreadPillLayout.addView(closeIcon, LayoutHelper.createLinear(24, 24));
+            closeIcon.setOnClickListener(v -> {
+                if (viewPages == null) return;
+                onlyUnread = false;
+                for (ViewPage page : viewPages) {
+                    if (page != null && page.dialogsAdapter != null) {
+                        page.dialogsAdapter.setOnlyUnread(false);
+                    }
+                }
+                updateUnreadPillVisibility(false, true);
+            });
+        }
+
+        if (fragmentSearchField != null && unreadPillView != null) {
+            AndroidUtilities.removeFromParent(unreadPillView);
+            fragmentSearchField.addAdditionalIcon(unreadPillView);
+        }
+        // [Alexgram: Double Tap On Chats To Filter Unread Chats] - End
 
         if (fragmentSearchField != null) {
             fragmentSearchField.setupBlurredBackground(iBlur3FactoryLiquidGlass.create(fragmentSearchField, BlurredBackgroundProviderImpl.topPanel(resourceProvider)));
@@ -7105,6 +7172,12 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     @Override
     public void onResume() {
         super.onResume();
+        // [Alexgram: Double Tap On Chats To Filter Unread Chats] - Start
+        if (unreadPillView != null) {
+            boolean visible = viewPages != null && viewPages[0] != null && viewPages[0].dialogsAdapter != null && viewPages[0].dialogsAdapter.isOnlyUnread();
+            updateUnreadPillVisibility(visible, false);
+        }
+        // [Alexgram: Double Tap On Chats To Filter Unread Chats] - End
         if (dialogStoriesCell != null) {
             dialogStoriesCell.onResume();
         }
@@ -7824,6 +7897,12 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         if (fragmentView != null) {
             fragmentView.invalidate();
         }
+        // [Alexgram: Double Tap On Chats To Filter Unread Chats] - Start
+        if (unreadPillView != null) {
+            unreadPillView.setAlpha(unreadPillAlpha * (1f - searchAnimationProgress));
+            unreadPillView.setVisibility(unreadPillView.getAlpha() > 0 && !searchIsShowed ? View.VISIBLE : View.GONE);
+        }
+        // [Alexgram: Double Tap On Chats To Filter Unread Chats] - End
 
         final boolean budget = SharedConfig.getDevicePerformanceClass() == SharedConfig.PERFORMANCE_CLASS_LOW || !LiteMode.isEnabled(LiteMode.FLAG_CHAT_SCALE);
         if (full) {
@@ -14299,6 +14378,73 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     public void onParentScrollToTop() {
         scrollToTop(true, true);
     }
+
+    // [Alexgram: Double Tap On Chats To Filter Unread Chats] - Start
+    @Override
+    public void onDoubleTapOnChats() {
+        if (viewPages == null || viewPages[0] == null || viewPages[0].dialogsAdapter == null) return;
+        onlyUnread = !viewPages[0].dialogsAdapter.isOnlyUnread();
+        for (ViewPage page : viewPages) {
+            if (page != null && page.dialogsAdapter != null) {
+                page.dialogsAdapter.setOnlyUnread(onlyUnread);
+            }
+        }
+        updateUnreadPillVisibility(onlyUnread, true);
+    }
+
+    private void updateUnreadPillVisibility(boolean visible, boolean animated) {
+        if (unreadPillView == null) return;
+        updateUnreadPillColors();
+        if (unreadPillAnimator != null) {
+            unreadPillAnimator.cancel();
+            unreadPillAnimator = null;
+        }
+        if (visible && unreadPillText != null && viewPages != null && viewPages[0] != null && viewPages[0].dialogsAdapter != null) {
+            int count = viewPages[0].dialogsAdapter.getDialogsCount();
+            if (count > 0) {
+                unreadPillText.setText(LocaleController.getString(R.string.FilterNameUnread) + " (" + count + ")");
+            } else {
+                unreadPillText.setText(LocaleController.getString(R.string.FilterNameUnread));
+            }
+        }
+        float targetAlpha = visible ? 1.0f : 0.0f;
+        if (animated) {
+            unreadPillAnimator = ValueAnimator.ofFloat(unreadPillAlpha, targetAlpha);
+            unreadPillAnimator.addUpdateListener(animation -> {
+                unreadPillAlpha = (float) animation.getAnimatedValue();
+                unreadPillView.setAlpha(unreadPillAlpha);
+                unreadPillView.setScaleX(0.8f + 0.2f * unreadPillAlpha);
+                unreadPillView.setScaleY(0.8f + 0.2f * unreadPillAlpha);
+            });
+            unreadPillAnimator.setDuration(250);
+            unreadPillAnimator.setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT);
+            unreadPillAnimator.start();
+        } else {
+            unreadPillAlpha = targetAlpha;
+            unreadPillView.setAlpha(unreadPillAlpha);
+            unreadPillView.setScaleX(0.8f + 0.2f * unreadPillAlpha);
+            unreadPillView.setScaleY(0.8f + 0.2f * unreadPillAlpha);
+        }
+    }
+
+    private void updateUnreadPillColors() {
+        if (unreadPillView == null || unreadPillText == null) return;
+        int textColor = getThemedColor(Theme.key_windowBackgroundWhiteBlueText);
+        unreadPillText.setTextColor(textColor);
+        for (int i = 0; i < unreadPillView.getChildCount(); i++) {
+            View child = unreadPillView.getChildAt(i);
+            if (child instanceof ViewGroup) {
+                ViewGroup group = (ViewGroup) child;
+                for (int j = 0; j < group.getChildCount(); j++) {
+                    View inner = group.getChildAt(j);
+                    if (inner instanceof ImageView) {
+                        ((ImageView) inner).setColorFilter(new PorterDuffColorFilter(textColor, PorterDuff.Mode.SRC_IN));
+                    }
+                }
+            }
+        }
+    }
+    // [Alexgram: Double Tap On Chats To Filter Unread Chats] - End
 
     private void switchTheme(Theme.ThemeInfo themeInfo, boolean toDark) {
         if (optionsItem == null) return;
