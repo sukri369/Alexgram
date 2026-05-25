@@ -14,6 +14,7 @@ import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.net.Uri;
+import android.util.TypedValue;
 import android.os.Build;
 import android.text.Editable;
 import android.text.InputType;
