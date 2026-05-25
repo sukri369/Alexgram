@@ -62,8 +62,10 @@ public class HiddenChatsActivity extends DialogsActivity {
                         HiddenChatsController.getInstance().hide(currentAccount, topicKey.dialogId);
                     }
                     fragment.finishFragment();
-                    if (viewPages != null && viewPages.length > 0 && viewPages[0] != null && viewPages[0].dialogsAdapter != null) {
-                        viewPages[0].dialogsAdapter.notifyDataSetChanged();
+                    for (ViewPage viewPage : viewPages) {
+                        if (viewPage != null && viewPage.dialogsAdapter != null) {
+                            viewPage.dialogsAdapter.notifyDataSetChanged();
+                        }
                     }
                     return true;
                 });

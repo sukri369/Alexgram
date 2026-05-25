@@ -8,6 +8,12 @@
 
 package org.telegram.ui;
 
+// [Alexgram: Hidden Chats] - Start
+import tw.nekomimi.nekogram.helpers.HiddenChatsController;
+import tw.nekomimi.nekogram.ui.HiddenChatsPasscodeActivity;
+import tw.nekomimi.nekogram.settings.HiddenChatsSettingsActivity;
+// [Alexgram: Hidden Chats] - End
+
 import static org.telegram.messenger.AndroidUtilities.dp;
 import static org.telegram.messenger.AndroidUtilities.dpf2;
 import static org.telegram.messenger.AndroidUtilities.lerp;
@@ -593,6 +599,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private ActionBarMenuSubItem readItem;
     @Nullable
     private ActionBarMenuSubItem blockItem;
+    // [Alexgram: Hidden Chats] - Start
+    @Nullable
+    private ActionBarMenuSubItem hideChatItem;
+    // [Alexgram: Hidden Chats] - End
 
     private float additionalFloatingTranslation;
     private float floatingButtonPanOffset;
@@ -704,6 +714,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private final static int pin2 = 108;
     private final static int add_to_folder = 109;
     private final static int remove_from_folder = 110;
+    // [Alexgram: Hidden Chats] - Start
+    private final static int hide_chat = 111;
+    // [Alexgram: Hidden Chats] - End
 
     private final static int select_all = 1000;
 
@@ -3549,6 +3562,15 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 statusDrawable.center = true;
                 actionBar.setTitle(actionBarTitleNax = TypefaceHelper.getTitleText(currentAccount), statusDrawable);
                 actionBar.setOnLongClickListener(v -> {
+                    // [Alexgram: Hidden Chats] - Start
+                    if (HiddenChatsController.getInstance().hasPasscode()) {
+                        presentFragment(new HiddenChatsPasscodeActivity(HiddenChatsPasscodeActivity.MODE_UNLOCK_CHATS));
+                        return true;
+                    } else if (HiddenChatsController.getInstance().hasHiddenChats()) {
+                        presentFragment(new HiddenChatsSettingsActivity());
+                        return true;
+                    }
+                    // [Alexgram: Hidden Chats] - End
                     if (NekoConfig.hideAllTab.Bool() && filterTabsView != null && filterTabsView.getCurrentTabId() != Integer.MAX_VALUE) {
                         filterTabsView.toggleAllTabs(true);
                         filterTabsView.selectDefaultTab();
@@ -3755,6 +3777,14 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     shareEmpty[0] = true;
 
                     ArrayList<TLRPC.Dialog> dialogs = new ArrayList<>(defaultTab ? getMessagesController().getDialogs(folderId) : getMessagesController().getAllDialogs());
+                    // [Alexgram: Hidden Chats] - Start
+                    for (int i = 0; i < dialogs.size(); i++) {
+                        if (HiddenChatsController.getInstance().isHidden(currentAccount, dialogs.get(i).id)) {
+                            dialogs.remove(i);
+                            i--;
+                        }
+                    }
+                    // [Alexgram: Hidden Chats] - End
                     MessagesController.DialogFilter filter = null;
                     if (dialogFilter != null) {
                         filter = getMessagesController().getDialogFilters().get(tabView.getId());
@@ -6770,6 +6800,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         readItem = otherItem.addSubItem(read, R.drawable.msg_markread, LocaleController.getString(R.string.MarkAsRead));
         clearItem = otherItem.addSubItem(clear, R.drawable.msg_clear, LocaleController.getString(R.string.ClearHistory));
         blockItem = otherItem.addSubItem(block, R.drawable.msg_block, LocaleController.getString(R.string.BlockUser));
+        // [Alexgram: Hidden Chats] - Start
+        hideChatItem = otherItem.addSubItem(hide_chat, R.drawable.msg_hidden, HiddenChatsController.getInstance().isLocked() ? getString(R.string.HideChat) : getString(R.string.UnhideChat));
+        // [Alexgram: Hidden Chats] - End
         otherItem.addSubItem(select_all, R.drawable.msg_select_between_solar, LocaleController.getString(R.string.SelectAll));
 
         muteItem.setOnLongClickListener(e -> {
@@ -9120,6 +9153,28 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     }
 
     private void performSelectedDialogsAction(ArrayList<Long> selectedDialogs, int action, boolean alert, boolean longPress) {
+        // [Alexgram: Hidden Chats] - Start
+        if (action == hide_chat) {
+            HiddenChatsController controller = HiddenChatsController.getInstance();
+            boolean hide = !controller.isHidden(currentAccount, selectedDialogs.get(0));
+            for (int a = 0; a < selectedDialogs.size(); a++) {
+                long dialogId = selectedDialogs.get(a);
+                if (hide) {
+                    controller.hide(currentAccount, dialogId);
+                    getNotificationsController().setDialogNotificationsSettings(dialogId, 0, NotificationsController.SETTING_MUTE_FOREVER);
+                } else {
+                    controller.unhide(currentAccount, dialogId);
+                }
+            }
+            hideActionMode(true);
+            for (ViewPage viewPage : viewPages) {
+                if (viewPage != null && viewPage.dialogsAdapter != null) {
+                    viewPage.dialogsAdapter.notifyDataSetChanged();
+                }
+            }
+            return;
+        }
+        // [Alexgram: Hidden Chats] - End
         performSelectedDialogsAction(selectedDialogs, action, alert, longPress, null);
     }
 
@@ -9706,6 +9761,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         canClearCacheCount = 0;
         int cantBlockCount = 0;
         canReportSpamCount = 0;
+        // [Alexgram: Hidden Chats] - Start
+        int canUnhideCount = 0;
+        int canHideCount = 0;
+        // [Alexgram: Hidden Chats] - End
         if (hide) {
             return;
         }
@@ -9804,6 +9863,13 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 canClearHistoryCount++;
                 canDeleteCount++;
             }
+            // [Alexgram: Hidden Chats] - Start
+            if (HiddenChatsController.getInstance().isHidden(dialog.id)) {
+                canUnhideCount++;
+            } else {
+                canHideCount++;
+            }
+            // [Alexgram: Hidden Chats] - End
         }
         if (deleteItem != null) {
             if (canDeleteCount != count) {
@@ -9854,6 +9920,20 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 archive2Item.setVisibility(View.GONE);
             }
         }
+        // [Alexgram: Hidden Chats] - Start
+        if (hideChatItem != null) {
+            if (canUnhideCount != 0 && canHideCount != 0) {
+                hideChatItem.setVisibility(View.GONE);
+            } else {
+                hideChatItem.setVisibility(View.VISIBLE);
+                if (canUnhideCount != 0) {
+                    hideChatItem.setTextAndIcon(getString(R.string.UnhideChat), R.drawable.msg_unhidden);
+                } else {
+                    hideChatItem.setTextAndIcon(getString(R.string.HideChat), R.drawable.msg_hidden);
+                }
+            }
+        }
+        // [Alexgram: Hidden Chats] - End
         if (pinItem != null && pin2Item != null) {
             if (canPinCount + canUnpinCount != count) {
                 pinItem.setVisibility(View.GONE);
@@ -10916,7 +10996,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private ArrayList<TLRPC.Dialog> botShareDialogs;
 
     @NonNull
-    public ArrayList<TLRPC.Dialog> getDialogsArray(int currentAccount, int dialogsType, int folderId, boolean frozen) {
+    private ArrayList<TLRPC.Dialog> getDialogsArrayInternal(int currentAccount, int dialogsType, int folderId, boolean frozen) {
         if (frozen && frozenDialogsList != null) {
             return frozenDialogsList;
         }
@@ -11058,6 +11138,29 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         }
         return new ArrayList<>();
     }
+
+    // [Alexgram: Hidden Chats] - Start
+    @NonNull
+    public ArrayList<TLRPC.Dialog> getDialogsArray(int currentAccount, int dialogsType, int folderId, boolean frozen) {
+        if (frozen && frozenDialogsList != null) {
+            return frozenDialogsList;
+        }
+        ArrayList<TLRPC.Dialog> dialogsArray = getDialogsArrayInternal(currentAccount, dialogsType, folderId, frozen);
+
+        if (HiddenChatsController.getInstance().isLocked() && !(this instanceof tw.nekomimi.nekogram.ui.HiddenChatsActivity)) {
+             ArrayList<TLRPC.Dialog> filtered = new ArrayList<>();
+             for (int a = 0; a < dialogsArray.size(); a++) {
+                  TLRPC.Dialog dialog = dialogsArray.get(a);
+                  if (!HiddenChatsController.getInstance().isHidden(currentAccount, dialog.id)) {
+                       filtered.add(dialog);
+                  }
+             }
+             return filtered;
+        }
+
+        return dialogsArray;
+    }
+    // [Alexgram: Hidden Chats] - End
 
     private boolean meetRequestPeerRequirements(TLRPC.User user) {
         TLRPC.TL_requestPeerTypeUser type = (TLRPC.TL_requestPeerTypeUser) requestPeerType;
