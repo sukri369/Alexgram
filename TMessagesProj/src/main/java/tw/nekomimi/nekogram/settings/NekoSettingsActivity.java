@@ -1,27 +1,17 @@
 package tw.nekomimi.nekogram.settings;
 
-import static android.view.View.OVER_SCROLL_NEVER;
 import static org.telegram.messenger.AndroidUtilities.dp;
+import org.telegram.messenger.LocaleController;
 import static org.telegram.messenger.LocaleController.getString;
 
-import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
-import android.net.Uri;
+import android.graphics.drawable.GradientDrawable;
 import android.util.TypedValue;
-import android.os.Build;
-import android.text.Editable;
-import android.text.InputType;
-import android.text.SpannableStringBuilder;
-import android.text.Spanned;
-import android.text.TextWatcher;
-import android.text.style.ForegroundColorSpan;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,350 +19,326 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.graphics.drawable.GradientDrawable;
 
 import androidx.annotation.NonNull;
+import androidx.core.graphics.ColorUtils;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
+import org.telegram.messenger.BuildVars;
+import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
-import org.telegram.messenger.SendMessagesHelper;
+import org.telegram.ui.AIAssistanceSettingsActivity;
 import org.telegram.ui.ActionBar.ActionBar;
-import org.telegram.ui.ActionBar.ActionBarMenu;
 import org.telegram.ui.ActionBar.AlertDialog;
+import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
-import org.telegram.ui.BasePermissionsActivity;
-import org.telegram.ui.Cells.SettingsSearchCell;
-import org.telegram.ui.Cells.TextCell;
-import org.telegram.ui.Components.EditTextBoldCursor;
+import org.telegram.ui.Components.BulletinFactory;
+import org.telegram.ui.Components.ItemOptions;
+import org.telegram.ui.Components.ItemOptions;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
-import org.telegram.ui.DocumentSelectActivity;
+import org.telegram.ui.Components.Switch;
 import org.telegram.ui.LaunchActivity;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.UUID;
-
 import tw.nekomimi.nekogram.NekoConfig;
+import tw.nekomimi.nekogram.config.ConfigItem;
 import tw.nekomimi.nekogram.helpers.AppRestartHelper;
 import tw.nekomimi.nekogram.helpers.CloudSettingsHelper;
+import tw.nekomimi.nekogram.helpers.HiddenChatsController;
 import tw.nekomimi.nekogram.helpers.PasscodeHelper;
+import tw.nekomimi.nekogram.helpers.QuickSettingEntry;
+import tw.nekomimi.nekogram.helpers.QuickSettingsController;
 import tw.nekomimi.nekogram.helpers.SettingsBackupHelper;
-import tw.nekomimi.nekogram.helpers.SettingsHelper;
-import tw.nekomimi.nekogram.helpers.SettingsSearchResult;
+import tw.nekomimi.nekogram.ui.HiddenChatsPasscodeActivity;
 import tw.nekomimi.nekogram.utils.AlertUtil;
+import xyz.nextalone.nagram.NaConfig;
 
+import java.util.ArrayList;
+import java.util.List;
+
+// [Alexgram: A-Settings UI] - Start
 public class NekoSettingsActivity extends BaseNekoSettingsActivity {
 
-    private static final int MENU_SEARCH = 1;
-    private static final int MENU_SYNC = 2;
+    private final List<String> recentSearchKeys = new ArrayList<>();
+    
+    private void loadRecentSearches() {
+        android.content.SharedPreferences prefs = ApplicationLoader.applicationContext.getSharedPreferences("alexgram_settings_search", Context.MODE_PRIVATE);
+        String data = prefs.getString("history", "");
+        recentSearchKeys.clear();
+        if (!data.isEmpty()) {
+            String[] keys = data.split(",");
+            for (String k : keys) {
+                if (!k.trim().isEmpty()) recentSearchKeys.add(k.trim());
+            }
+        }
+    }
 
-    private int generalRow;
-    private int translatorRow;
-    private int chatRow;
-    private int passcodeRow;
-    private int experimentRow;
-    private int categoriesEndRow;
+    private void saveRecentSearches() {
+        android.content.SharedPreferences prefs = ApplicationLoader.applicationContext.getSharedPreferences("alexgram_settings_search", Context.MODE_PRIVATE);
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < recentSearchKeys.size(); i++) {
+            if (i > 0) sb.append(",");
+            sb.append(recentSearchKeys.get(i));
+        }
+        prefs.edit().putString("history", sb.toString()).apply();
+    }
 
-    private int importSettingsRow;
-    private int exportSettingsRow;
-    private int resetSettingsRow;
-    private int appRestartRow;
-    private int nSettingsEndRow;
+    private void addToRecentSearches(String key) {
+        recentSearchKeys.remove(key);
+        recentSearchKeys.add(0, key);
+        while (recentSearchKeys.size() > 10) {
+            recentSearchKeys.remove(recentSearchKeys.size() - 1);
+        }
+        saveRecentSearches();
+    }
 
+    private boolean isDark;
+    private int cardBg;
+    private int cardBorder;
+    private int dividerColor;
 
-    private int aboutRow;
+    private int headerRow;
+    private int quickSettingsHeaderRow;
+    private int quickSettingsStartRow;
+    private int quickSettingsEndRow;
+    private int hideContactsRow;
+    private int ghostModeRow;
+    private int musicGraphRow;
+    private int saveDeletedRow;
+    private int privacyHeaderRow;
+    private int hiddenChatsRow;
+    private int analyticsRow;
+    private int coreHeaderRow;
+    private int coreSettingsRow;
+    private int advancedHeaderRow;
+    private int advancedSettingsRow;
+    private int actionsRow;
+    private int footerRow;
 
     @Override
     protected void updateRows() {
-        super.updateRows();
+        rowCount = 0;
+        rowMap.clear();
+        rowMapReverse.clear();
 
-        generalRow = addRow();
-        translatorRow = addRow();
-        chatRow = addRow();
-        if (!PasscodeHelper.isSettingsHidden()) {
-            passcodeRow = addRow();
+        headerRow = addRow();
+        
+        quickSettingsHeaderRow = addRow();
+        
+        List<QuickSettingEntry> quickSettings = QuickSettingsController.getInstance().getQuickSettings();
+        if (quickSettings.isEmpty()) {
+            quickSettingsStartRow = -1;
+            quickSettingsEndRow = -1;
         } else {
-            passcodeRow = -1;
+            quickSettingsStartRow = rowCount;
+            for (QuickSettingEntry entry : quickSettings) {
+                addRow(entry.key);
+            }
+            quickSettingsEndRow = rowCount;
         }
-        experimentRow = addRow();
-        categoriesEndRow = addRow();
 
-        importSettingsRow = addRow();
-        exportSettingsRow = addRow();
-        resetSettingsRow = addRow();
-        appRestartRow = addRow();
-        nSettingsEndRow = addRow();
-
-        aboutRow = addRow();
+        hideContactsRow = addRow("hide_contacts");
+        ghostModeRow = addRow("ghost_mode");
+        musicGraphRow = addRow("music_graph");
+        saveDeletedRow = addRow("save_deleted");
+        
+        privacyHeaderRow = addRow();
+        hiddenChatsRow = addRow("hidden_chats");
+        analyticsRow = addRow("analytics");
+        
+        coreHeaderRow = addRow();
+        coreSettingsRow = addRow("core_settings");
+        
+        advancedHeaderRow = addRow();
+        advancedSettingsRow = addRow("advanced_settings");
+        
+        actionsRow = addRow("actions");
+        footerRow = addRow();
     }
 
     @Override
     public View createView(Context context) {
-        View view = super.createView(context);
+        setupColors();
+        
+        fragmentView = new FrameLayout(context);
+        FrameLayout frameLayout = (FrameLayout) fragmentView;
+        frameLayout.setBackgroundColor(Color.TRANSPARENT);
 
-        ActionBarMenu menu = actionBar.createMenu();
-        menu.addItem(MENU_SEARCH, R.drawable.outline_header_search, resourcesProvider);
-        menu.addItem(MENU_SYNC, R.drawable.cloud_sync, resourcesProvider);
+        // Add animated background
+        AlexgramSettingsHeaderView backgroundView = new AlexgramSettingsHeaderView(context);
+        frameLayout.addView(backgroundView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
+        actionBar.setBackButtonImage(R.drawable.ic_ab_back);
+        actionBar.setTitle(LocaleController.getString("ASettings", R.string.ASettings));
+        actionBar.setBackgroundColor(Color.TRANSPARENT);
+        actionBar.setCastShadows(false);
+        actionBar.setAddToContainer(false);
+        
+        int color = isDark ? Color.WHITE : 0xFF1A1A2E;
+        actionBar.setItemsColor(color, false);
+        actionBar.setTitleColor(color);
+        
+        final FrameLayout searchContainer = new FrameLayout(context);
+        searchContainer.setVisibility(View.GONE);
+        searchContainer.setAlpha(0.0f);
+        
+        org.telegram.ui.Components.RecyclerListView searchListView = new org.telegram.ui.Components.RecyclerListView(context);
+        searchListView.setLayoutManager(new LinearLayoutManager(context));
+        searchListView.setPadding(0, AndroidUtilities.dp(64) + (AndroidUtilities.isTablet() ? 0 : AndroidUtilities.statusBarHeight), 0, AndroidUtilities.dp(16));
+        searchListView.setClipToPadding(true);
+        
+        final SearchAdapter searchAdapter = new SearchAdapter(context);
+        searchListView.setAdapter(searchAdapter);
+        searchContainer.addView(searchListView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        
+        final int search_id = 1;
+        final int cloud_id = 2;
+        org.telegram.ui.ActionBar.ActionBarMenu menu = actionBar.createMenu();
+        org.telegram.ui.ActionBar.ActionBarMenuItem searchItem = menu.addItem(search_id, R.drawable.ic_ab_search_solar);
+        searchItem.setIsSearchField(true).setActionBarMenuItemSearchListener(new org.telegram.ui.ActionBar.ActionBarMenuItem.ActionBarMenuItemSearchListener() {
+            @Override
+            public void onSearchExpand() {
+                searchContainer.setVisibility(View.VISIBLE);
+                searchContainer.animate().alpha(1.0f).setDuration(200).start();
+                listView.animate().alpha(0.0f).setDuration(200).start();
+                loadRecentSearches();
+                searchAdapter.search("");
+            }
+            @Override
+            public void onSearchCollapse() {
+                searchContainer.animate().alpha(0.0f).setDuration(200).withEndAction(() -> searchContainer.setVisibility(View.GONE)).start();
+                listView.animate().alpha(1.0f).setDuration(200).start();
+                searchAdapter.clear();
+            }
+            @Override
+            public void onTextChanged(android.widget.EditText editText) {
+                String query = editText.getText().toString();
+                searchAdapter.search(query);
+            }
+        });
+        searchItem.setSearchFieldHint("Search anything...");
+        
+        org.telegram.ui.ActionBar.ActionBarMenuItem cloudItem = menu.addItem(cloud_id, R.drawable.cloud_sync);
+        if (searchItem != null) searchItem.setIconColor(color);
+        if (cloudItem != null) cloudItem.setIconColor(color);
+        
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
             public void onItemClick(int id) {
                 if (id == -1) {
                     finishFragment();
-                } else if (id == MENU_SEARCH) {
-                    showSettingsSearchDialog();
-                } else if (id == MENU_SYNC) {
+                } else if (id == cloud_id) {
                     CloudSettingsHelper.getInstance().showDialog(NekoSettingsActivity.this);
                 }
             }
         });
 
-        return view;
-    }
+        actionBar.getTitleTextView().setAlpha(0.0f);
+        
+        listView = new org.telegram.ui.Components.BlurredRecyclerView(context);
+        listView.disableBlurTopPadding = true;
+        listView.setLayoutManager(layoutManager = new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
+        listView.setVerticalScrollBarEnabled(false);
+        listView.setPadding(0, AndroidUtilities.dp(40) + (AndroidUtilities.isTablet() ? 0 : AndroidUtilities.statusBarHeight), 0, AndroidUtilities.dp(40));
+        listView.setClipToPadding(false);
+        listView.setAdapter(listAdapter = createAdapter(context));
+        listView.setOnItemClickListener(this::onItemClick);
+        listView.setOnItemLongClickListener(this::onItemLongClick);
+        listView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                int scrollY = recyclerView.computeVerticalScrollOffset();
+                float alpha = Math.max(0, Math.min(1.0f, (scrollY - AndroidUtilities.dp(100)) / (float) AndroidUtilities.dp(60)));
+                actionBar.getTitleTextView().setAlpha(alpha);
+                actionBar.setBackgroundColor(ColorUtils.setAlphaComponent(isDark ? 0xFF1E2732 : Color.WHITE, (int) (alpha * 255)));
+            }
+        });
+        
+        frameLayout.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        frameLayout.addView(searchContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));  frameLayout.addView(actionBar, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
-    /**
-     * @noinspection SizeReplaceableByIsEmpty
-     */
-    private void showSettingsSearchDialog() {
-        try {
-            Activity parent = getParentActivity();
-            if (parent == null) return;
-
-            ArrayList<SettingsSearchResult> results = SettingsHelper.onCreateSearchArray(fragment -> AndroidUtilities.runOnUIThread(() -> {
-                try {
-                    presentFragment(fragment);
-                } catch (Exception ignore) {
-                }
-            }));
-
-            final ArrayList<SettingsSearchResult> filtered = new ArrayList<>(results);
-            final String[] currentQuery = new String[]{""};
-            final int searchHeight = dp(36);
-            final int clearSize = dp(36);
-            final int pad = dp(12);
-
-            LinearLayout containerLayout = new LinearLayout(parent);
-            containerLayout.setOrientation(LinearLayout.VERTICAL);
-            containerLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
-
-            FrameLayout searchFrame = new FrameLayout(parent);
-            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, searchHeight + dp(12));
-            layoutParams.leftMargin = dp(10);
-            layoutParams.rightMargin = dp(10);
-            layoutParams.topMargin = dp(6);
-            layoutParams.bottomMargin = dp(2);
-            searchFrame.setLayoutParams(layoutParams);
-            searchFrame.setClipToPadding(true);
-            searchFrame.setClipChildren(true);
-
-            ImageView searchIcon = new ImageView(parent);
-            searchIcon.setScaleType(ImageView.ScaleType.CENTER);
-            searchIcon.setImageResource(R.drawable.ic_ab_search_solar);
-            searchIcon.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_windowBackgroundWhiteGrayIcon), PorterDuff.Mode.MULTIPLY));
-            searchFrame.addView(searchIcon, LayoutHelper.createFrame(48, 48, Gravity.LEFT | Gravity.CENTER_VERTICAL));
-
-            EditTextBoldCursor searchField = new EditTextBoldCursor(parent);
-            searchField.setHint(getString(R.string.Search));
-            searchField.setTextColor(getThemedColor(Theme.key_dialogTextBlack));
-            searchField.setHintTextColor(getThemedColor(Theme.key_windowBackgroundWhiteHintText));
-            searchField.setSingleLine(true);
-            searchField.setBackground(null);
-            searchField.setInputType(InputType.TYPE_CLASS_TEXT);
-            searchField.setLineColors(getThemedColor(Theme.key_windowBackgroundWhiteInputField), getThemedColor(Theme.key_windowBackgroundWhiteInputFieldActivated), getThemedColor(Theme.key_text_RedRegular));
-            searchField.setPadding(dp(61), pad / 2, dp(48), pad / 2);
-            searchField.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT, Gravity.CENTER_VERTICAL));
-            searchFrame.addView(searchField);
-
-            ImageView clearButton = new ImageView(parent);
-            clearButton.setScaleType(ImageView.ScaleType.CENTER);
-            clearButton.setImageResource(R.drawable.ic_close_white);
-            clearButton.setBackground(Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector), Theme.RIPPLE_MASK_CIRCLE_20DP));
-            clearButton.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_windowBackgroundWhiteGrayIcon), PorterDuff.Mode.MULTIPLY));
-            clearButton.setLayoutParams(new FrameLayout.LayoutParams(clearSize, clearSize, Gravity.END | Gravity.CENTER_VERTICAL));
-            searchFrame.addView(clearButton);
-            containerLayout.addView(searchFrame);
-
-            AlertDialog.Builder builder = new AlertDialog.Builder(parent, resourceProvider);
-            builder.setView(containerLayout);
-            builder.setNegativeButton(getString(R.string.Close), null);
-            final AlertDialog dialog = builder.create();
-            dialog.setOnShowListener(d -> {
-                try {
-                    searchField.requestFocus();
-                    AndroidUtilities.showKeyboard(searchField);
-                } catch (Exception ignore) {
-                }
-            });
-
-            RecyclerListView searchListView = new RecyclerListView(parent);
-            searchListView.setOverScrollMode(OVER_SCROLL_NEVER);
-            searchListView.setLayoutManager(new LinearLayoutManager(parent, LinearLayoutManager.VERTICAL, false));
-
-            var adapter = new RecyclerListView.SelectionAdapter() {
-                @Override
-                public boolean isEnabled(RecyclerView.ViewHolder holder) {
-                    return true;
-                }
-
-                @NonNull
-                @Override
-                public RecyclerListView.Holder onCreateViewHolder(@NonNull ViewGroup parent1, int viewType) {
-                    View view = new SettingsSearchCell(parent);
-                    view.setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
-                    return new RecyclerListView.Holder(view);
-                }
-
-                @Override
-                public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-                    SettingsSearchCell cell = (SettingsSearchCell) holder.itemView;
-                    SettingsSearchResult r = filtered.get(position);
-                    String[] path = r.path2 != null ? new String[]{r.path1, r.path2} : new String[]{r.path1};
-                    CharSequence titleToSet = r.searchTitle == null ? "" : r.searchTitle;
-                    String q = currentQuery[0];
-                    if (q != null && !q.isEmpty() && titleToSet.length() > 0) {
-                        SpannableStringBuilder ss = new SpannableStringBuilder(titleToSet);
-                        String lower = titleToSet.toString().toLowerCase();
-                        String[] parts = q.split("\\s+");
-                        int highlightColor = getThemedColor(Theme.key_windowBackgroundWhiteBlueText4);
-                        for (String p : parts) {
-                            if (p.isEmpty()) continue;
-                            int idx = 0;
-                            while (true) {
-                                int found = lower.indexOf(p, idx);
-                                if (found == -1) break;
-                                try {
-                                    ss.setSpan(new ForegroundColorSpan(highlightColor), found, found + p.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                                } catch (Exception ignore) {
-                                }
-                                idx = found + p.length();
-                            }
-                        }
-                        titleToSet = ss;
-                    }
-                    cell.setTextAndValueAndIcon(titleToSet, path, r.iconResId, position < filtered.size() - 1);
-                }
-
-                @Override
-                public int getItemCount() {
-                    return filtered.size();
-                }
-            };
-
-            searchListView.setAdapter(adapter);
-            searchListView.setOnItemClickListener((v, position) -> {
-                if (position < 0 || position >= filtered.size()) return;
-                SettingsSearchResult r = filtered.get(position);
-                try {
-                    if (r.openRunnable != null) r.openRunnable.run();
-                } catch (Exception ignore) {
-                }
-                dialog.dismiss();
-            });
-
-            containerLayout.addView(searchListView, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
-
-            searchField.addTextChangedListener(new TextWatcher() {
-                @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                }
-
-                @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-                }
-
-                @SuppressLint("NotifyDataSetChanged")
-                @Override
-                public void afterTextChanged(Editable s) {
-                    String q = s.toString().toLowerCase().trim();
-                    currentQuery[0] = q;
-                    filtered.clear();
-                    if (q.isEmpty()) {
-                        filtered.addAll(results);
-                    } else {
-                        String[] parts = q.split("\\s+");
-                        for (SettingsSearchResult item : results) {
-                            String title = item.searchTitle == null ? "" : item.searchTitle.toLowerCase();
-                            boolean ok = true;
-                            for (String p : parts) {
-                                if (!title.contains(p)) {
-                                    ok = false;
-                                    break;
-                                }
-                            }
-                            if (ok) filtered.add(item);
-                        }
-                    }
-                    adapter.notifyDataSetChanged();
-                    searchIcon.setVisibility(q.length() > 20 ? View.GONE : View.VISIBLE);
-                    clearButton.setVisibility(q.isEmpty() ? View.GONE : View.VISIBLE);
-                }
-            });
-
-            clearButton.setOnClickListener(v -> {
-                searchField.setText("");
-                searchField.requestFocus();
-                AndroidUtilities.showKeyboard(searchField);
-            });
-            clearButton.setVisibility(View.GONE);
-
-            showDialog(dialog);
-        } catch (Exception ignore) {
-        }
+        return fragmentView;
     }
 
     @Override
-    protected String getActionBarTitle() {
-        return getString(R.string.NekoSettings);
+    public void onResume() {
+        super.onResume();
+        updateRows();
+        if (listAdapter != null) {
+            listAdapter.notifyDataSetChanged();
+        }
     }
 
-    @SuppressLint("ApplySharedPref")
+    private void setupColors() {
+        isDark = Theme.getActiveTheme().isDark();
+        if (isDark) {
+            cardBg = 0x221E2732;
+            cardBorder = 0x15FFFFFF;
+            dividerColor = 0x10FFFFFF;
+        } else {
+            cardBg = 0x40FFFFFF;
+            cardBorder = 0x20000000;
+            dividerColor = 0x15000000;
+        }
+    }
+
     @Override
     protected void onItemClick(View view, int position, float x, float y) {
-        if (position == chatRow) {
-            presentFragment(new NekoChatSettingsActivity());
-        } else if (position == generalRow) {
-            presentFragment(new NekoGeneralSettingsActivity());
-        } else if (position == passcodeRow) {
-            presentFragment(new NekoPasscodeSettingsActivity());
-        } else if (position == experimentRow) {
-            presentFragment(new NekoExperimentalSettingsActivity());
-        } else if (position == translatorRow) {
-            presentFragment(new NekoTranslatorSettingsActivity());
-        } else if (position == aboutRow) {
-            presentFragment(new NekoAboutActivity());
-        } else if (position == importSettingsRow) {
-            if (Build.VERSION.SDK_INT >= 33) {
-                openFilePicker();
+        if (position >= quickSettingsStartRow && position < quickSettingsEndRow) {
+            QuickSettingEntry entry = QuickSettingsController.getInstance().getQuickSettings().get(position - quickSettingsStartRow);
+            if (entry.type == QuickSettingEntry.TYPE_SWITCH) {
+                ConfigItem config = findConfig(entry.key);
+                if (config != null) {
+                    config.toggleConfigBool();
+                    if (view instanceof CardSwitchCell) {
+                        ((CardSwitchCell) view).setChecked(config.Bool());
+                    }
+                }
             } else {
-                DocumentSelectActivity activity = getDocumentSelectActivity(getParentActivity());
-                if (activity != null) {
-                    presentFragment(activity);
+                try {
+                    Class<?> clazz = Class.forName(entry.activityClass);
+                    BaseFragment fragment = (BaseFragment) clazz.getConstructor().newInstance();
+                    android.os.Bundle args = new android.os.Bundle();
+                    args.putString("scrollToKey", entry.key);
+                    fragment.setArguments(args);
+                    presentFragment(fragment);
+                } catch (Exception e) {
+                    org.telegram.messenger.FileLog.e(e);
                 }
             }
-        } else if (position == resetSettingsRow) {
-            AlertUtil.showConfirm(getParentActivity(),
-                    getString(R.string.ResetSettingsAlert),
-                    R.drawable.msg_reset,
-                    getString(R.string.Reset),
-                    true,
-                    () -> {
-                        ApplicationLoader.applicationContext.getSharedPreferences("nekocloud", Activity.MODE_PRIVATE).edit().clear().commit();
-                        ApplicationLoader.applicationContext.getSharedPreferences("nekox_config", Activity.MODE_PRIVATE).edit().clear().commit();
-                        NekoConfig.getPreferences().edit().clear().commit();
-                        AppRestartHelper.triggerRebirth(getParentActivity(), new Intent(getParentActivity(), LaunchActivity.class));
-                    });
-        } else if (position == exportSettingsRow) {
-            SettingsBackupHelper.backupSettings(getParentActivity(), resourceProvider);
-        } else if (position == appRestartRow) {
-            AppRestartHelper.triggerRebirth(getParentActivity(), new Intent(getParentActivity(), LaunchActivity.class));
         }
+    }
+
+    @Override
+    protected boolean onItemLongClick(View view, int position, float x, float y) {
+        if (position >= quickSettingsStartRow && position < quickSettingsEndRow) {
+            String key = rowMapReverse.get(position);
+            if (key != null) {
+                ItemOptions options = makeLongClickOptions(view);
+                options.add(R.drawable.msg_delete, "Remove from Quick Settings", () -> {
+                    QuickSettingsController.getInstance().removeQuickSetting(key);
+                    updateRows();
+                    listAdapter.notifyDataSetChanged();
+                    BulletinFactory.of(this).createSimpleBulletin(R.drawable.msg_delete, "Removed from Quick Settings").show();
+                });
+                options.show();
+                return true;
+            }
+        }
+        return super.onItemLongClick(view, position, x, y);
+    }
+
+    private ConfigItem findConfig(String key) {
+        for (ConfigItem config : NekoConfig.getAllConfigs()) {
+            if (config.key.equals(key)) return config;
+        }
+        for (ConfigItem config : NaConfig.INSTANCE.getAllConfigs()) {
+            if (config.key.equals(key)) return config;
+        }
+        return null;
     }
 
     @Override
@@ -380,236 +346,630 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         return new ListAdapter(context);
     }
 
-	// [Alexgram: A-Settings UI] - Start
-	private class ListAdapter extends BaseListAdapter {
-
-		public ListAdapter(Context context) {
-			super(context);
-		}
-
-		@NonNull
-		@Override
-		public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-			if (viewType == 100) {
-				View view = new CardItemCell(mContext);
-				view.setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
-				return new RecyclerListView.Holder(view);
-			}
-			return super.onCreateViewHolder(parent, viewType);
-		}
-
-		@Override
-		public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position, boolean partial) {
-			int viewType = holder.getItemViewType();
-			if (viewType == 100) {
-				CardItemCell cell = (CardItemCell) holder.itemView;
-				String title = "";
-				int iconRes = 0;
-				boolean first = false;
-				boolean last = false;
-
-				if (position == generalRow) {
-					title = getString(R.string.General);
-					iconRes = R.drawable.msg_colors_solar;
-					first = true;
-					last = false;
-				} else if (position == translatorRow) {
-					title = getString(R.string.TranslatorSettings);
-					iconRes = R.drawable.ic_translate;
-					first = false;
-					last = false;
-				} else if (position == chatRow) {
-					title = getString(R.string.Chat);
-					iconRes = R.drawable.msg_discussion_solar;
-					first = false;
-					last = false;
-				} else if (position == passcodeRow) {
-					title = getString(R.string.PasscodeNeko);
-					iconRes = R.drawable.msg_secret_solar;
-					first = false;
-					last = false;
-				} else if (position == experimentRow) {
-					title = getString(R.string.Experimental);
-					iconRes = R.drawable.msg_fave_solar;
-					first = false;
-					last = true;
-				} else if (position == importSettingsRow) {
-					title = getString(R.string.ImportSettings);
-					iconRes = R.drawable.msg_photo_settings_solar;
-					first = true;
-					last = false;
-				} else if (position == exportSettingsRow) {
-					title = getString(R.string.BackupSettings);
-					iconRes = R.drawable.msg_shareout_solar;
-					first = false;
-					last = false;
-				} else if (position == resetSettingsRow) {
-					title = getString(R.string.ResetSettings);
-					iconRes = R.drawable.msg_reset_solar;
-					first = false;
-					last = false;
-				} else if (position == appRestartRow) {
-					title = getString(R.string.RestartApp);
-					iconRes = R.drawable.msg_retry_solar;
-					first = false;
-					last = true;
-				} else if (position == aboutRow) {
-					title = getString(R.string.About);
-					iconRes = R.drawable.msg_info_solar;
-					first = true;
-					last = true;
-				}
-
-				cell.setData(title, iconRes, first, last);
-			} else {
-				super.onBindViewHolder(holder, position, partial);
-			}
-		}
-
-		@Override
-		public int getItemViewType(int position) {
-			if (position == categoriesEndRow || position == nSettingsEndRow) {
-				return TYPE_SHADOW;
-			} else if (position == chatRow || position == generalRow || position == passcodeRow || position == experimentRow || position == translatorRow ||
-					position == importSettingsRow || position == exportSettingsRow || position == resetSettingsRow || position == appRestartRow ||
-					position == aboutRow) {
-				return 100;
-			}
-			return TYPE_SHADOW;
-		}
-	}
-
-	private class CardItemCell extends FrameLayout {
-		private final LinearLayout container;
-		private final ImageView iconView;
-		private final TextView titleView;
-		private final ImageView arrowView;
-		private final View divider;
-
-		public CardItemCell(Context context) {
-			super(context);
-			setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
-			setPadding(dp(16), 0, dp(16), 0);
-
-			container = new LinearLayout(context);
-			container.setOrientation(LinearLayout.HORIZONTAL);
-			container.setGravity(Gravity.CENTER_VERTICAL);
-			container.setPadding(dp(16), dp(16), dp(16), dp(16));
-
-			iconView = new ImageView(context);
-			iconView.setScaleType(ImageView.ScaleType.CENTER);
-			container.addView(iconView, LayoutHelper.createLinear(24, 24));
-
-			titleView = new TextView(context);
-			titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
-			titleView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
-			titleView.setPadding(dp(16), 0, 0, 0);
-			container.addView(titleView, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f));
-
-			arrowView = new ImageView(context);
-			arrowView.setImageResource(R.drawable.msg_arrowright);
-			container.addView(arrowView, LayoutHelper.createLinear(20, 20));
-
-			addView(container, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
-
-			divider = new View(context);
-			addView(divider, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 1, Gravity.BOTTOM, 56, 0, 16, 0));
-		}
-
-		public void setData(String title, int iconRes, boolean first, boolean last) {
-			titleView.setText(title);
-			iconView.setImageResource(iconRes);
-
-			GradientDrawable bg = new GradientDrawable();
-			bg.setColor(NekoSettingsActivity.this.cardBg);
-			float r = dp(16);
-			bg.setCornerRadii(new float[]{
-					first ? r : 0, first ? r : 0,
-					first ? r : 0, first ? r : 0,
-					last ? r : 0, last ? r : 0,
-					last ? r : 0, last ? r : 0
-			});
-			container.setBackground(bg);
-
-			int titleColor = NekoSettingsActivity.this.isDark ? Color.WHITE : 0xFF1A1A2E;
-			titleView.setTextColor(titleColor);
-
-			int iconColor = NekoSettingsActivity.this.isDark ? Color.WHITE : 0xFF1A1A2E;
-			iconView.setColorFilter(new PorterDuffColorFilter(iconColor, PorterDuff.Mode.SRC_IN));
-			arrowView.setColorFilter(new PorterDuffColorFilter(NekoSettingsActivity.this.isDark ? 0x33FFFFFF : 0x22000000, PorterDuff.Mode.SRC_IN));
-
-			divider.setBackgroundColor(NekoSettingsActivity.this.dividerColor);
-			divider.setVisibility(last ? GONE : VISIBLE);
-		}
-	}
-	// [Alexgram: A-Settings UI] - End
-
-    private DocumentSelectActivity getDocumentSelectActivity(Activity parent) {
-        try {
-            if (parent.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                parent.requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, BasePermissionsActivity.REQUEST_CODE_EXTERNAL_STORAGE);
-                return null;
-            }
-        } catch (Throwable ignore) {
-        }
-        DocumentSelectActivity fragment = new DocumentSelectActivity(false);
-        fragment.setMaxSelectedFiles(1);
-        fragment.setAllowPhoto(false);
-        fragment.setDelegate(new DocumentSelectActivity.DocumentSelectActivityDelegate() {
-            @Override
-            public void didSelectFiles(DocumentSelectActivity activity, ArrayList<String> files, String caption, boolean notify, int scheduleDate) {
-                activity.finishFragment();
-                SettingsBackupHelper.importSettings(parent, new File(files.get(0)));
-            }
-
-            @Override
-            public void didSelectPhotos(ArrayList<SendMessagesHelper.SendingMediaInfo> photos, boolean notify, int scheduleDate) {
-            }
-
-            @Override
-            public void startDocumentSelectActivity() {
-            }
-        });
-        return fragment;
-    }
-
-    private void openFilePicker() {
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType("application/json");
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        try {
-            startActivityForResult(intent, 21);
-        } catch (android.content.ActivityNotFoundException ex) {
-            AlertUtil.showSimpleAlert(getParentActivity(), ex);
-        }
-    }
-
     @Override
-    public void onActivityResultFragment(int requestCode, int resultCode, Intent data) {
-        if (requestCode == 21 && resultCode == Activity.RESULT_OK && data != null) {
-            Uri uri = data.getData();
-            if (uri != null) {
-                File cacheDir = AndroidUtilities.getCacheDir();
-                String tempFile = UUID.randomUUID().toString().replace("-", "") + ".nekox-settings.json";
-                File file = new File(cacheDir.getPath(), tempFile);
-                try {
-                    final InputStream inputStream = ApplicationLoader.applicationContext.getContentResolver().openInputStream(uri);
-                    if (inputStream != null) {
-                        OutputStream outputStream = new FileOutputStream(file);
-                        final byte[] buffer = new byte[4 * 1024];
-                        int read;
-                        while ((read = inputStream.read(buffer)) != -1) {
-                            outputStream.write(buffer, 0, read);
+    protected String getActionBarTitle() {
+        return LocaleController.getString("ASettings", R.string.ASettings);
+    }
+
+    private class ListAdapter extends BaseListAdapter {
+
+        public ListAdapter(Context context) {
+            super(context);
+        }
+
+        @NonNull
+        @Override
+        public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View view;
+            switch (viewType) {
+                case 0: view = new BrandingHeaderView(mContext); break;
+                case 1: view = new SectionHeaderCell(mContext); break;
+                case 2: view = new CardSwitchCell(mContext); break;
+                case 3: view = new CardItemCell(mContext); break;
+                case 4: view = new ActionsCell(mContext); break;
+                case 5: view = new FooterCell(mContext); break;
+                case 6: view = new CardSwitchCell(mContext); break; // Quick Setting Switch
+                case 7: view = new CardItemCell(mContext); break; // Quick Setting Dialog/Nav
+                default: view = new View(mContext); break;
+            }
+            return new RecyclerListView.Holder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position, boolean partial) {
+            int viewType = holder.getItemViewType();
+            if (viewType == 0) {
+                ((BrandingHeaderView) holder.itemView).update();
+            } else if (viewType == 1) {
+                SectionHeaderCell cell = (SectionHeaderCell) holder.itemView;
+                if (position == quickSettingsHeaderRow) cell.setText("QUICK SETTINGS");
+                else if (position == privacyHeaderRow) cell.setText("PRIVACY");
+                else if (position == coreHeaderRow) cell.setText("CORE SETTINGS");
+                else if (position == advancedHeaderRow) cell.setText("ADVANCED");
+            } else if (viewType == 6) {
+                CardSwitchCell cell = (CardSwitchCell) holder.itemView;
+                QuickSettingEntry entry = QuickSettingsController.getInstance().getQuickSettings().get(position - quickSettingsStartRow);
+                ConfigItem config = findConfig(entry.key);
+                int resId = mContext.getResources().getIdentifier(entry.iconResName, "drawable", mContext.getPackageName());
+                if (resId == 0) resId = R.drawable.msg_settings;
+                
+                boolean isLast = position == quickSettingsEndRow - 1;
+                cell.setData(entry.title, null, resId, config != null && config.Bool(), isChecked -> {
+                    if ("music_graph".equals(entry.key) && isChecked && android.os.Build.VERSION.SDK_INT >= 23 && getParentActivity().checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                        android.content.SharedPreferences prefs = org.telegram.messenger.MessagesController.getGlobalMainSettings();
+                        if (prefs.getBoolean("asked_mic_music_graph", false) || !getParentActivity().shouldShowRequestPermissionRationale(android.Manifest.permission.RECORD_AUDIO)) {
+                            tw.nekomimi.nekogram.utils.AlertUtil.showMicPermissionDialog(getParentActivity());
+                        } else {
+                            prefs.edit().putBoolean("asked_mic_music_graph", true).apply();
+                            getParentActivity().requestPermissions(new String[]{android.Manifest.permission.RECORD_AUDIO}, 101);
                         }
-                        inputStream.close();
-                        outputStream.flush();
-                        outputStream.close();
-                        SettingsBackupHelper.importSettings(getParentActivity(), file);
+                        cell.setChecked(false);
+                        return;
                     }
-                } catch (Exception ignore) {
+                    if (config != null) {
+                        config.setConfigBool(isChecked);
+                        if ("HideContacts".equals(config.key)) {
+                            AppRestartHelper.triggerRebirth(mContext, new Intent(mContext, LaunchActivity.class));
+                        }
+                    }
+                    NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.reloadInterface);
+                }, position == quickSettingsStartRow, isLast);
+            } else if (viewType == 7) {
+                CardItemCell cell = (CardItemCell) holder.itemView;
+                QuickSettingEntry entry = QuickSettingsController.getInstance().getQuickSettings().get(position - quickSettingsStartRow);
+                ConfigItem config = findConfig(entry.key);
+                int resId = mContext.getResources().getIdentifier(entry.iconResName, "drawable", mContext.getPackageName());
+                if (resId == 0) resId = R.drawable.msg_settings;
+                
+                String subtitle = entry.subtitle;
+                if (config != null) {
+                    if (config.type == ConfigItem.configTypeString || config.type == ConfigItem.configTypeInt) {
+                        subtitle = config.String();
+                    }
+                }
+                
+                boolean isLast = position == quickSettingsEndRow - 1;
+                cell.setData(entry.title, subtitle, resId, 0xFF2196F3, v -> onItemClick(cell, position, 0, 0), position == quickSettingsStartRow, isLast);
+            } else if (viewType == 2) {
+                CardSwitchCell cell = (CardSwitchCell) holder.itemView;
+                if (position == hideContactsRow) {
+                    cell.setData("Hide Contacts", "Hide contacts tab", R.drawable.msg_contacts, NaConfig.INSTANCE.getHideContacts().Bool(), isChecked -> {
+                        NaConfig.INSTANCE.getHideContacts().setConfigBool(isChecked);
+                        AppRestartHelper.triggerRebirth(mContext, new Intent(mContext, LaunchActivity.class));
+                    }, true, false);
+                } else if (position == ghostModeRow) {
+                    cell.setData("Ghost Mode", "Read silently", R.drawable.msg_secret, NekoConfig.isGhostModeActive(), isChecked -> NekoConfig.setGhostMode(isChecked), false, false);
+                } else if (position == musicGraphRow) {
+                    cell.setData("Music Graph", "Visualizer in player", R.drawable.baseline_music_note_24, NaConfig.INSTANCE.getMusicGraph().Bool(), isChecked -> {
+                        if (isChecked && android.os.Build.VERSION.SDK_INT >= 23 && getParentActivity().checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                            android.content.SharedPreferences prefs = org.telegram.messenger.MessagesController.getGlobalMainSettings();
+                            if (prefs.getBoolean("asked_mic_music_graph", false) || !getParentActivity().shouldShowRequestPermissionRationale(android.Manifest.permission.RECORD_AUDIO)) {
+                                tw.nekomimi.nekogram.utils.AlertUtil.showMicPermissionDialog(getParentActivity());
+                            } else {
+                                prefs.edit().putBoolean("asked_mic_music_graph", true).apply();
+                                getParentActivity().requestPermissions(new String[]{android.Manifest.permission.RECORD_AUDIO}, 101);
+                            }
+                            cell.setChecked(false);
+                            return;
+                        }
+                        NaConfig.INSTANCE.getMusicGraph().setConfigBool(isChecked);
+                    }, false, false);
+                } else if (position == saveDeletedRow) {
+                    cell.setData("Save Deleted", "Save deleted messages", R.drawable.msg_delete_solar, NaConfig.INSTANCE.getEnableSaveDeletedMessages().Bool(), isChecked -> NaConfig.INSTANCE.getEnableSaveDeletedMessages().setConfigBool(isChecked), false, true);
+                }
+            } else if (viewType == 3) {
+                CardItemCell cell = (CardItemCell) holder.itemView;
+                if (position == hiddenChatsRow) {
+                    cell.setData("Hidden Chats", "Private conversations", R.drawable.msg_secret, 0xFF2196F3, v -> {
+                        tw.nekomimi.nekogram.helpers.HiddenChatsController controller = tw.nekomimi.nekogram.helpers.HiddenChatsController.getInstance();
+                        if (controller.hasPasscode()) {
+                            presentFragment(new tw.nekomimi.nekogram.ui.HiddenChatsPasscodeActivity(tw.nekomimi.nekogram.ui.HiddenChatsPasscodeActivity.MODE_UNLOCK_SETTINGS));
+                        } else {
+                            presentFragment(new tw.nekomimi.nekogram.ui.HiddenChatsPasscodeActivity(tw.nekomimi.nekogram.ui.HiddenChatsPasscodeActivity.MODE_SETUP_PASSCODE));
+                        }
+                    }, true, false);
+                } else if (position == analyticsRow) {
+                    cell.setData("Analytics & Control", "Usage stats, chat lock & focus mode", R.drawable.msg_stats_solar, 0xFF2196F3, v -> {
+                        Intent intent = new Intent(getParentActivity(), xyz.nextalone.nagram.analytics.ui.AnalyticsDashboardActivity.class);
+                        getParentActivity().startActivity(intent);
+                    }, false, true);
+
+                } else if (position == coreSettingsRow) {
+                    List<CoreItem> items = new ArrayList<>();
+                    items.add(new CoreItem("General", "Appearance, Language, Behavior", R.drawable.msg_settings, 0xFF2196F3, v -> presentFragment(new NekoGeneralSettingsActivity())));
+                    items.add(new CoreItem("Translator", "Messages, Languages, Engine", R.drawable.ic_translate, 0xFF9C27B0, v -> presentFragment(new NekoTranslatorSettingsActivity())));
+                    items.add(new CoreItem("AI Assistance", "Alexgram assistant behavior & animations", R.drawable.settings_chat, 0xFF8E44AD, v -> presentFragment(new AIAssistanceSettingsActivity())));
+                    items.add(new CoreItem("Chats", "UI, Privacy, Media", R.drawable.msg_discussion, 0xFF4CAF50, v -> presentFragment(new NekoChatSettingsActivity())));
+                    if (!PasscodeHelper.isSettingsHidden()) {
+                        items.add(new CoreItem("Passcode", "Security & Fingerprint", R.drawable.msg_permissions, 0xFFF44336, v -> presentFragment(new NekoPasscodeSettingsActivity())));
+                    }
+                    cell.setMultiData(items.toArray(new CoreItem[0]));
+                } else if (position == advancedSettingsRow) {
+                    cell.setMultiData(new CoreItem[]{
+                            new CoreItem("Cloud Settings", "Sync, backup, and restore", R.drawable.cloud_sync, 0xFF00BCD4, v -> CloudSettingsHelper.getInstance().showDialog(NekoSettingsActivity.this)),
+                            new CoreItem("Experimental", "Beta Tools & Features", R.drawable.msg_fave, 0xFF673AB7, v -> presentFragment(new NekoExperimentalSettingsActivity()))
+                    });
+                }
+            } else if (viewType == 4) {
+                ((ActionsCell) holder.itemView).update();
+            } else if (viewType == 5) {
+                ((FooterCell) holder.itemView).update();
+            }
+        }
+
+        @Override
+        public int getItemViewType(int position) {
+            if (position == headerRow) return 0;
+            if (position == quickSettingsHeaderRow || position == privacyHeaderRow || position == coreHeaderRow || position == advancedHeaderRow) return 1;
+            if (position == hideContactsRow || position == ghostModeRow || position == musicGraphRow || position == saveDeletedRow) return 2;
+            if (position == hiddenChatsRow || position == analyticsRow || position == coreSettingsRow || position == advancedSettingsRow) return 3;
+            if (position >= quickSettingsStartRow && position < quickSettingsEndRow) {
+                QuickSettingEntry entry = QuickSettingsController.getInstance().getQuickSettings().get(position - quickSettingsStartRow);
+                return entry.type == QuickSettingEntry.TYPE_SWITCH ? 6 : 7;
+            }
+            if (position == actionsRow) return 4;
+            if (position == footerRow) return 5;
+            return -1;
+        }
+
+        @Override
+        public boolean isEnabled(RecyclerView.ViewHolder holder) {
+            int viewType = holder.getItemViewType();
+            return viewType == 2 || viewType == 3 || viewType == 4 || viewType == 6 || viewType == 7;
+        }
+    }
+
+    private class BrandingHeaderView extends FrameLayout {
+        private final ImageView logoView;
+        private final TextView nameView;
+        private final TextView versionView;
+
+        public BrandingHeaderView(Context context) {
+            super(context);
+            setPadding(0, dp(32), 0, dp(4));
+            setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
+
+            FrameLayout logoContainer = new FrameLayout(context);
+            if (android.os.Build.VERSION.SDK_INT >= 21) {
+                logoContainer.setOutlineProvider(new android.view.ViewOutlineProvider() {
+                    @Override
+                    public void getOutline(View view, android.graphics.Outline outline) {
+                        outline.setOval(0, 0, view.getWidth(), view.getHeight());
+                    }
+                });
+                logoContainer.setClipToOutline(true);
+            }
+            GradientDrawable logoBg = new GradientDrawable();
+            logoBg.setShape(GradientDrawable.OVAL);
+            logoBg.setColor(Color.TRANSPARENT);
+            logoContainer.setBackground(logoBg);
+            addView(logoContainer, LayoutHelper.createFrame(60, 60, Gravity.CENTER_HORIZONTAL));
+
+            logoView = new ImageView(context);
+            if (android.os.Build.VERSION.SDK_INT >= 21) {
+                logoView.setOutlineProvider(new android.view.ViewOutlineProvider() {
+                    @Override
+                    public void getOutline(View view, android.graphics.Outline outline) {
+                        outline.setOval(0, 0, view.getWidth(), view.getHeight());
+                    }
+                });
+                logoView.setClipToOutline(true);
+            }
+            logoView.setImageResource(isDark ? R.drawable.ic_launcher_alexgram_dark : R.drawable.ic_launcher_alexgram_blue);
+            logoView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            logoContainer.addView(logoView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+
+            nameView = new TextView(context);
+            nameView.setText("Alexgram");
+            nameView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 18);
+            nameView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+            nameView.setTextColor(isDark ? Color.WHITE : 0xFF1A1A2E);
+            nameView.setGravity(Gravity.CENTER);
+            addView(nameView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 0, 72, 0, 0));
+
+            versionView = new TextView(context);
+            versionView.setText("v" + BuildVars.BUILD_VERSION_STRING);
+            versionView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
+            versionView.setAlpha(0.6f);
+            versionView.setTextColor(isDark ? Color.WHITE : 0xFF5C6B7F);
+            versionView.setGravity(Gravity.CENTER);
+            addView(versionView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 0, 96, 0, 0));
+        }
+        public void update() {
+            nameView.setTextColor(isDark ? Color.WHITE : 0xFF1A1A2E);
+            versionView.setTextColor(isDark ? 0xAAFFFFFF : 0xAA5C6B7F);
+            logoView.setImageResource(isDark ? R.drawable.ic_launcher_alexgram_dark : R.drawable.ic_launcher_alexgram_blue);
+        }
+    }
+
+    private class SectionHeaderCell extends FrameLayout {
+        private final TextView textView;
+        public SectionHeaderCell(Context context) {
+            super(context);
+            setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
+            setPadding(dp(22), dp(16), dp(16), dp(8));
+            textView = new TextView(context);
+            textView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11);
+            textView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+            textView.setLetterSpacing(0.05f);
+            textView.setTextColor(isDark ? 0x88FFFFFF : 0x885C6B7F);
+            addView(textView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
+        }
+        public void setText(String text) { textView.setText(text); }
+    }
+
+    private class CardSwitchCell extends FrameLayout {
+        private final LinearLayout container;
+        private final ImageView iconView;
+        private final TextView titleView;
+        private final TextView subtitleView;
+        private final Switch switchView;
+        private final View divider;
+
+        public CardSwitchCell(Context context) {
+            super(context);
+            setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
+            setPadding(dp(16), 0, dp(16), 0);
+            container = new LinearLayout(context);
+            container.setOrientation(LinearLayout.HORIZONTAL);
+            container.setGravity(Gravity.CENTER_VERTICAL);
+            container.setPadding(dp(14), dp(12), dp(14), dp(12));
+            iconView = new ImageView(context);
+            iconView.setScaleType(ImageView.ScaleType.CENTER);
+            container.addView(iconView, LayoutHelper.createLinear(32, 32));
+            LinearLayout texts = new LinearLayout(context);
+            texts.setOrientation(LinearLayout.VERTICAL);
+            texts.setPadding(dp(12), 0, 0, 0);
+            titleView = new TextView(context);
+            titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
+            titleView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+            texts.addView(titleView);
+            subtitleView = new TextView(context);
+            subtitleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
+            texts.addView(subtitleView);
+            container.addView(texts, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f));
+            switchView = new Switch(context);
+            container.addView(switchView, LayoutHelper.createLinear(44, 30, Gravity.CENTER_VERTICAL, 0, 0, 0, 0));
+            addView(container, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+            divider = new View(context);
+            addView(divider, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 1, Gravity.BOTTOM, 54, 0, 14, 0));
+        }
+
+        public void setChecked(boolean checked) {
+            switchView.setChecked(checked, true);
+        }
+
+        public void setData(String title, String subtitle, int iconRes, boolean checked, OnSwitchListener listener, boolean first, boolean last) {
+            titleView.setText(title);
+            subtitleView.setText(subtitle);
+            iconView.setImageResource(iconRes);
+            switchView.setChecked(checked, false);
+            GradientDrawable bg = new GradientDrawable();
+            bg.setColor(cardBg);
+            float r = dp(16);
+            bg.setCornerRadii(new float[]{first ? r : 0, first ? r : 0, first ? r : 0, first ? r : 0, last ? r : 0, last ? r : 0, last ? r : 0, last ? r : 0});
+            container.setBackground(bg);
+            titleView.setTextColor(isDark ? Color.WHITE : 0xFF1A1A2E);
+            subtitleView.setTextColor(isDark ? 0xAAFFFFFF : 0xAA5C6B7F);
+            iconView.setColorFilter(new PorterDuffColorFilter(checked ? 0xFF2196F3 : (isDark ? 0xFFAAAAAA : 0xFF777777), PorterDuff.Mode.SRC_IN));
+            
+            if (iconRes == R.drawable.msg_delete_solar) {
+                iconView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                iconView.setPadding(dp(2), dp(2), dp(2), dp(2));
+            } else {
+                iconView.setScaleType(ImageView.ScaleType.CENTER);
+                iconView.setPadding(0, 0, 0, 0);
+            }
+            
+            divider.setBackgroundColor(dividerColor);
+            divider.setVisibility(last ? GONE : VISIBLE);
+            setOnClickListener(v -> {
+                boolean target = !switchView.isChecked();
+                switchView.setChecked(target, true);
+                listener.onSwitch(target);
+                iconView.setColorFilter(new PorterDuffColorFilter(target ? 0xFF2196F3 : (isDark ? 0xFFAAAAAA : 0xFF777777), PorterDuff.Mode.SRC_IN));
+            });
+            setOnLongClickListener(v -> {
+                int position = -1;
+                if (getParent() instanceof RecyclerListView) {
+                    position = ((RecyclerListView) getParent()).getChildAdapterPosition(this);
+                }
+                return onItemLongClick(this, position, 0, 0);
+            });
+        }
+    }
+
+    private interface OnSwitchListener { void onSwitch(boolean isChecked); }
+
+    private class CardItemCell extends LinearLayout {
+        public CardItemCell(Context context) {
+            super(context);
+            setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
+            setOrientation(VERTICAL);
+            setPadding(dp(16), 0, dp(16), 8);
+        }
+        public void setData(String title, String subtitle, int iconRes, int iconColor, View.OnClickListener listener, boolean first, boolean last) {
+            removeAllViews();
+            addView(createItem(getContext(), title, subtitle, iconRes, iconColor, listener, first, last), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+        }
+        public void setMultiData(CoreItem[] items) {
+            removeAllViews();
+            for (int i = 0; i < items.length; i++) {
+                CoreItem item = items[i];
+                addView(createItem(getContext(), item.title, item.subtitle, item.iconRes, item.iconColor, item.listener, i == 0, i == items.length - 1), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+                if (i < items.length - 1) {
+                    View d = new View(getContext());
+                    d.setBackgroundColor(dividerColor);
+                    addView(d, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 1, 56, 0, 16, 0));
                 }
             }
-            super.onActivityResultFragment(requestCode, resultCode, data);
+        }
+        private View createItem(Context ctx, String title, String subtitle, int iconRes, int iconColor, View.OnClickListener listener, boolean first, boolean last) {
+            LinearLayout row = new LinearLayout(ctx);
+            row.setOrientation(HORIZONTAL);
+            row.setGravity(Gravity.CENTER_VERTICAL);
+            row.setPadding(dp(14), dp(12), dp(14), dp(12));
+            row.setClickable(true);
+            row.setOnClickListener(listener);
+            GradientDrawable bg = new GradientDrawable();
+            bg.setColor(cardBg);
+            float r = dp(16);
+            bg.setCornerRadii(new float[]{first ? r : 0, first ? r : 0, first ? r : 0, first ? r : 0, last ? r : 0, last ? r : 0, last ? r : 0, last ? r : 0});
+            row.setBackground(bg);
+            ImageView iconView = new ImageView(ctx);
+            iconView.setImageResource(iconRes);
+            iconView.setColorFilter(Color.WHITE);
+            iconView.setScaleType(ImageView.ScaleType.CENTER);
+            GradientDrawable iconBg = new GradientDrawable();
+            iconBg.setCornerRadius(dp(10));
+            iconBg.setColor(iconColor);
+            iconView.setBackground(iconBg);
+            row.addView(iconView, LayoutHelper.createLinear(32, 32));
+            LinearLayout texts = new LinearLayout(ctx);
+            texts.setOrientation(VERTICAL);
+            texts.setPadding(dp(12), 0, 0, 0);
+            TextView titleView = new TextView(ctx);
+            titleView.setText(title);
+            titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
+            titleView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+            titleView.setTextColor(isDark ? Color.WHITE : 0xFF1A1A2E);
+            texts.addView(titleView);
+            TextView subView = new TextView(ctx);
+            subView.setText(subtitle);
+            subView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
+            subView.setTextColor(isDark ? 0xAAFFFFFF : 0xAA5C6B7F);
+            texts.addView(subView);
+            row.addView(texts, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f));
+            ImageView arrow = new ImageView(ctx);
+            arrow.setImageResource(R.drawable.msg_arrowright);
+            arrow.setColorFilter(new PorterDuffColorFilter(isDark ? 0x44FFFFFF : 0x22000000, PorterDuff.Mode.SRC_IN));
+            row.addView(arrow, LayoutHelper.createLinear(20, 20));
+            row.setOnLongClickListener(v -> {
+                int position = -1;
+                if (getParent() instanceof RecyclerListView) {
+                    position = ((RecyclerListView) getParent()).getChildAdapterPosition(this);
+                }
+                return onItemLongClick(this, position, 0, 0);
+            });
+            return row;
         }
     }
+
+    private static class CoreItem {
+        String title, subtitle;
+        int iconRes, iconColor;
+        View.OnClickListener listener;
+        CoreItem(String t, String s, int i, int c, View.OnClickListener l) { title = t; subtitle = s; iconRes = i; iconColor = c; listener = l; }
+    }
+
+    private class ActionsCell extends LinearLayout {
+        public ActionsCell(Context context) {
+            super(context);
+            setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
+            setOrientation(HORIZONTAL);
+            setPadding(dp(16), dp(8), dp(16), dp(8));
+        }
+        public void update() {
+            removeAllViews();
+            int color = isDark ? Color.WHITE : 0xFF1A1A2E;
+            addView(createAction(getContext(), "Export", R.drawable.msg_share, color, v -> SettingsBackupHelper.backupSettings(getParentActivity(), resourcesProvider)), LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f));
+            addView(new View(getContext()), LayoutHelper.createLinear(dp(8), 1));
+            addView(createAction(getContext(), "Reset", R.drawable.msg_reset, color, v -> resetSettings()), LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f));
+            addView(new View(getContext()), LayoutHelper.createLinear(dp(8), 1));
+            addView(createAction(getContext(), "Restart", R.drawable.msg_retry, color, v -> AppRestartHelper.triggerRebirth(getParentActivity(), new Intent(getParentActivity(), LaunchActivity.class))), LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f));
+            addView(new View(getContext()), LayoutHelper.createLinear(dp(8), 1));
+            addView(createAction(getContext(), "About", R.drawable.msg_info, color, v -> presentFragment(new NekoAboutActivity())), LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f));
+        }
+        private View createAction(Context ctx, String text, int iconRes, int textColor, View.OnClickListener listener) {
+            LinearLayout btn = new LinearLayout(ctx);
+            btn.setOrientation(VERTICAL);
+            btn.setGravity(Gravity.CENTER);
+            btn.setPadding(0, dp(16), 0, dp(16));
+            btn.setClickable(true);
+            btn.setOnClickListener(listener);
+            GradientDrawable bg = new GradientDrawable();
+            bg.setColor(cardBg);
+            bg.setCornerRadius(dp(20));
+            bg.setStroke(dp(1), cardBorder);
+            btn.setBackground(bg);
+            ImageView icon = new ImageView(ctx);
+            icon.setImageResource(iconRes);
+            icon.setColorFilter(new PorterDuffColorFilter(0xFF2196F3, PorterDuff.Mode.SRC_IN));
+            btn.addView(icon, LayoutHelper.createLinear(28, 28));
+            TextView tv = new TextView(ctx);
+            tv.setText(text);
+            tv.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
+            tv.setGravity(Gravity.CENTER);
+            tv.setTextColor(textColor);
+            btn.addView(tv, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 6, 0, 0));
+            return btn;
+        }
+    }
+
+    private class FooterCell extends FrameLayout {
+        private final TextView textView;
+        public FooterCell(Context context) {
+            super(context);
+            setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
+            setPadding(0, dp(32), 0, dp(32));
+            textView = new TextView(context);
+            textView.setTextSize(11);
+            textView.setGravity(Gravity.CENTER);
+            textView.setTextColor(isDark ? 0x80FFFFFF : 0x805C6B7F);
+            addView(textView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER));
+        }
+        public void update() { 
+            textView.setText("Alexgram v" + BuildVars.BUILD_VERSION_STRING); 
+            textView.setGravity(Gravity.CENTER);
+        }
+    }
+
+    private class ClearRecentSearchCell extends FrameLayout {
+        public ClearRecentSearchCell(Context context) {
+            super(context);
+            TextView textView = new TextView(context);
+            textView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
+            textView.setTextColor(0xFFF44336);
+            textView.setGravity(Gravity.CENTER);
+            textView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+            textView.setText("Clear All Recent Searches");
+            textView.setPadding(0, dp(16), 0, dp(16));
+            addView(textView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+            
+            View divider = new View(context);
+            divider.setBackgroundColor(isDark ? 0x10FFFFFF : 0x10000000);
+            addView(divider, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 1, Gravity.TOP, 16, 0, 16, 0));
+            
+            setBackground(Theme.getSelectorDrawable(false));
+        }
+    }
+
+    private class SearchAdapter extends RecyclerListView.SelectionAdapter {
+        private final Context mContext;
+        private final List<SettingsSearchManager.SearchItem> results = new ArrayList<>();
+        private boolean isSearching = false;
+
+        private static final int VIEW_TYPE_HEADER = 0;
+        private static final int VIEW_TYPE_ITEM = 1;
+        private static final int VIEW_TYPE_CLEAR = 2;
+
+        public SearchAdapter(Context context) {
+            mContext = context;
+        }
+
+        public void search(String query) {
+            isSearching = !query.isEmpty();
+            results.clear();
+            if (isSearching) {
+                results.addAll(SettingsSearchManager.getInstance().search(query));
+            } else {
+                for (String key : recentSearchKeys) {
+                    SettingsSearchManager.SearchItem item = SettingsSearchManager.getInstance().getItem(key);
+                    if (item != null) results.add(item);
+                }
+            }
+            notifyDataSetChanged();
+        }
+
+        public void clear() {
+            results.clear();
+            isSearching = false;
+            notifyDataSetChanged();
+        }
+
+        @Override
+        public int getItemCount() {
+            if (isSearching) return results.size();
+            return results.isEmpty() ? 0 : results.size() + 2;
+        }
+
+        @Override
+        public int getItemViewType(int position) {
+            if (isSearching) return VIEW_TYPE_ITEM;
+            if (position == 0) return VIEW_TYPE_HEADER;
+            if (position == results.size() + 1) return VIEW_TYPE_CLEAR;
+            return VIEW_TYPE_ITEM;
+        }
+
+        @Override
+        public boolean isEnabled(RecyclerView.ViewHolder holder) {
+            return holder.getItemViewType() == VIEW_TYPE_ITEM || holder.getItemViewType() == VIEW_TYPE_CLEAR;
+        }
+
+        @NonNull
+        @Override
+        public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View view;
+            if (viewType == VIEW_TYPE_HEADER) {
+                view = new SectionHeaderCell(mContext);
+            } else if (viewType == VIEW_TYPE_CLEAR) {
+                view = new ClearRecentSearchCell(mContext);
+            } else {
+                view = new SettingsSearchResultCell(mContext);
+            }
+            view.setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
+            return new RecyclerListView.Holder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+            if (holder.getItemViewType() == VIEW_TYPE_HEADER) {
+                ((SectionHeaderCell) holder.itemView).setText("RECENT SEARCHES");
+            } else if (holder.getItemViewType() == VIEW_TYPE_CLEAR) {
+                holder.itemView.setOnClickListener(v -> {
+                    recentSearchKeys.clear();
+                    saveRecentSearches();
+                    search("");
+                });
+            } else {
+                SettingsSearchResultCell cell = (SettingsSearchResultCell) holder.itemView;
+                int idx = isSearching ? position : position - 1;
+                SettingsSearchManager.SearchItem item = results.get(idx);
+                cell.setData(item, idx == results.size() - 1);
+                
+                if (!isSearching) {
+                    cell.setCanDelete(() -> {
+                        recentSearchKeys.remove(item.key);
+                        saveRecentSearches();
+                        search("");
+                    });
+                } else {
+                    cell.setCanDelete(null);
+                }
+                
+                cell.setOnClickListener(v -> {
+                    addToRecentSearches(item.key);
+                    try {
+                        if (item.fragmentClass == NekoSettingsActivity.class) {
+                            actionBar.closeSearchField();
+                            scrollToRow(item.key, null);
+                        } else {
+                            BaseFragment fragment = item.fragmentClass.getConstructor().newInstance();
+                            android.os.Bundle args = new android.os.Bundle();
+                            args.putString("scrollToKey", item.key);
+                            fragment.setArguments(args);
+                            presentFragment(fragment);
+                        }
+                    } catch (Exception e) {
+                        org.telegram.messenger.FileLog.e(e);
+                    }
+                });
+            }
+        }
+    }
+
+    private void resetSettings() {
+        AlertUtil.showConfirm(getParentActivity(),
+                getString(R.string.ResetSettingsAlert),
+                R.drawable.msg_reset,
+                getString(R.string.Reset),
+                true,
+                () -> {
+                    ApplicationLoader.applicationContext.getSharedPreferences("nekocloud", Activity.MODE_PRIVATE).edit().clear().commit();
+                    ApplicationLoader.applicationContext.getSharedPreferences("nekox_config", Activity.MODE_PRIVATE).edit().clear().commit();
+                    NekoConfig.getPreferences().edit().clear().commit();
+                    AppRestartHelper.triggerRebirth(getParentActivity(), new Intent(getParentActivity(), LaunchActivity.class));
+                });
+    }
 }
+// [Alexgram: A-Settings UI] - End
