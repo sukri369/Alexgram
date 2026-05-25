@@ -39,6 +39,9 @@ import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Insets;
 import android.graphics.LinearGradient;
+// [Alexgram: Ambient Mode] - Start
+import android.graphics.RadialGradient;
+// [Alexgram: Ambient Mode] - End
 import android.graphics.Matrix;
 import android.graphics.Outline;
 import android.graphics.Paint;
