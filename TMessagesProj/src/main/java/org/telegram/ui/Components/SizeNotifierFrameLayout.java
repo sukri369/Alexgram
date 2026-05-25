@@ -39,6 +39,12 @@ import android.os.Build;
 import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
+// [Alexgram: Live Video Wallpaper] - Start
+import android.media.MediaPlayer;
+import android.graphics.SurfaceTexture;
+import android.view.Surface;
+import android.view.TextureView;
+// [Alexgram: Live Video Wallpaper] - End
 
 import androidx.annotation.NonNull;
 
@@ -94,6 +100,21 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
     SnowflakesEffect snowflakesEffect;
     public View backgroundView;
     boolean attached;
+    // [Alexgram: Live Video Wallpaper] - Start
+    private TextureView videoTextureView;
+    private MediaPlayer videoMediaPlayer;
+    private boolean videoWallpaperPlaying;
+    private String currentVideoPath;
+    private int currentBlur = -1;
+    private boolean canPlayVideo = false;
+
+    public void setCanPlayVideo(boolean canPlay) {
+        this.canPlayVideo = canPlay;
+        if (attached) {
+            checkVideoWallpaper();
+        }
+    }
+    // [Alexgram: Live Video Wallpaper] - End
 
 
     //blur variables
@@ -362,14 +383,165 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
 
     }
 
+    // [Alexgram: Live Video Wallpaper] - Start
+    private boolean checkVideoWallpaper() {
+        if (!canPlayVideo) {
+            if (videoTextureView != null) {
+                removeView(videoTextureView);
+                videoTextureView = null;
+                releaseVideo();
+            }
+            return false;
+        }
 
+        boolean enabled = NaConfig.INSTANCE.getEnableLiveVideoWallpaper().Bool();
+        String path = NaConfig.INSTANCE.getLiveVideoWallpaperPath().String();
+
+        boolean pathChanged = !android.text.TextUtils.equals(path, currentVideoPath);
+        currentVideoPath = path;
+
+        int newBlur = NaConfig.INSTANCE.getLiveVideoBlurIntensity().Int();
+        boolean blurChanged = (newBlur != currentBlur);
+        currentBlur = newBlur;
+
+        if (enabled && !android.text.TextUtils.isEmpty(currentVideoPath)) {
+            if (videoTextureView == null) {
+                videoTextureView = new TextureView(getContext());
+                videoTextureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
+                    @Override
+                    public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+                        playVideo(surface, currentVideoPath);
+                    }
+
+                    @Override
+                    public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {}
+
+                    @Override
+                    public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+                        releaseVideo();
+                        return true;
+                    }
+
+                    @Override
+                    public void onSurfaceTextureUpdated(SurfaceTexture surface) {}
+                });
+                addView(videoTextureView, 0, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+            } else {
+                if (pathChanged && videoTextureView.isAvailable()) {
+                    playVideo(videoTextureView.getSurfaceTexture(), currentVideoPath);
+                } else if (!videoWallpaperPlaying && videoTextureView.isAvailable()) {
+                    playVideo(videoTextureView.getSurfaceTexture(), currentVideoPath);
+                }
+            }
+            if (Build.VERSION.SDK_INT >= 31 && blurChanged) {
+                if (newBlur > 0) {
+                    float r = Math.max(1f, newBlur / 4.0f);
+                    videoTextureView.setRenderEffect(RenderEffect.createBlurEffect(r, r, Shader.TileMode.CLAMP));
+                } else {
+                    videoTextureView.setRenderEffect(null);
+                }
+            }
+            return true;
+        } else {
+            if (videoTextureView != null) {
+                removeView(videoTextureView);
+                videoTextureView = null;
+                releaseVideo();
+            }
+            return false;
+        }
+    }
+
+    private void playVideo(SurfaceTexture surface, String path) {
+        try {
+            if (videoMediaPlayer == null) {
+                videoMediaPlayer = new MediaPlayer();
+            } else {
+                videoMediaPlayer.reset();
+            }
+            if (path.startsWith("content://")) {
+                videoMediaPlayer.setDataSource(getContext(), android.net.Uri.parse(path));
+            } else {
+                videoMediaPlayer.setDataSource(path);
+            }
+            videoMediaPlayer.setSurface(new Surface(surface));
+            videoMediaPlayer.setLooping(true);
+            videoMediaPlayer.setVolume(0, 0);
+            videoMediaPlayer.prepareAsync();
+            videoMediaPlayer.setOnPreparedListener(MediaPlayer::start);
+            videoMediaPlayer.setOnInfoListener((mp, what, extra) -> {
+                if (what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START) {
+                    if (backgroundView != null) {
+                        backgroundView.animate().alpha(0.0f).setDuration(250).withEndAction(() -> {
+                            if (backgroundView != null) backgroundView.setVisibility(View.GONE);
+                        }).start();
+                    }
+                    return true;
+                }
+                return false;
+            });
+            videoWallpaperPlaying = true;
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+    }
+
+    private void releaseVideo() {
+        if (videoMediaPlayer != null) {
+            videoMediaPlayer.release();
+            videoMediaPlayer = null;
+        }
+        videoWallpaperPlaying = false;
+    }
+    // [Alexgram: Live Video Wallpaper] - End
+
+
+    // [Alexgram: Live Video Wallpaper] - Start
     public void setBackgroundImage(Drawable bitmap, boolean motion) {
+        boolean video = checkVideoWallpaper();
         if (backgroundDrawable == bitmap) {
+            if (video) {
+                if (videoTextureView != null) videoTextureView.setVisibility(View.VISIBLE);
+                if (videoMediaPlayer != null && videoMediaPlayer.isPlaying()) {
+                    if (backgroundView != null) backgroundView.setVisibility(View.GONE);
+                } else {
+                    if (backgroundView != null) {
+                        backgroundView.setVisibility(View.VISIBLE);
+                        backgroundView.setAlpha(1.0f);
+                    }
+                }
+            } else {
+                if (backgroundView != null) {
+                    backgroundView.setVisibility(View.VISIBLE);
+                    backgroundView.animate().cancel();
+                    backgroundView.setAlpha(1.0f);
+                }
+                if (videoTextureView != null) videoTextureView.setVisibility(View.GONE);
+            }
             return;
         }
         if (backgroundView == null) {
             addView(backgroundView = new BackgroundView(getContext()), 0, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
             checkLayerType();
+        }
+
+        if (video) {
+            if (videoTextureView != null) videoTextureView.setVisibility(View.VISIBLE);
+            if (videoMediaPlayer != null && videoMediaPlayer.isPlaying()) {
+                if (backgroundView != null) backgroundView.setVisibility(View.GONE);
+            } else {
+                if (backgroundView != null) {
+                    backgroundView.setVisibility(View.VISIBLE);
+                    backgroundView.setAlpha(1.0f);
+                }
+            }
+        } else {
+            if (backgroundView != null) {
+                backgroundView.setVisibility(View.VISIBLE);
+                backgroundView.animate().cancel();
+                backgroundView.setAlpha(1.0f);
+            }
+            if (videoTextureView != null) videoTextureView.setVisibility(View.GONE);
         }
         if (bitmap instanceof MotionBackgroundDrawable) {
             MotionBackgroundDrawable motionBackgroundDrawable = (MotionBackgroundDrawable) bitmap;
@@ -393,6 +565,7 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
         backgroundView.invalidate();
         checkLayerType();
     }
+    // [Alexgram: Live Video Wallpaper] - End
 
     private void checkMotion() {
         boolean motion = oldBackgroundMotion || backgroundMotion;
@@ -847,6 +1020,9 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
+        // [Alexgram: Live Video Wallpaper] - Start
+        checkVideoWallpaper();
+        // [Alexgram: Live Video Wallpaper] - End
         attached = true;
         if (needBlur && !blurIsRunning) {
             blurIsRunning = true;
@@ -869,6 +1045,9 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
+        // [Alexgram: Live Video Wallpaper] - Start
+        releaseVideo();
+        // [Alexgram: Live Video Wallpaper] - End
         attached = false;
         blurPaintTop.setShader(null);
         blurPaintTop2.setShader(null);
