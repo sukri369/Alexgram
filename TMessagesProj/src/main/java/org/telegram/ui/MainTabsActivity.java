@@ -917,6 +917,10 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
             }
         } else if (id == NotificationCenter.contactsPermissionBadgeCheck) {
             checkContactsTabBadge();
+        // [Alexgram: Hide Navigation Bar on Scroll] - Start
+        } else if (id == NotificationCenter.setTabsVisible) {
+            animatorTabsVisible.setValue((Boolean) args[0], true);
+        // [Alexgram: Hide Navigation Bar on Scroll] - End
         }
     }
 
@@ -934,11 +938,17 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
             .add(NotificationCenter.updateInterfaces)
             .add(NotificationCenter.callTabsVisibleToggled)
             .add(NotificationCenter.mainUserInfoChanged)
-            .add(NotificationCenter.contactsPermissionBadgeCheck);
+            .add(NotificationCenter.contactsPermissionBadgeCheck)
+            // [Alexgram: Hide Navigation Bar on Scroll] - Start
+            .add(NotificationCenter.setTabsVisible);
+            // [Alexgram: Hide Navigation Bar on Scroll] - End
 
         globalObserversGroup = NotificationCenter.getGlobalInstance().createObserversGroup(this)
             .add(NotificationCenter.appUpdateAvailable)
             .add(NotificationCenter.appUpdateLoading)
+            // [Alexgram: Hide Navigation Bar on Scroll] - Start
+            .add(NotificationCenter.setTabsVisible)
+            // [Alexgram: Hide Navigation Bar on Scroll] - End
             .add(NotificationCenter.needSetDayNightTheme);
 
         return super.onFragmentCreate();
