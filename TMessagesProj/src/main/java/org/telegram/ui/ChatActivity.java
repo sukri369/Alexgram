@@ -457,6 +457,9 @@ public class ChatActivity extends BaseFragment implements
 	private final static int nkbtn_hide = 2009;
 	private final static int nkbtn_savemessage = 2010;
 	private final static int nkbtn_forward_noquote = 2011;
+	// [Alexgram: Special Forward] - Start
+	private final static int nkbtn_special_forward = 2060;
+	// [Alexgram: Special Forward] - End
 	private final static int nkbtn_sharemessage = 2030;
 
 	// chat click menu buttons
@@ -10871,6 +10874,11 @@ public class ChatActivity extends BaseFragment implements
 		if (currentEncryptedChat == null && getDialogId() != UserObject.VERIFY && NaConfig.INSTANCE.getActionBarButtonForward().Bool()) {
 			actionModeViews.add(actionMode.addItemWithWidth(forward, R.drawable.msg_forward_noquote, AndroidUtilities.dp(54), LocaleController.getString(R.string.Forward)));
 		}
+		// [Alexgram: Special Forward] - Start
+		if (currentEncryptedChat == null && NaConfig.INSTANCE.getSpecialForward().Bool()) {
+			actionModeViews.add(actionMode.addItemWithWidth(nkbtn_special_forward, R.drawable.nk_special_forward, AndroidUtilities.dp(54), LocaleController.getString(R.string.SpecialForward)));
+		}
+		// [Alexgram: Special Forward] - End
 		actionModeViews.add(actionMode.addItemWithWidth(delete, R.drawable.msg_delete, AndroidUtilities.dp(54), LocaleController.getString(R.string.Delete)));
 
 		if (currentEncryptedChat == null) {
@@ -10887,6 +10895,9 @@ public class ChatActivity extends BaseFragment implements
 
 		if (currentEncryptedChat == null && !noforward) {
 			actionModeOtherItem.addSubItem(nkbtn_forward_noquote, R.drawable.msg_forward_noquote, LocaleController.getString(R.string.NoQuoteForward));
+			// [Alexgram: Special Forward] - Start
+			actionModeOtherItem.addSubItem(nkbtn_special_forward, R.drawable.nk_special_forward, LocaleController.getString(R.string.SpecialForward));
+			// [Alexgram: Special Forward] - End
 		}
 		actionModeOtherItem.addSubItem(nkbtn_translate, LlmConfig.llmIsDefaultProvider() ? R.drawable.magic_stick_solar : R.drawable.ic_translate, LocaleController.getString(R.string.Translate));
 		actionModeOtherItem.addSubItem(nkbtn_sharemessage, R.drawable.msg_shareout, LocaleController.getString(R.string.ShareMessages));
@@ -10909,6 +10920,9 @@ public class ChatActivity extends BaseFragment implements
 		actionMode.setItemVisibility(star, selectedMessagesCanStarIds[0].size() + selectedMessagesCanStarIds[1].size() != 0 ? View.VISIBLE : View.GONE);
 		actionMode.setItemVisibility(combine_message, selectedMessagesCanCopyIds[0].size() + selectedMessagesCanCopyIds[1].size() != 0 ? View.VISIBLE : View.GONE);
 		actionMode.setItemVisibility(forward, NaConfig.INSTANCE.getActionBarButtonForward().Bool() ? View.VISIBLE : View.GONE);
+		// [Alexgram: Special Forward] - Start
+		actionMode.setItemVisibility(nkbtn_special_forward, NaConfig.INSTANCE.getSpecialForward().Bool() ? View.VISIBLE : View.GONE);
+		// [Alexgram: Special Forward] - End
 		actionMode.setItemVisibility(delete, cantDeleteMessagesCount == 0 ? View.VISIBLE : View.GONE);
 		actionMode.setItemVisibility(tag_message, getUserConfig().isPremium() ? View.VISIBLE : View.GONE);
 		actionMode.setItemVisibility(share, View.GONE);
@@ -12954,6 +12968,18 @@ public class ChatActivity extends BaseFragment implements
 		updateVisibleRows();
 		updateSelectedMessageReactions();
 	}
+
+	// [Alexgram: Special Forward] - Start
+	private void openSpecialForwardActivity() {
+		ArrayList<MessageObject> messages = new ArrayList<>();
+		for (int a = 0; a < selectedMessagesIds.length; a++) {
+			for (int b = 0; b < selectedMessagesIds[a].size(); b++) {
+				messages.add(selectedMessagesIds[a].valueAt(b));
+			}
+		}
+		presentFragment(new SpecialForwardActivity(messages));
+	}
+	// [Alexgram: Special Forward] - End
 
 	public void openForward(boolean fromActionBar) {
 		boolean hasSelectedAyuDeletedMessage = hasSelectedAyuDeletedMessage();
@@ -33614,8 +33640,15 @@ public class ChatActivity extends BaseFragment implements
 		if (item != null) {
 			item.setVisibility(View.VISIBLE);
 		}
-		if (chatMode != MODE_SCHEDULED && actionModeOtherItem != null && NaConfig.INSTANCE.getShowNoQuoteForward().Bool()) {
-			actionModeOtherItem.showSubItem(nkbtn_forward_noquote);
+		if (chatMode != MODE_SCHEDULED && actionModeOtherItem != null) {
+			if (NaConfig.INSTANCE.getShowNoQuoteForward().Bool()) {
+				actionModeOtherItem.showSubItem(nkbtn_forward_noquote);
+			}
+			// [Alexgram: Special Forward] - Start
+			if (NaConfig.INSTANCE.getSpecialForward().Bool()) {
+				actionModeOtherItem.showSubItem(nkbtn_special_forward);
+			}
+			// [Alexgram: Special Forward] - End
 		}
 		actionMode.setItemVisibility(delete, View.VISIBLE);
 		actionsButtonsLayout.bringToFront();
@@ -45867,6 +45900,11 @@ public class ChatActivity extends BaseFragment implements
 				messagePreviewParams.hideCaption = noForwardCaption;
 			}
 			openForward(true);
+		// [Alexgram: Special Forward] - Start
+		} else if (id == nkbtn_special_forward) {
+			openSpecialForwardActivity();
+			hideActionMode();
+		// [Alexgram: Special Forward] - End
 		} else if (id == nkactionbarbtn_reply) {
 			MessageObject messageObject = null;
 			for (int a = 1; a >= 0; a--) {
@@ -46043,6 +46081,12 @@ public class ChatActivity extends BaseFragment implements
 				repeatMessage(false, true);
 				break;
 			}
+			// [Alexgram: Special Forward] - Start
+			case nkbtn_special_forward: {
+				openSpecialForwardActivity();
+				break;
+			}
+			// [Alexgram: Special Forward] - End
 			case nkbtn_forward_nocaption:
 			case nkbtn_forward_noquote: {
 				noForwardQuote = true;
@@ -48453,6 +48497,13 @@ public class ChatActivity extends BaseFragment implements
 						options.add(nkbtn_repeatascopy);
 						icons.add(R.drawable.msg_repeat);
 					}
+					// [Alexgram: Special Forward] - Start
+					if (NaConfig.INSTANCE.getSpecialForward().Bool() && selectedObject.canForwardMessage() && !isAyuDeleted && !noforwards) {
+						items.add(LocaleController.getString(R.string.SpecialForward));
+						options.add(nkbtn_special_forward);
+						icons.add(R.drawable.nk_special_forward);
+					}
+					// [Alexgram: Special Forward] - End
 					if (NekoConfig.showDeleteDownloadedFile.Bool() && getMessageHelper().messageObjectIsFile(type, selectedObject)) {
 						items.add(LocaleController.getString(R.string.DeleteDownloadedFile));
 						options.add(nkbtn_deldlcache);
