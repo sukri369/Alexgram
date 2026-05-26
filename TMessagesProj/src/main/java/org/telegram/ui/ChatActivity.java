@@ -21081,6 +21081,113 @@ public class ChatActivity extends BaseFragment implements
 	@Override
 	public void onActivityResultFragment(int requestCode, int resultCode, Intent data) {
 		if (resultCode == Activity.RESULT_OK) {
+			// [Alexgram: Send Video as Round] - Start
+			if (requestCode == 71) {
+				if (data == null || data.getData() == null) {
+					showAttachmentError();
+					return;
+				}
+				Uri uri = data.getData();
+				String videoPath = null;
+				try {
+					videoPath = AndroidUtilities.getPath(uri);
+				} catch (Exception e) {
+					FileLog.e(e);
+				}
+				if (videoPath == null) {
+					try {
+						final File file = AndroidUtilities.generateVideoPath();
+						InputStream in = ApplicationLoader.applicationContext.getContentResolver().openInputStream(uri);
+						FileOutputStream fos = new FileOutputStream(file);
+						byte[] buffer = new byte[8 * 1024];
+						int lengthRead;
+						while ((lengthRead = in.read(buffer)) > 0) {
+							fos.write(buffer, 0, lengthRead);
+							fos.flush();
+						}
+						in.close();
+						fos.close();
+						videoPath = file.getAbsolutePath();
+					} catch (Exception ex) {
+						FileLog.e(ex);
+						showAttachmentError();
+						return;
+					}
+				}
+				if (videoPath != null) {
+					int w = 360, h = 360, rot = 0, bitrate = -1;
+					long durationMs = 0;
+					android.media.MediaMetadataRetriever retriever = null;
+					try {
+						retriever = new android.media.MediaMetadataRetriever();
+						retriever.setDataSource(videoPath);
+						String ws = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH);
+						String hs = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT);
+						String ds = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION);
+						String rs = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION);
+						String bs = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_BITRATE);
+						if (ws != null) w = Integer.parseInt(ws);
+						if (hs != null) h = Integer.parseInt(hs);
+						if (ds != null) durationMs = Long.parseLong(ds);
+						if (rs != null) rot = Integer.parseInt(rs);
+						if (bs != null) bitrate = Integer.parseInt(bs);
+					} catch (Exception e) {
+						FileLog.e(e);
+					} finally {
+						try { if (retriever != null) retriever.release(); } catch (Exception ignore) {}
+					}
+
+					if (durationMs > 60_000) {
+						BulletinFactory.of(this).createErrorBulletin(LocaleController.getString(R.string.VideoNoteDurationError)).show();
+						return;
+					}
+
+					if (rot == 90 || rot == 270) {
+						int tmp = w; w = h; h = tmp;
+					}
+
+					VideoEditedInfo videoEditedInfo = new VideoEditedInfo();
+					videoEditedInfo.roundVideo = true;
+					videoEditedInfo.startTime = -1;
+					videoEditedInfo.endTime = -1;
+					videoEditedInfo.originalPath = videoPath;
+					videoEditedInfo.originalWidth = w;
+					videoEditedInfo.originalHeight = h;
+					videoEditedInfo.resultWidth = 384;
+					videoEditedInfo.resultHeight = 384;
+					videoEditedInfo.rotationValue = rot;
+					videoEditedInfo.bitrate = bitrate == -1 ? 0 : bitrate;
+					videoEditedInfo.framerate = 30;
+					videoEditedInfo.estimatedDuration = durationMs;
+					videoEditedInfo.originalDuration = durationMs * 1000;
+					videoEditedInfo.estimatedSize = new File(videoPath).length();
+
+					MediaController.CropState cropState = new MediaController.CropState();
+					if (w != h) {
+						int minSide = Math.min(w, h);
+						cropState.cropPw = (float) minSide / w;
+						cropState.cropPh = (float) minSide / h;
+						cropState.cropPx = (1f - cropState.cropPw) / 2f;
+						cropState.cropPy = (1f - cropState.cropPh) / 2f;
+					} else {
+						cropState.cropPw = 1f;
+						cropState.cropPh = 1f;
+						cropState.cropPx = 0f;
+						cropState.cropPy = 0f;
+					}
+					cropState.cropScale = 1.0f;
+					cropState.cropRotate = 0;
+					cropState.transformWidth = 384;
+					cropState.transformHeight = 384;
+					cropState.transformRotation = 0;
+					videoEditedInfo.cropState = cropState;
+
+					SendMessagesHelper.prepareSendingVideo(getAccountInstance(), videoPath, videoEditedInfo, null, null, dialog_id, replyingMessageObject, getThreadMessage(), null, replyingQuote, null, 0, null, true, 0, 0, false, false, "", quickReplyShortcut, getQuickReplyId(), 0, 0, getSendMonoForumPeerId(), getSendMessageSuggestionParams(), false);
+				} else {
+					showAttachmentError();
+				}
+			}
+			// [Alexgram: Send Video as Round] - End
 			if (requestCode == 0 || requestCode == 2) {
 				createChatAttachView();
 				if (chatAttachAlert != null) {
