@@ -16,7 +16,7 @@ import org.telegram.messenger.MessagesStorage
 import org.telegram.messenger.NotificationCenter
 import org.telegram.messenger.TranslateController
 import org.telegram.tgnet.TLRPC
-import org.telegram.ui.ChatActivity
+import org.telegram.ui.Components.ChatActivityInterface
 import tw.nekomimi.nekogram.NekoConfig
 import tw.nekomimi.nekogram.helpers.MessageHelper
 import tw.nekomimi.nekogram.translate.Translator
@@ -34,20 +34,20 @@ const val TRANSLATE_MODE_WITH_ORIGINAL_ALL = 2
 
 const val TRANSLATION_SEPARATOR = "\n\n--------\n\n"
 
-private val ChatActivity.translateController: TranslateController
+private val ChatActivityInterface.translateController: TranslateController
     get() = messagesController.translateController
 
 
 @JvmName("translateMessages")
-fun ChatActivity.translateMessagesWithProvider(provider: Int) =
+fun ChatActivityInterface.translateMessagesWithProvider(provider: Int) =
     translateMessages(provider = provider)
 
 @JvmName("translateMessages")
-fun ChatActivity.translateMessagesWithMessages(messages: List<MessageObject>) =
+fun ChatActivityInterface.translateMessagesWithMessages(messages: List<MessageObject>) =
     translateMessages(messages = messages)
 
 @JvmOverloads
-fun ChatActivity.translateMessages(
+fun ChatActivityInterface.translateMessages(
     targetLocale: Locale = NekoConfig.translateToLang.String().code2Locale,
     provider: Int = 0,
     messages: List<MessageObject> = messageForTranslate?.let { listOf(it) }
@@ -82,10 +82,10 @@ fun ChatActivity.translateMessages(
 
     // Mark messages as translating
     messagesToTranslate.forEach { msg ->
-        messageHelper.detectLanguageNow(msg)
+        getMessageHelper().detectLanguageNow(msg)
         translateController.addAsTranslatingItem(msg)
         translateController.addAsManualTranslate(msg)
-        notificationCenter.postNotificationName(NotificationCenter.messageTranslating, msg)
+        getNotificationCenter().postNotificationName(NotificationCenter.messageTranslating, msg)
     }
 
     // Perform translations concurrently
@@ -110,7 +110,7 @@ fun ChatActivity.translateMessages(
     }
 }
 
-private suspend fun ChatActivity.translateSingleMessage(
+private suspend fun ChatActivityInterface.translateSingleMessage(
     msg: MessageObject,
     provider: Int,
     targetLocale: Locale,
@@ -156,7 +156,7 @@ private suspend fun ChatActivity.translateSingleMessage(
     finalizeTranslation(msg, translatorMode)
 }
 
-private suspend fun ChatActivity.translateSummary(
+private suspend fun ChatActivityInterface.translateSummary(
     msg: MessageObject,
     targetLocale: Locale,
     provider: Int,
@@ -181,7 +181,7 @@ private suspend fun ChatActivity.translateSummary(
     return true
 }
 
-private suspend fun ChatActivity.translatePoll(
+private suspend fun ChatActivityInterface.translatePoll(
     msg: MessageObject,
     target: Locale,
     provider: Int
@@ -215,7 +215,7 @@ private suspend fun ChatActivity.translatePoll(
     return true
 }
 
-private suspend fun ChatActivity.translateMessageContent(
+private suspend fun ChatActivityInterface.translateMessageContent(
     msg: MessageObject,
     target: Locale,
     provider: Int,
@@ -284,7 +284,7 @@ private suspend fun ChatActivity.translateMessageContent(
     return true
 }
 
-private suspend fun ChatActivity.finalizeTranslation(
+private suspend fun ChatActivityInterface.finalizeTranslation(
     msg: MessageObject,
     translatorMode: Int
 ) {
@@ -293,7 +293,7 @@ private suspend fun ChatActivity.finalizeTranslation(
 
     // Persist translation to storage
     if (!BuildVars.LOGS_ENABLED) {
-        MessagesStorage.getInstance(currentAccount).updateMessageCustomParams(
+        MessagesStorage.getInstance(getCurrentAccount()).updateMessageCustomParams(
             msg.dialogId, msg.messageOwner
         )
     }
@@ -303,34 +303,34 @@ private suspend fun ChatActivity.finalizeTranslation(
     if (msg.messageOwner.summarizedOpen) {
         AndroidUtilities.runOnUIThread {
             postTranslatedNotification(msg)
-            notificationCenter.postNotificationName(NotificationCenter.updateInterfaces, 0)
+            getNotificationCenter().postNotificationName(NotificationCenter.updateInterfaces, 0)
         }
     } else if (msg.messageOwner.translatedText != null && !keepOriginal) {
         AndroidUtilities.runOnUIThread {
             postTranslatedNotification(msg)
-            notificationCenter.postNotificationName(NotificationCenter.updateInterfaces, 0)
+            getNotificationCenter().postNotificationName(NotificationCenter.updateInterfaces, 0)
         }
     } else {
         withContext(Dispatchers.Main) {
-            clearTranslated(msg, currentAccount, false)
-            messageHelper.resetMessageContent(dialogId, msg)
+            clearTranslated(msg, getCurrentAccount(), false)
+            getMessageHelper().resetMessageContent(getDialogId(), msg)
         }
     }
 }
 
-private fun ChatActivity.postTranslatedNotification(msg: MessageObject) {
+private fun ChatActivityInterface.postTranslatedNotification(msg: MessageObject) {
     if (msg.messageOwner.summarizedOpen) {
-        notificationCenter.postNotificationName(
+        getNotificationCenter().postNotificationName(
             NotificationCenter.messageTranslated, msg, true
         )
     } else {
-        notificationCenter.postNotificationName(
+        getNotificationCenter().postNotificationName(
             NotificationCenter.messageTranslated, msg
         )
     }
 }
 
-private fun ChatActivity.hideTranslation(
+private fun ChatActivityInterface.hideTranslation(
     msg: MessageObject,
     translatorMode: Int,
 ) {
@@ -341,14 +341,14 @@ private fun ChatActivity.hideTranslation(
 
     AndroidUtilities.runOnUIThread {
         if ((MessageHelper.shouldKeepOriginalForManualTranslation(translatorMode) && !msg.messageOwner.summarizedOpen) || msg.isPoll) {
-            messageHelper.resetMessageContent(dialogId, msg)
+            getMessageHelper().resetMessageContent(getDialogId(), msg)
         } else {
             postTranslatedNotification(msg)
         }
     }
 }
 
-private fun ChatActivity.applyCachedTranslations(
+private fun ChatActivityInterface.applyCachedTranslations(
     messages: List<MessageObject>,
     targetLanguage: String,
     translatorMode: Int,
@@ -384,21 +384,21 @@ private fun ChatActivity.applyCachedTranslations(
             when {
                 msg.messageOwner.summarizedOpen -> {
                     postTranslatedNotification(msg)
-                    notificationCenter.postNotificationName(
+                    getNotificationCenter().postNotificationName(
                         NotificationCenter.updateInterfaces, 0
                     )
                 }
 
                 msg.isPoll -> {
-                    messageHelper.resetMessageContent(dialogId, msg)
+                    getMessageHelper().resetMessageContent(getDialogId(), msg)
                 }
 
                 MessageHelper.shouldKeepOriginalForManualTranslation(translatorMode) -> {
-                    messageHelper.resetMessageContent(dialogId, msg)
+                    getMessageHelper().resetMessageContent(getDialogId(), msg)
                 }
 
                 else -> {
-                    notificationCenter.postNotificationName(
+                    getNotificationCenter().postNotificationName(
                         NotificationCenter.messageTranslating, msg
                     )
                     postTranslatedNotification(msg)
@@ -531,7 +531,7 @@ private fun extractLlmContextText(message: MessageObject): String? {
     return text
 }
 
-private fun buildLlmContext(chatActivity: ChatActivity, message: MessageObject): String? {
+private fun buildLlmContext(chatActivity: ChatActivityInterface, message: MessageObject): String? {
     val maxMessages = LLMTranslator.getContextMessageLimit()
     if (maxMessages <= 0) return null
 
@@ -561,9 +561,9 @@ private fun buildLlmContext(chatActivity: ChatActivity, message: MessageObject):
 
     // Context messages
     val contextTexts = ArrayList<String>()
-    val currentChat = chatActivity.currentChat
+    val currentChat = chatActivity.getCurrentChat()
     if (currentChat == null || !ChatObject.isChannelAndNotMegaGroup(currentChat)) {
-        val messages = chatActivity.chatAdapter?.messages
+        val messages = chatActivity.getChatAdapterMessages()
         if (messages != null) {
             val index = messages.indexOf(message).takeIf { it >= 0 }
                 ?: messages.indexOfFirst { it.dialogId == message.dialogId && it.id == message.id }
@@ -586,7 +586,7 @@ private fun buildLlmContext(chatActivity: ChatActivity, message: MessageObject):
     if (replyChainTexts.isEmpty() && contextTexts.isEmpty()) return null
 
     return buildString {
-        val dialogTitle = DialogObject.getName(chatActivity.currentAccount, message.dialogId).trim()
+        val dialogTitle = DialogObject.getName(chatActivity.getCurrentAccount(), message.dialogId).trim()
         if (dialogTitle.isNotEmpty()) {
             append("Chat: ").append(dialogTitle).append("\n\n")
         }

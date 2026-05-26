@@ -13,3 +13,5 @@ TMessagesProj/.cxx/
 TMessagesProj/jniLibs/
 TMessagesProj/jniRes/
 TMessagesProj/afat/
+Tools/features_helper.py
+Tools/features_backup.json

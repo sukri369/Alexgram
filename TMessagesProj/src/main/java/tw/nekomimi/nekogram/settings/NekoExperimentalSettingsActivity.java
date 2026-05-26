@@ -54,7 +54,9 @@ import org.telegram.ui.ActionBar.ActionBarLayout;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BottomSheet;
 import org.telegram.ui.ActionBar.Theme;
+// [Alexgram: AI Reply] - Start
 import org.telegram.ui.AIAssistanceSettingsActivity;
+// [Alexgram: AI Reply] - End
 import org.telegram.ui.Cells.TextCell;
 import org.telegram.ui.Cells.TextCheckBoxCell;
 import org.telegram.ui.Cells.TextCheckCell;
@@ -201,8 +203,10 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
             getString(R.string.PerformanceClassAverage),
             getString(R.string.PerformanceClassLow),
     }, null));
+    // [Alexgram: Force Max FPS] - Start
     private final AbstractConfigCell forceMaxRefreshRateRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getForceMaxRefreshRate(), getString(R.string.ExperimentalForceMaxFPSInfo), getString(R.string.ExperimentalForceMaxFPS)));
     private final AbstractConfigCell dividerForceMaxFPS = cellGroup.appendCell(new ConfigCellDivider());
+    // [Alexgram: Force Max FPS] - End
 
     // Story
     private final AbstractConfigCell headerStory = cellGroup.appendCell(new ConfigCellHeader(getString(R.string.Story)));
@@ -215,6 +219,7 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
     private final AbstractConfigCell enablePanguOnSendingRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getEnablePanguOnSending(), getString(R.string.PanguInfo)));
     private final AbstractConfigCell dividerPangu = cellGroup.appendCell(new ConfigCellDivider());
 
+    // [Alexgram: AI Reply] - Start
     // AI Reply
     private final AbstractConfigCell headerAiReply = cellGroup.appendCell(new ConfigCellHeader("AI Reply"));
     private final AbstractConfigCell aiAssistanceSettingsRow = cellGroup.appendCell(new ConfigCellText("AiAssistanceSettings", () -> presentFragment(new AIAssistanceSettingsActivity())));
@@ -236,6 +241,7 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
         testAiApi(url != null ? url : "", key != null ? key : "");
     }));
     private final AbstractConfigCell dividerAiReply = cellGroup.appendCell(new ConfigCellDivider());
+    // [Alexgram: AI Reply] - End
 
     public NekoExperimentalSettingsActivity() {
         if (NaConfig.INSTANCE.getUseDeletedIcon().Bool()) {
@@ -328,11 +334,13 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
                 tooltip.showWithAction(0, UndoView.ACTION_NEED_RESTART, null, null);
             } else if (key.equals(NaConfig.INSTANCE.getRunInBackground().getKey())) {
                 updateRunInBackground((Boolean) newValue);
+            // [Alexgram: Force Max FPS] - Start
             } else if (key.equals(NaConfig.INSTANCE.getForceMaxRefreshRate().getKey())) {
                 tooltip.showWithAction(0, UndoView.ACTION_NEED_RESTART, null, null);
                 if (getParentActivity() != null) {
                     AndroidUtilities.setPreferredMaxRefreshRate(getParentActivity().getWindow());
                 }
+            // [Alexgram: Force Max FPS] - End
             } else if (key.equals(NaConfig.INSTANCE.getV8dAudio().getKey())) {
                 tooltip.showWithAction(0, UndoView.ACTION_NEED_RESTART, null, null);
             }
@@ -535,6 +543,7 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
         }
     }
 
+    // [Alexgram: AI Reply] - Start
     private void testAiApi(String url, String key) {
         if (TextUtils.isEmpty(url) || TextUtils.isEmpty(key)) {
             BulletinFactory.of(this).createSimpleBulletin(R.raw.error, "URL and API Key cannot be empty").show();
@@ -725,15 +734,17 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
             clipboard.setPrimaryClip(clip);
             BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Copied to clipboard").show();
         });
-        
+
         AlertDialog dialog = builder.create();
         showDialog(dialog);
-        
+
         // Haptic Feedback
         try {
             root.performHapticFeedback(success ? android.view.HapticFeedbackConstants.VIRTUAL_KEY : android.view.HapticFeedbackConstants.LONG_PRESS);
         } catch (Exception ignore) {}
     }
+    // [Alexgram: AI Reply] - End
+
 
     private void showBottomSheet() {
         if (getParentActivity() == null) {

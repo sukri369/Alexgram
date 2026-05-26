@@ -142,5 +142,10 @@
     <string name="SplitChatSelectChat">Select a chat to open alongside</string>
     <string name="SplitChatHint">Tap an icon to restore minimized chat</string>
     <string name="SplitChatMinimized">Chat minimized</string>
+    <string name="ChangeFont">Change Font</string>
+    <string name="ShadowBanChannelAdded">Channel added to **Shadow Ban**</string>
+    <string name="ShadowBanChannelRemoved">Channel removed from **Shadow Ban**</string>
+    <string name="ExperimentalForceMaxFPSInfo">Force maximum refresh rate.</string>
+    <string name="ExperimentalForceMaxFPS">Force Max FPS</string>
 </resources>
 

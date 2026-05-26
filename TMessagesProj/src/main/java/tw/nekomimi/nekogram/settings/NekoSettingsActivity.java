@@ -59,6 +59,7 @@ import xyz.nextalone.nagram.NaConfig;
 import java.util.ArrayList;
 import java.util.List;
 
+// [Alexgram: A-Settings UI] - Start
 public class NekoSettingsActivity extends BaseNekoSettingsActivity {
 
     private final List<String> recentSearchKeys = new ArrayList<>();
@@ -971,3 +972,4 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
                 });
     }
 }
+// [Alexgram: A-Settings UI] - End

@@ -193,7 +193,7 @@ public class SplitChatLayout extends FrameLayout {
         excluded.add(originId);
         for (SplitPane p : panes) excluded.add(p.dialogId);
         for (MiniPaneTab m : minis) excluded.add(m.dialogId);
-        picker.setExcludedDialogIds(excluded);
+        // picker.setExcludedDialogIds(excluded);
 
         picker.setDelegate((frag, dids, msg, param, notify, date, period, topicsFrag) -> {
             if (dids != null && !dids.isEmpty()) {
