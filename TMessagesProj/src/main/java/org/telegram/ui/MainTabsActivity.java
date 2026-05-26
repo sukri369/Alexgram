@@ -19,6 +19,9 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
+// [Alexgram: Double Tap On Chats To Filter Unread Chats] - Start
+import android.view.ViewConfiguration;
+// [Alexgram: Double Tap On Chats To Filter Unread Chats] - End
 import android.view.ViewGroup;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.FrameLayout;
