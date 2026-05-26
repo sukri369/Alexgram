@@ -209,7 +209,9 @@ public class TranslateAlert3 extends BottomSheetWithRecyclerListView {
         return this;
     }
     public TranslateAlert3 setNoforwards(boolean noforwards) {
-        this.noforwards = noforwards;
+        // [Alexgram: Allow Forwarding/Copying] - Start
+        this.noforwards = noforwards && !xyz.nextalone.nagram.NaConfig.INSTANCE.getAllowForwardingRestriction().Bool();
+        // [Alexgram: Allow Forwarding/Copying] - End
         return this;
     }
     public TranslateAlert3 setOnLinkPress(Utilities.CallbackReturn<URLSpan, Boolean> onLinkPress) {
