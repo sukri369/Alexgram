@@ -176,6 +176,9 @@ import java.util.stream.Collectors;
 import me.vkryl.core.BitwiseUtils;
 
 import tw.nekomimi.nekogram.helpers.PasscodeHelper;
+// [Alexgram: Default Schedule Delay] - Start
+import tw.nekomimi.nekogram.helpers.ScheduleTimeHelper;
+// [Alexgram: Default Schedule Delay] - End
 import tw.nekomimi.nekogram.NekoConfig;
 import static tw.nekomimi.nekogram.settings.NekoChatSettingsActivity.getDeleteMenuChecks;
 import xyz.nextalone.nagram.NaConfig;
@@ -4243,21 +4246,22 @@ public class AlertsCreator {
         linearLayout.addView(minutePicker, LayoutHelper.createLinear(0, 54 * 5, 0.3f));
         minutePicker.setOnValueChangedListener(onValueChangeListener);
 
-        if (currentDate > 0 && currentDate != 0x7FFFFFFE) {
-            currentDate *= 1000;
-            calendar.setTimeInMillis(System.currentTimeMillis());
-            calendar.set(Calendar.MINUTE, 0);
-            calendar.set(Calendar.SECOND, 0);
-            calendar.set(Calendar.MILLISECOND, 0);
-            calendar.set(Calendar.HOUR_OF_DAY, 0);
-            int days = (int) ((currentDate - calendar.getTimeInMillis()) / (24 * 60 * 60 * 1000));
-            calendar.setTimeInMillis(currentDate);
-            if (days >= 0) {
-                minutePicker.setValue(calendar.get(Calendar.MINUTE));
-                hourPicker.setValue(calendar.get(Calendar.HOUR_OF_DAY));
-                dayPicker.setValue(days);
-            }
+        // [Alexgram: Default Schedule Delay] - Start
+        ScheduleTimeHelper.setPickersFromTargetTime(ScheduleTimeHelper.getInitialTargetTime(currentDate), calendar, dayPicker, hourPicker, minutePicker);
+
+        if (ScheduleTimeHelper.shouldUseDefaultSchedule(currentDate)) {
+            ScheduleTimeHelper.addDefaultScheduleSlider(
+                    context,
+                    container,
+                    resourcesProvider,
+                    calendar,
+                    dayPicker,
+                    hourPicker,
+                    minutePicker,
+                    () -> checkScheduleDate(buttonTextView, null, forcedTitle != null ? 3 : selfUserId == dialogId ? 1 : 0, dayPicker, hourPicker, minutePicker)
+            );
         }
+        // [Alexgram: Default Schedule Delay] - End
         final boolean[] canceled = {true};
 
         checkScheduleDate(buttonTextView, null, forcedTitle != null ? 3 : selfUserId == dialogId ? 1 : 0, dayPicker, hourPicker, minutePicker);

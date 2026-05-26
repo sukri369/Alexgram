@@ -1580,6 +1580,15 @@ object NaConfig {
             70
         )
 
+    // [Alexgram: Default Schedule Delay] - Start
+    val defaultScheduledTime =
+        addConfig(
+            "DefaultScheduledTime",
+            ConfigItem.configTypeInt,
+            10
+        )
+    // [Alexgram: Default Schedule Delay] - End
+
     val preferredTranslateTargetLangList = ArrayList<String>()
     fun updatePreferredTranslateTargetLangList() {
         AndroidUtilities.runOnUIThread({

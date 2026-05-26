@@ -404,4 +404,7 @@
     <string name="aiApiKey2">AI API Key 2 (Failover)</string>
     <string name="TestAiApi2">Test API Connection 2</string>
     <!-- [Alexgram: AI Reply] - End -->
+    <!-- [Alexgram: Default Schedule Delay] - Start -->
+    <string name="DefaultScheduleDelay">Default delay</string>
+    <!-- [Alexgram: Default Schedule Delay] - End -->
 </resources>
