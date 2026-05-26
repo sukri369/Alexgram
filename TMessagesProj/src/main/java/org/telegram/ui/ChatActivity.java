@@ -2027,7 +2027,9 @@ public class ChatActivity extends BaseFragment implements
 					return false;
 				}
 				selectedObjectGroup = getValidGroupedMessage(selectedObject = ((ChatMessageCell) view).getMessageObject());
-				var noforwards = getMessagesController().isChatNoForwards(currentChat) || message.messageOwner.noforwards;
+				// [Alexgram: Allow Forwarding/Copying] - Start
+				var noforwards = (getMessagesController().isChatNoForwards(currentChat) || message.messageOwner.noforwards) && !NaConfig.INSTANCE.getAllowForwardingRestriction().Bool();
+				// [Alexgram: Allow Forwarding/Copying] - End
 				var isAyuDeleted = message.isAyuDeleted();
 				boolean allowChatActions = chatMode != MODE_SCHEDULED && (threadMessageObjects == null || !threadMessageObjects.contains(message)) &&
 						!message.isSponsored() && (getMessageType(message) != MESSAGE_TYPE_SERVICE || message.getDialogId() != mergeDialogId) &&
@@ -3772,10 +3774,12 @@ public class ChatActivity extends BaseFragment implements
 				return false;
 			}
 			if (selectedView != null && selectedView.getMessageObject() != null && selectedView.getMessageObject().isAyuDeleted()) return false;
+			// [Alexgram: Allow Forwarding/Copying] - Start
 			final boolean noforwards = (
 				chatActivity != null && chatActivity.isPeerNoForwards() ||
 				selectedView != null && selectedView.getMessageObject() != null && selectedView.getMessageObject().messageOwner != null && selectedView.getMessageObject().messageOwner.noforwards
-			);
+			) && !NaConfig.INSTANCE.getAllowForwardingRestriction().Bool();
+			// [Alexgram: Allow Forwarding/Copying] - End
 			return !isFactCheck && (
 				chatActivity != null && chatActivity.getCurrentEncryptedChat() == null &&
 				(selectedView == null ||
@@ -8587,7 +8591,9 @@ public class ChatActivity extends BaseFragment implements
 			updateSelectedMessageReactions();
 		});*/
 		// left button action start
-		boolean noForwards = getMessagesController().isChatNoForwards(currentChat) || currentChat != null && currentChat.noforwards;
+		// [Alexgram: Allow Forwarding/Copying] - Start
+		boolean noForwards = (getMessagesController().isChatNoForwards(currentChat) || currentChat != null && currentChat.noforwards) && !NaConfig.INSTANCE.getAllowForwardingRestriction().Bool();
+		// [Alexgram: Allow Forwarding/Copying] - End
 		boolean currentLeftButtonNoForwards = isCurrentLeftButtonNoForwards();
 		ChatsHelper chatsHelper = ChatsHelper.getInstance(currentAccount);
 		int leftButtonAction = ChatsHelper.getLeftButtonAction(this, currentLeftButtonNoForwards);
@@ -12900,7 +12906,9 @@ public class ChatActivity extends BaseFragment implements
 			for (int i = 0; i < selectedMessagesIds.length; ++i) {
 				for (int j = 0; j < selectedMessagesIds[i].size(); ++j) {
 					MessageObject msg = selectedMessagesIds[i].valueAt(j);
-					if (msg != null && msg.messageOwner != null && msg.messageOwner.noforwards) {
+					// [Alexgram: Allow Forwarding/Copying] - Start
+					if (msg != null && msg.messageOwner != null && msg.messageOwner.noforwards && !NaConfig.INSTANCE.getAllowForwardingRestriction().Bool()) {
+					// [Alexgram: Allow Forwarding/Copying] - End
 						return true;
 					}
 				}
@@ -14112,7 +14120,9 @@ public class ChatActivity extends BaseFragment implements
 	}
 
 	private void showTextSelectionHint(MessageObject messageObject) {
-		if (getParentActivity() == null || getMessagesController().isPeerNoForwards(messageObject.getDialogId()) || (messageObject != null && messageObject.messageOwner != null && messageObject.messageOwner.noforwards)) {
+		// [Alexgram: Allow Forwarding/Copying] - Start
+		if (getParentActivity() == null || (getMessagesController().isPeerNoForwards(messageObject.getDialogId()) || (messageObject != null && messageObject.messageOwner != null && messageObject.messageOwner.noforwards)) && !NaConfig.INSTANCE.getAllowForwardingRestriction().Bool()) {
+		// [Alexgram: Allow Forwarding/Copying] - End
 			return;
 		}
 		CharSequence text;
@@ -20328,7 +20338,9 @@ public class ChatActivity extends BaseFragment implements
 								MessageObject msg = selectedMessagesIds[a].valueAt(i);
 								if (msg == null) continue;
 								if (msg.isVoiceOnce() || msg.isRoundOnce()) continue;
-								if (msg.messageOwner.noforwards) continue;
+								// [Alexgram: Allow Forwarding/Copying] - Start
+								if (msg.messageOwner.noforwards && !NaConfig.INSTANCE.getAllowForwardingRestriction().Bool()) continue;
+								// [Alexgram: Allow Forwarding/Copying] - End
 								if (msg.isVoice() || msg.isRoundVideo())
 									show = true;
 							}
@@ -31976,7 +31988,9 @@ public class ChatActivity extends BaseFragment implements
 			allowPin = false;
 		}
 		allowPin = allowPin && message.getId() > 0 && (message.messageOwner.action == null || message.messageOwner.action instanceof TLRPC.TL_messageActionEmpty) && !message.isExpiredStory() && message.type != MessageObject.TYPE_STORY_MENTION;
-		boolean noforwards = isPeerNoForwards() || message.messageOwner.noforwards || getDialogId() == UserObject.VERIFY;
+		// [Alexgram: Allow Forwarding/Copying] - Start
+		boolean noforwards = (isPeerNoForwards() || message.messageOwner.noforwards || getDialogId() == UserObject.VERIFY) && !NaConfig.INSTANCE.getAllowForwardingRestriction().Bool();
+		// [Alexgram: Allow Forwarding/Copying] - End
 		boolean noforwardsOverride = false;
 		boolean noforwardsOrPaidMedia = noforwardsOverride || message.type == MessageObject.TYPE_PAID_MEDIA;
 		boolean allowUnpin = message.getDialogId() != mergeDialogId && allowPin && (pinnedMessageObjects.containsKey(message.getId()) || groupedMessages != null && !groupedMessages.messages.isEmpty() && pinnedMessageObjects.containsKey(groupedMessages.messages.get(0).getId())) && !message.isExpiredStory();
@@ -33378,7 +33392,7 @@ public class ChatActivity extends BaseFragment implements
 					}
 				}
 
-				boolean showNoForwards = (isPeerNoForwards() || message.messageOwner.noforwards && currentUser != null && currentUser.bot) && message.messageOwner.action == null && message.isSent() && !message.isEditing() && chatMode != MODE_SCHEDULED && chatMode != MODE_SAVED && getDialogId() != UserObject.VERIFY;
+				boolean showNoForwards = ((isPeerNoForwards() || message.messageOwner.noforwards && currentUser != null && currentUser.bot) && message.messageOwner.action == null && message.isSent() && !message.isEditing() && chatMode != MODE_SCHEDULED && chatMode != MODE_SAVED && getDialogId() != UserObject.VERIFY) && !NaConfig.INSTANCE.getAllowForwardingRestriction().Bool();
 				scrimPopupContainerLayout.addView(popupLayout, LayoutHelper.createLinearRelatively(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT, isReactionsAvailable ? 16 : 0, 0, isReactionsAvailable ? 36 : 0, 0));
 				scrimPopupContainerLayout.setPopupWindowLayout(popupLayout);
 				if (showNoForwards) {
@@ -34968,7 +34982,9 @@ public class ChatActivity extends BaseFragment implements
 				break;
 			}
 			case OPTION_REPLY: {
-				if (selectedObject != null && selectedObject.messageOwner != null && selectedObject.messageOwner.noforwards) {
+				// [Alexgram: Allow Forwarding/Copying] - Start
+				if (selectedObject != null && selectedObject.messageOwner != null && selectedObject.messageOwner.noforwards && !NaConfig.INSTANCE.getAllowForwardingRestriction().Bool()) {
+				// [Alexgram: Allow Forwarding/Copying] - End
 					return;
 				}
 				if (selectedObject != null && currentChat != null && (ChatObject.isNotInChat(currentChat) && !ChatObject.isMonoForum(currentChat) && !isThreadChat() || ChatObject.isChannel(currentChat) && !ChatObject.canPost(currentChat) && !currentChat.megagroup || !ChatObject.canSendMessages(currentChat))) {
@@ -37992,7 +38008,9 @@ public class ChatActivity extends BaseFragment implements
 		if (url == null || getParentActivity() == null) {
 			return;
 		}
-		boolean noforwards = isPeerNoForwards() || (messageObject != null && messageObject.messageOwner != null && messageObject.messageOwner.noforwards);
+		// [Alexgram: Allow Forwarding/Copying] - Start
+		boolean noforwards = (isPeerNoForwards() || (messageObject != null && messageObject.messageOwner != null && messageObject.messageOwner.noforwards)) && !NaConfig.INSTANCE.getAllowForwardingRestriction().Bool();
+		// [Alexgram: Allow Forwarding/Copying] - End
 		boolean noforwardsOverride = false;
 		if (url instanceof URLSpanMono) {
 			if (!noforwardsOverride || getDialogId() == UserObject.VERIFY) {
