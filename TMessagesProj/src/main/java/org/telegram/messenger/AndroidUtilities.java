@@ -2900,6 +2900,7 @@ public class AndroidUtilities {
         }
     }
 
+    // [Alexgram: Force Max FPS] - Start
     public static void setPreferredMaxRefreshRate(Window window) {
         setPreferredMaxRefreshRate(window, screenMaxRefreshRate);
     }
@@ -3019,6 +3020,7 @@ public class AndroidUtilities {
             }
         }
     }
+    // [Alexgram: Force Max FPS] - End
 
     public static double fixLocationCoord(double value) {
         return ((long) (value * 1000000)) / 1000000.0;

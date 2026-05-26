@@ -203,8 +203,10 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
             getString(R.string.PerformanceClassAverage),
             getString(R.string.PerformanceClassLow),
     }, null));
+    // [Alexgram: Force Max FPS] - Start
     private final AbstractConfigCell forceMaxRefreshRateRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getForceMaxRefreshRate(), getString(R.string.ExperimentalForceMaxFPSInfo), getString(R.string.ExperimentalForceMaxFPS)));
     private final AbstractConfigCell dividerForceMaxFPS = cellGroup.appendCell(new ConfigCellDivider());
+    // [Alexgram: Force Max FPS] - End
 
     // Story
     private final AbstractConfigCell headerStory = cellGroup.appendCell(new ConfigCellHeader(getString(R.string.Story)));
@@ -332,11 +334,13 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
                 tooltip.showWithAction(0, UndoView.ACTION_NEED_RESTART, null, null);
             } else if (key.equals(NaConfig.INSTANCE.getRunInBackground().getKey())) {
                 updateRunInBackground((Boolean) newValue);
+            // [Alexgram: Force Max FPS] - Start
             } else if (key.equals(NaConfig.INSTANCE.getForceMaxRefreshRate().getKey())) {
                 tooltip.showWithAction(0, UndoView.ACTION_NEED_RESTART, null, null);
                 if (getParentActivity() != null) {
                     AndroidUtilities.setPreferredMaxRefreshRate(getParentActivity().getWindow());
                 }
+            // [Alexgram: Force Max FPS] - End
             } else if (key.equals(NaConfig.INSTANCE.getV8dAudio().getKey())) {
                 tooltip.showWithAction(0, UndoView.ACTION_NEED_RESTART, null, null);
             }

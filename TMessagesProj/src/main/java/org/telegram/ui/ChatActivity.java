@@ -47831,7 +47831,9 @@ public class ChatActivity extends BaseFragment implements
 			allowPin = false;
 		}
 		allowPin = allowPin && message.getId() > 0 && (message.messageOwner.action == null || message.messageOwner.action instanceof TLRPC.TL_messageActionEmpty) && !message.isExpiredStory() && message.type != MessageObject.TYPE_STORY_MENTION;
-		boolean noforwards = isPeerNoForwards() || message.messageOwner.noforwards || getDialogId() == UserObject.VERIFY;
+		// [Alexgram: Allow Forwarding/Copying] - Start
+		boolean noforwards = (isPeerNoForwards() || message.messageOwner.noforwards || getDialogId() == UserObject.VERIFY) && !NaConfig.INSTANCE.getAllowForwardingRestriction().Bool();
+		// [Alexgram: Allow Forwarding/Copying] - End
 		boolean noforwardsOverride = false;
 		boolean noforwardsOrPaidMedia = noforwardsOverride || message.type == MessageObject.TYPE_PAID_MEDIA;
 		boolean allowUnpin = message.getDialogId() != mergeDialogId && allowPin && (pinnedMessageObjects.containsKey(message.getId()) || groupedMessages != null && !groupedMessages.messages.isEmpty() && pinnedMessageObjects.containsKey(groupedMessages.messages.get(0).getId())) && !message.isExpiredStory();
