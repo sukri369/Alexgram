@@ -4014,8 +4014,10 @@ public class PeerStoriesView extends SizeNotifierFrameLayout implements Notifica
                         sparseIntArray.put(Theme.key_chat_messagePanelIcons, ColorUtils.blendARGB(Color.BLACK, Color.WHITE, 0.5f));
                     }
                 };
+                // [Alexgram: Allow Forwarding/Copying] - Start
                 TLRPC.Chat chat = isChannel ? MessagesController.getInstance(currentAccount).getChat(-dialogId) : null;
-                final boolean canRepost = !DISABLE_STORY_REPOSTING && MessagesController.getInstance(currentAccount).storiesEnabled() && (!isChannel && !UserObject.isService(dialogId) || ChatObject.isPublic(chat));
+                final boolean canRepost = !DISABLE_STORY_REPOSTING && MessagesController.getInstance(currentAccount).storiesEnabled() && ((!isChannel && !UserObject.isService(dialogId) || ChatObject.isPublic(chat)) || xyz.nextalone.nagram.NaConfig.INSTANCE.getAllowForwardingRestriction().Bool());
+                // [Alexgram: Allow Forwarding/Copying] - End
                 shareAlert = new ShareAlert(storyViewer.fragment.getContext(), null, null, link, null, false, link, null, false, false, canRepost, null, shareResourceProvider) {
 
                     @Override
@@ -5145,27 +5147,29 @@ public class PeerStoriesView extends SizeNotifierFrameLayout implements Notifica
                 storyItem.dialogId = dialogId;
                 storyAreasView.set(preload ? null : storyItem, emojiAnimationsOverlay);
                 currentStory.set(storyItem);
+                // [Alexgram: Allow Forwarding/Copying] - Start
                 allowShare = allowShareLink = !unsupported && currentStory.storyItem != null && !(currentStory.storyItem instanceof TL_stories.TL_storyItemDeleted) && !(currentStory.storyItem instanceof TL_stories.TL_storyItemSkipped);
                 if (allowShare) {
-                    allowShare = currentStory.allowScreenshots() && currentStory.storyItem.isPublic;
+                    allowShare = (currentStory.allowScreenshots() && currentStory.storyItem.isPublic) || xyz.nextalone.nagram.NaConfig.INSTANCE.getAllowForwardingRestriction().Bool();
                 }
                 if (allowShare) {
-                    allowShare = currentStory.storyItem.pinned || !StoriesUtilities.isExpired(currentAccount, currentStory.storyItem);
+                    allowShare = currentStory.storyItem.pinned || !StoriesUtilities.isExpired(currentAccount, currentStory.storyItem) || xyz.nextalone.nagram.NaConfig.INSTANCE.getAllowForwardingRestriction().Bool();
                 }
                 allowRepost = allowShare;
                 if (allowRepost && isChannel) {
                     final TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-dialogId);
-                    allowRepost = chat != null && ChatObject.isPublic(chat);
+                    allowRepost = (chat != null && ChatObject.isPublic(chat)) || xyz.nextalone.nagram.NaConfig.INSTANCE.getAllowForwardingRestriction().Bool();
                 }
                 if (allowShareLink) {
                     if (isChannel) {
                         final TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-dialogId);
-                        allowShareLink = chat != null && ChatObject.getPublicUsername(chat) != null;
+                        allowShareLink = (chat != null && ChatObject.getPublicUsername(chat) != null) || xyz.nextalone.nagram.NaConfig.INSTANCE.getAllowForwardingRestriction().Bool();
                     } else {
                         final TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(dialogId);
-                        allowShareLink = user != null && UserObject.getPublicUsername(user) != null && currentStory.storyItem.isPublic;
+                        allowShareLink = (user != null && UserObject.getPublicUsername(user) != null && currentStory.storyItem.isPublic) || xyz.nextalone.nagram.NaConfig.INSTANCE.getAllowForwardingRestriction().Bool();
                     }
                 }
+                // [Alexgram: Allow Forwarding/Copying] - End
                 NotificationsController.getInstance(currentAccount).processReadStories(dialogId, storyItem.id);
             }
         }

@@ -1853,7 +1853,9 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                 params = new HashMap<>();
                 params.put("parentObject", "sent_" + messageObject.messageOwner.peer_id.channel_id + "_" + messageObject.getId() + "_" + messageObject.getDialogId() + "_" + messageObject.type + "_" + messageObject.getSize());
             }
-            boolean isRestricted = NaConfig.INSTANCE.getAllowForwardingRestriction().Bool() && getMessagesController().isPeerNoForwards(messageObject.getDialogId(), true);
+            // [Alexgram: Allow Forwarding/Copying] - Start
+            boolean isRestricted = NaConfig.INSTANCE.getAllowForwardingRestriction().Bool() && (getMessagesController().isPeerNoForwards(messageObject.getDialogId(), true) || (messageObject.messageOwner != null && messageObject.messageOwner.noforwards));
+            // [Alexgram: Allow Forwarding/Copying] - End
 
             File f = getFileLoader().getPathToMessage(messageObject.messageOwner);
             String path = (f != null && f.exists()) ? f.getAbsolutePath() : messageObject.messageOwner.attachPath;
@@ -1938,7 +1940,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
             fparams.monoForumPeer = monoForumPeerId;
             fparams.suggestionParams = suggestionParams;
             sendMessage(fparams);
-        } else if (DialogObject.isEncryptedDialog(did) || (NaConfig.INSTANCE.getAllowForwardingRestriction().Bool() && getMessagesController().isPeerNoForwards(messageObject.getDialogId(), true))) {
+        } else if (DialogObject.isEncryptedDialog(did) || (NaConfig.INSTANCE.getAllowForwardingRestriction().Bool() && (getMessagesController().isPeerNoForwards(messageObject.getDialogId(), true) || (messageObject.messageOwner != null && messageObject.messageOwner.noforwards)))) {
             ArrayList<MessageObject> arrayList = new ArrayList<>();
             arrayList.add(messageObject);
             sendMessage(arrayList, did, true, false, true, 0, 0, null, -1, payStars, monoForumPeerId, suggestionParams);
@@ -2183,7 +2185,9 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         if (forceCopySend) {
             forceCopySend = false;
             for (int a = 0, N = messages.size(); a < N; a++) {
-                if (getMessagesController().isPeerNoForwards(messages.get(a).getDialogId(), true)) {
+                // [Alexgram: Allow Forwarding/Copying] - Start
+                if (getMessagesController().isPeerNoForwards(messages.get(a).getDialogId(), true) || (messages.get(a).messageOwner != null && messages.get(a).messageOwner.noforwards)) {
+                // [Alexgram: Allow Forwarding/Copying] - End
                     forceCopySend = true;
                     break;
                 }
