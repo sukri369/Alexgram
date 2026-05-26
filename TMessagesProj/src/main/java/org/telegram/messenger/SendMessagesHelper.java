@@ -1836,7 +1836,8 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
             FileLog.d("NK_DEBUG: album bypass starting with " + infos.size() + " items, did=" + did);
             final boolean finalForceDocument = forceDocument;
             AndroidUtilities.runOnUIThread(() -> {
-                prepareSendingMedia(AccountInstance.getInstance(currentAccount), infos, did, first.replyMessageObject, null, null, null, finalForceDocument, true, null, null, true, 0, 0, 0, false, null, null, 0, 0, false, payStars, monoForumPeerId, suggestionParams);
+                MessageObject targetReplyMsg = (first.replyMessageObject != null && first.replyMessageObject.getDialogId() == did) ? first.replyMessageObject : null;
+                prepareSendingMedia(AccountInstance.getInstance(currentAccount), infos, did, targetReplyMsg, null, null, null, finalForceDocument, true, null, null, true, 0, 0, 0, false, null, null, 0, 0, false, payStars, monoForumPeerId, suggestionParams);
             });
         } else {
             FileLog.d("NK_DEBUG: album bypass failed, no valid paths found in group of " + group.size());
@@ -1847,6 +1848,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         if (messageObject == null) {
             return;
         }
+        MessageObject targetReplyMsg = (messageObject.replyMessageObject != null && messageObject.replyMessageObject.getDialogId() == did) ? messageObject.replyMessageObject : null;
         if (messageObject.messageOwner.media != null && !(messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaEmpty) && !(messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaWebPage) && !(messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaGame) && !(messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaInvoice)) {
             HashMap<String, String> params = null;
             if (DialogObject.isEncryptedDialog(did) && messageObject.messageOwner.peer_id != null && (messageObject.messageOwner.media.photo instanceof TLRPC.TL_photo || messageObject.messageOwner.media.document instanceof TLRPC.TL_document)) {
@@ -1866,11 +1868,11 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                 if (isRestricted && path != null) {
                     final String finalPath = path;
                     AndroidUtilities.runOnUIThread(() -> {
-                        prepareSendingPhoto(AccountInstance.getInstance(currentAccount), finalPath, null, null, did, messageObject.replyMessageObject, null, null, null, messageObject.messageOwner.entities, null, null, messageObject.messageOwner.media.ttl_seconds, null, messageObject.videoEditedInfo, true, 0, 0, 0, false, messageObject.messageOwner.message, null, 0, 0, payStars, monoForumPeerId, suggestionParams);
+                        prepareSendingPhoto(AccountInstance.getInstance(currentAccount), finalPath, null, null, did, targetReplyMsg, null, null, null, messageObject.messageOwner.entities, null, null, messageObject.messageOwner.media.ttl_seconds, null, messageObject.videoEditedInfo, true, 0, 0, 0, false, messageObject.messageOwner.message, null, 0, 0, payStars, monoForumPeerId, suggestionParams);
                     });
                 } else {
                     photo = isRestricted ? cleanPhoto(photo) : photo;
-                    SendMessagesHelper.SendMessageParams fparams = SendMessagesHelper.SendMessageParams.of(photo, path, did, messageObject.replyMessageObject, null, messageObject.messageOwner.message, messageObject.messageOwner.entities, null, params, true, 0, 0, messageObject.messageOwner.media.ttl_seconds, messageObject, false);
+                    SendMessagesHelper.SendMessageParams fparams = SendMessagesHelper.SendMessageParams.of(photo, path, did, targetReplyMsg, null, messageObject.messageOwner.message, messageObject.messageOwner.entities, null, params, true, 0, 0, messageObject.messageOwner.media.ttl_seconds, messageObject, false);
                     fparams.payStars = payStars;
                     fparams.monoForumPeer = monoForumPeerId;
                     fparams.suggestionParams = suggestionParams;
@@ -1883,19 +1885,19 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                     final String finalPath = path;
                     if (MessageObject.isVideoDocument(document) || messageObject.videoEditedInfo != null) {
                         AndroidUtilities.runOnUIThread(() -> {
-                            prepareSendingVideo(AccountInstance.getInstance(currentAccount), finalPath, messageObject.videoEditedInfo, null, null, did, messageObject.replyMessageObject, null, null, null, messageObject.messageOwner.entities, messageObject.messageOwner.media.ttl_seconds, null, true, 0, 0, false, false, messageObject.messageOwner.message, null, 0, 0, payStars, monoForumPeerId, suggestionParams);
+                            prepareSendingVideo(AccountInstance.getInstance(currentAccount), finalPath, messageObject.videoEditedInfo, null, null, did, targetReplyMsg, null, null, null, messageObject.messageOwner.entities, messageObject.messageOwner.media.ttl_seconds, null, true, 0, 0, false, false, messageObject.messageOwner.message, null, 0, 0, payStars, monoForumPeerId, suggestionParams);
                         });
                     } else {
                         ArrayList<String> paths = new ArrayList<>();
                         paths.add(path);
                         final TLRPC.TL_document finalDocument = document;
                         AndroidUtilities.runOnUIThread(() -> {
-                            prepareSendingDocuments(AccountInstance.getInstance(currentAccount), paths, paths, null, messageObject.messageOwner.message, messageObject.messageOwner.entities, finalDocument.mime_type, did, messageObject.replyMessageObject, null, null, null, null, true, 0, 0, null, null, 0, 0, false, payStars, monoForumPeerId, suggestionParams);
+                            prepareSendingDocuments(AccountInstance.getInstance(currentAccount), paths, paths, null, messageObject.messageOwner.message, messageObject.messageOwner.entities, finalDocument.mime_type, did, targetReplyMsg, null, null, null, null, true, 0, 0, null, null, 0, 0, false, payStars, monoForumPeerId, suggestionParams);
                         });
                     }
                 } else {
                     document = isRestricted ? cleanDocument(document) : document;
-                    SendMessagesHelper.SendMessageParams fparams = SendMessagesHelper.SendMessageParams.of(document, null, path, did, messageObject.replyMessageObject, null, messageObject.messageOwner.message, messageObject.messageOwner.entities, null, params, true, 0, 0, messageObject.messageOwner.media.ttl_seconds, messageObject, null, false);
+                    SendMessagesHelper.SendMessageParams fparams = SendMessagesHelper.SendMessageParams.of(document, null, path, did, targetReplyMsg, null, messageObject.messageOwner.message, messageObject.messageOwner.entities, null, params, true, 0, 0, messageObject.messageOwner.media.ttl_seconds, messageObject, null, false);
                     fparams.payStars = payStars;
                     fparams.monoForumPeer = monoForumPeerId;
                     fparams.suggestionParams = suggestionParams;
@@ -1903,7 +1905,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                 }
             }
             else if (messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaVenue || messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaGeo) {
-                SendMessagesHelper.SendMessageParams fparams = SendMessagesHelper.SendMessageParams.of(messageObject.messageOwner.media, did, messageObject.replyMessageObject, null, null, null, true, 0, 0);
+                SendMessagesHelper.SendMessageParams fparams = SendMessagesHelper.SendMessageParams.of(messageObject.messageOwner.media, did, targetReplyMsg, null, null, null, true, 0, 0);
                 fparams.payStars = payStars;
                 fparams.monoForumPeer = monoForumPeerId;
                 fparams.suggestionParams = suggestionParams;
@@ -1914,7 +1916,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                 user.first_name = messageObject.messageOwner.media.first_name;
                 user.last_name = messageObject.messageOwner.media.last_name;
                 user.id = messageObject.messageOwner.media.user_id;
-                SendMessagesHelper.SendMessageParams fparams = SendMessagesHelper.SendMessageParams.of(user, did, messageObject.replyMessageObject, null, null, null, true, 0, 0);
+                SendMessagesHelper.SendMessageParams fparams = SendMessagesHelper.SendMessageParams.of(user, did, targetReplyMsg, null, null, null, true, 0, 0);
                 fparams.monoForumPeer = monoForumPeerId;
                 fparams.suggestionParams = suggestionParams;
                 fparams.payStars = payStars;
@@ -1935,7 +1937,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
             } else {
                 entities = null;
             }
-            SendMessagesHelper.SendMessageParams fparams = SendMessagesHelper.SendMessageParams.of(messageObject.messageOwner.message, did, messageObject.replyMessageObject, null, webPage, true, entities, null, null, true, 0, 0, null, false);
+            SendMessagesHelper.SendMessageParams fparams = SendMessagesHelper.SendMessageParams.of(messageObject.messageOwner.message, did, targetReplyMsg, null, webPage, true, entities, null, null, true, 0, 0, null, false);
             fparams.payStars = payStars;
             fparams.monoForumPeer = monoForumPeerId;
             fparams.suggestionParams = suggestionParams;
