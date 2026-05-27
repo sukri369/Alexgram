@@ -10,6 +10,7 @@ import android.graphics.PorterDuffColorFilter;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.InputType;
+import android.text.style.URLSpan;
 import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -380,21 +381,36 @@ public class SpecialForwardActivity extends BaseFragment {
         }
     }
 
+    private void updateMessageText(MessageObject msg, CharSequence charSequence) {
+        if (msg == null) return;
+        ArrayList<TLRPC.MessageEntity> entities = charSequence == null ? null : MediaDataController.getInstance(currentAccount).getEntities(new CharSequence[]{charSequence}, true);
+        msg.messageOwner.message = charSequence == null ? "" : charSequence.toString();
+        TLRPC.Message message = msg.messageOwner;
+        if (entities == null) {
+            entities = new ArrayList<>();
+        }
+        message.entities = entities;
+        msg.messageOwner.send_state = 3;
+        msg.forceUpdate = true;
+        if (!msg.isMediaEmpty()) {
+            msg.caption = null;
+            msg.generateCaption();
+        } else if (TextUtils.isEmpty(msg.messageOwner.message)) {
+            msg.messageOwner.message = "Empty message";
+        }
+        msg.applyNewText();
+        msg.checkLayout();
+        msg.messageOwner.send_state = 0;
+    }
+
+    private CharSequence getMessageText(MessageObject msg) {
+        if (msg == null) return "";
+        return msg.isMediaEmpty() ? msg.messageText : msg.caption;
+    }
+
     private void saveCurrentEdit() {
         if (selectedMessage != null && commentView != null) {
-            CharSequence[] textArr = new CharSequence[]{commentView.getText()};
-            ArrayList<TLRPC.MessageEntity> entities = MediaDataController.getInstance(currentAccount).getEntities(textArr, true);
-            CharSequence newText = textArr[0];
-            
-            if (selectedMessage.caption != null || selectedMessage.isPhoto() || selectedMessage.isVideo() || selectedMessage.isDocument()) {
-                selectedMessage.caption = newText;
-            } else {
-                selectedMessage.messageText = newText;
-            }
-            if (selectedMessage.messageOwner != null) {
-                selectedMessage.messageOwner.entities = entities;
-                selectedMessage.messageOwner.message = newText.toString();
-            }
+            updateMessageText(selectedMessage, commentView.getText());
             
             MessageObject newObj = recreateMessageObject(selectedMessage);
             if (newObj != null) {
@@ -460,20 +476,92 @@ public class SpecialForwardActivity extends BaseFragment {
     private void replaceAllTexts() {
         AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
         builder.setTitle(LocaleController.getString(R.string.SpecialForwardReplaceAllTexts));
+        
+        LinearLayout layout = new LinearLayout(getParentActivity());
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(8), AndroidUtilities.dp(24), AndroidUtilities.dp(8));
+        
+        final org.telegram.ui.Cells.TextCheckCell checkPre = new org.telegram.ui.Cells.TextCheckCell(getParentActivity());
+        checkPre.setTextAndCheck("Prepend (add at beginning)", false, true);
+        
+        final org.telegram.ui.Cells.TextCheckCell checkPost = new org.telegram.ui.Cells.TextCheckCell(getParentActivity());
+        checkPost.setTextAndCheck("Append (add at end)", false, true);
+        
+        final EditText searchPhrase = new EditText(getParentActivity());
+        searchPhrase.setHint("Phrase to search and replace (leave empty to replace all)");
+        searchPhrase.setInputType(InputType.TYPE_CLASS_TEXT);
+        
         final EditText input = new EditText(getParentActivity());
+        input.setHint("Replacement / New text");
         input.setInputType(InputType.TYPE_CLASS_TEXT);
-        builder.setView(input);
+        
+        final boolean[] prep = new boolean[]{false};
+        final boolean[] app = new boolean[]{false};
+        checkPre.setOnClickListener(v -> {
+            prep[0] = !prep[0];
+            checkPre.setChecked(prep[0]);
+            if (prep[0]) {
+                app[0] = false;
+                checkPost.setChecked(false);
+                searchPhrase.setVisibility(View.GONE);
+            } else {
+                searchPhrase.setVisibility(View.VISIBLE);
+            }
+        });
+        checkPost.setOnClickListener(v -> {
+            app[0] = !app[0];
+            checkPost.setChecked(app[0]);
+            if (app[0]) {
+                prep[0] = false;
+                checkPre.setChecked(false);
+                searchPhrase.setVisibility(View.GONE);
+            } else {
+                searchPhrase.setVisibility(View.VISIBLE);
+            }
+        });
+        
+        layout.addView(checkPre, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+        layout.addView(checkPost, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+        layout.addView(searchPhrase, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 12, 0, 12));
+        layout.addView(input, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+        
+        builder.setView(layout);
         builder.setPositiveButton("Replace", (dialog, which) -> {
             String newText = input.getText().toString();
+            String searchVal = searchPhrase.getText().toString();
+            
             for (int i = 0; i < messages.size(); i++) {
                 MessageObject msg = messages.get(i);
-                if (msg.caption != null) {
-                     msg.caption = newText;
-                     if (msg.messageOwner != null) msg.messageOwner.message = newText; 
+                CharSequence oldText = getMessageText(msg);
+                if (oldText == null) oldText = "";
+                
+                SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(oldText);
+                boolean isTextEmpty = oldText.length() == 0;
+                
+                if (prep[0]) {
+                    spannableStringBuilder.replace(0, 0, isTextEmpty ? newText : newText + "\n");
+                } else if (app[0]) {
+                    if (isTextEmpty) {
+                        spannableStringBuilder.append(newText);
+                    } else {
+                        spannableStringBuilder.append("\n").append(newText);
+                    }
                 } else {
-                     msg.messageText = newText;
-                     if (msg.messageOwner != null) msg.messageOwner.message = newText;
+                    if (TextUtils.isEmpty(searchVal)) {
+                        spannableStringBuilder = new SpannableStringBuilder(newText);
+                    } else {
+                        String searchStr = searchVal;
+                        String fullStr = spannableStringBuilder.toString();
+                        int index = fullStr.indexOf(searchStr);
+                        while (index != -1) {
+                            spannableStringBuilder.replace(index, index + searchStr.length(), newText);
+                            fullStr = spannableStringBuilder.toString();
+                            index = fullStr.indexOf(searchStr, index + newText.length());
+                        }
+                    }
                 }
+                
+                updateMessageText(msg, spannableStringBuilder);
                 messages.set(i, recreateMessageObject(msg));
             }
             listAdapter.notifyDataSetChanged();
@@ -485,68 +573,48 @@ public class SpecialForwardActivity extends BaseFragment {
     private void replaceAllLinks() {
         AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
         builder.setTitle(LocaleController.getString(R.string.SpecialForwardReplaceAllLinks));
+        
+        LinearLayout layout = new LinearLayout(getParentActivity());
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(8), AndroidUtilities.dp(24), AndroidUtilities.dp(8));
+        
+        final boolean[] checked = new boolean[]{true, true, true, true};
+        String[] titles = new String[]{
+            "Internal links (tg://, t.me)",
+            "Mentions (@username)",
+            "Hashtags (#tag)",
+            "External links (http://, https://)"
+        };
+        
+        for (int i = 0; i < titles.length; i++) {
+            final int idx = i;
+            final org.telegram.ui.Cells.TextCheckCell cell = new org.telegram.ui.Cells.TextCheckCell(getParentActivity());
+            cell.setTextAndCheck(titles[i], checked[i], i < titles.length - 1);
+            cell.setOnClickListener(v -> {
+                checked[idx] = !checked[idx];
+                cell.setChecked(checked[idx]);
+            });
+            layout.addView(cell, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+        }
+        
         final EditText input = new EditText(getParentActivity());
-        input.setHint("New link");
+        input.setHint("New link (e.g. https://t.me/...)");
         input.setInputType(InputType.TYPE_TEXT_VARIATION_URI);
-        builder.setView(input);
+        layout.addView(input, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 16, 0, 0));
+        
+        builder.setView(layout);
         builder.setPositiveButton("Replace", (dialog, which) -> {
-            final String newLink = input.getText().toString();
-            // Regex to match URLs in plain text
-            Pattern urlPattern = Pattern.compile("https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)");
+            String newLink = input.getText().toString();
+            int typeMask = 0;
+            if (checked[0]) typeMask |= 1;
+            if (checked[1]) typeMask |= 2;
+            if (checked[2]) typeMask |= 4;
+            if (checked[3]) typeMask |= 8;
             
             for (int i = 0; i < messages.size(); i++) {
                 MessageObject msg = messages.get(i);
-                boolean changed = false;
-
-                // 1. Handle embedded links (TextUrl) - Update the URL target only
-                if (msg.messageOwner.entities != null && !msg.messageOwner.entities.isEmpty()) {
-                    for (int j = 0; j < msg.messageOwner.entities.size(); j++) {
-                        TLRPC.MessageEntity entity = msg.messageOwner.entities.get(j);
-                        if (entity instanceof TLRPC.TL_messageEntityTextUrl) {
-                            ((TLRPC.TL_messageEntityTextUrl) entity).url = newLink;
-                            changed = true;
-                        }
-                    }
-                }
-
-                // 2. Handle plain text URLs
-                CharSequence cs = msg.caption != null ? msg.caption : msg.messageText;
-                String text = cs != null ? cs.toString() : "";
-                
-                if (!TextUtils.isEmpty(text)) {
-                    Matcher matcher = urlPattern.matcher(text);
-                    StringBuffer sb = new StringBuffer();
-                    boolean found = false;
-                    while (matcher.find()) {
-                        matcher.appendReplacement(sb, newLink);
-                        found = true;
-                        changed = true;
-                    }
-                    matcher.appendTail(sb);
-                    
-                    if (found) {
-                        String result = sb.toString();
-                        if (msg.caption != null) msg.caption = result;
-                        else msg.messageText = result;
-                        if (msg.messageOwner != null) msg.messageOwner.message = result;
-                        
-                        // Since we changed text length, old entity offsets (except strictly TextUrl inside markdown? No, offsets are absolute) might be wrong.
-                        // Ideally we should re-parse entities or shift them. 
-                        // For simplicity, if we replaced text via regex, implies we touched URLs.
-                        // Let's clear entities that are just plain URLs to avoid offset crashes, 
-                        // but TextUrls (anchors) we updated in step 1 might now have wrong offsets if they came AFTER a replaced link.
-                        // So, we should probably clear entities if we did a regex replacement, OR try to regenerate them.
-                        // Re-generating layout with MessageObject(..., true, ...) parses entities? 
-                        // No, generateLayout=true generates StaticLayout, not RPC entities.
-                        // We will rely on simple replacement for now, fixing offsets is non-trivial. 
-                        // But to prevent crash (IndexOutOfBounds in TextLayout), we might want to clear entities if text changed significantly.
-                        // However, users want to keep "Text Link" functionality.
-                    }
-                }
-                
-                if (changed) {
-                    messages.set(i, recreateMessageObject(msg));
-                }
+                replaceLinks(msg, typeMask, newLink);
+                messages.set(i, recreateMessageObject(msg));
             }
             listAdapter.notifyDataSetChanged();
         });
@@ -554,87 +622,127 @@ public class SpecialForwardActivity extends BaseFragment {
         builder.show();
     }
 
-    private void deleteAllLinks() {
-        Pattern urlPattern = Pattern.compile("https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)");
-        for (int i = 0; i < messages.size(); i++) {
-            MessageObject msg = messages.get(i);
-            boolean changed = false;
-
-            // 1. Remove embedded links (Convert TextUrl to plain text label - keep text, remove entity)
-            if (msg.messageOwner.entities != null && !msg.messageOwner.entities.isEmpty()) {
-                 ArrayList<TLRPC.MessageEntity> toRemove = new ArrayList<>();
-                 for (int j = 0; j < msg.messageOwner.entities.size(); j++) {
-                     TLRPC.MessageEntity entity = msg.messageOwner.entities.get(j);
-                     if (entity instanceof TLRPC.TL_messageEntityTextUrl) {
-                         // It's a text link [label](url). We want to keep 'label' but remove the link capability.
-                         // So we just remove the entity from the list. The text remains 'label'.
-                         toRemove.add(entity);
-                         changed = true;
-                     } else if (entity instanceof TLRPC.TL_messageEntityUrl) {
-                         // It's a raw URL in text. The pattern below will handle removing the text if desired.
-                         // But if we just want to unlink, we remove entity. 
-                         // "Delete all links" usually means REMOVE THE URL TEXT. 
-                         // So we leave this to the regex below.
-                         toRemove.add(entity); // Remove entity anyway to be safe
-                         changed = true;
-                     }
-                 }
-                 msg.messageOwner.entities.removeAll(toRemove);
-            }
-
-            // 2. Remove plain text URLs
-            CharSequence cs = msg.caption != null ? msg.caption : msg.messageText;
-            String text = cs != null ? cs.toString() : "";
-            
-            if (!TextUtils.isEmpty(text)) {
-                Matcher matcher = urlPattern.matcher(text);
-                String result = matcher.replaceAll("").trim(); 
-                
-                if (!result.equals(text)) {
-                    // Calculate if message becomes empty
-                    boolean isEmpty = TextUtils.isEmpty(result);
-                    boolean hasMedia = msg.isPhoto() || msg.isVideo() || msg.isDocument() || msg.isSticker();
+    private void replaceLinks(MessageObject msg, int typeMask, CharSequence newLink) {
+        CharSequence text = getMessageText(msg);
+        if (text == null) return;
+        
+        SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(text);
+        Object[] spans = spannableStringBuilder.getSpans(0, spannableStringBuilder.length(), Object.class);
+        if (spans != null && spans.length > 0) {
+            for (Object obj : spans) {
+                if (obj instanceof URLSpan) {
+                    String url = ((URLSpan) obj).getURL();
+                    boolean shouldReplace = (org.telegram.messenger.browser.Browser.isInternalUrl(url, null) && (typeMask & 1) != 0)
+                            || (url.startsWith("@") && (typeMask & 2) != 0)
+                            || (url.startsWith("#") && (typeMask & 4) != 0)
+                            || (!url.startsWith("@") && !url.startsWith("#") && !org.telegram.messenger.browser.Browser.isInternalUrl(url, null) && (typeMask & 8) != 0);
                     
-                    if (isEmpty && !hasMedia) {
-                        // If it becomes empty text message, maybe user wants to delete the MessageObject?
-                        // Or maybe we should keep it as empty? 
-                        // User complained "it also hide message with links". 
-                        // If we skip updating 'messageText' for empty result, the link stays.
-                        // If we update it, it vanishes.
-                        // Let's assume user doesn't want empty messages. 
-                        // But we can't delete message here easily while iterating without messing up index/list.
-                        // We'll set it to empty string.
-                        // If user creates a message with JUST a link, and deletes links, it becomes empty.
-                        // This seems correct for "Delete all links". 
-                        // BUT maybe user means "Unlink" (keep text as is)? 
-                        // Given "Delete", removal is expected. 
-                        // I will keep the behavior but ensure we recreateObject properly.
+                    if (shouldReplace) {
+                        try {
+                            int spanStart = spannableStringBuilder.getSpanStart(obj);
+                            int spanEnd = spannableStringBuilder.getSpanEnd(obj);
+                            if (spanStart >= 0 && spanEnd >= 0 && spanStart <= spannableStringBuilder.length() && spanEnd <= spannableStringBuilder.length()) {
+                                spannableStringBuilder.replace(spanStart, spanEnd, newLink);
+                                spannableStringBuilder.removeSpan(obj);
+                            }
+                        } catch (Exception e) {
+                            FileLog.e(e);
+                        }
                     }
-                    
-                    if (msg.caption != null) msg.caption = result;
-                    else msg.messageText = result;
-                    
-                    if (msg.messageOwner != null) msg.messageOwner.message = result;
-                    changed = true;
                 }
             }
+        }
+        updateMessageText(msg, spannableStringBuilder);
+    }
+
+    private void deleteAllLinks() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+        builder.setTitle(LocaleController.getString(R.string.SpecialForwardDeleteAllLinks));
+        
+        LinearLayout layout = new LinearLayout(getParentActivity());
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(8), AndroidUtilities.dp(24), AndroidUtilities.dp(8));
+        
+        final boolean[] checked = new boolean[]{true, true, true, true};
+        String[] titles = new String[]{
+            "Internal links (tg://, t.me)",
+            "Mentions (@username)",
+            "Hashtags (#tag)",
+            "External links (http://, https://)"
+        };
+        
+        for (int i = 0; i < titles.length; i++) {
+            final int idx = i;
+            final org.telegram.ui.Cells.TextCheckCell cell = new org.telegram.ui.Cells.TextCheckCell(getParentActivity());
+            cell.setTextAndCheck(titles[i], checked[i], i < titles.length - 1);
+            cell.setOnClickListener(v -> {
+                checked[idx] = !checked[idx];
+                cell.setChecked(checked[idx]);
+            });
+            layout.addView(cell, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+        }
+        
+        builder.setView(layout);
+        builder.setPositiveButton("Delete", (dialog, which) -> {
+            int typeMask = 0;
+            if (checked[0]) typeMask |= 1;
+            if (checked[1]) typeMask |= 2;
+            if (checked[2]) typeMask |= 4;
+            if (checked[3]) typeMask |= 8;
             
-            if (changed) {
+            for (int i = 0; i < messages.size(); i++) {
+                MessageObject msg = messages.get(i);
+                deleteLinks(msg, typeMask);
                 messages.set(i, recreateMessageObject(msg));
             }
+            listAdapter.notifyDataSetChanged();
+        });
+        builder.setNegativeButton("Cancel", null);
+        builder.show();
+    }
+
+    private void deleteLinks(MessageObject msg, int typeMask) {
+        CharSequence text = getMessageText(msg);
+        if (text == null) return;
+        
+        SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(text);
+        Object[] spans = spannableStringBuilder.getSpans(0, spannableStringBuilder.length(), Object.class);
+        if (spans != null && spans.length > 0) {
+            for (Object obj : spans) {
+                if (obj instanceof URLSpan) {
+                    String url = ((URLSpan) obj).getURL();
+                    boolean shouldDelete = (org.telegram.messenger.browser.Browser.isInternalUrl(url, null) && (typeMask & 1) != 0)
+                            || (url.startsWith("@") && (typeMask & 2) != 0)
+                            || (url.startsWith("#") && (typeMask & 4) != 0)
+                            || (!url.startsWith("@") && !url.startsWith("#") && !org.telegram.messenger.browser.Browser.isInternalUrl(url, null) && (typeMask & 8) != 0);
+                    
+                    if (shouldDelete) {
+                        try {
+                            int spanStart = spannableStringBuilder.getSpanStart(obj);
+                            int spanEnd = spannableStringBuilder.getSpanEnd(obj);
+                            if (spanStart >= 0 && spanEnd >= 0 && spanStart <= spannableStringBuilder.length() && spanEnd <= spannableStringBuilder.length()) {
+                                spannableStringBuilder.delete(spanStart, spanEnd);
+                                spannableStringBuilder.removeSpan(obj);
+                            }
+                        } catch (Exception e) {
+                            FileLog.e(e);
+                        }
+                    }
+                }
+            }
         }
-        listAdapter.notifyDataSetChanged();
+        updateMessageText(msg, spannableStringBuilder);
     }
 
     private void deleteAllCaptions() {
         for (int i = 0; i < messages.size(); i++) {
             MessageObject msg = messages.get(i);
             msg.caption = null;
-            // Also might need to clear messageText if it was derived from caption? 
             if (msg.isPhoto() || msg.isVideo() || msg.isDocument()) {
                 msg.messageText = "";
                 if (msg.messageOwner != null) msg.messageOwner.message = "";
             }
+            updateMessageText(msg, "");
             messages.set(i, recreateMessageObject(msg));
         }
         listAdapter.notifyDataSetChanged();
