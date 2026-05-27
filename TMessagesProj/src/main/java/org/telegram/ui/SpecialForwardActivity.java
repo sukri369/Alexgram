@@ -1357,7 +1357,7 @@ public class SpecialForwardActivity extends ChatActivity {
         
         private void showOptionsMenu(View anchorView) {
             boolean selectAllOn = selectedDialogs.size() == filteredDialogs.size() && !filteredDialogs.isEmpty();
-            ItemOptions.makeOptions(SpecialForwardActivity.this, anchorView)
+            ItemOptions.makeOptions(containerView, anchorView)
                 .add(selectAllOn ? R.drawable.baseline_check_box_24 : R.drawable.baseline_check_box_outline_blank_24, "Select All", () -> {
                     if (!selectAllOn) {
                         for (TLRPC.Dialog d : filteredDialogs) selectedDialogs.put(d.id, d);
