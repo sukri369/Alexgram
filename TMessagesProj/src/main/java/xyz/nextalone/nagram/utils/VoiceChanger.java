@@ -47,6 +47,7 @@ public class VoiceChanger {
     // ─── Processor state ─────────────────────────────────────────────────────
     private static int lastEffect = -1;
     private static Processor processor = null;
+    private static long lastProcessTime = 0;
 
     public static void process(ByteBuffer buffer, int count) {
         if (buffer == null || count <= 0) return;
@@ -60,6 +61,12 @@ public class VoiceChanger {
             }
             return;
         }
+
+        long now = System.currentTimeMillis();
+        if (now - lastProcessTime > 1000) {
+            destroyProcessor();
+        }
+        lastProcessTime = now;
 
         if (effect != lastEffect) {
             destroyProcessor();
@@ -86,7 +93,11 @@ public class VoiceChanger {
 
             // Create processor on first call (Telegraph creates per recording session)
             if (processor == null) {
-                processor = createProcessor(effect, SAMPLE_RATE, numSamples);
+                int sRate = SAMPLE_RATE;
+                try {
+                    sRate = org.telegram.messenger.MediaController.getInstance().sampleRate;
+                } catch (Throwable ignored) {}
+                processor = createProcessor(effect, sRate, numSamples);
             }
 
             // Process
@@ -187,6 +198,7 @@ public class VoiceChanger {
         private final SynthesisFilterBank synthesis;
         private final float[] floatBuf;
         private final ShortQueue inputQueue;
+        private final ShortQueue outputQueue;
 
         SpectralProcessor(int effect, int sampleRate, int bufferSize, FFTRatio ratio) {
             this.effect = effect;
@@ -196,19 +208,23 @@ public class VoiceChanger {
             this.analysis = new AnalysisFilterBank(fftSize, step, true);
             this.synthesis = new SynthesisFilterBank(fftSize, step, true);
             this.inputQueue = new ShortQueue(sampleRate * 2);
+            this.outputQueue = new ShortQueue(sampleRate * 2);
         }
 
         @Override
         public short[] process(short[] pcm) {
             inputQueue.write(pcm);
-            // Drain: run until we have output or queue is exhausted
-            short[] out = null;
-            while (out == null && inputQueue.available() >= analysis.fftSize) {
+            while (inputQueue.available() >= analysis.fftSize) {
                 analysis.process(floatBuf, inputQueue);
                 applySpectralEffect(floatBuf);
-                out = synthesis.process(floatBuf);
+                short[] outFrame = synthesis.process(floatBuf);
+                if (outFrame != null) {
+                    outputQueue.write(outFrame);
+                }
             }
-            return out != null ? out : pcm;
+            short[] out = new short[pcm.length];
+            outputQueue.read(out, out.length);
+            return out;
         }
 
         private void applySpectralEffect(float[] fArr) {
@@ -253,6 +269,7 @@ public class VoiceChanger {
         private final float[] floatBuf;
         private final float[] resampleBuf;
         private final ShortQueue inputQueue;
+        private final ShortQueue outputQueue;
 
         PitchProcessor(int effect, int sampleRate, int bufferSize, float pitchFactor) {
             // Telegraph: iF = frameSize(Default), iG = stepSize(Default)
@@ -270,13 +287,13 @@ public class VoiceChanger {
             this.resample = new ResampleProcessor(fftSize, resampleSize);
             this.synthesis = new SynthesisFilterBank(resampleSize, synthStep, false); // no IFFT
             this.inputQueue = new ShortQueue(sampleRate * 2);
+            this.outputQueue = new ShortQueue(sampleRate * 2);
         }
 
         @Override
         public short[] process(short[] pcm) {
             inputQueue.write(pcm);
-            short[] out = null;
-            while (out == null && inputQueue.available() >= analysis.fftSize) {
+            while (inputQueue.available() >= analysis.fftSize) {
                 // Telegraph: analysis.b(floatBuf, audioRecord)
                 analysis.process(floatBuf, inputQueue);
                 // Telegraph: timescale.b(floatBuf)
@@ -286,9 +303,14 @@ public class VoiceChanger {
                 // Telegraph: resample.b(floatBuf, resampleBuf)
                 resample.process(floatBuf, resampleBuf);
                 // Telegraph: synthesis.a(resampleBuf)
-                out = synthesis.process(resampleBuf);
+                short[] outFrame = synthesis.process(resampleBuf);
+                if (outFrame != null) {
+                    outputQueue.write(outFrame);
+                }
             }
-            return out != null ? out : pcm;
+            short[] out = new short[pcm.length];
+            outputQueue.read(out, out.length);
+            return out;
         }
     }
 
