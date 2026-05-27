@@ -80,8 +80,6 @@ public class SpecialForwardActivity extends ChatActivity {
                     resetClone.edit_date = 0;
                     
                     MessageObject resetObj = new MessageObject(currentAccount, resetClone, false, true);
-                    resetObj.messageOwner.grouped_id = 0L;
-                    resetObj.localSentGroupId = 0L;
                     resetObj.forceUpdate = true;
                     resetObj.checkLayout();
                     
@@ -97,8 +95,6 @@ public class SpecialForwardActivity extends ChatActivity {
                     msgClone.edit_date = 0;
                     
                     MessageObject clonedObj = new MessageObject(currentAccount, msgClone, false, true);
-                    clonedObj.messageOwner.grouped_id = 0L;
-                    clonedObj.localSentGroupId = 0L;
                     clonedObj.forceUpdate = true;
                     clonedObj.checkLayout();
                     
@@ -165,6 +161,8 @@ public class SpecialForwardActivity extends ChatActivity {
         }
         
         if (chatActivityEnterView != null) {
+            chatActivityEnterView.forceShowSendButton = true;
+            chatActivityEnterView.checkSendButton(false);
             chatActivityEnterView.setVisibility(View.VISIBLE);
             chatActivityEnterView.setAllowStickersAndGifs(true, false, false, true);
             chatActivityEnterView.showEditDoneProgress(false, true);
@@ -182,11 +180,10 @@ public class SpecialForwardActivity extends ChatActivity {
                                 if (messageClone != null) {
                                     messageClone.id = selectedMessage.getId();
                                     MessageObject newCloned = new MessageObject(currentAccount, messageClone, false, true);
-                                    newCloned.messageOwner.grouped_id = 0L;
-                                    newCloned.localSentGroupId = 0L;
                                     newCloned.forceUpdate = true;
                                     newCloned.checkLayout();
                                     messages.set(idx, newCloned);
+                                    rebuildGroupedMessages();
                                     if (chatAdapter != null) {
                                         chatAdapter.notifyItemChanged(idx);
                                     }
@@ -208,7 +205,7 @@ public class SpecialForwardActivity extends ChatActivity {
             if (chatActivityEnterView.sendButtonContainer != null) {
                 for (int i = 0; i < chatActivityEnterView.sendButtonContainer.getChildCount(); i++) {
                     View child = chatActivityEnterView.sendButtonContainer.getChildAt(i);
-                    if (child.getClass().getSimpleName().equals("SendButton")) {
+                    if (child instanceof org.telegram.ui.Components.ChatActivityEnterView.SendButton) {
                         child.setOnClickListener(v -> forwardMessages());
                     }
                 }
@@ -256,6 +253,8 @@ public class SpecialForwardActivity extends ChatActivity {
         
         setupCustomEditPanel();
         updateSendBadge();
+        
+        rebuildGroupedMessages();
         
         if (messages.size() == 1) {
             startEditingMessage(messages.get(0));
@@ -361,6 +360,41 @@ public class SpecialForwardActivity extends ChatActivity {
         
         if (chatActivityEnterView != null) {
             chatActivityEnterView.setEditingMessageObject(messageObject, null, false);
+            View doneBtn = chatActivityEnterView.getDoneButton();
+            if (doneBtn != null) {
+                doneBtn.setOnClickListener(v -> {
+                    CharSequence text = chatActivityEnterView.getFieldText();
+                    if (selectedMessage != null) {
+                        updateMessageText(selectedMessage, text);
+                        int idx = messages.indexOf(selectedMessage);
+                        if (idx >= 0) {
+                            try {
+                                TLRPC.Message messageClone = cloneMessage(selectedMessage.messageOwner);
+                                if (messageClone != null) {
+                                    messageClone.id = selectedMessage.getId();
+                                    MessageObject newCloned = new MessageObject(currentAccount, messageClone, false, true);
+                                    newCloned.forceUpdate = true;
+                                    newCloned.checkLayout();
+                                    messages.set(idx, newCloned);
+                                    rebuildGroupedMessages();
+                                    if (chatAdapter != null) {
+                                        chatAdapter.notifyItemChanged(idx);
+                                    }
+                                }
+                            } catch (Exception e) {
+                                FileLog.e(e);
+                            }
+                        }
+                    }
+                    chatActivityEnterView.setEditingMessageObject(null, null, false);
+                    hideFieldPanel(true);
+                    selectedMessage = null;
+                    editingMessageObject = null;
+                    updateBottomOverlay();
+                    updateVisibleRows();
+                    updateSendBadge();
+                });
+            }
             chatActivityEnterView.setVisibility(View.VISIBLE);
             chatActivityEnterView.setFieldFocused();
         }
@@ -381,12 +415,11 @@ public class SpecialForwardActivity extends ChatActivity {
                     if (messageClone != null) {
                         messageClone.id = selectedMessage.getId();
                         MessageObject newCloned = new MessageObject(currentAccount, messageClone, false, true);
-                        newCloned.messageOwner.grouped_id = 0L;
-                        newCloned.localSentGroupId = 0L;
                         newCloned.forceUpdate = true;
                         newCloned.checkLayout();
                         
                         messages.set(idx, newCloned);
+                        rebuildGroupedMessages();
                         if (chatAdapter != null) {
                             chatAdapter.notifyItemChanged(idx);
                         }
@@ -531,14 +564,13 @@ public class SpecialForwardActivity extends ChatActivity {
                 if (messageClone != null) {
                     messageClone.id = selectedMessage.getId();
                     MessageObject newCloned = new MessageObject(currentAccount, messageClone, false, true);
-                    newCloned.messageOwner.grouped_id = 0L;
-                    newCloned.localSentGroupId = 0L;
                     newCloned.forceUpdate = true;
                     newCloned.checkLayout();
                     
                     int idx = messages.indexOf(selectedMessage);
                     if (idx >= 0) {
                         messages.set(idx, newCloned);
+                        rebuildGroupedMessages();
                         if (chatAdapter != null) {
                             chatAdapter.notifyItemChanged(idx);
                         }
@@ -565,8 +597,6 @@ public class SpecialForwardActivity extends ChatActivity {
                     if (messageClone != null) {
                         messageClone.id = workingObj.getId();
                         MessageObject newCloned = new MessageObject(currentAccount, messageClone, false, true);
-                        newCloned.messageOwner.grouped_id = 0L;
-                        newCloned.localSentGroupId = 0L;
                         newCloned.forceUpdate = true;
                         newCloned.checkLayout();
                         
@@ -577,6 +607,8 @@ public class SpecialForwardActivity extends ChatActivity {
                 }
             }
         }
+        
+        rebuildGroupedMessages();
         
         if (chatAdapter != null) {
             chatAdapter.notifyDataSetChanged();
@@ -684,8 +716,6 @@ public class SpecialForwardActivity extends ChatActivity {
                     if (messageClone != null) {
                         messageClone.id = msg.getId();
                         MessageObject newCloned = new MessageObject(currentAccount, messageClone, false, true);
-                        newCloned.messageOwner.grouped_id = 0L;
-                        newCloned.localSentGroupId = 0L;
                         newCloned.forceUpdate = true;
                         newCloned.checkLayout();
                         messages.set(i, newCloned);
@@ -694,6 +724,7 @@ public class SpecialForwardActivity extends ChatActivity {
                     FileLog.e(e);
                 }
             }
+            rebuildGroupedMessages();
             if (chatAdapter != null) {
                 chatAdapter.notifyDataSetChanged();
             }
@@ -755,8 +786,6 @@ public class SpecialForwardActivity extends ChatActivity {
                     if (messageClone != null) {
                         messageClone.id = msg.getId();
                         MessageObject newCloned = new MessageObject(currentAccount, messageClone, false, true);
-                        newCloned.messageOwner.grouped_id = 0L;
-                        newCloned.localSentGroupId = 0L;
                         newCloned.forceUpdate = true;
                         newCloned.checkLayout();
                         messages.set(i, newCloned);
@@ -765,6 +794,7 @@ public class SpecialForwardActivity extends ChatActivity {
                     FileLog.e(e);
                 }
             }
+            rebuildGroupedMessages();
             if (chatAdapter != null) {
                 chatAdapter.notifyDataSetChanged();
             }
@@ -902,8 +932,6 @@ public class SpecialForwardActivity extends ChatActivity {
                     if (messageClone != null) {
                         messageClone.id = msg.getId();
                         MessageObject newCloned = new MessageObject(currentAccount, messageClone, false, true);
-                        newCloned.messageOwner.grouped_id = 0L;
-                        newCloned.localSentGroupId = 0L;
                         newCloned.forceUpdate = true;
                         newCloned.checkLayout();
                         messages.set(i, newCloned);
@@ -912,6 +940,7 @@ public class SpecialForwardActivity extends ChatActivity {
                     FileLog.e(e);
                 }
             }
+            rebuildGroupedMessages();
             if (chatAdapter != null) {
                 chatAdapter.notifyDataSetChanged();
             }
@@ -971,8 +1000,6 @@ public class SpecialForwardActivity extends ChatActivity {
                 if (messageClone != null) {
                     messageClone.id = msg.getId();
                     MessageObject newCloned = new MessageObject(currentAccount, messageClone, false, true);
-                    newCloned.messageOwner.grouped_id = 0L;
-                    newCloned.localSentGroupId = 0L;
                     newCloned.forceUpdate = true;
                     newCloned.checkLayout();
                     messages.set(i, newCloned);
@@ -981,6 +1008,9 @@ public class SpecialForwardActivity extends ChatActivity {
                 FileLog.e(e);
             }
         }
+        
+        rebuildGroupedMessages();
+        
         if (chatAdapter != null) {
             chatAdapter.notifyDataSetChanged();
         }
@@ -988,6 +1018,25 @@ public class SpecialForwardActivity extends ChatActivity {
             startEditingMessage(selectedMessage);
         }
         updateSendBadge();
+    }
+
+    private void rebuildGroupedMessages() {
+        if (groupedMessagesMap == null) return;
+        groupedMessagesMap.clear();
+        for (MessageObject msgObj : messages) {
+            if (msgObj.getGroupId() != 0) {
+                MessageObject.GroupedMessages groupedMessages = groupedMessagesMap.get(msgObj.getGroupId());
+                if (groupedMessages == null) {
+                    groupedMessages = new MessageObject.GroupedMessages();
+                    groupedMessages.groupId = msgObj.getGroupId();
+                    groupedMessagesMap.put(groupedMessages.groupId, groupedMessages);
+                }
+                groupedMessages.messages.add(msgObj);
+            }
+        }
+        for (int i = 0; i < groupedMessagesMap.size(); i++) {
+            groupedMessagesMap.valueAt(i).calculate();
+        }
     }
 
     private void forwardMessages() {

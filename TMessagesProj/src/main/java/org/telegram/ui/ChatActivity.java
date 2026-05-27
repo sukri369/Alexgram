@@ -1005,7 +1005,7 @@ public class ChatActivity extends BaseFragment implements
 	public ArrayList<MessageObject> messages = new ArrayList<>();
 	private SparseArray<MessageObject> waitingForReplies = new SparseArray<>();
 	private LongSparseArray<ArrayList<MessageObject>> polls = new LongSparseArray<>();
-	private LongSparseArray<MessageObject.GroupedMessages> groupedMessagesMap = new LongSparseArray<>();
+	protected LongSparseArray<MessageObject.GroupedMessages> groupedMessagesMap = new LongSparseArray<>();
 	private int[] maxMessageId = new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE};
 	private int[] minMessageId = new int[]{Integer.MIN_VALUE, Integer.MIN_VALUE};
 	private int[] maxDate = new int[]{Integer.MIN_VALUE, Integer.MIN_VALUE};
@@ -4008,6 +4008,11 @@ public class ChatActivity extends BaseFragment implements
 		actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
 			@Override
 			public void onItemClick(final int id) {
+				if (isMultiChat()) {
+					if (multiChatOnMenuItemClicked(id)) {
+						return;
+					}
+				}
 				if (id == -1) {
 					if (isInPollAddOptionMode()) {
 						pollAddOptionModeClose();
@@ -13023,7 +13028,38 @@ public class ChatActivity extends BaseFragment implements
 				messages.add(selectedObject);
 			}
 		}
-		presentFragment(new SpecialForwardActivity(messages));
+		ArrayList<MessageObject> resolvedMessages = new ArrayList<>();
+		java.util.HashSet<Long> processedGroups = new java.util.HashSet<>();
+		java.util.HashSet<Integer> addedMessageIds = new java.util.HashSet<>();
+		for (MessageObject msg : messages) {
+			if (msg == null) continue;
+			long groupId = msg.getGroupId();
+			if (groupId != 0) {
+				if (!processedGroups.contains(groupId)) {
+					processedGroups.add(groupId);
+					MessageObject.GroupedMessages grouped = groupedMessagesMap.get(groupId);
+					if (grouped != null && grouped.messages != null && !grouped.messages.isEmpty()) {
+						for (MessageObject gMsg : grouped.messages) {
+							if (gMsg != null && !addedMessageIds.contains(gMsg.getId())) {
+								resolvedMessages.add(gMsg);
+								addedMessageIds.add(gMsg.getId());
+							}
+						}
+					} else {
+						if (!addedMessageIds.contains(msg.getId())) {
+							resolvedMessages.add(msg);
+							addedMessageIds.add(msg.getId());
+						}
+					}
+				}
+			} else {
+				if (!addedMessageIds.contains(msg.getId())) {
+					resolvedMessages.add(msg);
+					addedMessageIds.add(msg.getId());
+				}
+			}
+		}
+		presentFragment(new SpecialForwardActivity(resolvedMessages));
 	}
 	// [Alexgram: Special Forward] - End
 
