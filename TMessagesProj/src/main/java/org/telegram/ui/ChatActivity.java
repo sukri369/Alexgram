@@ -537,7 +537,7 @@ public class ChatActivity extends BaseFragment implements
 	private WallpaperBitmapProvider wallpaperBitmapProvider = new WallpaperBitmapProvider();
 
 	protected ChatActivityEnterView chatActivityEnterView;
-	private ChatActivityEnterTopView chatActivityEnterTopView;
+	protected ChatActivityEnterTopView chatActivityEnterTopView;
 	private ChatReplyContainer replyLayout;
 	private boolean isActionBarTooNarrow;
 	private int chatActivityEnterViewAnimateFromTop;
@@ -650,7 +650,7 @@ public class ChatActivity extends BaseFragment implements
 
 	private boolean showTapForForwardingOptionsHit;
 	private Runnable tapForForwardingOptionsHitRunnable;
-	private ImageView replyCloseImageView;
+	protected ImageView replyCloseImageView;
 	private MentionsContainerView mentionContainer;
 	private AnimatorSet mentionListAnimation;
 	public ChatAttachAlert chatAttachAlert;

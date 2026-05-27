@@ -16212,4 +16212,8 @@ public class ChatActivityEnterView extends FrameLayout implements
         cameraSelectionPopup.dimBehind();
         if (!NekoConfig.disableVibration.Bool()) performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
     }
+
+    public View getDoneButton() {
+        return doneButton;
+    }
 }
