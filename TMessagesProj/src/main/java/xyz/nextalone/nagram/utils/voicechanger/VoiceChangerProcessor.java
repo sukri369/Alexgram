@@ -20,14 +20,16 @@ public class VoiceChangerProcessor {
     private short[] shortBuf;
     private float[] floatBufIn;
     private float[] floatBufOut;
-    private float[] floatBufTime;
     private KissFFT fft;
     
     private ByteBuffer excessBuffer;
     private boolean hasExcessSamples = false;
     private boolean isError = false;
+    
+    private double modPhase = 0.0;
+    private final int sampleRate;
 
-    // Effect constants from VoiceChanger
+    // Effect constants matching xyz.nextalone.nagram.utils.VoiceChanger
     public static final int EFFECT_NONE = 0;
     public static final int EFFECT_ROBOTIC = 1;
     public static final int EFFECT_ALIEN = 2;
@@ -48,19 +50,77 @@ public class VoiceChangerProcessor {
         this.effectId = effectId;
         this.isVoip = isVoip;
         this.inputQueue = inputQueue;
+        this.sampleRate = sampleRate;
         
         // Step size/Ratio calculations matching AbstractC2422aUx / B7
         double ratio;
-        if (effectId == 2 || effectId == 3) {
+        if (effectId == EFFECT_ROBOTIC || effectId == EFFECT_ALIEN) {
             ratio = 0.5d; // Medium
-        } else if (effectId == 4) {
+        } else if (effectId == EFFECT_HOARSENESS) {
             ratio = 0.25d; // Small
         } else {
             ratio = 1.0d; // Default
         }
         
+        // Determine DSP path flags
+        boolean isSpectral = false;
+        boolean isEcho = false;
+        boolean isNoise = false;
+        boolean isCave = false;
+        boolean isPitchShift = false;
+        boolean isModulation = false;
+        int semitones = 0;
+
+        switch (effectId) {
+            case EFFECT_ROBOTIC:
+            case EFFECT_ALIEN:
+            case EFFECT_HOARSENESS:
+                isSpectral = true;
+                break;
+            case EFFECT_MODULATION:
+                isModulation = true;
+                break;
+            case EFFECT_CHILD:
+                isPitchShift = true;
+                semitones = 5; // Custom pitch shift default
+                break;
+            case EFFECT_MOUSE:
+                isPitchShift = true;
+                semitones = 9;
+                break;
+            case EFFECT_MAN:
+                isPitchShift = true;
+                semitones = -3;
+                break;
+            case EFFECT_WOMAN:
+                isPitchShift = true;
+                semitones = 3;
+                break;
+            case EFFECT_MONSTER:
+                isPitchShift = true;
+                semitones = -8;
+                break;
+            case EFFECT_ECHO:
+                isEcho = true;
+                break;
+            case EFFECT_NOISE:
+                isNoise = true;
+                break;
+            case EFFECT_HELIUM:
+                isPitchShift = true;
+                semitones = 12;
+                break;
+            case EFFECT_HEXAFLUORIDE:
+                isPitchShift = true;
+                semitones = -5;
+                break;
+            case EFFECT_CAVE:
+                isCave = true;
+                break;
+        }
+
         int frameSize;
-        if (effectId == 11 || effectId == 12 || effectId == 15) {
+        if (isEcho || isNoise || isCave || isModulation) {
             frameSize = bufferCapacity / 2;
         } else {
             int calculated = (int) (sampleRate * 0.046439909297052155d * ratio);
@@ -69,46 +129,28 @@ public class VoiceChangerProcessor {
         
         int stepSize = frameSize / 4;
         
-        int lfoMaxLimit = isVoip ? 100 : 40; // values from B7 JADX (L1, O1, etc.)
+        int lfoMaxLimit = isVoip ? 100 : 40;
         int lfoMinLimit = isVoip ? 16 : 8;
         int maxDelayLimit = isVoip ? 160 : 64;
         int minDelayLimit = isVoip ? 40 : 16;
         
         try {
-            if (effectId == 2 || effectId == 3 || effectId == 4) {
+            if (isSpectral) {
                 this.floatBufIn = new float[frameSize];
                 this.analysisFilterBank = new AnalysisFilterBank(context, sampleRate, frameSize, stepSize, true);
                 this.synthesisFilterBank = new SynthesisFilterBank(frameSize, stepSize, true);
-            } else if (effectId == 11) {
+            } else if (isModulation) {
+                this.shortBuf = new short[frameSize];
+            } else if (isEcho) {
                 this.shortBuf = new short[frameSize];
                 this.echoProcessor = new AudioEffects.EchoProcessor(sampleRate, lfoMaxLimit * 0.1f, lfoMinLimit * 0.1f);
-            } else if (effectId == 12) {
+            } else if (isNoise) {
                 this.shortBuf = new short[frameSize];
                 this.noiseProcessor = new AudioEffects.NoiseProcessor(maxDelayLimit * 0.1f);
-            } else if (effectId == 15) {
+            } else if (isCave) {
                 this.shortBuf = new short[frameSize];
                 this.echoProcessor = new AudioEffects.EchoProcessor(sampleRate, 0.7f, 0.1f);
-            } else {
-                // Pitch shifting (helium, monster, man, woman, etc.)
-                int semitones = 0;
-                if (effectId == 14) {
-                    semitones = -5;
-                } else if (effectId == 13) {
-                    semitones = 12;
-                } else if (effectId == 10) {
-                    semitones = -8;
-                } else if (effectId == 9) {
-                    semitones = 0;
-                } else if (effectId == 8) {
-                    semitones = -3;
-                } else if (effectId == 7) {
-                    semitones = 11;
-                } else if (effectId == 6) {
-                    semitones = 9;
-                } else if (effectId == 5) {
-                    semitones = lfoMaxLimit;
-                }
-                
+            } else if (isPitchShift) {
                 float factor = (float) Math.pow(2.0f, semitones / 12.0f);
                 int synthStep = Math.round(stepSize / factor);
                 int resampleSize = Math.round(frameSize / factor);
@@ -179,23 +221,31 @@ public class VoiceChangerProcessor {
             
             short[] processedSamples = null;
             while (true) {
-                if (effectId == 2) {
+                if (effectId == EFFECT_ROBOTIC) {
                     this.analysisFilterBank.b(this.floatBufIn, inputQueue);
                     AudioEffects.RoboticModifier.a(this.floatBufIn);
                     processedSamples = this.synthesisFilterBank.a(this.floatBufIn);
-                } else if (effectId == 3) {
+                } else if (effectId == EFFECT_ALIEN) {
                     this.analysisFilterBank.b(this.floatBufIn, inputQueue);
                     AudioEffects.ConjugateModifier.a(this.floatBufIn);
                     processedSamples = this.synthesisFilterBank.a(this.floatBufIn);
-                } else if (effectId == 4) {
+                } else if (effectId == EFFECT_HOARSENESS) {
                     this.analysisFilterBank.b(this.floatBufIn, inputQueue);
                     AudioEffects.RandomPhaseModifier.a(this.floatBufIn);
                     processedSamples = this.synthesisFilterBank.a(this.floatBufIn);
-                } else if (effectId == 11 || effectId == 15) {
+                } else if (effectId == EFFECT_MODULATION) {
+                    inputQueue.read(this.shortBuf, 0, this.shortBuf.length);
+                    for (int i = 0; i < this.shortBuf.length; i++) {
+                        double carrier = Math.sin(modPhase);
+                        this.shortBuf[i] = (short) Math.min(32767, Math.max(-32768, (int) (this.shortBuf[i] * carrier)));
+                        modPhase += 2 * Math.PI * 440.0 / sampleRate;
+                    }
+                    processedSamples = this.shortBuf;
+                } else if (effectId == EFFECT_ECHO || effectId == EFFECT_CAVE) {
                     inputQueue.read(this.shortBuf, 0, this.shortBuf.length);
                     this.echoProcessor.a(this.shortBuf);
                     processedSamples = this.shortBuf;
-                } else if (effectId == 12) {
+                } else if (effectId == EFFECT_NOISE) {
                     inputQueue.read(this.shortBuf, 0, this.shortBuf.length);
                     this.noiseProcessor.a(this.shortBuf);
                     processedSamples = this.shortBuf;
