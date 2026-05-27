@@ -10696,10 +10696,10 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
             codeField.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
             codeField.setOnFocusChangeListener((view, hasFocus) -> outlineField.animateSelection(hasFocus ? 1.0f : 0.0f));
             codeField.setBackground(null);
-            codeField.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(16), AndroidUtilities.dp(16), AndroidUtilities.dp(16));
-            codeField.setGravity(Gravity.CENTER_VERTICAL | Gravity.LEFT);
+            codeField.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(16 - 2.66f), AndroidUtilities.dp(16), AndroidUtilities.dp(16 - 2.66f));
+            codeField.setGravity(LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT);
             outlineField.attachEditText(codeField);
-            outlineField.addView(codeField, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_VERTICAL));
+            outlineField.addView(codeField, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.FILL, 0, 0, 0, 0));
 
             codeField.addTextChangedListener(new TextWatcher() {
                 private boolean ignoreTextChange = false;
