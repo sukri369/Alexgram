@@ -12985,6 +12985,13 @@ public class ChatActivity extends BaseFragment implements
 				messages.add(selectedMessagesIds[a].valueAt(b));
 			}
 		}
+		if (messages.isEmpty() && selectedObject != null) {
+			if (selectedObjectGroup != null) {
+				messages.addAll(selectedObjectGroup.messages);
+			} else {
+				messages.add(selectedObject);
+			}
+		}
 		presentFragment(new SpecialForwardActivity(messages));
 	}
 	// [Alexgram: Special Forward] - End
