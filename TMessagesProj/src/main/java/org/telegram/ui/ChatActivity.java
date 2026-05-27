@@ -595,7 +595,7 @@ public class ChatActivity extends BaseFragment implements
 	private ChatActivityTopFadeView topPanelLayoutFade;
 
 	private boolean ignoreItemAnimation;
-	private ChatActivityChannelButtonsLayout bottomChannelButtonsLayout;
+	protected ChatActivityChannelButtonsLayout bottomChannelButtonsLayout;
 	private ChatActivityActionsButtonsLayout actionsButtonsLayout;
 	@Nullable
 	private FrameLayout emptyViewContainer;
@@ -815,7 +815,7 @@ public class ChatActivity extends BaseFragment implements
 	public TL_account.TL_businessChatLink businessLink = null;
 
 	public String quickReplyShortcut;
-	private int chatMode;
+	protected int chatMode;
 	private int scheduledMessagesCount = -1;
 	public boolean isSubscriberSuggestions;
 
@@ -1939,6 +1939,11 @@ public class ChatActivity extends BaseFragment implements
 		public void onItemClick(View view, int position, float x, float y) {
 			if (inPreviewMode) {
 				return;
+			}
+			if (isMultiChat()) {
+				if (multiChatListOnItemClick(view, position)) {
+					return;
+				}
 			}
 			wasManualScroll = true;
 			if (view instanceof ChatActionCell && ((ChatActionCell) view).getMessageObject().isDateObject) {
@@ -3080,6 +3085,11 @@ public class ChatActivity extends BaseFragment implements
 			if (searchType == 0 || searchingHashtag == null) {
 				return false;
 			}
+		} else if (isMultiChat()) {
+			chatMode = 102;
+			if (!multiChatOnFragmentCreate()) {
+				return false;
+			}
 		} else {
 			return false;
 		}
@@ -3258,6 +3268,8 @@ public class ChatActivity extends BaseFragment implements
 			int loadIndex = lastLoadIndex++;
 			waitingForLoad.add(loadIndex);
 			getNotificationCenter().postNotificationName(NotificationCenter.messagesDidLoad, dialog_id, messageObjects.size(), messageObjects, false, 0, last_message_id, 0, 0, 2, true, classGuid, loadIndex, pinnedMessageIds.get(0), 0, MODE_PINNED);
+		} else if (isMultiChat()) {
+			loading = false;
 		} else if (!forceHistoryEmpty) {
 			loading = true;
 		}
@@ -3489,6 +3501,11 @@ public class ChatActivity extends BaseFragment implements
 
 	public void firstLoadMessages() {
 		if (firstMessagesLoaded) {
+			return;
+		}
+		if (isMultiChat()) {
+			firstMessagesLoaded = true;
+			multiChatMessagesFirstLoad(lastLoadIndex++);
 			return;
 		}
 		firstMessagesLoaded = true;
@@ -9510,6 +9527,15 @@ public class ChatActivity extends BaseFragment implements
 		}
 		// [Alexgram: AI Reply] - End
 
+		if (isMultiChat()) {
+			ActionBarMenu abMenu = actionBar.createMenu();
+			if (abMenu != null) {
+				abMenu.clearItems();
+				multiChatCreateMenuItems(abMenu);
+			}
+			multiChatOnCreateView();
+		}
+
 		return fragmentView;
 	}
 
@@ -10859,6 +10885,11 @@ public class ChatActivity extends BaseFragment implements
 			return;
 		}
 		final ActionBarMenu actionMode = actionBar.createActionMode();
+		if (isMultiChat()) {
+			if (multiChatCreateActionModeIcons(actionMode)) {
+				return;
+			}
+		}
 
 		selectedMessagesCountTextView = new NumberTextView(actionMode.getContext());
 		selectedMessagesCountTextView.setTextSize(18);
@@ -40373,8 +40404,14 @@ public class ChatActivity extends BaseFragment implements
 		return getUserConfig().getClientUserId() == getDialogId() && !getMessagesController().getSavedMessagesController().unsupported && getUserConfig().isPremium();
 	}
 
-	private ChatMessageCellDelegate chatMessageCellDelegate;
-	private ChatMessageCellDelegate getChatMessageCellDelegate() {
+	protected ChatMessageCell.ChatMessageCellDelegate chatMessageCellDelegate;
+	protected ChatMessageCell.ChatMessageCellDelegate getChatMessageCellDelegate() {
+		if (isMultiChat()) {
+			ChatMessageCell.ChatMessageCellDelegate multiDelegate = multiChatGetChatMessageDelegate();
+			if (multiDelegate != null) {
+				return multiDelegate;
+			}
+		}
 		if (chatMessageCellDelegate == null) {
 			chatMessageCellDelegate = new ChatMessageCellDelegate();
 		}
@@ -50492,4 +50529,62 @@ public class ChatActivity extends BaseFragment implements
 	}
 
 	// [Alexgram: AI Reply] - End
+
+	// [Alexgram: Special Forward Multi-Chat Hooks] - Start
+	public boolean isMultiChat() { return false; }
+	public boolean isMultiChatWithInput() { return false; }
+	protected boolean multiChatAddProxyButton() { return false; }
+	protected void multiChatAddThemeDescriptions(ArrayList<org.telegram.ui.ActionBar.ThemeDescription> arrayList) {}
+	protected boolean multiChatCanDelete() { return true; }
+	protected boolean multiChatCanSearch() { return false; }
+	protected boolean multiChatCanShowSave() { return true; }
+	protected boolean multiChatCanShowShare() { return true; }
+	protected boolean multiChatCheckEndReached() { return false; }
+	protected boolean multiChatCreateActionModeIcons(org.telegram.ui.ActionBar.ActionBarMenu actionMode) { return false; }
+	protected void multiChatCreateAdViewBottom() {}
+	protected void multiChatCreateDeleteAlert(MessageObject messageObject, SparseArray<MessageObject> sparseArray, Runnable runnable) {}
+	protected void multiChatCreateEmptyView() {}
+	protected void multiChatCreateMenuItems(org.telegram.ui.ActionBar.ActionBarMenu menu) {}
+	protected boolean multiChatDidReceivedNotification(int id, int param, Object... args) { return false; }
+	protected android.view.View multiChatGetAdViewBottom() { return null; }
+	protected int multiChatGetAvatarRight() { return 0; }
+	protected org.telegram.ui.Cells.ChatMessageCell.ChatMessageCellDelegate multiChatGetChatMessageDelegate() { return null; }
+	protected int multiChatGetChatMode() { return 0; }
+	protected boolean multiChatHaveDialogId(long dialogId) { return false; }
+	protected void multiChatHideMenuItemsOnEdit(boolean editing) {}
+	protected boolean multiChatIsReactionsAvailable() { return false; }
+	protected void multiChatJumpButton(boolean up) {}
+	protected boolean multiChatListOnItemClick(android.view.View view, int position) { return false; }
+	protected void multiChatMessagesFirstLoad(int lastLoadIndex) {}
+	protected void multiChatMessagesLoadMore(int lastLoadIndex) {}
+	protected void multiChatMessagesSetOffset(int offset) {}
+	protected boolean multiChatNeedRemoveActions() { return false; }
+	protected boolean multiChatOnBackPressed() { return true; }
+	protected void multiChatOnCreateView() {}
+	protected boolean multiChatOnEditTextItemsClick(int itemId) { return false; }
+	protected boolean multiChatOnFragmentCreate() { return false; }
+	protected void multiChatOnFragmentDestroy() {}
+	protected boolean multiChatOnMenuItemClicked(int itemId) { return false; }
+	protected void multiChatOnMessageSend(CharSequence charSequence, boolean notify, int scheduleDate, int scheduleRepeatPeriod, long topicId) {}
+	protected void multiChatOnPause() {}
+	protected void multiChatOnResume() {}
+	protected void multiChatOnTextChanged(CharSequence charSequence, boolean isSpecial, boolean force) {}
+	protected void multiChatOnTransitionClose() {}
+	protected void multiChatOnTransitionOpen() {}
+	protected void multiChatSearchButton(boolean active) {}
+	protected void multiChatSearchLoadMore() {}
+	protected void multiChatSearchOnItemClick(int position) {}
+	protected void multiChatSetNewWallpaper() {}
+	protected boolean multiChatShowBarView2() { return false; }
+	protected void multiChatUpdateTitle() {}
+	protected void multiChatUpdateUpDownButtonVisibility() {}
+	protected void setLoaded() {
+		endReached[0] = endReached[1] = true;
+		cacheEndReached[0] = cacheEndReached[1] = true;
+		forwardEndReached[0] = forwardEndReached[1] = true;
+		firstLoading = false;
+		loading = false;
+		checkDispatchHideSkeletons(false);
+	}
+	// [Alexgram: Special Forward Multi-Chat Hooks] - End
 }
