@@ -2787,6 +2787,15 @@ public class ChatActivityEnterView extends FrameLayout implements
                     super.onLayout(changed, l, t, r, b);
                     setPivotX(getWidth());
                 }
+
+                @Override
+                public void setVisibility(int visibility) {
+                    if (isSpecialForward()) {
+                        super.setVisibility(GONE);
+                    } else {
+                        super.setVisibility(visibility);
+                    }
+                }
             };
             attachLayout.setOrientation(LinearLayout.HORIZONTAL);
             attachLayout.setEnabled(false);
@@ -2829,6 +2838,15 @@ public class ChatActivityEnterView extends FrameLayout implements
                 public boolean dispatchTouchEvent(MotionEvent event) {
                     if (getAlpha() < 0.5f) return false;
                     return super.dispatchTouchEvent(event);
+                }
+
+                @Override
+                public void setVisibility(int visibility) {
+                    if (isSpecialForward()) {
+                        super.setVisibility(GONE);
+                    } else {
+                        super.setVisibility(visibility);
+                    }
                 }
             };
             attachButton.setScaleType(ImageView.ScaleType.CENTER);
@@ -8661,7 +8679,30 @@ public class ChatActivityEnterView extends FrameLayout implements
         return encryptedChat == null || AndroidUtilities.getPeerLayerVersion(encryptedChat.layer) >= 101;
     }
 
+    private boolean isSpecialForward() {
+        return delegate instanceof org.telegram.ui.SpecialForwardActivity || parentFragment instanceof org.telegram.ui.SpecialForwardActivity;
+    }
+
     public void checkSendButton(boolean animated) {
+        if (isSpecialForward()) {
+            if (audioVideoButtonContainer != null) audioVideoButtonContainer.setVisibility(GONE);
+            if (audioVideoSendButton != null) audioVideoSendButton.setVisibility(GONE);
+            if (attachLayout != null) attachLayout.setVisibility(GONE);
+            if (attachButton != null) attachButton.setVisibility(GONE);
+            if (expandStickersButton != null) expandStickersButton.setVisibility(GONE);
+            if (botButton != null) botButton.setVisibility(GONE);
+            if (slowModeButton != null) slowModeButton.setVisibility(GONE);
+            
+            android.view.View sendBtn = getSendButtonInternal();
+            if (sendBtn != null) {
+                sendBtn.setVisibility(VISIBLE);
+                sendBtn.setScaleX(1.0f);
+                sendBtn.setScaleY(1.0f);
+                sendBtn.setAlpha(1.0f);
+            }
+            updateFieldRight(0);
+            return;
+        }
         if (editingMessageObject != null || recordingAudioVideo) {
             return;
         }

@@ -82,6 +82,7 @@ public class SpecialForwardActivity extends ChatActivity {
                     resetClone.edit_date = 0;
                     
                     MessageObject resetObj = new MessageObject(currentAccount, resetClone, false, true);
+                    resetObj.stableId = ChatActivity.lastStableId++;
                     resetObj.forceUpdate = true;
                     resetObj.checkLayout();
                     
@@ -97,6 +98,7 @@ public class SpecialForwardActivity extends ChatActivity {
                     msgClone.edit_date = 0;
                     
                     MessageObject clonedObj = new MessageObject(currentAccount, msgClone, false, true);
+                    clonedObj.stableId = resetObj.stableId;
                     clonedObj.forceUpdate = true;
                     clonedObj.checkLayout();
                     
@@ -182,6 +184,7 @@ public class SpecialForwardActivity extends ChatActivity {
                                 if (messageClone != null) {
                                     messageClone.id = selectedMessage.getId();
                                     MessageObject newCloned = new MessageObject(currentAccount, messageClone, false, true);
+                                    newCloned.stableId = selectedMessage.stableId;
                                     newCloned.forceUpdate = true;
                                     newCloned.checkLayout();
                                     messages.set(idx, newCloned);
@@ -353,6 +356,7 @@ public class SpecialForwardActivity extends ChatActivity {
                                 if (messageClone != null) {
                                     messageClone.id = selectedMessage.getId();
                                     MessageObject newCloned = new MessageObject(currentAccount, messageClone, false, true);
+                                    newCloned.stableId = selectedMessage.stableId;
                                     newCloned.forceUpdate = true;
                                     newCloned.checkLayout();
                                     messages.set(idx, newCloned);
@@ -395,6 +399,7 @@ public class SpecialForwardActivity extends ChatActivity {
                     if (messageClone != null) {
                         messageClone.id = selectedMessage.getId();
                         MessageObject newCloned = new MessageObject(currentAccount, messageClone, false, true);
+                        newCloned.stableId = selectedMessage.stableId;
                         newCloned.forceUpdate = true;
                         newCloned.checkLayout();
                         
@@ -544,6 +549,7 @@ public class SpecialForwardActivity extends ChatActivity {
                 if (messageClone != null) {
                     messageClone.id = selectedMessage.getId();
                     MessageObject newCloned = new MessageObject(currentAccount, messageClone, false, true);
+                    newCloned.stableId = selectedMessage.stableId;
                     newCloned.forceUpdate = true;
                     newCloned.checkLayout();
                     
@@ -577,6 +583,7 @@ public class SpecialForwardActivity extends ChatActivity {
                     if (messageClone != null) {
                         messageClone.id = workingObj.getId();
                         MessageObject newCloned = new MessageObject(currentAccount, messageClone, false, true);
+                        newCloned.stableId = workingObj.stableId;
                         newCloned.forceUpdate = true;
                         newCloned.checkLayout();
                         
@@ -696,6 +703,7 @@ public class SpecialForwardActivity extends ChatActivity {
                     if (messageClone != null) {
                         messageClone.id = msg.getId();
                         MessageObject newCloned = new MessageObject(currentAccount, messageClone, false, true);
+                        newCloned.stableId = msg.stableId;
                         newCloned.forceUpdate = true;
                         newCloned.checkLayout();
                         messages.set(i, newCloned);
@@ -766,6 +774,7 @@ public class SpecialForwardActivity extends ChatActivity {
                     if (messageClone != null) {
                         messageClone.id = msg.getId();
                         MessageObject newCloned = new MessageObject(currentAccount, messageClone, false, true);
+                        newCloned.stableId = msg.stableId;
                         newCloned.forceUpdate = true;
                         newCloned.checkLayout();
                         messages.set(i, newCloned);
@@ -912,6 +921,7 @@ public class SpecialForwardActivity extends ChatActivity {
                     if (messageClone != null) {
                         messageClone.id = msg.getId();
                         MessageObject newCloned = new MessageObject(currentAccount, messageClone, false, true);
+                        newCloned.stableId = msg.stableId;
                         newCloned.forceUpdate = true;
                         newCloned.checkLayout();
                         messages.set(i, newCloned);
@@ -980,6 +990,7 @@ public class SpecialForwardActivity extends ChatActivity {
                 if (messageClone != null) {
                     messageClone.id = msg.getId();
                     MessageObject newCloned = new MessageObject(currentAccount, messageClone, false, true);
+                    newCloned.stableId = msg.stableId;
                     newCloned.forceUpdate = true;
                     newCloned.checkLayout();
                     messages.set(i, newCloned);
@@ -1259,13 +1270,16 @@ public class SpecialForwardActivity extends ChatActivity {
             rootLayout.addView(scrollCategories, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 8));
             
             // 4. Grid view and floating submit send button
-            FrameLayout mainContainer = new FrameLayout(context);
-            
             gridView = new RecyclerView(context);
             gridView.setLayoutManager(new GridLayoutManager(context, 4));
             adapter = new ShareAdapter(context);
             gridView.setAdapter(adapter);
-            mainContainer.addView(gridView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 260));
+            rootLayout.addView(gridView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 260));
+            
+            FrameLayout frameLayout = new FrameLayout(context);
+            containerView = frameLayout;
+            
+            frameLayout.addView(rootLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
             
             sendButtonContainer = new FrameLayout(context);
             sendButtonContainer.setVisibility(View.GONE);
@@ -1311,10 +1325,7 @@ public class SpecialForwardActivity extends ChatActivity {
             );
             sendButtonContainer.addView(sendBadge, lpBadge);
             
-            mainContainer.addView(sendButtonContainer, LayoutHelper.createFrame(48, 48, Gravity.RIGHT | Gravity.BOTTOM, 0, 0, 16, 16));
-            
-            rootLayout.addView(mainContainer);
-            containerView = rootLayout;
+            frameLayout.addView(sendButtonContainer, LayoutHelper.createFrame(48, 48, Gravity.RIGHT | Gravity.BOTTOM, 0, 0, 16, 16));
         }
         
         private void filterDialogs() {
