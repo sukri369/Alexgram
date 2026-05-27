@@ -41,6 +41,7 @@ import org.telegram.ui.ActionBar.BottomSheet;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.Switch;
+import org.telegram.ui.Components.ItemOptions;
 import android.text.SpannableStringBuilder;
 import java.util.ArrayList;
 
@@ -72,6 +73,7 @@ public class SpecialForwardActivity extends ChatActivity {
                 if (resetClone != null) {
                     int id = nextUniqueId--;
                     resetClone.id = id;
+                    resetClone.fwd_msg_id = msg.getId();
                     
                     // Strip replies, reactions, and forwards metadata
                     resetClone.flags &= ~0x8D40;
@@ -90,6 +92,7 @@ public class SpecialForwardActivity extends ChatActivity {
                     
                     TLRPC.Message msgClone = cloneMessage(msg.messageOwner);
                     msgClone.id = id;
+                    msgClone.fwd_msg_id = msg.getId();
                     msgClone.flags &= ~0x8D40;
                     msgClone.reply_to = null;
                     msgClone.reactions = null;
@@ -1223,7 +1226,7 @@ public class SpecialForwardActivity extends ChatActivity {
             threeDots.setImageResource(R.drawable.ic_ab_other);
             threeDots.setColorFilter(new android.graphics.PorterDuffColorFilter(Theme.getColor(Theme.key_dialogIcon), android.graphics.PorterDuff.Mode.SRC_IN));
             threeDots.setBackground(Theme.getSelectorDrawable(false));
-            threeDots.setOnClickListener(v -> showOptionsMenu(context));
+            threeDots.setOnClickListener(v -> showOptionsMenu(threeDots));
             topRow.addView(threeDots, LayoutHelper.createLinear(36, 36, Gravity.CENTER_VERTICAL, 4, 0, 4, 0));
             
             rootLayout.addView(topRow, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 8));
@@ -1352,93 +1355,31 @@ public class SpecialForwardActivity extends ChatActivity {
             frameLayout.addView(sendButtonContainer, LayoutHelper.createFrame(48, 48, Gravity.RIGHT | Gravity.BOTTOM, 0, 0, 16, 16));
         }
         
-        private void showOptionsMenu(Context context) {
-            int textColor = Theme.getColor(Theme.key_dialogTextBlack);
-            int iconColor = Theme.getColor(Theme.key_dialogIcon);
-            int accentColor = Theme.getColor(Theme.key_dialogTextBlue);
-
-            LinearLayout menu = new LinearLayout(context);
-            menu.setOrientation(LinearLayout.VERTICAL);
-            menu.setPadding(0, AndroidUtilities.dp(8), 0, AndroidUtilities.dp(8));
-
-            // Row 1: Select All
-            boolean[] selectAllOn = {selectedDialogs.size() == filteredDialogs.size() && !filteredDialogs.isEmpty()};
-            LinearLayout rowSelectAll = buildMenuRow(context, R.drawable.baseline_check_box_outline_blank_24, "Select All", textColor, iconColor);
-            ImageView icSelectAll = (ImageView) rowSelectAll.getChildAt(0);
-            if (selectAllOn[0]) tintChecked(icSelectAll, accentColor);
-            rowSelectAll.setOnClickListener(v -> {
-                selectAllOn[0] = !selectAllOn[0];
-                if (selectAllOn[0]) {
-                    for (TLRPC.Dialog d : filteredDialogs) selectedDialogs.put(d.id, d);
-                    tintChecked(icSelectAll, accentColor);
-                } else {
-                    selectedDialogs.clear();
-                    icSelectAll.setImageResource(R.drawable.baseline_check_box_outline_blank_24);
-                    icSelectAll.setColorFilter(new android.graphics.PorterDuffColorFilter(iconColor, android.graphics.PorterDuff.Mode.SRC_IN));
-                }
-                if (adapter != null) adapter.notifyDataSetChanged();
-                sendButtonContainer.setVisibility(selectedDialogs.size() > 0 ? View.VISIBLE : View.GONE);
-                if (selectedDialogs.size() > 0) sendBadge.setText(String.valueOf(selectedDialogs.size()));
-            });
-            menu.addView(rowSelectAll);
-
-            // Row 2: Send as album
-            LinearLayout rowAlbum = buildMenuRow(context, R.drawable.baseline_check_box_outline_blank_24, "Send as album", textColor, iconColor);
-            ImageView icAlbum = (ImageView) rowAlbum.getChildAt(0);
-            if (sendAsAlbum) tintChecked(icAlbum, accentColor);
-            rowAlbum.setOnClickListener(v -> {
-                sendAsAlbum = !sendAsAlbum;
-                if (sendAsAlbum) tintChecked(icAlbum, accentColor);
-                else { icAlbum.setImageResource(R.drawable.baseline_check_box_outline_blank_24); icAlbum.setColorFilter(new android.graphics.PorterDuffColorFilter(iconColor, android.graphics.PorterDuff.Mode.SRC_IN)); }
-            });
-            menu.addView(rowAlbum);
-
-            // Row 3: Remove link preview
-            LinearLayout rowLink = buildMenuRow(context, R.drawable.baseline_check_box_outline_blank_24, "Remove link preview", textColor, iconColor);
-            ImageView icLink = (ImageView) rowLink.getChildAt(0);
-            if (removeLinkPreview) tintChecked(icLink, accentColor);
-            rowLink.setOnClickListener(v -> {
-                removeLinkPreview = !removeLinkPreview;
-                if (removeLinkPreview) tintChecked(icLink, accentColor);
-                else { icLink.setImageResource(R.drawable.baseline_check_box_outline_blank_24); icLink.setColorFilter(new android.graphics.PorterDuffColorFilter(iconColor, android.graphics.PorterDuff.Mode.SRC_IN)); }
-            });
-            menu.addView(rowLink);
-
-            // Row 4: Show as list (toggle, uses list icon always)
-            LinearLayout rowList = buildMenuRow(context, R.drawable.ic_filter_list, "Show as list", textColor, showAsList ? accentColor : iconColor);
-            ImageView icList = (ImageView) rowList.getChildAt(0);
-            rowList.setOnClickListener(v -> {
-                showAsList = !showAsList;
-                gridView.setLayoutManager(showAsList ? listLayoutManager : gridLayoutManager);
-                icList.setColorFilter(new android.graphics.PorterDuffColorFilter(showAsList ? accentColor : iconColor, android.graphics.PorterDuff.Mode.SRC_IN));
-                if (adapter != null) adapter.notifyDataSetChanged();
-            });
-            menu.addView(rowList);
-
-            new AlertDialog.Builder(context).setView(menu).create().show();
-        }
-
-        private void tintChecked(ImageView icon, int color) {
-            icon.setImageResource(R.drawable.baseline_check_circle_24);
-            icon.setColorFilter(new android.graphics.PorterDuffColorFilter(color, android.graphics.PorterDuff.Mode.SRC_IN));
-        }
-
-        private LinearLayout buildMenuRow(Context context, int iconRes, String title, int textColor, int iconColor) {
-            LinearLayout row = new LinearLayout(context);
-            row.setOrientation(LinearLayout.HORIZONTAL);
-            row.setGravity(Gravity.CENTER_VERTICAL);
-            row.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(14), AndroidUtilities.dp(16), AndroidUtilities.dp(14));
-            row.setBackground(Theme.getSelectorDrawable(false));
-            ImageView icon = new ImageView(context);
-            icon.setImageResource(iconRes);
-            icon.setColorFilter(new android.graphics.PorterDuffColorFilter(iconColor, android.graphics.PorterDuff.Mode.SRC_IN));
-            row.addView(icon, LayoutHelper.createLinear(24, 24, Gravity.CENTER_VERTICAL, 0, 0, 16, 0));
-            TextView label = new TextView(context);
-            label.setText(title);
-            label.setTextSize(16);
-            label.setTextColor(textColor);
-            row.addView(label, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f, Gravity.CENTER_VERTICAL));
-            return row;
+        private void showOptionsMenu(View anchorView) {
+            boolean selectAllOn = selectedDialogs.size() == filteredDialogs.size() && !filteredDialogs.isEmpty();
+            ItemOptions.makeOptions(SpecialForwardActivity.this, anchorView)
+                .add(selectAllOn ? R.drawable.baseline_check_box_24 : R.drawable.baseline_check_box_outline_blank_24, "Select All", () -> {
+                    if (!selectAllOn) {
+                        for (TLRPC.Dialog d : filteredDialogs) selectedDialogs.put(d.id, d);
+                    } else {
+                        selectedDialogs.clear();
+                    }
+                    if (adapter != null) adapter.notifyDataSetChanged();
+                    sendButtonContainer.setVisibility(selectedDialogs.size() > 0 ? View.VISIBLE : View.GONE);
+                    if (selectedDialogs.size() > 0) sendBadge.setText(String.valueOf(selectedDialogs.size()));
+                })
+                .add(sendAsAlbum ? R.drawable.baseline_check_box_24 : R.drawable.baseline_check_box_outline_blank_24, "Send as album", () -> {
+                    sendAsAlbum = !sendAsAlbum;
+                })
+                .add(removeLinkPreview ? R.drawable.baseline_check_box_24 : R.drawable.baseline_check_box_outline_blank_24, "Remove link preview", () -> {
+                    removeLinkPreview = !removeLinkPreview;
+                })
+                .add(R.drawable.ic_filter_list, "Show as list", () -> {
+                    showAsList = !showAsList;
+                    gridView.setLayoutManager(showAsList ? listLayoutManager : gridLayoutManager);
+                    if (adapter != null) adapter.notifyDataSetChanged();
+                })
+                .show();
         }
 
         private void filterDialogs() {
