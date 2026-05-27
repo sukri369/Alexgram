@@ -57,11 +57,13 @@ public class SpecialForwardActivity extends ChatActivity {
     private ImageView inlineResetView;
     private ImageView inlineReplaceLinkView;
     private ImageView inlineDeleteLinkView;
-    private TextView sendBadgeView;
 
     public SpecialForwardActivity(ArrayList<MessageObject> sourceMessages) {
         super(new Bundle());
         this.chatMode = 102; // Custom multi-chat / special forward mode
+        
+        // Sort original messages so the newest (highest ID) comes first, matching Telegram's reversed messages layout
+        java.util.Collections.sort(sourceMessages, (o1, o2) -> Integer.compare(o2.getId(), o1.getId()));
         
         // Deep copy messages and assign sequential negative unique IDs
         for (MessageObject msg : sourceMessages) {
@@ -311,34 +313,12 @@ public class SpecialForwardActivity extends ChatActivity {
     }
 
     private void updateSendBadge() {
-        if (chatActivityEnterView == null || chatActivityEnterView.sendButtonContainer == null || getParentActivity() == null) return;
+        if (chatActivityEnterView == null || getParentActivity() == null) return;
         
-        if (sendBadgeView == null) {
-            sendBadgeView = new TextView(getParentActivity());
-            sendBadgeView.setTextColor(Color.WHITE);
-            sendBadgeView.setTextSize(10);
-            sendBadgeView.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
-            sendBadgeView.setGravity(Gravity.CENTER);
-            
-            android.graphics.drawable.GradientDrawable badgeBg = new android.graphics.drawable.GradientDrawable();
-            badgeBg.setShape(android.graphics.drawable.GradientDrawable.OVAL);
-            badgeBg.setColor(0xff2196f3);
-            badgeBg.setStroke(AndroidUtilities.dp(1.5f), 0xffffffff);
-            sendBadgeView.setBackground(badgeBg);
-            
-            FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
-                AndroidUtilities.dp(18), 
-                AndroidUtilities.dp(18), 
-                Gravity.RIGHT | Gravity.TOP
-            );
-            lp.rightMargin = AndroidUtilities.dp(4);
-            lp.topMargin = AndroidUtilities.dp(4);
-            
-            chatActivityEnterView.sendButtonContainer.addView(sendBadgeView, lp);
+        View enterSendBtn = chatActivityEnterView.getSendButtonInternal();
+        if (enterSendBtn instanceof org.telegram.ui.Components.ChatActivityEnterView.SendButton) {
+            ((org.telegram.ui.Components.ChatActivityEnterView.SendButton) enterSendBtn).setCount(messages.size(), true);
         }
-        
-        sendBadgeView.setText(String.valueOf(messages.size()));
-        sendBadgeView.setVisibility(messages.size() > 0 ? View.VISIBLE : View.GONE);
     }
 
     @Override
@@ -1032,6 +1012,7 @@ public class SpecialForwardActivity extends ChatActivity {
                     groupedMessagesMap.put(groupedMessages.groupId, groupedMessages);
                 }
                 groupedMessages.messages.add(msgObj);
+                groupedMessages.reversed = reversed;
             }
         }
         for (int i = 0; i < groupedMessagesMap.size(); i++) {
@@ -1055,10 +1036,13 @@ public class SpecialForwardActivity extends ChatActivity {
     }
 
     private void performForwardToSelectedChats(ArrayList<Long> dids, boolean showQuote, boolean keepCaption) {
+        ArrayList<MessageObject> forwardList = new ArrayList<>(messages);
+        java.util.Collections.sort(forwardList, (o1, o2) -> Integer.compare(o1.getId(), o2.getId()));
+
         for (long peer : dids) {
             if (forwardAsFile) {
-                for (int j = 0; j < messages.size(); j++) {
-                    MessageObject msg = messages.get(j);
+                for (int j = 0; j < forwardList.size(); j++) {
+                    MessageObject msg = forwardList.get(j);
                     if (msg == null || msg.messageOwner == null) continue;
                     
                     String caption = keepCaption && msg.caption != null ? msg.caption.toString() : "";
@@ -1076,7 +1060,7 @@ public class SpecialForwardActivity extends ChatActivity {
                     }
                 }
             } else {
-                SendMessagesHelper.getInstance(currentAccount).sendMessage(messages, peer, !showQuote, !keepCaption, true, 0, 0);
+                SendMessagesHelper.getInstance(currentAccount).sendMessage(forwardList, peer, !showQuote, !keepCaption, true, 0, 0);
             }
         }
         finishFragment();

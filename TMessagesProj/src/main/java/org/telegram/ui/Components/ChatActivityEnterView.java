@@ -10954,27 +10954,51 @@ public class ChatActivityEnterView extends FrameLayout implements
                 audioVideoButtonContainer.setAlpha(0.0f);
                 audioVideoButtonContainer.setVisibility(GONE);
             } else {
-                getSendButtonInternal().setScaleX(0.1f);
-                getSendButtonInternal().setScaleY(0.1f);
-                getSendButtonInternal().setAlpha(0.0f);
-                getSendButtonInternal().setVisibility(GONE);
-                slowModeButton.setScaleX(0.1f);
-                slowModeButton.setScaleY(0.1f);
-                slowModeButton.setAlpha(0.0f);
-                setSlowModeButtonVisible(false);
-                attachLayout.setScaleX(1.0f);
-                attachLayoutAlpha = 1.0f;
-                updateAttachLayoutParams();
-                attachLayout.setVisibility(VISIBLE);
-                if (attachButton != null) {
-                    attachButton.setAlpha(attachButtonAlpha = 1.0f);
-                    attachButton.setScaleX(1.0f);
-                    attachButton.setScaleY(1.0f);
+                if (forceShowSendButton) {
+                    getSendButtonInternal().setScaleX(1.0f);
+                    getSendButtonInternal().setScaleY(1.0f);
+                    getSendButtonInternal().setAlpha(1.0f);
+                    getSendButtonInternal().setVisibility(VISIBLE);
+                    slowModeButton.setScaleX(0.1f);
+                    slowModeButton.setScaleY(0.1f);
+                    slowModeButton.setAlpha(0.0f);
+                    setSlowModeButtonVisible(false);
+                    attachLayout.setScaleX(1.0f);
+                    attachLayoutAlpha = 1.0f;
+                    updateAttachLayoutParams();
+                    attachLayout.setVisibility(VISIBLE);
+                    if (attachButton != null) {
+                        attachButton.setAlpha(attachButtonAlpha = 1.0f);
+                        attachButton.setScaleX(1.0f);
+                        attachButton.setScaleY(1.0f);
+                    }
+                    audioVideoButtonContainer.setScaleX(0.1f);
+                    audioVideoButtonContainer.setScaleY(0.1f);
+                    audioVideoButtonContainer.setAlpha(0.0f);
+                    audioVideoButtonContainer.setVisibility(GONE);
+                } else {
+                    getSendButtonInternal().setScaleX(0.1f);
+                    getSendButtonInternal().setScaleY(0.1f);
+                    getSendButtonInternal().setAlpha(0.0f);
+                    getSendButtonInternal().setVisibility(GONE);
+                    slowModeButton.setScaleX(0.1f);
+                    slowModeButton.setScaleY(0.1f);
+                    slowModeButton.setAlpha(0.0f);
+                    setSlowModeButtonVisible(false);
+                    attachLayout.setScaleX(1.0f);
+                    attachLayoutAlpha = 1.0f;
+                    updateAttachLayoutParams();
+                    attachLayout.setVisibility(VISIBLE);
+                    if (attachButton != null) {
+                        attachButton.setAlpha(attachButtonAlpha = 1.0f);
+                        attachButton.setScaleX(1.0f);
+                        attachButton.setScaleY(1.0f);
+                    }
+                    audioVideoButtonContainer.setScaleX(1.0f);
+                    audioVideoButtonContainer.setScaleY(1.0f);
+                    audioVideoButtonContainer.setAlpha(1.0f);
+                    audioVideoButtonContainer.setVisibility(VISIBLE);
                 }
-                audioVideoButtonContainer.setScaleX(1.0f);
-                audioVideoButtonContainer.setScaleY(1.0f);
-                audioVideoButtonContainer.setAlpha(1.0f);
-                audioVideoButtonContainer.setVisibility(VISIBLE);
             }
             createScheduledButton();
             if (scheduledButton != null && scheduledButton.getTag() != null) {
