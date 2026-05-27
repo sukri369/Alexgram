@@ -1039,16 +1039,26 @@ public class SpecialForwardActivity extends ChatActivity {
             currentAccount, 
             messages, 
             forwardAsFile, 
-            (dids, showQuoteState, keepCaptionState) -> {
-                performForwardToSelectedChats(dids, showQuoteState, keepCaptionState);
+            (dids, showQuoteState, keepCaptionState, sendAsAlbumState, removeLinkPreviewState) -> {
+                performForwardToSelectedChats(dids, showQuoteState, keepCaptionState, removeLinkPreviewState);
             }
         );
         showDialog(shareAlert);
     }
 
-    private void performForwardToSelectedChats(ArrayList<Long> dids, boolean showQuote, boolean keepCaption) {
+    private void performForwardToSelectedChats(ArrayList<Long> dids, boolean showQuote, boolean keepCaption, boolean removeLinkPreview) {
         ArrayList<MessageObject> forwardList = new ArrayList<>(messages);
         java.util.Collections.sort(forwardList, (o1, o2) -> Integer.compare(o1.getId(), o2.getId()));
+
+        // Strip web page preview if requested
+        if (removeLinkPreview) {
+            for (MessageObject msg : forwardList) {
+                if (msg != null && msg.messageOwner != null
+                        && msg.messageOwner.media instanceof TLRPC.TL_messageMediaWebPage) {
+                    msg.messageOwner.media = new TLRPC.TL_messageMediaEmpty();
+                }
+            }
+        }
 
         for (long peer : dids) {
             if (forwardAsFile) {
@@ -1080,7 +1090,7 @@ public class SpecialForwardActivity extends ChatActivity {
     public static class SpecialForwardShareAlert extends BottomSheet {
         private final int currentAccount;
         private final ArrayList<MessageObject> messages;
-        private final boolean forwardAsFile;
+        private boolean forwardAsFile;
         private final ShareAlertCallback callback;
         
         private ArrayList<TLRPC.Dialog> allDialogs;
@@ -1090,8 +1100,11 @@ public class SpecialForwardActivity extends ChatActivity {
         private int activeCategory = 0; 
         private String searchQuery = "";
         
-        private boolean showQuote = false; 
-        private boolean keepCaption = true; 
+        private boolean showQuote = false;
+        private boolean keepCaption = true;
+        private boolean sendAsAlbum = false;
+        private boolean removeLinkPreview = false;
+        private boolean showAsList = false;
         
         private RecyclerView gridView;
         private ShareAdapter adapter;
@@ -1099,9 +1112,11 @@ public class SpecialForwardActivity extends ChatActivity {
         private ImageView sendButton;
         private FrameLayout sendButtonContainer;
         private TextView sendBadge;
+        private GridLayoutManager gridLayoutManager;
+        private androidx.recyclerview.widget.LinearLayoutManager listLayoutManager;
         
         public interface ShareAlertCallback {
-            void onShareSelected(ArrayList<Long> dids, boolean showQuote, boolean keepCaption);
+            void onShareSelected(ArrayList<Long> dids, boolean showQuote, boolean keepCaption, boolean sendAsAlbum, boolean removeLinkPreview);
         }
         
         public SpecialForwardShareAlert(Context context, int account, ArrayList<MessageObject> messages, boolean asFile, ShareAlertCallback callback) {
@@ -1207,6 +1222,8 @@ public class SpecialForwardActivity extends ChatActivity {
             ImageView threeDots = new ImageView(context);
             threeDots.setImageResource(R.drawable.ic_ab_other);
             threeDots.setColorFilter(new android.graphics.PorterDuffColorFilter(Theme.getColor(Theme.key_dialogIcon), android.graphics.PorterDuff.Mode.SRC_IN));
+            threeDots.setBackground(Theme.getSelectorDrawable(false));
+            threeDots.setOnClickListener(v -> showOptionsMenu(context));
             topRow.addView(threeDots, LayoutHelper.createLinear(36, 36, Gravity.CENTER_VERTICAL, 4, 0, 4, 0));
             
             rootLayout.addView(topRow, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 8));
@@ -1270,14 +1287,21 @@ public class SpecialForwardActivity extends ChatActivity {
             rootLayout.addView(scrollCategories, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 8));
             
             // 4. Grid view and floating submit send button
+            gridLayoutManager = new GridLayoutManager(context, 4);
+            listLayoutManager = new androidx.recyclerview.widget.LinearLayoutManager(context);
             gridView = new RecyclerView(context);
-            gridView.setLayoutManager(new GridLayoutManager(context, 4));
+            gridView.setLayoutManager(gridLayoutManager);
             adapter = new ShareAdapter(context);
             gridView.setAdapter(adapter);
             rootLayout.addView(gridView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 260));
             
             FrameLayout frameLayout = new FrameLayout(context);
             containerView = frameLayout;
+            // Solid opaque background so the sheet isn't transparent
+            android.graphics.drawable.GradientDrawable sheetBg = new android.graphics.drawable.GradientDrawable();
+            sheetBg.setColor(Theme.getColor(Theme.key_dialogBackground));
+            sheetBg.setCornerRadii(new float[]{AndroidUtilities.dp(12), AndroidUtilities.dp(12), AndroidUtilities.dp(12), AndroidUtilities.dp(12), 0, 0, 0, 0});
+            frameLayout.setBackground(sheetBg);
             
             frameLayout.addView(rootLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
             
@@ -1301,7 +1325,7 @@ public class SpecialForwardActivity extends ChatActivity {
                     for (int i = 0; i < selectedDialogs.size(); i++) {
                         dids.add(selectedDialogs.keyAt(i));
                     }
-                    callback.onShareSelected(dids, showQuote, keepCaption);
+                    callback.onShareSelected(dids, showQuote, keepCaption, sendAsAlbum, removeLinkPreview);
                 }
             });
             sendButtonContainer.addView(sendButton, LayoutHelper.createFrame(48, 48));
@@ -1328,6 +1352,95 @@ public class SpecialForwardActivity extends ChatActivity {
             frameLayout.addView(sendButtonContainer, LayoutHelper.createFrame(48, 48, Gravity.RIGHT | Gravity.BOTTOM, 0, 0, 16, 16));
         }
         
+        private void showOptionsMenu(Context context) {
+            int textColor = Theme.getColor(Theme.key_dialogTextBlack);
+            int iconColor = Theme.getColor(Theme.key_dialogIcon);
+            int accentColor = Theme.getColor(Theme.key_dialogTextBlue);
+
+            LinearLayout menu = new LinearLayout(context);
+            menu.setOrientation(LinearLayout.VERTICAL);
+            menu.setPadding(0, AndroidUtilities.dp(8), 0, AndroidUtilities.dp(8));
+
+            // Row 1: Select All
+            boolean[] selectAllOn = {selectedDialogs.size() == filteredDialogs.size() && !filteredDialogs.isEmpty()};
+            LinearLayout rowSelectAll = buildMenuRow(context, R.drawable.baseline_check_box_outline_blank_24, "Select All", textColor, iconColor);
+            ImageView icSelectAll = (ImageView) rowSelectAll.getChildAt(0);
+            if (selectAllOn[0]) tintChecked(icSelectAll, accentColor);
+            rowSelectAll.setOnClickListener(v -> {
+                selectAllOn[0] = !selectAllOn[0];
+                if (selectAllOn[0]) {
+                    for (TLRPC.Dialog d : filteredDialogs) selectedDialogs.put(d.id, d);
+                    tintChecked(icSelectAll, accentColor);
+                } else {
+                    selectedDialogs.clear();
+                    icSelectAll.setImageResource(R.drawable.baseline_check_box_outline_blank_24);
+                    icSelectAll.setColorFilter(new android.graphics.PorterDuffColorFilter(iconColor, android.graphics.PorterDuff.Mode.SRC_IN));
+                }
+                if (adapter != null) adapter.notifyDataSetChanged();
+                sendButtonContainer.setVisibility(selectedDialogs.size() > 0 ? View.VISIBLE : View.GONE);
+                if (selectedDialogs.size() > 0) sendBadge.setText(String.valueOf(selectedDialogs.size()));
+            });
+            menu.addView(rowSelectAll);
+
+            // Row 2: Send as album
+            LinearLayout rowAlbum = buildMenuRow(context, R.drawable.baseline_check_box_outline_blank_24, "Send as album", textColor, iconColor);
+            ImageView icAlbum = (ImageView) rowAlbum.getChildAt(0);
+            if (sendAsAlbum) tintChecked(icAlbum, accentColor);
+            rowAlbum.setOnClickListener(v -> {
+                sendAsAlbum = !sendAsAlbum;
+                if (sendAsAlbum) tintChecked(icAlbum, accentColor);
+                else { icAlbum.setImageResource(R.drawable.baseline_check_box_outline_blank_24); icAlbum.setColorFilter(new android.graphics.PorterDuffColorFilter(iconColor, android.graphics.PorterDuff.Mode.SRC_IN)); }
+            });
+            menu.addView(rowAlbum);
+
+            // Row 3: Remove link preview
+            LinearLayout rowLink = buildMenuRow(context, R.drawable.baseline_check_box_outline_blank_24, "Remove link preview", textColor, iconColor);
+            ImageView icLink = (ImageView) rowLink.getChildAt(0);
+            if (removeLinkPreview) tintChecked(icLink, accentColor);
+            rowLink.setOnClickListener(v -> {
+                removeLinkPreview = !removeLinkPreview;
+                if (removeLinkPreview) tintChecked(icLink, accentColor);
+                else { icLink.setImageResource(R.drawable.baseline_check_box_outline_blank_24); icLink.setColorFilter(new android.graphics.PorterDuffColorFilter(iconColor, android.graphics.PorterDuff.Mode.SRC_IN)); }
+            });
+            menu.addView(rowLink);
+
+            // Row 4: Show as list (toggle, uses list icon always)
+            LinearLayout rowList = buildMenuRow(context, R.drawable.ic_filter_list, "Show as list", textColor, showAsList ? accentColor : iconColor);
+            ImageView icList = (ImageView) rowList.getChildAt(0);
+            rowList.setOnClickListener(v -> {
+                showAsList = !showAsList;
+                gridView.setLayoutManager(showAsList ? listLayoutManager : gridLayoutManager);
+                icList.setColorFilter(new android.graphics.PorterDuffColorFilter(showAsList ? accentColor : iconColor, android.graphics.PorterDuff.Mode.SRC_IN));
+                if (adapter != null) adapter.notifyDataSetChanged();
+            });
+            menu.addView(rowList);
+
+            new AlertDialog.Builder(context).setView(menu).create().show();
+        }
+
+        private void tintChecked(ImageView icon, int color) {
+            icon.setImageResource(R.drawable.baseline_check_circle_24);
+            icon.setColorFilter(new android.graphics.PorterDuffColorFilter(color, android.graphics.PorterDuff.Mode.SRC_IN));
+        }
+
+        private LinearLayout buildMenuRow(Context context, int iconRes, String title, int textColor, int iconColor) {
+            LinearLayout row = new LinearLayout(context);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(Gravity.CENTER_VERTICAL);
+            row.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(14), AndroidUtilities.dp(16), AndroidUtilities.dp(14));
+            row.setBackground(Theme.getSelectorDrawable(false));
+            ImageView icon = new ImageView(context);
+            icon.setImageResource(iconRes);
+            icon.setColorFilter(new android.graphics.PorterDuffColorFilter(iconColor, android.graphics.PorterDuff.Mode.SRC_IN));
+            row.addView(icon, LayoutHelper.createLinear(24, 24, Gravity.CENTER_VERTICAL, 0, 0, 16, 0));
+            TextView label = new TextView(context);
+            label.setText(title);
+            label.setTextSize(16);
+            label.setTextColor(textColor);
+            row.addView(label, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f, Gravity.CENTER_VERTICAL));
+            return row;
+        }
+
         private void filterDialogs() {
             filteredDialogs.clear();
             
