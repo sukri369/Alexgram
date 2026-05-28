@@ -1173,11 +1173,24 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
         contentLayout.setOrientation(LinearLayout.VERTICAL);
         contentLayout.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(16), AndroidUtilities.dp(24), AndroidUtilities.dp(16));
 
-        // Switch to enable/disable Translucent Deleted Messages
-        TextCheckBoxCell enableCheckbox = new TextCheckBoxCell(getParentActivity(), true, false);
-        enableCheckbox.setTextAndCheck("Enable Translucent Deleted Messages", NaConfig.INSTANCE.getTranslucentDeletedMessages().Bool(), true);
-        enableCheckbox.setBackground(Theme.getSelectorDrawable(false));
-        contentLayout.addView(enableCheckbox, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 50));
+        // Switch to enable/disable Translucent Deleted Messages (Custom layout to prevent truncation)
+        LinearLayout checkboxLayout = new LinearLayout(getParentActivity());
+        checkboxLayout.setOrientation(LinearLayout.HORIZONTAL);
+        checkboxLayout.setGravity(Gravity.CENTER_VERTICAL);
+        checkboxLayout.setPadding(0, AndroidUtilities.dp(8), 0, AndroidUtilities.dp(8));
+        checkboxLayout.setBackground(Theme.getSelectorDrawable(false));
+
+        TextView checkboxText = new TextView(getParentActivity());
+        checkboxText.setText("Enable Translucent Deleted Messages");
+        checkboxText.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
+        checkboxText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
+        checkboxLayout.addView(checkboxText, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f, Gravity.LEFT | Gravity.CENTER_VERTICAL, 0, 0, 8, 0));
+
+        org.telegram.ui.Components.CheckBoxSquare checkBoxSquare = new org.telegram.ui.Components.CheckBoxSquare(getParentActivity(), true);
+        checkBoxSquare.setChecked(NaConfig.INSTANCE.getTranslucentDeletedMessages().Bool(), false);
+        checkboxLayout.addView(checkBoxSquare, LayoutHelper.createLinear(18, 18, Gravity.RIGHT | Gravity.CENTER_VERTICAL, 0, 0, 4, 0));
+        
+        contentLayout.addView(checkboxLayout, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 50));
 
         // Translucency percentage label
         TextView valueLabel = new TextView(getParentActivity());
@@ -1288,7 +1301,7 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
             String customMark = NaConfig.INSTANCE.getCustomDeletedMark().String();
             deletedTextView.setText(!TextUtils.isEmpty(customMark) ? customMark : "Deleted");
             deletedTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11);
-            deletedTextView.setTextColor(deletedColor);
+            deletedTextView.setTextColor(outTimeColor); // Watermark text inherits standard theme time text color, ignoring custom icon color
             deletedTextView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
             infoLayout.addView(deletedTextView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_VERTICAL, 0, 0, 0, 0));
         }
@@ -1303,7 +1316,7 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
 
         // Update preview dynamically
         Runnable updatePreview = () -> {
-            boolean enabled = enableCheckbox.isChecked();
+            boolean enabled = checkBoxSquare.isChecked();
             int alphaPercent = seekBar.getProgress();
             
             seekBar.setEnabled(enabled);
@@ -1316,8 +1329,8 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
             }
         };
 
-        enableCheckbox.setOnClickListener(v -> {
-            enableCheckbox.setChecked(!enableCheckbox.isChecked());
+        checkboxLayout.setOnClickListener(v -> {
+            checkBoxSquare.setChecked(!checkBoxSquare.isChecked(), true);
             updatePreview.run();
         });
 
@@ -1340,7 +1353,7 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
         builder.setTitle("Translucent Deleted Messages");
         builder.setView(contentLayout);
         builder.setPositiveButton(getString(R.string.Save), (dialog, which) -> {
-            NaConfig.INSTANCE.getTranslucentDeletedMessages().setConfigBool(enableCheckbox.isChecked());
+            NaConfig.INSTANCE.getTranslucentDeletedMessages().setConfigBool(checkBoxSquare.isChecked());
             NaConfig.INSTANCE.getTranslucentDeletedMessagesAlpha().setConfigInt(seekBar.getProgress());
             if (listAdapter != null) {
                 listAdapter.notifyItemChanged(cellGroup.rows.indexOf(translucentDeletedMessagesRow));
