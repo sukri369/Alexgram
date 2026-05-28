@@ -7190,7 +7190,9 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             showUpdateActivity(UserConfig.selectedAccount, SharedConfig.pendingAppUpdate, true);
         }
         checkAppUpdate(false, null);
+        // [Alexgram: Important Announcement] - Start
         xyz.nextalone.nagram.helper.AnnouncementHelper.checkAnnouncement(this);
+        // [Alexgram: Important Announcement] - End
         
         // [Alexgram: Birthday Wishes] - Start
         // Birthday Wishes Feature - Online / Offline checks

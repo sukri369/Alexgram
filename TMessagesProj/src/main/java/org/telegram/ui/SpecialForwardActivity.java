@@ -1,3 +1,4 @@
+// [Alexgram: Special Forward] - Start
 package org.telegram.ui;
 
 import android.content.Context;
@@ -1088,6 +1089,9 @@ public class SpecialForwardActivity extends ChatActivity {
     private void deleteAllCaptions() {
         for (int i = 0; i < messages.size(); i++) {
             MessageObject msg = messages.get(i);
+            if (msg.isMediaEmpty()) {
+                continue;
+            }
             msg.caption = null;
             if (msg.isPhoto() || msg.isVideo() || msg.isDocument()) {
                 msg.messageText = "";
@@ -1653,3 +1657,4 @@ public class SpecialForwardActivity extends ChatActivity {
         }
     }
 }
+// [Alexgram: Special Forward] - End

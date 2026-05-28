@@ -172,12 +172,14 @@ object NaConfig {
             ConfigItem.configTypeBool,
             false
         )
+    // [Alexgram: Special Forward] - Start
     val specialForward =
         addConfig(
             "SpecialForward",
             ConfigItem.configTypeBool,
             false
         )
+    // [Alexgram: Special Forward] - End
     val showNoQuoteForward =
         addConfig(
             "NoQuoteForward",
@@ -798,12 +800,14 @@ object NaConfig {
             ConfigItem.configTypeBool,
             false
         )
+    // [Alexgram: Important Announcement] - Start
     val getImportantAnnouncementFromAlexgram =
         addConfig(
             "GetImportantAnnouncementFromAlexgram",
             ConfigItem.configTypeBool,
             true
         )
+    // [Alexgram: Important Announcement] - End
     val liveVideoBlurIntensity =
         addConfig(
             "LiveVideoBlurIntensity",

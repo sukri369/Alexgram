@@ -1,3 +1,4 @@
+// [Alexgram: Important Announcement] - Start
 package tw.nekomimi.nekogram.ui;
 
 import android.animation.ValueAnimator;
@@ -572,3 +573,4 @@ public class AnnouncementAlert extends BottomSheet {
         }
     }
 }
+// [Alexgram: Important Announcement] - End

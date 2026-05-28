@@ -34374,7 +34374,9 @@ public class ChatActivity extends BaseFragment implements
 		updatePinnedMessageView(true);
 		updateVisibleRows();
 
+		// [Alexgram: Special Forward] - Start
 		if (!asSuggestion && !messageObject.scheduled && !messageObject.isQuickReply() && getUserConfig().isClientActivated() && !getUserConfig().getCurrentUser().bot && !(this instanceof SpecialForwardActivity)) {
+		// [Alexgram: Special Forward] - End
 			TLRPC.TL_messages_getMessageEditData req = new TLRPC.TL_messages_getMessageEditData();
 			req.peer = getMessagesController().getInputPeer(dialog_id);
 			req.id = messageObject.getId();

@@ -276,5 +276,7 @@
 
     <string name="StarFallInChat">Starfall Chat Decoration</string>
     <string name="StarFallInChatDescription">Animated falling stars in the chat background</string>
+    <!-- [Alexgram: Important Announcement] - Start -->
     <string name="GetImportantAnnouncementFromAlexgram">Get Important Announcement From Alexgram</string>
+    <!-- [Alexgram: Important Announcement] - End -->
 </resources>
