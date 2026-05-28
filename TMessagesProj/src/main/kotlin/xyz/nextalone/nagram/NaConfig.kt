@@ -798,6 +798,12 @@ object NaConfig {
             ConfigItem.configTypeBool,
             false
         )
+    val getImportantAnnouncementFromAlexgram =
+        addConfig(
+            "GetImportantAnnouncementFromAlexgram",
+            ConfigItem.configTypeBool,
+            true
+        )
     val liveVideoBlurIntensity =
         addConfig(
             "LiveVideoBlurIntensity",
