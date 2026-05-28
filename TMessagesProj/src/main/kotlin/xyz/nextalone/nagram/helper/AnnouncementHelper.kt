@@ -62,6 +62,9 @@ object AnnouncementHelper {
                             return@runOnUIThread
                         }
                         val message = res2.messages[0] ?: return@runOnUIThread
+                        if (message.id <= 1 || message is TLRPC.TL_messageService) {
+                            return@runOnUIThread
+                        }
 
                         val prefs = NaConfig.getPreferences()
                         val lastShownId = prefs.getInt("last_announcement_id", 0)
