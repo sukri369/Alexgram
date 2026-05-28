@@ -1190,7 +1190,7 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
         checkBoxSquare.setChecked(NaConfig.INSTANCE.getTranslucentDeletedMessages().Bool(), false);
         checkboxLayout.addView(checkBoxSquare, LayoutHelper.createLinear(18, 18, Gravity.RIGHT | Gravity.CENTER_VERTICAL, 0, 0, 4, 0));
         
-        contentLayout.addView(checkboxLayout, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 50));
+        contentLayout.addView(checkboxLayout, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
         // Translucency percentage label
         TextView valueLabel = new TextView(getParentActivity());
