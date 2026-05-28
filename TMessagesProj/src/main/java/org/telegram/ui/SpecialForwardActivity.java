@@ -276,6 +276,19 @@ public class SpecialForwardActivity extends ChatActivity {
         
         Context context = getParentActivity();
         
+        View replyView = chatActivityEnterTopView.getReplyView();
+        if (replyView != null && replyView.getLayoutParams() instanceof FrameLayout.LayoutParams) {
+            FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) replyView.getLayoutParams();
+            lp.rightMargin = AndroidUtilities.dp(196);
+            replyView.setLayoutParams(lp);
+        }
+        View editView = chatActivityEnterTopView.getEditView();
+        if (editView != null && editView.getLayoutParams() instanceof FrameLayout.LayoutParams) {
+            FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) editView.getLayoutParams();
+            lp.rightMargin = AndroidUtilities.dp(196);
+            editView.setLayoutParams(lp);
+        }
+
         if (inlineResetView != null) chatActivityEnterTopView.removeView(inlineResetView);
         if (inlineReplaceLinkView != null) chatActivityEnterTopView.removeView(inlineReplaceLinkView);
         if (inlineDeleteLinkView != null) chatActivityEnterTopView.removeView(inlineDeleteLinkView);
@@ -284,7 +297,7 @@ public class SpecialForwardActivity extends ChatActivity {
         inlineDeleteLinkView.setImageResource(R.drawable.msg_delete);
         inlineDeleteLinkView.setColorFilter(new android.graphics.PorterDuffColorFilter(getThemedColor(Theme.key_chat_replyPanelClose), android.graphics.PorterDuff.Mode.SRC_IN));
         inlineDeleteLinkView.setScaleType(ImageView.ScaleType.CENTER);
-        inlineDeleteLinkView.setBackground(Theme.getSelectorDrawable(true));
+        inlineDeleteLinkView.setBackground(Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector), 1, AndroidUtilities.dp(19)));
         inlineDeleteLinkView.setOnClickListener(v -> {
             if (selectedMessage != null) {
                 deleteLinks(selectedMessage, 15);
@@ -297,7 +310,7 @@ public class SpecialForwardActivity extends ChatActivity {
         inlineReplaceLinkView.setImageResource(R.drawable.baseline_link_24);
         inlineReplaceLinkView.setColorFilter(new android.graphics.PorterDuffColorFilter(getThemedColor(Theme.key_chat_replyPanelClose), android.graphics.PorterDuff.Mode.SRC_IN));
         inlineReplaceLinkView.setScaleType(ImageView.ScaleType.CENTER);
-        inlineReplaceLinkView.setBackground(Theme.getSelectorDrawable(true));
+        inlineReplaceLinkView.setBackground(Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector), 1, AndroidUtilities.dp(19)));
         inlineReplaceLinkView.setOnClickListener(v -> {
             if (selectedMessage != null) {
                 replaceLinkForSelectedMessage();
@@ -308,14 +321,14 @@ public class SpecialForwardActivity extends ChatActivity {
         inlineResetView.setImageResource(R.drawable.msg_repeat);
         inlineResetView.setColorFilter(new android.graphics.PorterDuffColorFilter(getThemedColor(Theme.key_chat_replyPanelClose), android.graphics.PorterDuff.Mode.SRC_IN));
         inlineResetView.setScaleType(ImageView.ScaleType.CENTER);
-        inlineResetView.setBackground(Theme.getSelectorDrawable(true));
+        inlineResetView.setBackground(Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector), 1, AndroidUtilities.dp(19)));
         inlineResetView.setOnClickListener(v -> {
             resetSelectedMessage();
         });
         
-        chatActivityEnterTopView.addView(inlineDeleteLinkView, LayoutHelper.createFrame(48, 48, Gravity.RIGHT | Gravity.TOP, 0, 0, 52, 0));
-        chatActivityEnterTopView.addView(inlineReplaceLinkView, LayoutHelper.createFrame(48, 48, Gravity.RIGHT | Gravity.TOP, 0, 0, 100, 0));
-        chatActivityEnterTopView.addView(inlineResetView, LayoutHelper.createFrame(48, 48, Gravity.RIGHT | Gravity.TOP, 0, 0, 148, 0));
+        chatActivityEnterTopView.addView(inlineDeleteLinkView, LayoutHelper.createFrame(48, 46, Gravity.RIGHT | Gravity.TOP, 0, 0.5f, 52, 0));
+        chatActivityEnterTopView.addView(inlineReplaceLinkView, LayoutHelper.createFrame(48, 46, Gravity.RIGHT | Gravity.TOP, 0, 0.5f, 100, 0));
+        chatActivityEnterTopView.addView(inlineResetView, LayoutHelper.createFrame(48, 46, Gravity.RIGHT | Gravity.TOP, 0, 0.5f, 148, 0));
     }
 
     private void updateSendBadge() {
@@ -432,7 +445,7 @@ public class SpecialForwardActivity extends ChatActivity {
 
     @Override
     protected void multiChatCreateMenuItems(org.telegram.ui.ActionBar.ActionBarMenu menu) {
-        menu.addItem(MENU_EDIT_OPTIONS, R.drawable.baseline_edit_24);
+        menu.addItem(MENU_EDIT_OPTIONS, R.drawable.msg_edit);
         menu.addItem(MENU_PREVIEW, R.drawable.msg_views_solar);
     }
 
@@ -1357,7 +1370,7 @@ public class SpecialForwardActivity extends ChatActivity {
         
         private void showOptionsMenu(View anchorView) {
             boolean selectAllOn = selectedDialogs.size() == filteredDialogs.size() && !filteredDialogs.isEmpty();
-            ItemOptions.makeOptions(containerView, anchorView)
+            ItemOptions.makeOptions(container, anchorView)
                 .add(selectAllOn ? R.drawable.baseline_check_box_24 : R.drawable.baseline_check_box_outline_blank_24, "Select All", () -> {
                     if (!selectAllOn) {
                         for (TLRPC.Dialog d : filteredDialogs) selectedDialogs.put(d.id, d);
