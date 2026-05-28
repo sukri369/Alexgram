@@ -175,7 +175,6 @@ public class AnnouncementAlert extends BottomSheet {
             photoView.setRoundRadius(AndroidUtilities.dp(12));
             photoView.setAspectFit(true);
             photoView.getImageReceiver().setAllowStartAnimation(true);
-            photoView.getImageReceiver().setAutoPlayUrls(true);
 
             contentLayout.addView(photoView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, (int) displayH_dp, 20, 16, 20, 8));
 
