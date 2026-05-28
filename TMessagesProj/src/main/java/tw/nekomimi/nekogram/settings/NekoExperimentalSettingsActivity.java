@@ -570,6 +570,25 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
                 }
             }
         }
+
+        // [Alexgram: Deleted Icon Color Adapter Bind] - Start
+        @Override
+        public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+            super.onBindViewHolder(holder, position);
+            CellGroup cellGroup = getCellGroup();
+            if (cellGroup != null && position >= 0 && position < cellGroup.rows.size()) {
+                AbstractConfigCell a = cellGroup.rows.get(position);
+                if (a == deletedIconColorRow) {
+                    if (holder.itemView instanceof TextSettingsCell textCell) {
+                        int currentColor = NaConfig.INSTANCE.getDeletedIconColor().Int();
+                        if (currentColor != 0) {
+                            textCell.setTextValueColor(currentColor);
+                        }
+                    }
+                }
+            }
+        }
+        // [Alexgram: Deleted Icon Color Adapter Bind] - End
     }
 
     // [Alexgram: AI Reply] - Start
