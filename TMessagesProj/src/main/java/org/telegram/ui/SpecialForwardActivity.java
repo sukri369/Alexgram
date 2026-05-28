@@ -245,39 +245,7 @@ public class SpecialForwardActivity extends ChatActivity {
             
             View doneBtn = chatActivityEnterView.getDoneButton();
             if (doneBtn != null) {
-                doneBtn.setOnClickListener(v -> {
-                    CharSequence text = chatActivityEnterView.getFieldText();
-                    if (selectedMessage != null) {
-                        updateMessageText(selectedMessage, text);
-                        int idx = messages.indexOf(selectedMessage);
-                        if (idx >= 0) {
-                            try {
-                                TLRPC.Message messageClone = cloneMessage(selectedMessage.messageOwner);
-                                if (messageClone != null) {
-                                    messageClone.id = selectedMessage.getId();
-                                    MessageObject newCloned = createPreviewMessageObject(messageClone);
-                                    newCloned.stableId = selectedMessage.stableId;
-                                    newCloned.forceUpdate = true;
-                                    newCloned.checkLayout();
-                                    messages.set(idx, newCloned);
-                                    rebuildGroupedMessages();
-                                    if (chatAdapter != null) {
-                                        chatAdapter.notifyItemChanged(idx);
-                                    }
-                                }
-                            } catch (Exception e) {
-                                FileLog.e(e);
-                            }
-                        }
-                    }
-                    chatActivityEnterView.setEditingMessageObject(null, null, false);
-                    hideFieldPanel(true);
-                    selectedMessage = null;
-                    editingMessageObject = null;
-                    updateBottomOverlay();
-                    updateVisibleRows();
-                    updateSendBadge();
-                });
+                doneBtn.setOnClickListener(v -> onDoneEditingMessage(chatActivityEnterView.getFieldText()));
             }
             if (chatActivityEnterView.sendButtonContainer != null) {
                 for (int i = 0; i < chatActivityEnterView.sendButtonContainer.getChildCount(); i++) {
@@ -427,42 +395,10 @@ public class SpecialForwardActivity extends ChatActivity {
         setupCustomEditPanel();
         
         if (chatActivityEnterView != null) {
-            chatActivityEnterView.setEditingMessageObject(messageObject, null, false);
+            chatActivityEnterView.setEditingMessageObject(messageObject, null, !messageObject.isMediaEmpty());
             View doneBtn = chatActivityEnterView.getDoneButton();
             if (doneBtn != null) {
-                doneBtn.setOnClickListener(v -> {
-                    CharSequence text = chatActivityEnterView.getFieldText();
-                    if (selectedMessage != null) {
-                        updateMessageText(selectedMessage, text);
-                        int idx = messages.indexOf(selectedMessage);
-                        if (idx >= 0) {
-                            try {
-                                TLRPC.Message messageClone = cloneMessage(selectedMessage.messageOwner);
-                                if (messageClone != null) {
-                                    messageClone.id = selectedMessage.getId();
-                                    MessageObject newCloned = createPreviewMessageObject(messageClone);
-                                    newCloned.stableId = selectedMessage.stableId;
-                                    newCloned.forceUpdate = true;
-                                    newCloned.checkLayout();
-                                    messages.set(idx, newCloned);
-                                    rebuildGroupedMessages();
-                                    if (chatAdapter != null) {
-                                        chatAdapter.notifyItemChanged(idx);
-                                    }
-                                }
-                            } catch (Exception e) {
-                                FileLog.e(e);
-                            }
-                        }
-                    }
-                    chatActivityEnterView.setEditingMessageObject(null, null, false);
-                    hideFieldPanel(true);
-                    selectedMessage = null;
-                    editingMessageObject = null;
-                    updateBottomOverlay();
-                    updateVisibleRows();
-                    updateSendBadge();
-                });
+                doneBtn.setOnClickListener(v -> onDoneEditingMessage(chatActivityEnterView.getFieldText()));
             }
             chatActivityEnterView.setVisibility(View.VISIBLE);
             chatActivityEnterView.setFieldFocused();
@@ -470,6 +406,41 @@ public class SpecialForwardActivity extends ChatActivity {
         
         updateBottomOverlay();
         updateVisibleRows();
+    }
+
+    public void onDoneEditingMessage(CharSequence text) {
+        if (selectedMessage != null) {
+            updateMessageText(selectedMessage, text);
+            int idx = messages.indexOf(selectedMessage);
+            if (idx >= 0) {
+                try {
+                    TLRPC.Message messageClone = cloneMessage(selectedMessage.messageOwner);
+                    if (messageClone != null) {
+                        messageClone.id = selectedMessage.getId();
+                        MessageObject newCloned = createPreviewMessageObject(messageClone);
+                        newCloned.stableId = selectedMessage.stableId;
+                        newCloned.forceUpdate = true;
+                        newCloned.checkLayout();
+                        messages.set(idx, newCloned);
+                        rebuildGroupedMessages();
+                        if (chatAdapter != null) {
+                            chatAdapter.notifyItemChanged(idx);
+                        }
+                    }
+                } catch (Exception e) {
+                    FileLog.e(e);
+                }
+            }
+        }
+        if (chatActivityEnterView != null) {
+            chatActivityEnterView.setEditingMessageObject(null, null, false);
+        }
+        hideFieldPanel(true);
+        selectedMessage = null;
+        editingMessageObject = null;
+        updateBottomOverlay();
+        updateVisibleRows();
+        updateSendBadge();
     }
 
     @Override

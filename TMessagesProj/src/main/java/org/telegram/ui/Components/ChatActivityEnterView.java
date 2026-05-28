@@ -8407,6 +8407,18 @@ public class ChatActivityEnterView extends FrameLayout implements
             return;
         }
 
+        // [Alexgram: Special Forward] - Start
+        if (parentFragment instanceof org.telegram.ui.SpecialForwardActivity) {
+            CharSequence text = messageEditText == null ? "" : messageEditText.getTextToUse();
+            if (editingMessageObject.type != MessageObject.TYPE_EMOJIS) {
+                text = AndroidUtilities.getTrimmedString(text);
+            }
+            ((org.telegram.ui.SpecialForwardActivity) parentFragment).onDoneEditingMessage(text);
+            setEditingMessageObject(null, null, false);
+            return;
+        }
+        // [Alexgram: Special Forward] - End
+
         if (editingMessageObject.needResendWhenEdit() && !ChatObject.canManageMonoForum(currentAccount, editingMessageObject.getDialogId())) {
             final MessageSuggestionParams params = parentFragment != null && parentFragment.messageSuggestionParams != null ?
                 parentFragment.messageSuggestionParams : MessageSuggestionParams.of(editingMessageObject.messageOwner.suggested_post);
