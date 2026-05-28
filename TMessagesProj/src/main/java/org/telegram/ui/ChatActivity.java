@@ -34374,7 +34374,7 @@ public class ChatActivity extends BaseFragment implements
 		updatePinnedMessageView(true);
 		updateVisibleRows();
 
-		if (!asSuggestion && !messageObject.scheduled && !messageObject.isQuickReply() && getUserConfig().isClientActivated() && !getUserConfig().getCurrentUser().bot) {
+		if (!asSuggestion && !messageObject.scheduled && !messageObject.isQuickReply() && getUserConfig().isClientActivated() && !getUserConfig().getCurrentUser().bot && !(this instanceof SpecialForwardActivity)) {
 			TLRPC.TL_messages_getMessageEditData req = new TLRPC.TL_messages_getMessageEditData();
 			req.peer = getMessagesController().getInputPeer(dialog_id);
 			req.id = messageObject.getId();
