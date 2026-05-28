@@ -996,6 +996,14 @@ object NaConfig {
             ConfigItem.configTypeBool,
             true
         )
+    // [Alexgram: Deleted Icon Color] - Start
+    val deletedIconColor =
+        addConfig(
+            "DeletedIconColor",
+            ConfigItem.configTypeInt,
+            0
+        )
+    // [Alexgram: Deleted Icon Color] - End
     val useEditedIcon =
         addConfig(
             "UseEditedIcon",
