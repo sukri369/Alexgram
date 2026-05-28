@@ -16686,7 +16686,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             return;
         }
         if (shouldTranslucentDeleted() && ayuDeleted){
-            Theme.chat_msgTextPaint.setAlpha((int) (255 * 0.75f));
+            Theme.chat_msgTextPaint.setAlpha((int) (255 * (NaConfig.INSTANCE.getTranslucentDeletedMessagesAlpha().Int() / 100.0f)));
         }
         float textY = this.textY;
         if (transitionParams.animateTextY) {
@@ -16774,7 +16774,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             return;
         }
         if (shouldTranslucentDeleted() && ayuDeleted && caption) {
-            Theme.chat_msgTextPaint.setAlpha((int) (255 * 0.75f));
+            Theme.chat_msgTextPaint.setAlpha((int) (255 * (NaConfig.INSTANCE.getTranslucentDeletedMessagesAlpha().Int() / 100.0f)));
         }
         int firstVisibleBlockNum;
         int lastVisibleBlockNum;
@@ -20193,7 +20193,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             return;
         }
         if (shouldTranslucentDeleted() && ayuDeleted) {
-            canvas.saveLayerAlpha(null, (int) (255 * 0.75f), Canvas.ALL_SAVE_FLAG);
+            canvas.saveLayerAlpha(null, (int) (255 * (NaConfig.INSTANCE.getTranslucentDeletedMessagesAlpha().Int() / 100.0f)), Canvas.ALL_SAVE_FLAG);
         }
         if (!wasLayout) {
             onLayout(false, getLeft(), getTop(), getRight(), getBottom());
@@ -20738,7 +20738,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                         currentSelectedBackgroundAlpha = 0;
                         currentBackgroundDrawable.setAlpha((int) (255 * alphaInternal));
                         if (NaConfig.INSTANCE.getTranslucentDeletedMessages().Bool() && ayuDeleted && currentMessageObject.isOutOwner()) {
-                            currentBackgroundDrawable.setAlpha((int) (255 * 0.75f));
+                            currentBackgroundDrawable.setAlpha((int) (255 * (NaConfig.INSTANCE.getTranslucentDeletedMessagesAlpha().Int() / 100.0f)));
                         }
                         currentBackgroundDrawable.drawCached(canvas, backgroundCacheParams);
                     }
@@ -21896,7 +21896,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 currentBackgroundShadowDrawable.draw(canvas);
                 currentBackgroundShadowDrawable.setAlpha(255);
             }
-            currentBackgroundDrawable.setAlpha((int) (getAlpha() * (shouldTranslucentDeleted() && ayuDeleted ? 255 * 0.75f : 255)));
+            currentBackgroundDrawable.setAlpha((int) (getAlpha() * (shouldTranslucentDeleted() && ayuDeleted ? 255 * (NaConfig.INSTANCE.getTranslucentDeletedMessagesAlpha().Int() / 100.0f) : 255)));
             currentBackgroundDrawable.setBounds(left, top, right, bottom);
             currentBackgroundDrawable.drawCached(canvas, backgroundCacheParams);
             currentBackgroundDrawable.setAlpha(255);

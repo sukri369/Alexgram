@@ -918,6 +918,12 @@ object NaConfig {
             ConfigItem.configTypeBool,
             true
         )
+    val translucentDeletedMessagesAlpha =
+        addConfig(
+            "TranslucentDeletedMessagesAlpha",
+            ConfigItem.configTypeInt,
+            75
+        )
     val enableSeparateArticleTranslator =
         addConfig(
             "EnableSeparateArticleTranslator",

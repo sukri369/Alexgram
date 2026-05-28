@@ -17,6 +17,7 @@ import android.text.TextUtils;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.SeekBar;
 
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -169,7 +170,7 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
     private final AbstractConfigCell messageSavingSaveMediaRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getMessageSavingSaveMedia(), getString(R.string.MessageSavingSaveMediaHint)));
     private final AbstractConfigCell saveDeletedMessageForBotsUserRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getSaveDeletedMessageForBotUser()));
     private final AbstractConfigCell saveDeletedMessageInBotChatRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getSaveDeletedMessageForBot()));
-    private final AbstractConfigCell translucentDeletedMessagesRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getTranslucentDeletedMessages()));
+    private final AbstractConfigCell translucentDeletedMessagesRow = cellGroup.appendCell(new ConfigCellText("TranslucentDeletedMessages", null));
     private final AbstractConfigCell useDeletedIconRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getUseDeletedIcon()));
     private final AbstractConfigCell customDeletedMarkRow = cellGroup.appendCell(new ConfigCellTextInput(null, NaConfig.INSTANCE.getCustomDeletedMark(), "", null));
     // [Alexgram: Deleted Icon Color Row] - Start
@@ -369,6 +370,12 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
             return;
         }
         AbstractConfigCell a = cellGroup.rows.get(position);
+        // [Alexgram: Translucent Click] - Start
+        if (a == translucentDeletedMessagesRow) {
+            showTranslucentOptions();
+            return;
+        }
+        // [Alexgram: Translucent Click] - End
         // [Alexgram: Deleted Icon Color Click] - Start
         if (a == deletedIconColorRow) {
             showDeletedColorOptions(view);
@@ -547,8 +554,21 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
             CellGroup cellGroup = getCellGroup();
             if (cellGroup == null) return;
             AbstractConfigCell a = cellGroup.rows.get(position);
+            // [Alexgram: Translucent Deleted Messages Bind] - Start
+            if (a == translucentDeletedMessagesRow) {
+                if (holder.itemView instanceof TextSettingsCell textCell) {
+                    boolean enabled = NaConfig.INSTANCE.getTranslucentDeletedMessages().Bool();
+                    if (enabled) {
+                        int alpha = NaConfig.INSTANCE.getTranslucentDeletedMessagesAlpha().Int();
+                        textCell.setTextAndValue("Translucent Deleted Messages", alpha + "% Opacity", false, cellGroup.needSetDivider(a), true);
+                    } else {
+                        textCell.setTextAndValue("Translucent Deleted Messages", "Off", false, cellGroup.needSetDivider(a), true);
+                    }
+                }
+            }
+            // [Alexgram: Translucent Deleted Messages Bind] - End
             // [Alexgram: Deleted Icon Color Bind] - Start
-            if (a == deletedIconColorRow) {
+            else if (a == deletedIconColorRow) {
                 if (holder.itemView instanceof TextSettingsCell textCell) {
                     int currentColor = NaConfig.INSTANCE.getDeletedIconColor().Int();
                     if (currentColor == 0) {
@@ -1144,5 +1164,172 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
         showDialog(colorPicker);
     }
     // [Alexgram: Deleted Icon Color Helper] - End
+
+    // [Alexgram: Translucent Helper] - Start
+    private void showTranslucentOptions() {
+        if (getParentActivity() == null) return;
+
+        LinearLayout contentLayout = new LinearLayout(getParentActivity());
+        contentLayout.setOrientation(LinearLayout.VERTICAL);
+        contentLayout.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(16), AndroidUtilities.dp(24), AndroidUtilities.dp(16));
+
+        // Switch to enable/disable Translucent Deleted Messages
+        TextCheckBoxCell enableCheckbox = new TextCheckBoxCell(getParentActivity(), true, false);
+        enableCheckbox.setTextAndCheck("Enable Translucent Deleted Messages", NaConfig.INSTANCE.getTranslucentDeletedMessages().Bool(), true);
+        enableCheckbox.setBackground(Theme.getSelectorDrawable(false));
+        contentLayout.addView(enableCheckbox, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 50));
+
+        // Translucency percentage label
+        TextView valueLabel = new TextView(getParentActivity());
+        valueLabel.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
+        valueLabel.setTextColor(Theme.getColor(Theme.key_dialogTextGray2));
+        contentLayout.addView(valueLabel, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 12, 0, 4));
+
+        // SeekBar (Slider)
+        SeekBar seekBar = new SeekBar(getParentActivity());
+        seekBar.setMax(100);
+        int currentAlpha = NaConfig.INSTANCE.getTranslucentDeletedMessagesAlpha().Int();
+        seekBar.setProgress(currentAlpha);
+        contentLayout.addView(seekBar, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 4, 0, 16));
+
+        // Live Preview Title
+        TextView previewTitle = new TextView(getParentActivity());
+        previewTitle.setText("Live Preview");
+        previewTitle.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
+        previewTitle.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+        previewTitle.setTextColor(Theme.getColor(Theme.key_dialogTextBlue2));
+        contentLayout.addView(previewTitle, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 8, 0, 8));
+
+        // Live Preview Container (Chat Background)
+        FrameLayout previewContainer = new FrameLayout(getParentActivity());
+        previewContainer.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(16), AndroidUtilities.dp(12), AndroidUtilities.dp(16));
+        
+        int chatWallpaperColor = Theme.getColor(Theme.key_chat_wallpaper);
+        if (chatWallpaperColor == 0) {
+            chatWallpaperColor = 0xFFECE5DD;
+        }
+        android.graphics.drawable.GradientDrawable containerBg = new android.graphics.drawable.GradientDrawable();
+        containerBg.setColor(chatWallpaperColor);
+        containerBg.setCornerRadius(AndroidUtilities.dp(12));
+        previewContainer.setBackground(containerBg);
+        contentLayout.addView(previewContainer, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 120, 0, 0, 0, 8));
+
+        // Outgoing Deleted Message bubble
+        LinearLayout messageBubble = new LinearLayout(getParentActivity());
+        messageBubble.setOrientation(LinearLayout.VERTICAL);
+        messageBubble.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(8), AndroidUtilities.dp(12), AndroidUtilities.dp(8));
+        
+        int outBubbleColor = Theme.getColor(Theme.key_chat_outBubble);
+        if (outBubbleColor == 0) {
+            outBubbleColor = 0xFFE2F9C3;
+        }
+        android.graphics.drawable.GradientDrawable bubbleBg = new android.graphics.drawable.GradientDrawable();
+        bubbleBg.setColor(outBubbleColor);
+        bubbleBg.setCornerRadii(new float[] {
+            AndroidUtilities.dp(16), AndroidUtilities.dp(16),
+            AndroidUtilities.dp(16), AndroidUtilities.dp(16),
+            AndroidUtilities.dp(2), AndroidUtilities.dp(2),
+            AndroidUtilities.dp(16), AndroidUtilities.dp(16)
+        });
+        messageBubble.setBackground(bubbleBg);
+
+        // Preview text inside message bubble
+        TextView messageText = new TextView(getParentActivity());
+        messageText.setText("This is a deleted message.\nDrag the slider to adjust translucent level!");
+        int outTextColor = Theme.getColor(Theme.key_chat_messageTextOut);
+        if (outTextColor == 0) {
+            outTextColor = 0xFF000000;
+        }
+        messageText.setTextColor(outTextColor);
+        messageText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
+        messageBubble.addView(messageText, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
+
+        // Time and Deleted Icon
+        LinearLayout infoLayout = new LinearLayout(getParentActivity());
+        infoLayout.setOrientation(LinearLayout.HORIZONTAL);
+        infoLayout.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
+        
+        TextView timeView = new TextView(getParentActivity());
+        timeView.setText("12:00 PM ");
+        timeView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11);
+        int outTimeColor = Theme.getColor(Theme.key_chat_outTimeText);
+        if (outTimeColor == 0) {
+            outTimeColor = 0xFF70B15C;
+        }
+        timeView.setTextColor(outTimeColor);
+        infoLayout.addView(timeView);
+
+        TextView deletedIndicator = new TextView(getParentActivity());
+        
+        // Custom deleted mark or default
+        String customMark = NaConfig.INSTANCE.getCustomDeletedMark().String();
+        deletedIndicator.setText(!TextUtils.isEmpty(customMark) ? customMark : "⬤ Deleted");
+        deletedIndicator.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11);
+        
+        int deletedColor = NaConfig.INSTANCE.getDeletedIconColor().Int();
+        if (deletedColor == 0) {
+            deletedColor = 0xFFFF0000;
+        }
+        deletedIndicator.setTextColor(deletedColor);
+        deletedIndicator.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+        infoLayout.addView(deletedIndicator);
+
+        messageBubble.addView(infoLayout, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.RIGHT, 0, 4, 0, 0));
+
+        FrameLayout.LayoutParams bubbleParams = new FrameLayout.LayoutParams(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT);
+        bubbleParams.gravity = Gravity.RIGHT | Gravity.CENTER_VERTICAL;
+        bubbleParams.rightMargin = AndroidUtilities.dp(8);
+        previewContainer.addView(messageBubble, bubbleParams);
+
+        // Update preview dynamically
+        Runnable updatePreview = () -> {
+            boolean enabled = enableCheckbox.isChecked();
+            int alphaPercent = seekBar.getProgress();
+            
+            seekBar.setEnabled(enabled);
+            valueLabel.setText("Opacity: " + alphaPercent + "%");
+            
+            if (enabled) {
+                messageBubble.setAlpha(alphaPercent / 100.0f);
+            } else {
+                messageBubble.setAlpha(1.0f);
+            }
+        };
+
+        enableCheckbox.setOnClickListener(v -> {
+            enableCheckbox.setChecked(!enableCheckbox.isChecked());
+            updatePreview.run();
+        });
+
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                updatePreview.run();
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+
+        updatePreview.run();
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+        builder.setTitle("Translucent Deleted Messages");
+        builder.setView(contentLayout);
+        builder.setPositiveButton(getString(R.string.Save), (dialog, which) -> {
+            NaConfig.INSTANCE.getTranslucentDeletedMessages().setConfigBool(enableCheckbox.isChecked());
+            NaConfig.INSTANCE.getTranslucentDeletedMessagesAlpha().setConfigInt(seekBar.getProgress());
+            if (listAdapter != null) {
+                listAdapter.notifyItemChanged(cellGroup.rows.indexOf(translucentDeletedMessagesRow));
+            }
+            org.telegram.messenger.NotificationCenter.getGlobalInstance().postNotificationName(org.telegram.messenger.NotificationCenter.reloadInterface);
+        });
+        builder.setNegativeButton(getString(R.string.Cancel), null);
+        showDialog(builder.create());
+    }
+    // [Alexgram: Translucent Helper] - End
 
 }
