@@ -7192,6 +7192,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         checkAppUpdate(false, null);
         xyz.nextalone.nagram.helper.AnnouncementHelper.checkAnnouncement(this);
         
+        // [Alexgram: Birthday Wishes] - Start
         // Birthday Wishes Feature - Online / Offline checks
         {
             int account = currentAccount;
@@ -7214,6 +7215,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                 }
             }
         }
+        // [Alexgram: Birthday Wishes] - End
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             ApplicationLoader.canDrawOverlays = Settings.canDrawOverlays(this);

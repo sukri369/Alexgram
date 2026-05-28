@@ -15,8 +15,11 @@ import android.graphics.Shader;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.text.Layout;
 import android.text.SpannableStringBuilder;
+import android.text.Spanned;
 import android.util.TypedValue;
+import java.util.ArrayList;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -27,6 +30,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.browser.Browser;
 import org.telegram.messenger.FileLoader;
 import org.telegram.messenger.ImageLocation;
 import org.telegram.messenger.LocaleController;
@@ -38,6 +42,7 @@ import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ChatActivity;
 import org.telegram.ui.Components.BackupImageView;
 import org.telegram.ui.Components.LayoutHelper;
+import org.telegram.ui.Components.QuoteSpan;
 import org.telegram.ui.LaunchActivity;
 
 import tw.nekomimi.nekogram.TextViewEffects;
@@ -65,6 +70,41 @@ public class AnnouncementAlert extends BottomSheet {
         setApplyTopPadding(false);
         setApplyBottomPadding(false);
 
+        // Parse custom button redirect metadata from message text
+        String displayMessage = message.message;
+        String btnText = "Read on Channel";
+        String targetUrl = null;
+
+        if (displayMessage != null) {
+            int buttonIndex = displayMessage.lastIndexOf("\nButton:");
+            if (buttonIndex == -1) {
+                buttonIndex = displayMessage.lastIndexOf("\nbutton:");
+            }
+            if (buttonIndex != -1) {
+                String buttonLine = displayMessage.substring(buttonIndex).trim();
+                int colonIndex = buttonLine.indexOf(":");
+                if (colonIndex != -1) {
+                    String content = buttonLine.substring(colonIndex + 1).trim();
+                    int pipeIndex = content.indexOf("|");
+                    if (pipeIndex != -1) {
+                        btnText = content.substring(0, pipeIndex).trim();
+                        targetUrl = content.substring(pipeIndex + 1).trim();
+                        displayMessage = displayMessage.substring(0, buttonIndex).trim();
+                    }
+                }
+            }
+        }
+
+        ArrayList<TLRPC.MessageEntity> displayEntities = new ArrayList<>();
+        if (message.entities != null) {
+            int displayLength = displayMessage != null ? displayMessage.length() : 0;
+            for (TLRPC.MessageEntity entity : message.entities) {
+                if (entity.offset + entity.length <= displayLength) {
+                    displayEntities.add(entity);
+                }
+            }
+        }
+
         FrameLayout root = new FrameLayout(activity);
         containerView = root;
 
@@ -90,22 +130,71 @@ public class AnnouncementAlert extends BottomSheet {
         contentLayout.setOrientation(LinearLayout.VERTICAL);
         contentLayout.setPadding(0, 0, 0, AndroidUtilities.dp(8));
 
-        // Photo media
+        // Media: Photo or Document (Video/GIF)
         TLRPC.Photo photo = null;
+        TLRPC.Document document = null;
+
         if (message.media instanceof TLRPC.TL_messageMediaPhoto) {
             photo = message.media.photo;
+        } else if (message.media instanceof TLRPC.TL_messageMediaDocument && message.media.document != null) {
+            document = message.media.document;
         } else if (message.media instanceof TLRPC.TL_messageMediaWebPage && message.media.webpage != null) {
-            photo = message.media.webpage.photo;
+            if (message.media.webpage.document != null) {
+                document = message.media.webpage.document;
+            } else {
+                photo = message.media.webpage.photo;
+            }
         }
 
-        if (photo != null) {
+        if (document != null) {
+            int w = 0, h = 0;
+            if (document.attributes != null) {
+                for (int a = 0; a < document.attributes.size(); a++) {
+                    TLRPC.DocumentAttribute attribute = document.attributes.get(a);
+                    if (attribute instanceof TLRPC.TL_documentAttributeVideo || attribute instanceof TLRPC.TL_documentAttributeImageSize) {
+                        w = attribute.w;
+                        h = attribute.h;
+                        break;
+                    }
+                }
+            }
+            
+            float displayH_dp = 160;
+            if (w > 0) {
+                float screenW_dp = (AndroidUtilities.displaySize.x / AndroidUtilities.density) - 40;
+                displayH_dp = screenW_dp * ((float) h / w);
+                if (displayH_dp > 200) {
+                    displayH_dp = 200;
+                }
+                if (displayH_dp < 40) {
+                    displayH_dp = 120;
+                }
+            }
+
+            BackupImageView photoView = new BackupImageView(activity);
+            photoView.setRoundRadius(AndroidUtilities.dp(12));
+            photoView.setAspectFit(true);
+            photoView.getImageReceiver().setAllowStartAnimation(true);
+            photoView.getImageReceiver().setAutoPlayUrls(true);
+
+            contentLayout.addView(photoView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, (int) displayH_dp, 20, 16, 20, 8));
+
+            TLRPC.PhotoSize thumb = FileLoader.getClosestPhotoSizeWithSize(document.thumbs, 320);
+            photoView.setImage(
+                ImageLocation.getForDocument(document),
+                "400_300",
+                thumb != null ? ImageLocation.getForDocument(thumb, document) : null,
+                "400_300_b",
+                thumb != null ? thumb.size : 0,
+                document
+            );
+        } else if (photo != null) {
             TLRPC.PhotoSize size = FileLoader.getClosestPhotoSizeWithSize(photo.sizes, 640);
             if (size != null) {
                 BackupImageView photoView = new BackupImageView(activity);
                 photoView.setRoundRadius(AndroidUtilities.dp(12));
                 photoView.setAspectFit(true);
 
-                // Calculate layout dimensions in DP (NOT pixels) to avoid double-scaling inside LayoutHelper
                 float displayH_dp = 160;
                 if (size.w > 0) {
                     float screenW_dp = (AndroidUtilities.displaySize.x / AndroidUtilities.density) - 40;
@@ -124,19 +213,19 @@ public class AnnouncementAlert extends BottomSheet {
         }
 
         // Text Content
-        if (message.message != null && !message.message.isEmpty()) {
-            TextView textLog = new TextViewEffects(activity);
+        if (displayMessage != null && !displayMessage.isEmpty()) {
+            TextView textLog = new AnnouncementTextView(activity);
             textLog.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
             textLog.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
             textLog.setLineSpacing(AndroidUtilities.dp(4), 1f);
             textLog.setMovementMethod(new AndroidUtilities.LinkMovementMethodMy());
 
-            SpannableStringBuilder ssb = new SpannableStringBuilder(message.message);
-            if (message.entities != null && !message.entities.isEmpty()) {
-                MessageObject.addEntitiesToText(ssb, message.entities, false, false, false, false);
+            SpannableStringBuilder ssb = new SpannableStringBuilder(displayMessage);
+            if (!displayEntities.isEmpty()) {
+                MessageObject.addEntitiesToText(ssb, displayEntities, false, true, false, false);
             }
             textLog.setText(ssb);
-            contentLayout.addView(textLog, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 20, 12, 20, 16));
+            contentLayout.addView(textLog, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 10, 6, 10, 10));
         }
 
         sv.addView(contentLayout, LayoutHelper.createScroll(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP));
@@ -157,13 +246,18 @@ public class AnnouncementAlert extends BottomSheet {
         closeBtn.setOnClickListener(v -> dismiss());
         buttonsLayout.addView(closeBtn, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, 44, Gravity.CENTER_VERTICAL, 20, 0, 8, 0));
 
-        openBtn = new GradientButton(activity, "Read on Channel");
+        openBtn = new GradientButton(activity, btnText);
+        final String finalUrl = targetUrl;
         openBtn.setOnClickListener(v -> {
             dismiss();
-            Bundle args = new Bundle();
-            args.putLong("chat_id", chat.id);
-            args.putInt("message_id", message.id);
-            activity.getActionBarLayout().presentFragment(new ChatActivity(args), false, false, true, false);
+            if (finalUrl != null && !finalUrl.isEmpty()) {
+                Browser.openUrl(activity, finalUrl);
+            } else {
+                Bundle args = new Bundle();
+                args.putLong("chat_id", chat.id);
+                args.putInt("message_id", message.id);
+                activity.getActionBarLayout().presentFragment(new ChatActivity(args), false, false, true, false);
+            }
         });
         buttonsLayout.addView(openBtn, LayoutHelper.createLinear(160, 44, Gravity.CENTER_VERTICAL, 8, 0, 20, 0));
 
@@ -416,6 +510,66 @@ public class AnnouncementAlert extends BottomSheet {
                 invalidate();
             });
             pressAnim.start();
+        }
+    }
+
+    private static class AnnouncementTextView extends TextViewEffects {
+        private ArrayList<QuoteSpan.Block> quoteBlocks;
+        private boolean hasQuote;
+        private Layout lastLayout;
+
+        public AnnouncementTextView(Context context) {
+            super(context);
+            setLinkTextColor(Theme.getColor(Theme.key_dialogTextLink));
+            updatePadding();
+        }
+
+        private void updatePadding() {
+            setPadding(AndroidUtilities.dp(10), AndroidUtilities.dp(6), AndroidUtilities.dp(hasQuote ? 42 : 10), AndroidUtilities.dp(6));
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            super.onDraw(canvas);
+            if (lastLayout != getLayout()) {
+                lastLayout = getLayout();
+                quoteBlocks = QuoteSpan.updateQuoteBlocksSpanned(lastLayout, quoteBlocks);
+                boolean oldHasQuote = hasQuote;
+                hasQuote = lastLayout != null && lastLayout.getText() instanceof Spanned && 
+                           ((Spanned) lastLayout.getText()).getSpans(0, lastLayout.getText().length(), QuoteSpan.QuoteStyleSpan.class).length > 0;
+                if (oldHasQuote != hasQuote) {
+                    updatePadding();
+                }
+            }
+        }
+
+        @Override
+        protected void dispatchDraw(Canvas canvas) {
+            if (quoteBlocks != null && hasQuote) {
+                canvas.save();
+                canvas.translate(getPaddingLeft(), getPaddingTop());
+                int color = Theme.getColor(Theme.key_dialogTextLink);
+                for (int i = 0; i < quoteBlocks.size(); ++i) {
+                    quoteBlocks.get(i).draw(canvas, 0, getWidth() - getPaddingLeft() - getPaddingRight() + (hasQuote ? AndroidUtilities.dp(32) : 0), color, 1f, getPaint());
+                }
+                canvas.restore();
+            }
+            super.dispatchDraw(canvas);
+        }
+
+        @Override
+        protected void onDetachedFromWindow() {
+            super.onDetachedFromWindow();
+            quoteBlocks = QuoteSpan.updateQuoteBlocksSpanned(null, quoteBlocks);
+        }
+
+        @Override
+        protected void onTextChanged(CharSequence text, int start, int lengthBefore, int lengthAfter) {
+            super.onTextChanged(text, start, lengthBefore, lengthAfter);
+            quoteBlocks = QuoteSpan.updateQuoteBlocksSpanned(getLayout(), quoteBlocks);
+            hasQuote = getLayout() != null && getLayout().getText() instanceof Spanned && 
+                       ((Spanned) getLayout().getText()).getSpans(0, getLayout().getText().length(), QuoteSpan.QuoteStyleSpan.class).length > 0;
+            updatePadding();
         }
     }
 }
