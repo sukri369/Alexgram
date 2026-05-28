@@ -10912,7 +10912,6 @@ public class ChatActivity extends BaseFragment implements
 		actionModeViews.add(actionMode.addItemWithWidth(nkactionbarbtn_selectBetween, R.drawable.ic_select_between, AndroidUtilities.dp(54), LocaleController.getString(R.string.SelectBetween)));
 		actionModeViews.add(actionMode.addItemWithWidth(star, R.drawable.msg_fave, AndroidUtilities.dp(54), LocaleController.getString(R.string.AddToFavorites)));
 		actionModeViews.add(actionMode.addItemWithWidth(copy, R.drawable.msg_copy, AndroidUtilities.dp(54), LocaleController.getString(R.string.Copy)));
-		actionModeViews.add(actionMode.addItemWithWidth(combine_message, R.drawable.msg_replace, AndroidUtilities.dp(54), LocaleController.getString(R.string.CombineMessage)));
 		if (currentEncryptedChat == null && getDialogId() != UserObject.VERIFY && NaConfig.INSTANCE.getActionBarButtonForward().Bool()) {
 			actionModeViews.add(actionMode.addItemWithWidth(forward, R.drawable.msg_forward_noquote, AndroidUtilities.dp(54), LocaleController.getString(R.string.Forward)));
 		}
@@ -10921,6 +10920,7 @@ public class ChatActivity extends BaseFragment implements
 			actionModeViews.add(actionMode.addItemWithWidth(nkbtn_special_forward, R.drawable.nk_special_forward, AndroidUtilities.dp(54), LocaleController.getString(R.string.SpecialForward)));
 		}
 		// [Alexgram: Special Forward] - End
+
 		actionModeViews.add(actionMode.addItemWithWidth(delete, R.drawable.msg_delete, AndroidUtilities.dp(54), LocaleController.getString(R.string.Delete)));
 
 		if (currentEncryptedChat == null) {
@@ -10941,6 +10941,8 @@ public class ChatActivity extends BaseFragment implements
 			actionModeOtherItem.addSubItem(nkbtn_special_forward, R.drawable.nk_special_forward, LocaleController.getString(R.string.SpecialForward));
 			// [Alexgram: Special Forward] - End
 		}
+		// Move combine_message to overflow to free up space in main bar
+		actionModeOtherItem.addSubItem(combine_message, R.drawable.msg_replace, LocaleController.getString(R.string.CombineMessage));
 		actionModeOtherItem.addSubItem(nkbtn_translate, LlmConfig.llmIsDefaultProvider() ? R.drawable.magic_stick_solar : R.drawable.ic_translate, LocaleController.getString(R.string.Translate));
 		actionModeOtherItem.addSubItem(nkbtn_sharemessage, R.drawable.msg_shareout, LocaleController.getString(R.string.ShareMessages));
 		actionModeOtherItem.addSubItem(nkbtn_unpin, R.drawable.msg_unpin, LocaleController.getString(R.string.UnpinMessage));
@@ -10960,7 +10962,6 @@ public class ChatActivity extends BaseFragment implements
 		actionMode.setItemVisibility(nkactionbarbtn_selectBetween, NaConfig.INSTANCE.getActionBarButtonSelectBetween().Bool() ? View.VISIBLE : View.GONE);
 		actionMode.setItemVisibility(copy, /*!isPeerNoForwards() &&*/ (selectedMessagesCanCopyIds[0].size() + selectedMessagesCanCopyIds[1].size() != 0) && NaConfig.INSTANCE.getActionBarButtonCopy().Bool() ? View.VISIBLE : View.GONE);
 		actionMode.setItemVisibility(star, selectedMessagesCanStarIds[0].size() + selectedMessagesCanStarIds[1].size() != 0 ? View.VISIBLE : View.GONE);
-		actionMode.setItemVisibility(combine_message, selectedMessagesCanCopyIds[0].size() + selectedMessagesCanCopyIds[1].size() != 0 ? View.VISIBLE : View.GONE);
 		actionMode.setItemVisibility(forward, NaConfig.INSTANCE.getActionBarButtonForward().Bool() ? View.VISIBLE : View.GONE);
 		// [Alexgram: Special Forward] - Start
 		actionMode.setItemVisibility(nkbtn_special_forward, NaConfig.INSTANCE.getSpecialForward().Bool() ? View.VISIBLE : View.GONE);
@@ -20133,7 +20134,6 @@ public class ChatActivity extends BaseFragment implements
 				ActionBarMenuItem shareItem = actionBar.createActionMode().getItem(share);
 
 				ActionBarMenuItem selectItem = actionBar.createActionMode().getItem(nkactionbarbtn_selectBetween);
-				ActionBarMenuItem combineMessageItem = actionBar.createActionMode().getItem(combine_message);
 
 				ActionBarMenuSubItem saveMessageItem = null;
 				ActionBarMenuSubItem forwardNoQuoteItem = null;
@@ -20166,6 +20166,9 @@ public class ChatActivity extends BaseFragment implements
 				}
 				if (saveMessageItem != null) {
 					saveMessageItem.setVisibility(canForward);
+				}
+				if (actionModeOtherItem != null) {
+					actionModeOtherItem.setSubItemVisibility(combine_message, selectedMessagesCanCopyIds[0].size() + selectedMessagesCanCopyIds[1].size() != 0);
 				}
 				if (repeatItem != null) {
 					repeatItem.setVisibility(canForward && canSendMessage);
