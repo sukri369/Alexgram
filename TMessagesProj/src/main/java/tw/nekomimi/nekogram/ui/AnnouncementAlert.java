@@ -108,7 +108,7 @@ public class AnnouncementAlert extends BottomSheet {
                 }
                 
                 contentLayout.addView(photoView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, displayH, 20, 16, 20, 8));
-                photoView.setImage(ImageLocation.getForPhoto(size, photo), "400_300", null, photo);
+                photoView.setImage(ImageLocation.getForPhoto(size, photo), "400_300", (Drawable) null, photo);
             }
         }
 
@@ -128,7 +128,7 @@ public class AnnouncementAlert extends BottomSheet {
             contentLayout.addView(textLog, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 20, 12, 20, 16));
         }
 
-        sv.addView(contentLayout, LayoutHelper.createScroll(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+        sv.addView(contentLayout, LayoutHelper.createScroll(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP));
         card.addView(sv, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
         // Buttons
