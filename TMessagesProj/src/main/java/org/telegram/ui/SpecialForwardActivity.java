@@ -474,7 +474,16 @@ public class SpecialForwardActivity extends ChatActivity {
             LocaleController.getString("SpecialForwardAsFile", R.string.SpecialForwardAsFile) + ": " + (forwardAsFile ? "ON" : "OFF")
         };
         
-        builder.setItems(items, (dialog, which) -> {
+        int[] icons = new int[]{
+            R.drawable.msg_reset_all,
+            R.drawable.msg_replace_text,
+            R.drawable.msg_replace_link,
+            R.drawable.msg_delete_link,
+            R.drawable.msg_delete_caption,
+            R.drawable.msg_forward_as_file
+        };
+        
+        builder.setItems(items, icons, (dialog, which) -> {
             if (which == 0) {
                 resetAll();
             } else if (which == 1) {
