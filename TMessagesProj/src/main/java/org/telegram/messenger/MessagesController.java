@@ -18152,10 +18152,50 @@ public class MessagesController extends BaseController implements NotificationCe
                 if (!fromGetDifference) {
                     if (chatId != 0) {
                         if (chat == null) {
-                            if (BuildVars.LOGS_ENABLED) {
-                                FileLog.d("not found chat " + chatId);
+                            if (getUserConfig().getCurrentUser() != null && getUserConfig().getCurrentUser().bot) {
+                                if (message.peer_id.channel_id != 0) {
+                                    TLRPC.TL_channel channelDummy = new TLRPC.TL_channel();
+                                    channelDummy.id = chatId;
+                                    channelDummy.title = "Group/Channel " + chatId;
+                                    channelDummy.min = true;
+                                    chat = channelDummy;
+                                } else {
+                                    TLRPC.TL_chat chatDummy = new TLRPC.TL_chat();
+                                    chatDummy.id = chatId;
+                                    chatDummy.title = "Group " + chatId;
+                                    chatDummy.min = true;
+                                    chat = chatDummy;
+                                }
+                                putChat(chat, true);
+                                ArrayList<TLRPC.Chat> chatsArrToPut = new ArrayList<>();
+                                chatsArrToPut.add(chat);
+                                getMessagesStorage().putUsersAndChats(new ArrayList<>(), chatsArrToPut, true, true);
+                                
+                                final long finalChatId = chatId;
+                                TLRPC.TL_messages_getChats req = new TLRPC.TL_messages_getChats();
+                                req.id.add(finalChatId);
+                                getConnectionsManager().sendRequest(req, (response, error) -> {
+                                    if (error == null && response instanceof TLRPC.messages_Chats) {
+                                        TLRPC.messages_Chats res = (TLRPC.messages_Chats) response;
+                                        if (!res.chats.isEmpty()) {
+                                            TLRPC.Chat realChat = res.chats.get(0);
+                                            AndroidUtilities.runOnUIThread(() -> {
+                                                putChat(realChat, false);
+                                                ArrayList<TLRPC.Chat> realChatsList = new ArrayList<>();
+                                                realChatsList.add(realChat);
+                                                getMessagesStorage().putUsersAndChats(new ArrayList<>(), realChatsList, true, true);
+                                                getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
+                                                getNotificationCenter().postNotificationName(NotificationCenter.updateInterfaces, UPDATE_MASK_CHAT_NAME);
+                                            });
+                                        }
+                                    }
+                                });
+                            } else {
+                                if (BuildVars.LOGS_ENABLED) {
+                                    FileLog.d("not found chat " + chatId);
+                                }
+                                return false;
                             }
-                            return false;
                         }
                     }
 
