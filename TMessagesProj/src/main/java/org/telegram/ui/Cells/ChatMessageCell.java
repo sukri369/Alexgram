@@ -4501,6 +4501,16 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                             return true;
                         }
                     }
+                    if (block.ayuSpoilerGroups != null) {
+                        for (android.util.Pair<Integer, java.util.List<SpoilerEffect>> group : block.ayuSpoilerGroups) {
+                            for (SpoilerEffect eff : group.second) {
+                                if (eff.getBounds().contains(x - textX + offX, (int) (y - textY - block.textYOffset(currentMessageObject.textLayoutBlocks, transitionParams)))) {
+                                    spoilerPressed = eff;
+                                    return true;
+                                }
+                            }
+                        }
+                    }
                 }
             }
             if (captionLayout != null && x >= captionX && y >= captionY && x <= captionX + captionLayout.textWidth && y <= captionY + captionLayout.textHeight(transitionParams)) {
@@ -4515,6 +4525,16 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                         if (eff.getBounds().contains((int) (x - captionX + offX), (int) (y - captionY - block.textYOffset(captionLayout.textLayoutBlocks, transitionParams)))) {
                             spoilerPressed = eff;
                             return true;
+                        }
+                    }
+                    if (block.ayuSpoilerGroups != null) {
+                        for (android.util.Pair<Integer, java.util.List<SpoilerEffect>> group : block.ayuSpoilerGroups) {
+                            for (SpoilerEffect eff : group.second) {
+                                if (eff.getBounds().contains((int) (x - captionX + offX), (int) (y - captionY - block.textYOffset(captionLayout.textLayoutBlocks, transitionParams)))) {
+                                    spoilerPressed = eff;
+                                    return true;
+                                }
+                            }
                         }
                     }
                 }
@@ -4553,12 +4573,28 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                         Rect b = eff.getBounds();
                         sPath.addRect(b.left, b.top + block.textYOffset(captionLayout.textLayoutBlocks, transitionParams), b.right, b.bottom + block.textYOffset(captionLayout.textLayoutBlocks, transitionParams), Path.Direction.CW);
                     }
+                    if (block.ayuSpoilerGroups != null) {
+                        for (android.util.Pair<Integer, java.util.List<SpoilerEffect>> group : block.ayuSpoilerGroups) {
+                            for (SpoilerEffect eff : group.second) {
+                                Rect b = eff.getBounds();
+                                sPath.addRect(b.left, b.top + block.textYOffset(captionLayout.textLayoutBlocks, transitionParams), b.right, b.bottom + block.textYOffset(captionLayout.textLayoutBlocks, transitionParams), Path.Direction.CW);
+                            }
+                        }
+                    }
                 }
             } else if (currentMessageObject.textLayoutBlocks != null) {
                 for (MessageObject.TextLayoutBlock block : currentMessageObject.textLayoutBlocks) {
                     for (SpoilerEffect eff : block.spoilers) {
                         Rect b = eff.getBounds();
                         sPath.addRect(b.left, b.top + block.textYOffset(currentMessageObject.textLayoutBlocks, transitionParams), b.right, b.bottom + block.textYOffset(currentMessageObject.textLayoutBlocks, transitionParams), Path.Direction.CW);
+                    }
+                    if (block.ayuSpoilerGroups != null) {
+                        for (android.util.Pair<Integer, java.util.List<SpoilerEffect>> group : block.ayuSpoilerGroups) {
+                            for (SpoilerEffect eff : group.second) {
+                                Rect b = eff.getBounds();
+                                sPath.addRect(b.left, b.top + block.textYOffset(currentMessageObject.textLayoutBlocks, transitionParams), b.right, b.bottom + block.textYOffset(currentMessageObject.textLayoutBlocks, transitionParams), Path.Direction.CW);
+                            }
+                        }
                     }
                 }
             }
@@ -4570,6 +4606,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             spoilerPressed.setOnRippleEndCallback(() -> post(() -> {
                 isSpoilerRevealing = false;
                 getMessageObject().isSpoilersRevealed = true;
+                getMessageObject().ayuSpoilerRevealed = true;
                 if (explanationLayout != null) {
                     for (MessageObject.TextLayoutBlock block : explanationLayout.textLayoutBlocks) {
                         block.spoilers.clear();
@@ -4578,10 +4615,16 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 if (captionLayout != null) {
                     for (MessageObject.TextLayoutBlock block : captionLayout.textLayoutBlocks) {
                         block.spoilers.clear();
+                        if (block.ayuSpoilerGroups != null) {
+                            block.ayuSpoilerGroups.clear();
+                        }
                     }
                 } else if (currentMessageObject.textLayoutBlocks != null) {
                     for (MessageObject.TextLayoutBlock block : currentMessageObject.textLayoutBlocks) {
                         block.spoilers.clear();
+                        if (block.ayuSpoilerGroups != null) {
+                            block.ayuSpoilerGroups.clear();
+                        }
                     }
                 }
                 invalidate();
@@ -4600,12 +4643,26 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                     for (SpoilerEffect eff : block.spoilers) {
                         eff.startRipple(x - captionX + offX, y - block.textYOffset(captionLayout.textLayoutBlocks, transitionParams) - captionY, rad);
                     }
+                    if (block.ayuSpoilerGroups != null) {
+                        for (android.util.Pair<Integer, java.util.List<SpoilerEffect>> group : block.ayuSpoilerGroups) {
+                            for (SpoilerEffect eff : group.second) {
+                                eff.startRipple(x - captionX + offX, y - block.textYOffset(captionLayout.textLayoutBlocks, transitionParams) - captionY, rad);
+                            }
+                        }
+                    }
                 }
             } else if (currentMessageObject.textLayoutBlocks != null) {
                 for (MessageObject.TextLayoutBlock block : currentMessageObject.textLayoutBlocks) {
                     int offX = block.isRtl() ? (int) currentMessageObject.textXOffset : 0;
                     for (SpoilerEffect eff : block.spoilers) {
                         eff.startRipple(x - textX + offX, y - block.textYOffset(currentMessageObject.textLayoutBlocks, transitionParams) - textY, rad);
+                    }
+                    if (block.ayuSpoilerGroups != null) {
+                        for (android.util.Pair<Integer, java.util.List<SpoilerEffect>> group : block.ayuSpoilerGroups) {
+                            for (SpoilerEffect eff : group.second) {
+                                eff.startRipple(x - textX + offX, y - block.textYOffset(currentMessageObject.textLayoutBlocks, transitionParams) - textY, rad);
+                            }
+                        }
                     }
                 }
             }
@@ -6671,6 +6728,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
     public MultiLayoutTypingAnimator botDraftTypingAnimator;
 
     private void setMessageContent(MessageObject messageObject, MessageObject.GroupedMessages groupedMessages, boolean bottomNear, boolean topNear, boolean firstInChat, boolean lastInChatList) {
+        applyAyuFilterSpoiler(messageObject, groupedMessages);
         if (messageObject.checkLayout() || currentPosition != null && lastHeight != AndroidUtilities.displaySize.y) {
             currentMessageObject = null;
         }
@@ -17101,7 +17159,20 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                     }
 
                     if (needDrawTextDefault) {
-                        SpoilerEffect.renderWithRipple(this, invalidateSpoilersParent, blockSpoilersColor, 0, block.spoilersPatchedTextLayout, 0, block.textLayout, block.spoilers, canvas, currentPosition != null);
+                        if (block.ayuSpoilerGroups != null && !block.ayuSpoilerGroups.isEmpty()) {
+                            Layout baseLayout = block.ayuSpoilersPatchedTextLayout.get();
+                            if (baseLayout != null) {
+                                baseLayout.draw(canvas);
+                            } else {
+                                block.textLayout.draw(canvas);
+                            }
+                            renderSpoilerGroup(canvas, block.textLayout, block.spoilers, blockSpoilersColor, false);
+                            for (android.util.Pair<Integer, java.util.List<SpoilerEffect>> group : block.ayuSpoilerGroups) {
+                                renderSpoilerGroup(canvas, block.textLayout, group.second, group.first, true);
+                            }
+                        } else {
+                            SpoilerEffect.renderWithRipple(this, invalidateSpoilersParent, blockSpoilersColor, 0, block.spoilersPatchedTextLayout, 0, block.textLayout, block.spoilers, canvas, currentPosition != null);
+                        }
                     }
                     Emoji.emojiDrawingYOffset = 0;
                 } catch (Exception e) {
@@ -21494,7 +21565,14 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 collapsed = block.collapsed(transitionParams);
                 canvas.saveLayerAlpha(0, 0, width, block.height(transitionParams) - 1, 0xFF, Canvas.ALL_SAVE_FLAG);
             }
-            AnimatedEmojiSpan.drawAnimatedEmojis(canvas, block.textLayout, stack, 0, block.spoilers, top, bottom, drawingYOffset, alpha, getAdaptiveEmojiColorFilter(0, getThemedColor(textColorKey)));
+            java.util.List<SpoilerEffect> spoilers = block.spoilers;
+            if (block.ayuSpoilerGroups != null && !block.ayuSpoilerGroups.isEmpty()) {
+                spoilers = new java.util.ArrayList<>(block.spoilers);
+                for (android.util.Pair<Integer, java.util.List<SpoilerEffect>> group : block.ayuSpoilerGroups) {
+                    spoilers.addAll(group.second);
+                }
+            }
+            AnimatedEmojiSpan.drawAnimatedEmojis(canvas, block.textLayout, stack, 0, spoilers, top, bottom, drawingYOffset, alpha, getAdaptiveEmojiColorFilter(0, getThemedColor(textColorKey)));
             if (block.quoteCollapse && block.height > block.collapsedHeight) {
                 if (clip == null) {
                     clip = new GradientClip();
@@ -29414,5 +29492,115 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         return !TextUtils.isEmpty(messageObject.messageOwner.via_bot_name);
     }
     // bookmark end
+
+    private void applyAyuFilterSpoiler(MessageObject messageObject, MessageObject.GroupedMessages groupedMessages) {
+        if (messageObject == null || messageObject.isOutOwner()) {
+            return;
+        }
+        int action = tw.nekomimi.nekogram.filters.AyuFilter.getFilterAction(messageObject, groupedMessages);
+        if (action == tw.nekomimi.nekogram.filters.AyuFilter.FilterModel.ACTION_HIDE || action == -1) {
+            // no spoiler — clear any previous ayu spoiler
+            messageObject.ayuSpoilerText = null;
+            messageObject.ayuMediaSpoiler = false;
+            return;
+        }
+        int maskColor = tw.nekomimi.nekogram.filters.AyuFilter.getMaskColor(messageObject, groupedMessages);
+
+        if (action == tw.nekomimi.nekogram.filters.AyuFilter.FilterModel.ACTION_SPOILER_MATCH) {
+            // Only mask matched regex portions
+            CharSequence msgText = messageObject.messageText;
+            if (msgText == null || msgText.length() == 0) {
+                messageObject.ayuSpoilerText = null;
+                messageObject.ayuMediaSpoiler = false;
+                return;
+            }
+            java.util.List<tw.nekomimi.nekogram.filters.AyuFilter.FilterModel> matching =
+                    tw.nekomimi.nekogram.filters.AyuFilter.getMatchingFilterModels(messageObject, groupedMessages);
+            if (matching.isEmpty()) {
+                messageObject.ayuSpoilerText = null;
+                messageObject.ayuMediaSpoiler = false;
+                return;
+            }
+            android.text.SpannableStringBuilder sb = new android.text.SpannableStringBuilder(msgText);
+            for (tw.nekomimi.nekogram.filters.AyuFilter.FilterModel fm : matching) {
+                if (fm.filterAction == tw.nekomimi.nekogram.filters.AyuFilter.FilterModel.ACTION_SPOILER_MATCH && fm.pattern != null) {
+                    java.util.regex.Matcher m = fm.pattern.matcher(msgText);
+                    while (m.find()) {
+                        sb.setSpan(new MessageObject.AyuSpoilerSpan(fm.spoilerColor), m.start(), m.end(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    }
+                }
+            }
+            messageObject.ayuSpoilerText = sb;
+            messageObject.ayuMediaSpoiler = false;
+        } else {
+            // Mask entire message (ACTION_SPOILER_ALL)
+            CharSequence msgText = messageObject.messageText;
+            if (msgText != null && msgText.length() > 0) {
+                android.text.SpannableStringBuilder sb = new android.text.SpannableStringBuilder(msgText);
+                sb.setSpan(new MessageObject.AyuSpoilerSpan(maskColor), 0, msgText.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                messageObject.ayuSpoilerText = sb;
+            } else {
+                messageObject.ayuSpoilerText = null;
+            }
+            messageObject.ayuMediaSpoiler = true;
+        }
+    }
+
+    private static android.graphics.Paint xRefPaint;
+
+    private void renderSpoilerGroup(Canvas canvas, Layout textLayout, java.util.List<SpoilerEffect> spoilers, int color, boolean isAyu) {
+        if (spoilers == null || spoilers.isEmpty()) {
+            return;
+        }
+        sPath.rewind();
+        for (SpoilerEffect eff : spoilers) {
+            Rect b = eff.getBounds();
+            sPath.addRect(b.left, b.top, b.right, b.bottom, Path.Direction.CW);
+        }
+        if (spoilers.get(0).getRippleProgress() != -1) {
+            canvas.save();
+            canvas.clipPath(sPath);
+            sPath.rewind();
+            spoilers.get(0).getRipplePath(sPath);
+            canvas.clipPath(sPath);
+            canvas.translate(0, -getPaddingTop());
+            textLayout.draw(canvas);
+            canvas.restore();
+        }
+
+        boolean useAlphaLayer = spoilers.get(0).getRippleProgress() != -1;
+        if (useAlphaLayer) {
+            int w = getMeasuredWidth();
+            if (currentPosition != null && getParent() instanceof View) {
+                w = ((View) getParent()).getMeasuredWidth();
+            }
+            canvas.saveLayer(0, 0, w, getMeasuredHeight(), null, Canvas.ALL_SAVE_FLAG);
+        } else {
+            canvas.save();
+        }
+        canvas.translate(0, -getPaddingTop());
+        for (SpoilerEffect eff : spoilers) {
+            eff.setInvalidateParent(invalidateSpoilersParent);
+            if (eff.getParentView() != this) eff.setParentView(this);
+            if (eff.shouldInvalidateColor()) {
+                eff.setColor(androidx.core.graphics.ColorUtils.blendARGB(color, isAyu ? Theme.chat_msgTextPaint.getColor() : textLayout.getPaint().getColor(), Math.max(0, eff.getRippleProgress())));
+            } else {
+                eff.setColor(color);
+            }
+            eff.draw(canvas);
+        }
+
+        if (useAlphaLayer) {
+            sPath.rewind();
+            spoilers.get(0).getRipplePath(sPath);
+            if (xRefPaint == null) {
+                xRefPaint = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
+                xRefPaint.setColor(0xff000000);
+                xRefPaint.setXfermode(new android.graphics.PorterDuffXfermode(android.graphics.PorterDuff.Mode.CLEAR));
+            }
+            canvas.drawPath(sPath, xRefPaint);
+        }
+        canvas.restore();
+    }
 
 }

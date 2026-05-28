@@ -496,6 +496,18 @@ object NaConfig {
             ConfigItem.configTypeString,
             "[]"
         )
+    val maskBlockedUserMessages =
+        addConfig(
+            "MaskBlockedUserMessages",
+            ConfigItem.configTypeBool,
+            false
+        )
+    val blockedUserMaskColor =
+        addConfig(
+            "BlockedUserMaskColor",
+            ConfigItem.configTypeInt,
+            0xFF888888.toInt()
+        )
     val showTimeHint =
         addConfig(
             "ShowTimeHint",

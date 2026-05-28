@@ -49019,9 +49019,26 @@ public class ChatActivity extends BaseFragment implements
 
 	public boolean isBlockedUser(long senderId) {
 		if (!NekoConfig.ignoreBlocked.Bool()) {
+			// If masking is enabled for globally-blocked users, skip the block check
+			if (NaConfig.INSTANCE.getMaskBlockedUserMessages().Bool()) {
+				if (getMessagesController().blockePeers.indexOfKey(senderId) >= 0) {
+					return false;
+				}
+			}
+			if (AyuFilter.isCustomFilteredPeer(senderId)) {
+				return AyuFilter.isCustomFilteredPeerHidden(senderId);
+			}
 			return false;
 		}
-		return getMessagesController().blockePeers.indexOfKey(senderId) >= 0 || AyuFilter.isCustomFilteredPeer(senderId);
+		if (NaConfig.INSTANCE.getMaskBlockedUserMessages().Bool()) {
+			if (getMessagesController().blockePeers.indexOfKey(senderId) >= 0) {
+				return false;
+			}
+		}
+		if (AyuFilter.isCustomFilteredPeer(senderId)) {
+			return AyuFilter.isCustomFilteredPeerHidden(senderId);
+		}
+		return getMessagesController().blockePeers.indexOfKey(senderId) >= 0;
 	}
 
 	private void updateBotforumTabsBottomMargin() {

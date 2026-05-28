@@ -18152,6 +18152,7 @@ public class MessagesController extends BaseController implements NotificationCe
                 if (!fromGetDifference) {
                     if (chatId != 0) {
                         if (chat == null) {
+                            // [Alexgram: Bot Login Chat Loading Fix] - Start
                             if (getUserConfig().getCurrentUser() != null && getUserConfig().getCurrentUser().bot) {
                                 if (message.peer_id.channel_id != 0) {
                                     TLRPC.TL_channel channelDummy = new TLRPC.TL_channel();
@@ -18196,6 +18197,7 @@ public class MessagesController extends BaseController implements NotificationCe
                                 }
                                 return false;
                             }
+                            // [Alexgram: Bot Login Chat Loading Fix] - End
                         }
                     }
 
