@@ -260,6 +260,8 @@ public class NekoGeneralSettingsActivity extends BaseNekoXSettingsActivity {
     private final AbstractConfigCell allowForwardingRestrictionRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getAllowForwardingRestriction(), getString(R.string.AllowForwardingRestrictionDescription)));
     private final AbstractConfigCell dividerPrivacy = cellGroup.appendCell(new ConfigCellDivider());
 
+
+
     // Notifications
     private final AbstractConfigCell headerNotifications = cellGroup.appendCell(new ConfigCellHeader(getString(R.string.Notifications)));
     private final AbstractConfigCell pushServiceTypeRow = cellGroup.appendCell(new ConfigCellSelectBox(null, NaConfig.INSTANCE.getPushServiceType(), new String[]{
@@ -728,6 +730,8 @@ public class NekoGeneralSettingsActivity extends BaseNekoXSettingsActivity {
         Locale locale = LocaleController.getInstance().getCurrentLocale();
         return locale != null && locale.getLanguage().equals("fa");
     }
+
+
 
 
 

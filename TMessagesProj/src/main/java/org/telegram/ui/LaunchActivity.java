@@ -7191,6 +7191,29 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         }
         checkAppUpdate(false, null);
         xyz.nextalone.nagram.helper.AnnouncementHelper.checkAnnouncement(this);
+        
+        // Birthday Wishes Feature - Online / Offline checks
+        {
+            int account = currentAccount;
+            if (UserConfig.getInstance(account).isClientActivated()) {
+                long clientUserId = UserConfig.getInstance(account).getClientUserId();
+                TLRPC.UserFull cachedFull = MessagesController.getInstance(account).getUserFull(clientUserId);
+                if (cachedFull != null && tw.nekomimi.nekogram.ui.BirthdayAlert.shouldShowBirthdayWish(cachedFull)) {
+                    tw.nekomimi.nekogram.ui.BirthdayAlert.show(this, false);
+                }
+
+                TLRPC.User currentUser = UserConfig.getInstance(account).getCurrentUser();
+                if (currentUser != null) {
+                    MessagesController.getInstance(account).loadFullUser(currentUser, 0, true, userFull -> {
+                        AndroidUtilities.runOnUIThread(() -> {
+                            if (userFull != null && tw.nekomimi.nekogram.ui.BirthdayAlert.shouldShowBirthdayWish(userFull)) {
+                                tw.nekomimi.nekogram.ui.BirthdayAlert.show(this, false);
+                            }
+                        });
+                    });
+                }
+            }
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             ApplicationLoader.canDrawOverlays = Settings.canDrawOverlays(this);
