@@ -39,6 +39,7 @@ import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BottomSheet;
 import org.telegram.ui.ActionBar.Theme;
+import org.telegram.ui.ActionBar.ActionBarMenuItem;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.Switch;
 import org.telegram.ui.Components.ItemOptions;
@@ -51,6 +52,7 @@ public class SpecialForwardActivity extends ChatActivity {
     private MessageObject selectedMessage = null;
     private int nextUniqueId = -100000;
     private boolean forwardAsFile = false;
+    private FrameLayout tapToEditPanel = null;
 
     private final static int MENU_EDIT_OPTIONS = 1009;
     private final static int MENU_PREVIEW = 1010;
@@ -83,7 +85,7 @@ public class SpecialForwardActivity extends ChatActivity {
                     resetClone.fwd_from = null;
                     resetClone.edit_date = 0;
                     
-                    MessageObject resetObj = new MessageObject(currentAccount, resetClone, false, true);
+                    MessageObject resetObj = createPreviewMessageObject(resetClone);
                     resetObj.stableId = ChatActivity.lastStableId++;
                     resetObj.forceUpdate = true;
                     resetObj.checkLayout();
@@ -100,7 +102,7 @@ public class SpecialForwardActivity extends ChatActivity {
                     msgClone.fwd_from = null;
                     msgClone.edit_date = 0;
                     
-                    MessageObject clonedObj = new MessageObject(currentAccount, msgClone, false, true);
+                    MessageObject clonedObj = createPreviewMessageObject(msgClone);
                     clonedObj.stableId = resetObj.stableId;
                     clonedObj.forceUpdate = true;
                     clonedObj.checkLayout();
@@ -136,6 +138,72 @@ public class SpecialForwardActivity extends ChatActivity {
             FileLog.e(e);
             return null;
         }
+    }
+
+    private MessageObject createPreviewMessageObject(TLRPC.Message messageOwner) {
+        MessageObject messageObject = new MessageObject(currentAccount, messageOwner, false, true);
+        messageObject.previewForward = true;
+        return messageObject;
+    }
+
+    private void setupTapToEditPanel() {
+        if (chatActivityEnterView == null || chatActivityEnterView.getParent() == null) return;
+        ViewGroup parent = (ViewGroup) chatActivityEnterView.getParent();
+        if (tapToEditPanel == null) {
+            Context context = getParentActivity();
+            tapToEditPanel = new FrameLayout(context);
+            
+            TextView textView = new TextView(context);
+            textView.setText("Tap on message to edit it");
+            textView.setTextSize(15);
+            textView.setGravity(Gravity.CENTER);
+            textView.setTag("text");
+            
+            tapToEditPanel.addView(textView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER));
+            tapToEditPanel.setOnClickListener(v -> {});
+            
+            parent.addView(tapToEditPanel, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 48, Gravity.BOTTOM, 7, 0, 7, 0));
+        }
+        
+        android.graphics.drawable.GradientDrawable bg = new android.graphics.drawable.GradientDrawable();
+        bg.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
+        bg.setCornerRadius(AndroidUtilities.dp(24));
+        bg.setColor(getThemedColor(Theme.key_chat_messagePanelBackground));
+        tapToEditPanel.setBackground(bg);
+        
+        TextView textView = tapToEditPanel.findViewWithTag("text");
+        if (textView != null) {
+            textView.setTextColor(getThemedColor(Theme.key_chat_messagePanelHint));
+        }
+    }
+
+    private void updateEditModeUI() {
+        setupTapToEditPanel();
+        boolean isEditing = (selectedMessage != null);
+        if (tapToEditPanel != null) {
+            tapToEditPanel.setVisibility(isEditing ? View.GONE : View.VISIBLE);
+        }
+        if (chatActivityEnterView != null) {
+            chatActivityEnterView.setVisibility(isEditing ? View.VISIBLE : View.INVISIBLE);
+        }
+        if (actionBar != null && actionBar.createMenu() != null) {
+            ActionBarMenuItem previewItem = actionBar.createMenu().getItem(MENU_PREVIEW);
+            if (previewItem != null) {
+                previewItem.setIcon(isEditing ? R.drawable.msg_views_solar : R.drawable.ic_send);
+            }
+        }
+    }
+
+    @Override
+    public void updateBottomOverlay() {
+        super.updateBottomOverlay();
+        updateEditModeUI();
+    }
+
+    @Override
+    public void updateBottomOverlay(boolean animated) {
+        super.updateBottomOverlay(animated);
+        updateEditModeUI();
     }
 
     @Override
@@ -186,7 +254,7 @@ public class SpecialForwardActivity extends ChatActivity {
                                 TLRPC.Message messageClone = cloneMessage(selectedMessage.messageOwner);
                                 if (messageClone != null) {
                                     messageClone.id = selectedMessage.getId();
-                                    MessageObject newCloned = new MessageObject(currentAccount, messageClone, false, true);
+                                    MessageObject newCloned = createPreviewMessageObject(messageClone);
                                     newCloned.stableId = selectedMessage.stableId;
                                     newCloned.forceUpdate = true;
                                     newCloned.checkLayout();
@@ -371,7 +439,7 @@ public class SpecialForwardActivity extends ChatActivity {
                                 TLRPC.Message messageClone = cloneMessage(selectedMessage.messageOwner);
                                 if (messageClone != null) {
                                     messageClone.id = selectedMessage.getId();
-                                    MessageObject newCloned = new MessageObject(currentAccount, messageClone, false, true);
+                                    MessageObject newCloned = createPreviewMessageObject(messageClone);
                                     newCloned.stableId = selectedMessage.stableId;
                                     newCloned.forceUpdate = true;
                                     newCloned.checkLayout();
@@ -414,7 +482,7 @@ public class SpecialForwardActivity extends ChatActivity {
                     TLRPC.Message messageClone = cloneMessage(selectedMessage.messageOwner);
                     if (messageClone != null) {
                         messageClone.id = selectedMessage.getId();
-                        MessageObject newCloned = new MessageObject(currentAccount, messageClone, false, true);
+                        MessageObject newCloned = createPreviewMessageObject(messageClone);
                         newCloned.stableId = selectedMessage.stableId;
                         newCloned.forceUpdate = true;
                         newCloned.checkLayout();
@@ -455,7 +523,11 @@ public class SpecialForwardActivity extends ChatActivity {
             showEditOptionsMenu();
             return true;
         } else if (itemId == MENU_PREVIEW) {
-            showPreviewDialog();
+            if (selectedMessage == null) {
+                forwardMessages();
+            } else {
+                showPreviewDialog();
+            }
             return true;
         }
         return false;
@@ -573,7 +645,7 @@ public class SpecialForwardActivity extends ChatActivity {
                 TLRPC.Message messageClone = cloneMessage(originalObj.messageOwner);
                 if (messageClone != null) {
                     messageClone.id = selectedMessage.getId();
-                    MessageObject newCloned = new MessageObject(currentAccount, messageClone, false, true);
+                    MessageObject newCloned = createPreviewMessageObject(messageClone);
                     newCloned.stableId = selectedMessage.stableId;
                     newCloned.forceUpdate = true;
                     newCloned.checkLayout();
@@ -607,7 +679,7 @@ public class SpecialForwardActivity extends ChatActivity {
                     TLRPC.Message messageClone = cloneMessage(originalObj.messageOwner);
                     if (messageClone != null) {
                         messageClone.id = workingObj.getId();
-                        MessageObject newCloned = new MessageObject(currentAccount, messageClone, false, true);
+                        MessageObject newCloned = createPreviewMessageObject(messageClone);
                         newCloned.stableId = workingObj.stableId;
                         newCloned.forceUpdate = true;
                         newCloned.checkLayout();
@@ -733,7 +805,7 @@ public class SpecialForwardActivity extends ChatActivity {
                     TLRPC.Message messageClone = cloneMessage(msg.messageOwner);
                     if (messageClone != null) {
                         messageClone.id = msg.getId();
-                        MessageObject newCloned = new MessageObject(currentAccount, messageClone, false, true);
+                        MessageObject newCloned = createPreviewMessageObject(messageClone);
                         newCloned.stableId = msg.stableId;
                         newCloned.forceUpdate = true;
                         newCloned.checkLayout();
@@ -807,7 +879,7 @@ public class SpecialForwardActivity extends ChatActivity {
                     TLRPC.Message messageClone = cloneMessage(msg.messageOwner);
                     if (messageClone != null) {
                         messageClone.id = msg.getId();
-                        MessageObject newCloned = new MessageObject(currentAccount, messageClone, false, true);
+                        MessageObject newCloned = createPreviewMessageObject(messageClone);
                         newCloned.stableId = msg.stableId;
                         newCloned.forceUpdate = true;
                         newCloned.checkLayout();
@@ -957,7 +1029,7 @@ public class SpecialForwardActivity extends ChatActivity {
                     TLRPC.Message messageClone = cloneMessage(msg.messageOwner);
                     if (messageClone != null) {
                         messageClone.id = msg.getId();
-                        MessageObject newCloned = new MessageObject(currentAccount, messageClone, false, true);
+                        MessageObject newCloned = createPreviewMessageObject(messageClone);
                         newCloned.stableId = msg.stableId;
                         newCloned.forceUpdate = true;
                         newCloned.checkLayout();
@@ -1026,7 +1098,7 @@ public class SpecialForwardActivity extends ChatActivity {
                 TLRPC.Message messageClone = cloneMessage(msg.messageOwner);
                 if (messageClone != null) {
                     messageClone.id = msg.getId();
-                    MessageObject newCloned = new MessageObject(currentAccount, messageClone, false, true);
+                    MessageObject newCloned = createPreviewMessageObject(messageClone);
                     newCloned.stableId = msg.stableId;
                     newCloned.forceUpdate = true;
                     newCloned.checkLayout();
