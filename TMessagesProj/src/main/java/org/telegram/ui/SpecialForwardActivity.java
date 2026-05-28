@@ -650,10 +650,16 @@ public class SpecialForwardActivity extends ChatActivity {
         final EditText searchPhrase = new EditText(getParentActivity());
         searchPhrase.setHint("Phrase to search and replace (leave empty to replace all)");
         searchPhrase.setInputType(InputType.TYPE_CLASS_TEXT);
+        searchPhrase.setTextColor(getThemedColor(Theme.key_dialogTextBlack));
+        searchPhrase.setHintTextColor(getThemedColor(Theme.key_dialogTextHint));
+        searchPhrase.setBackground(Theme.createEditTextDrawable(getParentActivity(), true));
         
         final EditText input = new EditText(getParentActivity());
         input.setHint("Replacement / New text");
         input.setInputType(InputType.TYPE_CLASS_TEXT);
+        input.setTextColor(getThemedColor(Theme.key_dialogTextBlack));
+        input.setHintTextColor(getThemedColor(Theme.key_dialogTextHint));
+        input.setBackground(Theme.createEditTextDrawable(getParentActivity(), true));
         
         final boolean[] prep = new boolean[]{false};
         final boolean[] app = new boolean[]{false};
@@ -780,6 +786,9 @@ public class SpecialForwardActivity extends ChatActivity {
         final EditText input = new EditText(getParentActivity());
         input.setHint("New link (e.g. https://t.me/...)");
         input.setInputType(InputType.TYPE_TEXT_VARIATION_URI);
+        input.setTextColor(getThemedColor(Theme.key_dialogTextBlack));
+        input.setHintTextColor(getThemedColor(Theme.key_dialogTextHint));
+        input.setBackground(Theme.createEditTextDrawable(getParentActivity(), true));
         layout.addView(input, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 16, 0, 0));
         
         builder.setView(layout);
@@ -852,6 +861,9 @@ public class SpecialForwardActivity extends ChatActivity {
         final EditText input = new EditText(getParentActivity());
         input.setHint("New link (e.g. https://t.me/...)");
         input.setInputType(InputType.TYPE_TEXT_VARIATION_URI);
+        input.setTextColor(getThemedColor(Theme.key_dialogTextBlack));
+        input.setHintTextColor(getThemedColor(Theme.key_dialogTextHint));
+        input.setBackground(Theme.createEditTextDrawable(getParentActivity(), true));
         layout.addView(input, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 16, 0, 0));
         
         builder.setView(layout);
