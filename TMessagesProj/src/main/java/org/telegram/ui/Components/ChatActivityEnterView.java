@@ -6881,6 +6881,10 @@ public class ChatActivityEnterView extends FrameLayout implements
     }
 
     public void setAllowStickersAndGifs(boolean needAnimatedEmoji, boolean needStickers, boolean needGifs, boolean waitingForKeyboardOpen) {
+        if (parentFragment instanceof org.telegram.ui.SpecialForwardActivity) {
+            needStickers = false;
+            needGifs = false;
+        }
         if ((allowStickers != needStickers || allowGifs != needGifs) && emojiView != null) {
             if (emojiViewVisible && !waitingForKeyboardOpen) {
                 removeEmojiViewAfterAnimation = true;

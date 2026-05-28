@@ -318,7 +318,7 @@ public class SpecialForwardActivity extends ChatActivity {
         });
         
         inlineResetView = new ImageView(context);
-        inlineResetView.setImageResource(R.drawable.msg_repeat);
+        inlineResetView.setImageResource(R.drawable.msg_reset_all);
         inlineResetView.setColorFilter(new android.graphics.PorterDuffColorFilter(getThemedColor(Theme.key_chat_replyPanelClose), android.graphics.PorterDuff.Mode.SRC_IN));
         inlineResetView.setScaleType(ImageView.ScaleType.CENTER);
         inlineResetView.setBackground(Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector), 1, AndroidUtilities.dp(19)));
