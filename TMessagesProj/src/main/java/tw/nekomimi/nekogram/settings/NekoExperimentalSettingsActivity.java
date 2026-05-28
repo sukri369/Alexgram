@@ -1212,7 +1212,7 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
         containerBg.setColor(chatWallpaperColor);
         containerBg.setCornerRadius(AndroidUtilities.dp(12));
         previewContainer.setBackground(containerBg);
-        contentLayout.addView(previewContainer, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 120, 0, 0, 0, 8));
+        contentLayout.addView(previewContainer, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 8));
 
         // Outgoing Deleted Message bubble
         LinearLayout messageBubble = new LinearLayout(getParentActivity());
@@ -1259,26 +1259,33 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
         timeView.setTextColor(outTimeColor);
         infoLayout.addView(timeView);
 
-        TextView deletedIndicator = new TextView(getParentActivity());
-        
-        // Custom deleted mark or default
-        String customMark = NaConfig.INSTANCE.getCustomDeletedMark().String();
-        deletedIndicator.setText(!TextUtils.isEmpty(customMark) ? customMark : "⬤ Deleted");
-        deletedIndicator.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11);
-        
+        boolean useDeletedIcon = NaConfig.INSTANCE.getUseDeletedIcon().Bool();
         int deletedColor = NaConfig.INSTANCE.getDeletedIconColor().Int();
         if (deletedColor == 0) {
             deletedColor = 0xFFFF0000;
         }
-        deletedIndicator.setTextColor(deletedColor);
-        deletedIndicator.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
-        infoLayout.addView(deletedIndicator);
+
+        if (useDeletedIcon) {
+            android.widget.ImageView deletedIconView = new android.widget.ImageView(getParentActivity());
+            deletedIconView.setImageResource(R.drawable.msg_delete_solar);
+            deletedIconView.setColorFilter(deletedColor, android.graphics.PorterDuff.Mode.SRC_IN);
+            infoLayout.addView(deletedIconView, LayoutHelper.createLinear(14, 14, Gravity.CENTER_VERTICAL, 0, 0, 0, 0));
+        } else {
+            TextView deletedTextView = new TextView(getParentActivity());
+            String customMark = NaConfig.INSTANCE.getCustomDeletedMark().String();
+            deletedTextView.setText(!TextUtils.isEmpty(customMark) ? customMark : "Deleted");
+            deletedTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11);
+            deletedTextView.setTextColor(deletedColor);
+            deletedTextView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+            infoLayout.addView(deletedTextView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_VERTICAL, 0, 0, 0, 0));
+        }
 
         messageBubble.addView(infoLayout, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.RIGHT, 0, 4, 0, 0));
 
         FrameLayout.LayoutParams bubbleParams = new FrameLayout.LayoutParams(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT);
         bubbleParams.gravity = Gravity.RIGHT | Gravity.CENTER_VERTICAL;
         bubbleParams.rightMargin = AndroidUtilities.dp(8);
+        bubbleParams.leftMargin = AndroidUtilities.dp(48);
         previewContainer.addView(messageBubble, bubbleParams);
 
         // Update preview dynamically
