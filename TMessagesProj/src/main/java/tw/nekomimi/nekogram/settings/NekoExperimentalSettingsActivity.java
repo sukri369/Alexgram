@@ -1204,14 +1204,27 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
         FrameLayout previewContainer = new FrameLayout(getParentActivity());
         previewContainer.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(16), AndroidUtilities.dp(12), AndroidUtilities.dp(16));
         
-        int chatWallpaperColor = Theme.getColor(Theme.key_chat_wallpaper);
-        if (chatWallpaperColor == 0) {
-            chatWallpaperColor = 0xFFECE5DD;
+        android.graphics.drawable.Drawable wallpaperDrawable = Theme.getCachedWallpaper();
+        if (wallpaperDrawable != null) {
+            previewContainer.setBackground(wallpaperDrawable);
+        } else {
+            int chatWallpaperColor = Theme.getColor(Theme.key_chat_wallpaper);
+            if (chatWallpaperColor == 0) {
+                chatWallpaperColor = 0xFFECE5DD;
+            }
+            android.graphics.drawable.GradientDrawable containerBg = new android.graphics.drawable.GradientDrawable();
+            containerBg.setColor(chatWallpaperColor);
+            previewContainer.setBackground(containerBg);
         }
-        android.graphics.drawable.GradientDrawable containerBg = new android.graphics.drawable.GradientDrawable();
-        containerBg.setColor(chatWallpaperColor);
-        containerBg.setCornerRadius(AndroidUtilities.dp(12));
-        previewContainer.setBackground(containerBg);
+
+        previewContainer.setOutlineProvider(new android.view.ViewOutlineProvider() {
+            @Override
+            public void getOutline(android.view.View view, android.graphics.Outline outline) {
+                outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), AndroidUtilities.dp(12));
+            }
+        });
+        previewContainer.setClipToOutline(true);
+        
         contentLayout.addView(previewContainer, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 8));
 
         // Outgoing Deleted Message bubble
@@ -1262,7 +1275,7 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
         boolean useDeletedIcon = NaConfig.INSTANCE.getUseDeletedIcon().Bool();
         int deletedColor = NaConfig.INSTANCE.getDeletedIconColor().Int();
         if (deletedColor == 0) {
-            deletedColor = 0xFFFF0000;
+            deletedColor = outTimeColor;
         }
 
         if (useDeletedIcon) {
