@@ -127,7 +127,7 @@ public class BirthdayAlert extends Dialog {
 
         // Subtext / Wish message
         TextView messageView = new TextView(getContext());
-        messageView.setText("Today is all about you! We are wishing you a legendary, god-level year ahead. May your path be filled with light, joy, and infinite success! 🚀✨");
+        messageView.setText("Today is all about you! ✨ Another year of main character energy. Wishing you a year of pure growth, endless wins, and zero bad vibes. Go crush it! 🚀🎂");
         messageView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
         messageView.setTextColor(0xFFB0C4DE); // Light Steel Blue
         messageView.setGravity(Gravity.CENTER);
@@ -156,6 +156,21 @@ public class BirthdayAlert extends Dialog {
             // Animate button update
             makeWishButton.updateText("Wish Sent to the Stars! 🌌✨");
             makeWishButton.setEnabled(false);
+
+            // Auto dismiss card with animation after 2.5 seconds
+            AndroidUtilities.runOnUIThread(() -> {
+                if (cardView != null) {
+                    cardView.animate()
+                            .alpha(0f)
+                            .scaleX(0.9f)
+                            .scaleY(0.9f)
+                            .setDuration(300)
+                            .withEndAction(this::dismiss)
+                            .start();
+                } else {
+                    dismiss();
+                }
+            }, 2500);
         });
         contentLayout.addView(makeWishButton, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 48, Gravity.CENTER_HORIZONTAL, 0, 24, 0, 0));
 
