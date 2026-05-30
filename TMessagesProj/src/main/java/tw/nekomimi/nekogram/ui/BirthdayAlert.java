@@ -239,9 +239,11 @@ public class BirthdayAlert extends Dialog {
             return false;
         }
 
-        int currentYear = Calendar.getInstance().get(Calendar.YEAR);
-        int lastShownYear = org.telegram.messenger.MessagesController.getGlobalMainSettings().getInt("last_shown_birthday_year", 0);
-        return lastShownYear != currentYear;
+        long userId = UserConfig.getInstance(currentAccount).getClientUserId();
+        Calendar cal = Calendar.getInstance();
+        String todayStr = cal.get(Calendar.YEAR) + "-" + (cal.get(Calendar.MONTH) + 1) + "-" + cal.get(Calendar.DAY_OF_MONTH);
+        String lastShownDate = org.telegram.messenger.MessagesController.getGlobalMainSettings().getString("last_shown_birthday_date_" + userId, "");
+        return !todayStr.equals(lastShownDate);
     }
 
     public static void show(Activity activity, boolean isTest) {
@@ -252,8 +254,11 @@ public class BirthdayAlert extends Dialog {
             alert.show();
 
             if (!isTest) {
-                int currentYear = Calendar.getInstance().get(Calendar.YEAR);
-                org.telegram.messenger.MessagesController.getGlobalMainSettings().edit().putInt("last_shown_birthday_year", currentYear).apply();
+                int currentAccount = UserConfig.selectedAccount;
+                long userId = UserConfig.getInstance(currentAccount).getClientUserId();
+                Calendar cal = Calendar.getInstance();
+                String todayStr = cal.get(Calendar.YEAR) + "-" + (cal.get(Calendar.MONTH) + 1) + "-" + cal.get(Calendar.DAY_OF_MONTH);
+                org.telegram.messenger.MessagesController.getGlobalMainSettings().edit().putString("last_shown_birthday_date_" + userId, todayStr).apply();
             }
         } catch (Exception e) {
             e.printStackTrace();
