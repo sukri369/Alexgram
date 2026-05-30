@@ -182,7 +182,14 @@ public class VoiceChanger {
     // Frame size formula from AbstractC2422aUx.f()
     private static int frameSize(FFTRatio ratio, int sampleRate) {
         int v = (int) (sampleRate * 0.046439909297052155 * ratio.ratio);
-        return v % 2 != 0 ? v + 1 : v;
+        int power = 1;
+        while (power < v) {
+            power <<= 1;
+        }
+        if (java.lang.Math.abs(power - v) > java.lang.Math.abs((power >> 1) - v)) {
+            power >>= 1;
+        }
+        return power;
     }
     private static int stepSize(FFTRatio ratio, int sampleRate) {
         return frameSize(ratio, sampleRate) / 4;
