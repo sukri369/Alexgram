@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="RunInBackground">التشغيل في الخلفية</string>
     <string name="RunInBackgroundInfo">ابقِ التطبيق يعمل في الخلفية لضمان وصول التنبيهات الموثوقة.</string>
@@ -137,4 +137,22 @@
     <string name="HiddenChatsAbout">إخفاء الدردشات الحساسة من القائمة الرئيسية. الوصول إليها من خلال الضغط المطول على شريط العنوان بعد الفتح بالرمز.</string>
     <string name="HideContacts">إخفاء الجهات</string>
     <string name="RestartRequired">إعادة التشغيل مطلوبة لتطبيق التغييرات</string>
+    <string name="MaxActiveAccounts">الحد الأقصى لعدد الحسابات النشطة</string>
+    <string name="LimitReachedAccountsNa">عذراً، لا يمكنك إضافة أكثر من **%1$d** حسابات. يمكنك زيادة هذا الحد (حتى 100) في **إعدادات-A &gt; عام**.</string>
+    <string name="MaxActiveAccountsWarning">لديك حالياً %1$d حسابات نشطة. سيؤدي تعيين الحد إلى %2$d إلى منعك من إضافة حسابات جديدة حتى تسجّل الخروج من بعضها.</string>
+    <string name="SplitChat">تقسيم الشاشة</string>
+    <string name="SplitChatClose">إغلاق تقسيم الشاشة</string>
+    <string name="SplitChatSelectChat">اختر محادثة لفتحها بجانب الأخرى</string>
+    <string name="SplitChatHint">اضغط على الأيقونة لاستعادة المحادثة المصغرة</string>
+    <string name="SplitChatMinimized">تم تصغير المحادثة</string>
+    <string name="ChangeFont">تغيير الخط</string>
+    <string name="ShadowBanChannelAdded">تم إضافة القناة إلى **الحظر غير المرئي**</string>
+    <string name="ShadowBanChannelRemoved">تم إزالة القناة من **الحظر غير المرئي**</string>
+    <string name="ExperimentalForceMaxFPSInfo">فرض الحد الأقصى لمعدل تحديث الشاشة.</string>
+    <string name="ExperimentalForceMaxFPS">فرض أقصى إطار بالثانية (FPS)</string>
+    <string name="RegexFiltersSpoilerInsteadOfHide">استخدم قناع سبويلر بدلاً من إخفاء الرسالة</string>
+    <string name="MaskBlockedUserMessages">تغطية رسائل المستخدمين المحظورين</string>
+    <string name="MaskBlockedUserMessagesAbout">عرض رسائل المستخدمين المحظورين خلف قناع حرق الأحداث (السبويلر) بدلاً من إخفائها تماماً.</string>
+    <string name="RegexFiltersSpoilerMatchOnly">تغطية التعبيرات النمطية المتطابقة فقط</string>
+    <string name="RegexFiltersSpoilerColor">لون جزيئات القناع</string>
 </resources>

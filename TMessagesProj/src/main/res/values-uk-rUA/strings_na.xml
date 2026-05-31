@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+﻿<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="N_Config">А-Налаштування</string>
     <string name="CombineMessage">Об\'єднати повідомлення</string>
@@ -137,4 +137,22 @@
     <string name="HiddenChatsAbout">Приховайте важливі чати з основного списку. Доступ до них можна отримати довгим натисканням на заголовок після розблокування кодом або відбитком.</string>
     <string name="HideContacts">Приховати контакти</string>
     <string name="RestartRequired">Потрібен перезапуск для застосування змін</string>
+    <string name="MaxActiveAccounts">Максимальна кількість активних акаунтів</string>
+    <string name="LimitReachedAccountsNa">Вибачте, ви не можете додати більше **%1$d** акаунтів. Ви можете збільшити це обмеження (до 100) у **A-Налаштування &gt; Загальні**.</string>
+    <string name="MaxActiveAccountsWarning">Наразі у вас %1$d активних акаунтів. Встановлення ліміту на %2$d не дозволить додавати нові акаунти, поки ви не вийдете з деяких.</string>
+    <string name="SplitChat">Розділений екран</string>
+    <string name="SplitChatClose">Закрити розділений екран</string>
+    <string name="SplitChatSelectChat">Виберіть чат для відкриття поруч</string>
+    <string name="SplitChatHint">Натисніть на іконку, щоб відновити згорнутий чат</string>
+    <string name="SplitChatMinimized">Чат згорнуто</string>
+    <string name="ChangeFont">Змінити шрифт</string>
+    <string name="ShadowBanChannelAdded">Канал додано до **тіньового бану**</string>
+    <string name="ShadowBanChannelRemoved">Канал вилучено з **тіньового бану**</string>
+    <string name="ExperimentalForceMaxFPSInfo">Примусово використовувати максимальну частоту оновлення екрану.</string>
+    <string name="ExperimentalForceMaxFPS">Максимальна частота кадрів (FPS)</string>
+    <string name="RegexFiltersSpoilerInsteadOfHide">Спойлер замість приховування повідомлення</string>
+    <string name="MaskBlockedUserMessages">Маскувати повідомлення заблокованих користувачів</string>
+    <string name="MaskBlockedUserMessagesAbout">Показувати повідомлення заблокованих/тіньових забанених користувачів під спойлером замість повного приховування.</string>
+    <string name="RegexFiltersSpoilerMatchOnly">Маскувати лише збіги з регулярними виразами</string>
+    <string name="RegexFiltersSpoilerColor">Колір часток спойлера</string>
 </resources>

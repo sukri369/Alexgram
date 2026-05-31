@@ -147,6 +147,7 @@ ConnectionsManager& ConnectionsManager::getInstance(int32_t instanceNum) {
         case 7: { static ConnectionsManager instance7(7); return instance7; }
         case 8: { static ConnectionsManager instance8(8); return instance8; }
         case 9: { static ConnectionsManager instance9(9); return instance9; }
+        // [Alexgram: Max Active Accounts] - Start
         case 10: { static ConnectionsManager instance10(10); return instance10; }
         case 11: { static ConnectionsManager instance11(11); return instance11; }
         case 12: { static ConnectionsManager instance12(12); return instance12; }
@@ -238,6 +239,7 @@ ConnectionsManager& ConnectionsManager::getInstance(int32_t instanceNum) {
         case 98: { static ConnectionsManager instance98(98); return instance98; }
         case 99:
         default: { static ConnectionsManager instance99(99); return instance99; }
+        // [Alexgram: Max Active Accounts] - End
     }
 }
 

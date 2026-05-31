@@ -2452,6 +2452,7 @@ public class LimitReachedBottomSheet extends BottomSheetWithRecyclerListView imp
             limitParams.descriptionStr = LocaleController.formatString("LimitReachedFileSize", R.string.LimitReachedFileSize, "2 GB", "4 GB");
             limitParams.descriptionStrPremium = LocaleController.formatString("LimitReachedFileSizePremium", R.string.LimitReachedFileSizePremium, "4 GB");
             limitParams.descriptionStrLocked = LocaleController.formatString("LimitReachedFileSizeLocked", R.string.LimitReachedFileSizeLocked, "2 GB");
+        // [Alexgram: Max Active Accounts] - Start
         } else if (type == TYPE_ACCOUNTS) {
             limitParams.defaultLimit = UserConfig.getMaxAccountCount();
             limitParams.premiumLimit = UserConfig.MAX_ACCOUNT_COUNT;
@@ -2459,6 +2460,7 @@ public class LimitReachedBottomSheet extends BottomSheetWithRecyclerListView imp
             limitParams.descriptionStr = LocaleController.formatString("LimitReachedAccountsNa", R.string.LimitReachedAccountsNa, limitParams.defaultLimit);
             limitParams.descriptionStrPremium = LocaleController.formatString("LimitReachedAccountsPremium", R.string.LimitReachedAccountsPremium, limitParams.defaultLimit);
             limitParams.descriptionStrLocked = LocaleController.formatString("LimitReachedAccountsPremium", R.string.LimitReachedAccountsPremium, limitParams.defaultLimit);
+        // [Alexgram: Max Active Accounts] - End
         } else if (type == TYPE_ADD_MEMBERS_RESTRICTED) {
             limitParams.defaultLimit = 0;
             limitParams.premiumLimit = 0;

@@ -1,3 +1,4 @@
+// [Alexgram: Max Active Accounts] - Start
 package tw.nekomimi.nekogram.config.cell;
 
 import android.content.Context;
@@ -113,3 +114,4 @@ public class ConfigCellNumberPicker extends AbstractConfigCell implements WithBi
         cellGroup.runCallback(bindConfig.getKey(), newVal);
     }
 }
+// [Alexgram: Max Active Accounts] - End

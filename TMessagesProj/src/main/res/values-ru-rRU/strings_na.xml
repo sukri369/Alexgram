@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+﻿<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="N_Config">А-Настройки</string>
     <string name="CombineMessage">Объединить сообщения</string>
@@ -137,4 +137,22 @@
     <string name="HiddenChatsAbout">Скройте важные чаты из основного списка. Доступ к ним можно получить долгим нажатием на заголовок после разблокировки кодом или отпечатком.</string>
     <string name="HideContacts">Скрыть контакты</string>
     <string name="RestartRequired">Требуется перезапуск для применения изменений</string>
+    <string name="MaxActiveAccounts">Максимальное количество активных аккаунтов</string>
+    <string name="LimitReachedAccountsNa">Извините, вы не можете добавить более **%1$d** аккаунтов. Вы можете увеличить это ограничение (до 100) в **A-Настройки &gt; Основные**.</string>
+    <string name="MaxActiveAccountsWarning">У вас сейчас %1$d активных аккаунтов. Установка лимита на %2$d не позволит добавлять новые аккаунты, пока вы не выйдете из некоторых.</string>
+    <string name="SplitChat">Разделение экрана</string>
+    <string name="SplitChatClose">Закрыть разделение</string>
+    <string name="SplitChatSelectChat">Выберите чат для открытия рядом</string>
+    <string name="SplitChatHint">Нажмите на иконку, чтобы восстановить свернутый чат</string>
+    <string name="SplitChatMinimized">Чат свернут</string>
+    <string name="ChangeFont">Изменить шрифт</string>
+    <string name="ShadowBanChannelAdded">Канал добавлен в **теневой бан**</string>
+    <string name="ShadowBanChannelRemoved">Канал удален из **теневого бана**</string>
+    <string name="ExperimentalForceMaxFPSInfo">Принудительно использовать максимальную частоту обновления экрана.</string>
+    <string name="ExperimentalForceMaxFPS">Максимальный FPS</string>
+    <string name="RegexFiltersSpoilerInsteadOfHide">Спойлер вместо скрытия сообщения</string>
+    <string name="MaskBlockedUserMessages">Скрывать сообщения заблокированных пользователей</string>
+    <string name="MaskBlockedUserMessagesAbout">Показывать сообщения заблокированных/скрытых пользователей под спойлером вместо их полного скрытия.</string>
+    <string name="RegexFiltersSpoilerMatchOnly">Скрывать только совпадения с регулярными выражениями</string>
+    <string name="RegexFiltersSpoilerColor">Цвет частиц спойлера</string>
 </resources>

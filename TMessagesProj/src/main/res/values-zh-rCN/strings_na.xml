@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+﻿<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="N_Config">A-设置</string>
     <string name="CombineMessage">合并消息</string>
@@ -137,4 +137,22 @@
     <string name="HiddenChatsAbout">从主列表中隐藏敏感聊天。解锁后长按标题栏即可访问。</string>
     <string name="HideContacts">隐藏联系人</string>
     <string name="RestartRequired">需要重启以应用更改</string>
+    <string name="MaxActiveAccounts">最大活跃账号数</string>
+    <string name="LimitReachedAccountsNa">抱歉，您最多只能添加 **%1$d** 个账号。您可以在 **A-设置 &gt; 通用** 中将此限制提高（最多100个）。</string>
+    <string name="MaxActiveAccountsWarning">您当前有 %1$d 个活跃账号。将限制设置为 %2$d 将阻止您添加新账号，直到您退出部分账号。</string>
+    <string name="SplitChat">分屏聊天</string>
+    <string name="SplitChatClose">关闭分屏</string>
+    <string name="SplitChatSelectChat">选择一个要同时打开的聊天</string>
+    <string name="SplitChatHint">轻触图标以恢复最小化的聊天</string>
+    <string name="SplitChatMinimized">聊天已最小化</string>
+    <string name="ChangeFont">更改字体</string>
+    <string name="ShadowBanChannelAdded">频道已添加到 **小黑屋(Shadow Ban)**</string>
+    <string name="ShadowBanChannelRemoved">频道已从小黑屋(Shadow Ban)移除</string>
+    <string name="ExperimentalForceMaxFPSInfo">强制使用最大屏幕刷新率。</string>
+    <string name="ExperimentalForceMaxFPS">强制最大帧率 (FPS)</string>
+    <string name="RegexFiltersSpoilerInsteadOfHide">使用模糊遮罩(Spoiler标签)代替隐藏消息</string>
+    <string name="MaskBlockedUserMessages">遮罩已屏蔽用户的消息</string>
+    <string name="MaskBlockedUserMessagesAbout">在 Spoiler 遮罩下显示已屏蔽/被小黑屋用户的消息，而不是直接隐藏它们。</string>
+    <string name="RegexFiltersSpoilerMatchOnly">仅对匹配的正则表达式进行遮罩</string>
+    <string name="RegexFiltersSpoilerColor">遮罩粒子颜色</string>
 </resources>
