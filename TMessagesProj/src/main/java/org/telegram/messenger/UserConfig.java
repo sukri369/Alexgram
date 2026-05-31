@@ -250,6 +250,13 @@ public class UserConfig extends BaseController {
         }
     }
 
+    public boolean isBot() {
+        synchronized (sync) {
+            return currentUser != null && currentUser.bot;
+        }
+    }
+
+
     public long getClientUserId() {
         synchronized (sync) {
             return currentUser != null ? currentUser.id : 0;

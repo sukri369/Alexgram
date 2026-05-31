@@ -2424,6 +2424,12 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     public void loadRemoteFilters(boolean force, Utilities.Callback<Boolean> whenDone) {
+        if (getUserConfig().isBot()) {
+            if (whenDone != null) {
+                whenDone.run(true);
+            }
+            return;
+        }
         if (whenDone != null) {
             onLoadedRemoteFilters = whenDone;
         }
@@ -7436,7 +7442,7 @@ public class MessagesController extends BaseController implements NotificationCe
     private final long peerDialogRequestTimeout = 1000 * 60 * 4;
 
     private void reloadDialogsReadValue(ArrayList<TLRPC.Dialog> dialogs, long did) {
-        if (did == 0 && (dialogs == null || dialogs.isEmpty())) {
+        if ((did == 0 && (dialogs == null || dialogs.isEmpty())) || getUserConfig().isBot()) {
             return;
         }
         TLRPC.TL_messages_getPeerDialogs req = new TLRPC.TL_messages_getPeerDialogs();
@@ -8978,6 +8984,10 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     public void getBlockedPeers(boolean reset) {
+        if (getUserConfig().isBot()) {
+            AndroidUtilities.runOnUIThread(() -> getNotificationCenter().postNotificationName(NotificationCenter.blockedUsersDidLoad));
+            return;
+        }
         if (!getUserConfig().isClientActivated() || loadingBlockedPeers) {
             return;
         }
@@ -11484,6 +11494,13 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     private void loadMessagesInternal(long dialogId, long mergeDialogId, boolean loadInfo, int count, int max_id, int offset_date, boolean fromCache, int minDate, int classGuid, int load_type, int last_message_id, int mode, long threadMessageId, int loadIndex, int first_unread, int unread_count, int last_date, boolean queryFromServer, int mentionsCount, boolean loadDialog, boolean processMessages, boolean isTopic, Timer loaderLogger, long hash) {
+        if (getUserConfig().isBot()) {
+            final int first_unread_final = first_unread;
+            AndroidUtilities.runOnUIThread(() -> {
+                getNotificationCenter().postNotificationName(NotificationCenter.messagesDidLoad, dialogId, count, new ArrayList<>(), false, first_unread_final, last_message_id, unread_count, last_date, load_type, true, classGuid, loadIndex, max_id, mentionsCount, mode);
+            });
+            return;
+        }
         if (BuildVars.LOGS_ENABLED) {
             FileLog.d("load messages in chat " + dialogId + " topic_id " + threadMessageId + " count " + count + " max_id " + max_id + " cache " + fromCache + " mindate = " + minDate + " guid " + classGuid + " load_type " + load_type + " last_message_id " + last_message_id + " mode " + mode + " index " + loadIndex + " firstUnread " + first_unread + " unread_count " + unread_count + " last_date " + last_date + " queryFromServer " + queryFromServer + " isTopic " + isTopic);
         }
@@ -13018,6 +13035,10 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     private void migrateDialogs(int offset, int offsetDate, long offsetUser, long offsetChat, long offsetChannel, long accessPeer) {
+        if (getUserConfig().isBot()) {
+            migratingDialogs = false;
+            return;
+        }
         if (migratingDialogs || offset == -1) {
             return;
         }
@@ -13718,6 +13739,9 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     private void applyDialogNotificationsSettings(long dialogId, long topicId, TLRPC.PeerNotifySettings notify_settings) {
+        if (getUserConfig().isBot()) {
+            return;
+        }
         getNotificationsController().getNotificationsSettingsFacade().applyDialogNotificationsSettings(dialogId, topicId, notify_settings);
     }
 
