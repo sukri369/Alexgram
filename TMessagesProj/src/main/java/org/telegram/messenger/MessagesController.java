@@ -11494,7 +11494,7 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     private void loadMessagesInternal(long dialogId, long mergeDialogId, boolean loadInfo, int count, int max_id, int offset_date, boolean fromCache, int minDate, int classGuid, int load_type, int last_message_id, int mode, long threadMessageId, int loadIndex, int first_unread, int unread_count, int last_date, boolean queryFromServer, int mentionsCount, boolean loadDialog, boolean processMessages, boolean isTopic, Timer loaderLogger, long hash) {
-        if (getUserConfig().isBot()) {
+        if (getUserConfig().isBot() && !fromCache) {
             final int first_unread_final = first_unread;
             AndroidUtilities.runOnUIThread(() -> {
                 getNotificationCenter().postNotificationName(NotificationCenter.messagesDidLoad, dialogId, count, new ArrayList<>(), false, first_unread_final, last_message_id, unread_count, last_date, load_type, true, classGuid, loadIndex, max_id, mentionsCount, mode);
