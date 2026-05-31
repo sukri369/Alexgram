@@ -293,6 +293,12 @@ public class EmojiView extends FrameLayout implements
     }
 
     public void setAllow(boolean allowEmoji, boolean allowStickers, boolean allowGifs, boolean animated) {
+        // [Alexgram: Special Forward] - Start
+        if (fragment instanceof org.telegram.ui.SpecialForwardActivity) {
+            allowStickers = false;
+            allowGifs = false;
+        }
+        // [Alexgram: Special Forward] - End
         currentTabs.clear();
         for (int i = 0; i < allTabs.size(); i++) {
             if (allTabs.get(i).type == TAB_EMOJI && allowEmoji) {

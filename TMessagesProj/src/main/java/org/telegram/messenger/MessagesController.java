@@ -2424,6 +2424,12 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     public void loadRemoteFilters(boolean force, Utilities.Callback<Boolean> whenDone) {
+        if (getUserConfig().isBot()) {
+            if (whenDone != null) {
+                whenDone.run(true);
+            }
+            return;
+        }
         if (whenDone != null) {
             onLoadedRemoteFilters = whenDone;
         }
@@ -7017,7 +7023,12 @@ public class MessagesController extends BaseController implements NotificationCe
                         users.add((TLRPC.User) objects.get(i));
                     }
                 }
-                getMessagesController().putUsers(users, false);
+                AndroidUtilities.runOnUIThread(() -> {
+                    getMessagesController().putUsers(users, false);
+                    getMessagesStorage().putUsersAndChats(users, null, true, true);
+                    getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
+                    getNotificationCenter().postNotificationName(NotificationCenter.updateInterfaces, UPDATE_MASK_CHAT_NAME);
+                });
             }
         });
     }
@@ -7431,7 +7442,7 @@ public class MessagesController extends BaseController implements NotificationCe
     private final long peerDialogRequestTimeout = 1000 * 60 * 4;
 
     private void reloadDialogsReadValue(ArrayList<TLRPC.Dialog> dialogs, long did) {
-        if (did == 0 && (dialogs == null || dialogs.isEmpty())) {
+        if ((did == 0 && (dialogs == null || dialogs.isEmpty())) || getUserConfig().isBot()) {
             return;
         }
         TLRPC.TL_messages_getPeerDialogs req = new TLRPC.TL_messages_getPeerDialogs();
@@ -8973,6 +8984,10 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     public void getBlockedPeers(boolean reset) {
+        if (getUserConfig().isBot()) {
+            AndroidUtilities.runOnUIThread(() -> getNotificationCenter().postNotificationName(NotificationCenter.blockedUsersDidLoad));
+            return;
+        }
         if (!getUserConfig().isClientActivated() || loadingBlockedPeers) {
             return;
         }
@@ -11479,6 +11494,13 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     private void loadMessagesInternal(long dialogId, long mergeDialogId, boolean loadInfo, int count, int max_id, int offset_date, boolean fromCache, int minDate, int classGuid, int load_type, int last_message_id, int mode, long threadMessageId, int loadIndex, int first_unread, int unread_count, int last_date, boolean queryFromServer, int mentionsCount, boolean loadDialog, boolean processMessages, boolean isTopic, Timer loaderLogger, long hash) {
+        if (getUserConfig().isBot() && !fromCache) {
+            final int first_unread_final = first_unread;
+            AndroidUtilities.runOnUIThread(() -> {
+                getNotificationCenter().postNotificationName(NotificationCenter.messagesDidLoad, dialogId, count, new ArrayList<>(), false, first_unread_final, last_message_id, unread_count, last_date, load_type, true, classGuid, loadIndex, max_id, mentionsCount, mode);
+            });
+            return;
+        }
         if (BuildVars.LOGS_ENABLED) {
             FileLog.d("load messages in chat " + dialogId + " topic_id " + threadMessageId + " count " + count + " max_id " + max_id + " cache " + fromCache + " mindate = " + minDate + " guid " + classGuid + " load_type " + load_type + " last_message_id " + last_message_id + " mode " + mode + " index " + loadIndex + " firstUnread " + first_unread + " unread_count " + unread_count + " last_date " + last_date + " queryFromServer " + queryFromServer + " isTopic " + isTopic);
         }
@@ -12387,6 +12409,14 @@ public class MessagesController extends BaseController implements NotificationCe
         if (loadingDialogs.get(folderId) || resetingDialogs) {
             return;
         }
+        if (getUserConfig().isBot() && !fromCache) {
+            dialogsEndReached.put(folderId, true);
+            serverDialogsEndReached.put(folderId, true);
+            loadingDialogs.put(folderId, false);
+            dialogsLoaded = true;
+            getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
+            return;
+        }
         loadingDialogs.put(folderId, true);
         getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
         if (BuildVars.LOGS_ENABLED) {
@@ -13013,6 +13043,10 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     private void migrateDialogs(int offset, int offsetDate, long offsetUser, long offsetChat, long offsetChannel, long accessPeer) {
+        if (getUserConfig().isBot()) {
+            migratingDialogs = false;
+            return;
+        }
         if (migratingDialogs || offset == -1) {
             return;
         }
@@ -13713,6 +13747,9 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     private void applyDialogNotificationsSettings(long dialogId, long topicId, TLRPC.PeerNotifySettings notify_settings) {
+        if (getUserConfig().isBot()) {
+            return;
+        }
         getNotificationsController().getNotificationsSettingsFacade().applyDialogNotificationsSettings(dialogId, topicId, notify_settings);
     }
 
@@ -18152,10 +18189,52 @@ public class MessagesController extends BaseController implements NotificationCe
                 if (!fromGetDifference) {
                     if (chatId != 0) {
                         if (chat == null) {
-                            if (BuildVars.LOGS_ENABLED) {
-                                FileLog.d("not found chat " + chatId);
+                            // [Alexgram: Bot Login Chat Loading Fix] - Start
+                            if (getUserConfig().getCurrentUser() != null && getUserConfig().getCurrentUser().bot) {
+                                if (message.peer_id.channel_id != 0) {
+                                    TLRPC.TL_channel channelDummy = new TLRPC.TL_channel();
+                                    channelDummy.id = chatId;
+                                    channelDummy.title = "Group/Channel " + chatId;
+                                    channelDummy.min = true;
+                                    chat = channelDummy;
+                                } else {
+                                    TLRPC.TL_chat chatDummy = new TLRPC.TL_chat();
+                                    chatDummy.id = chatId;
+                                    chatDummy.title = "Group " + chatId;
+                                    chatDummy.min = true;
+                                    chat = chatDummy;
+                                }
+                                putChat(chat, true);
+                                ArrayList<TLRPC.Chat> chatsArrToPut = new ArrayList<>();
+                                chatsArrToPut.add(chat);
+                                getMessagesStorage().putUsersAndChats(new ArrayList<>(), chatsArrToPut, true, true);
+                                
+                                final long finalChatId = chatId;
+                                TLRPC.TL_messages_getChats req = new TLRPC.TL_messages_getChats();
+                                req.id.add(finalChatId);
+                                getConnectionsManager().sendRequest(req, (response, error) -> {
+                                    if (error == null && response instanceof TLRPC.messages_Chats) {
+                                        TLRPC.messages_Chats res = (TLRPC.messages_Chats) response;
+                                        if (!res.chats.isEmpty()) {
+                                            TLRPC.Chat realChat = res.chats.get(0);
+                                            AndroidUtilities.runOnUIThread(() -> {
+                                                putChat(realChat, false);
+                                                ArrayList<TLRPC.Chat> realChatsList = new ArrayList<>();
+                                                realChatsList.add(realChat);
+                                                getMessagesStorage().putUsersAndChats(new ArrayList<>(), realChatsList, true, true);
+                                                getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
+                                                getNotificationCenter().postNotificationName(NotificationCenter.updateInterfaces, UPDATE_MASK_CHAT_NAME);
+                                            });
+                                        }
+                                    }
+                                });
+                            } else {
+                                if (BuildVars.LOGS_ENABLED) {
+                                    FileLog.d("not found chat " + chatId);
+                                }
+                                return false;
                             }
-                            return false;
+                            // [Alexgram: Bot Login Chat Loading Fix] - End
                         }
                     }
 
@@ -18188,10 +18267,29 @@ public class MessagesController extends BaseController implements NotificationCe
                                 putUser(user, true);
                             }
                             if (user == null) {
-                                if (BuildVars.LOGS_ENABLED) {
-                                    FileLog.d("not found user " + userId);
+                                // [Alexgram: Bot Login User Loading Fix] - Start
+                                if (getUserConfig().getCurrentUser() != null && getUserConfig().getCurrentUser().bot) {
+                                    TLRPC.TL_user userDummy = new TLRPC.TL_user();
+                                    userDummy.id = userId;
+                                    userDummy.first_name = "User " + userId;
+                                    userDummy.min = true;
+                                    userDummy.fromMessageDialogId = message.dialog_id;
+                                    userDummy.fromMessageId = message.id;
+                                    user = userDummy;
+                                    putUser(user, true);
+                                    usersDict.put(userId, user);
+                                    ArrayList<TLRPC.User> usersArrToPut = new ArrayList<>();
+                                    usersArrToPut.add(user);
+                                    getMessagesStorage().putUsersAndChats(usersArrToPut, new ArrayList<>(), true, true);
+                                    
+                                    reloadUser(userId);
+                                } else {
+                                    if (BuildVars.LOGS_ENABLED) {
+                                        FileLog.d("not found user " + userId);
+                                    }
+                                    return false;
                                 }
-                                return false;
+                                // [Alexgram: Bot Login User Loading Fix] - End
                             }
                             if (!message.out && a == 1 && user.status != null && user.status.expires <= 0 && Math.abs(getConnectionsManager().getCurrentTime() - message.date) < 30) {
                                 onlinePrivacy.put(userId, message.date);

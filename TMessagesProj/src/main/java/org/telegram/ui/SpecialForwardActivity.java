@@ -1,482 +1,800 @@
-
+// [Alexgram: Special Forward] - Start
 package org.telegram.ui;
 
 import android.content.Context;
 import android.content.DialogInterface;
-import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffColorFilter;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.InputType;
+import android.text.style.URLSpan;
 import android.text.TextUtils;
-import android.util.TypedValue;
+import android.util.SparseArray;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ActionMode;
-import android.view.Menu;
-import android.view.MenuItem;
-import java.io.File;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.collection.LongSparseArray;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import org.telegram.ui.Cells.ChatMessageCell;
-import org.telegram.messenger.MediaDataController;
-import org.telegram.messenger.SendMessagesHelper.SendMessageParams;
-import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.ChatObject;
+import org.telegram.messenger.DialogObject;
+import org.telegram.messenger.MediaDataController;
+import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.FileLog;
-import org.telegram.messenger.FileLoader;
-import org.telegram.messenger.ImageLocation;
 import org.telegram.messenger.LocaleController;
-import org.telegram.messenger.MessagesController;
-import org.telegram.messenger.MessagesStorage;
-import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SendMessagesHelper;
-import org.telegram.messenger.UserConfig;
-import org.telegram.tgnet.NativeByteBuffer;
+import org.telegram.messenger.SendMessagesHelper.SendMessageParams;
+import org.telegram.messenger.MessagesStorage;
 import org.telegram.tgnet.SerializedData;
 import org.telegram.tgnet.TLRPC;
-import org.telegram.ui.ActionBar.ActionBar;
-import org.telegram.ui.ActionBar.ActionBarMenu;
-import org.telegram.ui.ActionBar.ActionBarMenuItem;
 import org.telegram.ui.ActionBar.AlertDialog;
-import org.telegram.ui.ActionBar.BaseFragment;
+import org.telegram.ui.ActionBar.BottomSheet;
 import org.telegram.ui.ActionBar.Theme;
-import org.telegram.ui.Components.BackupImageView;
-import org.telegram.ui.Components.EditTextBoldCursor;
+import org.telegram.ui.ActionBar.ActionBarMenuItem;
 import org.telegram.ui.Components.LayoutHelper;
-import org.telegram.ui.Components.RecyclerListView;
+import org.telegram.ui.Components.Switch;
 import org.telegram.ui.Components.ItemOptions;
-import org.telegram.ui.Components.TextStyleSpan;
-import org.telegram.messenger.Utilities;
 import android.text.SpannableStringBuilder;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import org.telegram.ui.PhotoViewer;
-import org.telegram.ui.PhotoPickerActivity;
-import org.telegram.messenger.MediaController;
 
-public class SpecialForwardActivity extends BaseFragment {
+public class SpecialForwardActivity extends ChatActivity {
 
-    private ArrayList<MessageObject> messages;
-    private ArrayList<MessageObject> originalMessages;
-    private RecyclerListView listView;
-    private ListAdapter listAdapter;
-    private org.telegram.ui.Components.EditTextCaption commentView;
-    private FrameLayout bottomView;
-    private ImageView sendButton;
-    private MessageObject selectedMessage;
-    private int selectedPosition = -1;
+    private final SparseArray<MessageObject> originalMessagesMap = new SparseArray<>();
+    private MessageObject selectedMessage = null;
+    private int nextUniqueId = -100000;
     private boolean forwardAsFile = false;
+    private FrameLayout tapToEditPanel = null;
 
-    private FrameLayout mediaPreviewContainer;
-    private BackupImageView mediaPreviewImage;
-    private TextView mediaPreviewText;
-    private ImageView mediaPreviewClose;
+    private final static int MENU_EDIT_OPTIONS = 1009;
+    private final static int MENU_PREVIEW = 1010;
 
-    private final static int edit_item = 1;
-
-    private ChatMessageCell.ChatMessageCellDelegate chatMessageCellDelegate;
-
-    private PhotoViewer.PhotoViewerProvider photoViewerProvider = new PhotoViewer.EmptyPhotoViewerProvider() {
-        @Override
-        public PhotoViewer.PlaceProviderObject getPlaceForPhoto(MessageObject messageObject, TLRPC.FileLocation fileLocation, int index, boolean needPreview, boolean closing) {
-            if (mediaPreviewImage == null || selectedMessage == null || !selectedMessage.equals(messageObject)) return null;
-            int[] coords = new int[2];
-            mediaPreviewImage.getLocationInWindow(coords);
-            PhotoViewer.PlaceProviderObject object = new PhotoViewer.PlaceProviderObject();
-            object.viewX = coords[0];
-            object.viewY = coords[1];
-            object.parentView = mediaPreviewImage;
-            object.imageReceiver = mediaPreviewImage.getImageReceiver();
-            object.thumb = object.imageReceiver.getBitmapSafe();
-            object.radius = mediaPreviewImage.getImageReceiver().getRoundRadius();
-            return object;
-        }
-    };
+    private ImageView inlineResetView;
+    private ImageView inlineReplaceLinkView;
+    private ImageView inlineDeleteLinkView;
 
     public SpecialForwardActivity(ArrayList<MessageObject> sourceMessages) {
-        this.messages = new ArrayList<>();
-        this.originalMessages = new ArrayList<>();
+        super(new Bundle());
+        this.chatMode = 102; // Custom multi-chat / special forward mode
         
-        // Deep copy messages to avoid editing the actual chat messages
+        // Sort original messages so the newest (highest ID) comes first, matching Telegram's reversed messages layout
+        java.util.Collections.sort(sourceMessages, (o1, o2) -> Integer.compare(o2.getId(), o1.getId()));
+        
+        // Deep copy messages and assign sequential negative unique IDs
         for (MessageObject msg : sourceMessages) {
             try {
-                // Create copy for working list
-                SerializedData data = new SerializedData(msg.messageOwner.getObjectSize());
-                msg.messageOwner.serializeToStream(data);
-                
-                SerializedData readData = new SerializedData(data.toByteArray());
-                TLRPC.Message messageClone = TLRPC.Message.TLdeserialize(readData, readData.readInt32(false), false);
-                messageClone.dialog_id = msg.getDialogId();
-                MessageObject newObj = new MessageObject(UserConfig.selectedAccount, messageClone, false, false);
-                newObj.messageText = msg.messageText; 
-                newObj.caption = msg.caption;
-                this.messages.add(newObj);
-                
-                data.cleanup();
-                readData.cleanup();
-                
-                // Create SEPARATE copy for restore point
-                SerializedData data2 = new SerializedData(msg.messageOwner.getObjectSize());
-                msg.messageOwner.serializeToStream(data2);
-                
-                SerializedData readData2 = new SerializedData(data2.toByteArray());
-                TLRPC.Message messageClone2 = TLRPC.Message.TLdeserialize(readData2, readData2.readInt32(false), false);
-                messageClone2.dialog_id = msg.getDialogId();
-                MessageObject originalObj = new MessageObject(UserConfig.selectedAccount, messageClone2, false, false);
-                originalObj.messageText = msg.messageText; 
-                originalObj.caption = msg.caption;
-                this.originalMessages.add(originalObj);
-                
-                data2.cleanup();
-                readData2.cleanup();
+                TLRPC.Message resetClone = cloneMessage(msg.messageOwner);
+                if (resetClone != null) {
+                    int id = nextUniqueId--;
+                    resetClone.id = id;
+                    resetClone.fwd_msg_id = msg.getId();
+                    
+                    // Strip replies, reactions, and forwards metadata
+                    resetClone.flags &= ~0x8D40;
+                    resetClone.reply_to = null;
+                    resetClone.reactions = null;
+                    resetClone.reply_markup = null;
+                    resetClone.fwd_from = null;
+                    resetClone.edit_date = 0;
+                    
+                    MessageObject resetObj = createPreviewMessageObject(resetClone);
+                    resetObj.stableId = ChatActivity.lastStableId++;
+                    resetObj.forceUpdate = true;
+                    resetObj.checkLayout();
+                    
+                    originalMessagesMap.put(id, resetObj);
+                    
+                    TLRPC.Message msgClone = cloneMessage(msg.messageOwner);
+                    msgClone.id = id;
+                    msgClone.fwd_msg_id = msg.getId();
+                    msgClone.flags &= ~0x8D40;
+                    msgClone.reply_to = null;
+                    msgClone.reactions = null;
+                    msgClone.reply_markup = null;
+                    msgClone.fwd_from = null;
+                    msgClone.edit_date = 0;
+                    
+                    MessageObject clonedObj = createPreviewMessageObject(msgClone);
+                    clonedObj.stableId = resetObj.stableId;
+                    clonedObj.forceUpdate = true;
+                    clonedObj.checkLayout();
+                    
+                    this.messages.add(clonedObj);
+                }
             } catch (Exception e) {
                 FileLog.e(e);
+            }
+        }
+    }
+
+    private TLRPC.Message cloneMessage(TLRPC.Message source) {
+        if (source == null) return null;
+        try {
+            SerializedData data = new SerializedData(source.getObjectSize());
+            source.serializeToStream(data);
+            
+            SerializedData readData = new SerializedData(data.toByteArray());
+            int constructor = readData.readInt32(false);
+            TLRPC.Message messageClone = TLRPC.Message.TLdeserialize(readData, constructor, false);
+            
+            data.cleanup();
+            readData.cleanup();
+            
+            if (messageClone != null) {
+                messageClone.dialog_id = source.dialog_id;
+                messageClone.attachPath = source.attachPath;
+                messageClone.params = source.params;
+            }
+            return messageClone;
+        } catch (Exception e) {
+            FileLog.e(e);
+            return null;
+        }
+    }
+
+    private MessageObject createPreviewMessageObject(TLRPC.Message messageOwner) {
+        MessageObject messageObject = new MessageObject(currentAccount, messageOwner, false, true);
+        messageObject.previewForward = true;
+        return messageObject;
+    }
+
+    private void setupTapToEditPanel() {
+        if (chatActivityEnterView == null || chatActivityEnterView.getParent() == null) return;
+        ViewGroup parent = (ViewGroup) chatActivityEnterView.getParent();
+        if (tapToEditPanel == null) {
+            Context context = getParentActivity();
+            tapToEditPanel = new FrameLayout(context);
+            
+            TextView textView = new TextView(context);
+            textView.setText("Tap on message to edit it");
+            textView.setTextSize(15);
+            textView.setGravity(Gravity.CENTER);
+            textView.setTag("text");
+            
+            tapToEditPanel.addView(textView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER));
+            tapToEditPanel.setOnClickListener(v -> {});
+            
+            parent.addView(tapToEditPanel, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 48, Gravity.BOTTOM, 7, 0, 7, 0));
+        }
+        
+        android.graphics.drawable.GradientDrawable bg = new android.graphics.drawable.GradientDrawable();
+        bg.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
+        bg.setCornerRadius(AndroidUtilities.dp(24));
+        bg.setColor(getThemedColor(Theme.key_chat_messagePanelBackground));
+        tapToEditPanel.setBackground(bg);
+        
+        TextView textView = tapToEditPanel.findViewWithTag("text");
+        if (textView != null) {
+            textView.setTextColor(getThemedColor(Theme.key_chat_messagePanelHint));
+        }
+    }
+
+    private void updateEditModeUI() {
+        setupTapToEditPanel();
+        boolean isEditing = (selectedMessage != null);
+        if (tapToEditPanel != null) {
+            tapToEditPanel.setVisibility(isEditing ? View.GONE : View.VISIBLE);
+        }
+        if (chatActivityEnterView != null) {
+            chatActivityEnterView.setVisibility(isEditing ? View.VISIBLE : View.INVISIBLE);
+        }
+        if (actionBar != null && actionBar.createMenu() != null) {
+            ActionBarMenuItem previewItem = actionBar.createMenu().getItem(MENU_PREVIEW);
+            if (previewItem != null) {
+                previewItem.setIcon(isEditing ? R.drawable.msg_views_solar : R.drawable.ic_send);
             }
         }
     }
 
     @Override
-    public View createView(Context context) {
-        if (chatMessageCellDelegate == null) {
-            chatMessageCellDelegate = new ChatMessageCell.ChatMessageCellDelegate() {
-                 @Override public boolean canPerformActions() { return false; }
-                 @Override public void didPressImage(ChatMessageCell cell, float x, float y, boolean fullPreview) {}
-                 @Override public void didQuickShareStart(ChatMessageCell cell, float x, float y) {}
-                 // @Override public boolean isChatAdminCell(int uid) { return false; } // Not in interface
-            };
+    public void updateBottomOverlay() {
+        super.updateBottomOverlay();
+        updateEditModeUI();
+    }
+
+    @Override
+    public void updateBottomOverlay(boolean animated) {
+        super.updateBottomOverlay(animated);
+        updateEditModeUI();
+    }
+
+    @Override
+    public boolean isMultiChat() {
+        return true;
+    }
+
+    @Override
+    public boolean isMultiChatWithInput() {
+        return true;
+    }
+
+    @Override
+    protected boolean multiChatOnFragmentCreate() {
+        return !messages.isEmpty();
+    }
+
+    @Override
+    protected void multiChatMessagesFirstLoad(int lastLoadIndex) {
+        setLoaded();
+        updateVisibleRows();
+    }
+
+    @Override
+    protected void multiChatOnCreateView() {
+        setLoaded();
+        
+        if (bottomChannelButtonsLayout != null) {
+            bottomChannelButtonsLayout.setVisibility(View.GONE);
         }
-        actionBar.setBackButtonImage(R.drawable.ic_ab_back);
-        actionBar.setAllowOverlayTitle(true);
-        actionBar.setTitle(LocaleController.getString(R.string.SpecialForwardTitle));
-        actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
-            @Override
-            public void onItemClick(int id) {
-                if (id == -1) {
-                    finishFragment();
-                } else if (id == edit_item) {
-                     showEditOptions();
+        
+        if (chatActivityEnterView != null) {
+            chatActivityEnterView.forceShowSendButton = true;
+            chatActivityEnterView.checkSendButton(false);
+            chatActivityEnterView.setVisibility(View.VISIBLE);
+            chatActivityEnterView.setAllowStickersAndGifs(true, false, false, true);
+            chatActivityEnterView.showEditDoneProgress(false, true);
+            
+            View doneBtn = chatActivityEnterView.getDoneButton();
+            if (doneBtn != null) {
+                doneBtn.setOnClickListener(v -> onDoneEditingMessage(chatActivityEnterView.getFieldText()));
+            }
+            if (chatActivityEnterView.sendButtonContainer != null) {
+                for (int i = 0; i < chatActivityEnterView.sendButtonContainer.getChildCount(); i++) {
+                    View child = chatActivityEnterView.sendButtonContainer.getChildAt(i);
+                    if (child instanceof org.telegram.ui.Components.ChatActivityEnterView.SendButton) {
+                        child.setOnClickListener(v -> forwardMessages());
+                    }
                 }
             }
-        });
-
-        ActionBarMenu menu = actionBar.createMenu();
-        // Ensure icon exists or use standard
-        menu.addItem(edit_item, R.drawable.ic_ab_other);
-
-        fragmentView = new FrameLayout(context);
-        FrameLayout frameLayout = (FrameLayout) fragmentView;
-        frameLayout.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundGray));
-
-        listView = new RecyclerListView(context);
-        listView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
-        listView.setAdapter(listAdapter = new ListAdapter(context));
-        listView.setVerticalScrollBarEnabled(false);
-        listView.setPadding(0, 0, 0, AndroidUtilities.dp(64));
-        listView.setClipToPadding(false);
-        listView.setOnItemClickListener((view, position) -> {
-            if (position >= 0 && position < messages.size()) {
-                 selectedMessage = messages.get(position);
-                 selectedPosition = position;
-                 if (commentView != null) {
-                     CharSequence textToEdit = (selectedMessage.isPhoto() || selectedMessage.isVideo() || selectedMessage.isDocument()) ? selectedMessage.messageOwner.message : selectedMessage.messageText;
-                     commentView.setText(org.telegram.ui.Components.ChatActivityEnterView.applyMessageEntities(selectedMessage.messageOwner.entities, textToEdit != null ? textToEdit : "", commentView.getPaint().getFontMetricsInt()));
-                     if (commentView.getText().length() > 0) {
-                        commentView.setSelection(commentView.getText().length());
-                     }
-                     
-                     // Show media preview if exists
-                     if (selectedMessage.isPhoto() || selectedMessage.isVideo() || selectedMessage.isDocument()) {
-                         mediaPreviewContainer.setVisibility(View.VISIBLE);
-                         mediaPreviewText.setText(selectedMessage.getFileName() != null ? selectedMessage.getFileName() : "Media");
-                         if (selectedMessage.isPhoto() || selectedMessage.isVideo()) {
-                             TLRPC.PhotoSize photoSize = FileLoader.getClosestPhotoSizeWithSize(selectedMessage.photoThumbs, AndroidUtilities.dp(50));
-                             mediaPreviewImage.setImage(ImageLocation.getForObject(photoSize, selectedMessage.photoThumbsObject), "50_50", (Drawable) null, selectedMessage);
-                         } else {
-                             mediaPreviewImage.setImageResource(R.drawable.baseline_insert_drive_file_24);
-                         }
-                     } else {
-                         mediaPreviewContainer.setVisibility(View.GONE);
-                     }
-                     
-                     AndroidUtilities.showKeyboard(commentView);
-                 }
+        }
+        
+        if (replyCloseImageView != null) {
+            replyCloseImageView.setOnClickListener(v -> {
+                if (chatActivityEnterView != null) {
+                    chatActivityEnterView.setEditingMessageObject(null, null, false);
+                }
+                hideFieldPanel(true);
+                selectedMessage = null;
+                editingMessageObject = null;
+                updateBottomOverlay();
+                updateVisibleRows();
+                updateSendBadge();
+            });
+        }
+        
+        if (avatarContainer != null) {
+            avatarContainer.setTitle(LocaleController.getString("SpecialForwardTitle", R.string.SpecialForwardTitle));
+            avatarContainer.setSubtitle(messages.size() + " messages");
+            
+            // Customize avatar to be circular blue forward button
+            if (avatarContainer.avatarImageView != null) {
+                avatarContainer.avatarImageView.setVisibility(View.GONE);
             }
-        });
-        frameLayout.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.TOP | Gravity.LEFT, 0, 0, 0, 0));
+            
+            ImageView customAvatar = new ImageView(getParentActivity());
+            customAvatar.setImageResource(R.drawable.baseline_forward_24);
+            customAvatar.setColorFilter(new android.graphics.PorterDuffColorFilter(Color.WHITE, android.graphics.PorterDuff.Mode.SRC_IN));
+            
+            android.graphics.drawable.GradientDrawable circleBg = new android.graphics.drawable.GradientDrawable();
+            circleBg.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+            circleBg.setColor(0xff2196f3); // Telegraph blue
+            customAvatar.setBackground(circleBg);
+            
+            customAvatar.setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8));
+            customAvatar.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            customAvatar.setOnClickListener(v -> forwardMessages());
+            
+            avatarContainer.addView(customAvatar, 0, LayoutHelper.createFrame(42, 42, Gravity.LEFT | Gravity.CENTER_VERTICAL, 0, 0, 8, 0));
+        }
+        
+        setupCustomEditPanel();
+        updateSendBadge();
+        
+        rebuildGroupedMessages();
+        
+        if (messages.size() == 1) {
+            startEditingMessage(messages.get(0));
+        } else {
+            updateBottomOverlay();
+        }
+    }
 
-        // Bottom Edit/Send View (Floating Input Bar style to match image 2)
-        bottomView = new FrameLayout(context);
-        bottomView.setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(2), AndroidUtilities.dp(8), AndroidUtilities.dp(12));
+    private void setupCustomEditPanel() {
+        if (chatActivityEnterTopView == null || getParentActivity() == null) return;
+        
+        Context context = getParentActivity();
+        
+        View replyView = chatActivityEnterTopView.getReplyView();
+        if (replyView != null && replyView.getLayoutParams() instanceof FrameLayout.LayoutParams) {
+            FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) replyView.getLayoutParams();
+            lp.rightMargin = AndroidUtilities.dp(196);
+            replyView.setLayoutParams(lp);
+        }
+        View editView = chatActivityEnterTopView.getEditView();
+        if (editView != null && editView.getLayoutParams() instanceof FrameLayout.LayoutParams) {
+            FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) editView.getLayoutParams();
+            lp.rightMargin = AndroidUtilities.dp(196);
+            editView.setLayoutParams(lp);
+        }
 
-        // Media Preview (Above input bar)
-        mediaPreviewContainer = new FrameLayout(context);
-        mediaPreviewContainer.setBackground(Theme.createRoundRectDrawable(AndroidUtilities.dp(12), Theme.getColor(Theme.key_chat_messagePanelBackground)));
-        mediaPreviewContainer.setVisibility(View.GONE);
-        bottomView.addView(mediaPreviewContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 50, Gravity.BOTTOM, 0, 0, 0, 52));
-
-        mediaPreviewImage = new BackupImageView(context);
-        mediaPreviewImage.setRoundRadius(AndroidUtilities.dp(4));
-        mediaPreviewImage.setOnClickListener(v -> {
+        if (inlineResetView != null) chatActivityEnterTopView.removeView(inlineResetView);
+        if (inlineReplaceLinkView != null) chatActivityEnterTopView.removeView(inlineReplaceLinkView);
+        if (inlineDeleteLinkView != null) chatActivityEnterTopView.removeView(inlineDeleteLinkView);
+        
+        inlineDeleteLinkView = new ImageView(context);
+        inlineDeleteLinkView.setImageResource(R.drawable.msg_delete);
+        inlineDeleteLinkView.setColorFilter(new android.graphics.PorterDuffColorFilter(getThemedColor(Theme.key_chat_replyPanelClose), android.graphics.PorterDuff.Mode.SRC_IN));
+        inlineDeleteLinkView.setScaleType(ImageView.ScaleType.CENTER);
+        inlineDeleteLinkView.setBackground(Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector), 1, AndroidUtilities.dp(19)));
+        inlineDeleteLinkView.setOnClickListener(v -> {
             if (selectedMessage != null) {
-                PhotoViewer.getInstance().setParentActivity(SpecialForwardActivity.this);
-                PhotoViewer.getInstance().openPhoto(selectedMessage, 0, 0, 0, photoViewerProvider, true);
+                deleteLinks(selectedMessage, 15);
+                startEditingMessage(selectedMessage);
+                Toast.makeText(context, "Deleted all links in message", Toast.LENGTH_SHORT).show();
             }
         });
-        mediaPreviewContainer.addView(mediaPreviewImage, LayoutHelper.createFrame(40, 40, Gravity.CENTER_VERTICAL | Gravity.LEFT, 5, 0, 0, 0));
-
-        mediaPreviewText = new TextView(context);
-        mediaPreviewText.setTextColor(Theme.getColor(Theme.key_chat_messagePanelText));
-        mediaPreviewText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
-        mediaPreviewText.setSingleLine(true);
-        mediaPreviewText.setEllipsize(TextUtils.TruncateAt.END);
-        mediaPreviewContainer.addView(mediaPreviewText, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_VERTICAL | Gravity.LEFT, 50, 0, 40, 0));
-
-        mediaPreviewClose = new ImageView(context);
-        mediaPreviewClose.setImageResource(R.drawable.msg_panel_clear);
-        mediaPreviewClose.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chat_messagePanelIcons), PorterDuff.Mode.MULTIPLY));
-        mediaPreviewClose.setScaleType(ImageView.ScaleType.CENTER);
-        mediaPreviewClose.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelector), 1));
-        mediaPreviewClose.setOnClickListener(v -> mediaPreviewContainer.setVisibility(View.GONE));
-        mediaPreviewContainer.addView(mediaPreviewClose, LayoutHelper.createFrame(36, 36, Gravity.CENTER_VERTICAL | Gravity.RIGHT, 0, 0, 4, 0));
-
-        ImageView mediaReplace = new ImageView(context);
-        mediaReplace.setImageResource(R.drawable.input_attach_solar);
-        mediaReplace.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chat_messagePanelIcons), PorterDuff.Mode.MULTIPLY));
-        mediaReplace.setScaleType(ImageView.ScaleType.CENTER);
-        mediaReplace.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelector), 1));
-        mediaReplace.setOnClickListener(v -> openPhotoPicker());
-        mediaPreviewContainer.addView(mediaReplace, LayoutHelper.createFrame(36, 36, Gravity.CENTER_VERTICAL | Gravity.RIGHT, 0, 0, 44, 0));
         
-        FrameLayout panelContainer = new FrameLayout(context);
-        panelContainer.setBackground(Theme.createRoundRectDrawable(AndroidUtilities.dp(24), Theme.getColor(Theme.key_chat_messagePanelBackground)));
-        bottomView.addView(panelContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM));
-
-        // Emoji Button (Left) - Using input_smile_solar found in resources
-        ImageView emojiButton = new ImageView(context);
-        emojiButton.setImageResource(R.drawable.input_smile_solar); 
-        emojiButton.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chat_messagePanelIcons), PorterDuff.Mode.MULTIPLY));
-        emojiButton.setScaleType(ImageView.ScaleType.CENTER);
-        emojiButton.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelector), 1));
-        panelContainer.addView(emojiButton, LayoutHelper.createFrame(48, 48, Gravity.BOTTOM | Gravity.LEFT));
+        inlineReplaceLinkView = new ImageView(context);
+        inlineReplaceLinkView.setImageResource(R.drawable.baseline_link_24);
+        inlineReplaceLinkView.setColorFilter(new android.graphics.PorterDuffColorFilter(getThemedColor(Theme.key_chat_replyPanelClose), android.graphics.PorterDuff.Mode.SRC_IN));
+        inlineReplaceLinkView.setScaleType(ImageView.ScaleType.CENTER);
+        inlineReplaceLinkView.setBackground(Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector), 1, AndroidUtilities.dp(19)));
+        inlineReplaceLinkView.setOnClickListener(v -> {
+            if (selectedMessage != null) {
+                replaceLinkForSelectedMessage();
+            }
+        });
         
-        commentView = new org.telegram.ui.Components.EditTextCaption(context, null) {
-            @Override
-             protected void extendActionMode(ActionMode actionMode, Menu menu) {
-                if (menu.findItem(R.id.menu_bold) != null) return;
-                menu.add(Menu.NONE, R.id.menu_bold, Menu.NONE, LocaleController.getString("Bold", R.string.Bold)).setIcon(R.drawable.baseline_format_bold_24);
-                menu.add(Menu.NONE, R.id.menu_italic, Menu.NONE, LocaleController.getString("Italic", R.string.Italic)).setIcon(R.drawable.baseline_format_italic_24);
-                menu.add(Menu.NONE, R.id.menu_mono, Menu.NONE, LocaleController.getString("Mono", R.string.Mono)).setIcon(R.drawable.baseline_code_24);
-                menu.add(Menu.NONE, R.id.menu_strike, Menu.NONE, LocaleController.getString("Strike", R.string.Strike)).setIcon(R.drawable.baseline_strikethrough_s_24);
-                menu.add(Menu.NONE, R.id.menu_underline, Menu.NONE, LocaleController.getString("Underline", R.string.Underline)).setIcon(R.drawable.baseline_format_underlined_24);
-                menu.add(Menu.NONE, R.id.menu_spoiler, Menu.NONE, LocaleController.getString("Spoiler", R.string.Spoiler)).setIcon(R.drawable.msg_secret_solar);
-                menu.add(Menu.NONE, R.id.menu_quote, Menu.NONE, LocaleController.getString("Quote", R.string.Quote)).setIcon(R.drawable.msg_share_quote_solar);
-                menu.add(Menu.NONE, R.id.menu_link, Menu.NONE, LocaleController.getString("CreateLink", R.string.CreateLink)).setIcon(R.drawable.msg_link2_solar);
-                menu.add(Menu.NONE, R.id.menu_regular, Menu.NONE, LocaleController.getString("Regular", R.string.Regular));
-                if (menu.findItem(R.id.menu_change_font) == null) {
-                    menu.add(Menu.NONE, R.id.menu_change_font, Menu.NONE, LocaleController.getString("ChangeFont", R.string.ChangeFont)).setIcon(R.drawable.msg_edit);
+        inlineResetView = new ImageView(context);
+        inlineResetView.setImageResource(R.drawable.msg_reset_all);
+        inlineResetView.setColorFilter(new android.graphics.PorterDuffColorFilter(getThemedColor(Theme.key_chat_replyPanelClose), android.graphics.PorterDuff.Mode.SRC_IN));
+        inlineResetView.setScaleType(ImageView.ScaleType.CENTER);
+        inlineResetView.setBackground(Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector), 1, AndroidUtilities.dp(19)));
+        inlineResetView.setOnClickListener(v -> {
+            resetSelectedMessage();
+        });
+        
+        chatActivityEnterTopView.addView(inlineDeleteLinkView, LayoutHelper.createFrame(48, 46, Gravity.RIGHT | Gravity.TOP, 0, 0.5f, 52, 0));
+        chatActivityEnterTopView.addView(inlineReplaceLinkView, LayoutHelper.createFrame(48, 46, Gravity.RIGHT | Gravity.TOP, 0, 0.5f, 100, 0));
+        chatActivityEnterTopView.addView(inlineResetView, LayoutHelper.createFrame(48, 46, Gravity.RIGHT | Gravity.TOP, 0, 0.5f, 148, 0));
+    }
+
+    private void updateSendBadge() {
+        if (chatActivityEnterView == null || getParentActivity() == null) return;
+        
+        View enterSendBtn = chatActivityEnterView.getSendButtonInternal();
+        if (enterSendBtn instanceof org.telegram.ui.Components.ChatActivityEnterView.SendButton) {
+            ((org.telegram.ui.Components.ChatActivityEnterView.SendButton) enterSendBtn).setCount(messages.size(), true);
+        }
+    }
+
+    @Override
+    protected boolean multiChatListOnItemClick(View view, int position) {
+        if (position >= 0 && position < messages.size()) {
+            startEditingMessage(messages.get(position));
+            return true;
+        }
+        return false;
+    }
+
+    private void startEditingMessage(MessageObject messageObject) {
+        if (messageObject == null) return;
+        this.selectedMessage = messageObject;
+        this.editingMessageObject = messageObject;
+        
+        showFieldPanelForEdit(true, messageObject);
+        setupCustomEditPanel();
+        
+        if (chatActivityEnterView != null) {
+            chatActivityEnterView.setEditingMessageObject(messageObject, null, !messageObject.isMediaEmpty());
+            View doneBtn = chatActivityEnterView.getDoneButton();
+            if (doneBtn != null) {
+                doneBtn.setOnClickListener(v -> onDoneEditingMessage(chatActivityEnterView.getFieldText()));
+            }
+            chatActivityEnterView.setVisibility(View.VISIBLE);
+            chatActivityEnterView.setFieldFocused();
+        }
+        
+        updateBottomOverlay();
+        updateVisibleRows();
+    }
+
+    public void onDoneEditingMessage(CharSequence text) {
+        if (selectedMessage != null) {
+            updateMessageText(selectedMessage, text);
+            int idx = messages.indexOf(selectedMessage);
+            if (idx >= 0) {
+                try {
+                    TLRPC.Message messageClone = cloneMessage(selectedMessage.messageOwner);
+                    if (messageClone != null) {
+                        messageClone.id = selectedMessage.getId();
+                        MessageObject newCloned = createPreviewMessageObject(messageClone);
+                        newCloned.stableId = selectedMessage.stableId;
+                        newCloned.forceUpdate = true;
+                        newCloned.checkLayout();
+                        messages.set(idx, newCloned);
+                        rebuildGroupedMessages();
+                        if (chatAdapter != null) {
+                            chatAdapter.notifyItemChanged(idx);
+                        }
+                    }
+                } catch (Exception e) {
+                    FileLog.e(e);
                 }
             }
-        };
-        commentView.setWindowView(getParentActivity().getWindow().getDecorView());
-        commentView.quoteColor = Theme.getColor(Theme.key_chat_inQuote);
-        commentView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 18);
-        commentView.setHint(LocaleController.getString(R.string.SpecialForwardEditHint));
-        commentView.setTextColor(Theme.getColor(Theme.key_chat_messagePanelText));
-        commentView.setHintTextColor(Theme.getColor(Theme.key_chat_messagePanelHint));
-        commentView.setCursorColor(Theme.getColor(Theme.key_chat_messagePanelCursor));
-        commentView.setBackgroundDrawable(null);
-        commentView.setPadding(0, AndroidUtilities.dp(11), 0, AndroidUtilities.dp(12));
-        commentView.setMaxLines(4);
-        commentView.setGravity(Gravity.BOTTOM);
-        commentView.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
-        panelContainer.addView(commentView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM | Gravity.LEFT, 48, 0, 88, 0));
-
-        // Save Button (Right 1)
-        ImageView saveButton = new ImageView(context);
-        saveButton.setImageResource(R.drawable.baseline_check_24); 
-        saveButton.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chat_messagePanelSend), PorterDuff.Mode.MULTIPLY));
-        saveButton.setScaleType(ImageView.ScaleType.CENTER);
-        saveButton.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelector), 1));
-        saveButton.setOnClickListener(v -> {
-             saveCurrentEdit();
-        });
-        panelContainer.addView(saveButton, LayoutHelper.createFrame(44, 48, Gravity.BOTTOM | Gravity.RIGHT, 0, 0, 44, 0));
-
-        // Menu Button (Right 2)
-        ImageView menuButton = new ImageView(context);
-        menuButton.setImageResource(R.drawable.ic_ab_other); 
-        menuButton.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chat_messagePanelIcons), PorterDuff.Mode.MULTIPLY));
-        menuButton.setScaleType(ImageView.ScaleType.CENTER);
-        menuButton.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelector), 1));
-        menuButton.setOnClickListener(v -> showEditOptions());
-        panelContainer.addView(menuButton, LayoutHelper.createFrame(44, 48, Gravity.BOTTOM | Gravity.RIGHT));
-
-        frameLayout.addView(bottomView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, 0, 0, 84, 0));
-
-        // Floating Action Button
-        sendButton = new ImageView(context);
-        Drawable drawable = Theme.createSimpleSelectorCircleDrawable(AndroidUtilities.dp(56), Theme.getColor(Theme.key_chats_actionBackground), Theme.getColor(Theme.key_chats_actionPressedBackground));
-        sendButton.setBackgroundDrawable(drawable);
-        sendButton.setImageResource(R.drawable.baseline_send_24);
-        sendButton.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chats_actionIcon), PorterDuff.Mode.MULTIPLY));
-        sendButton.setScaleType(ImageView.ScaleType.CENTER);
-        sendButton.setOnClickListener(v -> {
-             // Auto-save any pending edit before sending
-             if (selectedMessage != null && commentView != null && commentView.getText().length() > 0) {
-                 saveCurrentEdit();
-             }
-             forwardMessages();
-        });
-        frameLayout.addView(sendButton, LayoutHelper.createFrame(56, 56, Gravity.BOTTOM | Gravity.RIGHT, 0, 0, 16, 16)); 
-
-        return fragmentView;
-    }
-
-    private MessageObject recreateMessageObject(MessageObject source) {
-        if (source == null) return null;
-        try {
-            SerializedData data = new SerializedData(source.messageOwner.getObjectSize());
-            source.messageOwner.serializeToStream(data);
-            
-            byte[] byteArray = data.toByteArray();
-            data.cleanup();
-            
-            SerializedData readData = new SerializedData(byteArray);
-            int constructor = readData.readInt32(false);
-            TLRPC.Message messageClone = TLRPC.Message.TLdeserialize(readData, constructor, false);
-            readData.cleanup();
-            
-            if (messageClone == null) return source;
-
-            messageClone.dialog_id = source.getDialogId();
-            messageClone.attachPath = source.messageOwner.attachPath;
-            messageClone.params = source.messageOwner.params;
-            
-            MessageObject newObj = new MessageObject(UserConfig.selectedAccount, messageClone, false, false);
-            newObj.messageText = source.messageText; 
-            newObj.caption = source.caption;
-            newObj.videoEditedInfo = source.videoEditedInfo;
-            newObj.type = source.type;
-            return newObj;
-        } catch (Exception e) {
-            FileLog.e(e);
-            return source;
         }
+        if (chatActivityEnterView != null) {
+            chatActivityEnterView.setEditingMessageObject(null, null, false);
+        }
+        hideFieldPanel(true);
+        selectedMessage = null;
+        editingMessageObject = null;
+        updateBottomOverlay();
+        updateVisibleRows();
+        updateSendBadge();
     }
 
-    private void saveCurrentEdit() {
-        if (selectedMessage != null && commentView != null) {
-            CharSequence[] textArr = new CharSequence[]{commentView.getText()};
-            ArrayList<TLRPC.MessageEntity> entities = MediaDataController.getInstance(currentAccount).getEntities(textArr, true);
-            CharSequence newText = textArr[0];
+    @Override
+    protected void multiChatOnMessageSend(CharSequence charSequence, boolean notify, int scheduleDate, int scheduleRepeatPeriod, long topicId) {
+        if (selectedMessage != null) {
+            updateMessageText(selectedMessage, charSequence);
             
-            if (selectedMessage.caption != null || selectedMessage.isPhoto() || selectedMessage.isVideo() || selectedMessage.isDocument()) {
-                selectedMessage.caption = newText;
+            int idx = messages.indexOf(selectedMessage);
+            if (idx >= 0) {
+                try {
+                    TLRPC.Message messageClone = cloneMessage(selectedMessage.messageOwner);
+                    if (messageClone != null) {
+                        messageClone.id = selectedMessage.getId();
+                        MessageObject newCloned = createPreviewMessageObject(messageClone);
+                        newCloned.stableId = selectedMessage.stableId;
+                        newCloned.forceUpdate = true;
+                        newCloned.checkLayout();
+                        
+                        messages.set(idx, newCloned);
+                        rebuildGroupedMessages();
+                        if (chatAdapter != null) {
+                            chatAdapter.notifyItemChanged(idx);
+                        }
+                    }
+                } catch (Exception e) {
+                    FileLog.e(e);
+                }
+            }
+        }
+        
+        if (chatActivityEnterView != null) {
+            chatActivityEnterView.setEditingMessageObject(null, null, false);
+        }
+        hideFieldPanel(true);
+        selectedMessage = null;
+        editingMessageObject = null;
+        
+        updateBottomOverlay();
+        updateVisibleRows();
+        updateSendBadge();
+    }
+
+    @Override
+    protected void multiChatCreateMenuItems(org.telegram.ui.ActionBar.ActionBarMenu menu) {
+        menu.addItem(MENU_EDIT_OPTIONS, R.drawable.msg_edit);
+        menu.addItem(MENU_PREVIEW, R.drawable.msg_views_solar);
+    }
+
+    @Override
+    protected boolean multiChatOnMenuItemClicked(int itemId) {
+        if (itemId == MENU_EDIT_OPTIONS) {
+            showEditOptionsMenu();
+            return true;
+        } else if (itemId == MENU_PREVIEW) {
+            if (selectedMessage == null) {
+                forwardMessages();
             } else {
-                selectedMessage.messageText = newText;
+                showPreviewDialog();
             }
-            if (selectedMessage.messageOwner != null) {
-                selectedMessage.messageOwner.entities = entities;
-                selectedMessage.messageOwner.message = newText.toString();
-            }
-            
-            MessageObject newObj = recreateMessageObject(selectedMessage);
-            if (newObj != null) {
-                messages.set(selectedPosition, newObj);
-                selectedMessage = newObj; 
-            }
-
-            if (selectedPosition != -1) {
-                listAdapter.notifyItemChanged(selectedPosition);
-            }
-            commentView.setText("");
-            mediaPreviewContainer.setVisibility(View.GONE);
-            selectedMessage = null;
-            selectedPosition = -1;
-            AndroidUtilities.hideKeyboard(commentView);
+            return true;
         }
+        return false;
     }
 
-    private void showEditOptions() {
-        ActionBarMenuItem editItem = actionBar.createMenu().getItem(edit_item);
-        if (editItem == null) return;
+    private void showEditOptionsMenu() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+        builder.setTitle(LocaleController.getString("SpecialForwardTitle", R.string.SpecialForwardTitle) + " Options");
         
-        ItemOptions itemOptions = ItemOptions.makeOptions(this, editItem);
-        itemOptions.add(R.drawable.msg_repeat, LocaleController.getString(R.string.SpecialForwardResetAll), this::resetAll);
-        itemOptions.add(R.drawable.msg_edit, LocaleController.getString(R.string.SpecialForwardReplaceAllTexts), this::replaceAllTexts);
-        itemOptions.add(R.drawable.baseline_link_24, LocaleController.getString(R.string.SpecialForwardReplaceAllLinks), this::replaceAllLinks);
-        itemOptions.add(R.drawable.msg_delete, LocaleController.getString(R.string.SpecialForwardDeleteAllLinks), this::deleteAllLinks);
-        itemOptions.add(R.drawable.msg_delete, LocaleController.getString(R.string.SpecialForwardDeleteAllCaptions), this::deleteAllCaptions);
-        itemOptions.add(forwardAsFile ? R.drawable.baseline_check_24 : R.drawable.ic_ab_other, LocaleController.getString(R.string.SpecialForwardAsFile) + ": " + (forwardAsFile ? "ON" : "OFF"), () -> {
-            forwardAsFile = !forwardAsFile;
-            Toast.makeText(getParentActivity(), LocaleController.getString(R.string.SpecialForwardAsFile) + ": " + (forwardAsFile ? "ON" : "OFF"), Toast.LENGTH_SHORT).show();
+        CharSequence[] items = new CharSequence[]{
+            LocaleController.getString("SpecialForwardResetAll", R.string.SpecialForwardResetAll),
+            LocaleController.getString("SpecialForwardReplaceAllTexts", R.string.SpecialForwardReplaceAllTexts),
+            LocaleController.getString("SpecialForwardReplaceAllLinks", R.string.SpecialForwardReplaceAllLinks),
+            LocaleController.getString("SpecialForwardDeleteAllLinks", R.string.SpecialForwardDeleteAllLinks),
+            LocaleController.getString("SpecialForwardDeleteAllCaptions", R.string.SpecialForwardDeleteAllCaptions),
+            LocaleController.getString("SpecialForwardAsFile", R.string.SpecialForwardAsFile) + ": " + (forwardAsFile ? "ON" : "OFF")
+        };
+        
+        int[] icons = new int[]{
+            R.drawable.msg_reset_all,
+            R.drawable.msg_replace_text,
+            R.drawable.msg_replace_link,
+            R.drawable.msg_delete_link,
+            R.drawable.msg_delete_caption,
+            R.drawable.msg_forward_as_file
+        };
+        
+        builder.setItems(items, icons, (dialog, which) -> {
+            if (which == 0) {
+                resetAll();
+            } else if (which == 1) {
+                replaceAllTexts();
+            } else if (which == 2) {
+                replaceAllLinks();
+            } else if (which == 3) {
+                deleteAllLinks();
+            } else if (which == 4) {
+                deleteAllCaptions();
+            } else if (which == 5) {
+                forwardAsFile = !forwardAsFile;
+                Toast.makeText(getParentActivity(), LocaleController.getString("SpecialForwardAsFile", R.string.SpecialForwardAsFile) + ": " + (forwardAsFile ? "ON" : "OFF"), Toast.LENGTH_SHORT).show();
+            }
         });
-        itemOptions.show();
+        builder.show();
     }
 
-    private void resetAll() {
-        if (originalMessages == null || originalMessages.isEmpty()) return;
+    private void showPreviewDialog() {
+        SpannableStringBuilder builder = new SpannableStringBuilder();
+        for (int i = 0; i < messages.size(); i++) {
+            MessageObject msg = messages.get(i);
+            CharSequence text = getMessageText(msg);
+            if (text != null && text.length() > 0) {
+                if (builder.length() > 0) {
+                    builder.append("\n\n---\n\n");
+                }
+                builder.append("Message #").append(String.valueOf(i + 1)).append(":\n").append(text);
+            }
+        }
         
-        messages.clear();
-        for (MessageObject msg : originalMessages) {
-             try {
-                SerializedData data = new SerializedData(msg.messageOwner.getObjectSize());
-                msg.messageOwner.serializeToStream(data);
-                
-                SerializedData readData = new SerializedData(data.toByteArray());
-                TLRPC.Message messageClone = TLRPC.Message.TLdeserialize(readData, readData.readInt32(false), false);
-                messageClone.dialog_id = msg.getDialogId();
-                MessageObject newObj = new MessageObject(UserConfig.selectedAccount, messageClone, false, false);
-                newObj.messageText = msg.messageText; 
-                newObj.caption = msg.caption;
-                this.messages.add(newObj);
-                
-                data.cleanup();
-                readData.cleanup();
+        if (builder.length() == 0) {
+            Toast.makeText(getParentActivity(), "All messages are empty", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        AlertDialog.Builder alert = new AlertDialog.Builder(getParentActivity());
+        alert.setTitle("Forward Messages Preview");
+        
+        LinearLayout layout = new LinearLayout(getParentActivity());
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(16), AndroidUtilities.dp(24), AndroidUtilities.dp(16));
+        
+        TextView textView = new TextView(getParentActivity());
+        textView.setText(builder);
+        textView.setTextSize(16);
+        textView.setTextColor(getThemedColor(Theme.key_dialogTextBlack));
+        layout.addView(textView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+        
+        alert.setView(layout);
+        alert.setPositiveButton("OK", null);
+        alert.show();
+    }
+
+    private void updateMessageText(MessageObject msg, CharSequence charSequence) {
+        if (msg == null) return;
+        ArrayList<TLRPC.MessageEntity> entities = charSequence == null ? null : MediaDataController.getInstance(currentAccount).getEntities(new CharSequence[]{charSequence}, true);
+        msg.messageOwner.message = charSequence == null ? "" : charSequence.toString();
+        TLRPC.Message message = msg.messageOwner;
+        if (entities == null) {
+            entities = new ArrayList<>();
+        }
+        message.entities = entities;
+        msg.messageOwner.send_state = 3;
+        msg.forceUpdate = true;
+        if (!msg.isMediaEmpty()) {
+            msg.caption = null;
+            msg.generateCaption();
+        } else if (TextUtils.isEmpty(msg.messageOwner.message)) {
+            msg.messageOwner.message = "Empty message";
+        }
+        msg.applyNewText();
+        msg.checkLayout();
+        msg.messageOwner.send_state = 0;
+    }
+
+    private CharSequence getMessageText(MessageObject msg) {
+        if (msg == null) return "";
+        return msg.isMediaEmpty() ? msg.messageText : msg.caption;
+    }
+
+    private void resetSelectedMessage() {
+        if (selectedMessage == null || originalMessagesMap == null) return;
+        MessageObject originalObj = originalMessagesMap.get(selectedMessage.getId());
+        if (originalObj != null) {
+            try {
+                TLRPC.Message messageClone = cloneMessage(originalObj.messageOwner);
+                if (messageClone != null) {
+                    messageClone.id = selectedMessage.getId();
+                    MessageObject newCloned = createPreviewMessageObject(messageClone);
+                    newCloned.stableId = selectedMessage.stableId;
+                    newCloned.forceUpdate = true;
+                    newCloned.checkLayout();
+                    
+                    int idx = messages.indexOf(selectedMessage);
+                    if (idx >= 0) {
+                        messages.set(idx, newCloned);
+                        rebuildGroupedMessages();
+                        if (chatAdapter != null) {
+                            chatAdapter.notifyItemChanged(idx);
+                        }
+                    }
+                    
+                    startEditingMessage(newCloned);
+                    Toast.makeText(getParentActivity(), "Message reset to original", Toast.LENGTH_SHORT).show();
+                }
             } catch (Exception e) {
                 FileLog.e(e);
             }
         }
-        listAdapter.notifyDataSetChanged();
-        Toast.makeText(getParentActivity(), LocaleController.getString(R.string.SpecialForwardResetSuccess), Toast.LENGTH_SHORT).show();
+    }
+
+    private void resetAll() {
+        if (originalMessagesMap == null || originalMessagesMap.size() == 0) return;
+        
+        for (int i = 0; i < messages.size(); i++) {
+            MessageObject workingObj = messages.get(i);
+            MessageObject originalObj = originalMessagesMap.get(workingObj.getId());
+            if (originalObj != null) {
+                try {
+                    TLRPC.Message messageClone = cloneMessage(originalObj.messageOwner);
+                    if (messageClone != null) {
+                        messageClone.id = workingObj.getId();
+                        MessageObject newCloned = createPreviewMessageObject(messageClone);
+                        newCloned.stableId = workingObj.stableId;
+                        newCloned.forceUpdate = true;
+                        newCloned.checkLayout();
+                        
+                        messages.set(i, newCloned);
+                    }
+                } catch (Exception e) {
+                    FileLog.e(e);
+                }
+            }
+        }
+        
+        rebuildGroupedMessages();
+        
+        if (chatAdapter != null) {
+            chatAdapter.notifyDataSetChanged();
+        }
+        
+        if (selectedMessage != null) {
+            startEditingMessage(selectedMessage);
+        }
+        updateSendBadge();
+        Toast.makeText(getParentActivity(), LocaleController.getString("SpecialForwardResetSuccess", R.string.SpecialForwardResetSuccess), Toast.LENGTH_SHORT).show();
     }
 
     private void replaceAllTexts() {
         AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-        builder.setTitle(LocaleController.getString(R.string.SpecialForwardReplaceAllTexts));
+        builder.setTitle(LocaleController.getString("SpecialForwardReplaceAllTexts", R.string.SpecialForwardReplaceAllTexts));
+        
+        LinearLayout layout = new LinearLayout(getParentActivity());
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(8), AndroidUtilities.dp(24), AndroidUtilities.dp(8));
+        
+        final org.telegram.ui.Cells.TextCheckCell checkPre = new org.telegram.ui.Cells.TextCheckCell(getParentActivity());
+        checkPre.setTextAndCheck("Prepend (add at beginning)", false, true);
+        
+        final org.telegram.ui.Cells.TextCheckCell checkPost = new org.telegram.ui.Cells.TextCheckCell(getParentActivity());
+        checkPost.setTextAndCheck("Append (add at end)", false, true);
+        
+        final EditText searchPhrase = new EditText(getParentActivity());
+        searchPhrase.setHint("Phrase to search and replace (leave empty to replace all)");
+        searchPhrase.setInputType(InputType.TYPE_CLASS_TEXT);
+        searchPhrase.setTextColor(getThemedColor(Theme.key_dialogTextBlack));
+        searchPhrase.setHintTextColor(getThemedColor(Theme.key_dialogTextHint));
+        searchPhrase.setBackground(Theme.createEditTextDrawable(getParentActivity(), true));
+        
         final EditText input = new EditText(getParentActivity());
+        input.setHint("Replacement / New text");
         input.setInputType(InputType.TYPE_CLASS_TEXT);
-        builder.setView(input);
+        input.setTextColor(getThemedColor(Theme.key_dialogTextBlack));
+        input.setHintTextColor(getThemedColor(Theme.key_dialogTextHint));
+        input.setBackground(Theme.createEditTextDrawable(getParentActivity(), true));
+        
+        final boolean[] prep = new boolean[]{false};
+        final boolean[] app = new boolean[]{false};
+        checkPre.setOnClickListener(v -> {
+            prep[0] = !prep[0];
+            checkPre.setChecked(prep[0]);
+            if (prep[0]) {
+                app[0] = false;
+                checkPost.setChecked(false);
+                searchPhrase.setVisibility(View.GONE);
+            } else {
+                searchPhrase.setVisibility(View.VISIBLE);
+            }
+        });
+        checkPost.setOnClickListener(v -> {
+            app[0] = !app[0];
+            checkPost.setChecked(app[0]);
+            if (app[0]) {
+                prep[0] = false;
+                checkPre.setChecked(false);
+                searchPhrase.setVisibility(View.GONE);
+            } else {
+                searchPhrase.setVisibility(View.VISIBLE);
+            }
+        });
+        
+        layout.addView(checkPre, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+        layout.addView(checkPost, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+        layout.addView(searchPhrase, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 12, 0, 12));
+        layout.addView(input, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+        
+        builder.setView(layout);
         builder.setPositiveButton("Replace", (dialog, which) -> {
             String newText = input.getText().toString();
+            String searchVal = searchPhrase.getText().toString();
+            
             for (int i = 0; i < messages.size(); i++) {
                 MessageObject msg = messages.get(i);
-                if (msg.caption != null) {
-                     msg.caption = newText;
-                     if (msg.messageOwner != null) msg.messageOwner.message = newText; 
+                CharSequence oldText = getMessageText(msg);
+                if (oldText == null) oldText = "";
+                
+                SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(oldText);
+                boolean isTextEmpty = oldText.length() == 0;
+                
+                if (prep[0]) {
+                    spannableStringBuilder.replace(0, 0, isTextEmpty ? newText : newText + "\n");
+                } else if (app[0]) {
+                    if (isTextEmpty) {
+                        spannableStringBuilder.append(newText);
+                    } else {
+                        spannableStringBuilder.append("\n").append(newText);
+                    }
                 } else {
-                     msg.messageText = newText;
-                     if (msg.messageOwner != null) msg.messageOwner.message = newText;
+                    if (TextUtils.isEmpty(searchVal)) {
+                        spannableStringBuilder = new SpannableStringBuilder(newText);
+                    } else {
+                        String searchStr = searchVal;
+                        String fullStr = spannableStringBuilder.toString();
+                        int index = fullStr.indexOf(searchStr);
+                        while (index != -1) {
+                            spannableStringBuilder.replace(index, index + searchStr.length(), newText);
+                            fullStr = spannableStringBuilder.toString();
+                            index = fullStr.indexOf(searchStr, index + newText.length());
+                        }
+                    }
                 }
-                messages.set(i, recreateMessageObject(msg));
+                
+                updateMessageText(msg, spannableStringBuilder);
+                
+                try {
+                    TLRPC.Message messageClone = cloneMessage(msg.messageOwner);
+                    if (messageClone != null) {
+                        messageClone.id = msg.getId();
+                        MessageObject newCloned = createPreviewMessageObject(messageClone);
+                        newCloned.stableId = msg.stableId;
+                        newCloned.forceUpdate = true;
+                        newCloned.checkLayout();
+                        messages.set(i, newCloned);
+                    }
+                } catch (Exception e) {
+                    FileLog.e(e);
+                }
             }
-            listAdapter.notifyDataSetChanged();
+            rebuildGroupedMessages();
+            if (chatAdapter != null) {
+                chatAdapter.notifyDataSetChanged();
+            }
+            if (selectedMessage != null) {
+                startEditingMessage(selectedMessage);
+            }
+            updateSendBadge();
         });
         builder.setNegativeButton("Cancel", null);
         builder.show();
@@ -484,326 +802,830 @@ public class SpecialForwardActivity extends BaseFragment {
 
     private void replaceAllLinks() {
         AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-        builder.setTitle(LocaleController.getString(R.string.SpecialForwardReplaceAllLinks));
+        builder.setTitle(LocaleController.getString("SpecialForwardReplaceAllLinks", R.string.SpecialForwardReplaceAllLinks));
+        
+        LinearLayout layout = new LinearLayout(getParentActivity());
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(8), AndroidUtilities.dp(24), AndroidUtilities.dp(8));
+        
+        final boolean[] checked = new boolean[]{true, true, true, true};
+        String[] titles = new String[]{
+            "Internal links (tg://, t.me)",
+            "Mentions (@username)",
+            "Hashtags (#tag)",
+            "External links (http://, https://)"
+        };
+        
+        for (int i = 0; i < titles.length; i++) {
+            final int idx = i;
+            final org.telegram.ui.Cells.TextCheckCell cell = new org.telegram.ui.Cells.TextCheckCell(getParentActivity());
+            cell.setTextAndCheck(titles[i], checked[i], i < titles.length - 1);
+            cell.setOnClickListener(v -> {
+                checked[idx] = !checked[idx];
+                cell.setChecked(checked[idx]);
+            });
+            layout.addView(cell, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+        }
+        
         final EditText input = new EditText(getParentActivity());
-        input.setHint("New link");
+        input.setHint("New link (e.g. https://t.me/...)");
         input.setInputType(InputType.TYPE_TEXT_VARIATION_URI);
-        builder.setView(input);
+        input.setTextColor(getThemedColor(Theme.key_dialogTextBlack));
+        input.setHintTextColor(getThemedColor(Theme.key_dialogTextHint));
+        input.setBackground(Theme.createEditTextDrawable(getParentActivity(), true));
+        layout.addView(input, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 16, 0, 0));
+        
+        builder.setView(layout);
         builder.setPositiveButton("Replace", (dialog, which) -> {
-            final String newLink = input.getText().toString();
-            // Regex to match URLs in plain text
-            Pattern urlPattern = Pattern.compile("https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)");
+            String newLink = input.getText().toString();
+            int typeMask = 0;
+            if (checked[0]) typeMask |= 1;
+            if (checked[1]) typeMask |= 2;
+            if (checked[2]) typeMask |= 4;
+            if (checked[3]) typeMask |= 8;
             
             for (int i = 0; i < messages.size(); i++) {
                 MessageObject msg = messages.get(i);
-                boolean changed = false;
-
-                // 1. Handle embedded links (TextUrl) - Update the URL target only
-                if (msg.messageOwner.entities != null && !msg.messageOwner.entities.isEmpty()) {
-                    for (int j = 0; j < msg.messageOwner.entities.size(); j++) {
-                        TLRPC.MessageEntity entity = msg.messageOwner.entities.get(j);
-                        if (entity instanceof TLRPC.TL_messageEntityTextUrl) {
-                            ((TLRPC.TL_messageEntityTextUrl) entity).url = newLink;
-                            changed = true;
-                        }
+                replaceLinks(msg, typeMask, newLink);
+                try {
+                    TLRPC.Message messageClone = cloneMessage(msg.messageOwner);
+                    if (messageClone != null) {
+                        messageClone.id = msg.getId();
+                        MessageObject newCloned = createPreviewMessageObject(messageClone);
+                        newCloned.stableId = msg.stableId;
+                        newCloned.forceUpdate = true;
+                        newCloned.checkLayout();
+                        messages.set(i, newCloned);
                     }
-                }
-
-                // 2. Handle plain text URLs
-                CharSequence cs = msg.caption != null ? msg.caption : msg.messageText;
-                String text = cs != null ? cs.toString() : "";
-                
-                if (!TextUtils.isEmpty(text)) {
-                    Matcher matcher = urlPattern.matcher(text);
-                    StringBuffer sb = new StringBuffer();
-                    boolean found = false;
-                    while (matcher.find()) {
-                        matcher.appendReplacement(sb, newLink);
-                        found = true;
-                        changed = true;
-                    }
-                    matcher.appendTail(sb);
-                    
-                    if (found) {
-                        String result = sb.toString();
-                        if (msg.caption != null) msg.caption = result;
-                        else msg.messageText = result;
-                        if (msg.messageOwner != null) msg.messageOwner.message = result;
-                        
-                        // Since we changed text length, old entity offsets (except strictly TextUrl inside markdown? No, offsets are absolute) might be wrong.
-                        // Ideally we should re-parse entities or shift them. 
-                        // For simplicity, if we replaced text via regex, implies we touched URLs.
-                        // Let's clear entities that are just plain URLs to avoid offset crashes, 
-                        // but TextUrls (anchors) we updated in step 1 might now have wrong offsets if they came AFTER a replaced link.
-                        // So, we should probably clear entities if we did a regex replacement, OR try to regenerate them.
-                        // Re-generating layout with MessageObject(..., true, ...) parses entities? 
-                        // No, generateLayout=true generates StaticLayout, not RPC entities.
-                        // We will rely on simple replacement for now, fixing offsets is non-trivial. 
-                        // But to prevent crash (IndexOutOfBounds in TextLayout), we might want to clear entities if text changed significantly.
-                        // However, users want to keep "Text Link" functionality.
-                    }
-                }
-                
-                if (changed) {
-                    messages.set(i, recreateMessageObject(msg));
+                } catch (Exception e) {
+                    FileLog.e(e);
                 }
             }
-            listAdapter.notifyDataSetChanged();
+            rebuildGroupedMessages();
+            if (chatAdapter != null) {
+                chatAdapter.notifyDataSetChanged();
+            }
+            if (selectedMessage != null) {
+                startEditingMessage(selectedMessage);
+            }
+            updateSendBadge();
         });
         builder.setNegativeButton("Cancel", null);
         builder.show();
     }
 
-    private void deleteAllLinks() {
-        Pattern urlPattern = Pattern.compile("https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)");
-        for (int i = 0; i < messages.size(); i++) {
-            MessageObject msg = messages.get(i);
-            boolean changed = false;
-
-            // 1. Remove embedded links (Convert TextUrl to plain text label - keep text, remove entity)
-            if (msg.messageOwner.entities != null && !msg.messageOwner.entities.isEmpty()) {
-                 ArrayList<TLRPC.MessageEntity> toRemove = new ArrayList<>();
-                 for (int j = 0; j < msg.messageOwner.entities.size(); j++) {
-                     TLRPC.MessageEntity entity = msg.messageOwner.entities.get(j);
-                     if (entity instanceof TLRPC.TL_messageEntityTextUrl) {
-                         // It's a text link [label](url). We want to keep 'label' but remove the link capability.
-                         // So we just remove the entity from the list. The text remains 'label'.
-                         toRemove.add(entity);
-                         changed = true;
-                     } else if (entity instanceof TLRPC.TL_messageEntityUrl) {
-                         // It's a raw URL in text. The pattern below will handle removing the text if desired.
-                         // But if we just want to unlink, we remove entity. 
-                         // "Delete all links" usually means REMOVE THE URL TEXT. 
-                         // So we leave this to the regex below.
-                         toRemove.add(entity); // Remove entity anyway to be safe
-                         changed = true;
-                     }
-                 }
-                 msg.messageOwner.entities.removeAll(toRemove);
-            }
-
-            // 2. Remove plain text URLs
-            CharSequence cs = msg.caption != null ? msg.caption : msg.messageText;
-            String text = cs != null ? cs.toString() : "";
+    private void replaceLinkForSelectedMessage() {
+        if (selectedMessage == null) return;
+        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+        builder.setTitle("Replace Links in Selected Message");
+        
+        LinearLayout layout = new LinearLayout(getParentActivity());
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(8), AndroidUtilities.dp(24), AndroidUtilities.dp(8));
+        
+        final boolean[] checked = new boolean[]{true, true, true, true};
+        String[] titles = new String[]{
+            "Internal links (tg://, t.me)",
+            "Mentions (@username)",
+            "Hashtags (#tag)",
+            "External links (http://, https://)"
+        };
+        
+        for (int i = 0; i < titles.length; i++) {
+            final int idx = i;
+            final org.telegram.ui.Cells.TextCheckCell cell = new org.telegram.ui.Cells.TextCheckCell(getParentActivity());
+            cell.setTextAndCheck(titles[i], checked[i], i < titles.length - 1);
+            cell.setOnClickListener(v -> {
+                checked[idx] = !checked[idx];
+                cell.setChecked(checked[idx]);
+            });
+            layout.addView(cell, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+        }
+        
+        final EditText input = new EditText(getParentActivity());
+        input.setHint("New link (e.g. https://t.me/...)");
+        input.setInputType(InputType.TYPE_TEXT_VARIATION_URI);
+        input.setTextColor(getThemedColor(Theme.key_dialogTextBlack));
+        input.setHintTextColor(getThemedColor(Theme.key_dialogTextHint));
+        input.setBackground(Theme.createEditTextDrawable(getParentActivity(), true));
+        layout.addView(input, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 16, 0, 0));
+        
+        builder.setView(layout);
+        builder.setPositiveButton("Replace", (dialog, which) -> {
+            String newLink = input.getText().toString();
+            int typeMask = 0;
+            if (checked[0]) typeMask |= 1;
+            if (checked[1]) typeMask |= 2;
+            if (checked[2]) typeMask |= 4;
+            if (checked[3]) typeMask |= 8;
             
-            if (!TextUtils.isEmpty(text)) {
-                Matcher matcher = urlPattern.matcher(text);
-                String result = matcher.replaceAll("").trim(); 
-                
-                if (!result.equals(text)) {
-                    // Calculate if message becomes empty
-                    boolean isEmpty = TextUtils.isEmpty(result);
-                    boolean hasMedia = msg.isPhoto() || msg.isVideo() || msg.isDocument() || msg.isSticker();
+            replaceLinks(selectedMessage, typeMask, newLink);
+            startEditingMessage(selectedMessage);
+        });
+        builder.setNegativeButton("Cancel", null);
+        builder.show();
+    }
+
+    private void replaceLinks(MessageObject msg, int typeMask, CharSequence newLink) {
+        CharSequence text = getMessageText(msg);
+        if (text == null) return;
+        
+        SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(text);
+        Object[] spans = spannableStringBuilder.getSpans(0, spannableStringBuilder.length(), Object.class);
+        if (spans != null && spans.length > 0) {
+            for (Object obj : spans) {
+                if (obj instanceof URLSpan) {
+                    String url = ((URLSpan) obj).getURL();
+                    boolean shouldReplace = (org.telegram.messenger.browser.Browser.isInternalUrl(url, null) && (typeMask & 1) != 0)
+                            || (url.startsWith("@") && (typeMask & 2) != 0)
+                            || (url.startsWith("#") && (typeMask & 4) != 0)
+                            || (!url.startsWith("@") && !url.startsWith("#") && !org.telegram.messenger.browser.Browser.isInternalUrl(url, null) && (typeMask & 8) != 0);
                     
-                    if (isEmpty && !hasMedia) {
-                        // If it becomes empty text message, maybe user wants to delete the MessageObject?
-                        // Or maybe we should keep it as empty? 
-                        // User complained "it also hide message with links". 
-                        // If we skip updating 'messageText' for empty result, the link stays.
-                        // If we update it, it vanishes.
-                        // Let's assume user doesn't want empty messages. 
-                        // But we can't delete message here easily while iterating without messing up index/list.
-                        // We'll set it to empty string.
-                        // If user creates a message with JUST a link, and deletes links, it becomes empty.
-                        // This seems correct for "Delete all links". 
-                        // BUT maybe user means "Unlink" (keep text as is)? 
-                        // Given "Delete", removal is expected. 
-                        // I will keep the behavior but ensure we recreateObject properly.
+                    if (shouldReplace) {
+                        try {
+                            int spanStart = spannableStringBuilder.getSpanStart(obj);
+                            int spanEnd = spannableStringBuilder.getSpanEnd(obj);
+                            if (spanStart >= 0 && spanEnd >= 0 && spanStart <= spannableStringBuilder.length() && spanEnd <= spannableStringBuilder.length()) {
+                                spannableStringBuilder.replace(spanStart, spanEnd, newLink);
+                                spannableStringBuilder.removeSpan(obj);
+                            }
+                        } catch (Exception e) {
+                            FileLog.e(e);
+                        }
                     }
-                    
-                    if (msg.caption != null) msg.caption = result;
-                    else msg.messageText = result;
-                    
-                    if (msg.messageOwner != null) msg.messageOwner.message = result;
-                    changed = true;
                 }
             }
+        }
+        updateMessageText(msg, spannableStringBuilder);
+    }
+
+    private void deleteAllLinks() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+        builder.setTitle(LocaleController.getString("SpecialForwardDeleteAllLinks", R.string.SpecialForwardDeleteAllLinks));
+        
+        LinearLayout layout = new LinearLayout(getParentActivity());
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(8), AndroidUtilities.dp(24), AndroidUtilities.dp(8));
+        
+        final boolean[] checked = new boolean[]{true, true, true, true};
+        String[] titles = new String[]{
+            "Internal links (tg://, t.me)",
+            "Mentions (@username)",
+            "Hashtags (#tag)",
+            "External links (http://, https://)"
+        };
+        
+        for (int i = 0; i < titles.length; i++) {
+            final int idx = i;
+            final org.telegram.ui.Cells.TextCheckCell cell = new org.telegram.ui.Cells.TextCheckCell(getParentActivity());
+            cell.setTextAndCheck(titles[i], checked[i], i < titles.length - 1);
+            cell.setOnClickListener(v -> {
+                checked[idx] = !checked[idx];
+                cell.setChecked(checked[idx]);
+            });
+            layout.addView(cell, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+        }
+        
+        builder.setView(layout);
+        builder.setPositiveButton("Delete", (dialog, which) -> {
+            int typeMask = 0;
+            if (checked[0]) typeMask |= 1;
+            if (checked[1]) typeMask |= 2;
+            if (checked[2]) typeMask |= 4;
+            if (checked[3]) typeMask |= 8;
             
-            if (changed) {
-                messages.set(i, recreateMessageObject(msg));
+            for (int i = 0; i < messages.size(); i++) {
+                MessageObject msg = messages.get(i);
+                deleteLinks(msg, typeMask);
+                try {
+                    TLRPC.Message messageClone = cloneMessage(msg.messageOwner);
+                    if (messageClone != null) {
+                        messageClone.id = msg.getId();
+                        MessageObject newCloned = createPreviewMessageObject(messageClone);
+                        newCloned.stableId = msg.stableId;
+                        newCloned.forceUpdate = true;
+                        newCloned.checkLayout();
+                        messages.set(i, newCloned);
+                    }
+                } catch (Exception e) {
+                    FileLog.e(e);
+                }
+            }
+            rebuildGroupedMessages();
+            if (chatAdapter != null) {
+                chatAdapter.notifyDataSetChanged();
+            }
+            if (selectedMessage != null) {
+                startEditingMessage(selectedMessage);
+            }
+            updateSendBadge();
+        });
+        builder.setNegativeButton("Cancel", null);
+        builder.show();
+    }
+
+    private void deleteLinks(MessageObject msg, int typeMask) {
+        CharSequence text = getMessageText(msg);
+        if (text == null) return;
+        
+        SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(text);
+        Object[] spans = spannableStringBuilder.getSpans(0, spannableStringBuilder.length(), Object.class);
+        if (spans != null && spans.length > 0) {
+            for (Object obj : spans) {
+                if (obj instanceof URLSpan) {
+                    String url = ((URLSpan) obj).getURL();
+                    boolean shouldDelete = (org.telegram.messenger.browser.Browser.isInternalUrl(url, null) && (typeMask & 1) != 0)
+                            || (url.startsWith("@") && (typeMask & 2) != 0)
+                            || (url.startsWith("#") && (typeMask & 4) != 0)
+                            || (!url.startsWith("@") && !url.startsWith("#") && !org.telegram.messenger.browser.Browser.isInternalUrl(url, null) && (typeMask & 8) != 0);
+                    
+                    if (shouldDelete) {
+                        try {
+                            int spanStart = spannableStringBuilder.getSpanStart(obj);
+                            int spanEnd = spannableStringBuilder.getSpanEnd(obj);
+                            if (spanStart >= 0 && spanEnd >= 0 && spanStart <= spannableStringBuilder.length() && spanEnd <= spannableStringBuilder.length()) {
+                                spannableStringBuilder.delete(spanStart, spanEnd);
+                                spannableStringBuilder.removeSpan(obj);
+                            }
+                        } catch (Exception e) {
+                            FileLog.e(e);
+                        }
+                    }
+                }
             }
         }
-        listAdapter.notifyDataSetChanged();
+        updateMessageText(msg, spannableStringBuilder);
     }
 
     private void deleteAllCaptions() {
         for (int i = 0; i < messages.size(); i++) {
             MessageObject msg = messages.get(i);
+            if (msg.isMediaEmpty()) {
+                continue;
+            }
             msg.caption = null;
-            // Also might need to clear messageText if it was derived from caption? 
             if (msg.isPhoto() || msg.isVideo() || msg.isDocument()) {
                 msg.messageText = "";
                 if (msg.messageOwner != null) msg.messageOwner.message = "";
             }
-            messages.set(i, recreateMessageObject(msg));
+            updateMessageText(msg, "");
+            try {
+                TLRPC.Message messageClone = cloneMessage(msg.messageOwner);
+                if (messageClone != null) {
+                    messageClone.id = msg.getId();
+                    MessageObject newCloned = createPreviewMessageObject(messageClone);
+                    newCloned.stableId = msg.stableId;
+                    newCloned.forceUpdate = true;
+                    newCloned.checkLayout();
+                    messages.set(i, newCloned);
+                }
+            } catch (Exception e) {
+                FileLog.e(e);
+            }
         }
-        listAdapter.notifyDataSetChanged();
+        
+        rebuildGroupedMessages();
+        
+        if (chatAdapter != null) {
+            chatAdapter.notifyDataSetChanged();
+        }
+        if (selectedMessage != null) {
+            startEditingMessage(selectedMessage);
+        }
+        updateSendBadge();
+    }
+
+    private void rebuildGroupedMessages() {
+        if (groupedMessagesMap == null) return;
+        groupedMessagesMap.clear();
+        for (MessageObject msgObj : messages) {
+            if (msgObj.getGroupId() != 0) {
+                MessageObject.GroupedMessages groupedMessages = groupedMessagesMap.get(msgObj.getGroupId());
+                if (groupedMessages == null) {
+                    groupedMessages = new MessageObject.GroupedMessages();
+                    groupedMessages.groupId = msgObj.getGroupId();
+                    groupedMessagesMap.put(groupedMessages.groupId, groupedMessages);
+                }
+                groupedMessages.messages.add(msgObj);
+                groupedMessages.reversed = reversed;
+            }
+        }
+        for (int i = 0; i < groupedMessagesMap.size(); i++) {
+            groupedMessagesMap.valueAt(i).calculate();
+        }
     }
 
     private void forwardMessages() {
-        if (messages.isEmpty()) return;
-
-        Bundle args = new Bundle();
-        args.putBoolean("onlySelect", true);
-        args.putInt("dialogsType", DialogsActivity.DIALOGS_TYPE_FORWARD);
-        DialogsActivity dialogsActivity = new DialogsActivity(args);
-        dialogsActivity.setDelegate(new DialogsActivity.DialogsActivityDelegate() {
-            @Override
-            public boolean didSelectDialogs(DialogsActivity fragment, ArrayList<MessagesStorage.TopicKey> dids, CharSequence message, boolean param, boolean notify, int scheduleDate, int scheduleRepeatPeriod, TopicsFragment topicsFragment) {
-                 if (dids == null || dids.isEmpty()) return false;
-                 
-                  fragment.finishFragment();
-                  removeSelfFromStack(); 
-                 
-                 for (int i = 0; i < dids.size(); i++) {
-                     MessagesStorage.TopicKey key = dids.get(i);
-                     long peer = key.dialogId; 
-                     long topicId = key.topicId;
-                     
-                     for (int j = 0; j < messages.size(); j++) {
-                         MessageObject msg = messages.get(j);
-                         if (msg == null || msg.messageOwner == null) continue;
-                     
-                         String caption = msg.caption != null ? msg.caption.toString() : "";
-                         String attachPath = msg.messageOwner.attachPath;
-                         ArrayList<TLRPC.MessageEntity> entities = msg.messageOwner.entities;
-
-                         // 1. Handle Replaced Media (Local Path present)
-                         if (!TextUtils.isEmpty(attachPath) && !attachPath.startsWith("http")) {
-                             if (msg.isVideo() || msg.isRoundVideo()) {
-                                 SendMessagesHelper.prepareSendingVideo(getAccountInstance(), attachPath, msg.videoEditedInfo, null, null, peer, null, null, null, null, entities, 0, null, notify, scheduleDate, scheduleRepeatPeriod, false, false, caption, null, 0, 0, 0, topicId, null, false);
-                             } else if (msg.isPhoto()) {
-                                 SendMessagesHelper.prepareSendingPhoto(getAccountInstance(), attachPath, null, null, peer, null, null, null, null, entities, null, null, 0, null, null, notify, scheduleDate, scheduleRepeatPeriod, 0, false, caption, null, 0, 0, 0, topicId, null);
-                             } else {
-                                 // Document or other file
-                                 ArrayList<String> paths = new ArrayList<>();
-                                 paths.add(attachPath);
-                                 SendMessagesHelper.prepareSendingDocuments(getAccountInstance(), paths, paths, null, caption, entities, null, peer, null, null, null, null, null, notify, scheduleDate, scheduleRepeatPeriod, null, null, 0, 0, false, 0, topicId, null, null, null, null, false);
-                             }
-                             continue;
-                         }
-
-                         // 2. Handle Forwarding/Editing Original Media
-                         SendMessageParams params = null;
-                         if (msg.isPhoto()) {
-                             TLRPC.TL_photo photo = null;
-                             if (msg.messageOwner.media instanceof TLRPC.TL_messageMediaPhoto) {
-                                 photo = (TLRPC.TL_photo) msg.messageOwner.media.photo;
-                             }
-                             if (photo != null) {
-                                 params = SendMessageParams.of(photo, null, peer, null, null, caption, entities, null, null, notify, scheduleDate, scheduleRepeatPeriod, 0, null, false);
-                             }
-                         } else if (msg.isVideo() || msg.isDocument()) {
-                             TLRPC.TL_document document = null;
-                             if (msg.messageOwner.media instanceof TLRPC.TL_messageMediaDocument) {
-                                 document = (TLRPC.TL_document) msg.messageOwner.media.document;
-                             }
-                             if (document != null) {
-                                 params = SendMessageParams.of(document, msg.videoEditedInfo, null, peer, null, null, caption, entities, null, null, notify, scheduleDate, scheduleRepeatPeriod, 0, null, null, false);
-                             }
-                         }
-                         
-                         if (params == null) {
-                             if (msg.messageText != null && !TextUtils.isEmpty(msg.messageText)) {
-                                 params = SendMessageParams.of(msg.messageText.toString(), peer, null, null, null, true, entities, null, null, notify, scheduleDate, scheduleRepeatPeriod, null, false);
-                             } else {
-                                 // Fallback: Resend as is
-                                 params = SendMessageParams.of(msg);
-                                 params.peer = peer;
-                                 params.caption = caption;
-                                 params.entities = entities;
-                             }
-                         }
-
-                         if (params != null) {
-                             params.monoForumPeer = topicId;
-                             getAccountInstance().getSendMessagesHelper().sendMessage(params);
-                         }
-                     }
-                 }
-                 return true;
+        if (messages.isEmpty() || getParentActivity() == null) return;
+        
+        SpecialForwardShareAlert shareAlert = new SpecialForwardShareAlert(
+            getParentActivity(), 
+            currentAccount, 
+            messages, 
+            forwardAsFile, 
+            (dids, showQuoteState, keepCaptionState, sendAsAlbumState, removeLinkPreviewState) -> {
+                performForwardToSelectedChats(dids, showQuoteState, keepCaptionState, removeLinkPreviewState);
             }
-        });
-        presentFragment(dialogsActivity);
+        );
+        showDialog(shareAlert);
     }
 
-    private class ListAdapter extends RecyclerListView.SelectionAdapter {
-        private Context mContext;
-        private ChatMessageCell.ChatMessageCellDelegate delegate;
+    private void performForwardToSelectedChats(ArrayList<Long> dids, boolean showQuote, boolean keepCaption, boolean removeLinkPreview) {
+        ArrayList<MessageObject> forwardList = new ArrayList<>(messages);
+        java.util.Collections.sort(forwardList, (o1, o2) -> Integer.compare(o1.getId(), o2.getId()));
 
-        public ListAdapter(Context context) { 
-            mContext = context; 
-            delegate = new ChatMessageCell.ChatMessageCellDelegate() {
-                 @Override public boolean canPerformActions() { return false; }
-                 @Override public void didPressImage(ChatMessageCell cell, float x, float y, boolean fullPreview) {}
-                 @Override public void didQuickShareStart(ChatMessageCell cell, float x, float y) {}
-            };
-        }
-        @Override
-        public boolean isEnabled(RecyclerView.ViewHolder holder) { return true; }
-        @Override
-        public int getItemCount() { return messages.size(); }
-        @Override
-        public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            ChatMessageCell cell = new ChatMessageCell(mContext, UserConfig.selectedAccount);
-            cell.setDelegate(delegate);
-            return new RecyclerListView.Holder(cell);
-        }
-        @Override
-        public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-            ChatMessageCell cell = (ChatMessageCell) holder.itemView;
-            MessageObject message = messages.get(position);
-            // Ensure message has a minimal valid setup for display
-            cell.setMessageObject(message, null, false, false, false, false);
-            cell.setBackgroundColor(selectedPosition == position ? Theme.getColor(Theme.key_chat_messagePanelBackground) : Color.TRANSPARENT);
-        }
-        @Override
-        public int getItemViewType(int position) { return 0; }
-    }
-    private void openPhotoPicker() {
-        PhotoAlbumPickerActivity fragment = new PhotoAlbumPickerActivity(PhotoAlbumPickerActivity.SELECT_TYPE_ALL, true, true, null);
-        fragment.setMaxSelectedPhotos(1, false);
-        fragment.setDelegate(new PhotoAlbumPickerActivity.PhotoAlbumPickerActivityDelegate() {
-            @Override
-            public void didSelectPhotos(ArrayList<SendMessagesHelper.SendingMediaInfo> photos, boolean notify, int scheduleDate) {
-                if (photos != null && !photos.isEmpty()) {
-                    onMediaReplaced(photos.get(0));
+        // Strip web page preview if requested
+        if (removeLinkPreview) {
+            for (MessageObject msg : forwardList) {
+                if (msg != null && msg.messageOwner != null
+                        && msg.messageOwner.media instanceof TLRPC.TL_messageMediaWebPage) {
+                    msg.messageOwner.media = new TLRPC.TL_messageMediaEmpty();
                 }
             }
+        }
 
-            @Override
-            public void startPhotoSelectActivity() {
+        for (long peer : dids) {
+            if (forwardAsFile) {
+                for (int j = 0; j < forwardList.size(); j++) {
+                    MessageObject msg = forwardList.get(j);
+                    if (msg == null || msg.messageOwner == null) continue;
+                    
+                    String caption = keepCaption && msg.caption != null ? msg.caption.toString() : "";
+                    ArrayList<TLRPC.MessageEntity> entities = keepCaption ? msg.messageOwner.entities : new ArrayList<>();
+                    String attachPath = msg.messageOwner.attachPath;
+                    
+                    if (!TextUtils.isEmpty(attachPath) && !attachPath.startsWith("http")) {
+                        ArrayList<String> paths = new ArrayList<>();
+                        paths.add(attachPath);
+                        SendMessagesHelper.prepareSendingDocuments(getAccountInstance(), paths, paths, null, caption, entities, null, peer, null, null, null, null, null, false, 0, 0, null, null, 0, 0, false, 0, 0, null, null, null, null, false);
+                    } else {
+                        ArrayList<MessageObject> singleList = new ArrayList<>();
+                        singleList.add(msg);
+                        SendMessagesHelper.getInstance(currentAccount).sendMessage(singleList, peer, !showQuote, !keepCaption, true, 0, 0);
+                    }
+                }
+            } else {
+                SendMessagesHelper.getInstance(currentAccount).sendMessage(forwardList, peer, !showQuote, !keepCaption, true, 0, 0);
             }
-        });
-        presentFragment(fragment);
+        }
+        finishFragment();
     }
 
-    private void onMediaReplaced(SendMessagesHelper.SendingMediaInfo info) {
-        if (selectedMessage == null) return;
+    public static class SpecialForwardShareAlert extends BottomSheet {
+        private final int currentAccount;
+        private final ArrayList<MessageObject> messages;
+        private boolean forwardAsFile;
+        private final ShareAlertCallback callback;
         
-        mediaPreviewImage.setImage(ImageLocation.getForPath(info.path), "50_50", (Drawable) null, selectedMessage);
-        mediaPreviewText.setText(new File(info.path).getName());
+        private ArrayList<TLRPC.Dialog> allDialogs;
+        private final ArrayList<TLRPC.Dialog> filteredDialogs = new ArrayList<>();
+        private final LongSparseArray<TLRPC.Dialog> selectedDialogs = new LongSparseArray<>();
         
-        selectedMessage.messageOwner.attachPath = info.path;
-        selectedMessage.videoEditedInfo = info.videoEditedInfo;
-        if (info.isVideo) {
-            selectedMessage.type = MessageObject.TYPE_VIDEO;
-            if (selectedMessage.messageOwner.media == null || !(selectedMessage.messageOwner.media instanceof TLRPC.TL_messageMediaDocument)) {
-                selectedMessage.messageOwner.media = new TLRPC.TL_messageMediaDocument();
-                selectedMessage.messageOwner.media.document = new TLRPC.TL_document();
+        private int activeCategory = 0; 
+        private String searchQuery = "";
+        
+        private boolean showQuote = false;
+        private boolean keepCaption = true;
+        private boolean sendAsAlbum = false;
+        private boolean removeLinkPreview = false;
+        private boolean showAsList = false;
+        
+        private RecyclerView gridView;
+        private ShareAdapter adapter;
+        private EditText searchEditText;
+        private ImageView sendButton;
+        private FrameLayout sendButtonContainer;
+        private TextView sendBadge;
+        private GridLayoutManager gridLayoutManager;
+        private androidx.recyclerview.widget.LinearLayoutManager listLayoutManager;
+        
+        public interface ShareAlertCallback {
+            void onShareSelected(ArrayList<Long> dids, boolean showQuote, boolean keepCaption, boolean sendAsAlbum, boolean removeLinkPreview);
+        }
+        
+        public SpecialForwardShareAlert(Context context, int account, ArrayList<MessageObject> messages, boolean asFile, ShareAlertCallback callback) {
+            super(context, true);
+            this.currentAccount = account;
+            this.messages = messages;
+            this.forwardAsFile = asFile;
+            this.callback = callback;
+            
+            allDialogs = new ArrayList<>(org.telegram.messenger.MessagesController.getInstance(currentAccount).getAllDialogs());
+            filterDialogs();
+            
+            LinearLayout rootLayout = new LinearLayout(context);
+            rootLayout.setOrientation(LinearLayout.VERTICAL);
+            rootLayout.setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(4), AndroidUtilities.dp(8), AndroidUtilities.dp(12));
+            
+            // 1. Bottom Sheet Top Slide Handle
+            View handleView = new View(context);
+            android.graphics.drawable.GradientDrawable handleBg = new android.graphics.drawable.GradientDrawable();
+            int headerColor = Theme.getColor(Theme.key_divider);
+            handleBg.setColor(headerColor != 0 ? headerColor : 0x22888888);
+            handleBg.setCornerRadius(AndroidUtilities.dp(2));
+            handleView.setBackground(handleBg);
+            LinearLayout.LayoutParams handleLp = new LinearLayout.LayoutParams(AndroidUtilities.dp(36), AndroidUtilities.dp(4));
+            handleLp.gravity = Gravity.CENTER_HORIZONTAL;
+            handleLp.bottomMargin = AndroidUtilities.dp(8);
+            rootLayout.addView(handleView, handleLp);
+            
+            // 2. Search Box and Switches Top Row
+            LinearLayout topRow = new LinearLayout(context);
+            topRow.setOrientation(LinearLayout.HORIZONTAL);
+            topRow.setGravity(Gravity.CENTER_VERTICAL);
+            
+            LinearLayout searchContainer = new LinearLayout(context);
+            searchContainer.setOrientation(LinearLayout.HORIZONTAL);
+            searchContainer.setGravity(Gravity.CENTER_VERTICAL);
+            searchContainer.setBackground(Theme.createRoundRectDrawable(AndroidUtilities.dp(18), Theme.getColor(Theme.key_dialogBackgroundGray)));
+            searchContainer.setPadding(AndroidUtilities.dp(10), 0, AndroidUtilities.dp(10), 0);
+            
+            ImageView searchIcon = new ImageView(context);
+            searchIcon.setImageResource(R.drawable.baseline_search_24);
+            searchIcon.setColorFilter(new android.graphics.PorterDuffColorFilter(0xff888888, android.graphics.PorterDuff.Mode.SRC_IN));
+            searchContainer.addView(searchIcon, LayoutHelper.createLinear(18, 18, Gravity.CENTER_VERTICAL, 0, 0, 6, 0));
+            
+            searchEditText = new EditText(context);
+            searchEditText.setHint("Send to...");
+            searchEditText.setHintTextColor(0x88888888);
+            searchEditText.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
+            searchEditText.setTextSize(14);
+            searchEditText.setBackground(null);
+            searchEditText.setSingleLine(true);
+            searchEditText.setInputType(InputType.TYPE_CLASS_TEXT);
+            searchEditText.addTextChangedListener(new android.text.TextWatcher() {
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                public void onTextChanged(CharSequence s, int start, int before, int count) {}
+                public void afterTextChanged(android.text.Editable s) {
+                    searchQuery = s.toString().trim().toLowerCase();
+                    filterDialogs();
+                }
+            });
+            searchContainer.addView(searchEditText, LayoutHelper.createLinear(0, LayoutHelper.MATCH_PARENT, 1.0f));
+            
+            topRow.addView(searchContainer, LayoutHelper.createLinear(0, 36, 1.0f, Gravity.CENTER_VERTICAL, 4, 0, 4, 0));
+            
+            // QUOTE Switch
+            LinearLayout quoteLayout = new LinearLayout(context);
+            quoteLayout.setOrientation(LinearLayout.VERTICAL);
+            quoteLayout.setGravity(Gravity.CENTER);
+            
+            TextView quoteText = new TextView(context);
+            quoteText.setText("QUOTE");
+            quoteText.setTextSize(9);
+            quoteText.setTextColor(Theme.getColor(Theme.key_dialogTextGray));
+            quoteText.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+            
+            Switch quoteSwitch = new Switch(context);
+            quoteSwitch.setChecked(showQuote, false);
+            quoteSwitch.setOnCheckedChangeListener((view, checked) -> showQuote = checked);
+            
+            quoteLayout.addView(quoteText);
+            quoteLayout.addView(quoteSwitch, LayoutHelper.createLinear(37, 20, Gravity.CENTER_HORIZONTAL, 0, 4, 0, 0));
+            topRow.addView(quoteLayout, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_VERTICAL, 4, 0, 4, 0));
+            
+            // CAP Switch
+            LinearLayout capLayout = new LinearLayout(context);
+            capLayout.setOrientation(LinearLayout.VERTICAL);
+            capLayout.setGravity(Gravity.CENTER);
+            
+            TextView capText = new TextView(context);
+            capText.setText("CAP");
+            capText.setTextSize(9);
+            capText.setTextColor(Theme.getColor(Theme.key_dialogTextGray));
+            capText.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+            
+            Switch capSwitch = new Switch(context);
+            capSwitch.setChecked(keepCaption, false);
+            capSwitch.setOnCheckedChangeListener((view, checked) -> keepCaption = checked);
+            
+            capLayout.addView(capText);
+            capLayout.addView(capSwitch, LayoutHelper.createLinear(37, 20, Gravity.CENTER_HORIZONTAL, 0, 4, 0, 0));
+            topRow.addView(capLayout, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_VERTICAL, 4, 0, 4, 0));
+            
+            ImageView threeDots = new ImageView(context);
+            threeDots.setImageResource(R.drawable.ic_ab_other);
+            threeDots.setColorFilter(new android.graphics.PorterDuffColorFilter(Theme.getColor(Theme.key_dialogIcon), android.graphics.PorterDuff.Mode.SRC_IN));
+            threeDots.setBackground(Theme.getSelectorDrawable(false));
+            threeDots.setOnClickListener(v -> showOptionsMenu(threeDots));
+            topRow.addView(threeDots, LayoutHelper.createLinear(36, 36, Gravity.CENTER_VERTICAL, 4, 0, 4, 0));
+            
+            rootLayout.addView(topRow, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 8));
+            
+            // 3. Category tabs
+            HorizontalScrollView scrollCategories = new HorizontalScrollView(context);
+            scrollCategories.setHorizontalScrollBarEnabled(false);
+            
+            LinearLayout categoriesRow = new LinearLayout(context);
+            categoriesRow.setOrientation(LinearLayout.HORIZONTAL);
+            categoriesRow.setGravity(Gravity.CENTER_VERTICAL);
+            
+            int[] icons = new int[]{
+                R.drawable.filter_all_solar,        
+                R.drawable.filter_private_solar,   
+                R.drawable.filter_groups_solar,        
+                R.drawable.filter_favorite_solar,          
+                R.drawable.msg_contacts_solar,       
+                R.drawable.msg_groups_solar,       
+                R.drawable.filter_channel_solar,            
+                R.drawable.filter_bots_solar            
+            };
+            
+            int selectedColor = Theme.getColor(Theme.key_dialogTextBlue);
+            int unselectedColor = Theme.getColor(Theme.key_dialogIcon);
+            int selectedBgColor = (selectedColor & 0x00ffffff) | 0x1a000000;
+            
+            final View[] categoryTabs = new View[icons.length];
+            for (int i = 0; i < icons.length; i++) {
+                final int idx = i;
+                ImageView tabIcon = new ImageView(context);
+                tabIcon.setImageResource(icons[i]);
+                tabIcon.setColorFilter(new android.graphics.PorterDuffColorFilter(i == activeCategory ? selectedColor : unselectedColor, android.graphics.PorterDuff.Mode.SRC_IN));
+                tabIcon.setPadding(AndroidUtilities.dp(10), AndroidUtilities.dp(10), AndroidUtilities.dp(10), AndroidUtilities.dp(10));
+                
+                android.graphics.drawable.GradientDrawable tabBg = new android.graphics.drawable.GradientDrawable();
+                tabBg.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+                tabBg.setColor(i == activeCategory ? selectedBgColor : Color.TRANSPARENT);
+                tabIcon.setBackground(tabBg);
+                
+                tabIcon.setOnClickListener(v -> {
+                    activeCategory = idx;
+                    for (int j = 0; j < categoryTabs.length; j++) {
+                        android.graphics.drawable.GradientDrawable bg = new android.graphics.drawable.GradientDrawable();
+                        bg.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+                        bg.setColor(j == activeCategory ? selectedBgColor : Color.TRANSPARENT);
+                        categoryTabs[j].setBackground(bg);
+                        if (j == activeCategory) {
+                            ((ImageView) categoryTabs[j]).setColorFilter(new android.graphics.PorterDuffColorFilter(selectedColor, android.graphics.PorterDuff.Mode.SRC_IN));
+                        } else {
+                            ((ImageView) categoryTabs[j]).setColorFilter(new android.graphics.PorterDuffColorFilter(unselectedColor, android.graphics.PorterDuff.Mode.SRC_IN));
+                        }
+                    }
+                    filterDialogs();
+                });
+                
+                categoryTabs[i] = tabIcon;
+                categoriesRow.addView(tabIcon, LayoutHelper.createLinear(40, 40, 0, 4, 0, 4, 0));
             }
-        } else {
-            selectedMessage.type = MessageObject.TYPE_PHOTO;
-            if (selectedMessage.messageOwner.media == null || !(selectedMessage.messageOwner.media instanceof TLRPC.TL_messageMediaPhoto)) {
-                selectedMessage.messageOwner.media = new TLRPC.TL_messageMediaPhoto();
-                selectedMessage.messageOwner.media.photo = new TLRPC.TL_photo();
+            scrollCategories.addView(categoriesRow);
+            rootLayout.addView(scrollCategories, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 8));
+            
+            // 4. Grid view and floating submit send button
+            gridLayoutManager = new GridLayoutManager(context, 4);
+            listLayoutManager = new androidx.recyclerview.widget.LinearLayoutManager(context);
+            gridView = new RecyclerView(context);
+            gridView.setLayoutManager(gridLayoutManager);
+            adapter = new ShareAdapter(context);
+            gridView.setAdapter(adapter);
+            rootLayout.addView(gridView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 260));
+            
+            FrameLayout frameLayout = new FrameLayout(context);
+            containerView = frameLayout;
+            // Solid opaque background so the sheet isn't transparent
+            android.graphics.drawable.GradientDrawable sheetBg = new android.graphics.drawable.GradientDrawable();
+            sheetBg.setColor(Theme.getColor(Theme.key_dialogBackground));
+            sheetBg.setCornerRadii(new float[]{AndroidUtilities.dp(12), AndroidUtilities.dp(12), AndroidUtilities.dp(12), AndroidUtilities.dp(12), 0, 0, 0, 0});
+            frameLayout.setBackground(sheetBg);
+            
+            frameLayout.addView(rootLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+            
+            sendButtonContainer = new FrameLayout(context);
+            sendButtonContainer.setVisibility(View.GONE);
+            
+            sendButton = new ImageView(context);
+            sendButton.setImageResource(R.drawable.baseline_forward_24);
+            sendButton.setColorFilter(new android.graphics.PorterDuffColorFilter(Color.WHITE, android.graphics.PorterDuff.Mode.SRC_IN));
+            
+            android.graphics.drawable.GradientDrawable btnBg = new android.graphics.drawable.GradientDrawable();
+            btnBg.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+            btnBg.setColor(0xff2196f3);
+            sendButton.setBackground(btnBg);
+            sendButton.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(12), AndroidUtilities.dp(12), AndroidUtilities.dp(12));
+            sendButton.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            sendButton.setOnClickListener(v -> {
+                if (selectedDialogs.size() > 0) {
+                    dismiss();
+                    ArrayList<Long> dids = new ArrayList<>();
+                    for (int i = 0; i < selectedDialogs.size(); i++) {
+                        dids.add(selectedDialogs.keyAt(i));
+                    }
+                    callback.onShareSelected(dids, showQuote, keepCaption, sendAsAlbum, removeLinkPreview);
+                }
+            });
+            sendButtonContainer.addView(sendButton, LayoutHelper.createFrame(48, 48));
+            
+            sendBadge = new TextView(context);
+            sendBadge.setTextColor(Color.WHITE);
+            sendBadge.setTextSize(9);
+            sendBadge.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+            sendBadge.setGravity(Gravity.CENTER);
+            
+            android.graphics.drawable.GradientDrawable badgeBg = new android.graphics.drawable.GradientDrawable();
+            badgeBg.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+            badgeBg.setColor(0xff2196f3);
+            badgeBg.setStroke(AndroidUtilities.dp(1.2f), 0xffffffff);
+            sendBadge.setBackground(badgeBg);
+            
+            FrameLayout.LayoutParams lpBadge = new FrameLayout.LayoutParams(
+                AndroidUtilities.dp(16), 
+                AndroidUtilities.dp(16), 
+                Gravity.RIGHT | Gravity.TOP
+            );
+            sendButtonContainer.addView(sendBadge, lpBadge);
+            
+            frameLayout.addView(sendButtonContainer, LayoutHelper.createFrame(48, 48, Gravity.RIGHT | Gravity.BOTTOM, 0, 0, 16, 16));
+        }
+        
+        private void showOptionsMenu(View anchorView) {
+            boolean selectAllOn = selectedDialogs.size() == filteredDialogs.size() && !filteredDialogs.isEmpty();
+            ItemOptions.makeOptions(container, anchorView)
+                .add(selectAllOn ? R.drawable.baseline_check_box_24 : R.drawable.baseline_check_box_outline_blank_24, "Select All", () -> {
+                    if (!selectAllOn) {
+                        for (TLRPC.Dialog d : filteredDialogs) selectedDialogs.put(d.id, d);
+                    } else {
+                        selectedDialogs.clear();
+                    }
+                    if (adapter != null) adapter.notifyDataSetChanged();
+                    sendButtonContainer.setVisibility(selectedDialogs.size() > 0 ? View.VISIBLE : View.GONE);
+                    if (selectedDialogs.size() > 0) sendBadge.setText(String.valueOf(selectedDialogs.size()));
+                })
+                .add(sendAsAlbum ? R.drawable.baseline_check_box_24 : R.drawable.baseline_check_box_outline_blank_24, "Send as album", () -> {
+                    sendAsAlbum = !sendAsAlbum;
+                })
+                .add(removeLinkPreview ? R.drawable.baseline_check_box_24 : R.drawable.baseline_check_box_outline_blank_24, "Remove link preview", () -> {
+                    removeLinkPreview = !removeLinkPreview;
+                })
+                .add(R.drawable.ic_filter_list, "Show as list", () -> {
+                    showAsList = !showAsList;
+                    gridView.setLayoutManager(showAsList ? listLayoutManager : gridLayoutManager);
+                    if (adapter != null) adapter.notifyDataSetChanged();
+                })
+                .show();
+        }
+
+        private void filterDialogs() {
+            filteredDialogs.clear();
+            
+            // If Contacts category is active and search query is empty, show all contacts
+            if (activeCategory == 4 && TextUtils.isEmpty(searchQuery)) {
+                ArrayList<TLRPC.TL_contact> contactsList = org.telegram.messenger.ContactsController.getInstance(currentAccount).contacts;
+                for (TLRPC.TL_contact contact : contactsList) {
+                    TLRPC.Dialog fakeDialog = new TLRPC.TL_dialog();
+                    fakeDialog.id = contact.user_id;
+                    filteredDialogs.add(fakeDialog);
+                }
+                if (adapter != null) {
+                    adapter.notifyDataSetChanged();
+                }
+                return;
+            }
+            
+            for (TLRPC.Dialog dialog : allDialogs) {
+                long dialogId = dialog.id;
+                
+                if (!TextUtils.isEmpty(searchQuery)) {
+                    String title = "";
+                    if (DialogObject.isUserDialog(dialogId)) {
+                        TLRPC.User user = org.telegram.messenger.MessagesController.getInstance(currentAccount).getUser(dialogId);
+                        if (user != null) {
+                            title = (user.first_name + " " + user.last_name).toLowerCase();
+                        }
+                    } else {
+                        TLRPC.Chat chat = org.telegram.messenger.MessagesController.getInstance(currentAccount).getChat(-dialogId);
+                        if (chat != null) {
+                            title = chat.title.toLowerCase();
+                        }
+                    }
+                    if (!title.contains(searchQuery)) {
+                        continue;
+                    }
+                }
+                
+                if (activeCategory == 1) { // PMs
+                    if (!DialogObject.isUserDialog(dialogId)) continue;
+                    TLRPC.User user = org.telegram.messenger.MessagesController.getInstance(currentAccount).getUser(dialogId);
+                    if (user == null || user.bot) continue;
+                } else if (activeCategory == 2) { // Groups
+                    if (!DialogObject.isChatDialog(dialogId)) continue;
+                    TLRPC.Chat chat = org.telegram.messenger.MessagesController.getInstance(currentAccount).getChat(-dialogId);
+                    if (chat == null || ChatObject.isChannel(chat)) continue;
+                } else if (activeCategory == 3) { // Favorites (Pinned)
+                    if (!dialog.pinned) continue;
+                } else if (activeCategory == 4) { // Contacts
+                    if (!DialogObject.isUserDialog(dialogId)) continue;
+                    if (!org.telegram.messenger.ContactsController.getInstance(currentAccount).isContact(dialogId)) continue;
+                } else if (activeCategory == 5) { // Supergroups
+                    if (!DialogObject.isChatDialog(dialogId)) continue;
+                    TLRPC.Chat chat = org.telegram.messenger.MessagesController.getInstance(currentAccount).getChat(-dialogId);
+                    if (chat == null || !ChatObject.isChannel(chat) || !chat.megagroup) continue;
+                } else if (activeCategory == 6) { // Channels
+                    if (!DialogObject.isChatDialog(dialogId)) continue;
+                    TLRPC.Chat chat = org.telegram.messenger.MessagesController.getInstance(currentAccount).getChat(-dialogId);
+                    if (chat == null || !ChatObject.isChannel(chat) || chat.megagroup) continue;
+                } else if (activeCategory == 7) { // Bots
+                    if (!DialogObject.isUserDialog(dialogId)) continue;
+                    TLRPC.User user = org.telegram.messenger.MessagesController.getInstance(currentAccount).getUser(dialogId);
+                    if (user == null || !user.bot) continue;
+                }
+                
+                filteredDialogs.add(dialog);
+            }
+            
+            // Also search in contacts if searching
+            if (!TextUtils.isEmpty(searchQuery)) {
+                ArrayList<TLRPC.TL_contact> contactsList = org.telegram.messenger.ContactsController.getInstance(currentAccount).contacts;
+                for (TLRPC.TL_contact contact : contactsList) {
+                    TLRPC.User user = org.telegram.messenger.MessagesController.getInstance(currentAccount).getUser(contact.user_id);
+                    if (user != null) {
+                        String title = (user.first_name + " " + user.last_name).toLowerCase();
+                        if (title.contains(searchQuery)) {
+                            // Check if already in filteredDialogs
+                            boolean exists = false;
+                            for (TLRPC.Dialog d : filteredDialogs) {
+                                    if (d.id == user.id) {
+                                    exists = true;
+                                    break;
+                                }
+                            }
+                            if (!exists) {
+                                TLRPC.Dialog fakeDialog = new TLRPC.TL_dialog();
+                                fakeDialog.id = user.id;
+                                filteredDialogs.add(fakeDialog);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            if (adapter != null) {
+                adapter.notifyDataSetChanged();
             }
         }
         
-        if (selectedPosition != -1) {
-            listAdapter.notifyItemChanged(selectedPosition);
+        private class ShareAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+            private final Context context;
+            
+            public ShareAdapter(Context context) {
+                this.context = context;
+            }
+            
+            @Override
+            public int getItemCount() {
+                return filteredDialogs.size();
+            }
+            
+            @Override
+            public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+                org.telegram.ui.Cells.ShareDialogCell cell = new org.telegram.ui.Cells.ShareDialogCell(context, org.telegram.ui.Cells.ShareDialogCell.TYPE_SHARE, null);
+                cell.setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, AndroidUtilities.dp(92)));
+                return new Holder(cell);
+            }
+            
+            @Override
+            public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+                org.telegram.ui.Cells.ShareDialogCell cell = (org.telegram.ui.Cells.ShareDialogCell) holder.itemView;
+                TLRPC.Dialog dialog = filteredDialogs.get(position);
+                boolean isSelected = selectedDialogs.indexOfKey(dialog.id) >= 0;
+                
+                cell.setDialog(dialog.id, isSelected, null);
+                
+                // Reposition the CheckBox2 view to the top-left of the avatar
+                for (int i = 0; i < cell.getChildCount(); i++) {
+                    View child = cell.getChildAt(i);
+                    if (child instanceof org.telegram.ui.Components.CheckBox2) {
+                        FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) child.getLayoutParams();
+                        lp.gravity = Gravity.CENTER_HORIZONTAL | Gravity.TOP;
+                        lp.leftMargin = -AndroidUtilities.dp(20);
+                        lp.rightMargin = 0;
+                        lp.topMargin = AndroidUtilities.dp(2);
+                        child.setLayoutParams(lp);
+                        break;
+                    }
+                }
+                
+                cell.setOnClickListener(v -> {
+                    if (selectedDialogs.indexOfKey(dialog.id) >= 0) {
+                        selectedDialogs.remove(dialog.id);
+                    } else {
+                        selectedDialogs.put(dialog.id, dialog);
+                    }
+                    cell.setChecked(selectedDialogs.indexOfKey(dialog.id) >= 0, true);
+                    
+                    if (selectedDialogs.size() > 0) {
+                        sendButtonContainer.setVisibility(View.VISIBLE);
+                        sendBadge.setText(String.valueOf(selectedDialogs.size()));
+                    } else {
+                        sendButtonContainer.setVisibility(View.GONE);
+                    }
+                });
+            }
         }
         
-        Toast.makeText(getParentActivity(), "Media replaced!", Toast.LENGTH_SHORT).show();
+        private static class Holder extends RecyclerView.ViewHolder {
+            public Holder(View itemView) {
+                super(itemView);
+            }
+        }
     }
 }
+// [Alexgram: Special Forward] - End

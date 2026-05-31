@@ -92,7 +92,20 @@ public class ShadowBanListActivity extends BaseNekoSettingsActivity {
                 return;
             }
             long userId = userIds.get(userIndex);
-            RegexUserFilterPopup.show(this, view, x, y, getResourceProvider(), () -> deleteCustomFilteredUser(userId));
+            AyuFilter.CustomFilteredUser cfu = AyuFilter.getCustomFilteredUser(userId);
+            boolean isMasked = cfu != null && cfu.filterAction != AyuFilter.FilterModel.ACTION_HIDE;
+
+            RegexUserFilterPopup.show(this, view, x, y, getResourceProvider(),
+                    () -> deleteCustomFilteredUser(userId),
+                    isMasked ? () -> {
+                        AyuFilter.setCustomFilteredUserAction(userId, AyuFilter.FilterModel.ACTION_HIDE, 0xFFFFFFFF);
+                        notifyCustomFilteredUserRowChanged(userId);
+                    } : null,
+                    !isMasked ? () -> {
+                        AyuFilter.setCustomFilteredUserAction(userId, AyuFilter.FilterModel.ACTION_SPOILER_ALL, 0xFFFFFFFF);
+                        notifyCustomFilteredUserRowChanged(userId);
+                    } : null,
+                    () -> showMaskColorPicker(userId));
         }
     }
 
@@ -288,8 +301,33 @@ public class ShadowBanListActivity extends BaseNekoSettingsActivity {
         return String.valueOf(userId);
     }
 
-    private String getCustomFilteredUserRowSubtitle(long userId) {
+    private CharSequence getCustomFilteredUserRowSubtitle(long userId) {
+        AyuFilter.CustomFilteredUser cfu = AyuFilter.getCustomFilteredUser(userId);
+        if (cfu != null && cfu.filterAction != AyuFilter.FilterModel.ACTION_HIDE) {
+            String colorHex = String.format("#%06X", 0xFFFFFF & cfu.spoilerColor);
+            return android.text.Html.fromHtml(getString(R.string.MaskBlockedUserMessages) + " <font color=\"" + colorHex + "\">●</font>");
+        }
         return String.valueOf(userId);
+    }
+
+    private void showMaskColorPicker(long userId) {
+        Context context = getContext();
+        if (context == null) return;
+        AyuFilter.CustomFilteredUser cfu = AyuFilter.getCustomFilteredUser(userId);
+        int currentColor = (cfu != null && cfu.filterAction != AyuFilter.FilterModel.ACTION_HIDE) ? cfu.spoilerColor : 0xFFFFFFFF;
+        org.telegram.ui.Components.Paint.ColorPickerBottomSheet sheet =
+                new org.telegram.ui.Components.Paint.ColorPickerBottomSheet(context, getResourceProvider());
+        sheet.setColorListener(color -> {
+            AyuFilter.CustomFilteredUser curr = AyuFilter.getCustomFilteredUser(userId);
+            int action = curr != null ? curr.filterAction : AyuFilter.FilterModel.ACTION_SPOILER_ALL;
+            if (action == AyuFilter.FilterModel.ACTION_HIDE) {
+                action = AyuFilter.FilterModel.ACTION_SPOILER_ALL;
+            }
+            AyuFilter.setCustomFilteredUserAction(userId, action, color);
+            notifyCustomFilteredUserRowChanged(userId);
+        });
+        sheet.setColor(currentColor);
+        sheet.show();
     }
 
     private boolean cacheResolvedCustomFilteredUser(long userId, TLRPC.User user, boolean notifyRow) {

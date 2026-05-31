@@ -171,6 +171,14 @@ public class TimeStringHelper {
             deletedSpan = new SpannableStringBuilder("\u200B");
             deletedSpan.setSpan(new ColoredImageSpan(deletedDrawable, true), 0, 1, 0);
         }
+        // [Alexgram: Deleted Icon Color] - Start
+        if (deletedSpan != null) {
+            ColoredImageSpan[] spans = deletedSpan.getSpans(0, deletedSpan.length(), ColoredImageSpan.class);
+            if (spans != null && spans.length > 0) {
+                spans[0].setOverrideColor(NaConfig.INSTANCE.getDeletedIconColor().Int());
+            }
+        }
+        // [Alexgram: Deleted Icon Color] - End
 
         if (translatedDrawable == null) {
             if (NaConfig.INSTANCE.getIconReplacements().Int() == IconsResources.ICON_REPLACE_SOLAR) {

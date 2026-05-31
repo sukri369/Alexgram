@@ -172,12 +172,14 @@ object NaConfig {
             ConfigItem.configTypeBool,
             false
         )
+    // [Alexgram: Special Forward] - Start
     val specialForward =
         addConfig(
             "SpecialForward",
             ConfigItem.configTypeBool,
             false
         )
+    // [Alexgram: Special Forward] - End
     val showNoQuoteForward =
         addConfig(
             "NoQuoteForward",
@@ -496,6 +498,18 @@ object NaConfig {
             ConfigItem.configTypeString,
             "[]"
         )
+    val maskBlockedUserMessages =
+        addConfig(
+            "MaskBlockedUserMessages",
+            ConfigItem.configTypeBool,
+            false
+        )
+    val blockedUserMaskColor =
+        addConfig(
+            "BlockedUserMaskColor",
+            ConfigItem.configTypeInt,
+            0xFF888888.toInt()
+        )
     val showTimeHint =
         addConfig(
             "ShowTimeHint",
@@ -618,6 +632,14 @@ object NaConfig {
             ConfigItem.configTypeInt,
             0
         )
+    // [Alexgram: Max Active Accounts] - Start
+    val maxActiveAccounts =
+        addConfig(
+            "MaxActiveAccounts",
+            ConfigItem.configTypeInt,
+            10
+        )
+    // [Alexgram: Max Active Accounts] - End
     val showVoiceChangerInChatMenu =
         addConfig(
             "ShowVoiceChangerInChatMenu",
@@ -786,6 +808,14 @@ object NaConfig {
             ConfigItem.configTypeBool,
             false
         )
+    // [Alexgram: Important Announcement] - Start
+    val getImportantAnnouncementFromAlexgram =
+        addConfig(
+            "GetImportantAnnouncementFromAlexgram",
+            ConfigItem.configTypeBool,
+            true
+        )
+    // [Alexgram: Important Announcement] - End
     val liveVideoBlurIntensity =
         addConfig(
             "LiveVideoBlurIntensity",
@@ -918,6 +948,12 @@ object NaConfig {
             ConfigItem.configTypeBool,
             true
         )
+    val translucentDeletedMessagesAlpha =
+        addConfig(
+            "TranslucentDeletedMessagesAlpha",
+            ConfigItem.configTypeInt,
+            75
+        )
     val enableSeparateArticleTranslator =
         addConfig(
             "EnableSeparateArticleTranslator",
@@ -996,6 +1032,14 @@ object NaConfig {
             ConfigItem.configTypeBool,
             true
         )
+    // [Alexgram: Deleted Icon Color] - Start
+    val deletedIconColor =
+        addConfig(
+            "DeletedIconColor",
+            ConfigItem.configTypeInt,
+            0
+        )
+    // [Alexgram: Deleted Icon Color] - End
     val useEditedIcon =
         addConfig(
             "UseEditedIcon",

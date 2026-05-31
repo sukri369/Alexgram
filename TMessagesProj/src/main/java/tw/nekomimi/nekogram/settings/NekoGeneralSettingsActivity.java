@@ -52,6 +52,7 @@ import tw.nekomimi.nekogram.config.cell.AbstractConfigCell;
 import tw.nekomimi.nekogram.config.cell.ConfigCellCustom;
 import tw.nekomimi.nekogram.config.cell.ConfigCellDivider;
 import tw.nekomimi.nekogram.config.cell.ConfigCellHeader;
+import tw.nekomimi.nekogram.config.cell.ConfigCellNumberPicker;
 import tw.nekomimi.nekogram.config.cell.ConfigCellSelectBox;
 import tw.nekomimi.nekogram.config.cell.ConfigCellTextCheck;
 import tw.nekomimi.nekogram.config.cell.ConfigCellTextDetail;
@@ -108,6 +109,9 @@ public class NekoGeneralSettingsActivity extends BaseNekoXSettingsActivity {
             getString(R.string.LastFirst),
             getString(R.string.FirstLast)
     }, null));
+    // [Alexgram: Max Active Accounts] - Start
+    private final AbstractConfigCell maxActiveAccountsRow = cellGroup.appendCell(new ConfigCellNumberPicker("MaxActiveAccounts", NaConfig.INSTANCE.getMaxActiveAccounts(), 10, 100));
+    // [Alexgram: Max Active Accounts] - End
     private final AbstractConfigCell searchEngineInSearchBarRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getSearchEngineInSearchBar(), getString(R.string.SearchEngineInSearchBarDescription)));
     private final AbstractConfigCell dividerGeneral = cellGroup.appendCell(new ConfigCellDivider());
 
@@ -253,11 +257,16 @@ public class NekoGeneralSettingsActivity extends BaseNekoXSettingsActivity {
 
     // Privacy
     private final AbstractConfigCell headerPrivacy = cellGroup.appendCell(new ConfigCellHeader(getString(R.string.PrivacyTitle)));
+    // [Alexgram: Important Announcement] - Start
+    private final AbstractConfigCell getImportantAnnouncementFromAlexgramRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getGetImportantAnnouncementFromAlexgram()));
+    // [Alexgram: Important Announcement] - End
     private final AbstractConfigCell hidePhoneRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.hidePhone));
     private final AbstractConfigCell disableSystemAccountRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.disableSystemAccount));
     private final AbstractConfigCell disableCrashlyticsCollectionRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getDisableCrashlyticsCollection()));
     private final AbstractConfigCell allowForwardingRestrictionRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getAllowForwardingRestriction(), getString(R.string.AllowForwardingRestrictionDescription)));
     private final AbstractConfigCell dividerPrivacy = cellGroup.appendCell(new ConfigCellDivider());
+
+
 
     // Notifications
     private final AbstractConfigCell headerNotifications = cellGroup.appendCell(new ConfigCellHeader(getString(R.string.Notifications)));
@@ -412,6 +421,10 @@ public class NekoGeneralSettingsActivity extends BaseNekoXSettingsActivity {
                 }
             } else if (key.equals(NaConfig.INSTANCE.getSearchEngineInSearchBar().getKey())) {
                 tooltip.showWithAction(0, UndoView.ACTION_NEED_RESTART, null, null);
+            // [Alexgram: Max Active Accounts] - Start
+            } else if (key.equals(NaConfig.INSTANCE.getMaxActiveAccounts().getKey())) {
+                tooltip.showWithAction(0, UndoView.ACTION_NEED_RESTART, null, null);
+            // [Alexgram: Max Active Accounts] - End
             }
         };
 
@@ -727,6 +740,8 @@ public class NekoGeneralSettingsActivity extends BaseNekoXSettingsActivity {
         Locale locale = LocaleController.getInstance().getCurrentLocale();
         return locale != null && locale.getLanguage().equals("fa");
     }
+
+
 
 
 

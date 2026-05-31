@@ -7190,6 +7190,34 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             showUpdateActivity(UserConfig.selectedAccount, SharedConfig.pendingAppUpdate, true);
         }
         checkAppUpdate(false, null);
+        // [Alexgram: Important Announcement] - Start
+        xyz.nextalone.nagram.helper.AnnouncementHelper.checkAnnouncement(this);
+        // [Alexgram: Important Announcement] - End
+        
+        // [Alexgram: Birthday Wishes] - Start
+        // Birthday Wishes Feature - Online / Offline checks
+        {
+            int account = currentAccount;
+            if (UserConfig.getInstance(account).isClientActivated()) {
+                long clientUserId = UserConfig.getInstance(account).getClientUserId();
+                TLRPC.UserFull cachedFull = MessagesController.getInstance(account).getUserFull(clientUserId);
+                if (cachedFull != null && tw.nekomimi.nekogram.ui.BirthdayAlert.shouldShowBirthdayWish(cachedFull)) {
+                    tw.nekomimi.nekogram.ui.BirthdayAlert.show(this, false);
+                }
+
+                TLRPC.User currentUser = UserConfig.getInstance(account).getCurrentUser();
+                if (currentUser != null) {
+                    MessagesController.getInstance(account).loadFullUser(currentUser, 0, true, userFull -> {
+                        AndroidUtilities.runOnUIThread(() -> {
+                            if (userFull != null && tw.nekomimi.nekogram.ui.BirthdayAlert.shouldShowBirthdayWish(userFull)) {
+                                tw.nekomimi.nekogram.ui.BirthdayAlert.show(this, false);
+                            }
+                        });
+                    });
+                }
+            }
+        }
+        // [Alexgram: Birthday Wishes] - End
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             ApplicationLoader.canDrawOverlays = Settings.canDrawOverlays(this);

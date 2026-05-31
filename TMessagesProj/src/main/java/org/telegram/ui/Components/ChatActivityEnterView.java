@@ -2787,6 +2787,17 @@ public class ChatActivityEnterView extends FrameLayout implements
                     super.onLayout(changed, l, t, r, b);
                     setPivotX(getWidth());
                 }
+
+                @Override
+                public void setVisibility(int visibility) {
+                    // [Alexgram: Special Forward] - Start
+                    if (isSpecialForward()) {
+                        super.setVisibility(GONE);
+                    } else {
+                        super.setVisibility(visibility);
+                    }
+                    // [Alexgram: Special Forward] - End
+                }
             };
             attachLayout.setOrientation(LinearLayout.HORIZONTAL);
             attachLayout.setEnabled(false);
@@ -2829,6 +2840,17 @@ public class ChatActivityEnterView extends FrameLayout implements
                 public boolean dispatchTouchEvent(MotionEvent event) {
                     if (getAlpha() < 0.5f) return false;
                     return super.dispatchTouchEvent(event);
+                }
+
+                @Override
+                public void setVisibility(int visibility) {
+                    // [Alexgram: Special Forward] - Start
+                    if (isSpecialForward()) {
+                        super.setVisibility(GONE);
+                    } else {
+                        super.setVisibility(visibility);
+                    }
+                    // [Alexgram: Special Forward] - End
                 }
             };
             attachButton.setScaleType(ImageView.ScaleType.CENTER);
@@ -6863,6 +6885,12 @@ public class ChatActivityEnterView extends FrameLayout implements
     }
 
     public void setAllowStickersAndGifs(boolean needAnimatedEmoji, boolean needStickers, boolean needGifs, boolean waitingForKeyboardOpen) {
+        // [Alexgram: Special Forward] - Start
+        if (parentFragment instanceof org.telegram.ui.SpecialForwardActivity) {
+            needStickers = false;
+            needGifs = false;
+        }
+        // [Alexgram: Special Forward] - End
         if ((allowStickers != needStickers || allowGifs != needGifs) && emojiView != null) {
             if (emojiViewVisible && !waitingForKeyboardOpen) {
                 removeEmojiViewAfterAnimation = true;
@@ -8379,6 +8407,18 @@ public class ChatActivityEnterView extends FrameLayout implements
             return;
         }
 
+        // [Alexgram: Special Forward] - Start
+        if (parentFragment instanceof org.telegram.ui.SpecialForwardActivity) {
+            CharSequence text = messageEditText == null ? "" : messageEditText.getTextToUse();
+            if (editingMessageObject.type != MessageObject.TYPE_EMOJIS) {
+                text = AndroidUtilities.getTrimmedString(text);
+            }
+            ((org.telegram.ui.SpecialForwardActivity) parentFragment).onDoneEditingMessage(text);
+            setEditingMessageObject(null, null, false);
+            return;
+        }
+        // [Alexgram: Special Forward] - End
+
         if (editingMessageObject.needResendWhenEdit() && !ChatObject.canManageMonoForum(currentAccount, editingMessageObject.getDialogId())) {
             final MessageSuggestionParams params = parentFragment != null && parentFragment.messageSuggestionParams != null ?
                 parentFragment.messageSuggestionParams : MessageSuggestionParams.of(editingMessageObject.messageOwner.suggested_post);
@@ -8661,7 +8701,32 @@ public class ChatActivityEnterView extends FrameLayout implements
         return encryptedChat == null || AndroidUtilities.getPeerLayerVersion(encryptedChat.layer) >= 101;
     }
 
+    // [Alexgram: Special Forward] - Start
+    private boolean isSpecialForward() {
+        return delegate instanceof org.telegram.ui.SpecialForwardActivity || parentFragment instanceof org.telegram.ui.SpecialForwardActivity;
+    }
+
     public void checkSendButton(boolean animated) {
+        if (isSpecialForward()) {
+            if (audioVideoButtonContainer != null) audioVideoButtonContainer.setVisibility(GONE);
+            if (audioVideoSendButton != null) audioVideoSendButton.setVisibility(GONE);
+            if (attachLayout != null) attachLayout.setVisibility(GONE);
+            if (attachButton != null) attachButton.setVisibility(GONE);
+            if (expandStickersButton != null) expandStickersButton.setVisibility(GONE);
+            if (botButton != null) botButton.setVisibility(GONE);
+            if (slowModeButton != null) slowModeButton.setVisibility(GONE);
+            
+            android.view.View sendBtn = getSendButtonInternal();
+            if (sendBtn != null) {
+                sendBtn.setVisibility(VISIBLE);
+                sendBtn.setScaleX(1.0f);
+                sendBtn.setScaleY(1.0f);
+                sendBtn.setAlpha(1.0f);
+            }
+            updateFieldRight(0);
+            return;
+        }
+    // [Alexgram: Special Forward] - End
         if (editingMessageObject != null || recordingAudioVideo) {
             return;
         }
@@ -10954,27 +11019,51 @@ public class ChatActivityEnterView extends FrameLayout implements
                 audioVideoButtonContainer.setAlpha(0.0f);
                 audioVideoButtonContainer.setVisibility(GONE);
             } else {
-                getSendButtonInternal().setScaleX(0.1f);
-                getSendButtonInternal().setScaleY(0.1f);
-                getSendButtonInternal().setAlpha(0.0f);
-                getSendButtonInternal().setVisibility(GONE);
-                slowModeButton.setScaleX(0.1f);
-                slowModeButton.setScaleY(0.1f);
-                slowModeButton.setAlpha(0.0f);
-                setSlowModeButtonVisible(false);
-                attachLayout.setScaleX(1.0f);
-                attachLayoutAlpha = 1.0f;
-                updateAttachLayoutParams();
-                attachLayout.setVisibility(VISIBLE);
-                if (attachButton != null) {
-                    attachButton.setAlpha(attachButtonAlpha = 1.0f);
-                    attachButton.setScaleX(1.0f);
-                    attachButton.setScaleY(1.0f);
+                if (forceShowSendButton) {
+                    getSendButtonInternal().setScaleX(1.0f);
+                    getSendButtonInternal().setScaleY(1.0f);
+                    getSendButtonInternal().setAlpha(1.0f);
+                    getSendButtonInternal().setVisibility(VISIBLE);
+                    slowModeButton.setScaleX(0.1f);
+                    slowModeButton.setScaleY(0.1f);
+                    slowModeButton.setAlpha(0.0f);
+                    setSlowModeButtonVisible(false);
+                    attachLayout.setScaleX(1.0f);
+                    attachLayoutAlpha = 1.0f;
+                    updateAttachLayoutParams();
+                    attachLayout.setVisibility(VISIBLE);
+                    if (attachButton != null) {
+                        attachButton.setAlpha(attachButtonAlpha = 1.0f);
+                        attachButton.setScaleX(1.0f);
+                        attachButton.setScaleY(1.0f);
+                    }
+                    audioVideoButtonContainer.setScaleX(0.1f);
+                    audioVideoButtonContainer.setScaleY(0.1f);
+                    audioVideoButtonContainer.setAlpha(0.0f);
+                    audioVideoButtonContainer.setVisibility(GONE);
+                } else {
+                    getSendButtonInternal().setScaleX(0.1f);
+                    getSendButtonInternal().setScaleY(0.1f);
+                    getSendButtonInternal().setAlpha(0.0f);
+                    getSendButtonInternal().setVisibility(GONE);
+                    slowModeButton.setScaleX(0.1f);
+                    slowModeButton.setScaleY(0.1f);
+                    slowModeButton.setAlpha(0.0f);
+                    setSlowModeButtonVisible(false);
+                    attachLayout.setScaleX(1.0f);
+                    attachLayoutAlpha = 1.0f;
+                    updateAttachLayoutParams();
+                    attachLayout.setVisibility(VISIBLE);
+                    if (attachButton != null) {
+                        attachButton.setAlpha(attachButtonAlpha = 1.0f);
+                        attachButton.setScaleX(1.0f);
+                        attachButton.setScaleY(1.0f);
+                    }
+                    audioVideoButtonContainer.setScaleX(1.0f);
+                    audioVideoButtonContainer.setScaleY(1.0f);
+                    audioVideoButtonContainer.setAlpha(1.0f);
+                    audioVideoButtonContainer.setVisibility(VISIBLE);
                 }
-                audioVideoButtonContainer.setScaleX(1.0f);
-                audioVideoButtonContainer.setScaleY(1.0f);
-                audioVideoButtonContainer.setAlpha(1.0f);
-                audioVideoButtonContainer.setVisibility(VISIBLE);
             }
             createScheduledButton();
             if (scheduledButton != null && scheduledButton.getTag() != null) {
@@ -16211,5 +16300,9 @@ public class ChatActivityEnterView extends FrameLayout implements
         cameraSelectionPopup.showAtLocation(anchorView, Gravity.LEFT | Gravity.TOP, x, y);
         cameraSelectionPopup.dimBehind();
         if (!NekoConfig.disableVibration.Bool()) performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
+    }
+
+    public View getDoneButton() {
+        return doneButton;
     }
 }

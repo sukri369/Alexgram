@@ -10821,4 +10821,15 @@
     <string name="AIEditorStyleSharedToManyChats_other">Sent AI Style link to **%1$d chats**.</string>
 
     <string name="GuestBotFor"> for </string>
+    <!-- [Alexgram: Bot Login] - Start -->
+    <string name="BotLoginBotToken">Login with bot token</string>
+    <string name="BotLoginInvalidAccessToken">You provided an invalid bot token.</string>
+    <string name="BotLoginLimits">Note:\nYou can use the @BotFather bot to create a new bot.\nEnter the bot token here that @BotFather gave you to login with the bot.\n\nIf you login with a bot, you will have all the limitations that bots have, including:\n- You do not have access to your contacts.\n- You can\'t join groups and channels. (unless you add their administrators)\n- You can only write to users who have already sent you /start.\n- You will not be able to see when users view your messages.\n- The chat list is empty when you first login, and will populate when the bot receives messages from users and groups. Group detection can be particularly slow.</string>
+    <string name="BotLoginPhoneNumber">Login with phone number</string>
+    <string name="BotLoginStartText">Please enter your bot token.</string>
+    <string name="BotLoginTitle">Bot Token</string>
+    <!-- [Alexgram: Bot Login] - End -->
+    <!-- [Alexgram: Bot Warmup Banner] - Start -->
+    <string name="BotWarmupMessage">⏳ Your first new message may take up to 30 minutes to appear. This notice will disappear automatically once messages arrive.</string>
+    <!-- [Alexgram: Bot Warmup Banner] - End -->
 </resources>

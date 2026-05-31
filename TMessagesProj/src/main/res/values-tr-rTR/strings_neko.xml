@@ -270,4 +270,13 @@
     <string name="EmojiUseDefault">Sistem emojilerini kullan</string>
     <string name="Chat">Sohbetler</string>
     <string name="Appearance">Görünüm</string>
+    <!-- [Alexgram: Important Announcement] -->
+    <string name="GetImportantAnnouncementFromAlexgram">Alexgram\'dan Önemli Duyuruları Al</string>
+    <!-- [Alexgram: Birthday Wish] - Start -->
+    <string name="BirthdayTitle">Doğum Günün Kutlu Olsun,\n%1$s! 🎉</string>
+    <string name="BirthdayMessage">Bugün tamamen senin günün! ✨ Başrol enerjisiyle dolu bir yıl daha. Saf büyüme, sonsuz zaferler ve sıfır kötü enerjiyle dolu bir yıl dileriz. Git ve ortalığı salla! 🚀🎂</string>
+    <string name="BirthdayMakeWish">Bir Dilek Tut 🌟</string>
+    <string name="BirthdayWishSent">Dileğin Yıldızlara Gönderildi! 🌌✨</string>
+    <!-- [Alexgram: Birthday Wish] - End -->
 </resources>
+

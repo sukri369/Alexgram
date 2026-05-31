@@ -637,7 +637,7 @@ public class LimitReachedBottomSheet extends BottomSheetWithRecyclerListView imp
                 dismiss();
                 return;
             }
-            if (UserConfig.getInstance(currentAccount).isPremium() || MessagesController.getInstance(currentAccount).premiumFeaturesBlocked() || isVeryLargeFile) {
+            if (type == TYPE_ACCOUNTS || UserConfig.getInstance(currentAccount).isPremium() || MessagesController.getInstance(currentAccount).premiumFeaturesBlocked() || isVeryLargeFile) {
                 dismiss();
                 return;
             }
@@ -945,7 +945,7 @@ public class LimitReachedBottomSheet extends BottomSheetWithRecyclerListView imp
             spannableStringBuilder.setSpan(new ColoredImageSpan(R.drawable.msg_copy_filled), 0, 1, 0);
             spannableStringBuilder.append(getString(R.string.CopyLink));
             premiumButtonView.buttonTextView.setText(spannableStringBuilder);
-        } else if (UserConfig.getInstance(currentAccount).isPremium() || MessagesController.getInstance(currentAccount).premiumFeaturesBlocked() || isVeryLargeFile) {
+        } else if (type == TYPE_ACCOUNTS || UserConfig.getInstance(currentAccount).isPremium() || MessagesController.getInstance(currentAccount).premiumFeaturesBlocked() || isVeryLargeFile) {
             premiumButtonView.buttonTextView.setText(getString(R.string.OK));
             premiumButtonView.hideIcon();
         } else {
@@ -2452,13 +2452,15 @@ public class LimitReachedBottomSheet extends BottomSheetWithRecyclerListView imp
             limitParams.descriptionStr = LocaleController.formatString("LimitReachedFileSize", R.string.LimitReachedFileSize, "2 GB", "4 GB");
             limitParams.descriptionStrPremium = LocaleController.formatString("LimitReachedFileSizePremium", R.string.LimitReachedFileSizePremium, "4 GB");
             limitParams.descriptionStrLocked = LocaleController.formatString("LimitReachedFileSizeLocked", R.string.LimitReachedFileSizeLocked, "2 GB");
+        // [Alexgram: Max Active Accounts] - Start
         } else if (type == TYPE_ACCOUNTS) {
-            limitParams.defaultLimit = UserConfig.MAX_ACCOUNT_DEFAULT_COUNT;
+            limitParams.defaultLimit = UserConfig.getMaxAccountCount();
             limitParams.premiumLimit = UserConfig.MAX_ACCOUNT_COUNT;
             limitParams.icon = R.drawable.msg_limit_accounts;
-            limitParams.descriptionStr = LocaleController.formatString("LimitReachedAccounts", R.string.LimitReachedAccounts, limitParams.defaultLimit, limitParams.premiumLimit);
-            limitParams.descriptionStrPremium = LocaleController.formatString("LimitReachedAccountsPremium", R.string.LimitReachedAccountsPremium, limitParams.premiumLimit);
+            limitParams.descriptionStr = LocaleController.formatString("LimitReachedAccountsNa", R.string.LimitReachedAccountsNa, limitParams.defaultLimit);
+            limitParams.descriptionStrPremium = LocaleController.formatString("LimitReachedAccountsPremium", R.string.LimitReachedAccountsPremium, limitParams.defaultLimit);
             limitParams.descriptionStrLocked = LocaleController.formatString("LimitReachedAccountsPremium", R.string.LimitReachedAccountsPremium, limitParams.defaultLimit);
+        // [Alexgram: Max Active Accounts] - End
         } else if (type == TYPE_ADD_MEMBERS_RESTRICTED) {
             limitParams.defaultLimit = 0;
             limitParams.premiumLimit = 0;

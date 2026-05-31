@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="AppName">Nagram X</string>
     <string name="AppNameBeta">Telegram Beta</string>
@@ -1316,4 +1316,6 @@
     <string name="RemindDayYearAt">\'Recordar el\' d \'de\' MMM \'de\' yyyy \'a las\' HH:mm</string>
     <string name="BotsMenuTitle">Menu</string>
     <string name="Understood">👍 Entendido</string>
+    <!-- [Alexgram: Bot Warmup Banner] -->
+    <string name="BotWarmupMessage">⏳ Tu primer mensaje nuevo puede tardar hasta 30 minutos en aparecer. Este aviso desaparecerá automáticamente cuando lleguen los mensajes.</string>
 </resources>

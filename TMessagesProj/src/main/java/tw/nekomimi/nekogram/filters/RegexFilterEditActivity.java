@@ -57,6 +57,13 @@ public class RegexFilterEditActivity extends BaseFragment {
 
     private TextCheckCell caseInsensitiveButtonView;
     private TextCheckCell addToSharedFiltersButtonView;
+    private TextCheckCell spoilerInsteadOfHideButtonView;
+    private TextCheckCell spoilerMatchOnlyButtonView;
+    private org.telegram.ui.Cells.TextSettingsCell spoilerColorButtonView;
+
+    private boolean spoilerInsteadOfHide;
+    private boolean spoilerMatchOnly;
+    private int spoilerColor = 0xFFFFFFFF;
 
     public RegexFilterEditActivity() {
         filterIdx = -1;
@@ -97,6 +104,9 @@ public class RegexFilterEditActivity extends BaseFragment {
         this.chatFilterIdx = chatFilterIdx;
         this.filterModel = AyuFilter.getChatFiltersForDialog(dialogId).size() > chatFilterIdx && chatFilterIdx >= 0 ? AyuFilter.getChatFiltersForDialog(dialogId).get(chatFilterIdx) : null;
         this.caseInsensitive = this.filterModel == null || this.filterModel.caseInsensitive;
+        this.spoilerInsteadOfHide = this.filterModel != null && this.filterModel.filterAction != AyuFilter.FilterModel.ACTION_HIDE;
+        this.spoilerMatchOnly = this.filterModel != null && this.filterModel.filterAction == AyuFilter.FilterModel.ACTION_SPOILER_MATCH;
+        this.spoilerColor = this.filterModel != null ? this.filterModel.spoilerColor : 0xFFFFFFFF;
         this.prefillText = null;
         this.canSelectSharedTarget = false;
         this.addToSharedFilters = false;
@@ -106,6 +116,9 @@ public class RegexFilterEditActivity extends BaseFragment {
         this.filterIdx = filterIdx; // use -1 to CREATE, not EDIT
         this.filterModel = AyuFilter.getRegexFilters().get(filterIdx);
         this.caseInsensitive = filterModel.caseInsensitive;
+        this.spoilerInsteadOfHide = filterModel.filterAction != AyuFilter.FilterModel.ACTION_HIDE;
+        this.spoilerMatchOnly = filterModel.filterAction == AyuFilter.FilterModel.ACTION_SPOILER_MATCH;
+        this.spoilerColor = filterModel.spoilerColor;
         this.targetDialogId = 0L;
         this.chatFilterIdx = -1;
         this.prefillText = null;
@@ -148,20 +161,29 @@ public class RegexFilterEditActivity extends BaseFragment {
 
                     // If editing a chat-specific filter, update that entry and return.
                     if (chatFilterIdx != -1 && targetDialogId != 0L) {
-                        AyuFilter.editChatFilter(targetDialogId, chatFilterIdx, text, caseInsensitive);
+                        int action = spoilerInsteadOfHide
+                                ? (spoilerMatchOnly ? AyuFilter.FilterModel.ACTION_SPOILER_MATCH : AyuFilter.FilterModel.ACTION_SPOILER_ALL)
+                                : AyuFilter.FilterModel.ACTION_HIDE;
+                        AyuFilter.editChatFilter(targetDialogId, chatFilterIdx, text, caseInsensitive, action, spoilerColor);
                     } else if (filterIdx != -1) {
                         // editing shared filter
-                        AyuFilter.editFilter(filterIdx, text, caseInsensitive);
+                        int action = spoilerInsteadOfHide
+                                ? (spoilerMatchOnly ? AyuFilter.FilterModel.ACTION_SPOILER_MATCH : AyuFilter.FilterModel.ACTION_SPOILER_ALL)
+                                : AyuFilter.FilterModel.ACTION_HIDE;
+                        AyuFilter.editFilter(filterIdx, text, caseInsensitive, action, spoilerColor);
                     } else {
                         // creating a new filter (shared or chat-scoped)
+                        int action = spoilerInsteadOfHide
+                                ? (spoilerMatchOnly ? AyuFilter.FilterModel.ACTION_SPOILER_MATCH : AyuFilter.FilterModel.ACTION_SPOILER_ALL)
+                                : AyuFilter.FilterModel.ACTION_HIDE;
                         if (targetDialogId != 0L) {
                             if (canSelectSharedTarget && addToSharedFilters) {
-                                AyuFilter.addFilter(text, caseInsensitive);
+                                AyuFilter.addFilter(text, caseInsensitive, action, spoilerColor);
                             } else {
-                                AyuFilter.addChatFilter(targetDialogId, text, caseInsensitive);
+                                AyuFilter.addChatFilter(targetDialogId, text, caseInsensitive, action, spoilerColor);
                             }
                         } else {
-                            AyuFilter.addFilter(text, caseInsensitive);
+                            AyuFilter.addFilter(text, caseInsensitive, action, spoilerColor);
                         }
                     }
 
@@ -259,7 +281,55 @@ public class RegexFilterEditActivity extends BaseFragment {
             caseInsensitiveButtonView.setChecked(checked);
             caseInsensitive = checked;
         });
-        linearLayout.addView(caseInsensitiveButtonView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT, 24, 10, 24, 0));
+        linearLayout.addView(caseInsensitiveButtonView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT, 0, 0, 0, 0));
+
+        spoilerInsteadOfHideButtonView = new TextCheckCell(context);
+        spoilerInsteadOfHideButtonView.setFocusable(true);
+        spoilerInsteadOfHideButtonView.setTextAndCheck(getString(R.string.RegexFiltersSpoilerInsteadOfHide), spoilerInsteadOfHide, true);
+        spoilerInsteadOfHideButtonView.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
+        spoilerInsteadOfHideButtonView.setOnClickListener((v) -> {
+            boolean checked = !spoilerInsteadOfHideButtonView.isChecked();
+            spoilerInsteadOfHideButtonView.setChecked(checked);
+            spoilerInsteadOfHide = checked;
+            if (spoilerMatchOnlyButtonView != null) {
+                spoilerMatchOnlyButtonView.setVisibility(checked ? View.VISIBLE : View.GONE);
+            }
+            if (spoilerColorButtonView != null) {
+                spoilerColorButtonView.setVisibility(checked ? View.VISIBLE : View.GONE);
+            }
+        });
+        linearLayout.addView(spoilerInsteadOfHideButtonView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT, 0, 0, 0, 0));
+
+        spoilerMatchOnlyButtonView = new TextCheckCell(context);
+        spoilerMatchOnlyButtonView.setFocusable(true);
+        spoilerMatchOnlyButtonView.setTextAndCheck(getString(R.string.RegexFiltersSpoilerMatchOnly), spoilerMatchOnly, false);
+        spoilerMatchOnlyButtonView.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
+        spoilerMatchOnlyButtonView.setVisibility(spoilerInsteadOfHide ? View.VISIBLE : View.GONE);
+        spoilerMatchOnlyButtonView.setOnClickListener((v) -> {
+            boolean checked = !spoilerMatchOnlyButtonView.isChecked();
+            spoilerMatchOnlyButtonView.setChecked(checked);
+            spoilerMatchOnly = checked;
+        });
+        linearLayout.addView(spoilerMatchOnlyButtonView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT, 0, 0, 0, 0));
+
+        spoilerColorButtonView = new org.telegram.ui.Cells.TextSettingsCell(context);
+        spoilerColorButtonView.setFocusable(true);
+        String colorHex = String.format("#%06X", 0xFFFFFF & spoilerColor);
+        spoilerColorButtonView.setTextAndValue(getString(R.string.RegexFiltersSpoilerColor), colorHex, false);
+        spoilerColorButtonView.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
+        spoilerColorButtonView.setVisibility(spoilerInsteadOfHide ? View.VISIBLE : View.GONE);
+        spoilerColorButtonView.setOnClickListener((v) -> {
+            org.telegram.ui.Components.Paint.ColorPickerBottomSheet sheet =
+                    new org.telegram.ui.Components.Paint.ColorPickerBottomSheet(context, getResourceProvider());
+            sheet.setColorListener(color -> {
+                spoilerColor = color;
+                String hex = String.format("#%06X", 0xFFFFFF & color);
+                spoilerColorButtonView.setTextAndValue(getString(R.string.RegexFiltersSpoilerColor), hex, false);
+            });
+            sheet.setColor(spoilerColor);
+            sheet.show();
+        });
+        linearLayout.addView(spoilerColorButtonView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT, 0, 0, 0, 0));
 
         return fragmentView;
     }

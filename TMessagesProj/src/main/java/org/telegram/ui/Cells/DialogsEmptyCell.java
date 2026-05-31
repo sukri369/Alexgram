@@ -45,9 +45,9 @@ import java.util.ArrayList;
 @SuppressWarnings("FieldCanBeLocal")
 public class DialogsEmptyCell extends LinearLayout {
     public final static int TYPE_WELCOME_NO_CONTACTS = 0,
-        TYPE_WELCOME_WITH_CONTACTS = 1,
-        TYPE_FILTER_NO_CHATS_TO_DISPLAY = 2,
-        TYPE_FILTER_ADDING_CHATS = 3;
+            TYPE_WELCOME_WITH_CONTACTS = 1,
+            TYPE_FILTER_NO_CHATS_TO_DISPLAY = 2,
+            TYPE_FILTER_ADDING_CHATS = 3;
     private final static int TYPE_UNSPECIFIED = -1;
 
     @Retention(RetentionPolicy.SOURCE)
@@ -58,7 +58,8 @@ public class DialogsEmptyCell extends LinearLayout {
             TYPE_FILTER_NO_CHATS_TO_DISPLAY,
             TYPE_FILTER_ADDING_CHATS
     })
-    public @interface EmptyType {}
+    public @interface EmptyType {
+    }
 
     // Utyan is our special guest here
     private float utyanCollapseProgress;
@@ -101,7 +102,8 @@ public class DialogsEmptyCell extends LinearLayout {
         titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 20);
         titleView.setTypeface(AndroidUtilities.bold());
         titleView.setGravity(Gravity.CENTER);
-        addView(titleView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP | Gravity.LEFT, 52, 10, 52, 0));
+        addView(titleView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT,
+                Gravity.TOP | Gravity.LEFT, 52, 10, 52, 0));
 
         subtitleView = new TextViewSwitcher(context);
         subtitleView.setFactory(() -> {
@@ -114,7 +116,8 @@ public class DialogsEmptyCell extends LinearLayout {
         });
         subtitleView.setInAnimation(context, R.anim.alpha_in);
         subtitleView.setOutAnimation(context, R.anim.alpha_out);
-        addView(subtitleView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP | Gravity.LEFT, 52, 7, 52, 0));
+        addView(subtitleView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT,
+                Gravity.TOP | Gravity.LEFT, 52, 7, 52, 0));
     }
 
     public void setOnUtyanAnimationEndListener(Runnable onUtyanAnimationEndListener) {
@@ -269,7 +272,8 @@ public class DialogsEmptyCell extends LinearLayout {
 
     public void updateLayout() {
         int offset = 0;
-        if (getParent() instanceof View && (currentType == TYPE_FILTER_NO_CHATS_TO_DISPLAY || currentType == TYPE_FILTER_ADDING_CHATS)) {
+        if (getParent() instanceof View
+                && (currentType == TYPE_FILTER_NO_CHATS_TO_DISPLAY || currentType == TYPE_FILTER_ADDING_CHATS)) {
             View view = (View) getParent();
             int paddingTop = view.getPaddingTop();
             if (paddingTop != 0) {
@@ -296,7 +300,8 @@ public class DialogsEmptyCell extends LinearLayout {
             totalHeight = MeasureSpec.getSize(heightMeasureSpec);
         }
         if (totalHeight == 0) {
-            totalHeight = AndroidUtilities.displaySize.y - ActionBar.getCurrentActionBarHeight() - (Build.VERSION.SDK_INT >= 21 ? AndroidUtilities.statusBarHeight : 0);
+            totalHeight = AndroidUtilities.displaySize.y - ActionBar.getCurrentActionBarHeight()
+                    - (Build.VERSION.SDK_INT >= 21 ? AndroidUtilities.statusBarHeight : 0);
         }
         if (getParent() instanceof BlurredRecyclerView) {
             totalHeight -= ((BlurredRecyclerView) getParent()).blurTopPadding;
@@ -308,7 +313,8 @@ public class DialogsEmptyCell extends LinearLayout {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         if (currentType == TYPE_WELCOME_NO_CONTACTS || currentType == TYPE_WELCOME_WITH_CONTACTS) {
-            super.onMeasure(MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(measureUtyanHeight(heightMeasureSpec), MeasureSpec.EXACTLY));
+            super.onMeasure(MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.EXACTLY),
+                    MeasureSpec.makeMeasureSpec(measureUtyanHeight(heightMeasureSpec), MeasureSpec.EXACTLY));
         } else if (currentType == TYPE_FILTER_NO_CHATS_TO_DISPLAY || currentType == TYPE_FILTER_ADDING_CHATS) {
             int totalHeight;
             if (getParent() instanceof View) {
@@ -321,7 +327,8 @@ public class DialogsEmptyCell extends LinearLayout {
                 totalHeight = MeasureSpec.getSize(heightMeasureSpec);
             }
             if (totalHeight == 0) {
-                totalHeight = AndroidUtilities.displaySize.y - ActionBar.getCurrentActionBarHeight() - (Build.VERSION.SDK_INT >= 21 ? AndroidUtilities.statusBarHeight : 0);
+                totalHeight = AndroidUtilities.displaySize.y - ActionBar.getCurrentActionBarHeight()
+                        - (Build.VERSION.SDK_INT >= 21 ? AndroidUtilities.statusBarHeight : 0);
             }
 
             if (getParent() instanceof BlurredRecyclerView) {
@@ -330,11 +337,14 @@ public class DialogsEmptyCell extends LinearLayout {
 
             ArrayList<TLRPC.RecentMeUrl> arrayList = MessagesController.getInstance(currentAccount).hintDialogs;
             if (!arrayList.isEmpty()) {
-                totalHeight -= AndroidUtilities.dp(72) * arrayList.size() + arrayList.size() - 1 + AndroidUtilities.dp(12 + 38);
+                totalHeight -= AndroidUtilities.dp(72) * arrayList.size() + arrayList.size() - 1
+                        + AndroidUtilities.dp(12 + 38);
             }
-            super.onMeasure(MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(totalHeight, MeasureSpec.EXACTLY));
+            super.onMeasure(MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.EXACTLY),
+                    MeasureSpec.makeMeasureSpec(totalHeight, MeasureSpec.EXACTLY));
         } else {
-            super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(166), MeasureSpec.EXACTLY));
+            super.onMeasure(widthMeasureSpec,
+                    MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(166), MeasureSpec.EXACTLY));
         }
     }
 }

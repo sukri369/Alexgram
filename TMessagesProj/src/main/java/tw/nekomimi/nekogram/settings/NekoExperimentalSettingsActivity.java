@@ -17,6 +17,7 @@ import android.text.TextUtils;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.SeekBar;
 
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -86,6 +87,7 @@ import tw.nekomimi.nekogram.config.cell.ConfigCellTextCheck;
 import tw.nekomimi.nekogram.config.cell.ConfigCellTextCheckIcon;
 import tw.nekomimi.nekogram.config.cell.ConfigCellTextInput;
 import tw.nekomimi.nekogram.filters.RegexFiltersSettingActivity;
+import tw.nekomimi.nekogram.helpers.TimeStringHelper;
 import tw.nekomimi.nekogram.ui.PopupBuilder;
 import tw.nekomimi.nekogram.ui.cells.HeaderCell;
 import xyz.nextalone.nagram.NaConfig;
@@ -149,7 +151,9 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
     private final AbstractConfigCell enhancedVideoBitrateRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getEnhancedVideoBitrate()));
     private final AbstractConfigCell musicGraphRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getMusicGraph(), getString(R.string.MusicGraphInfo)));
     private final AbstractConfigCell sendVideoAsRoundRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getSendVideoAsRound()));
+    // [Alexgram: Special Forward] - Start
     private final AbstractConfigCell specialForwardRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getSpecialForward(), getString(R.string.SpecialForwardAbout), getString(R.string.SpecialForward)));
+    // [Alexgram: Special Forward] - End
     private final AbstractConfigCell customAudioBitrateRow = cellGroup.appendCell(new ConfigCellCustom("customGroupVoipAudioBitrate", CellGroup.ITEM_TYPE_TEXT_SETTINGS_CELL, true));
     private final AbstractConfigCell playerDecoderRow = cellGroup.appendCell(new ConfigCellSelectBox(null, NaConfig.INSTANCE.getPlayerDecoder(), new String[]{
             getString(R.string.VideoPlayerDecoderHardware),
@@ -168,9 +172,12 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
     private final AbstractConfigCell messageSavingSaveMediaRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getMessageSavingSaveMedia(), getString(R.string.MessageSavingSaveMediaHint)));
     private final AbstractConfigCell saveDeletedMessageForBotsUserRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getSaveDeletedMessageForBotUser()));
     private final AbstractConfigCell saveDeletedMessageInBotChatRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getSaveDeletedMessageForBot()));
-    private final AbstractConfigCell translucentDeletedMessagesRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getTranslucentDeletedMessages()));
+    private final AbstractConfigCell translucentDeletedMessagesRow = cellGroup.appendCell(new ConfigCellText("TranslucentDeletedMessages", null));
     private final AbstractConfigCell useDeletedIconRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getUseDeletedIcon()));
     private final AbstractConfigCell customDeletedMarkRow = cellGroup.appendCell(new ConfigCellTextInput(null, NaConfig.INSTANCE.getCustomDeletedMark(), "", null));
+    // [Alexgram: Deleted Icon Color Row] - Start
+    private final AbstractConfigCell deletedIconColorRow = cellGroup.appendCell(new ConfigCellText("DeletedIconColor", null));
+    // [Alexgram: Deleted Icon Color Row] - End
     private final AbstractConfigCell clearMessageDatabaseRow = cellGroup.appendCell(new ConfigCellTextCheckIcon(null, "ClearMessageDatabase", null, AyuData.totalSize > 0 ? AndroidUtilities.formatFileSize(AyuData.totalSize) : "...", R.drawable.msg_clear_solar, false, () -> new AlertDialog.Builder(getContext(), getResourceProvider())
             .setTitle(getString(R.string.ClearMessageDatabase))
             .setMessage(getString(R.string.AreYouSure))
@@ -246,6 +253,10 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
     public NekoExperimentalSettingsActivity() {
         if (NaConfig.INSTANCE.getUseDeletedIcon().Bool()) {
             cellGroup.rows.remove(customDeletedMarkRow);
+        } else {
+            // [Alexgram: Deleted Icon Color Init] - Start
+            cellGroup.rows.remove(deletedIconColorRow);
+            // [Alexgram: Deleted Icon Color Init] - End
         }
         if (!NaConfig.INSTANCE.getSaveDeletedMessageForBotUser().Bool()) {
             cellGroup.rows.remove(saveDeletedMessageInBotChatRow);
@@ -361,6 +372,18 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
             return;
         }
         AbstractConfigCell a = cellGroup.rows.get(position);
+        // [Alexgram: Translucent Click] - Start
+        if (a == translucentDeletedMessagesRow) {
+            showTranslucentOptions();
+            return;
+        }
+        // [Alexgram: Translucent Click] - End
+        // [Alexgram: Deleted Icon Color Click] - Start
+        if (a == deletedIconColorRow) {
+            showDeletedColorOptions(view);
+            return;
+        }
+        // [Alexgram: Deleted Icon Color Click] - End
         if (a instanceof ConfigCellTextCheck) {
             if (position == cellGroup.rows.indexOf(musicGraphRow)) {
                 if (!NaConfig.INSTANCE.getMusicGraph().Bool()) {
@@ -533,7 +556,35 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
             CellGroup cellGroup = getCellGroup();
             if (cellGroup == null) return;
             AbstractConfigCell a = cellGroup.rows.get(position);
-            if (a instanceof ConfigCellTextCheckIcon) {
+            // [Alexgram: Translucent Deleted Messages Bind] - Start
+            if (a == translucentDeletedMessagesRow) {
+                if (holder.itemView instanceof TextSettingsCell textCell) {
+                    boolean enabled = NaConfig.INSTANCE.getTranslucentDeletedMessages().Bool();
+                    if (enabled) {
+                        int alpha = NaConfig.INSTANCE.getTranslucentDeletedMessagesAlpha().Int();
+                        textCell.setTextAndValue("Translucent Deleted Messages", alpha + "% Opacity", false, cellGroup.needSetDivider(a), true);
+                    } else {
+                        textCell.setTextAndValue("Translucent Deleted Messages", "Off", false, cellGroup.needSetDivider(a), true);
+                    }
+                }
+            }
+            // [Alexgram: Translucent Deleted Messages Bind] - End
+            // [Alexgram: Deleted Icon Color Bind] - Start
+            else if (a == deletedIconColorRow) {
+                if (holder.itemView instanceof TextSettingsCell textCell) {
+                    int currentColor = NaConfig.INSTANCE.getDeletedIconColor().Int();
+                    if (currentColor == 0) {
+                        textCell.setTextAndValue("Deleted Icon Color", getString(R.string.Default), false, cellGroup.needSetDivider(a), true);
+                        textCell.setTextValueColor(Theme.getColor(Theme.key_windowBackgroundWhiteValueText));
+                    } else {
+                        String hex = String.format("#%08X", currentColor);
+                        textCell.setTextAndValue("Deleted Icon Color", "⬤ " + hex, false, cellGroup.needSetDivider(a), true);
+                        textCell.setTextValueColor(currentColor);
+                    }
+                }
+            }
+            // [Alexgram: Deleted Icon Color Bind] - End
+            else if (a instanceof ConfigCellTextCheckIcon) {
                 if (holder.itemView instanceof TextCell textCell) {
                     if (position == cellGroup.rows.indexOf(clearMessageDatabaseRow)) {
                         textCell.setColors(Theme.key_text_RedRegular, Theme.key_text_RedRegular);
@@ -541,6 +592,25 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
                 }
             }
         }
+
+        // [Alexgram: Deleted Icon Color Adapter Bind] - Start
+        @Override
+        public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+            super.onBindViewHolder(holder, position);
+            CellGroup cellGroup = getCellGroup();
+            if (cellGroup != null && position >= 0 && position < cellGroup.rows.size()) {
+                AbstractConfigCell a = cellGroup.rows.get(position);
+                if (a == deletedIconColorRow) {
+                    if (holder.itemView instanceof TextSettingsCell textCell) {
+                        int currentColor = NaConfig.INSTANCE.getDeletedIconColor().Int();
+                        if (currentColor != 0) {
+                            textCell.setTextValueColor(currentColor);
+                        }
+                    }
+                }
+            }
+        }
+        // [Alexgram: Deleted Icon Color Adapter Bind] - End
     }
 
     // [Alexgram: AI Reply] - Start
@@ -857,7 +927,10 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
                 saveDeletedMessageInBotChatRow,
                 translucentDeletedMessagesRow,
                 useDeletedIconRow,
-                customDeletedMarkRow
+                customDeletedMarkRow,
+                // [Alexgram: Deleted Icon Color Save Managed] - Start
+                deletedIconColorRow
+                // [Alexgram: Deleted Icon Color Save Managed] - End
         );
         if (listAdapter == null) {
             if (!isSaveEnabled) {
@@ -892,6 +965,10 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
             rowsToAdd.add(useDeletedIconRow);
             if (!NaConfig.INSTANCE.getUseDeletedIcon().Bool()) {
                 rowsToAdd.add(customDeletedMarkRow);
+            } else {
+                // [Alexgram: Deleted Icon Color Save Add] - Start
+                rowsToAdd.add(deletedIconColorRow);
+                // [Alexgram: Deleted Icon Color Save Add] - End
             }
             cellGroup.rows.addAll(anchorIndex + 1, rowsToAdd);
             listAdapter.notifyItemRangeInserted(anchorIndex + 1, rowsToAdd.size());
@@ -923,15 +1000,23 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
         addRowsToMap(cellGroup);
     }
 
+    // [Alexgram: Deleted Icon Color Visibility] - Start
     private void checkUseDeletedIconRows() {
         boolean enabled = NaConfig.INSTANCE.getUseDeletedIcon().Bool();
         if (listAdapter == null) {
             if (enabled) {
                 cellGroup.rows.remove(customDeletedMarkRow);
+            } else {
+                cellGroup.rows.remove(deletedIconColorRow);
             }
             return;
         }
         if (!enabled) {
+            final int colorIndex = cellGroup.rows.indexOf(deletedIconColorRow);
+            if (colorIndex != -1) {
+                cellGroup.rows.remove(deletedIconColorRow);
+                listAdapter.notifyItemRemoved(colorIndex);
+            }
             final int index = cellGroup.rows.indexOf(useDeletedIconRow);
             if (!cellGroup.rows.contains(customDeletedMarkRow)) {
                 cellGroup.rows.add(index + 1, customDeletedMarkRow);
@@ -943,9 +1028,15 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
                 cellGroup.rows.remove(customDeletedMarkRow);
                 listAdapter.notifyItemRemoved(index);
             }
+            final int useIconIndex = cellGroup.rows.indexOf(useDeletedIconRow);
+            if (!cellGroup.rows.contains(deletedIconColorRow)) {
+                cellGroup.rows.add(useIconIndex + 1, deletedIconColorRow);
+                listAdapter.notifyItemInserted(useIconIndex + 1);
+            }
         }
         addRowsToMap(cellGroup);
     }
+    // [Alexgram: Deleted Icon Color Visibility] - End
 
     private void updateRunInBackground(boolean enabled) {
         MessagesController.getGlobalNotificationsSettings().edit()
@@ -1013,5 +1104,267 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
             }
         }
     }
+
+    // [Alexgram: Deleted Icon Color Helper] - Start
+    private void showDeletedColorOptions(View view) {
+        PopupBuilder builder = new PopupBuilder(view);
+        builder.setItems(new String[]{
+                getString(R.string.Default),
+                "Choose Custom Color..."
+        }, (i, __) -> {
+            if (i == 0) {
+                NaConfig.INSTANCE.getDeletedIconColor().setConfigInt(0);
+                if (listAdapter != null) {
+                    listAdapter.notifyItemChanged(cellGroup.rows.indexOf(deletedIconColorRow));
+                }
+                TimeStringHelper.deletedSpan = null;
+                org.telegram.messenger.NotificationCenter.getGlobalInstance().postNotificationName(org.telegram.messenger.NotificationCenter.reloadInterface);
+            } else if (i == 1) {
+                showDeletedColorPicker();
+            }
+            return kotlin.Unit.INSTANCE;
+        });
+        builder.show();
+    }
+
+    private void showDeletedColorPicker() {
+        if (getParentActivity() == null) return;
+
+        org.telegram.ui.Components.Paint.ColorPickerBottomSheet colorPicker =
+                new org.telegram.ui.Components.Paint.ColorPickerBottomSheet(getParentActivity(), getResourceProvider());
+
+        colorPicker.setPipetteDelegate(new org.telegram.ui.Components.Paint.ColorPickerBottomSheet.PipetteDelegate() {
+            @Override
+            public boolean isPipetteAvailable() { return false; }
+            @Override
+            public boolean isPipetteVisible() { return false; }
+            @Override
+            public android.view.ViewGroup getContainerView() { return null; }
+            @Override
+            public android.view.View getSnapshotDrawingView() { return null; }
+            @Override
+            public void onDrawImageOverCanvas(android.graphics.Bitmap bitmap, android.graphics.Canvas canvas) {}
+            @Override
+            public void onStartColorPipette() {}
+            @Override
+            public void onStopColorPipette() {}
+            @Override
+            public void onColorSelected(int color) {}
+        });
+
+        colorPicker.setColorListener(color -> {
+            NaConfig.INSTANCE.getDeletedIconColor().setConfigInt(color);
+            if (listAdapter != null) {
+                listAdapter.notifyItemChanged(cellGroup.rows.indexOf(deletedIconColorRow));
+            }
+            TimeStringHelper.deletedSpan = null;
+            org.telegram.messenger.NotificationCenter.getGlobalInstance().postNotificationName(org.telegram.messenger.NotificationCenter.reloadInterface);
+        });
+
+        int currentColor = NaConfig.INSTANCE.getDeletedIconColor().Int();
+        colorPicker.setColor(currentColor != 0 ? currentColor : 0xFFFF0000);
+        showDialog(colorPicker);
+    }
+    // [Alexgram: Deleted Icon Color Helper] - End
+
+    // [Alexgram: Translucent Helper] - Start
+    private void showTranslucentOptions() {
+        if (getParentActivity() == null) return;
+
+        LinearLayout contentLayout = new LinearLayout(getParentActivity());
+        contentLayout.setOrientation(LinearLayout.VERTICAL);
+        contentLayout.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(16), AndroidUtilities.dp(24), AndroidUtilities.dp(16));
+
+        // Switch to enable/disable Translucent Deleted Messages (Custom layout to prevent truncation)
+        LinearLayout checkboxLayout = new LinearLayout(getParentActivity());
+        checkboxLayout.setOrientation(LinearLayout.HORIZONTAL);
+        checkboxLayout.setGravity(Gravity.CENTER_VERTICAL);
+        checkboxLayout.setPadding(0, AndroidUtilities.dp(8), 0, AndroidUtilities.dp(8));
+        checkboxLayout.setBackground(Theme.getSelectorDrawable(false));
+
+        TextView checkboxText = new TextView(getParentActivity());
+        checkboxText.setText("Enable Translucent Deleted Messages");
+        checkboxText.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
+        checkboxText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
+        checkboxLayout.addView(checkboxText, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f, Gravity.LEFT | Gravity.CENTER_VERTICAL, 0, 0, 8, 0));
+
+        org.telegram.ui.Components.CheckBoxSquare checkBoxSquare = new org.telegram.ui.Components.CheckBoxSquare(getParentActivity(), true);
+        checkBoxSquare.setChecked(NaConfig.INSTANCE.getTranslucentDeletedMessages().Bool(), false);
+        checkboxLayout.addView(checkBoxSquare, LayoutHelper.createLinear(18, 18, Gravity.RIGHT | Gravity.CENTER_VERTICAL, 0, 0, 4, 0));
+        
+        contentLayout.addView(checkboxLayout, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+
+        // Translucency percentage label
+        TextView valueLabel = new TextView(getParentActivity());
+        valueLabel.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
+        valueLabel.setTextColor(Theme.getColor(Theme.key_dialogTextGray2));
+        contentLayout.addView(valueLabel, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 12, 0, 4));
+
+        // SeekBar (Slider)
+        SeekBar seekBar = new SeekBar(getParentActivity());
+        seekBar.setMax(100);
+        int currentAlpha = NaConfig.INSTANCE.getTranslucentDeletedMessagesAlpha().Int();
+        seekBar.setProgress(currentAlpha);
+        contentLayout.addView(seekBar, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 4, 0, 16));
+
+        // Live Preview Title
+        TextView previewTitle = new TextView(getParentActivity());
+        previewTitle.setText("Live Preview");
+        previewTitle.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
+        previewTitle.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+        previewTitle.setTextColor(Theme.getColor(Theme.key_dialogTextBlue2));
+        contentLayout.addView(previewTitle, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 8, 0, 8));
+
+        // Live Preview Container (Chat Background)
+        FrameLayout previewContainer = new FrameLayout(getParentActivity());
+        previewContainer.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(16), AndroidUtilities.dp(12), AndroidUtilities.dp(16));
+        
+        android.graphics.drawable.Drawable wallpaperDrawable = Theme.getCachedWallpaper();
+        if (wallpaperDrawable != null) {
+            previewContainer.setBackground(wallpaperDrawable);
+        } else {
+            int chatWallpaperColor = Theme.getColor(Theme.key_chat_wallpaper);
+            if (chatWallpaperColor == 0) {
+                chatWallpaperColor = 0xFFECE5DD;
+            }
+            android.graphics.drawable.GradientDrawable containerBg = new android.graphics.drawable.GradientDrawable();
+            containerBg.setColor(chatWallpaperColor);
+            previewContainer.setBackground(containerBg);
+        }
+
+        previewContainer.setOutlineProvider(new android.view.ViewOutlineProvider() {
+            @Override
+            public void getOutline(android.view.View view, android.graphics.Outline outline) {
+                outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), AndroidUtilities.dp(12));
+            }
+        });
+        previewContainer.setClipToOutline(true);
+        
+        contentLayout.addView(previewContainer, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 8));
+
+        // Outgoing Deleted Message bubble
+        LinearLayout messageBubble = new LinearLayout(getParentActivity());
+        messageBubble.setOrientation(LinearLayout.VERTICAL);
+        messageBubble.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(8), AndroidUtilities.dp(12), AndroidUtilities.dp(8));
+        
+        int outBubbleColor = Theme.getColor(Theme.key_chat_outBubble);
+        if (outBubbleColor == 0) {
+            outBubbleColor = 0xFFE2F9C3;
+        }
+        android.graphics.drawable.GradientDrawable bubbleBg = new android.graphics.drawable.GradientDrawable();
+        bubbleBg.setColor(outBubbleColor);
+        bubbleBg.setCornerRadii(new float[] {
+            AndroidUtilities.dp(16), AndroidUtilities.dp(16),
+            AndroidUtilities.dp(16), AndroidUtilities.dp(16),
+            AndroidUtilities.dp(2), AndroidUtilities.dp(2),
+            AndroidUtilities.dp(16), AndroidUtilities.dp(16)
+        });
+        messageBubble.setBackground(bubbleBg);
+
+        // Preview text inside message bubble
+        TextView messageText = new TextView(getParentActivity());
+        messageText.setText("This is a deleted message.\nDrag the slider to adjust translucent level!");
+        int outTextColor = Theme.getColor(Theme.key_chat_messageTextOut);
+        if (outTextColor == 0) {
+            outTextColor = 0xFF000000;
+        }
+        messageText.setTextColor(outTextColor);
+        messageText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
+        messageBubble.addView(messageText, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
+
+        // Time and Deleted Icon
+        LinearLayout infoLayout = new LinearLayout(getParentActivity());
+        infoLayout.setOrientation(LinearLayout.HORIZONTAL);
+        infoLayout.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
+        
+        TextView timeView = new TextView(getParentActivity());
+        timeView.setText("12:00 PM ");
+        timeView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11);
+        int outTimeColor = Theme.getColor(Theme.key_chat_outTimeText);
+        if (outTimeColor == 0) {
+            outTimeColor = 0xFF70B15C;
+        }
+        timeView.setTextColor(outTimeColor);
+        infoLayout.addView(timeView);
+
+        boolean useDeletedIcon = NaConfig.INSTANCE.getUseDeletedIcon().Bool();
+        int deletedColor = NaConfig.INSTANCE.getDeletedIconColor().Int();
+        if (deletedColor == 0) {
+            deletedColor = outTimeColor;
+        }
+
+        if (useDeletedIcon) {
+            android.widget.ImageView deletedIconView = new android.widget.ImageView(getParentActivity());
+            deletedIconView.setImageResource(R.drawable.msg_delete_solar);
+            deletedIconView.setColorFilter(deletedColor, android.graphics.PorterDuff.Mode.SRC_IN);
+            infoLayout.addView(deletedIconView, LayoutHelper.createLinear(14, 14, Gravity.CENTER_VERTICAL, 0, 0, 0, 0));
+        } else {
+            TextView deletedTextView = new TextView(getParentActivity());
+            String customMark = NaConfig.INSTANCE.getCustomDeletedMark().String();
+            deletedTextView.setText(!TextUtils.isEmpty(customMark) ? customMark : "Deleted");
+            deletedTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11);
+            deletedTextView.setTextColor(outTimeColor); // Watermark text inherits standard theme time text color, ignoring custom icon color
+            deletedTextView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+            infoLayout.addView(deletedTextView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_VERTICAL, 0, 0, 0, 0));
+        }
+
+        messageBubble.addView(infoLayout, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.RIGHT, 0, 4, 0, 0));
+
+        FrameLayout.LayoutParams bubbleParams = new FrameLayout.LayoutParams(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT);
+        bubbleParams.gravity = Gravity.RIGHT | Gravity.CENTER_VERTICAL;
+        bubbleParams.rightMargin = AndroidUtilities.dp(8);
+        bubbleParams.leftMargin = AndroidUtilities.dp(48);
+        previewContainer.addView(messageBubble, bubbleParams);
+
+        // Update preview dynamically
+        Runnable updatePreview = () -> {
+            boolean enabled = checkBoxSquare.isChecked();
+            int alphaPercent = seekBar.getProgress();
+            
+            seekBar.setEnabled(enabled);
+            valueLabel.setText("Opacity: " + alphaPercent + "%");
+            
+            if (enabled) {
+                messageBubble.setAlpha(alphaPercent / 100.0f);
+            } else {
+                messageBubble.setAlpha(1.0f);
+            }
+        };
+
+        checkboxLayout.setOnClickListener(v -> {
+            checkBoxSquare.setChecked(!checkBoxSquare.isChecked(), true);
+            updatePreview.run();
+        });
+
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                updatePreview.run();
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+
+        updatePreview.run();
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+        builder.setTitle("Translucent Deleted Messages");
+        builder.setView(contentLayout);
+        builder.setPositiveButton(getString(R.string.Save), (dialog, which) -> {
+            NaConfig.INSTANCE.getTranslucentDeletedMessages().setConfigBool(checkBoxSquare.isChecked());
+            NaConfig.INSTANCE.getTranslucentDeletedMessagesAlpha().setConfigInt(seekBar.getProgress());
+            if (listAdapter != null) {
+                listAdapter.notifyItemChanged(cellGroup.rows.indexOf(translucentDeletedMessagesRow));
+            }
+            org.telegram.messenger.NotificationCenter.getGlobalInstance().postNotificationName(org.telegram.messenger.NotificationCenter.reloadInterface);
+        });
+        builder.setNegativeButton(getString(R.string.Cancel), null);
+        showDialog(builder.create());
+    }
+    // [Alexgram: Translucent Helper] - End
 
 }

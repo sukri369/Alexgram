@@ -142,6 +142,7 @@ public class WebRtcAudioRecord {
             byteBuffer.clear();
             byteBuffer.put(emptyBytes);
           }
+          xyz.nextalone.nagram.utils.VoiceChanger.process(byteBuffer, bytesRead);
           // It's possible we've been shut down during the read, and stopRecording() tried and
           // failed to join this thread. To be a bit safer, try to avoid calling any native methods
           // in case they've been unregistered after stopRecording() returned.

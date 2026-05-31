@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+﻿<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="N_Config">A-Konfiguracja</string>
     <string name="CombineMessage">Połącz wiadomości</string>
@@ -137,4 +137,22 @@
     <string name="HiddenChatsAbout">Ukryj wrażliwe czaty z listy głównej. Dostęp do nich uzyskasz, przytrzymując pasek tytułu po odblokowaniu hasłem lub biometrią.</string>
     <string name="HideContacts">Ukryj kontakty</string>
     <string name="RestartRequired">Wymagany restart, aby zastosować zmiany</string>
+    <string name="MaxActiveAccounts">Maksymalna liczba aktywnych kont</string>
+    <string name="LimitReachedAccountsNa">Przepraszamy, nie możesz dodać więcej niż **%1$d** kont. Możesz zwiększyć ten limit (do 100) w **A-Ustawienia &gt; Ogólne**.</string>
+    <string name="MaxActiveAccountsWarning">Masz obecnie %1$d aktywnych kont. Ustawienie limitu na %2$d uniemożliwi Ci dodawanie nowych kont, dopóki nie wylogujesz się z niektórych.</string>
+    <string name="SplitChat">Podziel Chat</string>
+    <string name="SplitChatClose">Zamknij Podział</string>
+    <string name="SplitChatSelectChat">Wybierz czat do otwarcia obok</string>
+    <string name="SplitChatHint">Dotknij ikony, aby przywrócić zminimalizowany czat</string>
+    <string name="SplitChatMinimized">Czat zminimalizowany</string>
+    <string name="ChangeFont">Zmień Czcionkę</string>
+    <string name="ShadowBanChannelAdded">Kanał dodany do **Shadow Ban**</string>
+    <string name="ShadowBanChannelRemoved">Kanał usunięty z **Shadow Ban**</string>
+    <string name="ExperimentalForceMaxFPSInfo">Wymuś maksymalną częstotliwość odświeżania ekranu.</string>
+    <string name="ExperimentalForceMaxFPS">Wymuś Max FPS</string>
+    <string name="RegexFiltersSpoilerInsteadOfHide">Użyj spoilera zamiast ukrywania wiadomości</string>
+    <string name="MaskBlockedUserMessages">Maskuj wiadomości od zablokowanych użytkowników</string>
+    <string name="MaskBlockedUserMessagesAbout">Pokazuj wiadomości od zablokowanych/ukrytych użytkowników pod spoilerem zamiast całkowitego ich ukrywania.</string>
+    <string name="RegexFiltersSpoilerMatchOnly">Maskuj tylko pasujące wyrażenia regularne</string>
+    <string name="RegexFiltersSpoilerColor">Kolor cząsteczek spoilera</string>
 </resources>

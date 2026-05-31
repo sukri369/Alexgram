@@ -641,6 +641,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private DialogsHintCell dialogsHintCell;
     private UnconfirmedAuthHintCell authHintCell;
     private Long cacheSize, deviceSize;
+    // [Alexgram: Bot Warmup Banner] - Start
+    private FrameLayout botWarmupHintCell;
+    // [Alexgram: Bot Warmup Banner] - End
 
     private ArrayList<TLRPC.Dialog> frozenDialogsList;
     private boolean dialogsListFrozen;
@@ -4995,6 +4998,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 updateDialogsHint();
             });
             topPanelLayout.addView(dialogsHintCell);
+            // [Alexgram: Bot Warmup Banner] - Start
+            botWarmupHintCell = createBotWarmupHintCell(context);
+            topPanelLayout.addView(botWarmupHintCell);
+            topPanelLayout.setPriority(botWarmupHintCell, 10);
+            // [Alexgram: Bot Warmup Banner] - End
         } else if (initialDialogsType == DIALOGS_TYPE_FORWARD || clickSelectsDialog()) {
             chatInputViewsContainer = new ChatInputViewsContainer(context);
             chatInputViewsContainer.setClipChildren(false);
@@ -6475,6 +6483,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
         checkUnconfirmedAuthHintCellVisibility();
         checkActiveGiftAuctionsHintCellVisibility();
+        // [Alexgram: Bot Warmup Banner] - Start
+        checkBotWarmupBannerVisibility();
+        // [Alexgram: Bot Warmup Banner] - End
     }
 
     private void checkUnconfirmedAuthHintCellVisibility() {
@@ -6519,6 +6530,54 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             topPanelLayout.setViewVisible(activeGiftAuctionsHintCell, isVisible);
         }
     }
+
+    // [Alexgram: Bot Warmup Banner] - Start
+    private FrameLayout createBotWarmupHintCell(Context context) {
+        FrameLayout container = new FrameLayout(context);
+        container.setPadding(dp(14), dp(10), dp(14), dp(10));
+
+        LinearLayout row = new LinearLayout(context);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(android.view.Gravity.CENTER_VERTICAL);
+
+        ImageView icon = new ImageView(context);
+        icon.setImageResource(R.drawable.msg_info);
+        icon.setColorFilter(new android.graphics.PorterDuffColorFilter(
+                getThemedColor(Theme.key_windowBackgroundWhiteGrayText2),
+                android.graphics.PorterDuff.Mode.MULTIPLY));
+        row.addView(icon, LayoutHelper.createLinear(20, 20, android.view.Gravity.CENTER_VERTICAL, 0, 0, 10, 0));
+
+        TextView text = new TextView(context);
+        text.setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 14);
+        text.setTextColor(getThemedColor(Theme.key_windowBackgroundWhiteGrayText2));
+        text.setText(LocaleController.getString(R.string.BotWarmupMessage));
+        text.setLineSpacing(dp(2), 1f);
+        text.setGravity(android.view.Gravity.CENTER_VERTICAL);
+        row.addView(text, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+
+        container.addView(row, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, android.view.Gravity.CENTER_VERTICAL));
+        return container;
+    }
+
+    private void checkBotWarmupBannerVisibility() {
+        if (fragmentView == null || topPanelLayout == null || botWarmupHintCell == null) {
+            return;
+        }
+        if (!getUserConfig().isBot()) {
+            topPanelLayout.setViewVisible(botWarmupHintCell, false);
+            return;
+        }
+        // Show only on main dialogs screen, not in search, and only while dialog list is empty
+        final boolean hasDialogs = !getMessagesController().getDialogs(0).isEmpty();
+        final boolean isVisible = !isInPreviewMode()
+            && folderId == 0
+            && initialDialogsType == DIALOGS_TYPE_DEFAULT
+            && !hasDialogs
+            && !animatorSearchVisible.getValue()
+            && (rightSlidingDialogContainer == null || !rightSlidingDialogContainer.hasFragment());
+        topPanelLayout.setViewVisible(botWarmupHintCell, isVisible);
+    }
+    // [Alexgram: Bot Warmup Banner] - End
 
     private void createGroupForThis() {
         AlertDialog progress = new AlertDialog(getContext(), AlertDialog.ALERT_TYPE_SPINNER);
@@ -10678,6 +10737,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 filterTabsView.checkTabsCounter();
             }
             slowedReloadAfterDialogClick = false;
+            // [Alexgram: Bot Warmup Banner] - Start
+            checkBotWarmupBannerVisibility();
+            // [Alexgram: Bot Warmup Banner] - End
         } else if (id == NotificationCenter.topicsDidLoaded) {
             updateVisibleRows(0);
         } else if (id == NotificationCenter.dialogsUnreadCounterChanged) {

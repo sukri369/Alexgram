@@ -110,7 +110,7 @@ public class FiltersChatCell extends FrameLayout {
         setWillNotDraw(!needDivider);
     }
 
-    public void setUserFilter(long userId, String title, String subtitle, boolean divider) {
+    public void setUserFilter(long userId, String title, CharSequence subtitle, boolean divider) {
         needDivider = divider;
         imageView.setRoundRadius(dp(20));
 

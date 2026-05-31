@@ -2295,7 +2295,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
             long lastGroupedId;
             for (int a = 0; a < messages.size(); a++) {
                 MessageObject msgObj = messages.get(a);
-                if (msgObj.getId() <= 0 || msgObj.needDrawBluredPreview()) {
+                if ((msgObj.getId() <= 0 && msgObj.messageOwner.fwd_msg_id == 0) || msgObj.needDrawBluredPreview()) {
                     if (msgObj.type == MessageObject.TYPE_TEXT && !TextUtils.isEmpty(msgObj.messageText)) {
                         TLRPC.WebPage webPage = msgObj.messageOwner.media != null ? msgObj.messageOwner.media.webpage : null;
                         final SendMessageParams params = SendMessageParams.of(msgObj.messageText.toString(), peer, null, replyToTopMsg, webPage, webPage != null, msgObj.messageOwner.entities, null, null, notify, scheduleDate, scheduleRepeatPeriod, null, false);
@@ -2398,7 +2398,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                     } else if (!forwardFromSaved) { //if (!toMyself || !msgObj.isOutOwner())
                         long fromId = msgObj.getFromChatId();
                         newMsg.fwd_from = new TLRPC.TL_messageFwdHeader();
-                        newMsg.fwd_from.channel_post = msgObj.getId();
+                        newMsg.fwd_from.channel_post = msgObj.messageOwner.fwd_msg_id != 0 ? msgObj.messageOwner.fwd_msg_id : msgObj.getId();
                         newMsg.fwd_from.flags |= 4;
                         if (msgObj.isFromUser()) {
                             newMsg.fwd_from.from_id = msgObj.messageOwner.from_id;
@@ -2426,7 +2426,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                     }
                     if (peer == myId && newMsg.fwd_from != null) {
                         newMsg.fwd_from.flags |= 16;
-                        newMsg.fwd_from.saved_from_msg_id = msgObj.getId();
+                        newMsg.fwd_from.saved_from_msg_id = msgObj.messageOwner.fwd_msg_id != 0 ? msgObj.messageOwner.fwd_msg_id : msgObj.getId();
                         newMsg.fwd_from.saved_from_peer = msgObj.messageOwner.peer_id;
                         if (newMsg.fwd_from.saved_from_peer.user_id == myId) {
                             newMsg.fwd_from.saved_from_peer.user_id = msgObj.getDialogId();
@@ -2434,7 +2434,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                     }
                 }
                 newMsg.params = new HashMap<>();
-                newMsg.params.put("fwd_id", "" + msgObj.getId());
+                newMsg.params.put("fwd_id", "" + (msgObj.messageOwner.fwd_msg_id != 0 ? msgObj.messageOwner.fwd_msg_id : msgObj.getId()));
                 newMsg.params.put("fwd_peer", "" + msgObj.getDialogId());
                 if (!msgObj.messageOwner.restriction_reason.isEmpty()) {
                     newMsg.restriction_reason = msgObj.messageOwner.restriction_reason;
@@ -2476,7 +2476,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                     newMsg.entities = msgObj.messageOwner.entities;
                 }
 
-                newMsg.fwd_msg_id = msgObj.getId();
+                newMsg.fwd_msg_id = msgObj.messageOwner.fwd_msg_id != 0 ? msgObj.messageOwner.fwd_msg_id : msgObj.getId();
                 newMsg.attachPath = msgObj.messageOwner.attachPath;
 //                newMsg.entities = msgObj.messageOwner.entities;
                 if (msgObj.messageOwner.reply_markup instanceof TLRPC.TL_replyInlineMarkup) {

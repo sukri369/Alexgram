@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+﻿<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="N_Config">Konfig-A</string>
     <string name="CombineMessage">Gabungkan Pesan</string>
@@ -137,4 +137,22 @@
     <string name="HiddenChatsAbout">Sembunyikan obrolan sensitif dari daftar utama. Akses dengan menahan bilah Judul setelah membuka kunci dengan sandi atau biometrik.</string>
     <string name="HideContacts">Sembunyikan Kontak</string>
     <string name="RestartRequired">Diperlukan mulai ulang untuk menerapkan perubahan</string>
+    <string name="MaxActiveAccounts">Jumlah Maksimum Akun Aktif</string>
+    <string name="LimitReachedAccountsNa">Maaf, Anda tidak dapat menambahkan lebih dari **%1$d** akun. Anda dapat meningkatkan batas ini (hingga 100) di **A-Pengaturan &gt; Umum**.</string>
+    <string name="MaxActiveAccountsWarning">Anda saat ini memiliki %1$d akun aktif. Menetapkan batas ke %2$d akan mencegah Anda menambahkan akun baru hingga Anda keluar dari beberapa akun.</string>
+    <string name="SplitChat">Bagi Layar Obrolan</string>
+    <string name="SplitChatClose">Tutup Layar Obrolan</string>
+    <string name="SplitChatSelectChat">Pilih obrolan untuk dibuka berdampingan</string>
+    <string name="SplitChatHint">Ketuk ikon untuk memulihkan obrolan yang diperkecil</string>
+    <string name="SplitChatMinimized">Obrolan diperkecil</string>
+    <string name="ChangeFont">Ubah Font</string>
+    <string name="ShadowBanChannelAdded">Saluran ditambahkan ke **Shadow Ban**</string>
+    <string name="ShadowBanChannelRemoved">Saluran dihapus dari **Shadow Ban**</string>
+    <string name="ExperimentalForceMaxFPSInfo">Paksa tingkat penyegaran layar maksimum.</string>
+    <string name="ExperimentalForceMaxFPS">Paksa FPS Maksimum</string>
+    <string name="RegexFiltersSpoilerInsteadOfHide">Gunakan spoiler alih-alih menyembunyikan pesan</string>
+    <string name="MaskBlockedUserMessages">Samarkan Pesan dari Pengguna yang Diblokir</string>
+    <string name="MaskBlockedUserMessagesAbout">Tampilkan pesan dari pengguna yang diblokir/shadow-banned di balik masker spoiler alih-alih menyembunyikannya.</string>
+    <string name="RegexFiltersSpoilerMatchOnly">Hanya samarkan regex yang cocok</string>
+    <string name="RegexFiltersSpoilerColor">Warna partikel masker</string>
 </resources>

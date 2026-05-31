@@ -382,6 +382,7 @@
     <string name="usePollinationsAi">Use Pollinations.ai</string>
     <string name="usePollinationsAiAbout">Use Pollinations.ai for free AI Reply, Summarize, and AI Assistance. No API key required.</string>
     <string name="AmbientMode">Ambient Mode</string>
+    <!-- [Alexgram: Special Forward] - Start -->
     <string name="SpecialForward">Special Forward</string>
     <string name="SpecialForwardAbout">Enable an advanced forward menu with message editing and filtering options.</string>
     <string name="SpecialForwardTitle">Special forward</string>
@@ -393,6 +394,7 @@
     <string name="SpecialForwardDeleteAllCaptions">Delete all media captions</string>
     <string name="SpecialForwardAsFile">Forward as file</string>
     <string name="SpecialForwardResetSuccess">Messages reset</string>
+    <!-- [Alexgram: Special Forward] - End -->
     <!-- [Alexgram: AI Reply] - Start -->
     <string name="AiAssistanceSettings">AI Assistance Settings</string>
     <string name="enableAIReply">AI Reply</string>

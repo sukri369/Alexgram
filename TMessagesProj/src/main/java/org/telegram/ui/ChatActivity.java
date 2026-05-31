@@ -537,7 +537,7 @@ public class ChatActivity extends BaseFragment implements
 	private WallpaperBitmapProvider wallpaperBitmapProvider = new WallpaperBitmapProvider();
 
 	protected ChatActivityEnterView chatActivityEnterView;
-	private ChatActivityEnterTopView chatActivityEnterTopView;
+	protected ChatActivityEnterTopView chatActivityEnterTopView;
 	private ChatReplyContainer replyLayout;
 	private boolean isActionBarTooNarrow;
 	private int chatActivityEnterViewAnimateFromTop;
@@ -595,7 +595,7 @@ public class ChatActivity extends BaseFragment implements
 	private ChatActivityTopFadeView topPanelLayoutFade;
 
 	private boolean ignoreItemAnimation;
-	private ChatActivityChannelButtonsLayout bottomChannelButtonsLayout;
+	protected ChatActivityChannelButtonsLayout bottomChannelButtonsLayout;
 	private ChatActivityActionsButtonsLayout actionsButtonsLayout;
 	@Nullable
 	private FrameLayout emptyViewContainer;
@@ -650,7 +650,7 @@ public class ChatActivity extends BaseFragment implements
 
 	private boolean showTapForForwardingOptionsHit;
 	private Runnable tapForForwardingOptionsHitRunnable;
-	private ImageView replyCloseImageView;
+	protected ImageView replyCloseImageView;
 	private MentionsContainerView mentionContainer;
 	private AnimatorSet mentionListAnimation;
 	public ChatAttachAlert chatAttachAlert;
@@ -815,7 +815,7 @@ public class ChatActivity extends BaseFragment implements
 	public TL_account.TL_businessChatLink businessLink = null;
 
 	public String quickReplyShortcut;
-	private int chatMode;
+	protected int chatMode;
 	private int scheduledMessagesCount = -1;
 	public boolean isSubscriberSuggestions;
 
@@ -1005,7 +1005,7 @@ public class ChatActivity extends BaseFragment implements
 	public ArrayList<MessageObject> messages = new ArrayList<>();
 	private SparseArray<MessageObject> waitingForReplies = new SparseArray<>();
 	private LongSparseArray<ArrayList<MessageObject>> polls = new LongSparseArray<>();
-	private LongSparseArray<MessageObject.GroupedMessages> groupedMessagesMap = new LongSparseArray<>();
+	protected LongSparseArray<MessageObject.GroupedMessages> groupedMessagesMap = new LongSparseArray<>();
 	private int[] maxMessageId = new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE};
 	private int[] minMessageId = new int[]{Integer.MIN_VALUE, Integer.MIN_VALUE};
 	private int[] maxDate = new int[]{Integer.MIN_VALUE, Integer.MIN_VALUE};
@@ -1939,6 +1939,11 @@ public class ChatActivity extends BaseFragment implements
 		public void onItemClick(View view, int position, float x, float y) {
 			if (inPreviewMode) {
 				return;
+			}
+			if (isMultiChat()) {
+				if (multiChatListOnItemClick(view, position)) {
+					return;
+				}
 			}
 			wasManualScroll = true;
 			if (view instanceof ChatActionCell && ((ChatActionCell) view).getMessageObject().isDateObject) {
@@ -3080,6 +3085,11 @@ public class ChatActivity extends BaseFragment implements
 			if (searchType == 0 || searchingHashtag == null) {
 				return false;
 			}
+		} else if (isMultiChat()) {
+			chatMode = 102;
+			if (!multiChatOnFragmentCreate()) {
+				return false;
+			}
 		} else {
 			return false;
 		}
@@ -3258,6 +3268,8 @@ public class ChatActivity extends BaseFragment implements
 			int loadIndex = lastLoadIndex++;
 			waitingForLoad.add(loadIndex);
 			getNotificationCenter().postNotificationName(NotificationCenter.messagesDidLoad, dialog_id, messageObjects.size(), messageObjects, false, 0, last_message_id, 0, 0, 2, true, classGuid, loadIndex, pinnedMessageIds.get(0), 0, MODE_PINNED);
+		} else if (isMultiChat()) {
+			loading = false;
 		} else if (!forceHistoryEmpty) {
 			loading = true;
 		}
@@ -3489,6 +3501,11 @@ public class ChatActivity extends BaseFragment implements
 
 	public void firstLoadMessages() {
 		if (firstMessagesLoaded) {
+			return;
+		}
+		if (isMultiChat()) {
+			firstMessagesLoaded = true;
+			multiChatMessagesFirstLoad(lastLoadIndex++);
 			return;
 		}
 		firstMessagesLoaded = true;
@@ -3991,6 +4008,11 @@ public class ChatActivity extends BaseFragment implements
 		actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
 			@Override
 			public void onItemClick(final int id) {
+				if (isMultiChat()) {
+					if (multiChatOnMenuItemClicked(id)) {
+						return;
+					}
+				}
 				if (id == -1) {
 					if (isInPollAddOptionMode()) {
 						pollAddOptionModeClose();
@@ -9510,6 +9532,15 @@ public class ChatActivity extends BaseFragment implements
 		}
 		// [Alexgram: AI Reply] - End
 
+		if (isMultiChat()) {
+			ActionBarMenu abMenu = actionBar.createMenu();
+			if (abMenu != null) {
+				abMenu.clearItems();
+				multiChatCreateMenuItems(abMenu);
+			}
+			multiChatOnCreateView();
+		}
+
 		return fragmentView;
 	}
 
@@ -10859,6 +10890,11 @@ public class ChatActivity extends BaseFragment implements
 			return;
 		}
 		final ActionBarMenu actionMode = actionBar.createActionMode();
+		if (isMultiChat()) {
+			if (multiChatCreateActionModeIcons(actionMode)) {
+				return;
+			}
+		}
 
 		selectedMessagesCountTextView = new NumberTextView(actionMode.getContext());
 		selectedMessagesCountTextView.setTextSize(18);
@@ -10876,7 +10912,6 @@ public class ChatActivity extends BaseFragment implements
 		actionModeViews.add(actionMode.addItemWithWidth(nkactionbarbtn_selectBetween, R.drawable.ic_select_between, AndroidUtilities.dp(54), LocaleController.getString(R.string.SelectBetween)));
 		actionModeViews.add(actionMode.addItemWithWidth(star, R.drawable.msg_fave, AndroidUtilities.dp(54), LocaleController.getString(R.string.AddToFavorites)));
 		actionModeViews.add(actionMode.addItemWithWidth(copy, R.drawable.msg_copy, AndroidUtilities.dp(54), LocaleController.getString(R.string.Copy)));
-		actionModeViews.add(actionMode.addItemWithWidth(combine_message, R.drawable.msg_replace, AndroidUtilities.dp(54), LocaleController.getString(R.string.CombineMessage)));
 		if (currentEncryptedChat == null && getDialogId() != UserObject.VERIFY && NaConfig.INSTANCE.getActionBarButtonForward().Bool()) {
 			actionModeViews.add(actionMode.addItemWithWidth(forward, R.drawable.msg_forward_noquote, AndroidUtilities.dp(54), LocaleController.getString(R.string.Forward)));
 		}
@@ -10885,6 +10920,7 @@ public class ChatActivity extends BaseFragment implements
 			actionModeViews.add(actionMode.addItemWithWidth(nkbtn_special_forward, R.drawable.nk_special_forward, AndroidUtilities.dp(54), LocaleController.getString(R.string.SpecialForward)));
 		}
 		// [Alexgram: Special Forward] - End
+
 		actionModeViews.add(actionMode.addItemWithWidth(delete, R.drawable.msg_delete, AndroidUtilities.dp(54), LocaleController.getString(R.string.Delete)));
 
 		if (currentEncryptedChat == null) {
@@ -10905,6 +10941,8 @@ public class ChatActivity extends BaseFragment implements
 			actionModeOtherItem.addSubItem(nkbtn_special_forward, R.drawable.nk_special_forward, LocaleController.getString(R.string.SpecialForward));
 			// [Alexgram: Special Forward] - End
 		}
+		// Move combine_message to overflow to free up space in main bar
+		actionModeOtherItem.addSubItem(combine_message, R.drawable.msg_replace, LocaleController.getString(R.string.CombineMessage));
 		actionModeOtherItem.addSubItem(nkbtn_translate, LlmConfig.llmIsDefaultProvider() ? R.drawable.magic_stick_solar : R.drawable.ic_translate, LocaleController.getString(R.string.Translate));
 		actionModeOtherItem.addSubItem(nkbtn_sharemessage, R.drawable.msg_shareout, LocaleController.getString(R.string.ShareMessages));
 		actionModeOtherItem.addSubItem(nkbtn_unpin, R.drawable.msg_unpin, LocaleController.getString(R.string.UnpinMessage));
@@ -10924,7 +10962,6 @@ public class ChatActivity extends BaseFragment implements
 		actionMode.setItemVisibility(nkactionbarbtn_selectBetween, NaConfig.INSTANCE.getActionBarButtonSelectBetween().Bool() ? View.VISIBLE : View.GONE);
 		actionMode.setItemVisibility(copy, /*!isPeerNoForwards() &&*/ (selectedMessagesCanCopyIds[0].size() + selectedMessagesCanCopyIds[1].size() != 0) && NaConfig.INSTANCE.getActionBarButtonCopy().Bool() ? View.VISIBLE : View.GONE);
 		actionMode.setItemVisibility(star, selectedMessagesCanStarIds[0].size() + selectedMessagesCanStarIds[1].size() != 0 ? View.VISIBLE : View.GONE);
-		actionMode.setItemVisibility(combine_message, selectedMessagesCanCopyIds[0].size() + selectedMessagesCanCopyIds[1].size() != 0 ? View.VISIBLE : View.GONE);
 		actionMode.setItemVisibility(forward, NaConfig.INSTANCE.getActionBarButtonForward().Bool() ? View.VISIBLE : View.GONE);
 		// [Alexgram: Special Forward] - Start
 		actionMode.setItemVisibility(nkbtn_special_forward, NaConfig.INSTANCE.getSpecialForward().Bool() ? View.VISIBLE : View.GONE);
@@ -12985,7 +13022,45 @@ public class ChatActivity extends BaseFragment implements
 				messages.add(selectedMessagesIds[a].valueAt(b));
 			}
 		}
-		presentFragment(new SpecialForwardActivity(messages));
+		if (messages.isEmpty() && selectedObject != null) {
+			if (selectedObjectGroup != null) {
+				messages.addAll(selectedObjectGroup.messages);
+			} else {
+				messages.add(selectedObject);
+			}
+		}
+		ArrayList<MessageObject> resolvedMessages = new ArrayList<>();
+		java.util.HashSet<Long> processedGroups = new java.util.HashSet<>();
+		java.util.HashSet<Integer> addedMessageIds = new java.util.HashSet<>();
+		for (MessageObject msg : messages) {
+			if (msg == null) continue;
+			long groupId = msg.getGroupId();
+			if (groupId != 0) {
+				if (!processedGroups.contains(groupId)) {
+					processedGroups.add(groupId);
+					MessageObject.GroupedMessages grouped = groupedMessagesMap.get(groupId);
+					if (grouped != null && grouped.messages != null && !grouped.messages.isEmpty()) {
+						for (MessageObject gMsg : grouped.messages) {
+							if (gMsg != null && !addedMessageIds.contains(gMsg.getId())) {
+								resolvedMessages.add(gMsg);
+								addedMessageIds.add(gMsg.getId());
+							}
+						}
+					} else {
+						if (!addedMessageIds.contains(msg.getId())) {
+							resolvedMessages.add(msg);
+							addedMessageIds.add(msg.getId());
+						}
+					}
+				}
+			} else {
+				if (!addedMessageIds.contains(msg.getId())) {
+					resolvedMessages.add(msg);
+					addedMessageIds.add(msg.getId());
+				}
+			}
+		}
+		presentFragment(new SpecialForwardActivity(resolvedMessages));
 	}
 	// [Alexgram: Special Forward] - End
 
@@ -20059,7 +20134,6 @@ public class ChatActivity extends BaseFragment implements
 				ActionBarMenuItem shareItem = actionBar.createActionMode().getItem(share);
 
 				ActionBarMenuItem selectItem = actionBar.createActionMode().getItem(nkactionbarbtn_selectBetween);
-				ActionBarMenuItem combineMessageItem = actionBar.createActionMode().getItem(combine_message);
 
 				ActionBarMenuSubItem saveMessageItem = null;
 				ActionBarMenuSubItem forwardNoQuoteItem = null;
@@ -20092,6 +20166,9 @@ public class ChatActivity extends BaseFragment implements
 				}
 				if (saveMessageItem != null) {
 					saveMessageItem.setVisibility(canForward);
+				}
+				if (actionModeOtherItem != null) {
+					actionModeOtherItem.setSubItemVisibility(combine_message, selectedMessagesCanCopyIds[0].size() + selectedMessagesCanCopyIds[1].size() != 0);
 				}
 				if (repeatItem != null) {
 					repeatItem.setVisibility(canForward && canSendMessage);
@@ -34300,7 +34377,9 @@ public class ChatActivity extends BaseFragment implements
 		updatePinnedMessageView(true);
 		updateVisibleRows();
 
-		if (!asSuggestion && !messageObject.scheduled && !messageObject.isQuickReply() && getUserConfig().isClientActivated() && !getUserConfig().getCurrentUser().bot) {
+		// [Alexgram: Special Forward] - Start
+		if (!asSuggestion && !messageObject.scheduled && !messageObject.isQuickReply() && getUserConfig().isClientActivated() && !getUserConfig().getCurrentUser().bot && !(this instanceof SpecialForwardActivity)) {
+		// [Alexgram: Special Forward] - End
 			TLRPC.TL_messages_getMessageEditData req = new TLRPC.TL_messages_getMessageEditData();
 			req.peer = getMessagesController().getInputPeer(dialog_id);
 			req.id = messageObject.getId();
@@ -40366,8 +40445,14 @@ public class ChatActivity extends BaseFragment implements
 		return getUserConfig().getClientUserId() == getDialogId() && !getMessagesController().getSavedMessagesController().unsupported && getUserConfig().isPremium();
 	}
 
-	private ChatMessageCellDelegate chatMessageCellDelegate;
-	private ChatMessageCellDelegate getChatMessageCellDelegate() {
+	protected ChatMessageCell.ChatMessageCellDelegate chatMessageCellDelegate;
+	protected ChatMessageCell.ChatMessageCellDelegate getChatMessageCellDelegate() {
+		if (isMultiChat()) {
+			ChatMessageCell.ChatMessageCellDelegate multiDelegate = multiChatGetChatMessageDelegate();
+			if (multiDelegate != null) {
+				return multiDelegate;
+			}
+		}
 		if (chatMessageCellDelegate == null) {
 			chatMessageCellDelegate = new ChatMessageCellDelegate();
 		}
@@ -48939,9 +49024,26 @@ public class ChatActivity extends BaseFragment implements
 
 	public boolean isBlockedUser(long senderId) {
 		if (!NekoConfig.ignoreBlocked.Bool()) {
+			// If masking is enabled for globally-blocked users, skip the block check
+			if (NaConfig.INSTANCE.getMaskBlockedUserMessages().Bool()) {
+				if (getMessagesController().blockePeers.indexOfKey(senderId) >= 0) {
+					return false;
+				}
+			}
+			if (AyuFilter.isCustomFilteredPeer(senderId)) {
+				return AyuFilter.isCustomFilteredPeerHidden(senderId);
+			}
 			return false;
 		}
-		return getMessagesController().blockePeers.indexOfKey(senderId) >= 0 || AyuFilter.isCustomFilteredPeer(senderId);
+		if (NaConfig.INSTANCE.getMaskBlockedUserMessages().Bool()) {
+			if (getMessagesController().blockePeers.indexOfKey(senderId) >= 0) {
+				return false;
+			}
+		}
+		if (AyuFilter.isCustomFilteredPeer(senderId)) {
+			return AyuFilter.isCustomFilteredPeerHidden(senderId);
+		}
+		return getMessagesController().blockePeers.indexOfKey(senderId) >= 0;
 	}
 
 	private void updateBotforumTabsBottomMargin() {
@@ -50485,4 +50587,62 @@ public class ChatActivity extends BaseFragment implements
 	}
 
 	// [Alexgram: AI Reply] - End
+
+	// [Alexgram: Special Forward Multi-Chat Hooks] - Start
+	public boolean isMultiChat() { return false; }
+	public boolean isMultiChatWithInput() { return false; }
+	protected boolean multiChatAddProxyButton() { return false; }
+	protected void multiChatAddThemeDescriptions(ArrayList<org.telegram.ui.ActionBar.ThemeDescription> arrayList) {}
+	protected boolean multiChatCanDelete() { return true; }
+	protected boolean multiChatCanSearch() { return false; }
+	protected boolean multiChatCanShowSave() { return true; }
+	protected boolean multiChatCanShowShare() { return true; }
+	protected boolean multiChatCheckEndReached() { return false; }
+	protected boolean multiChatCreateActionModeIcons(org.telegram.ui.ActionBar.ActionBarMenu actionMode) { return false; }
+	protected void multiChatCreateAdViewBottom() {}
+	protected void multiChatCreateDeleteAlert(MessageObject messageObject, SparseArray<MessageObject> sparseArray, Runnable runnable) {}
+	protected void multiChatCreateEmptyView() {}
+	protected void multiChatCreateMenuItems(org.telegram.ui.ActionBar.ActionBarMenu menu) {}
+	protected boolean multiChatDidReceivedNotification(int id, int param, Object... args) { return false; }
+	protected android.view.View multiChatGetAdViewBottom() { return null; }
+	protected int multiChatGetAvatarRight() { return 0; }
+	protected org.telegram.ui.Cells.ChatMessageCell.ChatMessageCellDelegate multiChatGetChatMessageDelegate() { return null; }
+	protected int multiChatGetChatMode() { return 0; }
+	protected boolean multiChatHaveDialogId(long dialogId) { return false; }
+	protected void multiChatHideMenuItemsOnEdit(boolean editing) {}
+	protected boolean multiChatIsReactionsAvailable() { return false; }
+	protected void multiChatJumpButton(boolean up) {}
+	protected boolean multiChatListOnItemClick(android.view.View view, int position) { return false; }
+	protected void multiChatMessagesFirstLoad(int lastLoadIndex) {}
+	protected void multiChatMessagesLoadMore(int lastLoadIndex) {}
+	protected void multiChatMessagesSetOffset(int offset) {}
+	protected boolean multiChatNeedRemoveActions() { return false; }
+	protected boolean multiChatOnBackPressed() { return true; }
+	protected void multiChatOnCreateView() {}
+	protected boolean multiChatOnEditTextItemsClick(int itemId) { return false; }
+	protected boolean multiChatOnFragmentCreate() { return false; }
+	protected void multiChatOnFragmentDestroy() {}
+	protected boolean multiChatOnMenuItemClicked(int itemId) { return false; }
+	protected void multiChatOnMessageSend(CharSequence charSequence, boolean notify, int scheduleDate, int scheduleRepeatPeriod, long topicId) {}
+	protected void multiChatOnPause() {}
+	protected void multiChatOnResume() {}
+	protected void multiChatOnTextChanged(CharSequence charSequence, boolean isSpecial, boolean force) {}
+	protected void multiChatOnTransitionClose() {}
+	protected void multiChatOnTransitionOpen() {}
+	protected void multiChatSearchButton(boolean active) {}
+	protected void multiChatSearchLoadMore() {}
+	protected void multiChatSearchOnItemClick(int position) {}
+	protected void multiChatSetNewWallpaper() {}
+	protected boolean multiChatShowBarView2() { return false; }
+	protected void multiChatUpdateTitle() {}
+	protected void multiChatUpdateUpDownButtonVisibility() {}
+	protected void setLoaded() {
+		endReached[0] = endReached[1] = true;
+		cacheEndReached[0] = cacheEndReached[1] = true;
+		forwardEndReached[0] = forwardEndReached[1] = true;
+		firstLoading = false;
+		loading = false;
+		checkDispatchHideSkeletons(false);
+	}
+	// [Alexgram: Special Forward Multi-Chat Hooks] - End
 }

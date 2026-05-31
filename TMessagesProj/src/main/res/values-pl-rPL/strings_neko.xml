@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="NekoSettings">A-Ustawienia</string>
     <string name="IPv6">Preferuj IPv6</string>
@@ -270,4 +270,13 @@
     <string name="EmojiUseDefault">Użyj systemowych emoji</string>
     <string name="Chat">Czaty</string>
     <string name="Appearance">Wygląd</string>
+    <!-- [Alexgram: Important Announcement] -->
+    <string name="GetImportantAnnouncementFromAlexgram">Pobierz ważne ogłoszenia z Alexgram</string>
+    <!-- [Alexgram: Birthday Wish] - Start -->
+    <string name="BirthdayTitle">Wszystkiego najlepszego,\n%1$s! 🎉</string>
+    <string name="BirthdayMessage">Dzisiaj wszystko kręci się wokół Ciebie! ✨ Kolejny rok z energią głównego bohatera. Życzymy Ci roku czystego rozwoju, niekończących się sukcesów i zera negatywnych wibracji. Idź i zdobywaj świat! 🚀🎂</string>
+    <string name="BirthdayMakeWish">Pomyśl życzenie 🌟</string>
+    <string name="BirthdayWishSent">Życzenie wysłane do gwiazd! 🌌✨</string>
+    <!-- [Alexgram: Birthday Wish] - End -->
 </resources>
+

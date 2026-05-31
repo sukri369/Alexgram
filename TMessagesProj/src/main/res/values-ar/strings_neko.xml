@@ -1,3 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- [Alexgram: Important Announcement] -->
+    <string name="GetImportantAnnouncementFromAlexgram">احصل على الإعلانات المهمة من Alexgram</string>
+    <!-- [Alexgram: Birthday Wish] - Start -->
+    <string name="BirthdayTitle">عيد ميلاد سعيد،\n%1$s! 🎉</string>
+    <string name="BirthdayMessage">اليوم كله لك! ✨ سنة أخرى من طاقة البطل الحقيقي. نتمنى لك سنة من النمو الخالص، الانتصارات اللانهائية، وبدون طاقة سلبية تماماً. انطلق وحقق النجاح! 🚀🎂</string>
+    <string name="BirthdayMakeWish">تمنَّ أمنية 🌟</string>
+    <string name="BirthdayWishSent">أرسِلت الأمنية إلى النجوم! 🌌✨</string>
+    <!-- [Alexgram: Birthday Wish] - End -->
 </resources>
