@@ -7017,7 +7017,12 @@ public class MessagesController extends BaseController implements NotificationCe
                         users.add((TLRPC.User) objects.get(i));
                     }
                 }
-                getMessagesController().putUsers(users, false);
+                AndroidUtilities.runOnUIThread(() -> {
+                    getMessagesController().putUsers(users, false);
+                    getMessagesStorage().putUsersAndChats(users, null, true, true);
+                    getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
+                    getNotificationCenter().postNotificationName(NotificationCenter.updateInterfaces, UPDATE_MASK_CHAT_NAME);
+                });
             }
         });
     }
@@ -18230,10 +18235,29 @@ public class MessagesController extends BaseController implements NotificationCe
                                 putUser(user, true);
                             }
                             if (user == null) {
-                                if (BuildVars.LOGS_ENABLED) {
-                                    FileLog.d("not found user " + userId);
+                                // [Alexgram: Bot Login User Loading Fix] - Start
+                                if (getUserConfig().getCurrentUser() != null && getUserConfig().getCurrentUser().bot) {
+                                    TLRPC.TL_user userDummy = new TLRPC.TL_user();
+                                    userDummy.id = userId;
+                                    userDummy.first_name = "User " + userId;
+                                    userDummy.min = true;
+                                    userDummy.fromMessageDialogId = message.dialog_id;
+                                    userDummy.fromMessageId = message.id;
+                                    user = userDummy;
+                                    putUser(user, true);
+                                    usersDict.put(userId, user);
+                                    ArrayList<TLRPC.User> usersArrToPut = new ArrayList<>();
+                                    usersArrToPut.add(user);
+                                    getMessagesStorage().putUsersAndChats(usersArrToPut, new ArrayList<>(), true, true);
+                                    
+                                    reloadUser(userId);
+                                } else {
+                                    if (BuildVars.LOGS_ENABLED) {
+                                        FileLog.d("not found user " + userId);
+                                    }
+                                    return false;
                                 }
-                                return false;
+                                // [Alexgram: Bot Login User Loading Fix] - End
                             }
                             if (!message.out && a == 1 && user.status != null && user.status.expires <= 0 && Math.abs(getConnectionsManager().getCurrentTime() - message.date) < 30) {
                                 onlinePrivacy.put(userId, message.date);
