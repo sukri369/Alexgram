@@ -1,5 +1,6 @@
 package tw.nekomimi.nekogram.ui;
 
+// [Alexgram: Birthday Wish] - Start
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
@@ -117,7 +118,7 @@ public class BirthdayAlert extends Dialog {
         int currentAccount = UserConfig.selectedAccount;
         TLRPC.User currentUser = UserConfig.getInstance(currentAccount).getCurrentUser();
         String name = currentUser != null ? UserObject.getUserName(currentUser) : "";
-        titleView.setText("Happy Birthday,\n" + name + "! 🎉");
+        titleView.setText(LocaleController.formatString("BirthdayTitle", R.string.BirthdayTitle, name));
         titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 22);
         titleView.setTextColor(Color.WHITE);
         titleView.setTypeface(AndroidUtilities.bold());
@@ -127,7 +128,7 @@ public class BirthdayAlert extends Dialog {
 
         // Subtext / Wish message
         TextView messageView = new TextView(getContext());
-        messageView.setText("Today is all about you! ✨ Another year of main character energy. Wishing you a year of pure growth, endless wins, and zero bad vibes. Go crush it! 🚀🎂");
+        messageView.setText(LocaleController.getString("BirthdayMessage", R.string.BirthdayMessage));
         messageView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
         messageView.setTextColor(0xFFB0C4DE); // Light Steel Blue
         messageView.setGravity(Gravity.CENTER);
@@ -135,7 +136,7 @@ public class BirthdayAlert extends Dialog {
         contentLayout.addView(messageView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 12, 0, 0));
 
         // Make a Wish Button
-        makeWishButton = new GlassmorphicButton(getContext(), "Make a Wish 🌟");
+        makeWishButton = new GlassmorphicButton(getContext(), LocaleController.getString("BirthdayMakeWish", R.string.BirthdayMakeWish));
         makeWishButton.setOnClickListener(v -> {
             if (wishMade) return;
             wishMade = true;
@@ -154,7 +155,7 @@ public class BirthdayAlert extends Dialog {
             triggerExplosionVibration();
 
             // Animate button update
-            makeWishButton.updateText("Wish Sent to the Stars! 🌌✨");
+            makeWishButton.updateText(LocaleController.getString("BirthdayWishSent", R.string.BirthdayWishSent));
             makeWishButton.setEnabled(false);
 
             // Auto dismiss card with animation after 2.5 seconds
@@ -534,3 +535,4 @@ public class BirthdayAlert extends Dialog {
         }
     }
 }
+// [Alexgram: Birthday Wish] - End

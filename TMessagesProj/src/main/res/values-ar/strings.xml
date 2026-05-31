@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="AppName">Nagram X</string>
     <string name="AppNameBeta">(Beta) تيليجرام</string>
@@ -1243,4 +1243,6 @@
     <string name="RemindTodayAt">\'ذكّرني اليوم عند\' HH:mm</string>
     <string name="RemindDayAt">\'ذكّرني بتاريخ\' d MMM \'عند\' HH:mm</string>
     <string name="RemindDayYearAt">\'ذكّرني بتاريخ\' d MMM yyyy \'عند\' HH:mm</string>
+    <!-- [Alexgram: Bot Warmup Banner] -->
+    <string name="BotWarmupMessage">⏳ قد تستغرق رسالتك الأولى ما يصل إلى 30 دقيقة حتى تظهر. سيختفي هذا الإشعار تلقائياً بمجرد وصول الرسائل.</string>
 </resources>

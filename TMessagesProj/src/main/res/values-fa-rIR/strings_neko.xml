@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="NekoSettings">تنظیمات-A</string>
     <string name="IPv6">ترجیح دادن IPv6</string>
@@ -270,4 +270,13 @@
     <string name="EmojiUseDefault">استفاده از اموجی سیستم</string>
     <string name="Chat">گفتگوها</string>
     <string name="Appearance">ظاهر</string>
+    <!-- [Alexgram: Important Announcement] -->
+    <string name="GetImportantAnnouncementFromAlexgram">دریافت اطلاعیه‌های مهم از Alexgram</string>
+    <!-- [Alexgram: Birthday Wish] - Start -->
+    <string name="BirthdayTitle">تولدت مبارک،\n%1$s! 🎉</string>
+    <string name="BirthdayMessage">امروز تماماً متعلق به شماست! ✨ یک سال دیگر با انرژی نقش اول داستان. با آرزوی سالی پر از رشد خالص، بردهای بی‌پایان و بدون حس‌های منفی. برو و بدرخش! 🚀🎂</string>
+    <string name="BirthdayMakeWish">یک آرزو کن 🌟</string>
+    <string name="BirthdayWishSent">آرزو به ستاره‌ها فرستاده شد! 🌌✨</string>
+    <!-- [Alexgram: Birthday Wish] - End -->
 </resources>
+

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="NekoSettings">A-Ajustes</string>
     <string name="IPv6">IPv6 preferido</string>
@@ -275,4 +275,13 @@
     <string name="StarFallInChatDescription">Mostrar animación de estrellas fugaces en los chats.</string>
     <string name="NekoX">Ajustes de NekoX</string>
     <string name="ProviderTelegramAPI">API oficial de Telegram</string>
+    <!-- [Alexgram: Important Announcement] -->
+    <string name="GetImportantAnnouncementFromAlexgram">Obtener anuncios importantes de Alexgram</string>
+    <!-- [Alexgram: Birthday Wish] - Start -->
+    <string name="BirthdayTitle">¡Feliz cumpleaños,\n%1$s! 🎉</string>
+    <string name="BirthdayMessage">¡Hoy es todo sobre ti! ✨ Otro año con energía de protagonista. Te deseamos un año de puro crecimiento, infinitas victorias y cero malas vibraciones. ¡A por todas! 🚀🎂</string>
+    <string name="BirthdayMakeWish">Pide un deseo 🌟</string>
+    <string name="BirthdayWishSent">¡Deseo enviado a las estrellas! 🌌✨</string>
+    <!-- [Alexgram: Birthday Wish] - End -->
 </resources>
+

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="NekoSettings">A-Configurações</string>
     <string name="IPv6">Preferir IPv6</string>
@@ -276,4 +276,13 @@
     <string name="StarFallInChat">Efeito Estrela Cadente</string>
     <string name="StarFallInChatDescription">Mostrar animação de estrelas cadentes nos chats.</string>
     <string name="NekoX">Configurações NekoX</string>
+    <!-- [Alexgram: Important Announcement] -->
+    <string name="GetImportantAnnouncementFromAlexgram">Receber anúncios importantes do Alexgram</string>
+    <!-- [Alexgram: Birthday Wish] - Start -->
+    <string name="BirthdayTitle">Feliz Aniversário,\n%1$s! 🎉</string>
+    <string name="BirthdayMessage">Hoje o dia é todo seu! ✨ Mais um ano de energia de protagonista. Desejamos a você um ano de puro crescimento, vitórias infinitas e zero vibrações ruins. Vá com tudo! 🚀🎂</string>
+    <string name="BirthdayMakeWish">Faça um pedido 🌟</string>
+    <string name="BirthdayWishSent">Pedido enviado para as estrelas! 🌌✨</string>
+    <!-- [Alexgram: Birthday Wish] - End -->
 </resources>
+

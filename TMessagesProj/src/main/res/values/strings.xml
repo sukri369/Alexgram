@@ -10829,4 +10829,7 @@
     <string name="BotLoginStartText">Please enter your bot token.</string>
     <string name="BotLoginTitle">Bot Token</string>
     <!-- [Alexgram: Bot Login] - End -->
+    <!-- [Alexgram: Bot Warmup Banner] - Start -->
+    <string name="BotWarmupMessage">⏳ Your first new message may take up to 30 minutes to appear. This notice will disappear automatically once messages arrive.</string>
+    <!-- [Alexgram: Bot Warmup Banner] - End -->
 </resources>
