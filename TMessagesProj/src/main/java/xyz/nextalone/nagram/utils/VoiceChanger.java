@@ -236,7 +236,7 @@ public class VoiceChanger {
 
         private void applySpectralEffect(float[] fArr) {
             // Telegraph: AbstractC6938AUX (Robotic), AbstractC6943aUx (Alien), AbstractC6944auX (Hoarseness)
-            int bins = fftSize / 2;
+            int bins = analysis.fftSize / 2;
             for (int i = 1; i <= bins; i++) {
                 int re = i * 2;
                 int im = re + 1;
@@ -263,7 +263,7 @@ public class VoiceChanger {
             for (int i = 1; i < bins; i++) {
                 int reSource = i * 2;
                 int imSource = reSource + 1;
-                int reTarget = (fftSize - i) * 2;
+                int reTarget = (analysis.fftSize - i) * 2;
                 int imTarget = reTarget + 1;
                 fArr[reTarget] = fArr[reSource];
                 fArr[imTarget] = -fArr[imSource];
