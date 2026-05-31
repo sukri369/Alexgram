@@ -211,7 +211,7 @@ public class VoiceChanger {
             this.effect = effect;
             int fftSize = frameSize(ratio, sampleRate);
             int step = stepSize(ratio, sampleRate);
-            this.floatBuf = new float[fftSize];
+            this.floatBuf = new float[fftSize * 2];
             this.analysis = new AnalysisFilterBank(fftSize, step, true);
             this.synthesis = new SynthesisFilterBank(fftSize, step, true);
             this.inputQueue = new ShortQueue(sampleRate * 2);
@@ -236,8 +236,8 @@ public class VoiceChanger {
 
         private void applySpectralEffect(float[] fArr) {
             // Telegraph: AbstractC6938AUX (Robotic), AbstractC6943aUx (Alien), AbstractC6944auX (Hoarseness)
-            int length = fArr.length / 2;
-            for (int i = 1; i < length; i++) {
+            int bins = fftSize / 2;
+            for (int i = 1; i <= bins; i++) {
                 int re = i * 2;
                 int im = re + 1;
                 switch (effect) {
@@ -259,6 +259,17 @@ public class VoiceChanger {
                         break;
                 }
             }
+            // Reconstruct conjugate symmetry for the second half
+            for (int i = 1; i < bins; i++) {
+                int reSource = i * 2;
+                int imSource = reSource + 1;
+                int reTarget = (fftSize - i) * 2;
+                int imTarget = reTarget + 1;
+                fArr[reTarget] = fArr[reSource];
+                fArr[imTarget] = -fArr[imSource];
+            }
+            fArr[1] = 0.0f;
+            fArr[bins * 2 + 1] = 0.0f;
         }
     }
 
@@ -286,8 +297,8 @@ public class VoiceChanger {
             int synthStep = java.lang.Math.round(step / pitchFactor);
             int resampleSize = java.lang.Math.round(fftSize / pitchFactor);
 
-            this.floatBuf = new float[fftSize];
-            this.resampleBuf = new float[resampleSize];
+            this.floatBuf = new float[fftSize * 2];
+            this.resampleBuf = new float[resampleSize * 2];
             this.analysis = new AnalysisFilterBank(fftSize, synthStep, true);
             this.timescale = new TimescaleProcessor(fftSize, synthStep, step);
             this.fft = new SimpleFFT(fftSize);
@@ -457,8 +468,9 @@ public class VoiceChanger {
         private void applyWindow(short[] src, int srcOff, float[] dst, int dstOff, int len) {
             for (int i = 0; i < len; i++) {
                 int di = i + dstOff;
-                dst[di] = java.lang.Math.min(1.0f, java.lang.Math.max(-1.0f,
+                dst[di * 2] = java.lang.Math.min(1.0f, java.lang.Math.max(-1.0f,
                         src[i + srcOff] / 32767.0f)) * window[di];
+                dst[di * 2 + 1] = 0.0f;
             }
         }
     }
@@ -516,7 +528,7 @@ public class VoiceChanger {
                 int si = i + srcOff;
                 int di = i + dstOff;
                 float val = java.lang.Math.min(1.0f, java.lang.Math.max(-1.0f,
-                        src[si] * window[si])) * 32767.0f;
+                        src[si * 2] * window[si])) * 32767.0f;
                 dst[di] = (short) (dst[di] + (short) java.lang.Math.round(val));
             }
         }
@@ -572,6 +584,18 @@ public class VoiceChanger {
                 if (re < fArr.length) fArr[re] = DSP.real(mag, phaseAccum[k]);
                 if (im < fArr.length) fArr[im] = DSP.imag(mag, phaseAccum[k]);
             }
+
+            // Reconstruct conjugate symmetry for real-valued IFFT
+            for (int k = 1; k < bins; k++) {
+                int reSource = k * 2;
+                int imSource = reSource + 1;
+                int reTarget = (fftSize - k) * 2;
+                int imTarget = reTarget + 1;
+                fArr[reTarget] = fArr[reSource];
+                fArr[imTarget] = -fArr[imSource];
+            }
+            fArr[1] = 0.0f;
+            fArr[bins * 2 + 1] = 0.0f;
         }
 
         private static float princarg(float phase) {
@@ -595,7 +619,10 @@ public class VoiceChanger {
         void process(float[] src, float[] dst) {
             // Exact port of NativeResampleProcessor.b() from Telegraph
             if (outSize <= 1) {
-                if (outSize == 1 && inSize > 0) dst[0] = src[0];
+                if (outSize == 1 && inSize > 0) {
+                    dst[0] = src[0];
+                    dst[1] = src[1];
+                }
                 return;
             }
             float factor = (float) (inSize - 1) / (outSize - 1);
@@ -604,7 +631,8 @@ public class VoiceChanger {
                 int floor = (int) srcIdx;
                 int ceil = java.lang.Math.min(inSize - 1, floor + 1);
                 float frac = srcIdx - floor;
-                dst[i] = src[floor] * (1.0f - frac) + src[ceil] * frac;
+                dst[i * 2] = src[floor * 2] * (1.0f - frac) + src[ceil * 2] * frac;
+                dst[i * 2 + 1] = src[floor * 2 + 1] * (1.0f - frac) + src[ceil * 2 + 1] * frac;
             }
         }
     }
