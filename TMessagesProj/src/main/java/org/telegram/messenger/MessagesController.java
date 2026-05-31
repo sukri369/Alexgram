@@ -12409,6 +12409,14 @@ public class MessagesController extends BaseController implements NotificationCe
         if (loadingDialogs.get(folderId) || resetingDialogs) {
             return;
         }
+        if (getUserConfig().isBot() && !fromCache) {
+            dialogsEndReached.put(folderId, true);
+            serverDialogsEndReached.put(folderId, true);
+            loadingDialogs.put(folderId, false);
+            dialogsLoaded = true;
+            getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
+            return;
+        }
         loadingDialogs.put(folderId, true);
         getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
         if (BuildVars.LOGS_ENABLED) {
