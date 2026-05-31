@@ -27,7 +27,7 @@ public class UserConfig extends BaseController {
 
     public static int selectedAccount;
     public final static int MAX_ACCOUNT_DEFAULT_COUNT = 10;
-    public final static int MAX_ACCOUNT_COUNT = 10;
+    public final static int MAX_ACCOUNT_COUNT = 100;
 
     private final Object sync = new Object();
     private volatile boolean configLoaded;
@@ -124,7 +124,11 @@ public class UserConfig extends BaseController {
     }
 
     public static int getMaxAccountCount() {
-        return hasPremiumOnAccounts() ? 5 : 3;
+        try {
+            return tw.nekomimi.nekogram.NekoConfig.getPreferences().getInt("MaxActiveAccounts", 10);
+        } catch (Exception e) {
+            return 10;
+        }
     }
 
     public int getNewMessageId() {

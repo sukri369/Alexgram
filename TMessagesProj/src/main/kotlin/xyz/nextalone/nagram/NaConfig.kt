@@ -632,6 +632,12 @@ object NaConfig {
             ConfigItem.configTypeInt,
             0
         )
+    val maxActiveAccounts =
+        addConfig(
+            "MaxActiveAccounts",
+            ConfigItem.configTypeInt,
+            10
+        )
     val showVoiceChangerInChatMenu =
         addConfig(
             "ShowVoiceChangerInChatMenu",
