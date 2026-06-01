@@ -33,7 +33,7 @@ public class DrawerAddCell extends FrameLayout {
 
         imageView = new ImageView(context);
         imageView.setScaleType(ImageView.ScaleType.CENTER);
-        addView(imageView, LayoutHelper.createFrame(30, 30, Gravity.LEFT | Gravity.TOP, 19, 9, 0, 0));
+        addView(imageView, LayoutHelper.createFrame(30, 30, Gravity.LEFT | Gravity.TOP, 31, 9, 0, 0));
 
         textView = new TextView(context);
         textView.setTextColor(Theme.getColor(Theme.key_chats_menuItemText));
@@ -43,7 +43,7 @@ public class DrawerAddCell extends FrameLayout {
         textView.setMaxLines(1);
         textView.setSingleLine(true);
         textView.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
-        addView(textView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.LEFT | Gravity.TOP, 72, 0, 16, 0));
+        addView(textView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.LEFT | Gravity.TOP, 86, 0, 16, 0));
     }
 
     @Override

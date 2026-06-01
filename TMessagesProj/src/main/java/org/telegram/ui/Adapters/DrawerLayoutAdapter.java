@@ -149,6 +149,9 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter imple
             case 5:
                 view = new DrawerAddCell(mContext);
                 break;
+            case 6:
+                view = new EmptyCell(mContext, AndroidUtilities.dp(14));
+                break;
             case 1:
             default:
                 view = new EmptyCell(mContext, AndroidUtilities.dp(8));
@@ -195,7 +198,7 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter imple
                 if (i == accountNumbers.size()) {
                     return 5;
                 } else if (i == accountNumbers.size() + 1) {
-                    return 2;
+                    return 6;
                 }
             }
             i -= getAccountRowsCount();

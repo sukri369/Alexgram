@@ -464,25 +464,24 @@ public class HomeDrawerHelper {
         }
 
         int menuBackground = Theme.getColor(Theme.key_chats_menuBackground);
-        int panelOverlay = Theme.multAlpha(
-                Theme.getColor(Theme.key_chats_menuItemIcon),
-                Theme.isCurrentThemeDark() ? 0.10f : 0.055f
-        );
+        int panelOverlay = Theme.isCurrentThemeDark()
+                ? Theme.multAlpha(0xff000000, 0.18f)
+                : Theme.multAlpha(Theme.getColor(Theme.key_chats_menuItemIcon), 0.065f);
         accountPanelPaint.setColor(Theme.blendOver(menuBackground, panelOverlay));
         accountPanelStrokePaint.setStyle(Paint.Style.STROKE);
         accountPanelStrokePaint.setStrokeWidth(AndroidUtilities.dpf2(1));
         accountPanelStrokePaint.setColor(Theme.multAlpha(
                 Theme.getColor(Theme.key_chats_menuItemIcon),
-                Theme.isCurrentThemeDark() ? 0.17f : 0.12f
+                Theme.isCurrentThemeDark() ? 0.22f : 0.14f
         ));
 
         accountPanelRect.set(
-                AndroidUtilities.dp(12),
-                top + AndroidUtilities.dp(2),
-                parent.getWidth() - AndroidUtilities.dp(12),
-                bottom - AndroidUtilities.dp(2)
+                AndroidUtilities.dp(20),
+                top - AndroidUtilities.dp(1),
+                parent.getWidth() - AndroidUtilities.dp(20),
+                bottom + AndroidUtilities.dp(1)
         );
-        float radius = AndroidUtilities.dp(18);
+        float radius = AndroidUtilities.dp(20);
         canvas.drawRoundRect(accountPanelRect, radius, radius, accountPanelPaint);
         canvas.drawRoundRect(accountPanelRect, radius, radius, accountPanelStrokePaint);
     }

@@ -65,7 +65,7 @@ public class DrawerUserCell extends FrameLayout implements NotificationCenter.No
 
         imageView = new BackupImageView(context);
         imageView.setRoundRadius(dp(18));
-        addView(imageView, LayoutHelper.createFrame(36, 36, Gravity.LEFT | Gravity.TOP, 14, 6, 0, 0));
+        addView(imageView, LayoutHelper.createFrame(36, 36, Gravity.LEFT | Gravity.TOP, 28, 6, 0, 0));
 
         textView = new SimpleTextView(context);
         textView.setPadding(0, dp(4), 0, dp(4));
@@ -75,7 +75,7 @@ public class DrawerUserCell extends FrameLayout implements NotificationCenter.No
         textView.setMaxLines(1);
         textView.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
         textView.setEllipsizeByGradient(24);
-        addView(textView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.CENTER_VERTICAL, 72, 0, 14, 0));
+        addView(textView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.CENTER_VERTICAL, 86, 0, 14, 0));
 
         botVerification = new AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable(textView, dp(18));
         status = new AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable(textView, dp(20));
@@ -86,7 +86,7 @@ public class DrawerUserCell extends FrameLayout implements NotificationCenter.No
         checkBox.setCheckScale(0.9f);
         checkBox.setInnerRadDiff(dp(1.5f));
         checkBox.setColorKeysOverrides(Theme.key_chats_unreadCounterText, Theme.key_chats_unreadCounter, Theme.key_chats_menuBackground);
-        addView(checkBox, LayoutHelper.createFrame(18, 18, Gravity.LEFT | Gravity.TOP, 37, 27, 0, 0));
+        addView(checkBox, LayoutHelper.createFrame(18, 18, Gravity.LEFT | Gravity.TOP, 51, 27, 0, 0));
 
         setWillNotDraw(false);
     }
@@ -208,15 +208,14 @@ public class DrawerUserCell extends FrameLayout implements NotificationCenter.No
         final int countTop = dp(12.5f);
         final int textWidth = (int) Math.ceil(Theme.dialogs_countTextPaint.measureText(text));
         final int countWidth = Math.max(dp(10), textWidth);
-        final int countLeft = getMeasuredWidth() - countWidth - dp(25);
-
-        final int x = countLeft - dp(5.5f);
-        rect.set(x, countTop, x + countWidth + dp(14), countTop + dp(23));
+        final int countRight = getMeasuredWidth() - dp(44);
+        final int x = countRight - countWidth - dp(14);
+        rect.set(x, countTop, countRight, countTop + dp(23));
         canvas.drawRoundRect(rect, 11.5f * AndroidUtilities.density, 11.5f * AndroidUtilities.density, Theme.dialogs_countPaint);
 
         canvas.drawText(text, rect.left + (rect.width() - textWidth) / 2, countTop + dp(16), Theme.dialogs_countTextPaint);
 
-        textView.setRightPadding(countWidth + dp(14 + 12));
+        textView.setRightPadding(countWidth + dp(52));
     }
 
     private void drawSelectedAccountBackground(Canvas canvas) {
@@ -229,7 +228,7 @@ public class DrawerUserCell extends FrameLayout implements NotificationCenter.No
                 Theme.isCurrentThemeDark() ? 0.70f : 0.45f
         );
         selectedBackgroundPaint.setColor(Theme.blendOver(menuBackground, selectorOverlay));
-        rect.set(dp(12), dp(5), getMeasuredWidth() - dp(24), getMeasuredHeight() - dp(5));
+        rect.set(dp(22), dp(5), getMeasuredWidth() - dp(30), getMeasuredHeight() - dp(5));
         canvas.drawRoundRect(rect, dp(13), dp(13), selectedBackgroundPaint);
 
         avatarRingPaint.setStyle(Paint.Style.STROKE);
