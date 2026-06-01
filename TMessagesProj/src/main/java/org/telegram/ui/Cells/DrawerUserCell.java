@@ -12,6 +12,7 @@ import static org.telegram.messenger.AndroidUtilities.dp;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.view.Gravity;
@@ -50,6 +51,8 @@ public class DrawerUserCell extends FrameLayout implements NotificationCenter.No
     private final GroupCreateCheckBox checkBox;
     private final AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable botVerification;
     private final AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable status;
+    private final Paint selectedBackgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint avatarRingPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
     private int accountNumber;
     private final RectF rect = new RectF();
@@ -189,6 +192,8 @@ public class DrawerUserCell extends FrameLayout implements NotificationCenter.No
 
     @Override
     protected void onDraw(Canvas canvas) {
+        drawSelectedAccountBackground(canvas);
+
         if (UserConfig.getActivatedAccountsCount() <= 1 || !NotificationsController.getInstance(accountNumber).showBadgeNumber) {
             textView.setRightPadding(0);
             return;
@@ -212,6 +217,30 @@ public class DrawerUserCell extends FrameLayout implements NotificationCenter.No
         canvas.drawText(text, rect.left + (rect.width() - textWidth) / 2, countTop + dp(16), Theme.dialogs_countTextPaint);
 
         textView.setRightPadding(countWidth + dp(14 + 12));
+    }
+
+    private void drawSelectedAccountBackground(Canvas canvas) {
+        if (accountNumber != UserConfig.selectedAccount) {
+            return;
+        }
+        int menuBackground = Theme.getColor(Theme.key_chats_menuBackground);
+        int selectorOverlay = Theme.multAlpha(
+                Theme.getColor(Theme.key_listSelector),
+                Theme.isCurrentThemeDark() ? 0.70f : 0.45f
+        );
+        selectedBackgroundPaint.setColor(Theme.blendOver(menuBackground, selectorOverlay));
+        rect.set(dp(12), dp(5), getMeasuredWidth() - dp(24), getMeasuredHeight() - dp(5));
+        canvas.drawRoundRect(rect, dp(13), dp(13), selectedBackgroundPaint);
+
+        avatarRingPaint.setStyle(Paint.Style.STROKE);
+        avatarRingPaint.setStrokeWidth(AndroidUtilities.dpf2(2));
+        avatarRingPaint.setColor(Theme.getColor(Theme.key_featuredStickers_addButton));
+        canvas.drawCircle(
+                imageView.getLeft() + imageView.getMeasuredWidth() / 2f,
+                imageView.getTop() + imageView.getMeasuredHeight() / 2f,
+                dp(20),
+                avatarRingPaint
+        );
     }
 
     @Override

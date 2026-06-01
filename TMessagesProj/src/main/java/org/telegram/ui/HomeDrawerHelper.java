@@ -5,7 +5,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.graphics.Point;
+import android.graphics.RectF;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Base64;
@@ -77,6 +79,9 @@ public class HomeDrawerHelper {
     private SideMenultItemAnimator itemAnimator;
     private FrameLayout sideMenuContainer;
     private SelectAnimatedEmojiDialog.SelectAnimatedEmojiDialogWindow selectAnimatedEmojiDialog;
+    private final RectF accountPanelRect = new RectF();
+    private final Paint accountPanelPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint accountPanelStrokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
     public HomeDrawerHelper(LaunchActivity activity) {
         this.activity = activity;
@@ -256,6 +261,12 @@ public class HomeDrawerHelper {
         };
         itemAnimator = new SideMenultItemAnimator(sideMenu);
         sideMenu.setItemAnimator(itemAnimator);
+        sideMenu.addItemDecoration(new RecyclerView.ItemDecoration() {
+            @Override
+            public void onDraw(@NonNull Canvas canvas, @NonNull RecyclerView parent, @NonNull RecyclerView.State state) {
+                drawAccountsPanel(canvas, parent);
+            }
+        });
         sideMenu.setClipToPadding(false);
         sideMenu.setBackgroundColor(Theme.getColor(Theme.key_chats_menuBackground));
         sideMenuContainer.setBackgroundColor(Theme.getColor(Theme.key_chats_menuBackground));
@@ -426,6 +437,54 @@ public class HomeDrawerHelper {
             }
             return false;
         });
+    }
+
+    private void drawAccountsPanel(Canvas canvas, RecyclerView parent) {
+        if (drawerLayoutAdapter == null || !drawerLayoutAdapter.isAccountsShown()) {
+            return;
+        }
+        int firstPosition = drawerLayoutAdapter.getFirstAccountPosition();
+        int addAccountPosition = drawerLayoutAdapter.getLastAccountPosition() + 1;
+        if (firstPosition == RecyclerView.NO_POSITION || addAccountPosition <= firstPosition) {
+            return;
+        }
+
+        float top = Float.MAX_VALUE;
+        float bottom = -Float.MAX_VALUE;
+        for (int i = 0; i < parent.getChildCount(); i++) {
+            View child = parent.getChildAt(i);
+            int position = parent.getChildAdapterPosition(child);
+            if (position >= firstPosition && position <= addAccountPosition) {
+                top = Math.min(top, child.getTop() + child.getTranslationY());
+                bottom = Math.max(bottom, child.getBottom() + child.getTranslationY());
+            }
+        }
+        if (top == Float.MAX_VALUE || bottom == -Float.MAX_VALUE) {
+            return;
+        }
+
+        int menuBackground = Theme.getColor(Theme.key_chats_menuBackground);
+        int panelOverlay = Theme.multAlpha(
+                Theme.getColor(Theme.key_chats_menuItemIcon),
+                Theme.isCurrentThemeDark() ? 0.10f : 0.055f
+        );
+        accountPanelPaint.setColor(Theme.blendOver(menuBackground, panelOverlay));
+        accountPanelStrokePaint.setStyle(Paint.Style.STROKE);
+        accountPanelStrokePaint.setStrokeWidth(AndroidUtilities.dpf2(1));
+        accountPanelStrokePaint.setColor(Theme.multAlpha(
+                Theme.getColor(Theme.key_chats_menuItemIcon),
+                Theme.isCurrentThemeDark() ? 0.17f : 0.12f
+        ));
+
+        accountPanelRect.set(
+                AndroidUtilities.dp(12),
+                top + AndroidUtilities.dp(2),
+                parent.getWidth() - AndroidUtilities.dp(12),
+                bottom - AndroidUtilities.dp(2)
+        );
+        float radius = AndroidUtilities.dp(18);
+        canvas.drawRoundRect(accountPanelRect, radius, radius, accountPanelPaint);
+        canvas.drawRoundRect(accountPanelRect, radius, radius, accountPanelStrokePaint);
     }
 
     public void syncHomeDrawer() {

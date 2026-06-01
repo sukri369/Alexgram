@@ -11,10 +11,10 @@ package org.telegram.ui.Cells;
 import android.content.Context;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
-import android.graphics.drawable.Drawable;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.telegram.messenger.AndroidUtilities;
@@ -25,10 +25,15 @@ import org.telegram.ui.Components.LayoutHelper;
 
 public class DrawerAddCell extends FrameLayout {
 
-    private TextView textView;
+    private final ImageView imageView;
+    private final TextView textView;
 
     public DrawerAddCell(Context context) {
         super(context);
+
+        imageView = new ImageView(context);
+        imageView.setScaleType(ImageView.ScaleType.CENTER);
+        addView(imageView, LayoutHelper.createFrame(30, 30, Gravity.LEFT | Gravity.TOP, 19, 9, 0, 0));
 
         textView = new TextView(context);
         textView.setTextColor(Theme.getColor(Theme.key_chats_menuItemText));
@@ -38,8 +43,7 @@ public class DrawerAddCell extends FrameLayout {
         textView.setMaxLines(1);
         textView.setSingleLine(true);
         textView.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
-        textView.setCompoundDrawablePadding(AndroidUtilities.dp(29));
-        addView(textView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.LEFT | Gravity.TOP, 19, 0, 16, 0));
+        addView(textView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.LEFT | Gravity.TOP, 72, 0, 16, 0));
     }
 
     @Override
@@ -52,10 +56,8 @@ public class DrawerAddCell extends FrameLayout {
         super.onAttachedToWindow();
         textView.setTextColor(Theme.getColor(Theme.key_chats_menuItemText));
         textView.setText(LocaleController.getString(R.string.AddAccount));
-        Drawable drawable = getResources().getDrawable(R.drawable.msg_add);
-        if (drawable != null) {
-            drawable.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chats_menuItemIcon), PorterDuff.Mode.MULTIPLY));
-        }
-        textView.setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null);
+        imageView.setBackground(Theme.createCircleDrawable(AndroidUtilities.dp(30), Theme.getColor(Theme.key_featuredStickers_addButton)));
+        imageView.setImageResource(R.drawable.msg_add);
+        imageView.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chats_unreadCounterText), PorterDuff.Mode.SRC_IN));
     }
 }
