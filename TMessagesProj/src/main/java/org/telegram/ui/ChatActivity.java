@@ -33122,12 +33122,84 @@ public class ChatActivity extends BaseFragment implements
 				icons.addAll(textIcons);
 				options.clear();
 				options.addAll(textOptions);
+
+				boolean[] groupedIconsMerged = new boolean[]{false};
+				if (GroupedIconsView.useGroupedIcons() && !gridOptions.isEmpty()) {
+					groupedIconsMerged[0] = true;
+					ArrayList<Integer> coreOptions = new ArrayList<>();
+					ArrayList<Integer> coreIcons = new ArrayList<>();
+					ArrayList<CharSequence> coreItems = new ArrayList<>();
+
+					if (this.lastMessageMenuStatus.allowReply || this.lastMessageMenuStatus.allowReplyPm) {
+						coreOptions.add(this.lastMessageMenuStatus.allowReply ? OPTION_REPLY : nkbtn_reply_private);
+						coreIcons.add(R.drawable.menu_reply);
+						coreItems.add("Reply");
+					}
+
+					if (this.lastMessageMenuStatus.allowCopy || this.lastMessageMenuStatus.allowCopyPhoto || this.lastMessageMenuStatus.allowCopyLink || this.lastMessageMenuStatus.allowCopyLinkPm) {
+						int copyOptionId = OPTION_COPY;
+						int copyIconRes = R.drawable.msg_copy;
+						if (this.lastMessageMenuStatus.allowCopy) {
+							if (!this.lastMessageMenuStatus.allowCopyPhoto && selectedObject != null && selectedObject.isPhoto() && selectedObject.isWebpage()) {
+								copyOptionId = OPTION_COPY_PHOTO;
+							} else if (this.lastMessageMenuStatus.allowCopyLink) {
+								copyOptionId = OPTION_COPY_LINK;
+							} else if (this.lastMessageMenuStatus.allowCopyLinkPm) {
+								copyOptionId = nkbtn_copy_link_in_pm;
+							} else {
+								copyOptionId = OPTION_COPY;
+							}
+						} else if (this.lastMessageMenuStatus.allowCopyPhoto) {
+							if (selectedObject != null && !selectedObject.isSticker()) {
+								copyOptionId = OPTION_COPY_PHOTO_AS_STICKER;
+							} else {
+								if (this.lastMessageMenuStatus.allowCopyLink) {
+									copyOptionId = OPTION_COPY_LINK;
+								} else if (this.lastMessageMenuStatus.allowCopyLinkPm) {
+									copyOptionId = nkbtn_copy_link_in_pm;
+								} else {
+									copyOptionId = OPTION_COPY_PHOTO;
+								}
+							}
+							copyIconRes = R.drawable.msg_copy_photo;
+						} else if (this.lastMessageMenuStatus.allowCopyLink && this.lastMessageMenuStatus.allowDelete) {
+							copyOptionId = OPTION_COPY_LINK;
+							copyIconRes = R.drawable.msg_link;
+						} else if (this.lastMessageMenuStatus.allowCopyLinkPm) {
+							copyOptionId = nkbtn_copy_link_in_pm;
+							copyIconRes = R.drawable.msg_link;
+						}
+						coreOptions.add(copyOptionId);
+						coreIcons.add(copyIconRes);
+						coreItems.add("Copy");
+					}
+
+					if (this.lastMessageMenuStatus.allowDelete) {
+						coreOptions.add(OPTION_DELETE);
+						coreIcons.add(R.drawable.msg_delete);
+						coreItems.add("Delete");
+					}
+
+					if (this.lastMessageMenuStatus.allowEdit) {
+						coreOptions.add(OPTION_EDIT);
+						coreIcons.add(R.drawable.msg_edit);
+						coreItems.add("Edit");
+					} else if (this.lastMessageMenuStatus.allowForward) {
+						coreOptions.add(OPTION_FORWARD);
+						coreIcons.add(R.drawable.msg_forward_noquote);
+						coreItems.add("Forward");
+					}
+
+					gridOptions.addAll(0, coreOptions);
+					gridIcons.addAll(0, coreIcons);
+					gridItems.addAll(0, coreItems);
+				}
 				// [Alexgram: Customizable Message Menu] - End
 
 				scrimPopupWindowItems = new ActionBarMenuSubItem[items.size()];
-				final boolean hasGroupedIcons = GroupedIconsView.useGroupedIcons();
+				final boolean hasBottomIcons = GroupedIconsView.useGroupedIcons() || !gridOptions.isEmpty();
 				for (int a = 0, N = items.size(); a < N; a++) {
-					ActionBarMenuSubItem cell = new ActionBarMenuSubItem(getParentActivity(), a == 0, a == N - 1 && !hasGroupedIcons, themeDelegate);
+					ActionBarMenuSubItem cell = new ActionBarMenuSubItem(getParentActivity(), a == 0, a == N - 1 && !hasBottomIcons, themeDelegate);
 					cell.setMinimumWidth(AndroidUtilities.dp(200));
 					cell.setTextAndIcon(items.get(a), icons.get(a));
 					Integer option = options.get(a);
@@ -33378,7 +33450,7 @@ public class ChatActivity extends BaseFragment implements
 					popupLayout.addView(layout);
 				}
 
-				if (GroupedIconsView.useGroupedIcons()) {
+				if (GroupedIconsView.useGroupedIcons() && !groupedIconsMerged[0]) {
 					popupLayout.addView(new ActionBarPopupWindow.GapView(contentView.getContext(), themeDelegate), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 8));
 
 					var groupedIconsView = new GroupedIconsView(getContext(), ChatActivity.this, selectedObject, this.lastMessageMenuStatus.allowReply, this.lastMessageMenuStatus.allowReplyPm, this.lastMessageMenuStatus.allowEdit, this.lastMessageMenuStatus.allowDelete, this.lastMessageMenuStatus.allowForward, this.lastMessageMenuStatus.allowCopy, this.lastMessageMenuStatus.allowCopyPhoto, this.lastMessageMenuStatus.allowCopyLink, this.lastMessageMenuStatus.allowCopyLinkPm);

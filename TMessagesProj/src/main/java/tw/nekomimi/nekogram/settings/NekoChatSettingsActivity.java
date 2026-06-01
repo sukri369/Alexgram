@@ -245,7 +245,7 @@ public class NekoChatSettingsActivity extends BaseNekoXSettingsActivity implemen
                 add(new ConfigCellTextCheckIcon(NekoConfig.showChangePermissions, getString(R.string.ChangePermissions), R.drawable.msg_permissions));
             }}))
     ));
-    private final AbstractConfigCell customReplyWordRow = cellGroup.appendCell(new ConfigCellTextInput(null, NaConfig.INSTANCE.getCustomReplyWord(), "Custom Reply Word", null));
+    private final AbstractConfigCell customReplyWordRow = cellGroup.appendCell(new ConfigCellTextInput("Custom Reply Word", NaConfig.INSTANCE.getCustomReplyWord(), "Custom Reply Word", null));
     // [Alexgram: Customizable Message Menu] - End
     private final AbstractConfigCell mediaViewerMenuRow = cellGroup.appendCell(new ConfigCellTextCheckIcon(null, "MediaViewerMenu", null, R.drawable.msg_photos, false, () ->
             showDialog(showConfigMenuWithIconAlert(this, R.string.MediaViewerMenu, new ArrayList<>() {{
