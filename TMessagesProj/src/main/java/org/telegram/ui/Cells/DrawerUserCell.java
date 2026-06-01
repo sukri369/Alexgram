@@ -228,7 +228,7 @@ public class DrawerUserCell extends FrameLayout implements NotificationCenter.No
                 Theme.isCurrentThemeDark() ? 0.70f : 0.45f
         );
         selectedBackgroundPaint.setColor(Theme.blendOver(menuBackground, selectorOverlay));
-        rect.set(dp(22), dp(5), getMeasuredWidth() - dp(30), getMeasuredHeight() - dp(5));
+        rect.set(dp(20), dp(5), getMeasuredWidth() - dp(20), getMeasuredHeight() - dp(5));
         canvas.drawRoundRect(rect, dp(13), dp(13), selectedBackgroundPaint);
 
         avatarRingPaint.setStyle(Paint.Style.STROKE);
