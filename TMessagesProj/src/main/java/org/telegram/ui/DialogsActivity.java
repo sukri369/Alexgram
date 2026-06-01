@@ -14377,8 +14377,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         if (filterTabsView != null && (filterTabsView.isEditing() || filterTabsView.isAnimatingIndicator())) {
             return false;
         }
-        return SharedConfig.getChatSwipeAction(currentAccount) != SwipeGestureSettingsView.SWIPE_GESTURE_FOLDERS
-                || isHomeDrawerOnFirstTab();
+        return isHomeDrawerOnFirstTab();
     }
 
     @Nullable
