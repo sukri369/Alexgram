@@ -874,6 +874,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         tabsAnimation = null;
                     }
                     tabsAnimationInProgress = false;
+                    updateHomeDrawerAvailability();
                 }
                 return tabsAnimationInProgress;
             }
@@ -1574,6 +1575,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                                 actionBar.setEnabled(true);
                                 filterTabsView.setEnabled(true);
                                 checkListLoad(viewPages[0]);
+                                updateHomeDrawerAvailability();
                             }
                         });
                         tabsAnimation.start();
@@ -14366,7 +14368,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private boolean isHomeDrawerOnFirstTab() {
         return filterTabsView == null
                 || filterTabsView.getTabsCount() < 2
-                || filterTabsView.getCurrentTabId() == filterTabsView.getFirstTabId();
+                || filterTabsView.isFirstTabSelected();
     }
 
     private boolean canSwipeOpenHomeDrawer() {
