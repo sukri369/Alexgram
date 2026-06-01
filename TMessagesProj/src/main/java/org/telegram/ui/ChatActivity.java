@@ -46607,7 +46607,7 @@ public class ChatActivity extends BaseFragment implements
 				if (handleTranslateDuringAutoTrans(null)) {
 					return;
 				}
-				MessageTransKt.translateMessages(this, option == nkbtn_translate_llm ? Translator.providerLLMTranslator : 0);
+				MessageTransKt.translateMessages(this, id == nkbtn_translate_llm ? Translator.providerLLMTranslator : 0);
 				break;
 			case nkbtn_translateVoice:
 				TranscribeButton.retryOrTranslateVoiceTranscription(selectedObject, false, null);
