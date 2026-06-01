@@ -37,6 +37,7 @@ import org.telegram.tgnet.TLRPC;
 import org.telegram.tgnet.tl.TL_stars;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.DrawerContainer;
+import org.telegram.ui.ActionBar.INavigationLayout;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Adapters.DrawerLayoutAdapter;
 import org.telegram.ui.Cells.DrawerActionCell;
@@ -49,11 +50,13 @@ import org.telegram.ui.Components.AnimatedEmojiDrawable;
 import org.telegram.ui.Components.BulletinFactory;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.MediaActivity;
+import org.telegram.ui.Components.Premium.LimitReachedBottomSheet;
 import org.telegram.ui.Components.RecyclerListView;
-import org.telegram.ui.Components.SelectAnimatedEmojiDialog;
 import org.telegram.ui.Components.SharedMediaLayout;
 import org.telegram.ui.Components.SideMenultItemAnimator;
-import org.telegram.ui.Components.StarGiftSheet;
+import org.telegram.ui.Stars.StarGiftSheet;
+import org.telegram.ui.Stars.StarsController;
+import org.telegram.ui.bots.BotWebViewSheet;
 import org.telegram.ui.web.WebBrowserSettings;
 
 import tw.nekomimi.nekogram.BackButtonMenuRecent;
@@ -158,8 +161,11 @@ public class HomeDrawerHelper {
         BaseFragment fragment = null;
         if (activity.actionBarLayout != null && activity.actionBarLayout.getFragmentStack() != null && !activity.actionBarLayout.getFragmentStack().isEmpty()) {
             fragment = activity.actionBarLayout.getFragmentStack().get(0);
-        } else if (activity.layersActionBarLayout != null && activity.layersActionBarLayout.getFragmentStack() != null && !activity.layersActionBarLayout.getFragmentStack().isEmpty()) {
-            fragment = activity.layersActionBarLayout.getFragmentStack().get(0);
+        } else {
+            INavigationLayout layersActionBarLayout = activity.getLayersActionBarLayout();
+            if (layersActionBarLayout != null && layersActionBarLayout.getFragmentStack() != null && !layersActionBarLayout.getFragmentStack().isEmpty()) {
+                fragment = layersActionBarLayout.getFragmentStack().get(0);
+            }
         }
         if (fragment instanceof MainTabsActivity mainTabsActivity) {
             DialogsActivity dialogsActivity = mainTabsActivity.getDialogsActivity();
