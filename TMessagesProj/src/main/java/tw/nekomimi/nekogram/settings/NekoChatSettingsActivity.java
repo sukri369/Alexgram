@@ -214,8 +214,21 @@ public class NekoChatSettingsActivity extends BaseNekoXSettingsActivity implemen
                 add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getChatMenuItemDeleteOwnMessages(), getString(R.string.DeleteAllFromSelf), R.drawable.msg_delete));
             }}))
     ));
+    // [Alexgram: Customizable Message Menu] - Start
     private final AbstractConfigCell messageMenuRow = cellGroup.appendCell(new ConfigCellTextCheckIcon(null, "MessageMenu", null, R.drawable.msg_list, false, () ->
-            showDialog(showConfigMenuWithIconAlert(this, R.string.MessageMenu, new ArrayList<>() {{
+            showDialog(showMessageMenuConfigAlert(this, R.string.MessageMenu, new ArrayList<>() {{
+                add(new ConfigCellTextCheckIcon(NekoConfig.showAddToSavedMessages, getString(R.string.AddToSavedMessages), R.drawable.msg_saved));
+                add(new ConfigCellTextCheckIcon(NekoConfig.showRepeat, getString(R.string.Repeat), R.drawable.msg_repeat));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getShowRepeatAsCopy(), R.drawable.msg_repeat));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getShowInvert(), "Invert", R.drawable.msg_retry));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getShowCustomReply(), "Custom reply word", R.drawable.ic_select_between));
+                add(new ConfigCellTextCheckIcon(NekoConfig.showViewHistory, getString(R.string.ViewHistory), R.drawable.menu_recent));
+                add(new ConfigCellTextCheckIcon(NekoConfig.showMessageDetails, getString(R.string.MessageDetails), R.drawable.msg_info));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getShowAddToBookmark(), getString(R.string.AddBookmark), R.drawable.msg_fave));
+                add(new ConfigCellTextCheckIcon(NekoConfig.showTranslate, getString(R.string.Translate), R.drawable.msg_translate));
+                add(new ConfigCellTextCheckIcon(NekoConfig.showMessageHide, getString(R.string.Hide), R.drawable.msg_disable));
+                add(new ConfigCellTextCheckIcon(NekoConfig.showReport, getString(R.string.ReportChat), R.drawable.msg_report));
+                add(new ConfigCellTextCheckIcon(NekoConfig.showShareMessages, getString(R.string.ShareMessages), R.drawable.msg_shareout));
                 add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getShowReactions(), R.drawable.msg_reactions2));
                 add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getShowReplyInPrivate(), R.drawable.menu_reply));
                 add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getShowCopyLink(), R.drawable.msg_link));
@@ -226,22 +239,14 @@ public class NekoChatSettingsActivity extends BaseNekoXSettingsActivity implemen
                 add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getShowAddToFavorites(), R.drawable.msg_fave));
                 add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getShowNoQuoteForward(), R.drawable.msg_forward_noquote));
                 add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getShowSetReminder(), R.drawable.msg_calendar2));
-                add(new ConfigCellTextCheckIcon(NekoConfig.showAddToSavedMessages, getString(R.string.AddToSavedMessages), R.drawable.msg_saved));
-                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getShowAddToBookmark(), getString(R.string.AddBookmark), R.drawable.msg_fave));
-                add(new ConfigCellTextCheckIcon(NekoConfig.showRepeat, getString(R.string.Repeat), R.drawable.msg_repeat));
-                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getShowRepeatAsCopy(), R.drawable.msg_repeat));
                 add(new ConfigCellTextCheckIcon(NekoConfig.showDeleteDownloadedFile, getString(R.string.DeleteDownloadedFile), R.drawable.msg_clear));
-                add(new ConfigCellTextCheckIcon(NekoConfig.showViewHistory, getString(R.string.ViewHistory), R.drawable.menu_recent));
-                add(new ConfigCellTextCheckIcon(NekoConfig.showTranslate, getString(R.string.Translate), R.drawable.msg_translate));
                 add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getShowTranslateMessageLLM(), R.drawable.magic_stick_solar));
-                add(new ConfigCellTextCheckIcon(NekoConfig.showShareMessages, getString(R.string.ShareMessages), R.drawable.msg_shareout));
-                add(new ConfigCellTextCheckIcon(NekoConfig.showMessageHide, getString(R.string.Hide), R.drawable.msg_disable));
-                add(new ConfigCellTextCheckIcon(NekoConfig.showReport, getString(R.string.ReportChat), R.drawable.msg_report));
                 add(new ConfigCellTextCheckIcon(NekoConfig.showAdminActions, getString(R.string.EditAdminRights), R.drawable.profile_admin));
                 add(new ConfigCellTextCheckIcon(NekoConfig.showChangePermissions, getString(R.string.ChangePermissions), R.drawable.msg_permissions));
-                add(new ConfigCellTextCheckIcon(NekoConfig.showMessageDetails, getString(R.string.MessageDetails), R.drawable.msg_info));
             }}))
     ));
+    private final AbstractConfigCell customReplyWordRow = cellGroup.appendCell(new ConfigCellTextInput(null, NaConfig.INSTANCE.getCustomReplyWord(), "Custom Reply Word", null));
+    // [Alexgram: Customizable Message Menu] - End
     private final AbstractConfigCell mediaViewerMenuRow = cellGroup.appendCell(new ConfigCellTextCheckIcon(null, "MediaViewerMenu", null, R.drawable.msg_photos, false, () ->
             showDialog(showConfigMenuWithIconAlert(this, R.string.MediaViewerMenu, new ArrayList<>() {{
                 add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getMediaViewerMenuItemForward(), getString(R.string.Forward), R.drawable.msg_forward));

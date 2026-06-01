@@ -1334,6 +1334,26 @@ object NaConfig {
             ConfigItem.configTypeBool,
             true
         )
+    // [Alexgram: Customizable Message Menu] - Start
+    val showInvert =
+        addConfig(
+            "showInvert",
+            ConfigItem.configTypeBool,
+            false
+        )
+    val showCustomReply =
+        addConfig(
+            "showCustomReply",
+            ConfigItem.configTypeBool,
+            false
+        )
+    val customReplyWord =
+        addConfig(
+            "CustomReplyWord",
+            ConfigItem.configTypeString,
+            "Great"
+        )
+    // [Alexgram: Customizable Message Menu] - End
     val preferCommonGroupsTab =
         addConfig(
             "PreferCommonGroupsTab",

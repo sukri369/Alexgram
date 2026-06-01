@@ -65,6 +65,11 @@ import tw.nekomimi.nekogram.config.cell.WithOnClick;
 import tw.nekomimi.nekogram.helpers.QuickSettingEntry;
 import tw.nekomimi.nekogram.helpers.QuickSettingsController;
 import tw.nekomimi.nekogram.ui.cells.HeaderCell;
+// [Alexgram: Customizable Message Menu] - Start
+import android.content.SharedPreferences;
+import android.widget.ScrollView;
+import tw.nekomimi.nekogram.ui.cells.MessageMenuConfigCell;
+// [Alexgram: Customizable Message Menu] - End
 
 public class BaseNekoXSettingsActivity extends BaseFragment {
     protected BlurredRecyclerView listView;
@@ -809,4 +814,52 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
         builder.setView(linearLayout);
         return builder.create();
     }
+
+    // [Alexgram: Customizable Message Menu] - Start
+    public static int getMessageMenuMode(String key, boolean defaultVal) {
+        SharedPreferences prefs = NekoConfig.getPreferences();
+        String modeKey = key + "_mode";
+        if (prefs.contains(modeKey)) {
+            return prefs.getInt(modeKey, defaultVal ? 1 : 0);
+        }
+        // Fallback to original boolean
+        boolean boolVal = prefs.getBoolean(key, defaultVal);
+        return boolVal ? 1 : 0;
+    }
+
+    public static void setMessageMenuMode(String key, int mode) {
+        SharedPreferences prefs = NekoConfig.getPreferences();
+        prefs.edit().putInt(key + "_mode", mode).apply();
+        // Sync legacy boolean
+        prefs.edit().putBoolean(key, mode != 0).apply();
+        NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.reloadInterface);
+    }
+
+    public static AlertDialog showMessageMenuConfigAlert(BaseFragment bf, int titleKeyRes, ArrayList<ConfigCellTextCheckIcon> configItems) {
+        Context context = bf.getContext();
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle(getString(titleKeyRes));
+
+        ScrollView scrollView = new ScrollView(context);
+        LinearLayout container = new LinearLayout(context);
+        container.setOrientation(LinearLayout.VERTICAL);
+        scrollView.addView(container);
+
+        for (int a = 0; a < configItems.size(); a++) {
+            ConfigCellTextCheckIcon configItem = configItems.get(a);
+            MessageMenuConfigCell cell = new MessageMenuConfigCell(
+                context,
+                configItem.getBindConfig().getKey(),
+                configItem.getTitle().toString(),
+                (boolean) configItem.getBindConfig().defaultValue,
+                () -> NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.reloadInterface)
+            );
+            container.addView(cell, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+        }
+
+        builder.setPositiveButton(getString(R.string.OK), null);
+        builder.setView(scrollView);
+        return builder.create();
+    }
+    // [Alexgram: Customizable Message Menu] - End
 }

@@ -489,6 +489,10 @@ public class ChatActivity extends BaseFragment implements
 	private final static int nkbtn_ai_reply = 2102;
 	private final static int nkbtn_ai_summarize = 2103;
 	// [Alexgram: AI Reply] - End
+	// [Alexgram: Customizable Message Menu] - Start
+	private final static int nkbtn_invert = 2120;
+	private final static int nkbtn_custom_reply = 2121;
+	// [Alexgram: Customizable Message Menu] - End
 
 	public int shareAlertDebugMode = DEBUG_SHARE_ALERT_MODE_NORMAL;
 	public boolean shareAlertDebugTopicsSlowMotion;
@@ -33076,6 +33080,50 @@ public class ChatActivity extends BaseFragment implements
 						popupLayout.addView(new ActionBarPopupWindow.GapView(contentView.getContext(), themeDelegate), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 8));
 					}
 				}
+				// [Alexgram: Customizable Message Menu] - Start
+				// Filter context menu options (Hide, Text, Icon)
+				ArrayList<CharSequence> textItems = new ArrayList<>();
+				ArrayList<Integer> textIcons = new ArrayList<>();
+				ArrayList<Integer> textOptions = new ArrayList<>();
+
+				ArrayList<CharSequence> gridItems = new ArrayList<>();
+				ArrayList<Integer> gridIcons = new ArrayList<>();
+				ArrayList<Integer> gridOptions = new ArrayList<>();
+
+				for (int a = 0, N = items.size(); a < N; a++) {
+					CharSequence item = items.get(a);
+					int icon = icons.get(a);
+					int option = options.get(a);
+
+					String key = getConfigKeyForOption(option);
+					if (key != null) {
+						boolean defVal = getDefaultValueForOption(option);
+						int mode = tw.nekomimi.nekogram.settings.BaseNekoXSettingsActivity.getMessageMenuMode(key, defVal);
+						if (mode == 0) {
+							// Hide
+							continue;
+						} else if (mode == 2) {
+							// Icon
+							gridItems.add(item);
+							gridIcons.add(icon);
+							gridOptions.add(option);
+							continue;
+						}
+					}
+					// Text
+					textItems.add(item);
+					textIcons.add(icon);
+					textOptions.add(option);
+				}
+
+				items.clear();
+				items.addAll(textItems);
+				icons.clear();
+				icons.addAll(textIcons);
+				options.clear();
+				options.addAll(textOptions);
+				// [Alexgram: Customizable Message Menu] - End
+
 				scrimPopupWindowItems = new ActionBarMenuSubItem[items.size()];
 				final boolean hasGroupedIcons = GroupedIconsView.useGroupedIcons();
 				for (int a = 0, N = items.size(); a < N; a++) {
@@ -33336,6 +33384,60 @@ public class ChatActivity extends BaseFragment implements
 					var groupedIconsView = new GroupedIconsView(getContext(), ChatActivity.this, selectedObject, this.lastMessageMenuStatus.allowReply, this.lastMessageMenuStatus.allowReplyPm, this.lastMessageMenuStatus.allowEdit, this.lastMessageMenuStatus.allowDelete, this.lastMessageMenuStatus.allowForward, this.lastMessageMenuStatus.allowCopy, this.lastMessageMenuStatus.allowCopyPhoto, this.lastMessageMenuStatus.allowCopyLink, this.lastMessageMenuStatus.allowCopyLinkPm);
 					popupLayout.addView(groupedIconsView.linearLayout);
 				}
+
+				// [Alexgram: Customizable Message Menu] - Start
+				if (!gridOptions.isEmpty()) {
+					popupLayout.addView(new ActionBarPopupWindow.GapView(contentView.getContext(), themeDelegate), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 8));
+
+					LinearLayout gridContainer = new LinearLayout(contentView.getContext());
+					gridContainer.setOrientation(LinearLayout.VERTICAL);
+					gridContainer.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(8), AndroidUtilities.dp(12), AndroidUtilities.dp(8));
+
+					int totalItems = gridOptions.size();
+					int columns = 4;
+					int rows = (totalItems + columns - 1) / columns;
+
+					for (int r = 0; r < rows; r++) {
+						LinearLayout rowLayout = new LinearLayout(contentView.getContext());
+						rowLayout.setOrientation(LinearLayout.HORIZONTAL);
+						rowLayout.setGravity(Gravity.CENTER_VERTICAL);
+						
+						for (int c = 0; c < columns; c++) {
+							int index = r * columns + c;
+							if (index < totalItems) {
+								int optionId = gridOptions.get(index);
+								int iconRes = gridIcons.get(index);
+								CharSequence title = gridItems.get(index);
+
+								FrameLayout cell = new FrameLayout(contentView.getContext());
+								
+								ImageView imageView = new ImageView(contentView.getContext());
+								imageView.setScaleType(ImageView.ScaleType.CENTER);
+								imageView.setImageResource(iconRes);
+								imageView.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_actionBarDefaultSubmenuItemIcon), PorterDuff.Mode.SRC_IN));
+								imageView.setBackground(Theme.createCircleSelectorDrawable(Theme.getColor(Theme.key_dialogButtonSelector), 0, 0));
+								
+								imageView.setContentDescription(title);
+
+								int btnSize = AndroidUtilities.dp(48);
+								cell.addView(imageView, LayoutHelper.createFrame(btnSize, btnSize, Gravity.CENTER));
+
+								imageView.setOnClickListener(v1 -> {
+									closeMenu(true);
+									processSelectedOption(optionId);
+								});
+
+								rowLayout.addView(cell, LayoutHelper.createLinear(0, AndroidUtilities.dp(56), 1.0f));
+							} else {
+								View dummy = new View(contentView.getContext());
+								rowLayout.addView(dummy, LayoutHelper.createLinear(0, AndroidUtilities.dp(56), 1.0f));
+							}
+						}
+						gridContainer.addView(rowLayout, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+					}
+					popupLayout.addView(gridContainer, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+				}
+				// [Alexgram: Customizable Message Menu] - End
 
 			}
 
@@ -46164,10 +46266,128 @@ public class ChatActivity extends BaseFragment implements
 		}
 	}
 
+	// [Alexgram: Customizable Message Menu] - Start
+	private String getConfigKeyForOption(int optionId) {
+		switch (optionId) {
+			case nkbtn_reply_private:
+				return "ReplyInPrivate";
+			case nkbtn_copy_link_in_pm:
+			case OPTION_COPY_LINK:
+				return "CopyLink";
+			case OPTION_COPY_FRAME:
+				return "CopyVideoFrame";
+			case OPTION_COPY_PHOTO:
+				return "CopyPhoto";
+			case OPTION_COPY_PHOTO_AS_STICKER:
+				return "CopyPhotoAsSticker";
+			case OPTION_ADD_TO_STICKERS_OR_MASKS:
+				return "AddToStickers";
+			case OPTION_ADD_STICKER_TO_FAVORITES:
+				return "AddToFavorites";
+			case nkbtn_forward_noquote:
+				return "NoQuoteForward";
+			case nkbtn_setReminder:
+				return "SetReminder";
+			case nkbtn_savemessage:
+				return "showAddToSavedMessages";
+			case nkbtn_bookmark:
+				return "ShowAddToBookmark";
+			case nkbtn_repeat:
+				return "showRepeat";
+			case nkbtn_repeatascopy:
+				return "RepeatAsCopy";
+			case nkbtn_invert:
+				return "showInvert";
+			case nkbtn_custom_reply:
+				return "showCustomReply";
+			case nkbtn_deldlcache:
+				return "showDeleteDownloadedFile";
+			case nkbtn_view_history:
+				return "showViewHistory";
+			case nkbtn_translate:
+			case OPTION_TRANSLATE:
+				return "showTranslate";
+			case nkbtn_translate_llm:
+				return "ShowTranslateMessageLLM";
+			case nkbtn_sharemessage:
+				return "showShareMessages";
+			case nkbtn_hide:
+				return "showMessageHide";
+			case nkbtn_report:
+			case OPTION_REPORT_CHAT:
+				return "showReport";
+			case nkbtn_editAdmin:
+				return "showAdminActions";
+			case nkbtn_editPermission:
+				return "showChangePermissions";
+			case nkbtn_detail:
+				return "showMessageDetails";
+			default:
+				return null;
+		}
+	}
+
+	private boolean getDefaultValueForOption(int optionId) {
+		switch (optionId) {
+			case nkbtn_forward_noquote:
+			case nkbtn_repeatascopy:
+			case nkbtn_invert:
+			case nkbtn_custom_reply:
+				return false;
+			default:
+				return true;
+		}
+	}
+	// [Alexgram: Customizable Message Menu] - End
+
 	private void nkbtn_onclick(int id) {
 		// from "items"
 		createUndoView();
 		switch (id) {
+			// [Alexgram: Customizable Message Menu] - Start
+			case nkbtn_invert: {
+				if (selectedObject != null && selectedObject.messageOwner != null && selectedObject.messageOwner.message != null) {
+					String text = selectedObject.messageOwner.message;
+					String reversedText = new StringBuilder(text).reverse().toString();
+					AndroidUtilities.addToClipboard(reversedText);
+					if (chatActivityEnterView != null) {
+						chatActivityEnterView.setFieldText(reversedText);
+					}
+					if (BulletinFactory.canShowBulletin(this)) {
+						BulletinFactory.of(this).createCopyBulletin(LocaleController.getString("TextCopied", R.string.TextCopied)).show();
+					}
+				}
+				break;
+			}
+			case nkbtn_custom_reply: {
+				if (selectedObject != null) {
+					String replyWord = NaConfig.INSTANCE.getCustomReplyWord().String();
+					if (TextUtils.isEmpty(replyWord)) {
+						replyWord = "Great";
+					}
+					SendMessagesHelper.SendMessageParams params = SendMessagesHelper.SendMessageParams.of(
+						replyWord,
+						dialog_id,
+						selectedObject,
+						getThreadMessage(),
+						null,
+						false,
+						null,
+						null,
+						null,
+						true,
+						0,
+						0,
+						null,
+						false
+					);
+					params.quick_reply_shortcut = quickReplyShortcut;
+					params.quick_reply_shortcut_id = getQuickReplyId();
+					SendMessagesHelper.getInstance(currentAccount).sendMessage(params);
+				}
+				break;
+			}
+			// [Alexgram: Customizable Message Menu] - End
 			// [Alexgram: AI Reply] - Start
 			case nkbtn_ai_reply: {
 				showAiReplyDialog();
@@ -48936,6 +49156,18 @@ public class ChatActivity extends BaseFragment implements
 				}
 			}
 		}
+		// [Alexgram: Customizable Message Menu] - Start
+		if (NaConfig.INSTANCE.getShowInvert().Bool() && selectedObject != null && selectedObject.messageOwner != null && !TextUtils.isEmpty(selectedObject.messageOwner.message)) {
+			items.add("Invert");
+			options.add(nkbtn_invert);
+			icons.add(R.drawable.msg_retry);
+		}
+		if (NaConfig.INSTANCE.getShowCustomReply().Bool() && allowReply) {
+			items.add(NaConfig.INSTANCE.getCustomReplyWord().String());
+			options.add(nkbtn_custom_reply);
+			icons.add(R.drawable.ic_select_between);
+		}
+		// [Alexgram: Customizable Message Menu] - End
 		if (NekoConfig.showMessageDetails.Bool()) {
 			items.add(LocaleController.getString(R.string.MessageDetails));
 			options.add(nkbtn_detail);
