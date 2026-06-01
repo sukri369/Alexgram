@@ -849,9 +849,10 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
             ConfigCellTextCheckIcon configItem = configItems.get(a);
             MessageMenuConfigCell cell = new MessageMenuConfigCell(
                 context,
-                configItem.getBindConfig().getKey(),
+                configItem.getKey(),
                 configItem.getTitle().toString(),
-                (boolean) configItem.getBindConfig().defaultValue,
+                configItem.getResId(),
+                configItem.getBindConfig() != null ? (boolean) configItem.getBindConfig().defaultValue : true,
                 () -> NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.reloadInterface)
             );
             container.addView(cell, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));

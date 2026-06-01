@@ -46347,7 +46347,7 @@ public class ChatActivity extends BaseFragment implements
 			case OPTION_COPY_LINK:
 				return "CopyLink";
 			case OPTION_COPY_FRAME:
-				return "CopyVideoFrame";
+				return "MessageMenuCopyFrame";
 			case OPTION_COPY_PHOTO:
 				return "CopyPhoto";
 			case OPTION_COPY_PHOTO_AS_STICKER:
@@ -46380,7 +46380,7 @@ public class ChatActivity extends BaseFragment implements
 			case OPTION_TRANSLATE:
 				return "showTranslate";
 			case nkbtn_translate_llm:
-				return "ShowTranslateMessageLLM";
+				return "TranslateMessageLLM";
 			case nkbtn_sharemessage:
 				return "showShareMessages";
 			case nkbtn_hide:
@@ -46607,7 +46607,7 @@ public class ChatActivity extends BaseFragment implements
 				if (handleTranslateDuringAutoTrans(null)) {
 					return;
 				}
-				MessageTransKt.translateMessages(this, id == nkbtn_translate_llm ? Translator.providerLLMTranslator : 0);
+				MessageTransKt.translateMessages(this, option == nkbtn_translate_llm ? Translator.providerLLMTranslator : 0);
 				break;
 			case nkbtn_translateVoice:
 				TranscribeButton.retryOrTranslateVoiceTranscription(selectedObject, false, null);

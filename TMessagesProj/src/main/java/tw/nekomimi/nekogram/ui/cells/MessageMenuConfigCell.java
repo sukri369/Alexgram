@@ -24,7 +24,7 @@ public class MessageMenuConfigCell extends LinearLayout {
     private int currentMode;
     private final Runnable onChanged;
 
-    public MessageMenuConfigCell(Context context, String key, String title, boolean defaultVal, Runnable onChanged) {
+    public MessageMenuConfigCell(Context context, String key, String title, int iconResId, boolean defaultVal, Runnable onChanged) {
         super(context);
         this.configKey = key;
         this.defaultValue = defaultVal;
@@ -34,6 +34,13 @@ public class MessageMenuConfigCell extends LinearLayout {
         setOrientation(HORIZONTAL);
         setGravity(Gravity.CENTER_VERTICAL);
         setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(12), AndroidUtilities.dp(16), AndroidUtilities.dp(12));
+
+        if (iconResId > 0) {
+            android.widget.ImageView iconView = new android.widget.ImageView(context);
+            iconView.setImageResource(iconResId);
+            iconView.setColorFilter(new android.graphics.PorterDuffColorFilter(Theme.getColor(Theme.key_windowBackgroundWhiteGrayIcon), android.graphics.PorterDuff.Mode.MULTIPLY));
+            addView(iconView, LayoutHelper.createLinear(24, 24, Gravity.CENTER, 0, 0, 12, 0));
+        }
 
         titleView = new TextView(context);
         titleView.setText(title);
