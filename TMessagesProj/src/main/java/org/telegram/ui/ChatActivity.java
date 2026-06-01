@@ -33463,7 +33463,7 @@ public class ChatActivity extends BaseFragment implements
 
 					LinearLayout gridContainer = new LinearLayout(contentView.getContext());
 					gridContainer.setOrientation(LinearLayout.VERTICAL);
-					gridContainer.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(8), AndroidUtilities.dp(12), AndroidUtilities.dp(8));
+					gridContainer.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(4), AndroidUtilities.dp(12), AndroidUtilities.dp(4));
 
 					int totalItems = gridOptions.size();
 					int columns = 4;
@@ -33499,15 +33499,15 @@ public class ChatActivity extends BaseFragment implements
 									processSelectedOption(optionId);
 								});
 
-								rowLayout.addView(cell, LayoutHelper.createLinear(0, AndroidUtilities.dp(56), 1.0f));
+								rowLayout.addView(cell, new LinearLayout.LayoutParams(0, AndroidUtilities.dp(48), 1.0f));
 							} else {
 								View dummy = new View(contentView.getContext());
-								rowLayout.addView(dummy, LayoutHelper.createLinear(0, AndroidUtilities.dp(56), 1.0f));
+								rowLayout.addView(dummy, new LinearLayout.LayoutParams(0, AndroidUtilities.dp(48), 1.0f));
 							}
 						}
-						gridContainer.addView(rowLayout, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+						gridContainer.addView(rowLayout, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 					}
-					popupLayout.addView(gridContainer, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+					popupLayout.addView(gridContainer, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 				}
 				// [Alexgram: Customizable Message Menu] - End
 
