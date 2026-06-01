@@ -197,6 +197,30 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
             .setNegativeButton(getString(R.string.Cancel), (d, w) -> d.dismiss())
             .makeRed(AlertDialog.BUTTON_POSITIVE)
             .show()));
+    // [Alexgram: Home Drawer] - Start
+    private final AbstractConfigCell navigationDrawerRow = cellGroup.appendCell(
+            new ConfigCellTextCheck(NekoConfig.navigationDrawerEnabled, null, getString(R.string.HomeDrawer))
+    );
+    private final AbstractConfigCell drawerElementsRow = cellGroup.appendCell(new ConfigCellTextCheckIcon(null, "DrawerElements", getString(R.string.DrawerElements), R.drawable.menu_newfilter, false, () ->
+            showDialog(showConfigMenuWithIconAlert(this, R.string.DrawerElements, new java.util.ArrayList<>() {{
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemMyProfile(), getString(R.string.MyProfile), R.drawable.left_status_profile));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemSetEmojiStatus(), getString(R.string.SetEmojiStatus), R.drawable.msg_status_set_solar, true));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemArchivedChats(), getString(R.string.ArchivedChats), R.drawable.msg_archive, true));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemNewGroup(), getString(R.string.NewGroup), R.drawable.msg_groups));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemNewChannel(), getString(R.string.NewChannel), R.drawable.msg_channel));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemContacts(), getString(R.string.Contacts), R.drawable.msg_contacts));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemCalls(), getString(R.string.Calls), R.drawable.msg_calls));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemRecentChats(), getString(R.string.RecentChats), R.drawable.msg_recent_solar));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemSaved(), getString(R.string.SavedMessages), R.drawable.msg_saved));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemSettings(), getString(R.string.Settings), R.drawable.msg_settings_old, true));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemNSettings(), getString(R.string.NekoSettings), R.drawable.nagramx_outline));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemBrowser(), getString(R.string.InappBrowser), R.drawable.web_browser));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemQrLogin(), getString(R.string.ImportLogin), R.drawable.msg_qrcode));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemSessions(), getString(R.string.Devices), R.drawable.msg2_devices, true));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemRestartApp(), getString(R.string.RestartApp), R.drawable.msg_retry));
+            }}))
+    ));
+    // [Alexgram: Home Drawer] - End
     private final AbstractConfigCell dividerAyuMoments = cellGroup.appendCell(new ConfigCellDivider());
 
     // N-Config
@@ -264,6 +288,11 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
         if (NaConfig.INSTANCE.getBackAnimationStyle().Int() != ActionBarLayout.BACK_ANIMATION_SPRING) {
             cellGroup.rows.remove(springAnimationCrossfadeRow);
         }
+        // [Alexgram: Home Drawer] - Start
+        if (!NekoConfig.navigationDrawerEnabled.Bool()) {
+            cellGroup.rows.remove(drawerElementsRow);
+        }
+        // [Alexgram: Home Drawer] - End
         checkStoriesRows();
         checkUseDeletedIconRows();
         checkSaveBotMsgRows();
@@ -354,6 +383,11 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
             // [Alexgram: Force Max FPS] - End
             } else if (key.equals(NaConfig.INSTANCE.getV8dAudio().getKey())) {
                 tooltip.showWithAction(0, UndoView.ACTION_NEED_RESTART, null, null);
+            // [Alexgram: Home Drawer] - Start
+            } else if (key.equals(NekoConfig.navigationDrawerEnabled.getKey())) {
+                checkDrawerElementsRow();
+                tooltip.showWithAction(0, UndoView.ACTION_NEED_RESTART, null, null);
+            // [Alexgram: Home Drawer] - End
             }
         };
 
@@ -895,6 +929,32 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
             listAdapter.notifyItemChanged(cellGroup.rows.indexOf(clearMessageDatabaseRow));
         }
     }
+
+    // [Alexgram: Home Drawer] - Start
+    private void checkDrawerElementsRow() {
+        boolean enabled = NekoConfig.navigationDrawerEnabled.Bool();
+        if (listAdapter == null) {
+            if (!enabled) {
+                cellGroup.rows.remove(drawerElementsRow);
+            }
+            return;
+        }
+        if (enabled) {
+            final int index = cellGroup.rows.indexOf(navigationDrawerRow);
+            if (!cellGroup.rows.contains(drawerElementsRow)) {
+                cellGroup.rows.add(index + 1, drawerElementsRow);
+                listAdapter.notifyItemInserted(index + 1);
+            }
+        } else {
+            final int index = cellGroup.rows.indexOf(drawerElementsRow);
+            if (index != -1) {
+                cellGroup.rows.remove(drawerElementsRow);
+                listAdapter.notifyItemRemoved(index);
+            }
+        }
+        addRowsToMap(cellGroup);
+    }
+    // [Alexgram: Home Drawer] - End
 
     private void checkStoriesRows() {
         boolean disabled = NaConfig.INSTANCE.getDisableStories().Bool();

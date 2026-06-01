@@ -1187,8 +1187,16 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
             return openCallsSelector(button);
         }
         if (index == INDEX_SETTINGS) {
+            final boolean drawerOn = NekoConfig.navigationDrawerEnabled.Bool();
+            final boolean showGhost = NekoConfig.showGhostInDrawer.Bool();
+            final boolean ghostInDrawer = drawerOn && showGhost;
+            final boolean nSettingsInDrawer = drawerOn && NaConfig.INSTANCE.getDrawerItemNSettings().Bool();
+            final boolean browserInDrawer = drawerOn && NaConfig.INSTANCE.getDrawerItemBrowser().Bool();
+            final boolean restartInDrawer = drawerOn && NaConfig.INSTANCE.getDrawerItemRestartApp().Bool();
+
             ItemOptions o = ItemOptions.makeOptions(this, button);
-            if (NekoConfig.showGhostInDrawer.Bool()) {
+            boolean addedAny = false;
+            if (showGhost && !ghostInDrawer) {
                 final String msg = NekoConfig.isGhostModeActive()
                     ? getString(R.string.DisableGhostMode)
                     : getString(R.string.EnableGhostMode);
@@ -1201,16 +1209,31 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
                     NotificationCenter.getInstance(UserConfig.selectedAccount).postNotificationName(NotificationCenter.mainUserInfoChanged);
                 });
                 o.addGap();
+                addedAny = true;
             }
-            o.add(R.drawable.msg_settings, getString(R.string.NekoSettings), () -> presentFragment(new NekoSettingsActivity()));
-            o.add(R.drawable.web_browser, getString(R.string.InappBrowser), () -> presentFragment(new WebBrowserSettings(null)), () -> BrowserUtils.openBrowserHome(null, true));
-            o.addGap();
-            o.add(R.drawable.msg_retry_solar, getString(R.string.RestartApp), () ->
-                AppRestartHelper.triggerRebirth(
-                    ApplicationLoader.applicationContext,
-                    new Intent(ApplicationLoader.applicationContext, LaunchActivity.class)
-                )
-            );
+            if (!nSettingsInDrawer) {
+                o.add(R.drawable.msg_settings, getString(R.string.NekoSettings), () -> presentFragment(new NekoSettingsActivity()));
+                addedAny = true;
+            }
+            if (!browserInDrawer) {
+                o.add(R.drawable.web_browser, getString(R.string.InappBrowser), () -> presentFragment(new WebBrowserSettings(null)), () -> BrowserUtils.openBrowserHome(null, true));
+                addedAny = true;
+            }
+            if (!restartInDrawer) {
+                if (addedAny) {
+                    o.addGap();
+                }
+                o.add(R.drawable.msg_retry_solar, getString(R.string.RestartApp), () ->
+                    AppRestartHelper.triggerRebirth(
+                        ApplicationLoader.applicationContext,
+                        new Intent(ApplicationLoader.applicationContext, LaunchActivity.class)
+                    )
+                );
+                addedAny = true;
+            }
+            if (!addedAny) {
+                return false;
+            }
             setupPopupMenuStyle(o);
             o.show();
             return true;
@@ -1234,18 +1257,30 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
             o.dismiss();
             BackButtonMenuRecent.show(currentAccount, this, button);
         });
-        o.addGap();
-        o.add(R.drawable.msg_archive, getString(R.string.ArchivedChats), () -> {
-            Bundle args = new Bundle();
-            args.putInt("folderId", 1);
-            presentFragment(new DialogsActivity(args));
-        });
-        o.add(R.drawable.msg_saved, getString(R.string.SavedMessages), () -> {
-            Bundle args = new Bundle();
-            args.putLong("user_id", UserConfig.getInstance(currentAccount).getClientUserId());
-            presentFragment(new ChatActivity(args));
-        });
-        if (NaConfig.INSTANCE.getShowAddToBookmark().Bool()) {
+        final boolean drawerOn = NekoConfig.navigationDrawerEnabled.Bool();
+        final boolean archivedInDrawer = drawerOn && NaConfig.INSTANCE.getDrawerItemArchivedChats().Bool();
+        final boolean savedInDrawer = drawerOn && NaConfig.INSTANCE.getDrawerItemSaved().Bool();
+        final boolean showBookmarks = NaConfig.INSTANCE.getShowAddToBookmark().Bool();
+        final boolean bookmarksInDrawer = drawerOn && showBookmarks;
+        final boolean hasExtra = !archivedInDrawer || !savedInDrawer || (showBookmarks && !bookmarksInDrawer);
+        if (hasExtra) {
+            o.addGap();
+        }
+        if (!archivedInDrawer) {
+            o.add(R.drawable.msg_archive, getString(R.string.ArchivedChats), () -> {
+                Bundle args = new Bundle();
+                args.putInt("folderId", 1);
+                presentFragment(new DialogsActivity(args));
+            });
+        }
+        if (!savedInDrawer) {
+            o.add(R.drawable.msg_saved, getString(R.string.SavedMessages), () -> {
+                Bundle args = new Bundle();
+                args.putLong("user_id", UserConfig.getInstance(currentAccount).getClientUserId());
+                presentFragment(new ChatActivity(args));
+            });
+        }
+        if (showBookmarks && !bookmarksInDrawer) {
             o.add(R.drawable.msg_fave, getString(R.string.BookmarksManager), () -> presentFragment(new BookmarkManagerActivity()));
         }
     }

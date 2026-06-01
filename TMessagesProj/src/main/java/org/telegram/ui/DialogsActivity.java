@@ -581,6 +581,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private boolean updatePullAfterScroll;
 
     private BackDrawable backDrawable;
+    private MenuDrawable menuDrawable;
+    private RecyclerView sideMenu;
 
     private final Paint actionBarDefaultPaint = new Paint();
 
@@ -3599,6 +3601,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 });
                 updateStatus(UserConfig.getInstance(currentAccount).getCurrentUser(), false);
             }
+            if (useHomeDrawer()) {
+                actionBar.setBackButtonDrawable(menuDrawable = new MenuDrawable());
+                menuDrawable.setRotateToBack(false);
+                menuDrawable.setRotation(0f, false);
+            }
             if (folderId == 0) {
                 actionBar.setSupportsHolidayImage(true);
             }
@@ -3618,6 +3625,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 scrollToTop(true, true);
             }
         });
+        updateHomeDrawerAvailability();
 
         if (
             (initialDialogsType == DIALOGS_TYPE_DEFAULT && !onlySelect || initialDialogsType == DIALOGS_TYPE_FORWARD) &&
@@ -3999,6 +4007,16 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                             searchViewPager.hideActionMode();
                         } else {
                             hideActionMode(true);
+                        }
+                    } else if (useHomeDrawer()) {
+                        var drawerLayoutContainer = getHomeDrawerContainer();
+                        if (drawerLayoutContainer != null) {
+                            if (drawerLayoutContainer.isDrawerOpened()) {
+                                drawerLayoutContainer.closeDrawer(true);
+                            } else if (canOpenHomeDrawer()) {
+                                drawerLayoutContainer.openDrawer(true);
+                            }
+                            return;
                         }
                     } else if (onlySelect || folderId != 0) {
                         finishFragment();
@@ -7231,6 +7249,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     @Override
     public void onResume() {
         super.onResume();
+        updateHomeDrawerAvailability();
         // [Alexgram: Double Tap On Chats To Filter Unread Chats] - Start
         if (unreadPillView != null) {
             boolean visible = viewPages != null && viewPages[0] != null && viewPages[0].dialogsAdapter != null && viewPages[0].dialogsAdapter.isOnlyUnread();
@@ -9188,6 +9207,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         selectedDialogs.clear();
         if (backDrawable != null) {
             backDrawable.setRotation(0, true);
+        }
+        if (useHomeDrawer() && actionBar.getBackButton() != null && actionBar.getBackButton().getDrawable() instanceof BackDrawable) {
+            actionBar.setBackButtonDrawable(menuDrawable = new MenuDrawable());
+            menuDrawable.setRotateToBack(false);
+            menuDrawable.setRotation(0f, false);
         }
         if (filterTabsView != null) {
             filterTabsView.animateColorsTo(Theme.key_actionBarTabLine, Theme.key_actionBarTabActiveText, Theme.key_actionBarTabUnactiveText, Theme.key_actionBarTabSelector, Theme.key_windowBackgroundWhite);
@@ -14293,16 +14317,109 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         final float factor1 = 1f - animatorSearchVisible.getFloatValue();
         final float factor2 = 1f - getRightSlidingProgress();
         final float factor3 = 1f - animatorDoneButtonVisible.getFloatValue();
-        final float factor = Math.max(progressToActionMode, factor1 * factor2 * factor3);
+        final float baseFactor = factor1 * factor2 * factor3;
+        final float factor = useStandaloneActionModeCloseView()
+                ? baseFactor * (1f - progressToActionMode)
+                : Math.max(progressToActionMode, baseFactor);
         FragmentFloatingButton.setAnimatedVisibility(actionBar.getBackButton(), factor);
+    }
+
+    private boolean useStandaloneActionModeCloseView() {
+        return hasMainTabs || mainTabsActivityController != null;
     }
 
     private void checkUi_itemOptionsVisibility() {
         final float factor1 = 1f - animatorSearchVisible.getFloatValue();
         final float factor2 = 1f - getRightSlidingProgress();
         final float factor3 = 1f - animatorDoneButtonVisible.getFloatValue();
-        final float factor = factor1 * factor2 * factor3;
+        final float factor = useHomeDrawer() ? 0f : factor1 * factor2 * factor3;
         FragmentFloatingButton.setAnimatedVisibility(optionsItem, factor);
+        updateHomeDrawerAvailability();
+    }
+
+    private boolean useHomeDrawer() {
+        return NekoConfig.navigationDrawerEnabled.Bool()
+                && !onlySelect
+                && folderId == 0
+                && initialDialogsType == DIALOGS_TYPE_DEFAULT
+                && TextUtils.isEmpty(searchString);
+    }
+
+    private boolean canOpenHomeDrawer() {
+        if (!useHomeDrawer()) {
+            return false;
+        }
+        if (searching || animatorSearchVisible.getFloatValue() > 0f) {
+            return false;
+        }
+        if (actionBar != null && actionBar.isActionModeShowed()) {
+            return false;
+        }
+        if (rightSlidingDialogContainer != null && rightSlidingDialogContainer.hasFragment()) {
+            return false;
+        }
+        return true;
+    }
+
+    private boolean isHomeDrawerOnFirstTab() {
+        return filterTabsView == null
+                || filterTabsView.getTabsCount() < 2
+                || filterTabsView.getCurrentTabId() == filterTabsView.getFirstTabId();
+    }
+
+    private boolean canSwipeOpenHomeDrawer() {
+        if (!canOpenHomeDrawer()) {
+            return false;
+        }
+        if (tabsAnimationInProgress || startedTracking || maybeStartTracking) {
+            return false;
+        }
+        if (filterTabsView != null && (filterTabsView.isEditing() || filterTabsView.isAnimatingIndicator())) {
+            return false;
+        }
+        return SharedConfig.getChatSwipeAction(currentAccount) != SwipeGestureSettingsView.SWIPE_GESTURE_FOLDERS
+                || isHomeDrawerOnFirstTab();
+    }
+
+    @Nullable
+    private org.telegram.ui.ActionBar.DrawerLayoutContainer getHomeDrawerContainer() {
+        return getParentLayout() != null ? getParentLayout().getDrawerLayoutContainer() : null;
+    }
+
+    public void setSideMenu(RecyclerView recyclerView) {
+        sideMenu = recyclerView;
+        sideMenu.setBackgroundColor(Theme.getColor(Theme.key_chats_menuBackground));
+        if (sideMenu instanceof org.telegram.ui.Components.RecyclerListView recyclerListView) {
+            recyclerListView.setGlowColor(Theme.getColor(Theme.key_chats_menuBackground));
+        }
+        if (sideMenu.getAdapter() != null) {
+            sideMenu.getAdapter().notifyDataSetChanged();
+        }
+    }
+
+    private void updateHomeDrawerAvailability() {
+        var drawerLayoutContainer = getHomeDrawerContainer();
+        if (drawerLayoutContainer == null) {
+            return;
+        }
+        if (!useHomeDrawer()) {
+            drawerLayoutContainer.setAllowOpenDrawer(false, false);
+            drawerLayoutContainer.setAllowOpenDrawerBySwipe(false);
+            if (drawerLayoutContainer.isDrawerOpened()) {
+                drawerLayoutContainer.closeDrawer(false);
+            }
+            return;
+        }
+        drawerLayoutContainer.setAllowOpenDrawer(canOpenHomeDrawer(), false);
+        drawerLayoutContainer.setAllowOpenDrawerBySwipe(canSwipeOpenHomeDrawer());
+    }
+
+    public void postUpdateHomeDrawerAvailability() {
+        if (fragmentView != null) {
+            fragmentView.post(this::updateHomeDrawerAvailability);
+        } else {
+            updateHomeDrawerAvailability();
+        }
     }
 
     private void checkUi_itemPasscodeVisibility() {
