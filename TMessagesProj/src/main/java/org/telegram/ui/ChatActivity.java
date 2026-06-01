@@ -33463,16 +33463,19 @@ public class ChatActivity extends BaseFragment implements
 
 					LinearLayout gridContainer = new LinearLayout(contentView.getContext());
 					gridContainer.setOrientation(LinearLayout.VERTICAL);
-					gridContainer.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(4), AndroidUtilities.dp(12), AndroidUtilities.dp(4));
+					gridContainer.setPadding(0, AndroidUtilities.dp(4), 0, AndroidUtilities.dp(4));
 
 					int totalItems = gridOptions.size();
 					int columns = 4;
 					int rows = (totalItems + columns - 1) / columns;
 
+					int cellWidth = AndroidUtilities.dp(56);
+					int cellHeight = AndroidUtilities.dp(48);
+
 					for (int r = 0; r < rows; r++) {
 						LinearLayout rowLayout = new LinearLayout(contentView.getContext());
 						rowLayout.setOrientation(LinearLayout.HORIZONTAL);
-						rowLayout.setGravity(Gravity.CENTER_VERTICAL);
+						rowLayout.setGravity(Gravity.CENTER);
 						
 						for (int c = 0; c < columns; c++) {
 							int index = r * columns + c;
@@ -33481,33 +33484,30 @@ public class ChatActivity extends BaseFragment implements
 								int iconRes = gridIcons.get(index);
 								CharSequence title = gridItems.get(index);
 
-								FrameLayout cell = new FrameLayout(contentView.getContext());
-								
 								ImageView imageView = new ImageView(contentView.getContext());
 								imageView.setScaleType(ImageView.ScaleType.CENTER);
 								imageView.setImageResource(iconRes);
 								imageView.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_actionBarDefaultSubmenuItemIcon), PorterDuff.Mode.SRC_IN));
 								imageView.setBackground(Theme.createCircleSelectorDrawable(Theme.getColor(Theme.key_dialogButtonSelector), 0, 0));
-								
 								imageView.setContentDescription(title);
-
-								int btnSize = AndroidUtilities.dp(48);
-								cell.addView(imageView, LayoutHelper.createFrame(btnSize, btnSize, Gravity.CENTER));
 
 								imageView.setOnClickListener(v1 -> {
 									closeMenu(true);
 									processSelectedOption(optionId);
 								});
 
-								rowLayout.addView(cell, new LinearLayout.LayoutParams(0, AndroidUtilities.dp(48), 1.0f));
+								rowLayout.addView(imageView, new LinearLayout.LayoutParams(cellWidth, cellHeight));
 							} else {
 								View dummy = new View(contentView.getContext());
-								rowLayout.addView(dummy, new LinearLayout.LayoutParams(0, AndroidUtilities.dp(48), 1.0f));
+								rowLayout.addView(dummy, new LinearLayout.LayoutParams(cellWidth, cellHeight));
 							}
 						}
-						gridContainer.addView(rowLayout, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+						gridContainer.addView(rowLayout, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 					}
-					popupLayout.addView(gridContainer, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+					
+					LinearLayout.LayoutParams containerParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+					containerParams.gravity = Gravity.CENTER_HORIZONTAL;
+					popupLayout.addView(gridContainer, containerParams);
 				}
 				// [Alexgram: Customizable Message Menu] - End
 
