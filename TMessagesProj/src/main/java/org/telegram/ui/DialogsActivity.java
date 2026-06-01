@@ -3719,6 +3719,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     showScrollbars(false);
                     switchToCurrentSelectedMode(true);
                     animatingForward = forward;
+                    updateHomeDrawerAvailability();
                 }
 
                 @Override
@@ -3749,6 +3750,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         checkListLoad(viewPages[0]);
                         viewPages[0].dialogsAdapter.resume();
                         viewPages[1].dialogsAdapter.pause();
+                        updateHomeDrawerAvailability();
                     }
                 }
 
