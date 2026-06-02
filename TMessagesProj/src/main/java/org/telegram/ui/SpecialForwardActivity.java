@@ -1130,6 +1130,43 @@ public class SpecialForwardActivity extends ChatActivity {
         showDialog(shareAlert);
     }
 
+    private void sendMessagesToPeer(ArrayList<MessageObject> forwardList, long peer, boolean showQuote, boolean keepCaption) {
+        boolean sendAsCopy = !showQuote;
+        if (!sendAsCopy) {
+            for (MessageObject msg : forwardList) {
+                if (msg != null && (getMessagesController().isPeerNoForwards(msg.getDialogId(), true) 
+                        || (msg.messageOwner != null && msg.messageOwner.noforwards))) {
+                    sendAsCopy = true;
+                    break;
+                }
+            }
+        }
+        
+        if (sendAsCopy) {
+            for (int a = 0; a < forwardList.size(); a++) {
+                MessageObject message = forwardList.get(a);
+                if (message == null) continue;
+                long groupId = message.messageOwner.grouped_id;
+                if (groupId != 0) {
+                    ArrayList<MessageObject> group = new ArrayList<>();
+                    group.add(message);
+                    while (a + 1 < forwardList.size() && forwardList.get(a + 1).messageOwner.grouped_id != 0 && forwardList.get(a + 1).messageOwner.grouped_id == groupId) {
+                        group.add(forwardList.get(++a));
+                    }
+                    if (group.size() > 1) {
+                        SendMessagesHelper.getInstance(currentAccount).processForwardFromMyName(group, peer, 0, 0, null);
+                    } else {
+                        SendMessagesHelper.getInstance(currentAccount).processForwardFromMyName(message, peer, 0, 0, null);
+                    }
+                } else {
+                    SendMessagesHelper.getInstance(currentAccount).processForwardFromMyName(message, peer, 0, 0, null);
+                }
+            }
+        } else {
+            SendMessagesHelper.getInstance(currentAccount).sendMessage(forwardList, peer, false, !keepCaption, true, 0, 0);
+        }
+    }
+
     private void performForwardToSelectedChats(ArrayList<Long> dids, boolean showQuote, boolean keepCaption, boolean removeLinkPreview) {
         ArrayList<MessageObject> forwardList = new ArrayList<>(messages);
         java.util.Collections.sort(forwardList, (o1, o2) -> Integer.compare(o1.getId(), o2.getId()));
@@ -1161,11 +1198,11 @@ public class SpecialForwardActivity extends ChatActivity {
                     } else {
                         ArrayList<MessageObject> singleList = new ArrayList<>();
                         singleList.add(msg);
-                        SendMessagesHelper.getInstance(currentAccount).sendMessage(singleList, peer, !showQuote, !keepCaption, true, 0, 0);
+                        sendMessagesToPeer(singleList, peer, showQuote, keepCaption);
                     }
                 }
             } else {
-                SendMessagesHelper.getInstance(currentAccount).sendMessage(forwardList, peer, !showQuote, !keepCaption, true, 0, 0);
+                sendMessagesToPeer(forwardList, peer, showQuote, keepCaption);
             }
         }
         finishFragment();
