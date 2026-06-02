@@ -3172,6 +3172,18 @@ public class ImageLoader {
                     }
 
                     if (cacheFile == null) {
+                        if (imageLocation != null && imageLocation.path != null && (imageLocation.path.startsWith("/") || imageLocation.path.startsWith("file://") || (imageLocation.path.length() >= 3 && Character.isLetter(imageLocation.path.charAt(0)) && imageLocation.path.charAt(1) == ':' && (imageLocation.path.charAt(2) == '\\' || imageLocation.path.charAt(2) == '/')))) {
+                            String localPath = imageLocation.path;
+                            if (localPath.startsWith("file://")) {
+                                localPath = localPath.substring(7);
+                            }
+                            cacheFile = new File(localPath);
+                            if (cacheFile.exists()) {
+                                cacheFileExists = true;
+                            }
+                        }
+                    }
+                    if (cacheFile == null) {
                         long fileSize = 0;
                         if (imageLocation.photoSize instanceof TLRPC.TL_photoStrippedSize || imageLocation.photoSize instanceof TLRPC.TL_photoPathSize) {
                             onlyCache = true;
@@ -3305,7 +3317,7 @@ public class ImageLoader {
                                 img.artworkTask = new ArtworkLoadTask(img);
                                 artworkTasks.add(img.artworkTask);
                                 runArtworkTasks(false);
-                            } else {
+                            } else if (imageLocation.path.startsWith("http://") || imageLocation.path.startsWith("https://")) {
                                 img.httpTask = new HttpImageTask(img, size);
                                 httpTasks.add(img.httpTask);
                                 runHttpTasks(false);
