@@ -1115,7 +1115,9 @@ public class SpecialForwardActivity extends ChatActivity {
             }
         }
         for (int i = 0; i < groupedMessagesMap.size(); i++) {
-            groupedMessagesMap.valueAt(i).calculate();
+            MessageObject.GroupedMessages groupedMessages = groupedMessagesMap.valueAt(i);
+            java.util.Collections.sort(groupedMessages.messages, (a, b) -> Integer.compare(a.getId(), b.getId()));
+            groupedMessages.calculate();
         }
     }
 
