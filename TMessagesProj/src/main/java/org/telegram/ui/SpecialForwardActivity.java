@@ -86,7 +86,7 @@ public class SpecialForwardActivity extends ChatActivity {
                     resetClone.fwd_from = null;
                     resetClone.edit_date = 0;
                     
-                    MessageObject resetObj = createPreviewMessageObject(resetClone);
+                    MessageObject resetObj = createPreviewMessageObject(resetClone, msg);
                     resetObj.stableId = ChatActivity.lastStableId++;
                     resetObj.forceUpdate = true;
                     resetObj.checkLayout();
@@ -103,7 +103,7 @@ public class SpecialForwardActivity extends ChatActivity {
                     msgClone.fwd_from = null;
                     msgClone.edit_date = 0;
                     
-                    MessageObject clonedObj = createPreviewMessageObject(msgClone);
+                    MessageObject clonedObj = createPreviewMessageObject(msgClone, msg);
                     clonedObj.stableId = resetObj.stableId;
                     clonedObj.forceUpdate = true;
                     clonedObj.checkLayout();
@@ -141,9 +141,13 @@ public class SpecialForwardActivity extends ChatActivity {
         }
     }
 
-    private MessageObject createPreviewMessageObject(TLRPC.Message messageOwner) {
+    private MessageObject createPreviewMessageObject(TLRPC.Message messageOwner, MessageObject originalObject) {
         MessageObject messageObject = new MessageObject(currentAccount, messageOwner, false, true);
         messageObject.previewForward = true;
+        if (originalObject != null) {
+            messageObject.localGroupId = originalObject.localGroupId;
+            messageObject.localSentGroupId = originalObject.localSentGroupId;
+        }
         return messageObject;
     }
 
@@ -417,7 +421,7 @@ public class SpecialForwardActivity extends ChatActivity {
                     TLRPC.Message messageClone = cloneMessage(selectedMessage.messageOwner);
                     if (messageClone != null) {
                         messageClone.id = selectedMessage.getId();
-                        MessageObject newCloned = createPreviewMessageObject(messageClone);
+                        MessageObject newCloned = createPreviewMessageObject(messageClone, selectedMessage);
                         newCloned.stableId = selectedMessage.stableId;
                         newCloned.forceUpdate = true;
                         newCloned.checkLayout();
@@ -454,7 +458,7 @@ public class SpecialForwardActivity extends ChatActivity {
                     TLRPC.Message messageClone = cloneMessage(selectedMessage.messageOwner);
                     if (messageClone != null) {
                         messageClone.id = selectedMessage.getId();
-                        MessageObject newCloned = createPreviewMessageObject(messageClone);
+                        MessageObject newCloned = createPreviewMessageObject(messageClone, selectedMessage);
                         newCloned.stableId = selectedMessage.stableId;
                         newCloned.forceUpdate = true;
                         newCloned.checkLayout();
@@ -617,7 +621,7 @@ public class SpecialForwardActivity extends ChatActivity {
                 TLRPC.Message messageClone = cloneMessage(originalObj.messageOwner);
                 if (messageClone != null) {
                     messageClone.id = selectedMessage.getId();
-                    MessageObject newCloned = createPreviewMessageObject(messageClone);
+                    MessageObject newCloned = createPreviewMessageObject(messageClone, originalObj);
                     newCloned.stableId = selectedMessage.stableId;
                     newCloned.forceUpdate = true;
                     newCloned.checkLayout();
@@ -651,7 +655,7 @@ public class SpecialForwardActivity extends ChatActivity {
                     TLRPC.Message messageClone = cloneMessage(originalObj.messageOwner);
                     if (messageClone != null) {
                         messageClone.id = workingObj.getId();
-                        MessageObject newCloned = createPreviewMessageObject(messageClone);
+                        MessageObject newCloned = createPreviewMessageObject(messageClone, originalObj);
                         newCloned.stableId = workingObj.stableId;
                         newCloned.forceUpdate = true;
                         newCloned.checkLayout();
@@ -777,7 +781,7 @@ public class SpecialForwardActivity extends ChatActivity {
                     TLRPC.Message messageClone = cloneMessage(msg.messageOwner);
                     if (messageClone != null) {
                         messageClone.id = msg.getId();
-                        MessageObject newCloned = createPreviewMessageObject(messageClone);
+                        MessageObject newCloned = createPreviewMessageObject(messageClone, msg);
                         newCloned.stableId = msg.stableId;
                         newCloned.forceUpdate = true;
                         newCloned.checkLayout();
@@ -851,7 +855,7 @@ public class SpecialForwardActivity extends ChatActivity {
                     TLRPC.Message messageClone = cloneMessage(msg.messageOwner);
                     if (messageClone != null) {
                         messageClone.id = msg.getId();
-                        MessageObject newCloned = createPreviewMessageObject(messageClone);
+                        MessageObject newCloned = createPreviewMessageObject(messageClone, msg);
                         newCloned.stableId = msg.stableId;
                         newCloned.forceUpdate = true;
                         newCloned.checkLayout();
@@ -1001,7 +1005,7 @@ public class SpecialForwardActivity extends ChatActivity {
                     TLRPC.Message messageClone = cloneMessage(msg.messageOwner);
                     if (messageClone != null) {
                         messageClone.id = msg.getId();
-                        MessageObject newCloned = createPreviewMessageObject(messageClone);
+                        MessageObject newCloned = createPreviewMessageObject(messageClone, msg);
                         newCloned.stableId = msg.stableId;
                         newCloned.forceUpdate = true;
                         newCloned.checkLayout();
@@ -1073,7 +1077,7 @@ public class SpecialForwardActivity extends ChatActivity {
                 TLRPC.Message messageClone = cloneMessage(msg.messageOwner);
                 if (messageClone != null) {
                     messageClone.id = msg.getId();
-                    MessageObject newCloned = createPreviewMessageObject(messageClone);
+                    MessageObject newCloned = createPreviewMessageObject(messageClone, msg);
                     newCloned.stableId = msg.stableId;
                     newCloned.forceUpdate = true;
                     newCloned.checkLayout();
