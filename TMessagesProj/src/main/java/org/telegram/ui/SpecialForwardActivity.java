@@ -445,7 +445,7 @@ public class SpecialForwardActivity extends ChatActivity {
                         messages.set(idx, newCloned);
                         rebuildGroupedMessages();
                         if (chatAdapter != null) {
-                            chatAdapter.notifyItemChanged(idx);
+                            chatAdapter.notifyDataSetChanged();
                         }
                     }
                 } catch (Exception e) {
@@ -564,7 +564,7 @@ public class SpecialForwardActivity extends ChatActivity {
                     messages.set(idx, newCloned);
                     rebuildGroupedMessages();
                     if (chatAdapter != null) {
-                        chatAdapter.notifyItemChanged(idx);
+                        chatAdapter.notifyDataSetChanged();
                     }
                 }
             } catch (Exception e) {
@@ -767,7 +767,7 @@ public class SpecialForwardActivity extends ChatActivity {
                         messages.set(idx, newCloned);
                         rebuildGroupedMessages();
                         if (chatAdapter != null) {
-                            chatAdapter.notifyItemChanged(idx);
+                            chatAdapter.notifyDataSetChanged();
                         }
                     }
                     
