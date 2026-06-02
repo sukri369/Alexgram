@@ -142,6 +142,9 @@ public class SpecialForwardActivity extends ChatActivity {
     }
 
     private MessageObject createPreviewMessageObject(TLRPC.Message messageOwner, MessageObject originalObject) {
+        if (originalObject != null && originalObject.localMediaOverridden && originalObject.messageOwner != null) {
+            messageOwner.media = originalObject.messageOwner.media;
+        }
         MessageObject messageObject = new MessageObject(currentAccount, messageOwner, false, true);
         messageObject.previewForward = true;
         if (originalObject != null) {
