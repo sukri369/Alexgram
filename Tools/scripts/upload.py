@@ -10,11 +10,17 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 
-BOT_TOKEN = os.environ.get("TG_BOT_TOKEN") or "7350436755:AAEpoGCZXJg4TJP_VqJrnXD06qjLCLZfOTM"
-DEFAULT_CHAT_ID = os.environ.get("TG_UPLOAD_CHAT_ID") or "-1003616714912"
+BOT_TOKEN = os.environ.get("TG_BOT_TOKEN")
+if not BOT_TOKEN and len(argv) > 1 and argv[1] and ":" in argv[1]:
+    BOT_TOKEN = argv[1]
+
+DEFAULT_CHAT_ID = os.environ.get("TG_UPLOAD_CHAT_ID")
+if not DEFAULT_CHAT_ID and len(argv) > 2 and argv[2]:
+    DEFAULT_CHAT_ID = argv[2]
+
 PYROGRAM_SESSION_STRING = os.environ.get("TG_SESSION_STRING") or ""
-PYROGRAM_API_ID = int(os.environ.get("APP_ID") or "25830228")
-PYROGRAM_API_HASH = os.environ.get("APP_HASH") or "a23a5133bddbdab87df3df06ccf63a89"
+PYROGRAM_API_ID = int(os.environ.get("APP_ID") or "0")
+PYROGRAM_API_HASH = os.environ.get("APP_HASH") or ""
 BOT_API_SIZE_LIMIT_BYTES = int(os.environ.get("TG_BOT_API_SIZE_LIMIT") or str(45 * 1024 * 1024))
 MAX_FLOOD_WAIT_SECONDS = int(os.environ.get("TG_MAX_FLOOD_WAIT") or "1800")
 
