@@ -341,7 +341,7 @@ public class SessionCell extends FrameLayout {
             colorKey = Theme.key_avatar_backgroundCyan;
             colorKey2 = Theme.key_avatar_background2Cyan;
         } else if (session.app_name.contains("Nagram X") || session.app_name.contains("NagramX") || session.app_name.contains("Alexgram")) {
-            iconId = R.drawable.nagramx_notification;
+            iconId = R.drawable.nagramx_outline;
             colorKey = Theme.key_avatar_backgroundBlue;
             colorKey2 = Theme.key_avatar_background2Blue;
         } else if (platform.contains("android")) {
