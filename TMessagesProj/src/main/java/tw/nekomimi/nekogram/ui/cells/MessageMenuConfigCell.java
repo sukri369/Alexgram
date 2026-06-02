@@ -63,21 +63,25 @@ public class MessageMenuConfigCell extends LinearLayout {
         addView(buttonsContainer, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
 
         String[] labels = {"Hide", "Text", "Icon"};
-        int count = isRestricted ? 2 : 3;
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < 3; i++) {
             final int mode = i;
             buttons[i] = new TextView(context);
             buttons[i].setText(labels[i]);
             buttons[i].setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
             buttons[i].setGravity(Gravity.CENTER);
             buttons[i].setPadding(AndroidUtilities.dp(10), AndroidUtilities.dp(6), AndroidUtilities.dp(10), AndroidUtilities.dp(6));
-            buttonsContainer.addView(buttons[i], LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, 0, 0, i < count - 1 ? 4 : 0, 0));
+            buttonsContainer.addView(buttons[i], LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, 0, 0, i < 2 ? 4 : 0, 0));
 
-            buttons[i].setOnClickListener(v -> {
-                updateSelected(mode);
-                BaseNekoXSettingsActivity.setMessageMenuMode(configKey, mode);
-                if (this.onChanged != null) this.onChanged.run();
-            });
+            if (isRestricted && i == 2) {
+                buttons[i].setVisibility(android.view.View.INVISIBLE);
+                buttons[i].setClickable(false);
+            } else {
+                buttons[i].setOnClickListener(v -> {
+                    updateSelected(mode);
+                    BaseNekoXSettingsActivity.setMessageMenuMode(configKey, mode);
+                    if (this.onChanged != null) this.onChanged.run();
+                });
+            }
         }
         updateSelected(currentMode);
     }
