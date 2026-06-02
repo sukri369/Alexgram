@@ -31,6 +31,16 @@ public class MessageMenuConfigCell extends LinearLayout {
         this.onChanged = onChanged;
         this.currentMode = BaseNekoXSettingsActivity.getMessageMenuMode(key, defaultVal);
 
+        boolean isRestricted = "showTranslate".equals(key)
+                || "TranslateMessageLLM".equals(key)
+                || "showShareMessages".equals(key)
+                || "Reactions".equals(key);
+
+        if (isRestricted && this.currentMode == 2) {
+            this.currentMode = 1;
+            BaseNekoXSettingsActivity.setMessageMenuMode(key, 1);
+        }
+
         setOrientation(HORIZONTAL);
         setGravity(Gravity.CENTER_VERTICAL);
         setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(12), AndroidUtilities.dp(16), AndroidUtilities.dp(12));
@@ -53,14 +63,15 @@ public class MessageMenuConfigCell extends LinearLayout {
         addView(buttonsContainer, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
 
         String[] labels = {"Hide", "Text", "Icon"};
-        for (int i = 0; i < 3; i++) {
+        int count = isRestricted ? 2 : 3;
+        for (int i = 0; i < count; i++) {
             final int mode = i;
             buttons[i] = new TextView(context);
             buttons[i].setText(labels[i]);
             buttons[i].setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
             buttons[i].setGravity(Gravity.CENTER);
             buttons[i].setPadding(AndroidUtilities.dp(10), AndroidUtilities.dp(6), AndroidUtilities.dp(10), AndroidUtilities.dp(6));
-            buttonsContainer.addView(buttons[i], LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, 0, 0, i < 2 ? 4 : 0, 0));
+            buttonsContainer.addView(buttons[i], LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, 0, 0, i < count - 1 ? 4 : 0, 0));
 
             buttons[i].setOnClickListener(v -> {
                 updateSelected(mode);
@@ -79,6 +90,7 @@ public class MessageMenuConfigCell extends LinearLayout {
             inactiveColor = 0x20FFFFFF; // slightly lighter in dark mode
         }
         for (int i = 0; i < 3; i++) {
+            if (buttons[i] == null) continue;
             GradientDrawable gd = new GradientDrawable();
             gd.setCornerRadius(AndroidUtilities.dp(6));
             if (i == selectedMode) {
