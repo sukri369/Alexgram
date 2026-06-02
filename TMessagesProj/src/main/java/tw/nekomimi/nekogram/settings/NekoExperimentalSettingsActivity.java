@@ -948,7 +948,7 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
         final String defaultHint = isFailover ? "sk-..." : "Api Key";
         final String titleText = isFailover ? "API Key (Failover)" : "AI API Key Settings";
 
-        BottomSheet.Builder builder = new BottomSheet.Builder(getParentActivity());
+        BottomSheet.Builder builder = new BottomSheet.Builder(getParentActivity(), true);
         builder.setApplyTopPadding(true);
         builder.setApplyBottomPadding(true);
 
