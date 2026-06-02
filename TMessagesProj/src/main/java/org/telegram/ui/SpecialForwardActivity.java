@@ -147,6 +147,10 @@ public class SpecialForwardActivity extends ChatActivity {
         if (originalObject != null) {
             messageObject.localGroupId = originalObject.localGroupId;
             messageObject.localSentGroupId = originalObject.localSentGroupId;
+            messageObject.localMediaOverridden = originalObject.localMediaOverridden;
+            messageObject.localMediaOverriddenPath = originalObject.localMediaOverriddenPath;
+            messageObject.localMediaIsVideo = originalObject.localMediaIsVideo;
+            messageObject.videoEditedInfo = originalObject.videoEditedInfo;
         }
         return messageObject;
     }
@@ -446,6 +450,125 @@ public class SpecialForwardActivity extends ChatActivity {
                 }
             }
         }
+        if (chatActivityEnterView != null) {
+            chatActivityEnterView.setEditingMessageObject(null, null, false);
+        }
+        hideFieldPanel(true);
+        selectedMessage = null;
+        editingMessageObject = null;
+        updateBottomOverlay();
+        updateVisibleRows();
+        updateSendBadge();
+    }
+
+    @Override
+    public void sendMedia(org.telegram.messenger.MediaController.PhotoEntry photoEntry, org.telegram.messenger.VideoEditedInfo videoEditedInfo, boolean notify, int scheduleDate, int scheduleRepeatPeriod, boolean forceDocument, long stars) {
+        if (photoEntry == null || editingMessageObject == null) {
+            return;
+        }
+
+        String newPath = photoEntry.imagePath != null ? photoEntry.imagePath : photoEntry.path;
+        if (newPath == null) {
+            return;
+        }
+
+        // Apply media edits/replacements locally
+        if (photoEntry.isVideo) {
+            TLRPC.TL_messageMediaDocument mediaDoc = new TLRPC.TL_messageMediaDocument();
+            mediaDoc.document = new TLRPC.TL_document();
+            mediaDoc.document.id = 0;
+            mediaDoc.document.mime_type = "video/mp4";
+            mediaDoc.document.size = (int) new java.io.File(newPath).length();
+            
+            TLRPC.TL_documentAttributeVideo attributeVideo = new TLRPC.TL_documentAttributeVideo();
+            attributeVideo.duration = videoEditedInfo != null ? (int) (videoEditedInfo.duration / 1000) : photoEntry.duration;
+            
+            int w = 800;
+            int h = 600;
+            if (videoEditedInfo != null) {
+                w = videoEditedInfo.originalWidth;
+                h = videoEditedInfo.originalHeight;
+            } else {
+                android.graphics.BitmapFactory.Options opts = new android.graphics.BitmapFactory.Options();
+                opts.inJustDecodeBounds = true;
+                if (photoEntry.coverPath != null) {
+                    android.graphics.BitmapFactory.decodeFile(photoEntry.coverPath, opts);
+                } else if (photoEntry.thumbPath != null) {
+                    android.graphics.BitmapFactory.decodeFile(photoEntry.thumbPath, opts);
+                }
+                if (opts.outWidth > 0) {
+                    w = opts.outWidth;
+                    h = opts.outHeight;
+                }
+            }
+            attributeVideo.w = w;
+            attributeVideo.h = h;
+            mediaDoc.document.attributes.add(attributeVideo);
+            
+            String coverPath = photoEntry.coverPath != null ? photoEntry.coverPath : photoEntry.thumbPath;
+            if (coverPath != null) {
+                TLRPC.TL_photoSize thumbSize = new TLRPC.TL_photoSize();
+                thumbSize.type = "x";
+                thumbSize.location = new com.radolyn.ayugram.utils.AyuFileLocation(coverPath);
+                thumbSize.w = w;
+                thumbSize.h = h;
+                thumbSize.size = (int) new java.io.File(coverPath).length();
+                mediaDoc.document.thumbs.add(thumbSize);
+            }
+            editingMessageObject.messageOwner.media = mediaDoc;
+        } else {
+            TLRPC.TL_messageMediaPhoto mediaPhoto = new TLRPC.TL_messageMediaPhoto();
+            mediaPhoto.photo = new TLRPC.TL_photo();
+            mediaPhoto.photo.id = 0;
+            
+            TLRPC.TL_photoSize size = new TLRPC.TL_photoSize();
+            size.type = "x";
+            size.location = new com.radolyn.ayugram.utils.AyuFileLocation(newPath);
+            
+            android.graphics.BitmapFactory.Options opts = new android.graphics.BitmapFactory.Options();
+            opts.inJustDecodeBounds = true;
+            android.graphics.BitmapFactory.decodeFile(newPath, opts);
+            int w = opts.outWidth > 0 ? opts.outWidth : 800;
+            int h = opts.outHeight > 0 ? opts.outHeight : 600;
+            
+            size.w = w;
+            size.h = h;
+            size.size = (int) new java.io.File(newPath).length();
+            mediaPhoto.photo.sizes.add(size);
+            editingMessageObject.messageOwner.media = mediaPhoto;
+        }
+
+        editingMessageObject.messageOwner.attachPath = newPath;
+        editingMessageObject.videoEditedInfo = videoEditedInfo;
+        editingMessageObject.localMediaOverridden = true;
+        editingMessageObject.localMediaOverriddenPath = newPath;
+        editingMessageObject.localMediaIsVideo = photoEntry.isVideo;
+
+        if (photoEntry.caption != null) {
+            updateMessageText(editingMessageObject, photoEntry.caption);
+        }
+
+        int idx = messages.indexOf(editingMessageObject);
+        if (idx >= 0) {
+            try {
+                TLRPC.Message messageClone = cloneMessage(editingMessageObject.messageOwner);
+                if (messageClone != null) {
+                    messageClone.id = editingMessageObject.getId();
+                    MessageObject newCloned = createPreviewMessageObject(messageClone, editingMessageObject);
+                    newCloned.stableId = editingMessageObject.stableId;
+                    newCloned.forceUpdate = true;
+                    newCloned.checkLayout();
+                    messages.set(idx, newCloned);
+                    rebuildGroupedMessages();
+                    if (chatAdapter != null) {
+                        chatAdapter.notifyItemChanged(idx);
+                    }
+                }
+            } catch (Exception e) {
+                FileLog.e(e);
+            }
+        }
+
         if (chatActivityEnterView != null) {
             chatActivityEnterView.setEditingMessageObject(null, null, false);
         }
@@ -1151,7 +1274,8 @@ public class SpecialForwardActivity extends ChatActivity {
         if (!sendAsCopy) {
             for (MessageObject msg : forwardList) {
                 if (msg != null && (getMessagesController().isPeerNoForwards(msg.getDialogId(), true) 
-                        || (msg.messageOwner != null && msg.messageOwner.noforwards))) {
+                        || (msg.messageOwner != null && msg.messageOwner.noforwards)
+                        || msg.localMediaOverridden)) {
                     sendAsCopy = true;
                     break;
                 }
@@ -1169,13 +1293,81 @@ public class SpecialForwardActivity extends ChatActivity {
                     while (a + 1 < forwardList.size() && forwardList.get(a + 1).messageOwner.grouped_id != 0 && forwardList.get(a + 1).messageOwner.grouped_id == groupId) {
                         group.add(forwardList.get(++a));
                     }
-                    if (group.size() > 1) {
-                        SendMessagesHelper.getInstance(currentAccount).processForwardFromMyName(group, peer, 0, 0, null);
+                    
+                    boolean hasOverridden = false;
+                    for (MessageObject m : group) {
+                        if (m.localMediaOverridden) {
+                            hasOverridden = true;
+                            break;
+                        }
+                    }
+                    
+                    if (hasOverridden) {
+                        ArrayList<SendMessagesHelper.SendingMediaInfo> infos = new ArrayList<>();
+                        boolean forceDocument = false;
+                        for (MessageObject m : group) {
+                            String path = m.localMediaOverridden ? m.localMediaOverriddenPath : null;
+                            if (path == null) {
+                                java.io.File f = getFileLoader().getPathToMessage(m.messageOwner);
+                                if (f != null && f.exists()) {
+                                    path = f.getAbsolutePath();
+                                }
+                            }
+                            if (path == null) {
+                                path = m.messageOwner.attachPath;
+                            }
+                            
+                            boolean isVideo = false;
+                            if (m.localMediaOverridden) {
+                                isVideo = m.localMediaIsVideo;
+                            } else if (m.messageOwner.media.document instanceof TLRPC.TL_document) {
+                                TLRPC.TL_document document = (TLRPC.TL_document) m.messageOwner.media.document;
+                                isVideo = MessageObject.isVideoDocument(document) || m.videoEditedInfo != null;
+                                if (!isVideo) forceDocument = true;
+                            }
+                            
+                            if (path != null) {
+                                SendMessagesHelper.SendingMediaInfo info = new SendMessagesHelper.SendingMediaInfo();
+                                info.path = path;
+                                info.isVideo = isVideo;
+                                info.caption = keepCaption && m.messageOwner.message != null ? m.messageOwner.message : "";
+                                info.entities = keepCaption ? m.messageOwner.entities : null;
+                                if (m.messageOwner.media != null) {
+                                    info.ttl = m.messageOwner.media.ttl_seconds;
+                                    info.hasMediaSpoilers = m.messageOwner.media.spoiler;
+                                }
+                                info.videoEditedInfo = m.videoEditedInfo;
+                                infos.add(info);
+                            }
+                        }
+                        
+                        if (!infos.isEmpty()) {
+                            final boolean finalForceDocument = forceDocument;
+                            final ArrayList<SendMessagesHelper.SendingMediaInfo> finalInfos = infos;
+                            AndroidUtilities.runOnUIThread(() -> {
+                                SendMessagesHelper.prepareSendingMedia(getAccountInstance(), finalInfos, peer, null, null, null, null, finalForceDocument, true, null, null, true, 0, 0, 0, false, null, null, 0, 0, false, 0, 0, null);
+                            });
+                        }
+                    } else {
+                        if (group.size() > 1) {
+                            SendMessagesHelper.getInstance(currentAccount).processForwardFromMyName(group, peer, 0, 0, null);
+                        } else {
+                            SendMessagesHelper.getInstance(currentAccount).processForwardFromMyName(message, peer, 0, 0, null);
+                        }
+                    }
+                } else {
+                    if (message.localMediaOverridden) {
+                        String path = message.localMediaOverriddenPath;
+                        String caption = keepCaption && message.messageOwner.message != null ? message.messageOwner.message : "";
+                        ArrayList<TLRPC.MessageEntity> entities = keepCaption ? message.messageOwner.entities : null;
+                        if (message.localMediaIsVideo) {
+                            SendMessagesHelper.prepareSendingVideo(getAccountInstance(), path, message.videoEditedInfo, null, null, peer, null, null, null, entities, 0, null, true, 0, 0, false, false, caption, null, 0, 0, 0, 0, null);
+                        } else {
+                            SendMessagesHelper.prepareSendingPhoto(getAccountInstance(), path, null, null, peer, null, null, null, null, entities, null, null, 0, null, message.videoEditedInfo, true, 0, 0, 0, false, caption, null, 0, 0, 0, 0, null);
+                        }
                     } else {
                         SendMessagesHelper.getInstance(currentAccount).processForwardFromMyName(message, peer, 0, 0, null);
                     }
-                } else {
-                    SendMessagesHelper.getInstance(currentAccount).processForwardFromMyName(message, peer, 0, 0, null);
                 }
             }
         } else {

@@ -302,6 +302,9 @@ public class MessageObject {
     public boolean scheduledSent;
     public boolean preview;
     public boolean previewForward;
+    public boolean localMediaOverridden;
+    public String localMediaOverriddenPath;
+    public boolean localMediaIsVideo;
     public boolean sentHighQuality;
 
     public boolean notime;
@@ -11352,6 +11355,9 @@ public class MessageObject {
     }
 
     public boolean canEditMessage(TLRPC.Chat chat) {
+        if (previewForward) {
+            return true;
+        }
         return canEditMessage(currentAccount, messageOwner, chat, scheduled);
     }
 
