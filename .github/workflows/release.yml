@@ -53,6 +53,8 @@ jobs:
         id: release_build_step
         env:
           COMMIT_ID: ${{ github.event.head_commit.id }}
+          TELEGRAM_APP_ID: ${{ secrets.APP_ID }}
+          TELEGRAM_APP_HASH: ${{ secrets.APP_HASH }}
         run: |
           export LOCAL_PROPERTIES="${{ secrets.LOCAL_PROPERTIES }}"
           export BUILD_TIMESTAMP=$(date +%s)
@@ -87,6 +89,8 @@ jobs:
         env:
           APP_ID: ${{ secrets.APP_ID }}
           APP_HASH: ${{ secrets.APP_HASH }}
+          TG_BOT_TOKEN: ${{ secrets.HELPER_BOT_TOKEN }}
+          TG_UPLOAD_CHAT_ID: ${{ secrets.HELPER_BOT_TARGET }}
           COMMIT_ID: ${{ github.event.head_commit.id }}
           COMMIT_URL: ${{ github.event.head_commit.url }}
           COMMIT_MESSAGE: ${{ github.event.head_commit.message }}

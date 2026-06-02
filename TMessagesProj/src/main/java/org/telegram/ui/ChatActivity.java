@@ -489,6 +489,10 @@ public class ChatActivity extends BaseFragment implements
 	private final static int nkbtn_ai_reply = 2102;
 	private final static int nkbtn_ai_summarize = 2103;
 	// [Alexgram: AI Reply] - End
+	// [Alexgram: Customizable Message Menu] - Start
+	private final static int nkbtn_invert = 2120;
+	private final static int nkbtn_custom_reply = 2121;
+	// [Alexgram: Customizable Message Menu] - End
 
 	public int shareAlertDebugMode = DEBUG_SHARE_ALERT_MODE_NORMAL;
 	public boolean shareAlertDebugTopicsSlowMotion;
@@ -7855,7 +7859,7 @@ public class ChatActivity extends BaseFragment implements
 						chatActivityEnterView.replaceWithText(start, len, "@" + UserObject.getPublicUsername(user) + " ", false);
 					} else {
 						String name = UserObject.getFirstName(user, false);
-						Spannable spannable = new SpannableString("@" + name + " ");
+						Spannable spannable = new SpannableString(name + " ");
 						spannable.setSpan(new URLSpanUserMention("" + user.id, 3), 0, spannable.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 						chatActivityEnterView.replaceWithText(start, len, spannable, false);
 					}
@@ -7993,7 +7997,7 @@ public class ChatActivity extends BaseFragment implements
 			} else if (object instanceof TLRPC.User user) {
 				if (!(searchingForUser && searchContainer.getVisibility() == View.VISIBLE) && user != null) {
 					String name = UserObject.getFirstName(user, false);
-					Spannable spannable = new SpannableString("@" + name + " ");
+					Spannable spannable = new SpannableString(name + " ");
 					spannable.setSpan(new URLSpanUserMention("" + user.id, 3), 0, spannable.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 					chatActivityEnterView.replaceWithText(start, len, spannable, false);
 					return true;
@@ -33076,10 +33080,126 @@ public class ChatActivity extends BaseFragment implements
 						popupLayout.addView(new ActionBarPopupWindow.GapView(contentView.getContext(), themeDelegate), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 8));
 					}
 				}
-				scrimPopupWindowItems = new ActionBarMenuSubItem[items.size()];
-				final boolean hasGroupedIcons = GroupedIconsView.useGroupedIcons();
+				// [Alexgram: Customizable Message Menu] - Start
+				// Filter context menu options (Hide, Text, Icon)
+				ArrayList<CharSequence> textItems = new ArrayList<>();
+				ArrayList<Integer> textIcons = new ArrayList<>();
+				ArrayList<Integer> textOptions = new ArrayList<>();
+
+				ArrayList<CharSequence> gridItems = new ArrayList<>();
+				ArrayList<Integer> gridIcons = new ArrayList<>();
+				ArrayList<Integer> gridOptions = new ArrayList<>();
+
 				for (int a = 0, N = items.size(); a < N; a++) {
-					ActionBarMenuSubItem cell = new ActionBarMenuSubItem(getParentActivity(), a == 0, a == N - 1 && !hasGroupedIcons, themeDelegate);
+					CharSequence item = items.get(a);
+					int icon = icons.get(a);
+					int option = options.get(a);
+
+					String key = getConfigKeyForOption(option);
+					if (key != null) {
+						boolean defVal = getDefaultValueForOption(option);
+						int mode = tw.nekomimi.nekogram.settings.BaseNekoXSettingsActivity.getMessageMenuMode(key, defVal);
+						if (mode == 0) {
+							// Hide
+							continue;
+						} else if (mode == 2) {
+							// Icon
+							gridItems.add(item);
+							gridIcons.add(icon);
+							gridOptions.add(option);
+							continue;
+						}
+					}
+					// Text
+					textItems.add(item);
+					textIcons.add(icon);
+					textOptions.add(option);
+				}
+
+				items.clear();
+				items.addAll(textItems);
+				icons.clear();
+				icons.addAll(textIcons);
+				options.clear();
+				options.addAll(textOptions);
+
+				boolean[] groupedIconsMerged = new boolean[]{false};
+				if (GroupedIconsView.useGroupedIcons() && !gridOptions.isEmpty()) {
+					groupedIconsMerged[0] = true;
+					ArrayList<Integer> coreOptions = new ArrayList<>();
+					ArrayList<Integer> coreIcons = new ArrayList<>();
+					ArrayList<CharSequence> coreItems = new ArrayList<>();
+
+					if (this.lastMessageMenuStatus.allowReply || this.lastMessageMenuStatus.allowReplyPm) {
+						coreOptions.add(this.lastMessageMenuStatus.allowReply ? OPTION_REPLY : nkbtn_reply_private);
+						coreIcons.add(R.drawable.menu_reply);
+						coreItems.add("Reply");
+					}
+
+					if (this.lastMessageMenuStatus.allowCopy || this.lastMessageMenuStatus.allowCopyPhoto || this.lastMessageMenuStatus.allowCopyLink || this.lastMessageMenuStatus.allowCopyLinkPm) {
+						int copyOptionId = OPTION_COPY;
+						int copyIconRes = R.drawable.msg_copy;
+						if (this.lastMessageMenuStatus.allowCopy) {
+							if (!this.lastMessageMenuStatus.allowCopyPhoto && selectedObject != null && selectedObject.isPhoto() && selectedObject.isWebpage()) {
+								copyOptionId = OPTION_COPY_PHOTO;
+							} else if (this.lastMessageMenuStatus.allowCopyLink) {
+								copyOptionId = OPTION_COPY_LINK;
+							} else if (this.lastMessageMenuStatus.allowCopyLinkPm) {
+								copyOptionId = nkbtn_copy_link_in_pm;
+							} else {
+								copyOptionId = OPTION_COPY;
+							}
+						} else if (this.lastMessageMenuStatus.allowCopyPhoto) {
+							if (selectedObject != null && !selectedObject.isSticker()) {
+								copyOptionId = OPTION_COPY_PHOTO_AS_STICKER;
+							} else {
+								if (this.lastMessageMenuStatus.allowCopyLink) {
+									copyOptionId = OPTION_COPY_LINK;
+								} else if (this.lastMessageMenuStatus.allowCopyLinkPm) {
+									copyOptionId = nkbtn_copy_link_in_pm;
+								} else {
+									copyOptionId = OPTION_COPY_PHOTO;
+								}
+							}
+							copyIconRes = R.drawable.msg_copy_photo;
+						} else if (this.lastMessageMenuStatus.allowCopyLink && this.lastMessageMenuStatus.allowDelete) {
+							copyOptionId = OPTION_COPY_LINK;
+							copyIconRes = R.drawable.msg_link;
+						} else if (this.lastMessageMenuStatus.allowCopyLinkPm) {
+							copyOptionId = nkbtn_copy_link_in_pm;
+							copyIconRes = R.drawable.msg_link;
+						}
+						coreOptions.add(copyOptionId);
+						coreIcons.add(copyIconRes);
+						coreItems.add("Copy");
+					}
+
+					if (this.lastMessageMenuStatus.allowDelete) {
+						coreOptions.add(OPTION_DELETE);
+						coreIcons.add(R.drawable.msg_delete);
+						coreItems.add("Delete");
+					}
+
+					if (this.lastMessageMenuStatus.allowEdit) {
+						coreOptions.add(OPTION_EDIT);
+						coreIcons.add(R.drawable.msg_edit);
+						coreItems.add("Edit");
+					} else if (this.lastMessageMenuStatus.allowForward) {
+						coreOptions.add(OPTION_FORWARD);
+						coreIcons.add(R.drawable.msg_forward_noquote);
+						coreItems.add("Forward");
+					}
+
+					gridOptions.addAll(0, coreOptions);
+					gridIcons.addAll(0, coreIcons);
+					gridItems.addAll(0, coreItems);
+				}
+				// [Alexgram: Customizable Message Menu] - End
+
+				scrimPopupWindowItems = new ActionBarMenuSubItem[items.size()];
+				final boolean hasBottomIcons = GroupedIconsView.useGroupedIcons() || !gridOptions.isEmpty();
+				for (int a = 0, N = items.size(); a < N; a++) {
+					ActionBarMenuSubItem cell = new ActionBarMenuSubItem(getParentActivity(), a == 0, a == N - 1 && !hasBottomIcons, themeDelegate);
 					cell.setMinimumWidth(AndroidUtilities.dp(200));
 					cell.setTextAndIcon(items.get(a), icons.get(a));
 					Integer option = options.get(a);
@@ -33330,12 +33450,66 @@ public class ChatActivity extends BaseFragment implements
 					popupLayout.addView(layout);
 				}
 
-				if (GroupedIconsView.useGroupedIcons()) {
+				if (GroupedIconsView.useGroupedIcons() && !groupedIconsMerged[0]) {
 					popupLayout.addView(new ActionBarPopupWindow.GapView(contentView.getContext(), themeDelegate), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 8));
 
 					var groupedIconsView = new GroupedIconsView(getContext(), ChatActivity.this, selectedObject, this.lastMessageMenuStatus.allowReply, this.lastMessageMenuStatus.allowReplyPm, this.lastMessageMenuStatus.allowEdit, this.lastMessageMenuStatus.allowDelete, this.lastMessageMenuStatus.allowForward, this.lastMessageMenuStatus.allowCopy, this.lastMessageMenuStatus.allowCopyPhoto, this.lastMessageMenuStatus.allowCopyLink, this.lastMessageMenuStatus.allowCopyLinkPm);
 					popupLayout.addView(groupedIconsView.linearLayout);
 				}
+
+				// [Alexgram: Customizable Message Menu] - Start
+				if (!gridOptions.isEmpty()) {
+					popupLayout.addView(new ActionBarPopupWindow.GapView(contentView.getContext(), themeDelegate), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 8));
+
+					LinearLayout gridContainer = new LinearLayout(contentView.getContext());
+					gridContainer.setOrientation(LinearLayout.VERTICAL);
+					gridContainer.setPadding(0, AndroidUtilities.dp(4), 0, AndroidUtilities.dp(4));
+
+					int totalItems = gridOptions.size();
+					int columns = 4;
+					int rows = (totalItems + columns - 1) / columns;
+
+					int cellWidth = AndroidUtilities.dp(56);
+					int cellHeight = AndroidUtilities.dp(48);
+
+					for (int r = 0; r < rows; r++) {
+						LinearLayout rowLayout = new LinearLayout(contentView.getContext());
+						rowLayout.setOrientation(LinearLayout.HORIZONTAL);
+						rowLayout.setGravity(Gravity.CENTER);
+						
+						for (int c = 0; c < columns; c++) {
+							int index = r * columns + c;
+							if (index < totalItems) {
+								int optionId = gridOptions.get(index);
+								int iconRes = gridIcons.get(index);
+								CharSequence title = gridItems.get(index);
+
+								ImageView imageView = new ImageView(contentView.getContext());
+								imageView.setScaleType(ImageView.ScaleType.CENTER);
+								imageView.setImageResource(iconRes);
+								imageView.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_actionBarDefaultSubmenuItemIcon), PorterDuff.Mode.SRC_IN));
+								imageView.setBackground(Theme.createCircleSelectorDrawable(Theme.getColor(Theme.key_dialogButtonSelector), 0, 0));
+								imageView.setContentDescription(title);
+
+								imageView.setOnClickListener(v1 -> {
+									closeMenu(true);
+									processSelectedOption(optionId);
+								});
+
+								rowLayout.addView(imageView, new LinearLayout.LayoutParams(cellWidth, cellHeight));
+							} else {
+								View dummy = new View(contentView.getContext());
+								rowLayout.addView(dummy, new LinearLayout.LayoutParams(cellWidth, cellHeight));
+							}
+						}
+						gridContainer.addView(rowLayout, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+					}
+					
+					LinearLayout.LayoutParams containerParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+					containerParams.gravity = Gravity.CENTER_HORIZONTAL;
+					popupLayout.addView(gridContainer, containerParams);
+				}
+				// [Alexgram: Customizable Message Menu] - End
 
 			}
 
@@ -46164,10 +46338,91 @@ public class ChatActivity extends BaseFragment implements
 		}
 	}
 
+	// [Alexgram: Customizable Message Menu] - Start
+	private String getConfigKeyForOption(int optionId) {
+		switch (optionId) {
+			case nkbtn_reply_private:
+				return "ReplyInPrivate";
+			case nkbtn_copy_link_in_pm:
+			case OPTION_COPY_LINK:
+				return "CopyLink";
+			case OPTION_COPY_FRAME:
+				return "MessageMenuCopyFrame";
+			case OPTION_COPY_PHOTO:
+				return "CopyPhoto";
+			case OPTION_COPY_PHOTO_AS_STICKER:
+				return "CopyPhotoAsSticker";
+			case OPTION_ADD_TO_STICKERS_OR_MASKS:
+				return "AddToStickers";
+			case OPTION_ADD_STICKER_TO_FAVORITES:
+				return "AddToFavorites";
+			case nkbtn_forward_noquote:
+				return "NoQuoteForward";
+			case nkbtn_setReminder:
+				return "SetReminder";
+			case nkbtn_savemessage:
+				return "showAddToSavedMessages";
+			case nkbtn_bookmark:
+				return "ShowAddToBookmark";
+			case nkbtn_repeat:
+				return "showRepeat";
+			case nkbtn_repeatascopy:
+				return "RepeatAsCopy";
+			case nkbtn_invert:
+				return "showInvert";
+			case nkbtn_custom_reply:
+				return "showCustomReply";
+			case nkbtn_deldlcache:
+				return "showDeleteDownloadedFile";
+			case nkbtn_view_history:
+				return "showViewHistory";
+			case nkbtn_translate:
+			case OPTION_TRANSLATE:
+				return "showTranslate";
+			case nkbtn_translate_llm:
+				return "TranslateMessageLLM";
+			case nkbtn_sharemessage:
+				return "showShareMessages";
+			case nkbtn_hide:
+				return "showMessageHide";
+			case nkbtn_report:
+			case OPTION_REPORT_CHAT:
+				return "showReport";
+			case nkbtn_editAdmin:
+				return "showAdminActions";
+			case nkbtn_editPermission:
+				return "showChangePermissions";
+			case nkbtn_detail:
+				return "showMessageDetails";
+			case nkbtn_ai_reply:
+				return "enableAIReply";
+			case nkbtn_ai_summarize:
+				return "enableSummarizeChat";
+			case nkbtn_special_forward:
+				return "SpecialForward";
+			default:
+				return null;
+		}
+	}
+
+	private boolean getDefaultValueForOption(int optionId) {
+		switch (optionId) {
+			case nkbtn_forward_noquote:
+			case nkbtn_repeatascopy:
+			case nkbtn_invert:
+			case nkbtn_custom_reply:
+				return false;
+			default:
+				return true;
+		}
+	}
+	// [Alexgram: Customizable Message Menu] - End
+
 	private void nkbtn_onclick(int id) {
 		// from "items"
 		createUndoView();
 		switch (id) {
+
 			// [Alexgram: AI Reply] - Start
 			case nkbtn_ai_reply: {
 				showAiReplyDialog();
@@ -48664,12 +48919,12 @@ public class ChatActivity extends BaseFragment implements
 				}
 				// [Alexgram: AI Reply] - Start
 				if (NaConfig.INSTANCE.getEnableAIReply().Bool()) {
-					items.add("Reply with AI");
+					items.add(LocaleController.getString("enableAIReply", R.string.enableAIReply));
 					options.add(nkbtn_ai_reply);
 					icons.add(R.drawable.ic_ai_reply_na);
 				}
 				if (NaConfig.INSTANCE.getEnableSummarizeChat().Bool()) {
-					items.add("Summarize");
+					items.add(LocaleController.getString("enableSummarizeChat", R.string.enableSummarizeChat));
 					options.add(nkbtn_ai_summarize);
 					icons.add(R.drawable.ic_ai_summarize_na);
 				}
@@ -48936,6 +49191,7 @@ public class ChatActivity extends BaseFragment implements
 				}
 			}
 		}
+		// [Alexgram: Customizable Message Menu] - End
 		if (NekoConfig.showMessageDetails.Bool()) {
 			items.add(LocaleController.getString(R.string.MessageDetails));
 			options.add(nkbtn_detail);

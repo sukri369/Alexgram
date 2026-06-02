@@ -375,4 +375,8 @@ Non possiamo aiutarti in questo caso; se hai problemi di accesso, contatta il Su
     <string name="SpecialForwardResetSuccess">Messaggi ripristinati</string>
     <string name="DoubleTapOnChatsToFilterUnread">Doppio tocco sulle chat per filtrare le non lette</string>
     <string name="AmbientMode">Modalità Ambiente</string>
+    <string name="enableAIReply">Rispondi con IA</string>
+    <string name="enableSummarizeChat">Riassumi</string>
+    <string name="HomeDrawer">Menu laterale principale</string>
+    <string name="DrawerElements">Elementi del menu laterale</string>
 </resources>

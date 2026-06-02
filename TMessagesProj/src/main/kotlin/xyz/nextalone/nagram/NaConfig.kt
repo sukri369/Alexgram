@@ -1334,6 +1334,26 @@ object NaConfig {
             ConfigItem.configTypeBool,
             true
         )
+    // [Alexgram: Customizable Message Menu] - Start
+    val showInvert =
+        addConfig(
+            "showInvert",
+            ConfigItem.configTypeBool,
+            false
+        )
+    val showCustomReply =
+        addConfig(
+            "showCustomReply",
+            ConfigItem.configTypeBool,
+            false
+        )
+    val customReplyWord =
+        addConfig(
+            "CustomReplyWord",
+            ConfigItem.configTypeString,
+            "Great"
+        )
+    // [Alexgram: Customizable Message Menu] - End
     val preferCommonGroupsTab =
         addConfig(
             "PreferCommonGroupsTab",
@@ -1632,6 +1652,99 @@ object NaConfig {
             10
         )
     // [Alexgram: Default Schedule Delay] - End
+
+    // [Alexgram: Home Drawer Items] - Start
+    val drawerItemMyProfile =
+        addConfig(
+            "DrawerItemMyProfile",
+            ConfigItem.configTypeBool,
+            true
+        )
+    val drawerItemSetEmojiStatus =
+        addConfig(
+            "DrawerItemSetEmojiStatus",
+            ConfigItem.configTypeBool,
+            true
+        )
+    val drawerItemNewGroup =
+        addConfig(
+            "DrawerItemNewGroup",
+            ConfigItem.configTypeBool,
+            true
+        )
+    val drawerItemNewChannel =
+        addConfig(
+            "DrawerItemNewChannel",
+            ConfigItem.configTypeBool,
+            false
+        )
+    val drawerItemContacts =
+        addConfig(
+            "DrawerItemContacts",
+            ConfigItem.configTypeBool,
+            true
+        )
+    val drawerItemCalls =
+        addConfig(
+            "DrawerItemCalls",
+            ConfigItem.configTypeBool,
+            true
+        )
+    val drawerItemRecentChats =
+        addConfig(
+            "DrawerItemRecentChats",
+            ConfigItem.configTypeBool,
+            true
+        )
+    val drawerItemSaved =
+        addConfig(
+            "DrawerItemSaved",
+            ConfigItem.configTypeBool,
+            true
+        )
+    val drawerItemSettings =
+        addConfig(
+            "DrawerItemSettings",
+            ConfigItem.configTypeBool,
+            true
+        )
+    val drawerItemNSettings =
+        addConfig(
+            "DrawerItemNSettings",
+            ConfigItem.configTypeBool,
+            true
+        )
+    val drawerItemQrLogin =
+        addConfig(
+            "DrawerItemQrLogin",
+            ConfigItem.configTypeBool,
+            false
+        )
+    val drawerItemArchivedChats =
+        addConfig(
+            "DrawerItemArchivedChats",
+            ConfigItem.configTypeBool,
+            false
+        )
+    val drawerItemRestartApp =
+        addConfig(
+            "DrawerItemRestartApp",
+            ConfigItem.configTypeBool,
+            false
+        )
+    val drawerItemBrowser =
+        addConfig(
+            "DrawerItemBrowser",
+            ConfigItem.configTypeBool,
+            false
+        )
+    val drawerItemSessions =
+        addConfig(
+            "DrawerItemSessions",
+            ConfigItem.configTypeBool,
+            false
+        )
+    // [Alexgram: Home Drawer Items] - End
 
     val preferredTranslateTargetLangList = ArrayList<String>()
     fun updatePreferredTranslateTargetLangList() {

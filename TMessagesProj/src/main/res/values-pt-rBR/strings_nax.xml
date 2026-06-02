@@ -372,4 +372,8 @@
     <string name="SpecialForwardResetSuccess">Mensagens redefinidas</string>
     <string name="DoubleTapOnChatsToFilterUnread">Toque duplo nos chats para filtrar não lidos</string>
     <string name="AmbientMode">Modo Ambiente</string>
+    <string name="enableAIReply">Responder com IA</string>
+    <string name="enableSummarizeChat">Resumir</string>
+    <string name="HomeDrawer">Menu lateral inicial</string>
+    <string name="DrawerElements">Elementos do menu lateral</string>
 </resources>

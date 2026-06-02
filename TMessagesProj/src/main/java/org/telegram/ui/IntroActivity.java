@@ -83,6 +83,8 @@ import org.telegram.ui.Components.SimpleThemeDescription;
 import org.telegram.ui.Components.voip.CellFlickerDrawable;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLConfig;
@@ -537,7 +539,9 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
                         if (!destroyed) {
                             switchLanguageTextView.setText(string.value);
                             SharedPreferences preferences = MessagesController.getGlobalMainSettings();
-                            preferences.edit().putString("language_showed2", finalSystemLang.toLowerCase()).apply();
+                            Set<String> showedLangs = new HashSet<>(preferences.getStringSet("language_showed3", new HashSet<>()));
+                            showedLangs.add(finalSystemLang.toLowerCase());
+                            preferences.edit().putStringSet("language_showed3", showedLangs).apply();
                         }
                     });
                 }

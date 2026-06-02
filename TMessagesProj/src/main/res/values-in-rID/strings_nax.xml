@@ -333,4 +333,8 @@
     <string name="SpecialForwardResetSuccess">Pesan disetel ulang</string>
     <string name="DoubleTapOnChatsToFilterUnread">Ketuk Ganda Pada Obrolan Untuk Memfilter Obrolan Belum Dibaca</string>
     <string name="AmbientMode">Mode Ambien</string>
+    <string name="enableAIReply">Balas dengan AI</string>
+    <string name="enableSummarizeChat">Ringkas</string>
+    <string name="HomeDrawer">Menu Samping Utama</string>
+    <string name="DrawerElements">Elemen Menu Samping</string>
 </resources>

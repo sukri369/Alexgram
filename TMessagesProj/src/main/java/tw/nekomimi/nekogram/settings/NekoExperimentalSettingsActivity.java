@@ -57,6 +57,8 @@ import org.telegram.ui.ActionBar.BottomSheet;
 import org.telegram.ui.ActionBar.Theme;
 // [Alexgram: AI Reply] - Start
 import org.telegram.ui.AIAssistanceSettingsActivity;
+import org.telegram.ui.Components.EditTextBoldCursor;
+import tw.nekomimi.nekogram.config.ConfigItem;
 // [Alexgram: AI Reply] - End
 import org.telegram.ui.Cells.TextCell;
 import org.telegram.ui.Cells.TextCheckBoxCell;
@@ -197,6 +199,30 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
             .setNegativeButton(getString(R.string.Cancel), (d, w) -> d.dismiss())
             .makeRed(AlertDialog.BUTTON_POSITIVE)
             .show()));
+    // [Alexgram: Home Drawer] - Start
+    private final AbstractConfigCell navigationDrawerRow = cellGroup.appendCell(
+            new ConfigCellTextCheck(NekoConfig.navigationDrawerEnabled, null, getString(R.string.HomeDrawer))
+    );
+    private final AbstractConfigCell drawerElementsRow = cellGroup.appendCell(new ConfigCellTextCheckIcon(null, "DrawerElements", getString(R.string.DrawerElements), R.drawable.menu_newfilter, false, () ->
+            showDialog(showConfigMenuWithIconAlert(this, R.string.DrawerElements, new java.util.ArrayList<>() {{
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemMyProfile(), getString(R.string.MyProfile), R.drawable.left_status_profile));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemSetEmojiStatus(), getString(R.string.SetEmojiStatus), R.drawable.msg_status_set_solar, true));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemArchivedChats(), getString(R.string.ArchivedChats), R.drawable.msg_archive, true));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemNewGroup(), getString(R.string.NewGroup), R.drawable.msg_groups));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemNewChannel(), getString(R.string.NewChannel), R.drawable.msg_channel));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemContacts(), getString(R.string.Contacts), R.drawable.msg_contacts));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemCalls(), getString(R.string.Calls), R.drawable.msg_calls));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemRecentChats(), getString(R.string.RecentChats), R.drawable.msg_recent_solar));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemSaved(), getString(R.string.SavedMessages), R.drawable.msg_saved));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemSettings(), getString(R.string.Settings), R.drawable.msg_settings_old, true));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemNSettings(), getString(R.string.NekoSettings), R.drawable.nagramx_outline));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemBrowser(), getString(R.string.InappBrowser), R.drawable.web_browser));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemQrLogin(), getString(R.string.ImportLogin), R.drawable.msg_qrcode));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemSessions(), getString(R.string.Devices), R.drawable.msg2_devices, true));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemRestartApp(), getString(R.string.RestartApp), R.drawable.msg_retry));
+            }}))
+    ));
+    // [Alexgram: Home Drawer] - End
     private final AbstractConfigCell dividerAyuMoments = cellGroup.appendCell(new ConfigCellDivider());
 
     // N-Config
@@ -233,20 +259,48 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
     private final AbstractConfigCell enableAIReplyRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getEnableAIReply()));
     private final AbstractConfigCell enableSummarizeChatRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getEnableSummarizeChat()));
     private final AbstractConfigCell usePollinationsAiRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getUsePollinationsAi(), getString(R.string.usePollinationsAiAbout)));
-    private final AbstractConfigCell aiModelUrlRow = cellGroup.appendCell(new ConfigCellTextInput("AI Model URL", NaConfig.INSTANCE.getAiModelUrl(), "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash", null));
-    private final AbstractConfigCell aiApiKeyRow = cellGroup.appendCell(new ConfigCellTextInput("AI API Key", NaConfig.INSTANCE.getAiApiKey(), "Api Key", null));
-    private final AbstractConfigCell testAiApiRow = cellGroup.appendCell(new ConfigCellText("TestAiApi", () -> {
-        String url = NaConfig.INSTANCE.getAiModelUrl().String();
-        String key = NaConfig.INSTANCE.getAiApiKey().String();
-        testAiApi(url != null ? url : "", key != null ? key : "");
-    }));
-    private final AbstractConfigCell aiModelUrl2Row = cellGroup.appendCell(new ConfigCellTextInput("AI Model URL 2", NaConfig.INSTANCE.getAiModelUrl2(), "https://api.openai.com/v1/chat/completions", null));
-    private final AbstractConfigCell aiApiKey2Row = cellGroup.appendCell(new ConfigCellTextInput("AI API Key 2", NaConfig.INSTANCE.getAiApiKey2(), "sk-...", null));
-    private final AbstractConfigCell testAiApi2Row = cellGroup.appendCell(new ConfigCellText("TestAiApi2", () -> {
-        String url = NaConfig.INSTANCE.getAiModelUrl2().String();
-        String key = NaConfig.INSTANCE.getAiApiKey2().String();
-        testAiApi(url != null ? url : "", key != null ? key : "");
-    }));
+    private final AbstractConfigCell aiApiKeyRow = cellGroup.appendCell(new ConfigCellText("AI API Key", null, () -> showAiSettingsBottomSheet(false)) {
+        private org.telegram.ui.Cells.TextSettingsCell customCell;
+
+        @Override
+        public void setEnabled(boolean enabled) {
+            super.setEnabled(enabled);
+            if (this.customCell != null) {
+                this.customCell.setEnabled(enabled);
+            }
+        }
+
+        @Override
+        public void onBindViewHolder(RecyclerView.ViewHolder holder) {
+            org.telegram.ui.Cells.TextSettingsCell cell = (org.telegram.ui.Cells.TextSettingsCell) holder.itemView;
+            this.customCell = cell;
+            String keyStr = NaConfig.INSTANCE.getAiApiKey().String();
+            String displayVal = TextUtils.isEmpty(keyStr) ? "Not Configured" : maskKey(keyStr);
+            cell.setTextAndValue("AI API Key", displayVal, false, cellGroup.needSetDivider(this), true);
+            cell.setEnabled(isEnabled());
+        }
+    });
+    private final AbstractConfigCell aiApiKey2Row = cellGroup.appendCell(new ConfigCellText("API Key (Failover)", null, () -> showAiSettingsBottomSheet(true)) {
+        private org.telegram.ui.Cells.TextSettingsCell customCell;
+
+        @Override
+        public void setEnabled(boolean enabled) {
+            super.setEnabled(enabled);
+            if (this.customCell != null) {
+                this.customCell.setEnabled(enabled);
+            }
+        }
+
+        @Override
+        public void onBindViewHolder(RecyclerView.ViewHolder holder) {
+            org.telegram.ui.Cells.TextSettingsCell cell = (org.telegram.ui.Cells.TextSettingsCell) holder.itemView;
+            this.customCell = cell;
+            String keyStr = NaConfig.INSTANCE.getAiApiKey2().String();
+            String displayVal = TextUtils.isEmpty(keyStr) ? "Not Configured" : maskKey(keyStr);
+            cell.setTextAndValue("API Key (Failover)", displayVal, false, cellGroup.needSetDivider(this), true);
+            cell.setEnabled(isEnabled());
+        }
+    });
     private final AbstractConfigCell dividerAiReply = cellGroup.appendCell(new ConfigCellDivider());
     // [Alexgram: AI Reply] - End
 
@@ -264,10 +318,16 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
         if (NaConfig.INSTANCE.getBackAnimationStyle().Int() != ActionBarLayout.BACK_ANIMATION_SPRING) {
             cellGroup.rows.remove(springAnimationCrossfadeRow);
         }
+        // [Alexgram: Home Drawer] - Start
+        if (!NekoConfig.navigationDrawerEnabled.Bool()) {
+            cellGroup.rows.remove(drawerElementsRow);
+        }
+        // [Alexgram: Home Drawer] - End
         checkStoriesRows();
         checkUseDeletedIconRows();
         checkSaveBotMsgRows();
         checkSaveDeletedRows();
+        checkAiApiRows();
         addRowsToMap(cellGroup);
     }
 
@@ -354,6 +414,13 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
             // [Alexgram: Force Max FPS] - End
             } else if (key.equals(NaConfig.INSTANCE.getV8dAudio().getKey())) {
                 tooltip.showWithAction(0, UndoView.ACTION_NEED_RESTART, null, null);
+            // [Alexgram: Home Drawer] - Start
+            } else if (key.equals(NekoConfig.navigationDrawerEnabled.getKey())) {
+                checkDrawerElementsRow();
+                tooltip.showWithAction(0, UndoView.ACTION_NEED_RESTART, null, null);
+            // [Alexgram: Home Drawer] - End
+            } else if (key.equals(NaConfig.INSTANCE.getUsePollinationsAi().getKey())) {
+                checkAiApiRows();
             }
         };
 
@@ -813,6 +880,345 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
             root.performHapticFeedback(success ? android.view.HapticFeedbackConstants.VIRTUAL_KEY : android.view.HapticFeedbackConstants.LONG_PRESS);
         } catch (Exception ignore) {}
     }
+
+    private String maskKey(String key) {
+        if (TextUtils.isEmpty(key)) return "";
+        if (key.length() > 8) {
+            return key.substring(0, 4) + "••••••••" + key.substring(key.length() - 4);
+        } else {
+            return "••••••••";
+        }
+    }
+
+    private void checkAiApiRows() {
+        boolean usePollinations = NaConfig.INSTANCE.getUsePollinationsAi().Bool();
+        if (listAdapter == null) {
+            if (usePollinations) {
+                cellGroup.rows.remove(aiApiKeyRow);
+                cellGroup.rows.remove(aiApiKey2Row);
+            }
+            return;
+        }
+        if (!usePollinations) {
+            final int index = cellGroup.rows.indexOf(usePollinationsAiRow);
+            int insertIndex = index + 1;
+            boolean inserted = false;
+            if (!cellGroup.rows.contains(aiApiKeyRow)) {
+                cellGroup.rows.add(insertIndex, aiApiKeyRow);
+                listAdapter.notifyItemInserted(insertIndex);
+                insertIndex++;
+                inserted = true;
+            }
+            if (!cellGroup.rows.contains(aiApiKey2Row)) {
+                cellGroup.rows.add(insertIndex, aiApiKey2Row);
+                listAdapter.notifyItemInserted(insertIndex);
+                inserted = true;
+            }
+            if (inserted) {
+                addRowsToMap(cellGroup);
+            }
+        } else {
+            boolean removed = false;
+            final int index1 = cellGroup.rows.indexOf(aiApiKeyRow);
+            if (index1 != -1) {
+                cellGroup.rows.remove(aiApiKeyRow);
+                listAdapter.notifyItemRemoved(index1);
+                removed = true;
+            }
+            final int index2 = cellGroup.rows.indexOf(aiApiKey2Row);
+            if (index2 != -1) {
+                cellGroup.rows.remove(aiApiKey2Row);
+                listAdapter.notifyItemRemoved(index2);
+                removed = true;
+            }
+            if (removed) {
+                addRowsToMap(cellGroup);
+            }
+        }
+    }
+
+    private void showAiSettingsBottomSheet(final boolean isFailover) {
+        if (getParentActivity() == null) {
+            return;
+        }
+
+        final ConfigItem modelUrlConfig = isFailover ? NaConfig.INSTANCE.getAiModelUrl2() : NaConfig.INSTANCE.getAiModelUrl();
+        final ConfigItem apiKeyConfig = isFailover ? NaConfig.INSTANCE.getAiApiKey2() : NaConfig.INSTANCE.getAiApiKey();
+        final String defaultUrl = isFailover ? "https://api.openai.com/v1/chat/completions" : "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash";
+        final String defaultHint = isFailover ? "sk-..." : "Api Key";
+        final String titleText = isFailover ? "API Key (Failover)" : "AI API Key Settings";
+
+        BottomSheet.Builder builder = new BottomSheet.Builder(getParentActivity(), true);
+        builder.setApplyTopPadding(true);
+        builder.setApplyBottomPadding(true);
+
+        LinearLayout contentLayout = new LinearLayout(getParentActivity());
+        contentLayout.setOrientation(LinearLayout.VERTICAL);
+        contentLayout.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(16), AndroidUtilities.dp(24), AndroidUtilities.dp(20));
+
+        // Header: Title and description
+        TextView titleView = new TextView(getParentActivity());
+        titleView.setText(titleText);
+        titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 20);
+        titleView.setTypeface(AndroidUtilities.bold());
+        titleView.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
+        titleView.setGravity(Gravity.LEFT);
+        contentLayout.addView(titleView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 8));
+
+        TextView descView = new TextView(getParentActivity());
+        descView.setText(isFailover ? "Configure the secondary backup AI model URL and API Key. It will be used if the primary key fails." : "Configure your custom AI API Key and model URL. Leave URL empty to use default.");
+        descView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
+        descView.setTextColor(Theme.getColor(Theme.key_dialogTextGray));
+        contentLayout.addView(descView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 20));
+
+        // Input 1: API Key
+        TextView apiKeyLabel = new TextView(getParentActivity());
+        apiKeyLabel.setText("API KEY");
+        apiKeyLabel.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11);
+        apiKeyLabel.setTypeface(AndroidUtilities.bold());
+        apiKeyLabel.setTextColor(Theme.getColor(Theme.key_dialogTextBlue2));
+        contentLayout.addView(apiKeyLabel, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 6));
+
+        FrameLayout apiKeyContainer = new FrameLayout(getParentActivity());
+        android.graphics.drawable.GradientDrawable inputBg = new android.graphics.drawable.GradientDrawable();
+        inputBg.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
+        inputBg.setCornerRadius(AndroidUtilities.dp(10));
+        inputBg.setColor(isDark ? 0x15FFFFFF : 0x0F000000);
+        inputBg.setStroke(AndroidUtilities.dp(1), isDark ? 0x20FFFFFF : 0x1A000000);
+        apiKeyContainer.setBackground(inputBg);
+
+        EditTextBoldCursor apiKeyEdit = new EditTextBoldCursor(getParentActivity());
+        apiKeyEdit.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
+        apiKeyEdit.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
+        apiKeyEdit.setHintTextColor(Theme.getColor(Theme.key_dialogTextGray));
+        apiKeyEdit.setHandlesColor(Theme.getColor(Theme.key_chat_TextSelectionCursor));
+        apiKeyEdit.setFocusable(true);
+        apiKeyEdit.setBackground(null);
+        apiKeyEdit.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(10), AndroidUtilities.dp(12), AndroidUtilities.dp(10));
+        apiKeyEdit.setText(apiKeyConfig.String());
+        apiKeyEdit.setHint(defaultHint);
+        apiKeyContainer.addView(apiKeyEdit, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+        contentLayout.addView(apiKeyContainer, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 16));
+
+        // Input 2: Model URL
+        TextView urlLabel = new TextView(getParentActivity());
+        urlLabel.setText("AI MODEL URL");
+        urlLabel.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11);
+        urlLabel.setTypeface(AndroidUtilities.bold());
+        urlLabel.setTextColor(Theme.getColor(Theme.key_dialogTextBlue2));
+        contentLayout.addView(urlLabel, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 6));
+
+        FrameLayout urlContainer = new FrameLayout(getParentActivity());
+        android.graphics.drawable.GradientDrawable inputBg2 = new android.graphics.drawable.GradientDrawable();
+        inputBg2.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
+        inputBg2.setCornerRadius(AndroidUtilities.dp(10));
+        inputBg2.setColor(isDark ? 0x15FFFFFF : 0x0F000000);
+        inputBg2.setStroke(AndroidUtilities.dp(1), isDark ? 0x20FFFFFF : 0x1A000000);
+        urlContainer.setBackground(inputBg2);
+
+        EditTextBoldCursor urlEdit = new EditTextBoldCursor(getParentActivity());
+        urlEdit.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
+        urlEdit.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
+        urlEdit.setHintTextColor(Theme.getColor(Theme.key_dialogTextGray));
+        urlEdit.setHandlesColor(Theme.getColor(Theme.key_chat_TextSelectionCursor));
+        urlEdit.setFocusable(true);
+        urlEdit.setBackground(null);
+        urlEdit.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(10), AndroidUtilities.dp(12), AndroidUtilities.dp(10));
+        urlEdit.setText(modelUrlConfig.String());
+        urlEdit.setHint(defaultUrl);
+        urlContainer.addView(urlEdit, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+        contentLayout.addView(urlContainer, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 20));
+
+        // Testing indicator / output area
+        LinearLayout testOutputContainer = new LinearLayout(getParentActivity());
+        testOutputContainer.setOrientation(LinearLayout.VERTICAL);
+        testOutputContainer.setVisibility(View.GONE);
+        testOutputContainer.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(12), AndroidUtilities.dp(12), AndroidUtilities.dp(12));
+        android.graphics.drawable.GradientDrawable testBg = new android.graphics.drawable.GradientDrawable();
+        testBg.setCornerRadius(AndroidUtilities.dp(8));
+        testBg.setColor(isDark ? 0x10FFFFFF : 0x08000000);
+        testOutputContainer.setBackground(testBg);
+        
+        TextView testStatusText = new TextView(getParentActivity());
+        testStatusText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
+        testStatusText.setTypeface(AndroidUtilities.bold());
+        testOutputContainer.addView(testStatusText, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 4));
+
+        TextView testDetailsText = new TextView(getParentActivity());
+        testDetailsText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
+        testDetailsText.setTextColor(Theme.getColor(Theme.key_dialogTextGray));
+        testOutputContainer.addView(testDetailsText, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+
+        contentLayout.addView(testOutputContainer, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 20));
+
+        // Buttons Layout
+        LinearLayout buttonsLayout = new LinearLayout(getParentActivity());
+        buttonsLayout.setOrientation(LinearLayout.HORIZONTAL);
+        buttonsLayout.setGravity(Gravity.RIGHT);
+
+        // Test button
+        TextView testButton = new TextView(getParentActivity());
+        testButton.setText("TEST");
+        testButton.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
+        testButton.setTypeface(AndroidUtilities.bold());
+        testButton.setTextColor(Theme.getColor(Theme.key_dialogTextBlue2));
+        testButton.setGravity(Gravity.CENTER);
+        testButton.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(10), AndroidUtilities.dp(16), AndroidUtilities.dp(10));
+        testButton.setBackground(Theme.getSelectorDrawable(true));
+        buttonsLayout.addView(testButton, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
+
+        // Spacer
+        View spacer = new View(getParentActivity());
+        buttonsLayout.addView(spacer, LayoutHelper.createLinear(0, 0, 1f));
+
+        // Cancel button
+        TextView cancelButton = new TextView(getParentActivity());
+        cancelButton.setText("CANCEL");
+        cancelButton.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
+        cancelButton.setTypeface(AndroidUtilities.bold());
+        cancelButton.setTextColor(Theme.getColor(Theme.key_dialogTextBlue2));
+        cancelButton.setGravity(Gravity.CENTER);
+        cancelButton.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(10), AndroidUtilities.dp(16), AndroidUtilities.dp(10));
+        cancelButton.setBackground(Theme.getSelectorDrawable(true));
+        buttonsLayout.addView(cancelButton, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
+
+        // Save button
+        TextView saveButton = new TextView(getParentActivity());
+        saveButton.setText("SAVE");
+        saveButton.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
+        saveButton.setTypeface(AndroidUtilities.bold());
+        saveButton.setTextColor(Theme.getColor(Theme.key_dialogTextBlue2));
+        saveButton.setGravity(Gravity.CENTER);
+        saveButton.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(10), AndroidUtilities.dp(16), AndroidUtilities.dp(10));
+        saveButton.setBackground(Theme.getSelectorDrawable(true));
+        buttonsLayout.addView(saveButton, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
+
+        contentLayout.addView(buttonsLayout, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+
+        builder.setCustomView(contentLayout);
+        BottomSheet bottomSheet = builder.create();
+
+        cancelButton.setOnClickListener(v -> bottomSheet.dismiss());
+
+        saveButton.setOnClickListener(v -> {
+            String newKey = apiKeyEdit.getText().toString().trim();
+            String newUrl = urlEdit.getText().toString().trim();
+            apiKeyConfig.setConfigString(newKey);
+            modelUrlConfig.setConfigString(newUrl);
+
+            if (listAdapter != null) {
+                listAdapter.notifyDataSetChanged();
+            }
+            if (getParentLayout() != null) {
+                getParentLayout().rebuildAllFragmentViews(false, false);
+            }
+            bottomSheet.dismiss();
+            BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Settings Saved").show();
+        });
+
+        testButton.setOnClickListener(v -> {
+            String testKey = apiKeyEdit.getText().toString().trim();
+            String testUrl = urlEdit.getText().toString().trim();
+            if (TextUtils.isEmpty(testUrl)) {
+                testUrl = defaultUrl;
+            }
+
+            testStatusText.setText("Testing Connection...");
+            testStatusText.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
+            testDetailsText.setText("Please wait while we reach the server...");
+            testOutputContainer.setVisibility(View.VISIBLE);
+
+            final String finalTestUrl = testUrl;
+            final boolean isGeminiNative = (finalTestUrl.contains("generativelanguage.googleapis.com") || finalTestUrl.contains("googleapis.com")) && !finalTestUrl.contains("openai");
+            
+            String reqUrl = finalTestUrl;
+            if (isGeminiNative && !reqUrl.contains(":generateContent")) {
+                if (reqUrl.endsWith("/")) {
+                    reqUrl = reqUrl.substring(0, reqUrl.length() - 1) + ":generateContent";
+                } else {
+                    reqUrl = reqUrl + ":generateContent";
+                }
+            }
+            final String requestUrl = reqUrl;
+
+            Utilities.globalQueue.postRunnable(() -> {
+                try {
+                    OkHttpClient client = new OkHttpClient.Builder()
+                            .connectTimeout(10, TimeUnit.SECONDS)
+                            .readTimeout(10, TimeUnit.SECONDS)
+                            .build();
+
+                    JSONObject jsonBody = new JSONObject();
+                    if (isGeminiNative) {
+                        JSONArray contents = new JSONArray();
+                        JSONObject contentObj = new JSONObject();
+                        JSONArray parts = new JSONArray();
+                        JSONObject textPart = new JSONObject();
+                        textPart.put("text", "Say ping");
+                        parts.put(textPart);
+                        contentObj.put("parts", parts);
+                        contents.put(contentObj);
+                        jsonBody.put("contents", contents);
+                    } else {
+                        jsonBody.put("model", "gpt-3.5-turbo");
+                        JSONArray messages = new JSONArray();
+                        JSONObject userMsg = new JSONObject();
+                        userMsg.put("role", "user");
+                        userMsg.put("content", "Say ping");
+                        messages.put(userMsg);
+                        jsonBody.put("messages", messages);
+                        jsonBody.put("max_tokens", 5);
+                    }
+
+                    Request.Builder requestBuilder = new Request.Builder()
+                            .url(requestUrl)
+                            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), jsonBody.toString()));
+
+                    if (isGeminiNative) {
+                        requestBuilder.addHeader("x-goog-api-key", testKey);
+                    } else {
+                        requestBuilder.addHeader("Authorization", "Bearer " + testKey);
+                    }
+
+                    client.newCall(requestBuilder.build()).enqueue(new Callback() {
+                        @Override
+                        public void onFailure(Call call, java.io.IOException e) {
+                            AndroidUtilities.runOnUIThread(() -> {
+                                testStatusText.setText("Connection Failed");
+                                testStatusText.setTextColor(Theme.getColor(Theme.key_text_RedRegular));
+                                testDetailsText.setText("Error: " + e.getMessage());
+                            });
+                        }
+
+                        @Override
+                        public void onResponse(Call call, Response response) throws java.io.IOException {
+                            String body = response.body().string();
+                            int code = response.code();
+                            AndroidUtilities.runOnUIThread(() -> {
+                                if (response.isSuccessful()) {
+                                    testStatusText.setText("Connection Successful!");
+                                    testStatusText.setTextColor(isDark ? 0xFF4CAF50 : 0xFF2E7D32);
+                                    testDetailsText.setText("HTTP Code: " + code + "\nAPI Type: " + (isGeminiNative ? "Gemini Native" : "OpenAI Compatible"));
+                                } else {
+                                    testStatusText.setText("Connection Failed (HTTP " + code + ")");
+                                    testStatusText.setTextColor(Theme.getColor(Theme.key_text_RedRegular));
+                                    testDetailsText.setText("Response: " + body);
+                                }
+                            });
+                        }
+                    });
+                } catch (Exception e) {
+                    AndroidUtilities.runOnUIThread(() -> {
+                        testStatusText.setText("Local Error");
+                        testStatusText.setTextColor(Theme.getColor(Theme.key_text_RedRegular));
+                        testDetailsText.setText("Error: " + e.getMessage());
+                    });
+                }
+            });
+        });
+
+        showDialog(bottomSheet);
+    }
     // [Alexgram: AI Reply] - End
 
 
@@ -895,6 +1301,32 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
             listAdapter.notifyItemChanged(cellGroup.rows.indexOf(clearMessageDatabaseRow));
         }
     }
+
+    // [Alexgram: Home Drawer] - Start
+    private void checkDrawerElementsRow() {
+        boolean enabled = NekoConfig.navigationDrawerEnabled.Bool();
+        if (listAdapter == null) {
+            if (!enabled) {
+                cellGroup.rows.remove(drawerElementsRow);
+            }
+            return;
+        }
+        if (enabled) {
+            final int index = cellGroup.rows.indexOf(navigationDrawerRow);
+            if (!cellGroup.rows.contains(drawerElementsRow)) {
+                cellGroup.rows.add(index + 1, drawerElementsRow);
+                listAdapter.notifyItemInserted(index + 1);
+            }
+        } else {
+            final int index = cellGroup.rows.indexOf(drawerElementsRow);
+            if (index != -1) {
+                cellGroup.rows.remove(drawerElementsRow);
+                listAdapter.notifyItemRemoved(index);
+            }
+        }
+        addRowsToMap(cellGroup);
+    }
+    // [Alexgram: Home Drawer] - End
 
     private void checkStoriesRows() {
         boolean disabled = NaConfig.INSTANCE.getDisableStories().Bool();

@@ -341,4 +341,8 @@
     <string name="SpecialForwardResetSuccess">メッセージがリセットされました</string>
     <string name="DoubleTapOnChatsToFilterUnread">チャットをダブルタップして未読をフィルタリング</string>
     <string name="AmbientMode">アンビエントモード</string>
+    <string name="enableAIReply">AIで返信</string>
+    <string name="enableSummarizeChat">要約</string>
+    <string name="HomeDrawer">ホームドロワー</string>
+    <string name="DrawerElements">ドロワーの要素</string>
 </resources>
