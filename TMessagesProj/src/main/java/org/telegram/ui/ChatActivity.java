@@ -46394,6 +46394,12 @@ public class ChatActivity extends BaseFragment implements
 				return "showChangePermissions";
 			case nkbtn_detail:
 				return "showMessageDetails";
+			case nkbtn_ai_reply:
+				return "enableAIReply";
+			case nkbtn_ai_summarize:
+				return "enableSummarizeChat";
+			case nkbtn_special_forward:
+				return "SpecialForward";
 			default:
 				return null;
 		}
