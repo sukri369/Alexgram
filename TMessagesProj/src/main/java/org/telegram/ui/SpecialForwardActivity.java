@@ -392,6 +392,16 @@ public class SpecialForwardActivity extends ChatActivity {
 
     private void startEditingMessage(MessageObject messageObject) {
         if (messageObject == null) return;
+        if (messageObject.getGroupId() != 0) {
+            MessageObject.GroupedMessages groupedMessages = groupedMessagesMap.get(messageObject.getGroupId());
+            if (groupedMessages != null) {
+                if (groupedMessages.captionMessage != null) {
+                    messageObject = groupedMessages.captionMessage;
+                } else if (!groupedMessages.messages.isEmpty()) {
+                    messageObject = groupedMessages.messages.get(0);
+                }
+            }
+        }
         this.selectedMessage = messageObject;
         this.editingMessageObject = messageObject;
         
