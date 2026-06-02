@@ -376,4 +376,8 @@
     <string name="SpecialForwardResetSuccess">Сообщения сброшены</string>
     <string name="DoubleTapOnChatsToFilterUnread">Двойное нажатие на чаты для фильтрации непрочитанных</string>
     <string name="AmbientMode">Режим Ambient</string>
+    <string name="enableAIReply">Ответить с помощью ИИ</string>
+    <string name="enableSummarizeChat">Суммировать</string>
+    <string name="HomeDrawer">Боковое меню</string>
+    <string name="DrawerElements">Элементы бокового меню</string>
 </resources>

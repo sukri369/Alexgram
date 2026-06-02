@@ -241,10 +241,10 @@ public class NekoChatSettingsActivity extends BaseNekoXSettingsActivity implemen
                 add(new ConfigCellTextCheckIcon(NekoConfig.showAdminActions, getString(R.string.EditAdminRights), R.drawable.profile_admin));
                 add(new ConfigCellTextCheckIcon(NekoConfig.showChangePermissions, getString(R.string.ChangePermissions), R.drawable.msg_permissions));
                 if (NaConfig.INSTANCE.getEnableAIReply().Bool()) {
-                    add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getEnableAIReply(), "Reply with AI", R.drawable.ic_ai_reply_na));
+                    add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getEnableAIReply(), getString(R.string.enableAIReply), R.drawable.ic_ai_reply_na));
                 }
                 if (NaConfig.INSTANCE.getEnableSummarizeChat().Bool()) {
-                    add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getEnableSummarizeChat(), "Summarize", R.drawable.ic_ai_summarize_na));
+                    add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getEnableSummarizeChat(), getString(R.string.enableSummarizeChat), R.drawable.ic_ai_summarize_na));
                 }
                 if (NaConfig.INSTANCE.getSpecialForward().Bool()) {
                     add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getSpecialForward(), getString(R.string.SpecialForward), R.drawable.nk_special_forward));

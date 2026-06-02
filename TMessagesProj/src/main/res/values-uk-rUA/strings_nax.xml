@@ -332,4 +332,8 @@
     <string name="SpecialForwardResetSuccess">Повідомлення скинуто</string>
     <string name="DoubleTapOnChatsToFilterUnread">Подвійне натискання на чати для фільтрації непрочитаних</string>
     <string name="AmbientMode">Режим Ambient</string>
+    <string name="enableAIReply">Відповісти за допомогою ШІ</string>
+    <string name="enableSummarizeChat">Узагальнити</string>
+    <string name="HomeDrawer">Бічне меню</string>
+    <string name="DrawerElements">Елементи бічного меню</string>
 </resources>

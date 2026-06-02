@@ -327,4 +327,8 @@
     <string name="SpecialForwardResetSuccess">Wiadomości zresetowane</string>
     <string name="DoubleTapOnChatsToFilterUnread">Kliknij dwukrotnie czaty, aby przefiltrować nieprzeczytane</string>
     <string name="AmbientMode">Tryb Ambient</string>
+    <string name="enableAIReply">Odpowiedz przez AI</string>
+    <string name="enableSummarizeChat">Podsumuj</string>
+    <string name="HomeDrawer">Panel boczny główny</string>
+    <string name="DrawerElements">Elementy panelu bocznego</string>
 </resources>

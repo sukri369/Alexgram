@@ -283,4 +283,8 @@
     <string name="SpecialForwardResetSuccess">پیام‌ها بازنشانی شدند</string>
     <string name="DoubleTapOnChatsToFilterUnread">دو بار ضربه روی گفتگوها برای فیلتر خوانده‌نشده‌ها</string>
     <string name="AmbientMode">حالت محیطی</string>
+    <string name="enableAIReply">پاسخ با هوش مصنوعی</string>
+    <string name="enableSummarizeChat">خلاصه کردن</string>
+    <string name="HomeDrawer">منوی کشویی اصلی</string>
+    <string name="DrawerElements">عناصر منوی کشویی</string>
 </resources>

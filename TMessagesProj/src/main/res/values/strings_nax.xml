@@ -397,8 +397,8 @@
     <!-- [Alexgram: Special Forward] - End -->
     <!-- [Alexgram: AI Reply] - Start -->
     <string name="AiAssistanceSettings">AI Assistance Settings</string>
-    <string name="enableAIReply">AI Reply</string>
-    <string name="enableSummarizeChat">Summarize Chat</string>
+    <string name="enableAIReply">Reply with AI</string>
+    <string name="enableSummarizeChat">Summarize</string>
     <string name="aiModelUrl">AI Model URL 1</string>
     <string name="aiApiKey">AI API Key 1</string>
     <string name="TestAiApi">Test API Connection 1</string>

@@ -48919,12 +48919,12 @@ public class ChatActivity extends BaseFragment implements
 				}
 				// [Alexgram: AI Reply] - Start
 				if (NaConfig.INSTANCE.getEnableAIReply().Bool()) {
-					items.add("Reply with AI");
+					items.add(LocaleController.getString("enableAIReply", R.string.enableAIReply));
 					options.add(nkbtn_ai_reply);
 					icons.add(R.drawable.ic_ai_reply_na);
 				}
 				if (NaConfig.INSTANCE.getEnableSummarizeChat().Bool()) {
-					items.add("Summarize");
+					items.add(LocaleController.getString("enableSummarizeChat", R.string.enableSummarizeChat));
 					options.add(nkbtn_ai_summarize);
 					icons.add(R.drawable.ic_ai_summarize_na);
 				}

@@ -376,4 +376,8 @@
     <string name="SpecialForwardResetSuccess">消息已重置</string>
     <string name="DoubleTapOnChatsToFilterUnread">双击聊天列表以过滤未读聊天</string>
     <string name="AmbientMode">环境模式</string>
+    <string name="enableAIReply">使用 AI 回复</string>
+    <string name="enableSummarizeChat">总结</string>
+    <string name="HomeDrawer">侧边栏设置</string>
+    <string name="DrawerElements">侧边栏元素</string>
 </resources>
