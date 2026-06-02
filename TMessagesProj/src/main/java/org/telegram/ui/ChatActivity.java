@@ -46416,50 +46416,7 @@ public class ChatActivity extends BaseFragment implements
 		// from "items"
 		createUndoView();
 		switch (id) {
-			// [Alexgram: Customizable Message Menu] - Start
-			case nkbtn_invert: {
-				if (selectedObject != null && selectedObject.messageOwner != null && selectedObject.messageOwner.message != null) {
-					String text = selectedObject.messageOwner.message;
-					String reversedText = new StringBuilder(text).reverse().toString();
-					AndroidUtilities.addToClipboard(reversedText);
-					if (chatActivityEnterView != null) {
-						chatActivityEnterView.setFieldText(reversedText);
-					}
-					if (BulletinFactory.canShowBulletin(this)) {
-						BulletinFactory.of(this).createCopyBulletin(LocaleController.getString("TextCopied", R.string.TextCopied)).show();
-					}
-				}
-				break;
-			}
-			case nkbtn_custom_reply: {
-				if (selectedObject != null) {
-					String replyWord = NaConfig.INSTANCE.getCustomReplyWord().String();
-					if (TextUtils.isEmpty(replyWord)) {
-						replyWord = "Great";
-					}
-					SendMessagesHelper.SendMessageParams params = SendMessagesHelper.SendMessageParams.of(
-						replyWord,
-						dialog_id,
-						selectedObject,
-						getThreadMessage(),
-						null,
-						false,
-						null,
-						null,
-						null,
-						true,
-						0,
-						0,
-						null,
-						false
-					);
-					params.quick_reply_shortcut = quickReplyShortcut;
-					params.quick_reply_shortcut_id = getQuickReplyId();
-					SendMessagesHelper.getInstance(currentAccount).sendMessage(params);
-				}
-				break;
-			}
-			// [Alexgram: Customizable Message Menu] - End
+
 			// [Alexgram: AI Reply] - Start
 			case nkbtn_ai_reply: {
 				showAiReplyDialog();
@@ -49227,17 +49184,6 @@ public class ChatActivity extends BaseFragment implements
 					}
 				}
 			}
-		}
-		// [Alexgram: Customizable Message Menu] - Start
-		if (NaConfig.INSTANCE.getShowInvert().Bool() && selectedObject != null && selectedObject.messageOwner != null && !TextUtils.isEmpty(selectedObject.messageOwner.message)) {
-			items.add("Invert");
-			options.add(nkbtn_invert);
-			icons.add(R.drawable.msg_retry);
-		}
-		if (NaConfig.INSTANCE.getShowCustomReply().Bool() && allowReply) {
-			items.add(NaConfig.INSTANCE.getCustomReplyWord().String());
-			options.add(nkbtn_custom_reply);
-			icons.add(R.drawable.ic_select_between);
 		}
 		// [Alexgram: Customizable Message Menu] - End
 		if (NekoConfig.showMessageDetails.Bool()) {
