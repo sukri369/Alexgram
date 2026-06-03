@@ -11444,7 +11444,7 @@ public class MessageObject {
         if (message.paid_suggested_post_stars || message.paid_suggested_post_ton) {
             return false;
         }
-        if (message.from_id instanceof TLRPC.TL_peerUser && message.from_id.user_id == message.peer_id.user_id && message.from_id.user_id == UserConfig.getInstance(currentAccount).getClientUserId() && !isLiveLocationMessage(message) && !(media instanceof TLRPC.TL_messageMediaContact)) {
+        if (message.from_id instanceof TLRPC.TL_peerUser && message.from_id.user_id == message.peer_id.user_id && message.from_id.user_id == UserConfig.getInstance(currentAccount).getClientUserId() && !isLiveLocationMessage(message)) {
             return true;
         }
         if (chat == null && message.peer_id.channel_id != 0) {
@@ -11460,7 +11460,8 @@ public class MessageObject {
             !(media instanceof TLRPC.TL_messageMediaDocument) &&
             !(media instanceof TLRPC.TL_messageMediaWebPage) &&
             !(media instanceof TLRPC.TL_messageMediaPaidMedia) &&
-            !(media instanceof TLRPC.TL_messageMediaToDo)
+            !(media instanceof TLRPC.TL_messageMediaToDo) &&
+            !(media instanceof TLRPC.TL_messageMediaContact)
         ) {
             return false;
         }
@@ -11481,6 +11482,7 @@ public class MessageObject {
                     media instanceof TLRPC.TL_messageMediaWebPage ||
                     media instanceof TLRPC.TL_messageMediaPaidMedia ||
                     media instanceof TLRPC.TL_messageMediaToDo ||
+                    media instanceof TLRPC.TL_messageMediaContact ||
                     media == null);
         }
         if (chat != null && chat.megagroup && message.out || chat != null && !chat.megagroup && (chat.creator || chat.admin_rights != null && (chat.admin_rights.edit_messages || message.out && chat.admin_rights.post_messages)) && message.post) {
@@ -11490,6 +11492,7 @@ public class MessageObject {
                 media instanceof TLRPC.TL_messageMediaWebPage ||
                 media instanceof TLRPC.TL_messageMediaPaidMedia ||
                 media instanceof TLRPC.TL_messageMediaToDo ||
+                media instanceof TLRPC.TL_messageMediaContact ||
                 media == null
             ) {
                 return true;
