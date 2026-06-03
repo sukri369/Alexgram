@@ -283,7 +283,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import me.vkryl.android.animator.BoolAnimator;
 import me.vkryl.android.animator.FactorAnimator;
 
-import tw.nekomimi.nekogram.BackButtonMenuRecent;
+import tw.nekomimi.nekogram.ChatHistoryActivity;
 import tw.nekomimi.nekogram.NekoConfig;
 import tw.nekomimi.nekogram.helpers.MainTabsHelper;
 import tw.nekomimi.nekogram.helpers.PasscodeHelper;
@@ -13956,12 +13956,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 });
             }
             io.addGapIf(hideBottomNavigationBar);
-            if (hideBottomNavigationBar) {
-                io.add(R.drawable.menu_recent, getString(R.string.RecentChats), () -> {
-                    io.dismiss();
-                    BackButtonMenuRecent.show(currentAccount, this, optionsItem);
-                });
-            }
+            io.add(R.drawable.msg_recent_solar, getString(R.string.RecentChats), () -> {
+                presentFragment(new ChatHistoryActivity());
+            });
             if (hideBottomNavigationBar && NaConfig.INSTANCE.getHideArchive().Bool()) {
                 io.add(R.drawable.msg_archive, getString(R.string.ArchivedChats), () -> {
                     Bundle args = new Bundle();

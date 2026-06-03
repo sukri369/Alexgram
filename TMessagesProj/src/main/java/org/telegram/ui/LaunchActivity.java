@@ -273,7 +273,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import kotlin.text.StringsKt;
-import tw.nekomimi.nekogram.BackButtonMenuRecent;
+import tw.nekomimi.nekogram.ChatHistoryActivity;
 import tw.nekomimi.nekogram.NekoConfig;
 import tw.nekomimi.nekogram.helpers.AppRestartHelper;
 import tw.nekomimi.nekogram.helpers.MonetHelper;
@@ -2022,12 +2022,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             presentFragment(new BookmarkManagerActivity());
             drawerLayoutContainer.closeDrawer(false);
         } else if (id == DrawerLayoutAdapter.nkbtnRecentChats) {
-            BaseFragment fragment = getHomeDrawerDialogsActivity();
-            if (fragment == null) {
-                fragment = getLastFragment();
-            }
-            BackButtonMenuRecent.show(currentAccount, fragment,
-                    sideMenuHeaderView != null ? sideMenuHeaderView : drawerLayoutContainer);
+            presentFragment(new ChatHistoryActivity());
             drawerLayoutContainer.closeDrawer(false);
         } else if (id == DrawerLayoutAdapter.nkbtnSettings) {
             presentFragment(new NekoSettingsActivity());

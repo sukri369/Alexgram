@@ -84,7 +84,7 @@ import java.util.Collections;
 
 import me.vkryl.android.animator.BoolAnimator;
 import me.vkryl.android.animator.FactorAnimator;
-import tw.nekomimi.nekogram.BackButtonMenuRecent;
+
 import tw.nekomimi.nekogram.NekoConfig;
 import tw.nekomimi.nekogram.helpers.AppRestartHelper;
 import tw.nekomimi.nekogram.helpers.MainTabsHelper;
@@ -1253,10 +1253,7 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
     }
 
     private void addChatsMenuItems(ItemOptions o, View button) {
-        o.add(R.drawable.menu_recent, getString(R.string.RecentChats), () -> {
-            o.dismiss();
-            BackButtonMenuRecent.show(currentAccount, this, button);
-        });
+
         final boolean drawerOn = NekoConfig.navigationDrawerEnabled.Bool();
         final boolean archivedInDrawer = drawerOn && NaConfig.INSTANCE.getDrawerItemArchivedChats().Bool();
         final boolean savedInDrawer = drawerOn && NaConfig.INSTANCE.getDrawerItemSaved().Bool();

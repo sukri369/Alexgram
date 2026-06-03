@@ -2402,6 +2402,10 @@ public class ShareAlert extends BottomSheet implements NotificationCenter.Notifi
         return true;
     }
 
+    public int getSelectedDialogsCount() {
+        return selectedDialogs.size();
+    }
+
     protected void sendInternal(boolean withSound) {
         for (int a = 0; a < selectedDialogs.size(); a++) {
             long key = selectedDialogs.keyAt(a);

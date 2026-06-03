@@ -61,7 +61,7 @@ import org.telegram.ui.Stars.StarsController;
 import org.telegram.ui.bots.BotWebViewSheet;
 import org.telegram.ui.web.WebBrowserSettings;
 
-import tw.nekomimi.nekogram.BackButtonMenuRecent;
+import tw.nekomimi.nekogram.ChatHistoryActivity;
 import tw.nekomimi.nekogram.NekoConfig;
 import tw.nekomimi.nekogram.helpers.AppRestartHelper;
 import tw.nekomimi.nekogram.settings.GhostModeActivity;
@@ -752,11 +752,7 @@ public class HomeDrawerHelper {
             activity.presentFragment(new BookmarkManagerActivity());
             activity.drawerLayoutContainer.closeDrawer(false);
         } else if (id == DrawerLayoutAdapter.nkbtnRecentChats) {
-            BaseFragment fragment = getHomeDrawerDialogsActivity();
-            if (fragment == null) {
-                fragment = activity.getLastFragment();
-            }
-            BackButtonMenuRecent.show(activity.currentAccount, fragment, sideMenuHeaderView != null ? sideMenuHeaderView : activity.drawerLayoutContainer);
+            activity.presentFragment(new ChatHistoryActivity());
             activity.drawerLayoutContainer.closeDrawer(false);
         } else if (id == DrawerLayoutAdapter.nkbtnSettings) {
             activity.presentFragment(new NekoSettingsActivity());

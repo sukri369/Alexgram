@@ -416,4 +416,27 @@
     <!-- [Alexgram: Customizable Message Menu] - Start -->
     <string name="CustomReplyWord">Custom Reply Word</string>
     <!-- [Alexgram: Customizable Message Menu] - End -->
+
+    <!-- Recent Chats Folder Strings -->
+    <string name="SwitchAccountNax">Switch Account</string>
+    <string name="CurrentNax">Current</string>
+    <string name="PrivateChatMessage">Cannot open private chat: %1$s\n\nThis chat is private and can only be accessed from the original account.</string>
+    <string name="DeleteChatTitle">Delete Chat</string>
+    <string name="DeleteChatMessage">Are you sure you want to remove %1$s from recent chats?</string>
+    <string name="ChatRemovedFromRecent">Chat removed from recent chats</string>
+    <string name="ChatHistory_ResultCount">%1$d results</string>
+    <string name="ChatCategoryAll">All</string>
+    <string name="ChatCategoryChannels">Channels</string>
+    <string name="ChatCategoryGroups">Groups</string>
+    <string name="ChatCategoryUsers">Users</string>
+    <string name="ChatCategoryBots">Bots</string>
+    <string name="ChatHistoryDeleteChats">Delete Chats</string>
+    <string name="ChatHistoryDeleteConfirmation">Are you sure you want to delete </string>
+    <string name="ChatHistorySelected">selected</string>
+    <string name="ChatHistory_NoResultsFor">No results found for "%1$s"</string>
+    <string name="ChatHistory_NoRecentChats">No recent chats</string>
+    <string name="ChatHistory_NoCategoryFound">No %1$s found</string>
+    <string name="ChatHistory_EnterSearchQuery">Enter search query</string>
+    <string name="ChatHistory_LinkSharedToChat_one">Link forwarded to **a chat**.</string>
+    <string name="ChatHistory_LinkSharedToChat_other">Link forwarded to **%1$d chats**.</string>
 </resources>
