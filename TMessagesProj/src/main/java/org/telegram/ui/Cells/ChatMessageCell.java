@@ -21640,18 +21640,28 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
 
     // [Alexgram: Quick Edit Icon] - Start
     private boolean checkQuickEditVisible() {
-        if (!NekoConfig.showQuickEditIconInChatList.Bool()
-                || currentMessageObject == null
-                || currentMessageObject.isSending()
-                || currentMessageObject.isSendError()
-                || delegate == null
-                || !delegate.canEditMessage(currentMessageObject)) {
-            return false;
+        boolean showConfig = NekoConfig.showQuickEditIconInChatList.Bool();
+        boolean hasMsg = currentMessageObject != null;
+        boolean sending = hasMsg && currentMessageObject.isSending();
+        boolean sendError = hasMsg && currentMessageObject.isSendError();
+        boolean hasDelegate = delegate != null;
+        boolean canEdit = hasDelegate && delegate.canEditMessage(currentMessageObject);
+        boolean onlyOwn = NekoConfig.quickEditIconOnlyForOwnMessages.Bool();
+        boolean isOut = hasMsg && currentMessageObject.isOutOwner();
+        
+        boolean result = showConfig && hasMsg && !sending && !sendError && canEdit && (!onlyOwn || isOut);
+        
+        if (hasMsg && currentMessageObject.type == 0) { // TYPE_TEXT
+            android.util.Log.d("QuickEditFix", "TextMsg ID: " + currentMessageObject.getId() + 
+                " | showConfig: " + showConfig + 
+                " | !sending: " + !sending + 
+                " | !sendError: " + !sendError + 
+                " | canEdit: " + canEdit + 
+                " | onlyOwn: " + onlyOwn + 
+                " | isOut: " + isOut + 
+                " | RESULT: " + result);
         }
-        if (NekoConfig.quickEditIconOnlyForOwnMessages.Bool() && !currentMessageObject.isOutOwner()) {
-            return false;
-        }
-        return true;
+        return result;
     }
 
     private void drawQuickEditButton(Canvas canvas) {
@@ -21671,6 +21681,15 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             }
             float y = backgroundDrawableTop + (backgroundDrawableBottom - backgroundDrawableTop - buttonSize) / 2f;
             quickEditRect.set(x, y, x + buttonSize, y + buttonSize);
+
+            if (currentMessageObject.type == 0) {
+                android.util.Log.d("QuickEditFix", "TextMsg ID: " + currentMessageObject.getId() + 
+                    " | rect: " + quickEditRect + 
+                    " | bgLeft: " + backgroundDrawableLeft + 
+                    " | bgWidth: " + backgroundWidth + 
+                    " | bgTop: " + backgroundDrawableTop + 
+                    " | bgBottom: " + backgroundDrawableBottom);
+            }
 
             canvas.drawRoundRect(quickEditRect, dp(16), dp(16), getThemedPaint(quickEditPressed ? Theme.key_paint_chatActionBackgroundSelected : Theme.key_paint_chatActionBackground));
             if (hasGradientService()) {
