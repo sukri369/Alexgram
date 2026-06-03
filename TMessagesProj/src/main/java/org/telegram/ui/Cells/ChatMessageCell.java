@@ -21640,29 +21640,36 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
 
     // [Alexgram: Quick Edit Icon] - Start
     private boolean checkQuickEditVisible() {
-        return NekoConfig.showQuickEditIconInChatList.Bool()
-                && currentMessageObject != null
-                && !currentMessageObject.isSending()
-                && !currentMessageObject.isSendError()
-                && (!NekoConfig.quickEditIconOnlyForOwnMessages.Bool() ? currentMessageObject.isOutOwner() : (delegate != null && delegate.canEditMessage(currentMessageObject)));
+        if (!NekoConfig.showQuickEditIconInChatList.Bool()
+                || currentMessageObject == null
+                || currentMessageObject.isSending()
+                || currentMessageObject.isSendError()
+                || delegate == null
+                || !delegate.canEditMessage(currentMessageObject)) {
+            return false;
+        }
+        if (NekoConfig.quickEditIconOnlyForOwnMessages.Bool() && !currentMessageObject.isOutOwner()) {
+            return false;
+        }
+        return true;
     }
 
     private void drawQuickEditButton(Canvas canvas) {
-        if (checkQuickEditVisible() && currentBackgroundDrawable != null) {
+        if (checkQuickEditVisible()) {
             float buttonSize = dp(32);
             float x;
             if (currentMessageObject.isOutOwner()) {
-                x = getCurrentBackgroundLeft() - dp(8) - buttonSize;
+                x = backgroundDrawableLeft - dp(8) - buttonSize;
                 if (currentMessagesGroup != null) {
                     x += currentMessagesGroup.transitionParams.offsetLeft - animationOffsetX;
                 }
             } else {
-                x = getCurrentBackgroundRight() + dp(8);
+                x = backgroundDrawableLeft + backgroundWidth + dp(8);
                 if (currentMessagesGroup != null) {
                     x += currentMessagesGroup.transitionParams.offsetRight - animationOffsetX;
                 }
             }
-            float y = currentBackgroundDrawable.getBounds().top + (currentBackgroundDrawable.getBounds().bottom - currentBackgroundDrawable.getBounds().top - buttonSize) / 2f;
+            float y = backgroundDrawableTop + (backgroundDrawableBottom - backgroundDrawableTop - buttonSize) / 2f;
             quickEditRect.set(x, y, x + buttonSize, y + buttonSize);
 
             canvas.drawRoundRect(quickEditRect, dp(16), dp(16), getThemedPaint(quickEditPressed ? Theme.key_paint_chatActionBackgroundSelected : Theme.key_paint_chatActionBackground));
