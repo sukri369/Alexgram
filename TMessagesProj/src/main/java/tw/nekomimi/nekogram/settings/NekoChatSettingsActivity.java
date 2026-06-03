@@ -120,6 +120,10 @@ public class NekoChatSettingsActivity extends BaseNekoXSettingsActivity implemen
     private final AbstractConfigCell deleteChatForBothSidesRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getDeleteChatForBothSides()));
     private final AbstractConfigCell showMessageIDRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getShowMessageID()));
     private final AbstractConfigCell showSeconds = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.showSeconds));
+    // [Alexgram: Quick Edit Icon] - Start
+    private final AbstractConfigCell showQuickEditIconRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.showQuickEditIconInChatList, getString(R.string.ShowQuickEditIconDesc)));
+    private final AbstractConfigCell quickEditIconOnlyOwnRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.quickEditIconOnlyForOwnMessages, getString(R.string.QuickEditIconOnlyOwnDesc)));
+    // [Alexgram: Quick Edit Icon] - End
     private final AbstractConfigCell useEditedIconRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getUseEditedIcon()));
     private final AbstractConfigCell customEditedMessageRow = cellGroup.appendCell(new ConfigCellTextInput(null, NaConfig.INSTANCE.getCustomEditedMessage(), "", null));
     private final AbstractConfigCell dateOfForwardMsgRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getDateOfForwardedMsg()));
@@ -501,6 +505,10 @@ public class NekoChatSettingsActivity extends BaseNekoXSettingsActivity implemen
         if (!BuildVars.LOGS_ENABLED) {
             cellGroup.rows.remove(markdownParserRow);
         }
+        // [Alexgram: Quick Edit Icon]
+        if (!NekoConfig.showQuickEditIconInChatList.Bool()) {
+            cellGroup.rows.remove(quickEditIconOnlyOwnRow);
+        }
         checkSkipOpenLinkConfirmRows();
         checkConfirmAVRows();
         addRowsToMap(cellGroup);
@@ -580,6 +588,21 @@ public class NekoChatSettingsActivity extends BaseNekoXSettingsActivity implemen
                 }
             } else if (key.equals("PremiumElements")) {
                 addRowsToMap(cellGroup);
+            // [Alexgram: Quick Edit Icon]
+            } else if (key.equals(NekoConfig.showQuickEditIconInChatList.getKey())) {
+                if ((boolean) newValue) {
+                    if (!cellGroup.rows.contains(quickEditIconOnlyOwnRow)) {
+                        final int index = cellGroup.rows.indexOf(showQuickEditIconRow) + 1;
+                        cellGroup.rows.add(index, quickEditIconOnlyOwnRow);
+                        listAdapter.notifyItemInserted(index);
+                    }
+                } else {
+                    if (cellGroup.rows.contains(quickEditIconOnlyOwnRow)) {
+                        final int index = cellGroup.rows.indexOf(quickEditIconOnlyOwnRow);
+                        cellGroup.rows.remove(quickEditIconOnlyOwnRow);
+                        listAdapter.notifyItemRemoved(index);
+                    }
+                }
             }
         };
 

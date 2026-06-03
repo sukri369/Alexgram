@@ -178,6 +178,10 @@ public class NekoConfig {
     // [Alexgram: Native Features] - Start
     public static ConfigItem forceMusicSpeedControl = addConfig("forceMusicSpeedControl", configTypeBool, false);
     public static ConfigItem enableEditFileName = addConfig("enableEditFileName", configTypeBool, false);
+    // [Alexgram: Quick Edit Icon] - Start
+    public static ConfigItem showQuickEditIconInChatList = addConfig("showQuickEditIconInChatList", configTypeBool, false);
+    public static ConfigItem quickEditIconOnlyForOwnMessages = addConfig("quickEditIconOnlyForOwnMessages", configTypeBool, true);
+    // [Alexgram: Quick Edit Icon] - End
     // [Alexgram: Native Features] - End
 
     public static ConfigItem usePersianCalendar = addConfig("UsePersianCalendar", configTypeBool, false);
