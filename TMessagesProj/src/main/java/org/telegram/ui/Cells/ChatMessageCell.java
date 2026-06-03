@@ -548,6 +548,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         isSponsoredMessageHidden.setValue(!isVisible, animated);
     }
 
+    private static long lastToastTime;
     private static final int SPONSORED_MESSAGE_HIDDEN_ANIMATOR_ID = 0;
     private final BoolAnimator isSponsoredMessageHidden = new BoolAnimator(SPONSORED_MESSAGE_HIDDEN_ANIMATOR_ID, this,
         CubicBezierInterpolator.EASE_OUT_QUINT, 380);
@@ -21660,6 +21661,29 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 " | onlyOwn: " + onlyOwn + 
                 " | isOut: " + isOut + 
                 " | RESULT: " + result);
+
+            if (!result) {
+                final String reason;
+                if (!showConfig) reason = "showConfig=false";
+                else if (sending) reason = "sending=true";
+                else if (sendError) reason = "sendError=true";
+                else if (!hasDelegate) reason = "hasDelegate=false";
+                else if (!canEdit) {
+                    reason = "canEdit=false (msg.canEdit=" + currentMessageObject.canEditMessage(null) + ")";
+                }
+                else if (onlyOwn && !isOut) reason = "onlyOwn=true & isOut=false";
+                else reason = "unknown";
+                
+                org.telegram.messenger.AndroidUtilities.runOnUIThread(() -> {
+                    long now = System.currentTimeMillis();
+                    if (now - lastToastTime > 5000) {
+                        lastToastTime = now;
+                        try {
+                            android.widget.Toast.makeText(getContext(), "QuickEdit: " + reason, android.widget.Toast.LENGTH_SHORT).show();
+                        } catch (Exception e) {}
+                    }
+                });
+            }
         }
         return result;
     }
@@ -21668,27 +21692,32 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         if (checkQuickEditVisible()) {
             float buttonSize = dp(32);
             float x;
+            float left = getBackgroundDrawableLeft();
+            float right = getBackgroundDrawableRight();
+            float top = getBackgroundDrawableTop();
+            float bottom = getBackgroundDrawableBottom();
+
             if (currentMessageObject.isOutOwner()) {
-                x = backgroundDrawableLeft - dp(8) - buttonSize;
+                x = left - dp(8) - buttonSize;
                 if (currentMessagesGroup != null) {
                     x += currentMessagesGroup.transitionParams.offsetLeft - animationOffsetX;
                 }
             } else {
-                x = backgroundDrawableLeft + backgroundWidth + dp(8);
+                x = right + dp(8);
                 if (currentMessagesGroup != null) {
                     x += currentMessagesGroup.transitionParams.offsetRight - animationOffsetX;
                 }
             }
-            float y = backgroundDrawableTop + (backgroundDrawableBottom - backgroundDrawableTop - buttonSize) / 2f;
+            float y = top + (bottom - top - buttonSize) / 2f;
             quickEditRect.set(x, y, x + buttonSize, y + buttonSize);
 
             if (currentMessageObject.type == 0) {
                 android.util.Log.d("QuickEditFix", "TextMsg ID: " + currentMessageObject.getId() + 
                     " | rect: " + quickEditRect + 
-                    " | bgLeft: " + backgroundDrawableLeft + 
-                    " | bgWidth: " + backgroundWidth + 
-                    " | bgTop: " + backgroundDrawableTop + 
-                    " | bgBottom: " + backgroundDrawableBottom);
+                    " | left: " + left + 
+                    " | right: " + right + 
+                    " | top: " + top + 
+                    " | bottom: " + bottom);
             }
 
             canvas.drawRoundRect(quickEditRect, dp(16), dp(16), getThemedPaint(quickEditPressed ? Theme.key_paint_chatActionBackgroundSelected : Theme.key_paint_chatActionBackground));
