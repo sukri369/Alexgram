@@ -439,4 +439,6 @@
     <string name="ChatHistory_EnterSearchQuery">Enter search query</string>
     <string name="ChatHistory_LinkSharedToChat_one">Link forwarded to **a chat**.</string>
     <string name="ChatHistory_LinkSharedToChat_other">Link forwarded to **%1$d chats**.</string>
+    <string name="sendToDiscussWithoutJoin">Write to discuss groups without joining</string>
+    <string name="sendToDiscussWithoutJoinInfo">Skip the client-only membership check for discussion groups</string>
 </resources>

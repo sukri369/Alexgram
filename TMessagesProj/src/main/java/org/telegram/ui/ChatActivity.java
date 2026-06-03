@@ -2045,7 +2045,7 @@ public class ChatActivity extends BaseFragment implements
 						!(message.messageOwner.action instanceof TLRPC.TL_messageActionSecureValuesSent) &&
 						(currentEncryptedChat != null || message.getId() >= 0) &&
 						// (bottomOverlayChat == null || bottomOverlayChat.getVisibility() != View.VISIBLE) &&
-						(currentChat == null || ((!ChatObject.isNotInChat(currentChat) || isThreadChat()) && (!ChatObject.isChannel(currentChat) || ChatObject.canPost(currentChat) || currentChat.megagroup) && ChatObject.canSendMessages(currentChat)));
+						(currentChat == null || ((tw.nekomimi.nekogram.helpers.ChatHelper.isEffectivelyInChat(currentChat) || isThreadChat()) && (!ChatObject.isChannel(currentChat) || ChatObject.canPost(currentChat) || currentChat.megagroup) && ChatObject.canSendMessages(currentChat)));
 				boolean allowEdit = message.canEditMessage(currentChat) && !chatActivityEnterView.hasAudioToSend() && message.getDialogId() != mergeDialogId;
 				if (allowEdit && selectedObjectGroup != null) {
 					int captionsCount = 0;
@@ -2075,11 +2075,11 @@ public class ChatActivity extends BaseFragment implements
 					case DoubleTap.DOUBLE_TAP_ACTION_SAVE:
 						return !message.isSponsored() && chatMode != MODE_SCHEDULED && !message.needDrawBluredPreview() && !message.isLiveLocation() && message.type != 16 && !noforwards && !UserObject.isUserSelf(currentUser) && !isAyuDeleted;
 					case DoubleTap.DOUBLE_TAP_ACTION_REPEAT:
-						allowRepeat = allowChatActions && (currentChat == null || ((!ChatObject.isNotInChat(currentChat) || isThreadChat()) && (!ChatObject.isChannel(currentChat) || currentChat.megagroup) && ChatObject.canSendMessages(currentChat))) && !isAyuDeleted &&
+						allowRepeat = allowChatActions && (currentChat == null || ((tw.nekomimi.nekogram.helpers.ChatHelper.isEffectivelyInChat(currentChat) || isThreadChat()) && (!ChatObject.isChannel(currentChat) || currentChat.megagroup) && ChatObject.canSendMessages(currentChat))) && !isAyuDeleted &&
 								(!isThreadChat() && !noforwards || getMessageHelper().getMessageForRepeat(message, selectedObjectGroup) != null);
 						return allowRepeat && !message.isSponsored() && chatMode != MODE_SCHEDULED && !message.needDrawBluredPreview() && !message.isLiveLocation() && message.type != 16;
 					case DoubleTap.DOUBLE_TAP_ACTION_REPEAT_AS_COPY:
-						allowRepeat = allowChatActions && (currentChat == null || ((!ChatObject.isNotInChat(currentChat) || isThreadChat()) && (!ChatObject.isChannel(currentChat) || currentChat.megagroup) && ChatObject.canSendMessages(currentChat))) && !isAyuDeleted &&
+						allowRepeat = allowChatActions && (currentChat == null || ((tw.nekomimi.nekogram.helpers.ChatHelper.isEffectivelyInChat(currentChat) || isThreadChat()) && (!ChatObject.isChannel(currentChat) || currentChat.megagroup) && ChatObject.canSendMessages(currentChat))) && !isAyuDeleted &&
 								(!isThreadChat() || getMessageHelper().getMessageForRepeat(message, selectedObjectGroup) != null);
 						return allowRepeat && !message.isSponsored() && chatMode != MODE_SCHEDULED && !message.needDrawBluredPreview() && !message.isLiveLocation() && message.type != 16;
 					case DoubleTap.DOUBLE_TAP_ACTION_EDIT:
@@ -5579,7 +5579,7 @@ public class ChatActivity extends BaseFragment implements
 						if (
 							bottomChannelButtonsLayout != null && bottomChannelButtonsLayout.getVisibility() == View.VISIBLE && !(bottomOverlayChatWaitsReply && allowReplyOnOpenTopic || message.wasJustSent) ||
 							currentChat != null && (
-								ChatObject.isNotInChat(currentChat) && !isThreadChat() ||
+								!tw.nekomimi.nekogram.helpers.ChatHelper.isEffectivelyInChat(currentChat) && !isThreadChat() ||
 								ChatObject.isChannel(currentChat) && !ChatObject.canPost(currentChat) && !currentChat.megagroup ||
 								!ChatObject.canSendMessages(currentChat)
 							)
@@ -20280,7 +20280,7 @@ public class ChatActivity extends BaseFragment implements
 				if (actionsButtonsLayout != null) {
 					boolean allowChatActions = true;
 					if (bottomChannelButtonsLayout != null && bottomChannelButtonsLayout.getVisibility() == View.VISIBLE && !bottomOverlayChatWaitsReply ||
-							currentChat != null && (ChatObject.isNotInChat(currentChat) && !isThreadChat() || ChatObject.isChannel(currentChat) && !ChatObject.canPost(currentChat) && !currentChat.megagroup || !ChatObject.canSendMessages(currentChat)) || hasSelectedAyuDeletedMessage) {
+							currentChat != null && (!tw.nekomimi.nekogram.helpers.ChatHelper.isEffectivelyInChat(currentChat) && !isThreadChat() || ChatObject.isChannel(currentChat) && !ChatObject.canPost(currentChat) && !currentChat.megagroup || !ChatObject.canSendMessages(currentChat)) || hasSelectedAyuDeletedMessage) {
 						allowChatActions = false;
 					}
 
@@ -28985,7 +28985,7 @@ public class ChatActivity extends BaseFragment implements
 			long requestedTime = MessagesController.getNotificationsSettings(currentAccount).getLong("dialog_join_requested_time_" + dialog_id, -1);
 			boolean shouldApply = false;
 			if (ChatObject.isChannel(currentChat) && !(currentChat instanceof TLRPC.TL_channelForbidden)) {
-				if (ChatObject.isNotInChat(currentChat) && !UserObject.isBotForum(currentUser) && (ChatObject.isForum(currentChat) || !isThreadChat() || currentChat.join_to_send)) {
+				if (!tw.nekomimi.nekogram.helpers.ChatHelper.isEffectivelyInChat(currentChat) && !UserObject.isBotForum(currentUser) && (ChatObject.isForum(currentChat) || !isThreadChat() || currentChat.join_to_send)) {
 					if (getMessagesController().isJoiningChannel(currentChat.id)) {
 						showBottomOverlayProgress(true, false);
 					} else {
@@ -29207,7 +29207,7 @@ public class ChatActivity extends BaseFragment implements
 				bottomChannelButtonsLayout.setVisibility(View.VISIBLE);
 				chatActivityEnterView.setVisibility(View.INVISIBLE);
 			} else if (chatMode == MODE_PINNED ||
-					currentChat != null && (!ChatObject.isMonoForum(currentChat) || !isSubscriberSuggestions) && ((ChatObject.isNotInChat(currentChat) && !UserObject.isBotForum(currentUser) || !ChatObject.canWriteToChat(currentChat)) && (currentChat.join_to_send || !isThreadChat() || ChatObject.isForum(currentChat)) || forumTopic != null && forumTopic.closed && !ChatObject.canManageTopic(currentAccount, currentChat, forumTopic) || shouldDisplaySwipeToLeftToReplyInForum()) ||
+					currentChat != null && (!ChatObject.isMonoForum(currentChat) || !isSubscriberSuggestions) && ((!tw.nekomimi.nekogram.helpers.ChatHelper.isEffectivelyInChat(currentChat) && !UserObject.isBotForum(currentUser) || !ChatObject.canWriteToChat(currentChat)) && (currentChat.join_to_send || !isThreadChat() || ChatObject.isForum(currentChat)) || forumTopic != null && forumTopic.closed && !ChatObject.canManageTopic(currentAccount, currentChat, forumTopic) || shouldDisplaySwipeToLeftToReplyInForum()) ||
 					currentUser != null && (UserObject.isDeleted(currentUser) || userBlocked || UserObject.isReplyUser(currentUser))) {
 				if (chatActivityEnterView.isEditingMessage()) {
 					chatActivityEnterView.setVisibility(View.VISIBLE);
@@ -32097,7 +32097,7 @@ public class ChatActivity extends BaseFragment implements
 			allowChatActions = false;
 		}
 
-		if (currentChat != null && (ChatObject.isNotInChat(currentChat) && !ChatObject.isMonoForum(currentChat) && !isThreadChat())) {
+		if (currentChat != null && (!tw.nekomimi.nekogram.helpers.ChatHelper.isEffectivelyInChat(currentChat) && !ChatObject.isMonoForum(currentChat) && !isThreadChat())) {
 			allowChatActions = false;
 		}
 
@@ -35242,7 +35242,7 @@ public class ChatActivity extends BaseFragment implements
 				// [Alexgram: Allow Forwarding/Copying] - End
 					return;
 				}
-				if (selectedObject != null && currentChat != null && (ChatObject.isNotInChat(currentChat) && !ChatObject.isMonoForum(currentChat) && !isThreadChat() || ChatObject.isChannel(currentChat) && !ChatObject.canPost(currentChat) && !currentChat.megagroup || !ChatObject.canSendMessages(currentChat))) {
+				if (selectedObject != null && currentChat != null && (!tw.nekomimi.nekogram.helpers.ChatHelper.isEffectivelyInChat(currentChat) && !ChatObject.isMonoForum(currentChat) && !isThreadChat() || ChatObject.isChannel(currentChat) && !ChatObject.canPost(currentChat) && !currentChat.megagroup || !ChatObject.canSendMessages(currentChat))) {
 					MessageObject messageObject = selectedObject;
 					if (messageObject.getGroupId() != 0) {
 						MessageObject.GroupedMessages group = getGroup(messageObject.getGroupId());
@@ -47668,7 +47668,7 @@ public class ChatActivity extends BaseFragment implements
 			final boolean suggestUpdate = (currentChat != null && currentChat.broadcast_messages_allowed && currentChat.linked_monoforum_id != 0)
 				!= (bottomChannelButtonsLayout != null && bottomChannelButtonsLayout.isButtonVisible(ChatActivityChannelButtonsLayout.BUTTON_DIRECT));
 
-			if (giftUpdate || suggestUpdate) {
+			if (giftUpdate || suggestUpdate || tw.nekomimi.nekogram.helpers.ChatHelper.isEffectivelyInChat(currentChat)) {
 				updateBottomOverlay(true);
 			}
 		}
@@ -48245,7 +48245,7 @@ public class ChatActivity extends BaseFragment implements
 			allowChatActions = false;
 		}
 
-		if (currentChat != null && (ChatObject.isNotInChat(currentChat) && !ChatObject.isMonoForum(currentChat) && !isThreadChat())) {
+		if (currentChat != null && (!tw.nekomimi.nekogram.helpers.ChatHelper.isEffectivelyInChat(currentChat) && !ChatObject.isMonoForum(currentChat) && !isThreadChat())) {
 			allowChatActions = false;
 		}
 
