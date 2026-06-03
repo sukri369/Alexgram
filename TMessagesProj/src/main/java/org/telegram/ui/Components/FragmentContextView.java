@@ -2026,7 +2026,8 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
                 } else {
                     isMusic = true;
                     if (playbackSpeedButton != null) {
-                        if (messageObject.getDuration() >= 10 * 60) {
+                        // [Alexgram: Native Features] - Start
+                        if (messageObject.getDuration() >= 10 * 60 || tw.nekomimi.nekogram.NekoConfig.forceMusicSpeedControl.Bool()) {
                             playbackSpeedButton.setAlpha(1.0f);
                             playbackSpeedButton.setEnabled(true);
                             titleTextView.setPadding(0, 0, dp(44) + joinButtonWidth, 0);
@@ -2036,6 +2037,7 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
                             playbackSpeedButton.setEnabled(false);
                             titleTextView.setPadding(0, 0, joinButtonWidth, 0);
                         }
+                        // [Alexgram: Native Features] - End
                     } else {
                         titleTextView.setPadding(0, 0, joinButtonWidth, 0);
                     }

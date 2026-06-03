@@ -1273,6 +1273,44 @@ public class MessageSendPreview extends Dialog implements NotificationCenter.Not
         options.setGapBackgroundColor(Theme.multAlpha(Theme.getColor(Theme.key_actionBarDefaultSubmenuItem, resourcesProvider), 0.06f));
         options.setBlurBackground(iBlur3Factory, BlurredBackgroundProviderImpl.scrimMenuBackground(resourcesProvider), false);
 
+        // [Alexgram: Native Features] - Start
+        if (tw.nekomimi.nekogram.NekoConfig.enableEditFileName.Bool()) {
+            org.telegram.ui.ActionBar.BaseFragment fragment = org.telegram.ui.LaunchActivity.getLastFragment();
+            if (fragment instanceof org.telegram.ui.ChatActivity) {
+                org.telegram.ui.ChatActivity chatActivity = (org.telegram.ui.ChatActivity) fragment;
+                if (chatActivity.chatAttachAlert != null && chatActivity.chatAttachAlert.isShowing()) {
+                    org.telegram.ui.Components.ChatAttachAlert.AttachAlertLayout currentLayout = chatActivity.chatAttachAlert.getCurrentAttachLayout();
+                    boolean hasSelection = false;
+                    String filePath = null;
+                    if (currentLayout instanceof org.telegram.ui.Components.ChatAttachAlertDocumentLayout) {
+                        org.telegram.ui.Components.ChatAttachAlertDocumentLayout documentLayout = (org.telegram.ui.Components.ChatAttachAlertDocumentLayout) currentLayout;
+                        if (documentLayout.selectedFilesOrder != null && !documentLayout.selectedFilesOrder.isEmpty()) {
+                            filePath = documentLayout.selectedFilesOrder.get(0);
+                            hasSelection = true;
+                        }
+                    } else if (currentLayout instanceof org.telegram.ui.Components.ChatAttachAlertAudioLayout) {
+                        org.telegram.ui.Components.ChatAttachAlertAudioLayout audioLayout = (org.telegram.ui.Components.ChatAttachAlertAudioLayout) currentLayout;
+                        if (audioLayout.selectedAudios != null && !audioLayout.selectedAudios.isEmpty()) {
+                            org.telegram.messenger.MediaController.AudioEntry audioEntry = audioLayout.selectedAudios.iterator().next();
+                            if (audioEntry != null) {
+                                filePath = audioEntry.path;
+                                hasSelection = true;
+                            }
+                        }
+                    }
+                    if (hasSelection && filePath != null) {
+                        final String fPath = filePath;
+                        final org.telegram.ui.Components.ChatAttachAlert.AttachAlertLayout fLayout = currentLayout;
+                        options.add(R.drawable.msg_edit, LocaleController.getString("ExperimentalEditFileName", R.string.ExperimentalEditFileName), () -> {
+                            dismiss();
+                            showFileNameEditDialog(fPath, fLayout);
+                        });
+                    }
+                }
+            }
+        }
+        // [Alexgram: Native Features] - End
+
         optionsView = options.getLayout();
         containerView.addView(optionsView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
     }
@@ -1953,5 +1991,176 @@ public class MessageSendPreview extends Dialog implements NotificationCenter.Not
             optionsView.invalidate();
         }
     }
+
+    // [Alexgram: Native Features] - Start
+    private void showFileNameEditDialog(final String filePath, final org.telegram.ui.Components.ChatAttachAlert.AttachAlertLayout currentLayout) {
+        org.telegram.ui.ActionBar.BaseFragment fragment = org.telegram.ui.LaunchActivity.getLastFragment();
+        if (fragment == null) return;
+        android.app.Activity activity = fragment.getParentActivity();
+        if (activity == null) return;
+
+        final String originalFilename = new java.io.File(filePath).getName();
+
+        final org.telegram.ui.Components.EditTextBoldCursor editText = new org.telegram.ui.Components.EditTextBoldCursor(activity);
+        editText.setHint("File Name");
+        editText.setText(originalFilename);
+        editText.setInputType(android.text.InputType.TYPE_CLASS_TEXT);
+        editText.setMaxLines(1);
+        editText.setSingleLine(true);
+        editText.setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 18);
+        editText.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText, resourcesProvider));
+        editText.setHintTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteHintText, resourcesProvider));
+        editText.setBackground(Theme.createEditTextDrawable(activity, true));
+        editText.setCursorColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlueHeader, resourcesProvider));
+        editText.setCursorSize(AndroidUtilities.dp(20));
+        editText.setCursorWidth(1.5f);
+        editText.setPadding(0, 0, 0, 0);
+        editText.setFocusable(true);
+
+        org.telegram.ui.ActionBar.AlertDialog.Builder builder = new org.telegram.ui.ActionBar.AlertDialog.Builder(activity, resourcesProvider);
+        builder.setTitle(LocaleController.getString("ExperimentalEditFileName", R.string.ExperimentalEditFileName));
+        builder.setMessage("Enter the new file name");
+        builder.setView(editText);
+
+        builder.setPositiveButton("Save", (dialog, which) -> {
+            String newFilename = editText.getText().toString().trim();
+            applyFilenameChange(newFilename, filePath, currentLayout, dialog);
+        });
+        builder.setNegativeButton("Cancel", (dialog, which) -> {
+            try {
+                AndroidUtilities.hideKeyboard(editText);
+            } catch (Exception ignore) {}
+            dialog.dismiss();
+        });
+
+        final org.telegram.ui.ActionBar.AlertDialog dialog = builder.show();
+
+        AndroidUtilities.runOnUIThread(() -> {
+            try {
+                android.view.ViewGroup.LayoutParams layoutParams = editText.getLayoutParams();
+                if (layoutParams instanceof android.widget.FrameLayout.LayoutParams) {
+                    ((android.widget.FrameLayout.LayoutParams) layoutParams).gravity = android.view.Gravity.CENTER_HORIZONTAL;
+                }
+                if (layoutParams instanceof android.view.ViewGroup.MarginLayoutParams) {
+                    android.view.ViewGroup.MarginLayoutParams marginParams = (android.view.ViewGroup.MarginLayoutParams) layoutParams;
+                    marginParams.rightMargin = AndroidUtilities.dp(24);
+                    marginParams.leftMargin = AndroidUtilities.dp(24);
+                    marginParams.height = AndroidUtilities.dp(36);
+                    marginParams.bottomMargin = AndroidUtilities.dp(15);
+                    editText.setLayoutParams(layoutParams);
+                }
+                editText.requestFocus();
+                int textLength = editText.getText() != null ? editText.getText().length() : 0;
+                editText.setSelection(0, textLength);
+            } catch (Exception ignore) {}
+        }, 100);
+    }
+
+    private void applyFilenameChange(String newFilename, String oldPath, org.telegram.ui.Components.ChatAttachAlert.AttachAlertLayout currentLayout, android.content.DialogInterface dialog) {
+        try {
+            if (newFilename == null || newFilename.trim().isEmpty()) {
+                dialog.dismiss();
+                return;
+            }
+            newFilename = newFilename.trim();
+
+            if (currentLayout instanceof org.telegram.ui.Components.ChatAttachAlertDocumentLayout) {
+                org.telegram.ui.Components.ChatAttachAlertDocumentLayout documentLayout = (org.telegram.ui.Components.ChatAttachAlertDocumentLayout) currentLayout;
+                java.io.File oldFile = new java.io.File(oldPath);
+                if (oldFile.exists()) {
+                    java.io.File cacheDir = org.telegram.messenger.ApplicationLoader.applicationContext.getCacheDir();
+                    java.io.File tempDir = new java.io.File(cacheDir, "renamed_files");
+                    if (!tempDir.exists()) {
+                        tempDir.mkdirs();
+                    }
+                    java.io.File newFile = new java.io.File(tempDir, newFilename);
+                    copyFile(oldFile, newFile);
+
+                    if (documentLayout.selectedFilesOrder != null && documentLayout.selectedFiles != null) {
+                        int index = documentLayout.selectedFilesOrder.indexOf(oldPath);
+                        if (index >= 0) {
+                            documentLayout.selectedFilesOrder.set(index, newFile.getAbsolutePath());
+                        }
+
+                        org.telegram.ui.Components.ChatAttachAlertDocumentLayout.ListItem oldListItem = documentLayout.selectedFiles.get(oldPath);
+                        if (oldListItem != null) {
+                            documentLayout.selectedFiles.remove(oldPath);
+                            oldListItem.file = newFile;
+                            oldListItem.title = newFilename;
+                            documentLayout.selectedFiles.put(newFile.getAbsolutePath(), oldListItem);
+
+                            if (documentLayout.listAdapter != null) {
+                                documentLayout.listAdapter.notifyDataSetChanged();
+                            }
+                        }
+                    }
+                }
+            } else if (currentLayout instanceof org.telegram.ui.Components.ChatAttachAlertAudioLayout) {
+                java.io.File cacheDir = org.telegram.messenger.ApplicationLoader.applicationContext.getCacheDir();
+                java.io.File tempDir = new java.io.File(cacheDir, "renamed_files");
+                if (!tempDir.exists()) {
+                    tempDir.mkdirs();
+                }
+                java.io.File newFile = new java.io.File(tempDir, newFilename);
+
+                org.telegram.ui.Components.ChatAttachAlertAudioLayout audioLayout = (org.telegram.ui.Components.ChatAttachAlertAudioLayout) currentLayout;
+                if (audioLayout.selectedAudios != null && !audioLayout.selectedAudios.isEmpty()) {
+                    org.telegram.messenger.MediaController.AudioEntry audioEntry = audioLayout.selectedAudios.iterator().next();
+                    if (audioEntry != null) {
+                        java.io.File oldFile = new java.io.File(oldPath);
+                        if (oldFile.exists()) {
+                            copyFile(oldFile, newFile);
+
+                            audioEntry.path = newFile.getAbsolutePath();
+                            audioEntry.title = newFilename;
+
+                            org.telegram.messenger.MessageObject msgObj = audioEntry.messageObject;
+                            if (msgObj != null) {
+                                org.telegram.tgnet.TLRPC.Message msg = msgObj.messageOwner;
+                                if (msg != null) {
+                                    msg.attachPath = newFile.getAbsolutePath();
+
+                                    if (msg.media != null && msg.media.document != null && msg.media.document.attributes != null) {
+                                        for (int i = 0; i < msg.media.document.attributes.size(); i++) {
+                                            org.telegram.tgnet.TLRPC.DocumentAttribute attr = msg.media.document.attributes.get(i);
+                                            if (attr instanceof org.telegram.tgnet.TLRPC.TL_documentAttributeFilename) {
+                                                ((org.telegram.tgnet.TLRPC.TL_documentAttributeFilename) attr).file_name = newFilename;
+                                            }
+                                            if (attr instanceof org.telegram.tgnet.TLRPC.TL_documentAttributeAudio) {
+                                                String nameWithoutExt = newFilename;
+                                                int dotIndex = nameWithoutExt.lastIndexOf('.');
+                                                if (dotIndex > 0) {
+                                                    nameWithoutExt = nameWithoutExt.substring(0, dotIndex);
+                                                }
+                                                ((org.telegram.tgnet.TLRPC.TL_documentAttributeAudio) attr).title = nameWithoutExt;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (audioLayout.listView != null && audioLayout.listView.adapter != null) {
+                                audioLayout.listView.adapter.update(true);
+                            }
+                        }
+                    }
+                }
+            }
+
+            dialog.dismiss();
+        } catch (Exception ignore) {
+            try {
+                dialog.dismiss();
+            } catch (Exception ignore2) {}
+        }
+    }
+
+    private void copyFile(java.io.File source, java.io.File dest) throws java.io.IOException {
+        try (java.nio.channels.FileChannel sourceChannel = new java.io.FileInputStream(source).getChannel();
+             java.nio.channels.FileChannel destChannel = new java.io.FileOutputStream(dest).getChannel()) {
+            destChannel.transferFrom(sourceChannel, 0, sourceChannel.size());
+        }
+    }
+    // [Alexgram: Native Features] - End
 
 }

@@ -136,6 +136,10 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
     private final AbstractConfigCell localPremiumRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.localPremium));
     private final AbstractConfigCell unlimitedPinnedDialogsRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.unlimitedPinnedDialogs, getString(R.string.UnlimitedPinnedDialogsAbout)));
     private final AbstractConfigCell unlimitedFavedStickersRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.unlimitedFavedStickers, getString(R.string.UnlimitedFavoredStickersAbout)));
+    // [Alexgram: Native Features] - Start
+    private final AbstractConfigCell forceMusicSpeedControlRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.forceMusicSpeedControl, getString(R.string.ExperimentalMusicSpeedControlAbout), getString(R.string.ExperimentalMusicSpeedControl)));
+    private final AbstractConfigCell enableEditFileNameRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.enableEditFileName, getString(R.string.ExperimentalEditFileNameAbout), getString(R.string.ExperimentalEditFileName)));
+    // [Alexgram: Native Features] - End
     private final AbstractConfigCell dividerGeneral = cellGroup.appendCell(new ConfigCellDivider());
     private final AbstractConfigCell runInBackgroundRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getRunInBackground(), getString(R.string.RunInBackgroundInfo)));
 
@@ -421,6 +425,12 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
             // [Alexgram: Home Drawer] - End
             } else if (key.equals(NaConfig.INSTANCE.getUsePollinationsAi().getKey())) {
                 checkAiApiRows();
+            // [Alexgram: Native Features] - Start
+            } else if (key.equals(NekoConfig.forceMusicSpeedControl.getKey())) {
+                tooltip.showWithAction(0, UndoView.ACTION_NEED_RESTART, null, null);
+            } else if (key.equals(NekoConfig.enableEditFileName.getKey())) {
+                tooltip.showWithAction(0, UndoView.ACTION_NEED_RESTART, null, null);
+            // [Alexgram: Native Features] - End
             }
         };
 

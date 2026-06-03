@@ -441,4 +441,10 @@
     <string name="ChatHistory_LinkSharedToChat_other">Link forwarded to **%1$d chats**.</string>
     <string name="sendToDiscussWithoutJoin">Write to discuss groups without joining</string>
     <string name="sendToDiscussWithoutJoinInfo">Skip the client-only membership check for discussion groups</string>
+    <!-- [Alexgram: Native Features] - Start -->
+    <string name="ExperimentalMusicSpeedControl">Force Music Speed Control</string>
+    <string name="ExperimentalMusicSpeedControlAbout">Enable playback speed control for all music files regardless of duration.</string>
+    <string name="ExperimentalEditFileName">Edit File Name</string>
+    <string name="ExperimentalEditFileNameAbout">Add \'Edit File Name\' option when selecting documents or audio files to send.</string>
+    <!-- [Alexgram: Native Features] - End -->
 </resources>

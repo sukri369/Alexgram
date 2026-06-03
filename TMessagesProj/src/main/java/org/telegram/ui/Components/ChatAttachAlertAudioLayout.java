@@ -78,7 +78,7 @@ public class ChatAttachAlertAudioLayout extends ChatAttachAlert.AttachAlertLayou
 
     private final FrameLayout frameLayout;
     private final FragmentSearchField searchField;
-    private UniversalRecyclerView listView;
+    public UniversalRecyclerView listView;
     private final View fadeView;
 
     private DialogsActivityTopPanelLayout topPanelLayout;
@@ -94,7 +94,7 @@ public class ChatAttachAlertAudioLayout extends ChatAttachAlert.AttachAlertLayou
     private boolean loadingAudio;
 
     private ArrayList<MediaController.AudioEntry> audioEntries = new ArrayList<>();
-    private final HashSet<MediaController.AudioEntry> selectedAudios = new HashSet<>();
+    public final HashSet<MediaController.AudioEntry> selectedAudios = new HashSet<>();
 
     private MessagesController.SavedMusicList savedMusicList;
     private ArrayList<MediaController.AudioEntry> profileEntries = new ArrayList<>();

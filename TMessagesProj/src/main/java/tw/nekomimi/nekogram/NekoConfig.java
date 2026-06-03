@@ -175,6 +175,11 @@ public class NekoConfig {
 
     public static ConfigItem localPremium = addConfig("localPremium", configTypeBool, false);
 
+    // [Alexgram: Native Features] - Start
+    public static ConfigItem forceMusicSpeedControl = addConfig("forceMusicSpeedControl", configTypeBool, false);
+    public static ConfigItem enableEditFileName = addConfig("enableEditFileName", configTypeBool, false);
+    // [Alexgram: Native Features] - End
+
     public static ConfigItem usePersianCalendar = addConfig("UsePersianCalendar", configTypeBool, false);
     public static ConfigItem displayPersianCalendarByLatin = addConfig("DisplayPersianCalendarByLatin", configTypeBool, false);
 
