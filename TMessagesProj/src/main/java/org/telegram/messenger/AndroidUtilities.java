@@ -1987,6 +1987,16 @@ public class AndroidUtilities {
                 //igonre
             }
         }
+        // [Alexgram: Native Features] - Start
+        if (pathString != null) {
+            try {
+                String renamedFilesPath = new File(ApplicationLoader.applicationContext.getCacheDir(), "renamed_files").getCanonicalPath();
+                if (pathString.startsWith(renamedFilesPath)) {
+                    return false;
+                }
+            } catch (Exception ignore) {}
+        }
+        // [Alexgram: Native Features] - End
         if (pathString.endsWith(".attheme")) {
             return false;
         }

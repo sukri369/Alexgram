@@ -2063,6 +2063,13 @@ public class MessageSendPreview extends Dialog implements NotificationCenter.Not
                 return;
             }
             newFilename = newFilename.trim();
+            int dot = oldPath.lastIndexOf('.');
+            if (dot >= 0) {
+                String ext = oldPath.substring(dot);
+                if (!newFilename.toLowerCase().endsWith(ext.toLowerCase())) {
+                    newFilename += ext;
+                }
+            }
 
             if (currentLayout instanceof org.telegram.ui.Components.ChatAttachAlertDocumentLayout) {
                 org.telegram.ui.Components.ChatAttachAlertDocumentLayout documentLayout = (org.telegram.ui.Components.ChatAttachAlertDocumentLayout) currentLayout;
