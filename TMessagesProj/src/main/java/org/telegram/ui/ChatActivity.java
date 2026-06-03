@@ -41261,6 +41261,14 @@ public class ChatActivity extends BaseFragment implements
 		}
 
 		@Override
+		public void didPressQuickEdit(ChatMessageCell cell) {
+			if (cell == null || cell.getMessageObject() == null) {
+				return;
+			}
+			startEditingMessageObject(cell.getMessageObject());
+		}
+
+		@Override
 		public void didPressSummarize(ChatMessageCell cell, boolean byReply) {
 			final MessageObject msg = cell.getMessageObject();
 			msg.messageOwner.summarizedOpen = !msg.messageOwner.summarizedOpen;

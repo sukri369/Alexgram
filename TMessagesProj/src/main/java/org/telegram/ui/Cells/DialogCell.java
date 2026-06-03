@@ -631,11 +631,6 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
     private int swipeMessageTextId;
     private int swipeMessageWidth;
     private int readOutboxMaxId = -1;
-    // [Alexgram: Quick Edit Icon] - Start
-    private boolean showQuickEditIcon;
-    private final RectF quickEditIconRect = new RectF();
-    private Paint quickEditIconBgPaint;
-    // [Alexgram: Quick Edit Icon] - End
     private final DialogUpdateHelper updateHelper = new DialogUpdateHelper();
 
     public static class BounceInterpolator implements Interpolator {
@@ -3714,38 +3709,8 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
                 } catch (Exception ignore) {}
             }
         }
-        // [Alexgram: Quick Edit Icon]
-        updateQuickEditIconState();
         invalidate();
     }
-
-    // [Alexgram: Quick Edit Icon] - Start
-    private void updateQuickEditIconState() {
-        if (!NekoConfig.showQuickEditIconInChatList.Bool() || currentDialogFolderId != 0 || isTopic || isShareToStoryCell) {
-            showQuickEditIcon = false;
-            return;
-        }
-        if (message == null || message.messageOwner == null) {
-            showQuickEditIcon = false;
-            return;
-        }
-        boolean onlyOwn = NekoConfig.quickEditIconOnlyForOwnMessages.Bool();
-        if (onlyOwn) {
-            // Only show if last message is sent by us (outgoing) and is a real text/media message
-            boolean isOwnMsg = message.isOut() && !message.isForwarded() && !message.isSending() && !message.isSendError();
-            showQuickEditIcon = isOwnMsg;
-        } else {
-            showQuickEditIcon = true;
-        }
-        if (showQuickEditIcon) {
-            // Position: small circle at bottom-right, above the unread badge area
-            int iconSize = dp(20);
-            int right = getMeasuredWidth() - dp(10);
-            int bottom = getMeasuredHeight() - dp(10);
-            quickEditIconRect.set(right - iconSize, bottom - iconSize, right, bottom);
-        }
-    }
-    // [Alexgram: Quick Edit Icon] - End
 
     public boolean isDrawArchive() {
         return drawArchive && (currentDialogFolderId != 0 || isTopic && forumTopic != null && forumTopic.id == 1) && translationX == 0 && archivedChatsDrawable != null;
@@ -4576,26 +4541,6 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
                     openButtonText.draw(canvas, openButtonRect.left + dp(13), openButtonRect.centerY(), Theme.getColor(Theme.key_featuredStickers_buttonText, resourcesProvider), 1.0f);
                 }
                 canvas.restore();
-            }
-
-            // [Alexgram: Quick Edit Icon]
-            if (showQuickEditIcon && !drawReorder && translationX == 0) {
-                if (quickEditIconBgPaint == null) {
-                    quickEditIconBgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-                }
-                quickEditIconBgPaint.setColor(Theme.getColor(Theme.key_chats_archiveBackground, resourcesProvider));
-                quickEditIconBgPaint.setAlpha(180);
-                float cx = quickEditIconRect.centerX();
-                float cy = quickEditIconRect.centerY();
-                float radius = quickEditIconRect.width() / 2f;
-                canvas.drawCircle(cx, cy, radius, quickEditIconBgPaint);
-                Drawable editIcon = ContextCompat.getDrawable(getContext(), R.drawable.msg_edit);
-                if (editIcon != null) {
-                    int iconHalf = dp(8);
-                    editIcon.setBounds((int)(cx - iconHalf), (int)(cy - iconHalf), (int)(cx + iconHalf), (int)(cy + iconHalf));
-                    editIcon.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chats_archiveIcon, resourcesProvider), PorterDuff.Mode.SRC_IN));
-                    editIcon.draw(canvas);
-                }
             }
 
             if (thumbsCount > 0 && updateHelper.typingProgres != 1f) {
@@ -6060,15 +6005,6 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
         if (rightFragmentOpenedProgress == 0 && !isTopic && !isShareToStoryCell && storyParams.checkOnTouchEvent(event, this)) {
             return true;
         }
-        // [Alexgram: Quick Edit Icon]
-        if (showQuickEditIcon && translationX == 0 && event.getAction() == MotionEvent.ACTION_UP) {
-            if (quickEditIconRect.contains(event.getX(), event.getY())) {
-                if (delegate != null) {
-                    delegate.onQuickEditClick(this, currentDialogId, message);
-                }
-                return true;
-            }
-        }
         if (delegate == null || delegate.canClickButtonInside()) {
             if (openBot) {
                 final boolean hit = openButtonRect.contains(event.getX(), event.getY());
@@ -6138,8 +6074,6 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
         void openStory(DialogCell dialogCell, Runnable onDone);
         void showChatPreview(DialogCell dialogCell);
         void openHiddenStories();
-        // [Alexgram: Quick Edit Icon]
-        default void onQuickEditClick(DialogCell cell, long dialogId, MessageObject message) {}
     }
 
     private class DialogUpdateHelper {

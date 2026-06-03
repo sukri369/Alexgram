@@ -1220,21 +1220,6 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
 
         parentFragment.getOrCreateStoryViewer().open(mContext, null, peerIds, 0, null, null, StoriesListPlaceProvider.of(recyclerListView, true), false);
     }
-
-    // [Alexgram: Quick Edit Icon] - Start
-    @Override
-    public void onQuickEditClick(org.telegram.ui.Cells.DialogCell cell, long dialogId, org.telegram.messenger.MessageObject message) {
-        if (parentFragment == null || message == null) return;
-        android.os.Bundle args = new android.os.Bundle();
-        args.putLong("dialog_id", dialogId);
-        args.putInt("start_from_id", message.getId());
-        args.putBoolean("need_scroll_to_message", true);
-        args.putBoolean("start_editing", true);
-        org.telegram.ui.ChatActivity chatActivity = new org.telegram.ui.ChatActivity(args);
-        parentFragment.presentFragment(chatActivity);
-    }
-    // [Alexgram: Quick Edit Icon] - End
-
     public void setIsTransitionSupport() {
         this.isTransitionSupport = true;
     }

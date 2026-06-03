@@ -121,8 +121,8 @@ public class NekoChatSettingsActivity extends BaseNekoXSettingsActivity implemen
     private final AbstractConfigCell showMessageIDRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getShowMessageID()));
     private final AbstractConfigCell showSeconds = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.showSeconds));
     // [Alexgram: Quick Edit Icon] - Start
-    private final AbstractConfigCell showQuickEditIconRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.showQuickEditIconInChatList, getString(R.string.ShowQuickEditIconDesc)));
-    private final AbstractConfigCell quickEditIconOnlyOwnRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.quickEditIconOnlyForOwnMessages, getString(R.string.QuickEditIconOnlyOwnDesc)));
+    private final AbstractConfigCell showQuickEditIconRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.showQuickEditIconInChatList, getString(R.string.ShowQuickEditIconDesc), getString(R.string.ShowQuickEditIcon)));
+    private final AbstractConfigCell quickEditIconOnlyOwnRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.quickEditIconOnlyForOwnMessages, getString(R.string.QuickEditIconOnlyOwnDesc), getString(R.string.QuickEditIconOnlyOwn)));
     // [Alexgram: Quick Edit Icon] - End
     private final AbstractConfigCell useEditedIconRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getUseEditedIcon()));
     private final AbstractConfigCell customEditedMessageRow = cellGroup.appendCell(new ConfigCellTextInput(null, NaConfig.INSTANCE.getCustomEditedMessage(), "", null));

@@ -10833,9 +10833,9 @@
     <string name="BotWarmupMessage">⏳ Your first new message may take up to 30 minutes to appear. This notice will disappear automatically once messages arrive.</string>
     <!-- [Alexgram: Bot Warmup Banner] - End -->
     <!-- [Alexgram: Quick Edit Icon] - Start -->
-    <string name="ShowQuickEditIcon">Quick Edit Button in Chats</string>
-    <string name="ShowQuickEditIconDesc">Show a pencil icon on each chat for quick access to edit your last message</string>
+    <string name="ShowQuickEditIcon">Quick Edit Button near Messages</string>
+    <string name="ShowQuickEditIconDesc">Show a pencil icon next to messages for quick access to edit them</string>
     <string name="QuickEditIconOnlyOwn">Only for Editable Messages</string>
-    <string name="QuickEditIconOnlyOwnDesc">Only show the edit icon when the last message is yours and can still be edited</string>
+    <string name="QuickEditIconOnlyOwnDesc">Only show the edit icon when the message can still be edited</string>
     <!-- [Alexgram: Quick Edit Icon] - End -->
 </resources>

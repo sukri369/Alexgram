@@ -591,6 +591,9 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         default void didPressBoostCounter(ChatMessageCell cell) {
         }
 
+        default void didPressQuickEdit(ChatMessageCell cell) {
+        }
+
         default void didPressChannelAvatar(ChatMessageCell cell, TLRPC.Chat chat, int postId, float touchX, float touchY, boolean asForward) {
         }
 
@@ -1074,6 +1077,10 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
 
     private boolean isUpdating;
 
+    // [Alexgram: Quick Edit Icon] - Start
+    private final RectF quickEditRect = new RectF();
+    private boolean quickEditPressed;
+    // [Alexgram: Quick Edit Icon] - End
     private RadialProgress2 radialProgress;
     private RadialProgress2 videoRadialProgress;
     private boolean drawRadialCheckBackground;
@@ -5004,6 +5011,9 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
 
         if (!result) {
             result = checkQuickShareMotionEvent(event);
+        }
+        if (!result) {
+            result = checkQuickEditMotionEvent(event);
         }
         if(!result) {
             result = checkAdminMotionEvent(event);
@@ -21440,6 +21450,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         }
 
         drawSideButton(canvas);
+        drawQuickEditButton(canvas);
         drawSummarizeButton(canvas);
     }
 
@@ -21622,6 +21633,94 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             invalidatesParent = b;
         }
     }
+
+    // [Alexgram: Quick Edit Icon] - Start
+    private boolean checkQuickEditVisible() {
+        return NekoConfig.showQuickEditIconInChatList.Bool()
+                && currentMessageObject != null
+                && !currentMessageObject.isSending()
+                && !currentMessageObject.isSendError()
+                && (!NekoConfig.quickEditIconOnlyForOwnMessages.Bool() ? currentMessageObject.isOutOwner() : currentMessageObject.canEditMessage(currentChat));
+    }
+
+    private void drawQuickEditButton(Canvas canvas) {
+        if (checkQuickEditVisible() && currentBackgroundDrawable != null) {
+            float buttonSize = dp(32);
+            float x;
+            if (currentMessageObject.isOutOwner()) {
+                x = getCurrentBackgroundLeft() - dp(8) - buttonSize;
+                if (currentMessagesGroup != null) {
+                    x += currentMessagesGroup.transitionParams.offsetLeft - animationOffsetX;
+                }
+            } else {
+                x = getCurrentBackgroundRight() + dp(8);
+                if (currentMessagesGroup != null) {
+                    x += currentMessagesGroup.transitionParams.offsetRight - animationOffsetX;
+                }
+            }
+            float y = currentBackgroundDrawable.getBounds().top + (currentBackgroundDrawable.getBounds().bottom - currentBackgroundDrawable.getBounds().top - buttonSize) / 2f;
+            quickEditRect.set(x, y, x + buttonSize, y + buttonSize);
+
+            canvas.drawRoundRect(quickEditRect, dp(16), dp(16), getThemedPaint(quickEditPressed ? Theme.key_paint_chatActionBackgroundSelected : Theme.key_paint_chatActionBackground));
+            if (hasGradientService()) {
+                canvas.drawRoundRect(quickEditRect, dp(16), dp(16), Theme.chat_actionBackgroundGradientDarkenPaint);
+            }
+
+            Drawable editIcon = ContextCompat.getDrawable(getContext(), R.drawable.msg_edit);
+            if (editIcon != null) {
+                int iconSize = dp(18);
+                int cx = (int) quickEditRect.centerX();
+                int cy = (int) quickEditRect.centerY();
+                editIcon.setBounds(cx - iconSize / 2, cy - iconSize / 2, cx + iconSize / 2, cy + iconSize / 2);
+                editIcon.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chat_serviceText, resourcesProvider), PorterDuff.Mode.SRC_IN));
+                editIcon.draw(canvas);
+            }
+        }
+    }
+
+    private boolean checkQuickEditMotionEvent(MotionEvent event) {
+        if (!checkQuickEditVisible()) {
+            return false;
+        }
+        float x = getEventX(event);
+        float y = getEventY(event);
+        float padding = dp(8);
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            if (x >= quickEditRect.left - padding && x <= quickEditRect.right + padding &&
+                y >= quickEditRect.top - padding && y <= quickEditRect.bottom + padding) {
+                quickEditPressed = true;
+                invalidate();
+                return true;
+            }
+        } else if (event.getAction() == MotionEvent.ACTION_MOVE) {
+            if (quickEditPressed) {
+                boolean contains = x >= quickEditRect.left - padding && x <= quickEditRect.right + padding &&
+                                   y >= quickEditRect.top - padding && y <= quickEditRect.bottom + padding;
+                if (!contains) {
+                    quickEditPressed = false;
+                    invalidate();
+                }
+                return true;
+            }
+        } else if (event.getAction() == MotionEvent.ACTION_UP) {
+            if (quickEditPressed) {
+                quickEditPressed = false;
+                invalidate();
+                playSoundEffect(SoundEffectConstants.CLICK);
+                if (delegate != null) {
+                    delegate.didPressQuickEdit(this);
+                }
+                return true;
+            }
+        } else if (event.getAction() == MotionEvent.ACTION_CANCEL) {
+            if (quickEditPressed) {
+                quickEditPressed = false;
+                invalidate();
+            }
+        }
+        return false;
+    }
+    // [Alexgram: Quick Edit Icon] - End
 
     public void drawSideButton(Canvas canvas) {
         drawSideButton(canvas, false);
