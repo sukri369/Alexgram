@@ -21669,7 +21669,12 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 else if (sendError) reason = "sendError=true";
                 else if (!hasDelegate) reason = "hasDelegate=false";
                 else if (!canEdit) {
-                    reason = "canEdit=false (msg.canEdit=" + currentMessageObject.canEditMessage(null) + " reason=" + org.telegram.messenger.MessageObject.canEditMessageDebugReason(currentMessageObject.currentAccount, currentMessageObject.messageOwner, null, currentMessageObject.scheduled) + ")";
+                    TLRPC.Chat delegateChat = null;
+                    if (delegate instanceof ChatActivity) {
+                        delegateChat = ((ChatActivity) delegate).getCurrentChat();
+                    }
+                    boolean canEditWithChat = currentMessageObject.canEditMessage(delegateChat);
+                    reason = "canEdit=false (msg.canEdit=" + currentMessageObject.canEditMessage(null) + " canEditWithChat=" + canEditWithChat + " reason=" + org.telegram.messenger.MessageObject.canEditMessageDebugReason(currentMessageObject.currentAccount, currentMessageObject.messageOwner, delegateChat, currentMessageObject.scheduled) + ")";
                 }
                 else if (onlyOwn && !isOut) reason = "onlyOwn=true & isOut=false";
                 else reason = "unknown";
