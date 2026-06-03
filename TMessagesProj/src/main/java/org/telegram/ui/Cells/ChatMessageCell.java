@@ -21652,7 +21652,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         
         boolean result = showConfig && hasMsg && !sending && !sendError && canEdit && (!onlyOwn || isOut);
         
-        if (hasMsg && currentMessageObject.type == 0) { // TYPE_TEXT
+        if (hasMsg && currentMessageObject.type == 0 && Math.abs(currentMessageObject.messageOwner.date - System.currentTimeMillis() / 1000) < 300) { // TYPE_TEXT
             android.util.Log.d("QuickEditFix", "TextMsg ID: " + currentMessageObject.getId() + 
                 " | showConfig: " + showConfig + 
                 " | !sending: " + !sending + 
