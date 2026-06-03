@@ -594,6 +594,10 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         default void didPressQuickEdit(ChatMessageCell cell) {
         }
 
+        default boolean canEditMessage(MessageObject message) {
+            return false;
+        }
+
         default void didPressChannelAvatar(ChatMessageCell cell, TLRPC.Chat chat, int postId, float touchX, float touchY, boolean asForward) {
         }
 
@@ -21640,7 +21644,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 && currentMessageObject != null
                 && !currentMessageObject.isSending()
                 && !currentMessageObject.isSendError()
-                && (!NekoConfig.quickEditIconOnlyForOwnMessages.Bool() ? currentMessageObject.isOutOwner() : currentMessageObject.canEditMessage(currentChat));
+                && (!NekoConfig.quickEditIconOnlyForOwnMessages.Bool() ? currentMessageObject.isOutOwner() : (delegate != null && delegate.canEditMessage(currentMessageObject)));
     }
 
     private void drawQuickEditButton(Canvas canvas) {

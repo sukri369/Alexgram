@@ -41269,6 +41269,18 @@ public class ChatActivity extends BaseFragment implements
 		}
 
 		@Override
+		public boolean canEditMessage(MessageObject message) {
+			if (message == null) {
+				return false;
+			}
+			return message.canEditMessage(currentChat)
+					&& (chatActivityEnterView == null || !chatActivityEnterView.hasAudioToSend())
+					&& message.getDialogId() != mergeDialogId
+					&& message.type != MessageObject.TYPE_STORY
+					&& message.type != MessageObject.TYPE_POLL;
+		}
+
+		@Override
 		public void didPressSummarize(ChatMessageCell cell, boolean byReply) {
 			final MessageObject msg = cell.getMessageObject();
 			msg.messageOwner.summarizedOpen = !msg.messageOwner.summarizedOpen;
