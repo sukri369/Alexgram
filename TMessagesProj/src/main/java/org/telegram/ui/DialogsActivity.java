@@ -4347,7 +4347,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             }
         };
 
-        int pagesCount = folderId == 0 && (initialDialogsType == DIALOGS_TYPE_DEFAULT && !onlySelect || initialDialogsType == DIALOGS_TYPE_FORWARD) ? 2 : 1;
+        // [Alexgram: Tabs by Type] - Allow 2 pages for Archive Chats (folderId == 1) so folders slide side-by-side smoothly
+        int pagesCount = (folderId == 0 || folderId == 1) && (initialDialogsType == DIALOGS_TYPE_DEFAULT && !onlySelect || initialDialogsType == DIALOGS_TYPE_FORWARD) ? 2 : 1;
         viewPages = new ViewPage[pagesCount];
         for (int a = 0; a < pagesCount; a++) {
             final ViewPage viewPage = new ViewPage(context);
@@ -13182,6 +13183,14 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             return filterTabsView.isFirstTab();
         }
         return true;
+    }
+
+    @Override
+    public boolean isSwipeBackEnabled(MotionEvent event) {
+        if (isArchive() && filterTabsView != null && filterTabsView.getVisibility() == View.VISIBLE) {
+            return filterTabsView.isFirstTab();
+        }
+        return super.isSwipeBackEnabled(event);
     }
 
     public void updateStoriesVisibility(boolean animated) {
