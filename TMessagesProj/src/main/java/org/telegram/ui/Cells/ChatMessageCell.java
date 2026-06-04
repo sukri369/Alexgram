@@ -21684,10 +21684,9 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         boolean canAlwaysEdit = msg.canEditMessageAnytime(chat);
 
         if (NekoConfig.quickEditIconOnlyForOwnMessages.Bool()) {
-            return isOwnMessage || canAlwaysEdit;
+            return delegate.canEditMessage(msg);
         }
-        // Setting off: show for any message the user has permission to edit
-        return isOwnMessage || canAlwaysEdit || msg.canEditMessage(chat);
+        return isOwnMessage || canAlwaysEdit || delegate.canEditMessage(msg);
     }
 
     private void drawQuickEditButton(Canvas canvas) {
