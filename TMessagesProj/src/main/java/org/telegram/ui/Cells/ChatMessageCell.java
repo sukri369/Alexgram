@@ -21644,17 +21644,49 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         if (!NekoConfig.showQuickEditIconInChatList.Bool()) return false;
         MessageObject msg = currentMessageObject;
         if (msg == null || msg.isSending() || msg.isSendError()) return false;
-        if (NekoConfig.quickEditIconOnlyForOwnMessages.Bool() && !msg.isOutOwner()) return false;
         if (delegate == null) return false;
-        // Get actual chat for correct permission evaluation (null for private DMs, non-null for groups/channels)
+
+        TLRPC.Message m = msg.messageOwner;
+        if (m == null || m.id < 0) return false; // unsent / pending
+
+        // These message types are structurally non-editable under any circumstances
+        if (m.action != null && !(m.action instanceof TLRPC.TL_messageActionEmpty)) return false;
+        if (MessageObject.isForwardedMessage(m)) return false;
+        if (m.via_bot_id != 0) return false;
+        if (msg.type == MessageObject.TYPE_POLL || msg.type == MessageObject.TYPE_STORY) return false;
+        if (msg.isSticker() || msg.isAnimatedSticker() || msg.isRoundVideo()) return false;
+        if (MessageObject.isLocationMessage(m)) return false;
+
+        // Only media types that Telegram allows editing
+        TLRPC.MessageMedia media = MessageObject.getMedia(m);
+        if (media != null &&
+            !(media instanceof TLRPC.TL_messageMediaEmpty) &&
+            !(media instanceof TLRPC.TL_messageMediaPhoto) &&
+            !(media instanceof TLRPC.TL_messageMediaDocument) &&
+            !(media instanceof TLRPC.TL_messageMediaWebPage) &&
+            !(media instanceof TLRPC.TL_messageMediaPaidMedia) &&
+            !(media instanceof TLRPC.TL_messageMediaToDo) &&
+            !(media instanceof TLRPC.TL_messageMediaContact)) {
+            return false;
+        }
+
+        // Ownership / permission check.
+        // We intentionally do NOT gate on the time window here — the server enforces that
+        // when the actual edit request is sent. This keeps the UX consistent with the
+        // long-press Edit menu which always appears for own messages.
         TLRPC.Chat chat = delegate instanceof org.telegram.ui.ChatActivity ?
             ((org.telegram.ui.ChatActivity) delegate).getCurrentChat() : null;
-        // Match context-menu: show when message can be edited within time window OR can always be edited
-        // canEditMessageAnytime() = true for: Saved Messages, channel admins with edit_messages, megagroup admins
-        // canEditMessage()        = true for: outgoing messages within the server-configured time window
-        return (msg.canEditMessage(chat) || msg.canEditMessageAnytime(chat))
-                && msg.type != MessageObject.TYPE_POLL
-                && msg.type != MessageObject.TYPE_STORY;
+
+        // m.out is the most reliable "this is my message" flag (covers DMs, channels, groups)
+        boolean isOwnMessage = m.out && !msg.isSponsored();
+        // Channel/group admins can always edit regardless of time window
+        boolean canAlwaysEdit = msg.canEditMessageAnytime(chat);
+
+        if (NekoConfig.quickEditIconOnlyForOwnMessages.Bool()) {
+            return isOwnMessage || canAlwaysEdit;
+        }
+        // Setting off: show for any message the user has permission to edit
+        return isOwnMessage || canAlwaysEdit || msg.canEditMessage(chat);
     }
 
     private void drawQuickEditButton(Canvas canvas) {
