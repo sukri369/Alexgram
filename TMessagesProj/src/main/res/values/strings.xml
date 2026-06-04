@@ -3103,6 +3103,27 @@
     <string name="FilterChatsRemovedFrom">**%1$s** removed from **%2$s**</string>
     <string name="FilterAddToAlertFullTitle">Limit reached</string>
     <string name="FilterAddToAlertFullText">Sorry, you can\'t exlude more than 100 chats from a folder.</string>
+    <!-- Tabs by Type feature -->
+    <string name="TabsByType">Tabs by type</string>
+    <string name="TabsByTypeMainList">Main List</string>
+    <string name="TabsByTypeArchive">Archive</string>
+    <string name="TabsByTypeAutoSorting">Auto-sorting chats</string>
+    <string name="TabsByTypeAutoSortingHint">Enable auto-sorting to automatically organize chats into tabs by type.</string>
+    <string name="TabsByTypeDragHint">Drag rows to reorder tabs.</string>
+    <string name="TabsByTypeUnread">Unread chats</string>
+    <string name="TabsByTypePersonal">Private chats</string>
+    <string name="TabsByTypeGroups">Groups</string>
+    <string name="TabsByTypeChannels">Channels</string>
+    <string name="TabsByTypeBots">Bots</string>
+    <string name="TabsByTypeAdmin">Admin</string>
+    <string name="TabsByTypeOwner">Owner</string>
+    <string name="TabsByTypePrivateGroups">Private groups</string>
+    <string name="TabsByTypePublicGroups">Public groups</string>
+    <string name="TabsByTypeMentioned">Mentioned chats</string>
+    <string name="TabsByTypeLive">Live chats</string>
+    <string name="TabsByTypeDeleted">Deleted accounts</string>
+    <string name="TabsByTypeSecret">Secret chats</string>
+    <string name="TabsByTypeAlbums">Albums</string>
     <!--passcode view-->
     <string name="Passcode">Passcode Lock</string>
     <string name="ChangePasscode">Change Passcode</string>
