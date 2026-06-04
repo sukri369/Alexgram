@@ -41265,7 +41265,21 @@ public class ChatActivity extends BaseFragment implements
 			if (cell == null || cell.getMessageObject() == null) {
 				return;
 			}
-			startEditingMessageObject(cell.getMessageObject());
+			MessageObject messageObject = cell.getMessageObject();
+			MessageObject.GroupedMessages groupedMessages = getValidGroupedMessage(messageObject);
+			if (groupedMessages != null) {
+				MessageObject selectedObjectToEditCaption = null;
+				for (int a = 0, N = groupedMessages.messages.size(); a < N; a++) {
+					MessageObject msgObj = groupedMessages.messages.get(a);
+					if (a == 0 || !TextUtils.isEmpty(msgObj.caption)) {
+						selectedObjectToEditCaption = msgObj;
+					}
+				}
+				if (selectedObjectToEditCaption != null) {
+					messageObject = selectedObjectToEditCaption;
+				}
+			}
+			startEditingMessageObject(messageObject);
 		}
 
 		@Override
