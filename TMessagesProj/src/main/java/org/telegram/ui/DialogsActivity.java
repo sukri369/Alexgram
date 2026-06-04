@@ -828,6 +828,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             if (id < 0) {
                 return false;
             }
+            // [Alexgram: Tabs by Type] - archive has only 1 viewPage; no page-swipe animation possible
+            if (viewPages.length < 2) {
+                return false;
+            }
             getParent().requestDisallowInterceptTouchEvent(true);
             maybeStartTracking = false;
             startedTracking = true;
@@ -3715,11 +3719,17 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     if (!tab.isDefault && (tab.id < 0 || tab.id >= dialogFilters.size())) {
                         return;
                     }
-                    viewPages[1].selectedType = tab.id;
-                    viewPages[1].setVisibility(View.VISIBLE);
-                    viewPages[1].setTranslationX(viewPages[0].getMeasuredWidth());
-                    showScrollbars(false);
-                    switchToCurrentSelectedMode(true);
+                    // [Alexgram: Tabs by Type] - archive has only 1 viewPage; switch directly on viewPages[0]
+                    if (viewPages.length > 1) {
+                        viewPages[1].selectedType = tab.id;
+                        viewPages[1].setVisibility(View.VISIBLE);
+                        viewPages[1].setTranslationX(viewPages[0].getMeasuredWidth());
+                        showScrollbars(false);
+                        switchToCurrentSelectedMode(true);
+                    } else {
+                        viewPages[0].selectedType = tab.id;
+                        switchToCurrentSelectedMode(false);
+                    }
                     animatingForward = forward;
                     updateHomeDrawerAvailability();
                 }
@@ -3731,6 +3741,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
                 @Override
                 public void onPageScrolled(float progress) {
+                    // [Alexgram: Tabs by Type] - archive has only 1 viewPage; skip scroll animation
+                    if (viewPages.length < 2) return;
                     if (progress == 1 && viewPages[1].getVisibility() != View.VISIBLE && !searching) {
                         return;
                     }
@@ -7029,7 +7041,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         for (int a = 0; a < viewPages.length; a++) {
             viewPages[a].listView.stopScroll();
         }
-        int a = animated ? 1 : 0;
+        // [Alexgram: Tabs by Type] - archive uses only 1 viewPage; clamp animated index to valid range
+        int a = (animated && viewPages.length > 1) ? 1 : 0;
         ArrayList<MessagesController.DialogFilter> activeFilters = getActiveDialogFilters();
         if (viewPages[a].selectedType < 0 || viewPages[a].selectedType >= activeFilters.size()) {
             return;
@@ -7039,7 +7052,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             viewPages[a].dialogsType = initialDialogsType;
             viewPages[a].listView.updatePullState();
         } else {
-            if (viewPages[a == 0 ? 1 : 0].dialogsType == 7) {
+            // [Alexgram: Tabs by Type] - guard viewPages[1] when archive only has 1 page
+            if (viewPages.length > 1 && viewPages[a == 0 ? 1 : 0].dialogsType == 7) {
                 viewPages[a].dialogsType = 8;
             } else {
                 viewPages[a].dialogsType = 7;
@@ -7047,7 +7061,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             viewPages[a].listView.setScrollEnabled(true);
             getMessagesController().selectDialogFilter(filter, viewPages[a].dialogsType == 8 ? 1 : 0);
         }
-        viewPages[1].isLocked = filter.locked;
+        // [Alexgram: Tabs by Type] - guard: archive DialogsActivity has only 1 viewPage
+        if (viewPages.length > 1) {
+            viewPages[1].isLocked = filter.locked;
+        }
 
         viewPages[a].dialogsAdapter.setDialogsType(viewPages[a].dialogsType);
         viewPages[a].layoutManager.scrollToPositionWithOffset(viewPages[a].dialogsType == DIALOGS_TYPE_DEFAULT && hasHiddenArchive() && viewPages[a].archivePullViewState == ARCHIVE_ITEM_STATE_HIDDEN ? 1 : 0, (int) scrollYOffset);
@@ -7150,7 +7167,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 if (startedTracking) {
                     startedTracking = false;
                     viewPages[0].setTranslationX(0);
-                    viewPages[1].setTranslationX(viewPages[0].getMeasuredWidth());
+                    // [Alexgram: Tabs by Type] - archive has only 1 viewPage
+                    if (viewPages.length > 1) {
+                        viewPages[1].setTranslationX(viewPages[0].getMeasuredWidth());
+                    }
                 }
                 if (viewPages[0].selectedType != filterTabsView.getDefaultTabId()) {
                     viewPages[0].selectedType = filterTabsView.getDefaultTabId();
@@ -7158,11 +7178,14 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     viewPages[0].dialogsType = initialDialogsType;
                     viewPages[0].dialogsAdapter.notifyDataSetChanged();
                 }
-                viewPages[1].setVisibility(View.GONE);
-                viewPages[1].selectedType = 0;
-                viewPages[1].dialogsAdapter.setDialogsType(0);
-                viewPages[1].dialogsType = initialDialogsType;
-                viewPages[1].dialogsAdapter.notifyDataSetChanged();
+                // [Alexgram: Tabs by Type] - guard: archive DialogsActivity has only 1 viewPage
+                if (viewPages.length > 1) {
+                    viewPages[1].setVisibility(View.GONE);
+                    viewPages[1].selectedType = 0;
+                    viewPages[1].dialogsAdapter.setDialogsType(0);
+                    viewPages[1].dialogsType = initialDialogsType;
+                    viewPages[1].dialogsAdapter.notifyDataSetChanged();
+                }
                 canShowFilterTabsView = false;
                 updateFilterTabsVisibility(animated);
                 for (int a = 0; a < viewPages.length; a++) {
