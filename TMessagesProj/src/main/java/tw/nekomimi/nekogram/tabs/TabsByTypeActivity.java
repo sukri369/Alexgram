@@ -248,7 +248,8 @@ public class TabsByTypeActivity extends BaseFragment {
                     cell.setTab(
                             tab,
                             settings.isTabEnabled(tab, archiveSelected),
-                            !isLast);
+                            !isLast,
+                            archiveSelected);
                     cell.setOnActionButtonClick(v -> {
                         if (tab.isEditableFab) {
                             FloatingActionButtonsChooserDialog dialog = new FloatingActionButtonsChooserDialog(

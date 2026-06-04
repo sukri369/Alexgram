@@ -9298,7 +9298,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 floatingButton3.setImageResource(drawableId);
                 floatingButton3.setContentDescription(fabType.getTitle(getParentActivity()));
             } else {
-                floatingButton3.setImageResource(R.drawable.filled_fab_compose_32);
+                int drawableId = R.drawable.filled_fab_compose_32;
+                if (filter != null && filter.emoticon != null) {
+                    drawableId = tw.nekomimi.nekogram.folder.FolderIconHelper.getTabIcon(filter.emoticon);
+                }
+                floatingButton3.setImageResource(drawableId);
                 floatingButton3.setContentDescription(LocaleController.getString(R.string.NewMessageTitle));
             }
         }

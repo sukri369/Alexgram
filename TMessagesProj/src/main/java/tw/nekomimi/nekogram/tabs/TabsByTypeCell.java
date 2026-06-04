@@ -91,7 +91,7 @@ public class TabsByTypeCell extends LinearLayout {
     }
 
     /** Bind the cell to a given tab type + state. */
-    public void setTab(TabsByTypeEntry tab, boolean isChecked, boolean drawDivider) {
+    public void setTab(TabsByTypeEntry tab, boolean isChecked, boolean drawDivider, boolean isArchive) {
         this.drawDivider = drawDivider;
         setWillNotDraw(!drawDivider);
 
@@ -100,14 +100,22 @@ public class TabsByTypeCell extends LinearLayout {
 
         textView.setText(tab.getTitle(getContext()));
 
-        // Build the circle button drawable
-        if (tab.isEditableFab) {
-            actionButton.clearAnimationDrawable();
-            FloatingActionButtonType fabType = TabsByTypeSettings.getInstance().getTabFabType(tab);
-            fabType.bindBig(actionButton);
+        if (isArchive) {
+            vertDivider.setVisibility(GONE);
+            buttonLayout.setVisibility(GONE);
         } else {
-            actionButton.clearAnimationDrawable();
-            actionButton.setImageResource(R.drawable.baseline_visibility_24);
+            vertDivider.setVisibility(VISIBLE);
+            buttonLayout.setVisibility(VISIBLE);
+
+            // Build the circle button drawable
+            if (tab.isEditableFab) {
+                actionButton.clearAnimationDrawable();
+                FloatingActionButtonType fabType = TabsByTypeSettings.getInstance().getTabFabType(tab);
+                fabType.bindBig(actionButton);
+            } else {
+                actionButton.clearAnimationDrawable();
+                actionButton.setImageResource(R.drawable.baseline_visibility_24);
+            }
         }
 
         updateColors();
