@@ -149,4 +149,21 @@ public class TabsByTypeManager {
         }
         return flags;
     }
+
+    public static TabsByTypeEntry getTabFromFilter(MessagesController.DialogFilter filter) {
+        if (filter == null) return null;
+        int filterId = filter.id;
+        if (filterId <= VIRTUAL_ID_BASE_ARCHIVE) {
+            int ordinal = VIRTUAL_ID_BASE_ARCHIVE - filterId;
+            if (ordinal >= 0 && ordinal < TabsByTypeEntry.values().length) {
+                return TabsByTypeEntry.values()[ordinal];
+            }
+        } else if (filterId <= VIRTUAL_ID_BASE) {
+            int ordinal = VIRTUAL_ID_BASE - filterId;
+            if (ordinal >= 0 && ordinal < TabsByTypeEntry.values().length) {
+                return TabsByTypeEntry.values()[ordinal];
+            }
+        }
+        return null;
+    }
 }

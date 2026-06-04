@@ -10859,4 +10859,20 @@
     <string name="QuickEditIconOnlyOwn">Only for Editable Messages</string>
     <string name="QuickEditIconOnlyOwnDesc">Only show the edit icon when the message can still be edited</string>
     <!-- [Alexgram: Quick Edit Icon] - End -->
+
+    <!-- [Alexgram: Tabs by Type - Custom FAB] -->
+    <string name="create_folder_change_fab_title">FAB button</string>
+    <string name="folder_fab_settings_fab_create_chat">New chat</string>
+    <string name="bookmarks_title">Bookmarks</string>
+    <string name="folder_fab_settings_fab_archive">Archive</string>
+    <string name="folder_fab_settings_fab_cloud">Cloud</string>
+    <string name="folder_fab_settings_fab_mark_all_read">Read all</string>
+    <string name="folder_fab_settings_fab_wallet">Wallet</string>
+    <string name="folder_fab_settings_fab_contacts">Contacts</string>
+    <string name="cloud_filter_music">Music</string>
+    <string name="music_albums_tab">Albums</string>
+    <string name="cloud_albums_intro_button">Create album</string>
+    <string name="drawer_mini_apps">Mini Apps</string>
+    <string name="ai_chat_name">iMe AI</string>
+    <string name="drawer_todo_item_title">To-Do</string>
 </resources>

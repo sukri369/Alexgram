@@ -3857,6 +3857,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     }
                     animatingForward = forward;
                     updateHomeDrawerAvailability();
+                    updateStoriesPosting();
                 }
 
                 @Override
@@ -5063,11 +5064,25 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 }
                 delegate.didSelectDialogs(DialogsActivity.this, topicKeys, null, false, notify, scheduleDate, scheduleRepeatPeriod, null);
             } else {
-                if (MessagesController.getInstance(currentAccount).isFrozen()) {
-                    AccountFrozenAlert.show(currentAccount);
-                    return;
+                MessagesController.DialogFilter filter = null;
+                if (filterTabsView != null) {
+                    int currentTabId = filterTabsView.getCurrentTabId();
+                    ArrayList<MessagesController.DialogFilter> activeFilters = getActiveDialogFilters();
+                    if (currentTabId >= 0 && currentTabId < activeFilters.size()) {
+                        filter = activeFilters.get(currentTabId);
+                    }
                 }
-                openWriteContacts();
+                tw.nekomimi.nekogram.tabs.TabsByTypeEntry tabType = tw.nekomimi.nekogram.tabs.TabsByTypeManager.getTabFromFilter(filter);
+                if (tabType != null) {
+                    tw.nekomimi.nekogram.tabs.FloatingActionButtonType fabType = tw.nekomimi.nekogram.tabs.TabsByTypeSettings.getInstance().getTabFabType(tabType);
+                    handleCustomFabClick(fabType);
+                } else {
+                    if (MessagesController.getInstance(currentAccount).isFrozen()) {
+                        AccountFrozenAlert.show(currentAccount);
+                        return;
+                    }
+                    openWriteContacts();
+                }
             }
         });
 
@@ -9240,8 +9255,51 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             floatingButton3.setImageResource(R.drawable.floating_check);
             floatingButton3.setContentDescription(LocaleController.getString(R.string.Done));
         } else {
-            floatingButton3.setImageResource(R.drawable.filled_fab_compose_32);
-            floatingButton3.setContentDescription(LocaleController.getString(R.string.NewMessageTitle));
+            MessagesController.DialogFilter filter = null;
+            if (filterTabsView != null) {
+                int currentTabId = filterTabsView.getCurrentTabId();
+                ArrayList<MessagesController.DialogFilter> activeFilters = getActiveDialogFilters();
+                if (currentTabId >= 0 && currentTabId < activeFilters.size()) {
+                    filter = activeFilters.get(currentTabId);
+                }
+            }
+            tw.nekomimi.nekogram.tabs.TabsByTypeEntry tabType = tw.nekomimi.nekogram.tabs.TabsByTypeManager.getTabFromFilter(filter);
+            if (tabType != null) {
+                tw.nekomimi.nekogram.tabs.FloatingActionButtonType fabType = tw.nekomimi.nekogram.tabs.TabsByTypeSettings.getInstance().getTabFabType(tabType);
+                int drawableId = R.drawable.filled_fab_compose_32;
+                if (fabType == tw.nekomimi.nekogram.tabs.FloatingActionButtonType.CREATE_CHAT) {
+                    drawableId = R.drawable.filled_fab_compose_32;
+                } else if (fabType == tw.nekomimi.nekogram.tabs.FloatingActionButtonType.BOOKMARKS) {
+                    drawableId = R.drawable.fork_drawer_bookmarks;
+                } else if (fabType == tw.nekomimi.nekogram.tabs.FloatingActionButtonType.ARCHIVE) {
+                    drawableId = R.drawable.fork_fab_archive;
+                } else if (fabType == tw.nekomimi.nekogram.tabs.FloatingActionButtonType.CLOUD) {
+                    drawableId = R.drawable.fork_fab_cloud;
+                } else if (fabType == tw.nekomimi.nekogram.tabs.FloatingActionButtonType.MARK_ALL_READ) {
+                    drawableId = R.drawable.fork_fab_mark_all_read;
+                } else if (fabType == tw.nekomimi.nekogram.tabs.FloatingActionButtonType.WALLET) {
+                    drawableId = R.drawable.fork_fab_wallet;
+                } else if (fabType == tw.nekomimi.nekogram.tabs.FloatingActionButtonType.CONTACTS) {
+                    drawableId = R.drawable.fork_fab_contacts;
+                } else if (fabType == tw.nekomimi.nekogram.tabs.FloatingActionButtonType.MUSIC) {
+                    drawableId = R.drawable.fork_fab_music;
+                } else if (fabType == tw.nekomimi.nekogram.tabs.FloatingActionButtonType.ALBUMS) {
+                    drawableId = R.drawable.fork_fab_albums;
+                } else if (fabType == tw.nekomimi.nekogram.tabs.FloatingActionButtonType.CREATE_STORY) {
+                    drawableId = R.drawable.outline_fab_story_24;
+                } else if (fabType == tw.nekomimi.nekogram.tabs.FloatingActionButtonType.MINI_APPS) {
+                    drawableId = R.drawable.fork_fab_miniapps_icon;
+                } else if (fabType == tw.nekomimi.nekogram.tabs.FloatingActionButtonType.AI_CHAT) {
+                    drawableId = R.drawable.fork_fab_ai;
+                } else if (fabType == tw.nekomimi.nekogram.tabs.FloatingActionButtonType.TODO) {
+                    drawableId = R.drawable.fork_fab_todo_icon;
+                }
+                floatingButton3.setImageResource(drawableId);
+                floatingButton3.setContentDescription(fabType.getTitle(getParentActivity()));
+            } else {
+                floatingButton3.setImageResource(R.drawable.filled_fab_compose_32);
+                floatingButton3.setContentDescription(LocaleController.getString(R.string.NewMessageTitle));
+            }
         }
     }
 
@@ -15063,4 +15121,82 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         return shouldShowIdleSearchField() ? dp(SEARCH_FIELD_HEIGHT) : 0;
     }
 
+    private void handleCustomFabClick(tw.nekomimi.nekogram.tabs.FloatingActionButtonType fabType) {
+        if (fabType == null) return;
+        switch (fabType) {
+            case CREATE_CHAT:
+                openWriteContacts();
+                break;
+            case BOOKMARKS:
+                presentFragment(new tw.nekomimi.nekogram.ui.BookmarkManagerActivity());
+                break;
+            case ARCHIVE: {
+                Bundle args = new Bundle();
+                args.putInt("folderId", 1);
+                presentFragment(new DialogsActivity(args));
+                break;
+            }
+            case CLOUD: {
+                Bundle args = new Bundle();
+                args.putLong("user_id", getUserConfig().getClientUserId());
+                presentFragment(new ChatActivity(args));
+                break;
+            }
+            case MARK_ALL_READ: {
+                MessagesController.DialogFilter filter = null;
+                if (filterTabsView != null) {
+                    int currentTabId = filterTabsView.getCurrentTabId();
+                    ArrayList<MessagesController.DialogFilter> activeFilters = getActiveDialogFilters();
+                    if (currentTabId >= 0 && currentTabId < activeFilters.size()) {
+                        filter = activeFilters.get(currentTabId);
+                    }
+                }
+                if (filter != null) {
+                    ArrayList<TLRPC.Dialog> dialogs = getDialogsArray(currentAccount, viewPages[0].dialogsType, filter.id, false);
+                    if (dialogs != null) {
+                        for (int i = 0; i < dialogs.size(); i++) {
+                            TLRPC.Dialog d = dialogs.get(i);
+                            if (d != null) {
+                                markAsRead(d.id);
+                            }
+                        }
+                    }
+                }
+                break;
+            }
+            case WALLET:
+                org.telegram.messenger.browser.Browser.openUrl(getParentActivity(), "tg://resolve?domain=wallet");
+                break;
+            case CONTACTS:
+                presentFragment(new ContactsActivity(null));
+                break;
+            case MUSIC: {
+                Bundle args = new Bundle();
+                args.putLong("user_id", getUserConfig().getClientUserId());
+                presentFragment(new ChatActivity(args));
+                break;
+            }
+            case ALBUMS: {
+                Bundle args = new Bundle();
+                args.putLong("user_id", getUserConfig().getClientUserId());
+                presentFragment(new ChatActivity(args));
+                break;
+            }
+            case CREATE_STORY:
+                openStoriesRecorder();
+                break;
+            case MINI_APPS:
+                org.telegram.messenger.browser.Browser.openUrl(getParentActivity(), "tg://resolve?domain=tapps");
+                break;
+            case AI_CHAT:
+                org.telegram.messenger.browser.Browser.openUrl(getParentActivity(), "tg://resolve?domain=CopilotBot");
+                break;
+            case TODO: {
+                Bundle args = new Bundle();
+                args.putLong("user_id", getUserConfig().getClientUserId());
+                presentFragment(new ChatActivity(args));
+                break;
+            }
+        }
+    }
 }

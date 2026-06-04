@@ -80,6 +80,24 @@ public class TabsByTypeSettings {
         prefs.edit().putBoolean(keyEnabled(tab, archive), enabled).apply();
     }
 
+    private String keyFabType(TabsByTypeEntry tab) {
+        return "tabsByType_" + tab.name() + "_fabType";
+    }
+
+    public FloatingActionButtonType getTabFabType(TabsByTypeEntry tab) {
+        FloatingActionButtonType defaultType = tab.isEditableFab ? FloatingActionButtonType.CREATE_CHAT : FloatingActionButtonType.MARK_ALL_READ;
+        String saved = prefs.getString(keyFabType(tab), defaultType.name());
+        try {
+            return FloatingActionButtonType.valueOf(saved);
+        } catch (Exception e) {
+            return defaultType;
+        }
+    }
+
+    public void setTabFabType(TabsByTypeEntry tab, FloatingActionButtonType fabType) {
+        prefs.edit().putString(keyFabType(tab), fabType.name()).apply();
+    }
+
     // ── Per-tab ordering ──────────────────────────────────────────────────────
 
     public int getTabOrder(TabsByTypeEntry tab, boolean archive) {

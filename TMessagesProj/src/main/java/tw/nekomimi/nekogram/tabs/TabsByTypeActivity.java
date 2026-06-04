@@ -249,9 +249,18 @@ public class TabsByTypeActivity extends BaseFragment {
                             tab,
                             settings.isTabEnabled(tab, archiveSelected),
                             !isLast);
-                    // Action button click — pencil = no-op for now; eye = no-op
                     cell.setOnActionButtonClick(v -> {
-                        // Future: open FAB chooser dialog
+                        if (tab.isEditableFab) {
+                            FloatingActionButtonsChooserDialog dialog = new FloatingActionButtonsChooserDialog(
+                                    getParentActivity(),
+                                    settings.getTabFabType(tab),
+                                    selectedType -> {
+                                        settings.setTabFabType(tab, selectedType);
+                                        TabsByTypeManager.getInstance(getCurrentAccount()).applyAndNotify();
+                                    }
+                            );
+                            showDialog(dialog);
+                        }
                     });
                     break;
                 }
