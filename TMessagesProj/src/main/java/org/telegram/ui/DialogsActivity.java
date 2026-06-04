@@ -5065,11 +5065,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 delegate.didSelectDialogs(DialogsActivity.this, topicKeys, null, false, notify, scheduleDate, scheduleRepeatPeriod, null);
             } else {
                 MessagesController.DialogFilter filter = null;
-                if (filterTabsView != null) {
-                    int currentTabId = filterTabsView.getCurrentTabId();
+                if (viewPages != null && viewPages[0] != null) {
+                    int selectedType = viewPages[0].selectedType;
                     ArrayList<MessagesController.DialogFilter> activeFilters = getActiveDialogFilters();
-                    if (currentTabId >= 0 && currentTabId < activeFilters.size()) {
-                        filter = activeFilters.get(currentTabId);
+                    if (selectedType >= 0 && selectedType < activeFilters.size()) {
+                        filter = activeFilters.get(selectedType);
                     }
                 }
                 tw.nekomimi.nekogram.tabs.TabsByTypeEntry tabType = tw.nekomimi.nekogram.tabs.TabsByTypeManager.getTabFromFilter(filter);
@@ -7421,6 +7421,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     @Override
     public void onResume() {
         super.onResume();
+        updateStoriesPosting();
         updateHomeDrawerAvailability();
         // [Alexgram: Double Tap On Chats To Filter Unread Chats] - Start
         if (unreadPillView != null) {
@@ -9256,11 +9257,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             floatingButton3.setContentDescription(LocaleController.getString(R.string.Done));
         } else {
             MessagesController.DialogFilter filter = null;
-            if (filterTabsView != null) {
-                int currentTabId = filterTabsView.getCurrentTabId();
+            if (viewPages != null && viewPages[0] != null) {
+                int selectedType = viewPages[0].selectedType;
                 ArrayList<MessagesController.DialogFilter> activeFilters = getActiveDialogFilters();
-                if (currentTabId >= 0 && currentTabId < activeFilters.size()) {
-                    filter = activeFilters.get(currentTabId);
+                if (selectedType >= 0 && selectedType < activeFilters.size()) {
+                    filter = activeFilters.get(selectedType);
                 }
             }
             tw.nekomimi.nekogram.tabs.TabsByTypeEntry tabType = tw.nekomimi.nekogram.tabs.TabsByTypeManager.getTabFromFilter(filter);
@@ -11160,6 +11161,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             }
         } else if (id == NotificationCenter.dialogFiltersUpdated) {
             updateFilterTabs(true, true);
+            updateStoriesPosting();
         } else if (id == NotificationCenter.filterSettingsUpdated) {
             showFiltersHint();
         } else if (id == NotificationCenter.newSuggestionsAvailable) {

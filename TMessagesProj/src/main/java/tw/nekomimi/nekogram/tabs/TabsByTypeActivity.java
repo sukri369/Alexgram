@@ -257,6 +257,7 @@ public class TabsByTypeActivity extends BaseFragment {
                                     selectedType -> {
                                         settings.setTabFabType(tab, selectedType);
                                         TabsByTypeManager.getInstance(getCurrentAccount()).applyAndNotify();
+                                        adapter.notifyItemChanged(position);
                                     }
                             );
                             showDialog(dialog);

@@ -21,6 +21,7 @@ import org.telegram.messenger.R;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.CheckBoxSquare;
 import org.telegram.ui.Components.LayoutHelper;
+import org.telegram.ui.Components.RLottieImageView;
 
 /**
  * A single row in the Tabs by Type settings list.
@@ -38,7 +39,7 @@ public class TabsByTypeCell extends LinearLayout {
     private final TextView       textView;
     private final android.view.View    vertDivider;
     private final FrameLayout    buttonLayout;
-    private final ImageView      actionButton;
+    private final RLottieImageView      actionButton;
 
     private boolean drawDivider;
 
@@ -79,7 +80,7 @@ public class TabsByTypeCell extends LinearLayout {
         // ── Right section: circle action button (pencil or eye) ───────────────
         buttonLayout = new FrameLayout(context);
 
-        actionButton = new ImageView(context);
+        actionButton = new RLottieImageView(context);
         actionButton.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
         buttonLayout.addView(actionButton,
                 LayoutHelper.createFrame(36, 36, Gravity.CENTER, 12, 6, 12, 6));
@@ -100,10 +101,14 @@ public class TabsByTypeCell extends LinearLayout {
         textView.setText(tab.getTitle(getContext()));
 
         // Build the circle button drawable
-        int buttonIcon = tab.isEditableFab
-                ? R.drawable.msg_edit_solar
-                : R.drawable.baseline_visibility_24;
-        actionButton.setImageResource(buttonIcon);
+        if (tab.isEditableFab) {
+            actionButton.clearAnimationDrawable();
+            FloatingActionButtonType fabType = TabsByTypeSettings.getInstance().getTabFabType(tab);
+            fabType.bindBig(actionButton);
+        } else {
+            actionButton.clearAnimationDrawable();
+            actionButton.setImageResource(R.drawable.baseline_visibility_24);
+        }
 
         updateColors();
     }
