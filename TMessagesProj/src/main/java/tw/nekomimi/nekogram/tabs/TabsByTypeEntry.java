@@ -94,12 +94,6 @@ public enum TabsByTypeEntry {
             MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_ARCHIVED | 0x20000000,
             true,
             false
-    ),
-    ALBUMS(
-            R.drawable.fork_filter_icon_albums,
-            MessagesController.DIALOG_FILTER_FLAG_ONLY_ARCHIVED | 0x04000000,
-            false,
-            false
     );
 
     public final int iconResId;
@@ -129,7 +123,6 @@ public enum TabsByTypeEntry {
             case LIVE_CHATS:      return context.getString(R.string.TabsByTypeLive);
             case DELETED_USERS:   return context.getString(R.string.TabsByTypeDeleted);
             case SECRET_CHATS:    return context.getString(R.string.TabsByTypeSecret);
-            case ALBUMS:          return context.getString(R.string.TabsByTypeAlbums);
             default:              return name();
         }
     }
