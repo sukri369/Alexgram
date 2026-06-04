@@ -21671,6 +21671,14 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             return false;
         }
 
+        // For grouped messages (albums), only show the edit button on one cell (the bottom-left/right one)
+        if (currentMessagesGroup != null && currentPosition != null) {
+            boolean last = (currentPosition.flags & MessageObject.POSITION_FLAG_BOTTOM) != 0 && (currentPosition.flags & (msg.isOutOwner() ? MessageObject.POSITION_FLAG_LEFT : MessageObject.POSITION_FLAG_RIGHT)) != 0;
+            if (!currentMessagesGroup.isDocuments && !last) {
+                return false;
+            }
+        }
+
         // Ownership / permission check.
         // We intentionally do NOT gate on the time window here — the server enforces that
         // when the actual edit request is sent. This keeps the UX consistent with the
@@ -21710,6 +21718,18 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 }
             }
             float y = top + (bottom - top - buttonSize) / 2f;
+            float topmostSideY = Float.MAX_VALUE;
+            if (drawSideButton != 0) {
+                topmostSideY = Math.min(topmostSideY, sideStartY);
+            }
+            if (drawSummarizeButton) {
+                topmostSideY = Math.min(topmostSideY, summarizeButtonY);
+            }
+            if (topmostSideY != Float.MAX_VALUE) {
+                if (y + buttonSize + dp(4) > topmostSideY) {
+                    y = topmostSideY - dp(4) - buttonSize;
+                }
+            }
             quickEditRect.set(x, y, x + buttonSize, y + buttonSize);
 
 
