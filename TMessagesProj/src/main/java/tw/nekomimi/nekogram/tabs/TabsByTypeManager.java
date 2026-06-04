@@ -67,12 +67,18 @@ public class TabsByTypeManager {
     /**
      * Call from TabsByTypeActivity (or any settings toggle) to re-inject and
      * broadcast the change so DialogsActivity refreshes its tab strip.
+     * Notifies ALL active accounts because TabsByTypeSettings is shared globally.
      */
     public void applyAndNotify() {
         AndroidUtilities.runOnUIThread(() -> {
-            injectFiltersSync();
-            NotificationCenter.getInstance(account)
-                    .postNotificationName(NotificationCenter.dialogFiltersUpdated);
+            // [Alexgram: Tabs by Type] - apply to all active accounts so tabs show on every account
+            for (int acc = 0; acc < UserConfig.MAX_ACCOUNT_COUNT; acc++) {
+                if (UserConfig.getInstance(acc).isClientActivated()) {
+                    TabsByTypeManager.getInstance(acc).injectFiltersSync();
+                    NotificationCenter.getInstance(acc)
+                            .postNotificationName(NotificationCenter.dialogFiltersUpdated);
+                }
+            }
         });
     }
 

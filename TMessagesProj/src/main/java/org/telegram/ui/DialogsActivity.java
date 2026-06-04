@@ -828,9 +828,12 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             if (id < 0) {
                 return false;
             }
-            // [Alexgram: Tabs by Type] - archive has only 1 viewPage; no page-swipe animation possible
+            // [Alexgram: Tabs by Type] - archive has only 1 viewPage; do instant tab switch on swipe
             if (viewPages.length < 2) {
-                return false;
+                viewPages[0].selectedType = id;
+                switchToCurrentSelectedMode(false);
+                filterTabsView.selectTabWithId(id, 1.0f);
+                return false; // no drag tracking needed — already switched
             }
             getParent().requestDisallowInterceptTouchEvent(true);
             maybeStartTracking = false;
