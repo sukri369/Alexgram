@@ -33123,6 +33123,24 @@ public class ChatActivity extends BaseFragment implements
 				options.clear();
 				options.addAll(textOptions);
 
+				if (GroupedIconsView.useGroupedIcons() && gridOptions.isEmpty()) {
+					boolean canDeleteVal = selectedObject != null && selectedObject.canDeleteMessage(chatMode == MODE_SCHEDULED, currentChat);
+					boolean textEmptyVal = selectedObject == null || selectedObject.messageOwner == null || TextUtils.isEmpty(selectedObject.messageOwner.message);
+					boolean hasCaptionVal = selectedObject != null && !TextUtils.isEmpty(getMessageCaption(selectedObject, selectedObjectGroup));
+					boolean willBeInGroupedIcons = !canDeleteVal || (textEmptyVal && !hasCaptionVal);
+					if (willBeInGroupedIcons) {
+						for (int i = 0; i < options.size(); i++) {
+							int opt = options.get(i);
+							if (opt == OPTION_COPY_PHOTO || opt == OPTION_COPY_PHOTO_AS_STICKER) {
+								items.remove(i);
+								options.remove(i);
+								icons.remove(i);
+								i--;
+							}
+						}
+					}
+				}
+
 				boolean[] groupedIconsMerged = new boolean[]{false};
 				if (GroupedIconsView.useGroupedIcons() && !gridOptions.isEmpty()) {
 					groupedIconsMerged[0] = true;
@@ -48667,20 +48685,12 @@ public class ChatActivity extends BaseFragment implements
 								options.add(OPTION_SAVE_TO_GALLERY);
 								icons.add(R.drawable.msg_gallery);
 								allowCopyPhoto = true;
-								if (
-									(!GroupedIconsView.useGroupedIcons() && NaConfig.INSTANCE.getShowCopyPhoto().Bool())
-									||
-									(GroupedIconsView.useGroupedIcons() && (!isMessageTextEmpty || hasCaption) && canDeleteMessage && NaConfig.INSTANCE.getShowCopyPhoto().Bool())
-								) {
+								if (NaConfig.INSTANCE.getShowCopyPhoto().Bool()) {
 									items.add(LocaleController.getString(R.string.CopyPhoto));
 									options.add(OPTION_COPY_PHOTO);
 									icons.add(R.drawable.msg_copy_photo);
 								}
-								if (
-									(!GroupedIconsView.useGroupedIcons() && NaConfig.INSTANCE.getShowCopyAsSticker().Bool())
-									||
-									(GroupedIconsView.useGroupedIcons() && (!isMessageTextEmpty || hasCaption) && canDeleteMessage && NaConfig.INSTANCE.getShowCopyAsSticker().Bool())
-								) {
+								if (NaConfig.INSTANCE.getShowCopyAsSticker().Bool()) {
 									items.add(LocaleController.getString(R.string.CopyPhotoAsSticker));
 									options.add(OPTION_COPY_PHOTO_AS_STICKER);
 									icons.add(R.drawable.msg_copy_photo);
@@ -49094,20 +49104,12 @@ public class ChatActivity extends BaseFragment implements
 						options.add(OPTION_SAVE_TO_GALLERY);
 						icons.add(R.drawable.msg_gallery);
 						allowCopyPhoto = true;
-						if (
-							(!GroupedIconsView.useGroupedIcons() && NaConfig.INSTANCE.getShowCopyPhoto().Bool())
-							||
-							(GroupedIconsView.useGroupedIcons() && (!isMessageTextEmpty || hasCaption) && canDeleteMessage && NaConfig.INSTANCE.getShowCopyPhoto().Bool())
-						) {
+						if (NaConfig.INSTANCE.getShowCopyPhoto().Bool()) {
 							items.add(LocaleController.getString(R.string.CopyPhoto));
 							options.add(OPTION_COPY_PHOTO);
 							icons.add(R.drawable.msg_copy_photo);
 						}
-						if (
-							(!GroupedIconsView.useGroupedIcons() && NaConfig.INSTANCE.getShowCopyAsSticker().Bool())
-							||
-							(GroupedIconsView.useGroupedIcons() && (!isMessageTextEmpty || hasCaption) && canDeleteMessage && NaConfig.INSTANCE.getShowCopyAsSticker().Bool())
-						) {
+						if (NaConfig.INSTANCE.getShowCopyAsSticker().Bool()) {
 							items.add(LocaleController.getString(R.string.CopyPhotoAsSticker));
 							options.add(OPTION_COPY_PHOTO_AS_STICKER);
 							icons.add(R.drawable.msg_copy_photo);
