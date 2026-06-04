@@ -349,7 +349,8 @@ public class SpecialForwardActivity extends ChatActivity {
         inlineDeleteLinkView.setOnClickListener(v -> {
             if (selectedMessage != null) {
                 deleteLinks(selectedMessage, 15);
-                startEditingMessage(selectedMessage);
+                MessageObject updated = updateClonedMessage(selectedMessage);
+                startEditingMessage(updated);
                 Toast.makeText(context, "Deleted all links in message", Toast.LENGTH_SHORT).show();
             }
         });
@@ -744,6 +745,59 @@ public class SpecialForwardActivity extends ChatActivity {
         msg.messageOwner.send_state = 0;
     }
 
+    private void updateMessageText(MessageObject msg, CharSequence charSequence, ArrayList<TLRPC.MessageEntity> entities) {
+        if (msg == null) return;
+        msg.messageOwner.message = charSequence == null ? "" : charSequence.toString();
+        TLRPC.Message message = msg.messageOwner;
+        if (entities == null) {
+            entities = new ArrayList<>();
+        }
+        message.entities = entities;
+        msg.messageOwner.send_state = 3;
+        msg.forceUpdate = true;
+        if (!msg.isMediaEmpty()) {
+            msg.caption = null;
+            msg.generateCaption();
+        } else if (TextUtils.isEmpty(msg.messageOwner.message)) {
+            msg.messageOwner.message = "Empty message";
+        }
+        msg.applyNewText();
+        msg.checkLayout();
+        msg.messageOwner.send_state = 0;
+    }
+
+    private MessageObject updateClonedMessage(MessageObject msg) {
+        if (msg == null) return null;
+        int idx = messages.indexOf(msg);
+        if (idx >= 0) {
+            try {
+                TLRPC.Message messageClone = cloneMessage(msg.messageOwner);
+                if (messageClone != null) {
+                    messageClone.id = msg.getId();
+                    MessageObject newCloned = createPreviewMessageObject(messageClone, msg);
+                    newCloned.stableId = msg.stableId;
+                    newCloned.forceUpdate = true;
+                    newCloned.checkLayout();
+                    messages.set(idx, newCloned);
+                    rebuildGroupedMessages();
+                    if (chatAdapter != null) {
+                        chatAdapter.notifyDataSetChanged();
+                    }
+                    if (selectedMessage == msg) {
+                        selectedMessage = newCloned;
+                    }
+                    if (editingMessageObject == msg) {
+                        editingMessageObject = newCloned;
+                    }
+                    return newCloned;
+                }
+            } catch (Exception e) {
+                FileLog.e(e);
+            }
+        }
+        return msg;
+    }
+
     private CharSequence getMessageText(MessageObject msg) {
         if (msg == null) return "";
         return msg.isMediaEmpty() ? msg.messageText : msg.caption;
@@ -1006,6 +1060,12 @@ public class SpecialForwardActivity extends ChatActivity {
                 chatAdapter.notifyDataSetChanged();
             }
             if (selectedMessage != null) {
+                for (MessageObject msg : messages) {
+                    if (msg.stableId == selectedMessage.stableId) {
+                        selectedMessage = msg;
+                        break;
+                    }
+                }
                 startEditingMessage(selectedMessage);
             }
             updateSendBadge();
@@ -1060,43 +1120,111 @@ public class SpecialForwardActivity extends ChatActivity {
             if (checked[3]) typeMask |= 8;
             
             replaceLinks(selectedMessage, typeMask, newLink);
-            startEditingMessage(selectedMessage);
+            MessageObject updated = updateClonedMessage(selectedMessage);
+            startEditingMessage(updated);
         });
         builder.setNegativeButton("Cancel", null);
         builder.show();
     }
 
     private void replaceLinks(MessageObject msg, int typeMask, CharSequence newLink) {
-        CharSequence text = getMessageText(msg);
-        if (text == null) return;
+        if (msg == null || msg.messageOwner == null) return;
+        String rawText = msg.messageOwner.message;
+        if (rawText == null) rawText = "";
         
-        SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(text);
-        Object[] spans = spannableStringBuilder.getSpans(0, spannableStringBuilder.length(), Object.class);
-        if (spans != null && spans.length > 0) {
-            for (Object obj : spans) {
-                if (obj instanceof URLSpan) {
-                    String url = ((URLSpan) obj).getURL();
-                    boolean shouldReplace = (org.telegram.messenger.browser.Browser.isInternalUrl(url, null) && (typeMask & 1) != 0)
-                            || (url.startsWith("@") && (typeMask & 2) != 0)
-                            || (url.startsWith("#") && (typeMask & 4) != 0)
-                            || (!url.startsWith("@") && !url.startsWith("#") && !org.telegram.messenger.browser.Browser.isInternalUrl(url, null) && (typeMask & 8) != 0);
+        ArrayList<TLRPC.MessageEntity> entities = msg.messageOwner.entities;
+        if (entities == null || entities.isEmpty()) {
+            entities = MediaDataController.getInstance(currentAccount).getEntities(new CharSequence[]{rawText}, true);
+        }
+        if (entities == null) {
+            entities = new ArrayList<>();
+        }
+        
+        StringBuilder textBuilder = new StringBuilder(rawText);
+        String replacementStr = newLink.toString();
+        
+        ArrayList<TLRPC.MessageEntity> workingEntities = new ArrayList<>();
+        for (TLRPC.MessageEntity ent : entities) {
+            workingEntities.add(ent);
+        }
+        
+        ArrayList<TLRPC.MessageEntity> toReplace = new ArrayList<>();
+        for (TLRPC.MessageEntity ent : workingEntities) {
+            if (ent.offset < 0 || ent.offset >= rawText.length() || ent.offset + ent.length > rawText.length()) {
+                continue;
+            }
+            
+            String entText = rawText.substring(ent.offset, ent.offset + ent.length);
+            String url = null;
+            
+            if (ent instanceof TLRPC.TL_messageEntityMention || ent instanceof TLRPC.TL_messageEntityMentionName) {
+                url = entText;
+            } else if (ent instanceof TLRPC.TL_messageEntityHashtag) {
+                url = entText;
+            } else if (ent instanceof TLRPC.TL_messageEntityUrl) {
+                url = entText;
+            } else if (ent instanceof TLRPC.TL_messageEntityTextUrl) {
+                url = ((TLRPC.TL_messageEntityTextUrl) ent).url;
+            }
+            
+            if (url == null) {
+                continue;
+            }
+            
+            boolean shouldReplace = (org.telegram.messenger.browser.Browser.isInternalUrl(url, null) && (typeMask & 1) != 0)
+                    || (url.startsWith("@") && (typeMask & 2) != 0)
+                    || (url.startsWith("#") && (typeMask & 4) != 0)
+                    || (!url.startsWith("@") && !url.startsWith("#") && !org.telegram.messenger.browser.Browser.isInternalUrl(url, null) && (typeMask & 8) != 0);
+            
+            if (shouldReplace) {
+                toReplace.add(ent);
+            }
+        }
+        
+        java.util.Collections.sort(toReplace, (e1, e2) -> Integer.compare(e2.offset, e1.offset));
+        
+        for (TLRPC.MessageEntity ent : toReplace) {
+            int oldOffset = ent.offset;
+            int oldLength = ent.length;
+            
+            if (ent instanceof TLRPC.TL_messageEntityTextUrl) {
+                ((TLRPC.TL_messageEntityTextUrl) ent).url = replacementStr;
+                String entText = textBuilder.substring(ent.offset, ent.offset + ent.length);
+                if (entText.startsWith("http://") || entText.startsWith("https://") || entText.startsWith("tg://") || entText.contains("t.me")) {
+                    textBuilder.replace(ent.offset, ent.offset + ent.length, replacementStr);
+                    int lengthDiff = replacementStr.length() - oldLength;
+                    ent.length = replacementStr.length();
                     
-                    if (shouldReplace) {
-                        try {
-                            int spanStart = spannableStringBuilder.getSpanStart(obj);
-                            int spanEnd = spannableStringBuilder.getSpanEnd(obj);
-                            if (spanStart >= 0 && spanEnd >= 0 && spanStart <= spannableStringBuilder.length() && spanEnd <= spannableStringBuilder.length()) {
-                                spannableStringBuilder.replace(spanStart, spanEnd, newLink);
-                                spannableStringBuilder.removeSpan(obj);
-                            }
-                        } catch (Exception e) {
-                            FileLog.e(e);
+                    for (TLRPC.MessageEntity other : workingEntities) {
+                        if (other != ent && other.offset > oldOffset) {
+                            other.offset += lengthDiff;
+                        }
+                    }
+                }
+            } else {
+                textBuilder.replace(ent.offset, ent.offset + ent.length, replacementStr);
+                int lengthDiff = replacementStr.length() - oldLength;
+                
+                TLRPC.TL_messageEntityUrl newUrlEnt = new TLRPC.TL_messageEntityUrl();
+                newUrlEnt.offset = ent.offset;
+                newUrlEnt.length = replacementStr.length();
+                
+                int index = workingEntities.indexOf(ent);
+                if (index >= 0) {
+                    workingEntities.set(index, newUrlEnt);
+                }
+                
+                for (TLRPC.MessageEntity other : workingEntities) {
+                    if (other != ent && other != newUrlEnt) {
+                        if (other.offset > oldOffset) {
+                            other.offset += lengthDiff;
                         }
                     }
                 }
             }
         }
-        updateMessageText(msg, spannableStringBuilder);
+        
+        updateMessageText(msg, textBuilder.toString(), workingEntities);
     }
 
     private void deleteAllLinks() {
@@ -1156,6 +1284,12 @@ public class SpecialForwardActivity extends ChatActivity {
                 chatAdapter.notifyDataSetChanged();
             }
             if (selectedMessage != null) {
+                for (MessageObject msg : messages) {
+                    if (msg.stableId == selectedMessage.stableId) {
+                        selectedMessage = msg;
+                        break;
+                    }
+                }
                 startEditingMessage(selectedMessage);
             }
             updateSendBadge();
@@ -1165,36 +1299,92 @@ public class SpecialForwardActivity extends ChatActivity {
     }
 
     private void deleteLinks(MessageObject msg, int typeMask) {
-        CharSequence text = getMessageText(msg);
-        if (text == null) return;
+        if (msg == null || msg.messageOwner == null) return;
+        String rawText = msg.messageOwner.message;
+        if (rawText == null) rawText = "";
         
-        SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(text);
-        Object[] spans = spannableStringBuilder.getSpans(0, spannableStringBuilder.length(), Object.class);
-        if (spans != null && spans.length > 0) {
-            for (Object obj : spans) {
-                if (obj instanceof URLSpan) {
-                    String url = ((URLSpan) obj).getURL();
-                    boolean shouldDelete = (org.telegram.messenger.browser.Browser.isInternalUrl(url, null) && (typeMask & 1) != 0)
-                            || (url.startsWith("@") && (typeMask & 2) != 0)
-                            || (url.startsWith("#") && (typeMask & 4) != 0)
-                            || (!url.startsWith("@") && !url.startsWith("#") && !org.telegram.messenger.browser.Browser.isInternalUrl(url, null) && (typeMask & 8) != 0);
-                    
-                    if (shouldDelete) {
-                        try {
-                            int spanStart = spannableStringBuilder.getSpanStart(obj);
-                            int spanEnd = spannableStringBuilder.getSpanEnd(obj);
-                            if (spanStart >= 0 && spanEnd >= 0 && spanStart <= spannableStringBuilder.length() && spanEnd <= spannableStringBuilder.length()) {
-                                spannableStringBuilder.delete(spanStart, spanEnd);
-                                spannableStringBuilder.removeSpan(obj);
-                            }
-                        } catch (Exception e) {
-                            FileLog.e(e);
-                        }
+        ArrayList<TLRPC.MessageEntity> entities = msg.messageOwner.entities;
+        if (entities == null || entities.isEmpty()) {
+            entities = MediaDataController.getInstance(currentAccount).getEntities(new CharSequence[]{rawText}, true);
+        }
+        if (entities == null) {
+            entities = new ArrayList<>();
+        }
+        
+        StringBuilder textBuilder = new StringBuilder(rawText);
+        
+        ArrayList<TLRPC.MessageEntity> workingEntities = new ArrayList<>();
+        for (TLRPC.MessageEntity ent : entities) {
+            workingEntities.add(ent);
+        }
+        
+        ArrayList<TLRPC.MessageEntity> toDeleteText = new ArrayList<>();
+        ArrayList<TLRPC.MessageEntity> toRemoveEntityOnly = new ArrayList<>();
+        
+        for (TLRPC.MessageEntity ent : workingEntities) {
+            if (ent.offset < 0 || ent.offset >= rawText.length() || ent.offset + ent.length > rawText.length()) {
+                continue;
+            }
+            
+            String entText = rawText.substring(ent.offset, ent.offset + ent.length);
+            String url = null;
+            boolean isTextUrl = false;
+            
+            if (ent instanceof TLRPC.TL_messageEntityMention || ent instanceof TLRPC.TL_messageEntityMentionName) {
+                url = entText;
+            } else if (ent instanceof TLRPC.TL_messageEntityHashtag) {
+                url = entText;
+            } else if (ent instanceof TLRPC.TL_messageEntityUrl) {
+                url = entText;
+            } else if (ent instanceof TLRPC.TL_messageEntityTextUrl) {
+                url = ((TLRPC.TL_messageEntityTextUrl) ent).url;
+                isTextUrl = true;
+            }
+            
+            if (url == null) {
+                continue;
+            }
+            
+            boolean shouldDelete = (org.telegram.messenger.browser.Browser.isInternalUrl(url, null) && (typeMask & 1) != 0)
+                    || (url.startsWith("@") && (typeMask & 2) != 0)
+                    || (url.startsWith("#") && (typeMask & 4) != 0)
+                    || (!url.startsWith("@") && !url.startsWith("#") && !org.telegram.messenger.browser.Browser.isInternalUrl(url, null) && (typeMask & 8) != 0);
+            
+            if (shouldDelete) {
+                if (isTextUrl) {
+                    if (entText.startsWith("http://") || entText.startsWith("https://") || entText.startsWith("tg://") || entText.contains("t.me")) {
+                        toDeleteText.add(ent);
+                    } else {
+                        toRemoveEntityOnly.add(ent);
                     }
+                } else {
+                    toDeleteText.add(ent);
                 }
             }
         }
-        updateMessageText(msg, spannableStringBuilder);
+        
+        java.util.Collections.sort(toDeleteText, (e1, e2) -> Integer.compare(e2.offset, e1.offset));
+        
+        for (TLRPC.MessageEntity ent : toDeleteText) {
+            int oldOffset = ent.offset;
+            int oldLength = ent.length;
+            
+            textBuilder.delete(ent.offset, ent.offset + ent.length);
+            workingEntities.remove(ent);
+            
+            int lengthDiff = -oldLength;
+            for (TLRPC.MessageEntity other : workingEntities) {
+                if (other.offset > oldOffset) {
+                    other.offset += lengthDiff;
+                }
+            }
+        }
+        
+        for (TLRPC.MessageEntity ent : toRemoveEntityOnly) {
+            workingEntities.remove(ent);
+        }
+        
+        updateMessageText(msg, textBuilder.toString(), workingEntities);
     }
 
     private void deleteAllCaptions() {
