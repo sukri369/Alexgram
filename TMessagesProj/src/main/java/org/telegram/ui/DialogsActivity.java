@@ -822,6 +822,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         private VelocityTracker velocityTracker;
         private boolean globalIgnoreLayout;
         private int[] pos = new int[2];
+        // [Alexgram: Tabs by Type] - tracks a confirmed horizontal swipe on the tabs view
+        // Used to consume the gesture in archive even at tab boundary (prevents fragment back nav)
+        private boolean tabsHorizontalGestureConsumed = false;
 
         private boolean prepareForMoving(MotionEvent ev, boolean forward) {
             int id = filterTabsView.getNextPageId(forward);
@@ -833,7 +836,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 viewPages[0].selectedType = id;
                 switchToCurrentSelectedMode(false);
                 filterTabsView.selectTabWithId(id, 1.0f);
-                return false; // no drag tracking needed — already switched
+                // Consume the gesture: reset maybeStartTracking so subsequent ACTION_MOVE events
+                // don't trigger more tab switches (prevents rapid-skipping to the last tab)
+                maybeStartTracking = false;
+                return false;
             }
             getParent().requestDisallowInterceptTouchEvent(true);
             maybeStartTracking = false;
@@ -1437,6 +1443,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     tabsAnimationInProgress = false;
                 } else if (ev != null && ev.getAction() == MotionEvent.ACTION_DOWN) {
                     additionalOffset = 0;
+                    tabsHorizontalGestureConsumed = false; // [Alexgram: Tabs by Type] reset on each new touch
                 }
                 if (ev != null && ev.getAction() == MotionEvent.ACTION_DOWN && !startedTracking && !maybeStartTracking && filterTabsView.getVisibility() == VISIBLE) {
                     startedTrackingPointerId = ev.getPointerId(0);
@@ -1460,6 +1467,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         float touchSlop = AndroidUtilities.getPixelsInCM(0.3f, true);
                         int dxLocal = (int) (ev.getX() - startedTrackingX);
                         if (Math.abs(dxLocal) >= touchSlop && Math.abs(dxLocal) > dy) {
+                            // [Alexgram: Tabs by Type] - mark horizontal gesture as consumed so the
+                            // archive doesn't close when swiping at a tab boundary
+                            tabsHorizontalGestureConsumed = true;
                             prepareForMoving(ev, dx < 0);
                         }
                     } else if (startedTracking) {
@@ -1598,7 +1608,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         velocityTracker = null;
                     }
                 }
-                return startedTracking;
+                // [Alexgram: Tabs by Type] - consume horizontal gesture in archive even at tab boundary
+                // so that swiping right from the first tab doesn't close the archive screen
+                return startedTracking || tabsHorizontalGestureConsumed;
             }
             return false;
         }
