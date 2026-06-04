@@ -129,38 +129,14 @@ public class TabsByTypeManager {
     }
 
     private int buildFlags(TabsByTypeEntry tab, boolean archive) {
-        switch (tab) {
-            case UNREAD:
-                return MessagesController.DIALOG_FILTER_FLAG_ALL_CHATS
-                        | MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_READ;
-
-            case PERSONAL:
-                return MessagesController.DIALOG_FILTER_FLAG_CONTACTS
-                        | MessagesController.DIALOG_FILTER_FLAG_NON_CONTACTS;
-
-            case GROUPS:
-            case PRIVATE_GROUPS:
-            case PUBLIC_GROUPS:
-            case ADMIN:
-            case OWNER:
-                return MessagesController.DIALOG_FILTER_FLAG_GROUPS;
-
-            case CHANNELS:
-                return MessagesController.DIALOG_FILTER_FLAG_CHANNELS;
-
-            case BOTS:
-                return MessagesController.DIALOG_FILTER_FLAG_BOTS;
-
-            case SECRET_CHATS:
-                return MessagesController.DIALOG_FILTER_FLAG_CONTACTS
-                        | MessagesController.DIALOG_FILTER_FLAG_NON_CONTACTS;
-
-            case MENTIONED_CHATS:
-            case LIVE_CHATS:
-            case DELETED_USERS:
-            case ALBUMS:
-            default:
-                return MessagesController.DIALOG_FILTER_FLAG_ALL_CHATS;
+        int flags = tab.dialogFilterFlags;
+        if (archive) {
+            flags = (flags & ~MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_ARCHIVED)
+                    | MessagesController.DIALOG_FILTER_FLAG_ONLY_ARCHIVED;
+        } else {
+            flags = (flags & ~MessagesController.DIALOG_FILTER_FLAG_ONLY_ARCHIVED)
+                    | MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_ARCHIVED;
         }
+        return flags;
     }
 }

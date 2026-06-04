@@ -1316,17 +1316,32 @@ public class MessagesController extends BaseController implements NotificationCe
             if (d.folder_id != 0 && (flags & DIALOG_FILTER_FLAG_EXCLUDE_ARCHIVED) != 0) {
                 return false;
             }
+            if (d.folder_id == 0 && (flags & DIALOG_FILTER_FLAG_ONLY_ARCHIVED) != 0) {
+                return false;
+            }
             MessagesController messagesController = accountInstance.getMessagesController();
             ContactsController contactsController = accountInstance.getContactsController();
-            boolean skip = false;
 
             if ((flags & DIALOG_FILTER_FLAG_EXCLUDE_MUTED) != 0 && messagesController.isDialogMuted(d.id, 0) && d.unread_mentions_count == 0 ||
                     (flags & DIALOG_FILTER_FLAG_EXCLUDE_READ) != 0 && messagesController.getDialogUnreadCount(d) == 0 && !d.unread_mark && d.unread_mentions_count == 0) {
                 return false;
             }
+
+            if ((flags & 0x01000000) != 0) { // MENTIONED_CHATS
+                if (d.unread_mentions_count != 0) {
+                    return true;
+                }
+            }
+            if (DialogObject.isEncryptedDialog(d.id) && (flags & 0x20000000) != 0) { // SECRET_CHATS
+                return true;
+            }
+
             if (dialogId > 0) {
                 TLRPC.User user = messagesController.getUser(dialogId);
                 if (user != null) {
+                    if (user.deleted && (flags & 0x02000000) != 0) { // DELETED_USERS
+                        return true;
+                    }
                     if (!user.bot) {
                         if (user.self || user.contact || contactsController.isContact(dialogId)) {
                             if ((flags & DIALOG_FILTER_FLAG_CONTACTS) != 0) {
@@ -1346,6 +1361,20 @@ public class MessagesController extends BaseController implements NotificationCe
             } else if (dialogId < 0) {
                 TLRPC.Chat chat = messagesController.getChat(-dialogId);
                 if (chat != null) {
+                    if (chat.call_active && chat.call_not_empty && (flags & 0x00800000) != 0) { // LIVE_CHATS
+                        return true;
+                    }
+                    if (ChatObject.hasAdminRights(chat)) {
+                        if (chat.creator) {
+                            if ((flags & 0x80000000) != 0) { // OWNER
+                                return true;
+                            }
+                        } else {
+                            if ((flags & 0x40000000) != 0) { // ADMIN
+                                return true;
+                            }
+                        }
+                    }
                     if (ChatObject.isChannel(chat) && !chat.megagroup) {
                         if ((flags & DIALOG_FILTER_FLAG_CHANNELS) != 0) {
                             return true;
@@ -1353,6 +1382,15 @@ public class MessagesController extends BaseController implements NotificationCe
                     } else {
                         if ((flags & DIALOG_FILTER_FLAG_GROUPS) != 0) {
                             return true;
+                        }
+                        if (TextUtils.isEmpty(chat.username)) {
+                            if ((flags & 0x10000000) != 0) { // PRIVATE_GROUPS
+                                return true;
+                            }
+                        } else {
+                            if ((flags & 0x08000000) != 0) { // PUBLIC_GROUPS
+                                return true;
+                            }
                         }
                     }
                 }
