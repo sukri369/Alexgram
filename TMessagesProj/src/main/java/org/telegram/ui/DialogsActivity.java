@@ -825,21 +825,27 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         // [Alexgram: Tabs by Type] - tracks a confirmed horizontal swipe on the tabs view
         // Used to consume the gesture in archive even at tab boundary (prevents fragment back nav)
         private boolean tabsHorizontalGestureConsumed = false;
+        // [Alexgram: Tabs by Type] - target tab ID for single-page smooth drag animation
+        private int singlePagePendingTabId = -1;
 
         private boolean prepareForMoving(MotionEvent ev, boolean forward) {
             int id = filterTabsView.getNextPageId(forward);
             if (id < 0) {
                 return false;
             }
-            // [Alexgram: Tabs by Type] - archive has only 1 viewPage; do instant tab switch on swipe
+            // [Alexgram: Tabs by Type] - archive has only 1 viewPage;
+            // start real drag tracking so viewPages[0] follows the finger for smooth animation
             if (viewPages.length < 2) {
-                viewPages[0].selectedType = id;
-                switchToCurrentSelectedMode(false);
-                filterTabsView.selectTabWithId(id, 1.0f);
-                // Consume the gesture: reset maybeStartTracking so subsequent ACTION_MOVE events
-                // don't trigger more tab switches (prevents rapid-skipping to the last tab)
+                getParent().requestDisallowInterceptTouchEvent(true);
                 maybeStartTracking = false;
-                return false;
+                startedTracking = true;
+                startedTrackingX = (int) (ev.getX() + additionalOffset);
+                actionBar.setEnabled(false);
+                filterTabsView.setEnabled(false);
+                singlePagePendingTabId = id;
+                animatingForward = forward;
+                showScrollbars(false);
+                return true; // real drag tracking active
             }
             getParent().requestDisallowInterceptTouchEvent(true);
             maybeStartTracking = false;
@@ -1459,36 +1465,51 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                             maybeStartTracking = true;
                             startedTracking = false;
                             viewPages[0].setTranslationX(0);
-                            viewPages[1].setTranslationX(animatingForward ? viewPages[0].getMeasuredWidth() : -viewPages[0].getMeasuredWidth());
-                            filterTabsView.selectTabWithId(viewPages[1].selectedType, 0);
+                            // [Alexgram: Tabs by Type] - guard viewPages[1] for single-page mode
+                            if (viewPages.length > 1) {
+                                viewPages[1].setTranslationX(animatingForward ? viewPages[0].getMeasuredWidth() : -viewPages[0].getMeasuredWidth());
+                                filterTabsView.selectTabWithId(viewPages[1].selectedType, 0);
+                            } else {
+                                filterTabsView.selectTabWithId(viewPages[0].selectedType, 1.0f);
+                                singlePagePendingTabId = -1;
+                            }
                         }
                     }
                     if (maybeStartTracking && !startedTracking) {
                         float touchSlop = AndroidUtilities.getPixelsInCM(0.3f, true);
                         int dxLocal = (int) (ev.getX() - startedTrackingX);
                         if (Math.abs(dxLocal) >= touchSlop && Math.abs(dxLocal) > dy) {
-                            // [Alexgram: Tabs by Type] - mark horizontal gesture as consumed so the
-                            // archive doesn't close when swiping at a tab boundary
+                            // [Alexgram: Tabs by Type] - mark horizontal gesture consumed + prevent
+                            // parent from intercepting (stops archive from closing on boundary swipe)
                             tabsHorizontalGestureConsumed = true;
+                            getParent().requestDisallowInterceptTouchEvent(true);
                             prepareForMoving(ev, dx < 0);
                         }
                     } else if (startedTracking) {
                         viewPages[0].setTranslationX(dx);
-                        if (animatingForward) {
-                            viewPages[1].setTranslationX(viewPages[0].getMeasuredWidth() + dx);
+                        // [Alexgram: Tabs by Type] - single-page mode: just translate page + update tab
+                        if (viewPages.length < 2) {
+                            float scrollProgress = Math.abs(dx) / (float) viewPages[0].getMeasuredWidth();
+                            if (singlePagePendingTabId >= 0) {
+                                filterTabsView.selectTabWithId(singlePagePendingTabId, scrollProgress);
+                            }
                         } else {
-                            viewPages[1].setTranslationX(dx - viewPages[0].getMeasuredWidth());
-                        }
-                        float scrollProgress = Math.abs(dx) / (float) viewPages[0].getMeasuredWidth();
-                        if (viewPages[1].isLocked && scrollProgress > 0.3f) {
-                            dispatchTouchEvent(MotionEvent.obtain(0, 0, MotionEvent.ACTION_CANCEL, 0, 0, 0));
-                            filterTabsView.shakeLock(viewPages[1].selectedType);
-                            AndroidUtilities.runOnUIThread(() -> {
-                                showDialog(new LimitReachedBottomSheet(DialogsActivity.this, getContext(), LimitReachedBottomSheet.TYPE_FOLDERS, currentAccount, null));
-                            }, 200);
-                            return false;
-                        } else {
-                            filterTabsView.selectTabWithId(viewPages[1].selectedType, scrollProgress);
+                            if (animatingForward) {
+                                viewPages[1].setTranslationX(viewPages[0].getMeasuredWidth() + dx);
+                            } else {
+                                viewPages[1].setTranslationX(dx - viewPages[0].getMeasuredWidth());
+                            }
+                            float scrollProgress = Math.abs(dx) / (float) viewPages[0].getMeasuredWidth();
+                            if (viewPages[1].isLocked && scrollProgress > 0.3f) {
+                                dispatchTouchEvent(MotionEvent.obtain(0, 0, MotionEvent.ACTION_CANCEL, 0, 0, 0));
+                                filterTabsView.shakeLock(viewPages[1].selectedType);
+                                AndroidUtilities.runOnUIThread(() -> {
+                                    showDialog(new LimitReachedBottomSheet(DialogsActivity.this, getContext(), LimitReachedBottomSheet.TYPE_FOLDERS, currentAccount, null));
+                                }, 200);
+                                return false;
+                            } else {
+                                filterTabsView.selectTabWithId(viewPages[1].selectedType, scrollProgress);
+                            }
                         }
                     }
                 } else if (ev == null || ev.getPointerId(0) == startedTrackingPointerId && (ev.getAction() == MotionEvent.ACTION_CANCEL || ev.getAction() == MotionEvent.ACTION_UP || ev.getAction() == MotionEvent.ACTION_POINTER_UP)) {
@@ -1509,95 +1530,164 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     }
                     if (startedTracking) {
                         float x = viewPages[0].getX();
-                        tabsAnimation = new AnimatorSet();
-                        if (viewPages[1].isLocked) {
-                            backAnimation = true;
+
+                        // [Alexgram: Tabs by Type] - single-page (archive) smooth slide animation
+                        if (viewPages.length < 2) {
+                            final int slideWidth = viewPages[0].getMeasuredWidth();
+                            final boolean wasForward = animatingForward;
+                            final int finalTabId = singlePagePendingTabId;
+                            final boolean commitSwitch;
+                            if (ev != null && ev.getAction() != MotionEvent.ACTION_CANCEL
+                                    && Math.abs(velX) >= 1500 && Math.abs(velX) > Math.abs(velY)) {
+                                commitSwitch = wasForward ? velX < 0 : velX > 0;
+                            } else {
+                                commitSwitch = Math.abs(x) >= slideWidth / 3.0f;
+                            }
+                            float dist = commitSwitch ? slideWidth - Math.abs(x) : Math.abs(x);
+                            float spd = Math.abs(velX);
+                            int dur = spd > 0 ? Math.min(350, (int) (dist / spd * 1000)) : 200;
+                            dur = Math.max(80, Math.min(350, dur));
+                            final int animDur = dur;
+
+                            if (commitSwitch && finalTabId >= 0) {
+                                // Slide current content off-screen
+                                viewPages[0].animate()
+                                        .translationX(wasForward ? -slideWidth : slideWidth)
+                                        .setDuration(animDur)
+                                        .setInterpolator(interpolator)
+                                        .withEndAction(() -> {
+                                            // Switch content while off-screen
+                                            viewPages[0].selectedType = finalTabId;
+                                            switchToCurrentSelectedMode(false);
+                                            filterTabsView.selectTabWithId(finalTabId, 1.0f);
+                                            // Enter from the opposite side
+                                            viewPages[0].setTranslationX(wasForward ? slideWidth : -slideWidth);
+                                            // Slide back in
+                                            viewPages[0].animate()
+                                                    .translationX(0)
+                                                    .setDuration(animDur)
+                                                    .setInterpolator(interpolator)
+                                                    .withEndAction(() -> {
+                                                        showScrollbars(true);
+                                                        tabsAnimationInProgress = false;
+                                                        maybeStartTracking = false;
+                                                        actionBar.setEnabled(true);
+                                                        filterTabsView.setEnabled(true);
+                                                        singlePagePendingTabId = -1;
+                                                        checkListLoad(viewPages[0]);
+                                                        updateHomeDrawerAvailability();
+                                                    }).start();
+                                        }).start();
+                                tabsAnimationInProgress = true;
+                            } else {
+                                // Snap back to original position
+                                filterTabsView.selectTabWithId(viewPages[0].selectedType, 1.0f);
+                                viewPages[0].animate()
+                                        .translationX(0)
+                                        .setDuration(animDur)
+                                        .setInterpolator(interpolator)
+                                        .withEndAction(() -> {
+                                            showScrollbars(true);
+                                            maybeStartTracking = false;
+                                            actionBar.setEnabled(true);
+                                            filterTabsView.setEnabled(true);
+                                            singlePagePendingTabId = -1;
+                                        }).start();
+                            }
+                            startedTracking = false;
+                            singlePagePendingTabId = -1;
                         } else {
-                            if (additionalOffset != 0) {
-                                if (Math.abs(velX) > 1500) {
-                                    backAnimation = animatingForward ? velX > 0 : velX < 0;
-                                } else {
-                                    if (animatingForward) {
-                                        backAnimation = (viewPages[1].getX() > (viewPages[0].getMeasuredWidth() >> 1));
+                            // ── 2-page mode: existing smooth slide animation ──
+                            tabsAnimation = new AnimatorSet();
+                            if (viewPages[1].isLocked) {
+                                backAnimation = true;
+                            } else {
+                                if (additionalOffset != 0) {
+                                    if (Math.abs(velX) > 1500) {
+                                        backAnimation = animatingForward ? velX > 0 : velX < 0;
                                     } else {
-                                        backAnimation = (viewPages[0].getX() < (viewPages[0].getMeasuredWidth() >> 1));
+                                        if (animatingForward) {
+                                            backAnimation = (viewPages[1].getX() > (viewPages[0].getMeasuredWidth() >> 1));
+                                        } else {
+                                            backAnimation = (viewPages[0].getX() < (viewPages[0].getMeasuredWidth() >> 1));
+                                        }
                                     }
+                                } else {
+                                    backAnimation = Math.abs(x) < viewPages[0].getMeasuredWidth() / 3.0f && (Math.abs(velX) < 3500 || Math.abs(velX) < Math.abs(velY));
+                                }
+                            }
+                            float dx;
+                            if (backAnimation) {
+                                dx = Math.abs(x);
+                                if (animatingForward) {
+                                    tabsAnimation.playTogether(
+                                            ObjectAnimator.ofFloat(viewPages[0], View.TRANSLATION_X, 0),
+                                            ObjectAnimator.ofFloat(viewPages[1], View.TRANSLATION_X, viewPages[1].getMeasuredWidth())
+                                    );
+                                } else {
+                                    tabsAnimation.playTogether(
+                                            ObjectAnimator.ofFloat(viewPages[0], View.TRANSLATION_X, 0),
+                                            ObjectAnimator.ofFloat(viewPages[1], View.TRANSLATION_X, -viewPages[1].getMeasuredWidth())
+                                    );
                                 }
                             } else {
-                                backAnimation = Math.abs(x) < viewPages[0].getMeasuredWidth() / 3.0f && (Math.abs(velX) < 3500 || Math.abs(velX) < Math.abs(velY));
-                            }
-                        }
-                        float dx;
-                        if (backAnimation) {
-                            dx = Math.abs(x);
-                            if (animatingForward) {
-                                tabsAnimation.playTogether(
-                                        ObjectAnimator.ofFloat(viewPages[0], View.TRANSLATION_X, 0),
-                                        ObjectAnimator.ofFloat(viewPages[1], View.TRANSLATION_X, viewPages[1].getMeasuredWidth())
-                                );
-                            } else {
-                                tabsAnimation.playTogether(
-                                        ObjectAnimator.ofFloat(viewPages[0], View.TRANSLATION_X, 0),
-                                        ObjectAnimator.ofFloat(viewPages[1], View.TRANSLATION_X, -viewPages[1].getMeasuredWidth())
-                                );
-                            }
-                        } else {
-                            dx = viewPages[0].getMeasuredWidth() - Math.abs(x);
-                            if (animatingForward) {
-                                tabsAnimation.playTogether(
-                                        ObjectAnimator.ofFloat(viewPages[0], View.TRANSLATION_X, -viewPages[0].getMeasuredWidth()),
-                                        ObjectAnimator.ofFloat(viewPages[1], View.TRANSLATION_X, 0)
-                                );
-                            } else {
-                                tabsAnimation.playTogether(
-                                        ObjectAnimator.ofFloat(viewPages[0], View.TRANSLATION_X, viewPages[0].getMeasuredWidth()),
-                                        ObjectAnimator.ofFloat(viewPages[1], View.TRANSLATION_X, 0)
-                                );
-                            }
-                        }
-                        tabsAnimation.setInterpolator(interpolator);
-
-                        int width = getMeasuredWidth();
-                        int halfWidth = width / 2;
-                        float distanceRatio = Math.min(1.0f, 1.0f * dx / (float) width);
-                        float distance = (float) halfWidth + (float) halfWidth * AndroidUtilities.distanceInfluenceForSnapDuration(distanceRatio);
-                        velX = Math.abs(velX);
-                        int duration;
-                        if (velX > 0) {
-                            duration = 4 * Math.round(1000.0f * Math.abs(distance / velX));
-                        } else {
-                            float pageDelta = dx / getMeasuredWidth();
-                            duration = (int) ((pageDelta + 1.0f) * 100.0f);
-                        }
-                        duration = Math.max(150, Math.min(duration, 600));
-
-                        tabsAnimation.setDuration(duration);
-                        tabsAnimation.addListener(new AnimatorListenerAdapter() {
-                            @Override
-                            public void onAnimationEnd(Animator animator) {
-                                tabsAnimation = null;
-                                if (!backAnimation) {
-                                    ViewPage tempPage = viewPages[0];
-                                    viewPages[0] = viewPages[1];
-                                    viewPages[1] = tempPage;
-                                    filterTabsView.selectTabWithId(viewPages[0].selectedType, 1.0f);
-                                    updateCounters(false);
-                                    viewPages[0].dialogsAdapter.resume();
-                                    viewPages[1].dialogsAdapter.pause();
+                                dx = viewPages[0].getMeasuredWidth() - Math.abs(x);
+                                if (animatingForward) {
+                                    tabsAnimation.playTogether(
+                                            ObjectAnimator.ofFloat(viewPages[0], View.TRANSLATION_X, -viewPages[0].getMeasuredWidth()),
+                                            ObjectAnimator.ofFloat(viewPages[1], View.TRANSLATION_X, 0)
+                                    );
+                                } else {
+                                    tabsAnimation.playTogether(
+                                            ObjectAnimator.ofFloat(viewPages[0], View.TRANSLATION_X, viewPages[0].getMeasuredWidth()),
+                                            ObjectAnimator.ofFloat(viewPages[1], View.TRANSLATION_X, 0)
+                                    );
                                 }
-                                viewPages[1].setVisibility(View.GONE);
-                                showScrollbars(true);
-                                tabsAnimationInProgress = false;
-                                maybeStartTracking = false;
-                                actionBar.setEnabled(true);
-                                filterTabsView.setEnabled(true);
-                                checkListLoad(viewPages[0]);
-                                updateHomeDrawerAvailability();
                             }
-                        });
-                        tabsAnimation.start();
-                        tabsAnimationInProgress = true;
-                        startedTracking = false;
+                            tabsAnimation.setInterpolator(interpolator);
+
+                            int width = getMeasuredWidth();
+                            int halfWidth = width / 2;
+                            float distanceRatio = Math.min(1.0f, 1.0f * dx / (float) width);
+                            float distance = (float) halfWidth + (float) halfWidth * AndroidUtilities.distanceInfluenceForSnapDuration(distanceRatio);
+                            velX = Math.abs(velX);
+                            int duration;
+                            if (velX > 0) {
+                                duration = 4 * Math.round(1000.0f * Math.abs(distance / velX));
+                            } else {
+                                float pageDelta = dx / getMeasuredWidth();
+                                duration = (int) ((pageDelta + 1.0f) * 100.0f);
+                            }
+                            duration = Math.max(150, Math.min(duration, 600));
+
+                            tabsAnimation.setDuration(duration);
+                            tabsAnimation.addListener(new AnimatorListenerAdapter() {
+                                @Override
+                                public void onAnimationEnd(Animator animator) {
+                                    tabsAnimation = null;
+                                    if (!backAnimation) {
+                                        ViewPage tempPage = viewPages[0];
+                                        viewPages[0] = viewPages[1];
+                                        viewPages[1] = tempPage;
+                                        filterTabsView.selectTabWithId(viewPages[0].selectedType, 1.0f);
+                                        updateCounters(false);
+                                        viewPages[0].dialogsAdapter.resume();
+                                        viewPages[1].dialogsAdapter.pause();
+                                    }
+                                    viewPages[1].setVisibility(View.GONE);
+                                    showScrollbars(true);
+                                    tabsAnimationInProgress = false;
+                                    maybeStartTracking = false;
+                                    actionBar.setEnabled(true);
+                                    filterTabsView.setEnabled(true);
+                                    checkListLoad(viewPages[0]);
+                                    updateHomeDrawerAvailability();
+                                }
+                            });
+                            tabsAnimation.start();
+                            tabsAnimationInProgress = true;
+                            startedTracking = false;
+                        } // end 2-page block
                     } else {
                         maybeStartTracking = false;
                         actionBar.setEnabled(true);
