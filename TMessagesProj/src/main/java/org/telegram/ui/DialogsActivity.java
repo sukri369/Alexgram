@@ -347,6 +347,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     // [Alexgram: Hidden Chats] - Start
     private String customTitle;
     // [Alexgram: Hidden Chats] - End
+    // [Alexgram: Tabs by Type] - target tab ID for single-page smooth drag animation
+    private int singlePagePendingTabId = -1;
 
     private TLRPC.RequestPeerType requestPeerType;
     private long requestPeerBotId;
@@ -463,7 +465,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 if (tabsAnimationInProgress) {
                     if (viewPages[0] == this) {
                         float scrollProgress = Math.abs(viewPages[0].getTranslationX()) / (float) viewPages[0].getMeasuredWidth();
-                        filterTabsView.selectTabWithId(viewPages[1].selectedType, scrollProgress);
+                        if (viewPages.length > 1) {
+                            filterTabsView.selectTabWithId(viewPages[1].selectedType, scrollProgress);
+                        } else if (singlePagePendingTabId >= 0) {
+                            filterTabsView.selectTabWithId(singlePagePendingTabId, scrollProgress);
+                        }
                     }
                 }
                 blur3_InvalidateBlur();
@@ -825,8 +831,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         // [Alexgram: Tabs by Type] - tracks a confirmed horizontal swipe on the tabs view
         // Used to consume the gesture in archive even at tab boundary (prevents fragment back nav)
         private boolean tabsHorizontalGestureConsumed = false;
-        // [Alexgram: Tabs by Type] - target tab ID for single-page smooth drag animation
-        private int singlePagePendingTabId = -1;
 
         private boolean prepareForMoving(MotionEvent ev, boolean forward) {
             int id = filterTabsView.getNextPageId(forward);
