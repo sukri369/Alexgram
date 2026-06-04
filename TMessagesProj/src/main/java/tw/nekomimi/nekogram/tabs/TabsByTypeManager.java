@@ -27,6 +27,7 @@ public class TabsByTypeManager {
 
     /** Base ID for virtual tab-type filters — must never clash with real folder IDs */
     public static final int VIRTUAL_ID_BASE = -20000;
+    public static final int VIRTUAL_ID_BASE_ARCHIVE = -30000;
 
     private static TabsByTypeManager[] instances = new TabsByTypeManager[UserConfig.MAX_ACCOUNT_COUNT];
 
@@ -57,6 +58,9 @@ public class TabsByTypeManager {
         removeVirtualFilters(mc.dialogFilters);
         if (settings.isEnabled(false)) {
             injectVirtualFilters(mc.dialogFilters, false);
+        }
+        if (settings.isEnabled(true)) {
+            injectVirtualFilters(mc.dialogFilters, true);
         }
     }
 
@@ -120,7 +124,7 @@ public class TabsByTypeManager {
 
         MessagesController.DialogFilter f = new MessagesController.DialogFilter();
         // Unique negative ID per tab type — cannot be 0 (that is the "All Chats" default)
-        f.id = VIRTUAL_ID_BASE - tab.ordinal();
+        f.id = (archive ? VIRTUAL_ID_BASE_ARCHIVE : VIRTUAL_ID_BASE) - tab.ordinal();
         f.name = tab.getTitle(ctx);
         f.emoticon = null;
         f.order = 10000 + tab.ordinal();

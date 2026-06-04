@@ -3631,7 +3631,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
         if (
             (initialDialogsType == DIALOGS_TYPE_DEFAULT && !onlySelect || initialDialogsType == DIALOGS_TYPE_FORWARD) &&
-            folderId == 0 && TextUtils.isEmpty(searchString)
+            (folderId == 0 || (folderId == 1 && tw.nekomimi.nekogram.tabs.TabsByTypeSettings.getInstance().isEnabledInArchive())) && TextUtils.isEmpty(searchString)
         ) {
             filterTabsView = new FilterTabsView(context, resourceProvider) {
                 @Override
@@ -3711,7 +3711,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         return;
                     }
 
-                    ArrayList<MessagesController.DialogFilter> dialogFilters = getMessagesController().getDialogFilters();
+                    ArrayList<MessagesController.DialogFilter> dialogFilters = getActiveDialogFilters();
                     if (!tab.isDefault && (tab.id < 0 || tab.id >= dialogFilters.size())) {
                         return;
                     }
@@ -3768,11 +3768,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     if (tabId == filterTabsView.getDefaultTabId()) {
                         return getMessagesStorage().getMainUnreadCount();
                     }
-                    ArrayList<MessagesController.DialogFilter> dialogFilters = getMessagesController().getDialogFilters();
+                    ArrayList<MessagesController.DialogFilter> dialogFilters = getActiveDialogFilters();
                     if (tabId < 0 || tabId >= dialogFilters.size()) {
                         return 0;
                     }
-                    return getMessagesController().getDialogFilters().get(tabId).unreadCount;
+                    return dialogFilters.get(tabId).unreadCount;
                 }
 
                 @Override
@@ -3793,7 +3793,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     if (tabView.getId() == filterTabsView.getDefaultTabId()) {
                         dialogFilter = null;
                     } else {
-                        ArrayList<MessagesController.DialogFilter> dialogFilters = getMessagesController().getDialogFilters();
+                        ArrayList<MessagesController.DialogFilter> dialogFilters = getActiveDialogFilters();
                         final int index = tabView.getId();
                         if (dialogFilters != null && index >= 0 && index < dialogFilters.size()) {
                             dialogFilter = dialogFilters.get(tabView.getId());
@@ -3819,7 +3819,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     // [Alexgram: Hidden Chats] - End
                     MessagesController.DialogFilter filter = null;
                     if (dialogFilter != null) {
-                        filter = getMessagesController().getDialogFilters().get(tabView.getId());
+                        filter = getActiveDialogFilters().get(tabView.getId());
                         if (filter != null) {
                             for (int i = 0; i < dialogs.size(); i++) {
                                 if (!filter.includesDialog(getAccountInstance(), dialogs.get(i).id)) {
@@ -3895,11 +3895,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                                     return PixelFormat.TRANSPARENT;
                                 }
                             })
-                            .addIf(getMessagesController().getDialogFilters().size() > 1, R.drawable.tabs_reorder, LocaleController.getString(R.string.FilterReorder), () -> {
+                            .addIf(getActiveDialogFilters().size() > 1, R.drawable.tabs_reorder, LocaleController.getString(R.string.FilterReorder), () -> {
                                 filterTabsView.setIsEditing(true);
                                 showDoneItem(true);
                             })
-                            .add(R.drawable.msg_edit, defaultTab ? LocaleController.getString(R.string.FilterEditAll) : LocaleController.getString(R.string.FilterEdit), () -> {
+                            .addIf(!tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(dialogFilter), R.drawable.msg_edit, defaultTab ? LocaleController.getString(R.string.FilterEditAll) : LocaleController.getString(R.string.FilterEdit), () -> {
                                 presentFragment(defaultTab ? new FiltersSetupActivity() : new FilterCreateActivity(dialogFilter));
                             })
                             .addIf(dialogFilter != null && !dialogs.isEmpty(), muteAll ? R.drawable.msg_mute : R.drawable.msg_unmute, muteAll ? getString(R.string.FilterMuteAll) : getString(R.string.FilterUnmuteAll), () -> {
@@ -3923,14 +3923,14 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                             .addIf(hasUnread, R.drawable.msg_markread, LocaleController.getString(R.string.MarkAllAsRead), () -> {
                                 markDialogsAsRead(dialogs);
                             })
-                            .addIf(hasShare, R.drawable.msg_share, FilterCreateActivity.withNew(filter != null && filter.isMyChatlist() ? -1 : 0, LocaleController.getString(R.string.LinkActionShare), true), () -> {
+                            .addIf(hasShare && !tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(filter), R.drawable.msg_share, FilterCreateActivity.withNew(filter != null && filter.isMyChatlist() ? -1 : 0, LocaleController.getString(R.string.LinkActionShare), true), () -> {
                                 if (shareEmpty[0]) {
                                     presentFragment(new FilterChatlistActivity(finalFilter, null));
                                 } else {
                                     FilterCreateActivity.FilterInvitesBottomSheet.show(DialogsActivity.this, finalFilter, null);
                                 }
                             })
-                            .addIf(!defaultTab, R.drawable.msg_delete, LocaleController.getString(R.string.FilterDeleteItem), true, () -> {
+                            .addIf(!defaultTab && !tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(dialogFilter), R.drawable.msg_delete, LocaleController.getString(R.string.FilterDeleteItem), true, () -> {
                                 showDeleteAlert(dialogFilter);
                             })
                             .setDimAlpha(0x60)
@@ -3948,7 +3948,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
                 @Override
                 public void onDeletePressed(int id) {
-                    showDeleteAlert(getMessagesController().getDialogFilters().get(id));
+                    MessagesController.DialogFilter f = getActiveDialogFilters().size() > id ? getActiveDialogFilters().get(id) : null;
+                    if (f != null && !tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(f)) {
+                        showDeleteAlert(f);
+                    }
                 }
 
                 @Override
@@ -4101,7 +4104,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     });
                     showDialog(sheet);
                 } else if (id == remove_from_folder) {
-                    MessagesController.DialogFilter filter = getMessagesController().getDialogFilters().get(viewPages[0].selectedType);
+                    MessagesController.DialogFilter filter = getActiveDialogFilters().get(viewPages[0].selectedType);
                     ArrayList<Long> neverShow = FiltersListBottomSheet.getDialogsCount(DialogsActivity.this, filter, selectedDialogs, false, false);
 
                     int currentCount;
@@ -7003,7 +7006,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             }
         }
         int index = filterTabsView.getTabsCount() - 1;
-        ArrayList<MessagesController.DialogFilter> filters = getMessagesController().getDialogFilters();
+        ArrayList<MessagesController.DialogFilter> filters = getActiveDialogFilters();
         for (int i = 0; i < filters.size(); ++i) {
             if (filters.get(i).id == fid) {
                 index = i;
@@ -7027,10 +7030,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             viewPages[a].listView.stopScroll();
         }
         int a = animated ? 1 : 0;
-        if (viewPages[a].selectedType < 0 || viewPages[a].selectedType >= getMessagesController().getDialogFilters().size()) {
+        ArrayList<MessagesController.DialogFilter> activeFilters = getActiveDialogFilters();
+        if (viewPages[a].selectedType < 0 || viewPages[a].selectedType >= activeFilters.size()) {
             return;
         }
-        MessagesController.DialogFilter filter = getMessagesController().getDialogFilters().get(viewPages[a].selectedType);
+        MessagesController.DialogFilter filter = activeFilters.get(viewPages[a].selectedType);
         if (filter.isDefault()) {
             viewPages[a].dialogsType = initialDialogsType;
             viewPages[a].listView.updatePullState();
@@ -7076,7 +7080,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             filterOptions.dismiss();
             filterOptions = null;
         }
-        final ArrayList<MessagesController.DialogFilter> filters = getMessagesController().getDialogFilters();
+        final ArrayList<MessagesController.DialogFilter> filters = getActiveDialogFilters();
         if (filters.size() > 1) {
             if (force || filterTabsView.getVisibility() != View.VISIBLE) {
                 boolean animatedUpdateItems = animated;
@@ -8062,7 +8066,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         boolean load = false;
         boolean loadFromCache = false;
         if (viewPage.dialogsType == DIALOGS_TYPE_FOLDER1 || viewPage.dialogsType == DIALOGS_TYPE_FOLDER2) {
-            ArrayList<MessagesController.DialogFilter> dialogFilters = getMessagesController().getDialogFilters();
+            ArrayList<MessagesController.DialogFilter> dialogFilters = getActiveDialogFilters();
             if (viewPage.selectedType >= 0 && viewPage.selectedType < dialogFilters.size()) {
                 MessagesController.DialogFilter filter = dialogFilters.get(viewPage.selectedType);
                 if ((filter.flags & MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_ARCHIVED) == 0) {
@@ -8745,11 +8749,12 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             scrollView.addView(linearLayout);
             final boolean backButtonAtTop = true;
 
-            final int foldersCount = getMessagesController().dialogFilters.size();
+            final ArrayList<MessagesController.DialogFilter> allFolders = getMessagesController().getDialogFilters();
+            final int foldersCount = allFolders.size();
             ActionBarMenuSubItem lastItem = null;
             for (int i = 0; i < foldersCount; ++i) {
-                MessagesController.DialogFilter folder = getMessagesController().dialogFilters.get(i);
-                if (folder.isDefault()) {
+                MessagesController.DialogFilter folder = allFolders.get(i);
+                if (folder.isDefault() || tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(folder)) {
                     continue;
                 }
                 final boolean contains = folder.includesDialog(AccountInstance.getInstance(currentAccount), dialogId);
@@ -11870,6 +11875,53 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     public boolean isArchive() {
         return folderId == 1;
+    }
+
+    public ArrayList<MessagesController.DialogFilter> getActiveDialogFilters() {
+        ArrayList<MessagesController.DialogFilter> allFilters = getMessagesController().getDialogFilters();
+        ArrayList<MessagesController.DialogFilter> activeFilters = new ArrayList<>();
+        if (allFilters.isEmpty()) {
+            return activeFilters;
+        }
+        MessagesController.DialogFilter defaultFilter = null;
+        for (int a = 0; a < allFilters.size(); a++) {
+            if (allFilters.get(a).isDefault()) {
+                defaultFilter = allFilters.get(a);
+                break;
+            }
+        }
+        if (folderId == 0) {
+            if (defaultFilter != null) {
+                activeFilters.add(defaultFilter);
+            }
+            for (int a = 0; a < allFilters.size(); a++) {
+                MessagesController.DialogFilter filter = allFilters.get(a);
+                if (filter.isDefault()) {
+                    continue;
+                }
+                if (!tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(filter) || 
+                    (filter.flags & MessagesController.DIALOG_FILTER_FLAG_ONLY_ARCHIVED) == 0) {
+                    activeFilters.add(filter);
+                }
+            }
+        } else if (folderId == 1) {
+            if (defaultFilter != null) {
+                activeFilters.add(defaultFilter);
+            }
+            for (int a = 0; a < allFilters.size(); a++) {
+                MessagesController.DialogFilter filter = allFilters.get(a);
+                if (filter.isDefault()) {
+                    continue;
+                }
+                if (tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(filter) && 
+                    (filter.flags & MessagesController.DIALOG_FILTER_FLAG_ONLY_ARCHIVED) != 0) {
+                    activeFilters.add(filter);
+                }
+            }
+        } else {
+            activeFilters.addAll(allFilters);
+        }
+        return activeFilters;
     }
 
     public int getType() {
