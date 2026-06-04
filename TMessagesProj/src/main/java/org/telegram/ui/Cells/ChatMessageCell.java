@@ -21085,6 +21085,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             !botButtons.isEmpty() ||
             drawSideButton != 0 ||
             drawSummarizeButton ||
+            checkQuickEditVisible() ||
             drawNameLayout && nameLayout != null && currentNameEmojiStatusDrawable != null && !currentNameEmojiStatusDrawable.isEmpty() ||
             animatedEmojiStack != null && !animatedEmojiStack.holders.isEmpty() ||
             currentNameStatusDrawable != null && !currentNameStatusDrawable.isEmpty() ||
