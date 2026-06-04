@@ -874,6 +874,21 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
         public boolean checkTabsAnimationInProgress() {
             if (tabsAnimationInProgress) {
+                // [Alexgram: Tabs by Type] - single-page mode uses ViewPropertyAnimator, not tabsAnimation.
+                // Cancel it, snap viewPages[0] to rest, and report NOT in-progress so the 2-page
+                // interrupt block (which accesses viewPages[1] and tabsAnimation) is never entered.
+                if (viewPages.length < 2) {
+                    viewPages[0].animate().cancel();
+                    viewPages[0].setTranslationX(0);
+                    filterTabsView.selectTabWithId(viewPages[0].selectedType, 1.0f);
+                    showScrollbars(true);
+                    tabsAnimationInProgress = false;
+                    maybeStartTracking = false;
+                    actionBar.setEnabled(true);
+                    filterTabsView.setEnabled(true);
+                    singlePagePendingTabId = -1;
+                    return false;
+                }
                 boolean cancel = false;
                 if (backAnimation) {
                     if (Math.abs(viewPages[0].getTranslationX()) < 1) {
