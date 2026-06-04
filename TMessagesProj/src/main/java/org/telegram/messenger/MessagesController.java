@@ -1307,6 +1307,14 @@ public class MessagesController extends BaseController implements NotificationCe
         }
 
         public boolean includesDialog(AccountInstance accountInstance, long dialogId, TLRPC.Dialog d) {
+            boolean res = includesDialogInternal(accountInstance, dialogId, d);
+            if (id <= tw.nekomimi.nekogram.tabs.TabsByTypeManager.VIRTUAL_ID_BASE) {
+                android.util.Log.d("AlexgramFilter", "includesDialog: filterId=" + id + ", name=" + name + ", flags=" + flags + ", d.id=" + d.id + ", dialogId=" + dialogId + ", res=" + res);
+            }
+            return res;
+        }
+
+        private boolean includesDialogInternal(AccountInstance accountInstance, long dialogId, TLRPC.Dialog d) {
             if (neverShow.contains(dialogId)) {
                 return false;
             }
