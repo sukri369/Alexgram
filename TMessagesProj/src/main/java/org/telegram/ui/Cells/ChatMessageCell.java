@@ -548,7 +548,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         isSponsoredMessageHidden.setValue(!isVisible, animated);
     }
 
-    private static long lastToastTime;
+
     private static final int SPONSORED_MESSAGE_HIDDEN_ANIMATOR_ID = 0;
     private final BoolAnimator isSponsoredMessageHidden = new BoolAnimator(SPONSORED_MESSAGE_HIDDEN_ANIMATOR_ID, this,
         CubicBezierInterpolator.EASE_OUT_QUINT, 380);
@@ -21641,56 +21641,20 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
 
     // [Alexgram: Quick Edit Icon] - Start
     private boolean checkQuickEditVisible() {
-        boolean showConfig = NekoConfig.showQuickEditIconInChatList.Bool();
-        boolean hasMsg = currentMessageObject != null;
-        boolean sending = hasMsg && currentMessageObject.isSending();
-        boolean sendError = hasMsg && currentMessageObject.isSendError();
-        boolean hasDelegate = delegate != null;
-        boolean canEdit = hasDelegate && delegate.canEditMessage(currentMessageObject);
-        boolean onlyOwn = NekoConfig.quickEditIconOnlyForOwnMessages.Bool();
-        boolean isOut = hasMsg && currentMessageObject.isOutOwner();
-        
-        boolean result = showConfig && hasMsg && !sending && !sendError && canEdit && (!onlyOwn || isOut);
-        
-        if (hasMsg && currentMessageObject.type == 0 && Math.abs(currentMessageObject.messageOwner.date - System.currentTimeMillis() / 1000) < 300) { // TYPE_TEXT
-            android.util.Log.d("QuickEditFix", "TextMsg ID: " + currentMessageObject.getId() + 
-                " | showConfig: " + showConfig + 
-                " | !sending: " + !sending + 
-                " | !sendError: " + !sendError + 
-                " | canEdit: " + canEdit + 
-                " | onlyOwn: " + onlyOwn + 
-                " | isOut: " + isOut + 
-                " | RESULT: " + result);
-
-            if (!result) {
-                final String reason;
-                if (!showConfig) reason = "showConfig=false";
-                else if (sending) reason = "sending=true";
-                else if (sendError) reason = "sendError=true";
-                else if (!hasDelegate) reason = "hasDelegate=false";
-                else if (!canEdit) {
-                    TLRPC.Chat delegateChat = null;
-                    if (delegate instanceof ChatActivity) {
-                        delegateChat = ((ChatActivity) delegate).getCurrentChat();
-                    }
-                    boolean canEditWithChat = currentMessageObject.canEditMessage(delegateChat);
-                    reason = "canEdit=false (msg.canEdit=" + currentMessageObject.canEditMessage(null) + " canEditWithChat=" + canEditWithChat + " reason=" + org.telegram.messenger.MessageObject.canEditMessageDebugReason(currentMessageObject.currentAccount, currentMessageObject.messageOwner, delegateChat, currentMessageObject.scheduled) + ")";
-                }
-                else if (onlyOwn && !isOut) reason = "onlyOwn=true & isOut=false";
-                else reason = "unknown";
-                
-                org.telegram.messenger.AndroidUtilities.runOnUIThread(() -> {
-                    long now = System.currentTimeMillis();
-                    if (now - lastToastTime > 5000) {
-                        lastToastTime = now;
-                        try {
-                            android.widget.Toast.makeText(getContext(), "QuickEdit: " + reason, android.widget.Toast.LENGTH_SHORT).show();
-                        } catch (Exception e) {}
-                    }
-                });
-            }
-        }
-        return result;
+        if (!NekoConfig.showQuickEditIconInChatList.Bool()) return false;
+        MessageObject msg = currentMessageObject;
+        if (msg == null || msg.isSending() || msg.isSendError()) return false;
+        if (NekoConfig.quickEditIconOnlyForOwnMessages.Bool() && !msg.isOutOwner()) return false;
+        if (delegate == null) return false;
+        // Get actual chat for correct permission evaluation (null for private DMs, non-null for groups/channels)
+        TLRPC.Chat chat = delegate instanceof org.telegram.ui.ChatActivity ?
+            ((org.telegram.ui.ChatActivity) delegate).getCurrentChat() : null;
+        // Match context-menu: show when message can be edited within time window OR can always be edited
+        // canEditMessageAnytime() = true for: Saved Messages, channel admins with edit_messages, megagroup admins
+        // canEditMessage()        = true for: outgoing messages within the server-configured time window
+        return (msg.canEditMessage(chat) || msg.canEditMessageAnytime(chat))
+                && msg.type != MessageObject.TYPE_POLL
+                && msg.type != MessageObject.TYPE_STORY;
     }
 
     private void drawQuickEditButton(Canvas canvas) {
@@ -21716,14 +21680,6 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             float y = top + (bottom - top - buttonSize) / 2f;
             quickEditRect.set(x, y, x + buttonSize, y + buttonSize);
 
-            if (currentMessageObject.type == 0) {
-                android.util.Log.d("QuickEditFix", "TextMsg ID: " + currentMessageObject.getId() + 
-                    " | rect: " + quickEditRect + 
-                    " | left: " + left + 
-                    " | right: " + right + 
-                    " | top: " + top + 
-                    " | bottom: " + bottom);
-            }
 
             canvas.drawRoundRect(quickEditRect, dp(16), dp(16), getThemedPaint(quickEditPressed ? Theme.key_paint_chatActionBackgroundSelected : Theme.key_paint_chatActionBackground));
             if (hasGradientService()) {
