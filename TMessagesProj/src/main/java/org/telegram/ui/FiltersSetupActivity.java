@@ -630,6 +630,10 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
             ArrayList<MessagesController.DialogFilter> filters = getMessagesController().getDialogFilters();
             for (int a = 0, N = filters.size(); a < N; a++) {
                 MessagesController.DialogFilter filter = filters.get(a);
+                // [Alexgram: Tabs by Type] - skip local-only virtual filters
+                if (tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(filter)) {
+                    continue;
+                }
                 req.order.add(filter.id);
             }
             getConnectionsManager().sendRequest(req, (response, error) -> {

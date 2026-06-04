@@ -2234,6 +2234,10 @@ public class MessagesController extends BaseController implements NotificationCe
                     putUsers(users, true);
                     putChats(chats, true);
                     dialogFiltersLoaded = true;
+                    // [Alexgram: Tabs by Type] - Start
+                    tw.nekomimi.nekogram.tabs.TabsByTypeManager.removeVirtualFilters(dialogFilters);
+                    tw.nekomimi.nekogram.tabs.TabsByTypeManager.getInstance(currentAccount).injectFiltersSync();
+                    // [Alexgram: Tabs by Type] - End
                     getNotificationCenter().postNotificationName(NotificationCenter.dialogFiltersUpdated);
                     if (remote == 0) {
                         loadRemoteFilters(false);

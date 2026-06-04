@@ -114,10 +114,14 @@ public class TabsByTypeActivity extends BaseFragment {
                 ((TextCheckCell) view).setChecked(!cur);
                 buildItems();
                 adapter.notifyDataSetChanged();
+                // [Alexgram: Tabs by Type] - notify DialogsActivity to refresh tab strip
+                TabsByTypeManager.getInstance(getCurrentAccount()).applyAndNotify();
             } else if (item.viewType == VT_ENTRY && item.tab != null) {
                 TabsByTypeCell cell = (TabsByTypeCell) view;
                 cell.toggleCheck();
                 settings.setTabEnabled(item.tab, archiveSelected, cell.isChecked());
+                // [Alexgram: Tabs by Type] - notify DialogsActivity to refresh tab strip
+                TabsByTypeManager.getInstance(getCurrentAccount()).applyAndNotify();
             }
         });
 
@@ -307,6 +311,8 @@ public class TabsByTypeActivity extends BaseFragment {
         public void clearView(@NonNull RecyclerView rv, @NonNull RecyclerView.ViewHolder vh) {
             super.clearView(rv, vh);
             vh.itemView.setAlpha(1f);
+            // [Alexgram: Tabs by Type] - refresh tab strip order after drag
+            TabsByTypeManager.getInstance(getCurrentAccount()).applyAndNotify();
         }
     }
 

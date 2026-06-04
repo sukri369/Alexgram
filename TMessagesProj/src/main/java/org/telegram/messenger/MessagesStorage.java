@@ -3681,6 +3681,10 @@ public class MessagesStorage extends BaseController {
             state = database.executeFast("UPDATE dialog_filter_neko SET ord = ?, flags = ? WHERE id = ?");
             for (int a = 0, N = dialogFilters.size(); a < N; a++) {
                 MessagesController.DialogFilter filter = dialogFilters.get(a);
+                // [Alexgram: Tabs by Type] - skip virtual filters, they are local-only
+                if (tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(filter)) {
+                    continue;
+                }
                 state.requery();
                 state.bindInteger(1, filter.order);
                 state.bindInteger(2, filter.flags);
@@ -3699,7 +3703,14 @@ public class MessagesStorage extends BaseController {
     }
 
     public void saveDialogFiltersOrder() {
-        ArrayList<MessagesController.DialogFilter> filtersFinal = new ArrayList<>(getMessagesController().dialogFilters);
+        ArrayList<MessagesController.DialogFilter> allFilters = getMessagesController().dialogFilters;
+        ArrayList<MessagesController.DialogFilter> filtersFinal = new ArrayList<>();
+        for (int i = 0; i < allFilters.size(); i++) {
+            // [Alexgram: Tabs by Type] - exclude virtual local-only tab-type filters
+            if (!tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(allFilters.get(i))) {
+                filtersFinal.add(allFilters.get(i));
+            }
+        }
         storageQueue.postRunnable(() -> {
             dialogFilters.clear();
             dialogFiltersMap.clear();

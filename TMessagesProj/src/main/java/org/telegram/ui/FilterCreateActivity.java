@@ -1082,6 +1082,10 @@ public class FilterCreateActivity extends BaseFragment {
             TLRPC.TL_messages_updateDialogFiltersOrder req = new TLRPC.TL_messages_updateDialogFiltersOrder();
             ArrayList<MessagesController.DialogFilter> filters = fragment.getMessagesController().getDialogFilters();
             for (int a = 0, N = filters.size(); a < N; a++) {
+                // [Alexgram: Tabs by Type] - skip local-only virtual filters
+                if (tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(filters.get(a))) {
+                    continue;
+                }
                 req.order.add(filters.get(a).id);
             }
             fragment.getConnectionsManager().sendRequest(req, null);
