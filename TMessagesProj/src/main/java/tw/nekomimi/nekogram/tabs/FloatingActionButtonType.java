@@ -90,8 +90,7 @@ public enum FloatingActionButtonType {
                 view.setImageResource(R.drawable.fork_fab_contacts);
                 break;
             case CREATE_STORY:
-                view.setAnimation(R.raw.write_contacts_fab_icon_camera, 56, 56);
-                view.playAnimation();
+                view.setImageResource(R.drawable.camera);
                 break;
             case MINI_APPS:
                 view.setImageResource(R.drawable.fork_fab_miniapps_icon);
