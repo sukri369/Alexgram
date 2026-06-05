@@ -9286,12 +9286,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 floatingButton3.updateColors();
                 floatingButton3.setContentDescription(fabType.getTitle(getParentActivity()));
             } else {
-                int drawableId = R.drawable.filled_fab_compose_32;
-                if (filter != null && filter.emoticon != null) {
-                    drawableId = tw.nekomimi.nekogram.folder.FolderIconHelper.getTabIcon(filter.emoticon);
-                }
+                // [Alexgram: Tabs by Type] - always show the default compose icon for real
+                // server-side folders; do NOT reflect the folder's emoticon on the FAB
                 floatingButton3.imageView.clearAnimationDrawable();
-                floatingButton3.setImageResource(drawableId);
+                floatingButton3.setImageResource(R.drawable.filled_fab_compose_32);
                 floatingButton3.updateColors();
                 floatingButton3.setContentDescription(LocaleController.getString(R.string.NewMessageTitle));
             }
