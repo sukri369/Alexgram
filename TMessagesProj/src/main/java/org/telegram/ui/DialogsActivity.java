@@ -15156,33 +15156,12 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             case CONTACTS:
                 presentFragment(new ContactsActivity(null));
                 break;
-            case MUSIC: {
-                Bundle args = new Bundle();
-                args.putLong("user_id", getUserConfig().getClientUserId());
-                presentFragment(new ChatActivity(args));
-                break;
-            }
-            case ALBUMS: {
-                Bundle args = new Bundle();
-                args.putLong("user_id", getUserConfig().getClientUserId());
-                presentFragment(new ChatActivity(args));
-                break;
-            }
             case CREATE_STORY:
                 openStoriesRecorder();
                 break;
             case MINI_APPS:
                 org.telegram.messenger.browser.Browser.openUrl(getParentActivity(), "tg://resolve?domain=tapps");
                 break;
-            case AI_CHAT:
-                org.telegram.messenger.browser.Browser.openUrl(getParentActivity(), "tg://resolve?domain=CopilotBot");
-                break;
-            case TODO: {
-                Bundle args = new Bundle();
-                args.putLong("user_id", getUserConfig().getClientUserId());
-                presentFragment(new ChatActivity(args));
-                break;
-            }
         }
     }
 }

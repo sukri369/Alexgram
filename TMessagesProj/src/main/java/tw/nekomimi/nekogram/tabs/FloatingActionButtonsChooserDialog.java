@@ -44,10 +44,9 @@ public class FloatingActionButtonsChooserDialog extends BottomSheet {
         this.callback = callback;
         this.selectedButton = currentSelection != null ? currentSelection : FloatingActionButtonType.getDefault();
 
+        // [Alexgram: Tabs by Type] - all remaining enum values are valid chooser options
         for (FloatingActionButtonType type : FloatingActionButtonType.values()) {
-            if (type != FloatingActionButtonType.CREATE_ALBUM) {
-                dialogButtons.add(type);
-            }
+            dialogButtons.add(type);
         }
 
         setTitle(LocaleController.getString("create_folder_change_fab_title", R.string.create_folder_change_fab_title), true);
