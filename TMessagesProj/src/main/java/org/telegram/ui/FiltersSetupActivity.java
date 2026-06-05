@@ -579,11 +579,22 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
             if (listView != null) listView.forcedSections.add(AndroidUtilities.pack(start, items.size() - 1));
             items.add(ItemInner.asShadow(null));
         }
-        if (!dialogFilters.isEmpty()) {
+        // [Alexgram: Tabs by Type] - only count real (non-virtual) filters for display and limit
+        int realFilterCount = 0;
+        for (int i = 0; i < dialogFilters.size(); ++i) {
+            if (!tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(dialogFilters.get(i))) {
+                realFilterCount++;
+            }
+        }
+        if (realFilterCount > 0) {
             filtersSectionStart = items.size();
             items.add(ItemInner.asHeader(LocaleController.getString(R.string.Filters)));
             filtersStartPosition = items.size();
             for (int i = 0; i < dialogFilters.size(); ++i) {
+                // [Alexgram: Tabs by Type] - skip virtual filters; they live in the Tabs by Type section
+                if (tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(dialogFilters.get(i))) {
+                    continue;
+                }
                 items.add(ItemInner.asFilter(dialogFilters.get(i)));
                 if (MessagesController.getInstance(currentAccount).folderTags && dialogFilters.get(i).color >= 0) {
                     loadedColors = true;
@@ -591,11 +602,11 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
             }
             filtersSectionEnd = items.size();
 
-            if (listView != null) listView.forcedSections.add(AndroidUtilities.pack(filtersSectionStart, filtersSectionEnd - 1 + (dialogFilters.size() < getMessagesController().dialogFiltersLimitPremium ? 1 : 0)));
+            if (listView != null) listView.forcedSections.add(AndroidUtilities.pack(filtersSectionStart, filtersSectionEnd - 1 + (realFilterCount < getMessagesController().dialogFiltersLimitPremium ? 1 : 0)));
         } else {
             filtersSectionStart = filtersSectionEnd = -1;
         }
-        if (dialogFilters.size() < getMessagesController().dialogFiltersLimitPremium) {
+        if (realFilterCount < getMessagesController().dialogFiltersLimitPremium) {
             items.add(ItemInner.asButton(LocaleController.getString(R.string.CreateNewFilter)));
         }
         items.add(ItemInner.asShadow(null));
@@ -1178,10 +1189,16 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
             int temp = from.filter.order;
             from.filter.order = to.filter.order;
             to.filter.order = temp;
+            // [Alexgram: Tabs by Type] - use indexOf because virtual filters may be in the raw list
+            // so position offset arithmetic is no longer reliable
             ArrayList<MessagesController.DialogFilter> filters = getMessagesController().dialogFilters;
+            int fromIdx = filters.indexOf(from.filter);
+            int toIdx   = filters.indexOf(to.filter);
             try {
-                filters.set(fromPosition - filtersStartPosition, to.filter);
-                filters.set(toPosition - filtersStartPosition, from.filter);
+                if (fromIdx >= 0 && toIdx >= 0) {
+                    filters.set(fromIdx, to.filter);
+                    filters.set(toIdx, from.filter);
+                }
             } catch (Exception ignore) {}
             orderChanged = true;
             updateRows(true);

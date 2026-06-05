@@ -106,10 +106,13 @@ public class TabsByTypeManager {
         List<TabsByTypeEntry> enabled = settings.getEnabledTabs(archive);
         Context ctx = org.telegram.messenger.ApplicationLoader.applicationContext;
 
+        // [Alexgram: Tabs by Type] - compute insert position once and increment per tab;
+        // calling findInsertPosition() inside the loop always returned the same index
+        // (before any already-inserted virtuals), producing a reversed tab order.
+        int insertAt = findInsertPosition(filters);
         for (TabsByTypeEntry tab : enabled) {
             MessagesController.DialogFilter vf = buildVirtualFilter(tab, ctx, archive);
-            int insertAt = findInsertPosition(filters);
-            filters.add(insertAt, vf);
+            filters.add(insertAt++, vf);
         }
     }
 
