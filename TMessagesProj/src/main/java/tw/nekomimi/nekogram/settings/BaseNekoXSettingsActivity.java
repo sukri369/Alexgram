@@ -342,8 +342,10 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
         boolean isOnOff = false;
         if (cellGroup != null && position >= 0 && position < cellGroup.rows.size()) {
             AbstractConfigCell cell = cellGroup.rows.get(position);
-            if (cell instanceof ConfigCellTextCheck || cell instanceof ConfigCellTextCheck2 || cell instanceof ConfigCellTextCheckIcon || cell instanceof ConfigCellCheckBox) {
+            if (cell instanceof ConfigCellTextCheck || cell instanceof ConfigCellTextCheck2 || cell instanceof ConfigCellCheckBox) {
                 isOnOff = true;
+            } else if (cell instanceof ConfigCellTextCheckIcon) {
+                isOnOff = ((ConfigCellTextCheckIcon) cell).getBindConfig() != null;
             }
         }
 
