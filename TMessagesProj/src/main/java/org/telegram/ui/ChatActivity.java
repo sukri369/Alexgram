@@ -33162,29 +33162,12 @@ public class ChatActivity extends BaseFragment implements
 						int copyOptionId = OPTION_COPY;
 						int copyIconRes = R.drawable.msg_copy;
 						if (this.lastMessageMenuStatus.allowCopy) {
-							if (!this.lastMessageMenuStatus.allowCopyPhoto && selectedObject != null && selectedObject.isPhoto() && selectedObject.isWebpage()) {
-								copyOptionId = OPTION_COPY_PHOTO;
-							} else if (this.lastMessageMenuStatus.allowCopyLink) {
-								copyOptionId = OPTION_COPY_LINK;
-							} else if (this.lastMessageMenuStatus.allowCopyLinkPm) {
-								copyOptionId = nkbtn_copy_link_in_pm;
-							} else {
-								copyOptionId = OPTION_COPY;
-							}
+							copyOptionId = OPTION_COPY;
+							copyIconRes = R.drawable.msg_copy;
 						} else if (this.lastMessageMenuStatus.allowCopyPhoto) {
-							if (selectedObject != null && !selectedObject.isSticker()) {
-								copyOptionId = OPTION_COPY_PHOTO;
-							} else {
-								if (this.lastMessageMenuStatus.allowCopyLink) {
-									copyOptionId = OPTION_COPY_LINK;
-								} else if (this.lastMessageMenuStatus.allowCopyLinkPm) {
-									copyOptionId = nkbtn_copy_link_in_pm;
-								} else {
-									copyOptionId = OPTION_COPY_PHOTO;
-								}
-							}
+							copyOptionId = OPTION_COPY_PHOTO;
 							copyIconRes = R.drawable.msg_copy_photo;
-						} else if (this.lastMessageMenuStatus.allowCopyLink && this.lastMessageMenuStatus.allowDelete) {
+						} else if (this.lastMessageMenuStatus.allowCopyLink) {
 							copyOptionId = OPTION_COPY_LINK;
 							copyIconRes = R.drawable.msg_link;
 						} else if (this.lastMessageMenuStatus.allowCopyLinkPm) {
@@ -33499,7 +33482,7 @@ public class ChatActivity extends BaseFragment implements
 					gridContainer.setPadding(0, AndroidUtilities.dp(4), 0, AndroidUtilities.dp(4));
 
 					int totalItems = gridOptions.size();
-					int columns = 4;
+					int columns = Math.min(5, totalItems);
 					int rows = (totalItems + columns - 1) / columns;
 
 					int cellWidth = AndroidUtilities.dp(56);
