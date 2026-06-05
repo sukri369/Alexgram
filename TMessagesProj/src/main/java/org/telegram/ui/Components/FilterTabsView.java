@@ -262,7 +262,7 @@ public class FilterTabsView extends FrameLayout {
 
         private MessagesController.DialogFilter getFilterForTab(Tab tab) {
             if (tab == null) return null;
-            int stableId = positionToStableId.get(currentPosition, -1);
+            int stableId = positionToStableId.get(tab.id, -1);
             if (stableId == -1) return null;
             
             ArrayList<MessagesController.DialogFilter> dialogFilters = 
