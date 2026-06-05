@@ -23111,6 +23111,9 @@ public class ChatActivity extends BaseFragment implements
 			if (headerItem != null) {
 				headerItem.setSubItemShown(open_direct, ChatObject.isChannel(currentChat) && !ChatObject.isMonoForum(currentChat) && currentChat.linked_monoforum_id != 0 && (NaConfig.INSTANCE.getDisableChannelMuteButton().Bool() || ChatObject.canManageMonoForum(currentAccount, -currentChat.linked_monoforum_id)));
 			}
+			if ((updateMask & (1 << 30)) != 0) {
+				updateSecretStatus();
+			}
 		} else if (id == NotificationCenter.didReceiveNewMessages) {
 			FileLog.d("ChatActivity didReceiveNewMessages start");
 			long did = (Long) args[0];
