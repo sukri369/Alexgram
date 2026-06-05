@@ -1596,6 +1596,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                                                         singlePagePendingTabId = -1;
                                                         checkListLoad(viewPages[0]);
                                                         updateHomeDrawerAvailability();
+                                                        // [Alexgram: Tabs by Type] - update FAB icon for new tab
+                                                        updateStoriesPosting();
                                                     }).start();
                                         }).start();
                                 tabsAnimationInProgress = true;
@@ -1702,6 +1704,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                                     filterTabsView.setEnabled(true);
                                     checkListLoad(viewPages[0]);
                                     updateHomeDrawerAvailability();
+                                    // [Alexgram: Tabs by Type] - update FAB icon for new tab
+                                    updateStoriesPosting();
                                 }
                             });
                             tabsAnimation.start();
