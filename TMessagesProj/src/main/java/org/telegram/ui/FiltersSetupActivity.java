@@ -917,6 +917,7 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
         // [Alexgram: Tabs by Type] - helper to build the row cell
         private View createTabsByTypeView(Context ctx) {
             FrameLayout cell = new FrameLayout(ctx);
+            cell.setLayoutParams(new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
             cell.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
             cell.setMinimumHeight(AndroidUtilities.dp(50));
 

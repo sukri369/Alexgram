@@ -207,6 +207,7 @@ public class FilterTabsView extends FrameLayout {
         private int textOffsetX;
         private String currentEmoticon;
         private Drawable icon;
+        private int lastLoadedTabId = -999999;
 
         public boolean animateChange;
         public float changeProgress;
@@ -476,10 +477,29 @@ public class FilterTabsView extends FrameLayout {
             int iconX = 0;
             if (tabType != NekoXConfig.TITLE_TYPE_TEXT) {
                 int emoticonSize = FolderIconHelper.getIconWidth();
-                if (!TextUtils.equals(currentTab.emoticon, currentEmoticon)) {
+                tw.nekomimi.nekogram.tabs.TabsByTypeEntry tabEntry = null;
+                int filterId = currentTab.id;
+                if (filterId <= tw.nekomimi.nekogram.tabs.TabsByTypeManager.VIRTUAL_ID_BASE_ARCHIVE) {
+                    int ordinal = tw.nekomimi.nekogram.tabs.TabsByTypeManager.VIRTUAL_ID_BASE_ARCHIVE - filterId;
+                    if (ordinal >= 0 && ordinal < tw.nekomimi.nekogram.tabs.TabsByTypeEntry.values().length) {
+                        tabEntry = tw.nekomimi.nekogram.tabs.TabsByTypeEntry.values()[ordinal];
+                    }
+                } else if (filterId <= tw.nekomimi.nekogram.tabs.TabsByTypeManager.VIRTUAL_ID_BASE) {
+                    int ordinal = tw.nekomimi.nekogram.tabs.TabsByTypeManager.VIRTUAL_ID_BASE - filterId;
+                    if (ordinal >= 0 && ordinal < tw.nekomimi.nekogram.tabs.TabsByTypeEntry.values().length) {
+                        tabEntry = tw.nekomimi.nekogram.tabs.TabsByTypeEntry.values()[ordinal];
+                    }
+                }
+
+                if (icon == null || !TextUtils.equals(currentTab.emoticon, currentEmoticon) || (tabEntry != null && lastLoadedTabId != currentTab.id)) {
                     currentEmoticon = currentTab.emoticon;
+                    lastLoadedTabId = currentTab.id;
                     android.graphics.Rect bounds = new android.graphics.Rect(0, 0, emoticonSize, emoticonSize);
-                    icon = getResources().getDrawable(FolderIconHelper.getTabIcon(currentTab.id != getDefaultTabId() ? currentTab.emoticon:"\uD83D\uDCAC")).mutate();
+                    if (tabEntry != null) {
+                        icon = getResources().getDrawable(tabEntry.iconResId).mutate();
+                    } else {
+                        icon = getResources().getDrawable(FolderIconHelper.getTabIcon(currentTab.id != getDefaultTabId() ? currentTab.emoticon : "\uD83D\uDCAC")).mutate();
+                    }
                     icon.setBounds(bounds);
                 }
                 if (icon != null) {
@@ -632,6 +652,7 @@ public class FilterTabsView extends FrameLayout {
             }
 
             lastEmoticon = currentEmoticon;
+            lastLoadedTabId = currentTab.id;
             lastTextX = textX;
             lastIconX = iconX;
             lastTabCount = currentTab.counter;
@@ -811,11 +832,58 @@ public class FilterTabsView extends FrameLayout {
                     changed = true;
                 }
 
-                if (lastEmoticon != null && !currentTab.emoticon.equals(lastEmoticon)) {
+                boolean iconChanged = false;
+                tw.nekomimi.nekogram.tabs.TabsByTypeEntry currentTabEntry = null;
+                int currentFilterId = currentTab.id;
+                if (currentFilterId <= tw.nekomimi.nekogram.tabs.TabsByTypeManager.VIRTUAL_ID_BASE_ARCHIVE) {
+                    int ordinal = tw.nekomimi.nekogram.tabs.TabsByTypeManager.VIRTUAL_ID_BASE_ARCHIVE - currentFilterId;
+                    if (ordinal >= 0 && ordinal < tw.nekomimi.nekogram.tabs.TabsByTypeEntry.values().length) {
+                        currentTabEntry = tw.nekomimi.nekogram.tabs.TabsByTypeEntry.values()[ordinal];
+                    }
+                } else if (currentFilterId <= tw.nekomimi.nekogram.tabs.TabsByTypeManager.VIRTUAL_ID_BASE) {
+                    int ordinal = tw.nekomimi.nekogram.tabs.TabsByTypeManager.VIRTUAL_ID_BASE - currentFilterId;
+                    if (ordinal >= 0 && ordinal < tw.nekomimi.nekogram.tabs.TabsByTypeEntry.values().length) {
+                        currentTabEntry = tw.nekomimi.nekogram.tabs.TabsByTypeEntry.values()[ordinal];
+                    }
+                }
+
+                tw.nekomimi.nekogram.tabs.TabsByTypeEntry lastTabEntry = null;
+                int lastFilterId = lastLoadedTabId;
+                if (lastFilterId <= tw.nekomimi.nekogram.tabs.TabsByTypeManager.VIRTUAL_ID_BASE_ARCHIVE) {
+                    int ordinal = tw.nekomimi.nekogram.tabs.TabsByTypeManager.VIRTUAL_ID_BASE_ARCHIVE - lastFilterId;
+                    if (ordinal >= 0 && ordinal < tw.nekomimi.nekogram.tabs.TabsByTypeEntry.values().length) {
+                        lastTabEntry = tw.nekomimi.nekogram.tabs.TabsByTypeEntry.values()[ordinal];
+                    }
+                } else if (lastFilterId <= tw.nekomimi.nekogram.tabs.TabsByTypeManager.VIRTUAL_ID_BASE) {
+                    int ordinal = tw.nekomimi.nekogram.tabs.TabsByTypeManager.VIRTUAL_ID_BASE - lastFilterId;
+                    if (ordinal >= 0 && ordinal < tw.nekomimi.nekogram.tabs.TabsByTypeEntry.values().length) {
+                        lastTabEntry = tw.nekomimi.nekogram.tabs.TabsByTypeEntry.values()[ordinal];
+                    }
+                }
+
+                if (currentTabEntry != null || lastTabEntry != null) {
+                    if (currentFilterId != lastFilterId) {
+                        iconChanged = true;
+                    }
+                } else {
+                    if (lastEmoticon != null && !currentTab.emoticon.equals(lastEmoticon)) {
+                        iconChanged = true;
+                    }
+                }
+
+                if (iconChanged) {
                     int emoticonWidth = FolderIconHelper.getIconWidth();
                     android.graphics.Rect bounds = new android.graphics.Rect(0, 0, emoticonWidth, emoticonWidth);
-                    iconAnimateOutDrawable = getResources().getDrawable(FolderIconHelper.getTabIcon(lastEmoticon)).mutate();
-                    iconAnimateInDrawable = getResources().getDrawable(FolderIconHelper.getTabIcon(currentTab.emoticon)).mutate();
+                    if (lastTabEntry != null) {
+                        iconAnimateOutDrawable = getResources().getDrawable(lastTabEntry.iconResId).mutate();
+                    } else {
+                        iconAnimateOutDrawable = getResources().getDrawable(FolderIconHelper.getTabIcon(lastEmoticon != null ? lastEmoticon : "\uD83D\uDCAC")).mutate();
+                    }
+                    if (currentTabEntry != null) {
+                        iconAnimateInDrawable = getResources().getDrawable(currentTabEntry.iconResId).mutate();
+                    } else {
+                        iconAnimateInDrawable = getResources().getDrawable(FolderIconHelper.getTabIcon(currentTab.emoticon)).mutate();
+                    }
                     iconAnimateOutDrawable.setBounds(bounds);
                     iconAnimateInDrawable.setBounds(bounds);
                     iconAnimateOutDrawable.setTint(textPaint.getColor());
