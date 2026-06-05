@@ -33132,10 +33132,14 @@ public class ChatActivity extends BaseFragment implements
 						for (int i = 0; i < options.size(); i++) {
 							int opt = options.get(i);
 							if (opt == OPTION_COPY_PHOTO || opt == OPTION_COPY_PHOTO_AS_STICKER) {
-								items.remove(i);
-								options.remove(i);
-								icons.remove(i);
-								i--;
+								String optKey = getConfigKeyForOption(opt);
+								int optMode = tw.nekomimi.nekogram.settings.BaseNekoXSettingsActivity.getMessageMenuMode(optKey, false);
+								if (optMode != 1) { // Only remove if mode is NOT Text (1)
+									items.remove(i);
+									options.remove(i);
+									icons.remove(i);
+									i--;
+								}
 							}
 						}
 					}
@@ -33169,7 +33173,7 @@ public class ChatActivity extends BaseFragment implements
 							}
 						} else if (this.lastMessageMenuStatus.allowCopyPhoto) {
 							if (selectedObject != null && !selectedObject.isSticker()) {
-								copyOptionId = OPTION_COPY_PHOTO_AS_STICKER;
+								copyOptionId = OPTION_COPY_PHOTO;
 							} else {
 								if (this.lastMessageMenuStatus.allowCopyLink) {
 									copyOptionId = OPTION_COPY_LINK;
@@ -33208,9 +33212,20 @@ public class ChatActivity extends BaseFragment implements
 						coreItems.add("Forward");
 					}
 
-					gridOptions.addAll(0, coreOptions);
-					gridIcons.addAll(0, coreIcons);
-					gridItems.addAll(0, coreItems);
+					for (int i = coreOptions.size() - 1; i >= 0; i--) {
+						int opt = coreOptions.get(i);
+						int icon = coreIcons.get(i);
+						CharSequence item = coreItems.get(i);
+						if (gridOptions.contains(opt)) {
+							int idx = gridOptions.indexOf(opt);
+							gridOptions.remove(idx);
+							gridIcons.remove(idx);
+							gridItems.remove(idx);
+						}
+						gridOptions.add(0, opt);
+						gridIcons.add(0, icon);
+						gridItems.add(0, item);
+					}
 				}
 				// [Alexgram: Customizable Message Menu] - End
 
@@ -48526,11 +48541,7 @@ public class ChatActivity extends BaseFragment implements
 				}
 				if (!selectedObject.isSponsored() && chatMode != MODE_SCHEDULED && ChatObject.isChannel(currentChat) && !ChatObject.isMonoForum(currentChat) && selectedObject.getDialogId() != mergeDialogId && !selectedObject.isAyuDeleted()) {
 					allowCopyLink = true;
-					if (
-						(!GroupedIconsView.useGroupedIcons() && (NaConfig.INSTANCE.getShowCopyLink().Bool() || selectedObject.isAnyKindOfSticker() || selectedObject.isPoll()))
-						||
-						(GroupedIconsView.useGroupedIcons() && NaConfig.INSTANCE.getShowCopyLink().Bool() && ((!isMessageTextEmpty || hasCaption) && selectedObject.isPhoto() && !selectedObject.isWebpage() || (canDeleteMessage && (!isMessageTextEmpty || selectedObject.isPhoto() || isStaticSticker))))
-					) {
+					if (NaConfig.INSTANCE.getShowCopyLink().Bool() || selectedObject.isAnyKindOfSticker() || selectedObject.isPoll()) {
 						items.add(LocaleController.getString(R.string.CopyLink));
 						options.add(OPTION_COPY_LINK);
 						icons.add(R.drawable.msg_link);
@@ -48538,11 +48549,7 @@ public class ChatActivity extends BaseFragment implements
 				}
 				if (!selectedObject.isSponsored() && chatMode != MODE_SCHEDULED && currentUser != null && selectedObject.getDialogId() != mergeDialogId) {
 					allowCopyLinkPm = true;
-					if (
-						(!GroupedIconsView.useGroupedIcons() && NaConfig.INSTANCE.getShowCopyLink().Bool())
-						||
-						(GroupedIconsView.useGroupedIcons() && NaConfig.INSTANCE.getShowCopyLink().Bool() && (!isMessageTextEmpty && !selectedObject.isPhoto() || selectedObject.isPhoto() && !selectedObject.needDrawBluredPreview() || isStaticSticker))
-					) {
+					if (NaConfig.INSTANCE.getShowCopyLink().Bool()) {
 						items.add(getString(R.string.CopyLink));
 						options.add(nkbtn_copy_link_in_pm);
 						icons.add(R.drawable.msg_link);
@@ -48756,6 +48763,19 @@ public class ChatActivity extends BaseFragment implements
 									options.add(OPTION_COPY_FRAME);
 									icons.add(R.drawable.msg_copy_photo);
 								}
+							}
+						}
+						if (selectedObject.getDocument() != null && selectedObject.getDocument().mime_type != null && !selectedObject.getDocument().mime_type.endsWith("/mp4")) {
+							allowCopyPhoto = true;
+							if (NaConfig.INSTANCE.getShowCopyPhoto().Bool()) {
+								items.add(LocaleController.getString(R.string.CopyPhoto));
+								options.add(OPTION_COPY_PHOTO);
+								icons.add(R.drawable.msg_copy_photo);
+							}
+							if (NaConfig.INSTANCE.getShowCopyAsSticker().Bool()) {
+								items.add(LocaleController.getString(R.string.CopyPhotoAsSticker));
+								options.add(OPTION_COPY_PHOTO_AS_STICKER);
+								icons.add(R.drawable.msg_copy_photo);
 							}
 						}
 						items.add(LocaleController.getString(R.string.SaveToGallery));
