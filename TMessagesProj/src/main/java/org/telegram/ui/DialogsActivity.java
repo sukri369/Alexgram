@@ -9267,42 +9267,18 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             tw.nekomimi.nekogram.tabs.TabsByTypeEntry tabType = tw.nekomimi.nekogram.tabs.TabsByTypeManager.getTabFromFilter(filter);
             if (tabType != null) {
                 tw.nekomimi.nekogram.tabs.FloatingActionButtonType fabType = tw.nekomimi.nekogram.tabs.TabsByTypeSettings.getInstance().getTabFabType(tabType);
-                int drawableId = R.drawable.filled_fab_compose_32;
-                if (fabType == tw.nekomimi.nekogram.tabs.FloatingActionButtonType.CREATE_CHAT) {
-                    drawableId = R.drawable.filled_fab_compose_32;
-                } else if (fabType == tw.nekomimi.nekogram.tabs.FloatingActionButtonType.BOOKMARKS) {
-                    drawableId = R.drawable.fork_drawer_bookmarks;
-                } else if (fabType == tw.nekomimi.nekogram.tabs.FloatingActionButtonType.ARCHIVE) {
-                    drawableId = R.drawable.fork_fab_archive;
-                } else if (fabType == tw.nekomimi.nekogram.tabs.FloatingActionButtonType.CLOUD) {
-                    drawableId = R.drawable.fork_fab_cloud;
-                } else if (fabType == tw.nekomimi.nekogram.tabs.FloatingActionButtonType.MARK_ALL_READ) {
-                    drawableId = R.drawable.fork_fab_mark_all_read;
-                } else if (fabType == tw.nekomimi.nekogram.tabs.FloatingActionButtonType.WALLET) {
-                    drawableId = R.drawable.fork_fab_wallet;
-                } else if (fabType == tw.nekomimi.nekogram.tabs.FloatingActionButtonType.CONTACTS) {
-                    drawableId = R.drawable.fork_fab_contacts;
-                } else if (fabType == tw.nekomimi.nekogram.tabs.FloatingActionButtonType.MUSIC) {
-                    drawableId = R.drawable.fork_fab_music;
-                } else if (fabType == tw.nekomimi.nekogram.tabs.FloatingActionButtonType.ALBUMS) {
-                    drawableId = R.drawable.fork_fab_albums;
-                } else if (fabType == tw.nekomimi.nekogram.tabs.FloatingActionButtonType.CREATE_STORY) {
-                    drawableId = R.drawable.outline_fab_story_24;
-                } else if (fabType == tw.nekomimi.nekogram.tabs.FloatingActionButtonType.MINI_APPS) {
-                    drawableId = R.drawable.fork_fab_miniapps_icon;
-                } else if (fabType == tw.nekomimi.nekogram.tabs.FloatingActionButtonType.AI_CHAT) {
-                    drawableId = R.drawable.fork_fab_ai;
-                } else if (fabType == tw.nekomimi.nekogram.tabs.FloatingActionButtonType.TODO) {
-                    drawableId = R.drawable.fork_fab_todo_icon;
-                }
-                floatingButton3.setImageResource(drawableId);
+                floatingButton3.imageView.clearAnimationDrawable();
+                fabType.bindBig(floatingButton3.imageView);
+                floatingButton3.updateColors();
                 floatingButton3.setContentDescription(fabType.getTitle(getParentActivity()));
             } else {
                 int drawableId = R.drawable.filled_fab_compose_32;
                 if (filter != null && filter.emoticon != null) {
                     drawableId = tw.nekomimi.nekogram.folder.FolderIconHelper.getTabIcon(filter.emoticon);
                 }
+                floatingButton3.imageView.clearAnimationDrawable();
                 floatingButton3.setImageResource(drawableId);
+                floatingButton3.updateColors();
                 floatingButton3.setContentDescription(LocaleController.getString(R.string.NewMessageTitle));
             }
         }

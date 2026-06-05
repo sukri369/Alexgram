@@ -164,6 +164,42 @@ public class TabsByTypeManager {
                 return TabsByTypeEntry.values()[ordinal];
             }
         }
+        
+        // Custom folder fallback matching by flags or name
+        String name = filter.name != null ? filter.name.toLowerCase() : "";
+        int flags = filter.flags;
+        
+        if ((flags & MessagesController.DIALOG_FILTER_FLAG_BOTS) != 0 || name.contains("bot")) {
+            return TabsByTypeEntry.BOTS;
+        }
+        if ((flags & MessagesController.DIALOG_FILTER_FLAG_CHANNELS) != 0 || name.contains("channel")) {
+            return TabsByTypeEntry.CHANNELS;
+        }
+        if ((flags & MessagesController.DIALOG_FILTER_FLAG_GROUPS) != 0 || name.contains("group")) {
+            if ((flags & 0x10000000) != 0 || name.contains("private group")) {
+                return TabsByTypeEntry.PRIVATE_GROUPS;
+            }
+            if ((flags & 0x08000000) != 0 || name.contains("public group")) {
+                return TabsByTypeEntry.PUBLIC_GROUPS;
+            }
+            return TabsByTypeEntry.GROUPS;
+        }
+        if (name.contains("unread")) {
+            return TabsByTypeEntry.UNREAD;
+        }
+        if ((flags & 0x20000000) != 0 || name.contains("secret")) {
+            return TabsByTypeEntry.SECRET_CHATS;
+        }
+        if ((flags & 0x40000000) != 0 || name.contains("admin")) {
+            return TabsByTypeEntry.ADMIN;
+        }
+        if ((flags & 0x80000000) != 0 || name.contains("owner")) {
+            return TabsByTypeEntry.OWNER;
+        }
+        if ((flags & MessagesController.DIALOG_FILTER_FLAG_CONTACTS) != 0 || name.contains("personal") || name.contains("private")) {
+            return TabsByTypeEntry.PERSONAL;
+        }
+        
         return null;
     }
 }
