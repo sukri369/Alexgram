@@ -13070,10 +13070,16 @@ public class ChatActivity extends BaseFragment implements
 
 	public void openForward(boolean fromActionBar) {
 		boolean hasSelectedAyuDeletedMessage = hasSelectedAyuDeletedMessage();
-		if (isPeerNoForwards() || hasSelectedNoforwardsMessage() || hasSelectedAyuDeletedMessage) {
+		// [Alexgram: Allow Forwarding/Copying] - Start
+		boolean blockForward = (isPeerNoForwards() || hasSelectedNoforwardsMessage() || hasSelectedAyuDeletedMessage) && !NaConfig.INSTANCE.getAllowForwardingRestriction().Bool();
+		if (NaConfig.INSTANCE.getAllowForwardingRestriction().Bool()) {
+			blockForward = hasSelectedAyuDeletedMessage && canForwardMessagesCount == 0;
+		}
+		if (blockForward) {
+		// [Alexgram: Allow Forwarding/Copying] - End
 			// We should update text if user changed locale without re-opening chat activity
 			String str;
-			if (isPeerNoForwards()) {
+			if (isPeerNoForwards() || getMessagesController().isPeerNoForwards(getDialogId(), true)) {
 				if (getDialogId() > 0) {
 					str = LocaleController.getString(R.string.ForwardsRestrictedInfoUser);
 				} else if (ChatObject.isChannel(currentChat) && !currentChat.megagroup) {
@@ -20153,7 +20159,12 @@ public class ChatActivity extends BaseFragment implements
 				}
 
 				boolean hasSelectedAyuDeletedMessage = hasSelectedAyuDeletedMessage();
-				boolean noforwards = isPeerNoForwards() || hasSelectedNoforwardsMessage() || hasSelectedAyuDeletedMessage;
+				// [Alexgram: Allow Forwarding/Copying] - Start
+				boolean noforwards = (isPeerNoForwards() || hasSelectedNoforwardsMessage() || hasSelectedAyuDeletedMessage) && !NaConfig.INSTANCE.getAllowForwardingRestriction().Bool();
+				if (NaConfig.INSTANCE.getAllowForwardingRestriction().Bool()) {
+					noforwards = hasSelectedAyuDeletedMessage && canForwardMessagesCount == 0;
+				}
+				// [Alexgram: Allow Forwarding/Copying] - End
 				boolean canForward = chatMode != MODE_SCHEDULED && cantForwardMessagesCount == 0 && !noforwards;
 				boolean showForward = NaConfig.INSTANCE.getActionBarButtonForward().Bool();
 				boolean canSendMessage = ChatObject.canSendMessages(currentChat);
