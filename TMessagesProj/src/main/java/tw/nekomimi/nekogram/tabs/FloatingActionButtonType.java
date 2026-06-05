@@ -70,8 +70,8 @@ public enum FloatingActionButtonType {
                 view.playAnimation();
                 break;
             case BOOKMARKS:
-                // [Alexgram: Tabs by Type] - changed from bookmark ribbon to star icon
-                view.setImageResource(R.drawable.baseline_star_24);
+                // [Alexgram: Tabs by Type] - use white star (fork_fab_star) to match FAB button style
+                view.setImageResource(R.drawable.fork_fab_star);
                 break;
             case ARCHIVE:
                 view.setImageResource(R.drawable.fork_fab_archive);

@@ -5076,7 +5076,12 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         filter = activeFilters.get(selectedType);
                     }
                 }
-                tw.nekomimi.nekogram.tabs.TabsByTypeEntry tabType = tw.nekomimi.nekogram.tabs.TabsByTypeManager.getTabFromFilter(filter);
+                // [Alexgram: Tabs by Type] - only apply custom FAB for virtual tab-type filters,
+                // NOT for real server-side folders that happen to match by flags/name
+                tw.nekomimi.nekogram.tabs.TabsByTypeEntry tabType =
+                        tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(filter)
+                                ? tw.nekomimi.nekogram.tabs.TabsByTypeManager.getTabFromFilter(filter)
+                                : null;
                 if (tabType != null) {
                     tw.nekomimi.nekogram.tabs.FloatingActionButtonType fabType = tw.nekomimi.nekogram.tabs.TabsByTypeSettings.getInstance().getTabFabType(tabType);
                     handleCustomFabClick(fabType);
@@ -9268,7 +9273,12 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     filter = activeFilters.get(selectedType);
                 }
             }
-            tw.nekomimi.nekogram.tabs.TabsByTypeEntry tabType = tw.nekomimi.nekogram.tabs.TabsByTypeManager.getTabFromFilter(filter);
+            // [Alexgram: Tabs by Type] - only apply custom FAB icon for virtual tab-type filters,
+            // NOT for real server-side folders that happen to match by flags/name
+            tw.nekomimi.nekogram.tabs.TabsByTypeEntry tabType =
+                    tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(filter)
+                            ? tw.nekomimi.nekogram.tabs.TabsByTypeManager.getTabFromFilter(filter)
+                            : null;
             if (tabType != null) {
                 tw.nekomimi.nekogram.tabs.FloatingActionButtonType fabType = tw.nekomimi.nekogram.tabs.TabsByTypeSettings.getInstance().getTabFabType(tabType);
                 floatingButton3.imageView.clearAnimationDrawable();
