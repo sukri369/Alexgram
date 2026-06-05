@@ -497,7 +497,7 @@ public class FilterTabsView extends FrameLayout {
                 tw.nekomimi.nekogram.tabs.TabsByTypeEntry tabEntry = tw.nekomimi.nekogram.tabs.TabsByTypeManager.getTabFromFilter(filter);
                 boolean isVirtual = tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(filter);
 
-                if (icon == null || !TextUtils.equals(currentTab.emoticon, currentEmoticon) || (isVirtual && lastLoadedTabId != (filter != null ? filter.id : -999999))) {
+                if (icon == null || !TextUtils.equals(currentTab.emoticon, currentEmoticon) || lastLoadedTabId != (filter != null ? filter.id : -999999)) {
                     currentEmoticon = currentTab.emoticon;
                     lastLoadedTabId = filter != null ? filter.id : -999999;
                     android.graphics.Rect bounds = new android.graphics.Rect(0, 0, emoticonSize, emoticonSize);
