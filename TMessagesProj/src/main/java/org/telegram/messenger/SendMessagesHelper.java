@@ -2256,23 +2256,30 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
             activeCopyForwards.put(peer, progress);
             getNotificationCenter().postNotificationName(NotificationCenter.updateInterfaces, 1 << 30);
 
-            for (int a = 0, N = messages.size(); a < N; a++) {
-                MessageObject message = messages.get(a);
-                long groupId = message.messageOwner.grouped_id;
-                if (groupId != 0) {
-                    ArrayList<MessageObject> group = new ArrayList<>();
-                    group.add(message);
-                    while (a + 1 < N && messages.get(a + 1).messageOwner.grouped_id != 0 && messages.get(a + 1).messageOwner.grouped_id == groupId) {
-                        group.add(messages.get(++a));
-                    }
-                    if (group.size() > 1) {
-                        processForwardFromMyName(group, peer, payStars, monoForumPeerId, suggestionParams);
+            isCopyForwarding = true;
+            copyForwardDialogId = peer;
+            try {
+                for (int a = 0, N = messages.size(); a < N; a++) {
+                    MessageObject message = messages.get(a);
+                    long groupId = message.messageOwner.grouped_id;
+                    if (groupId != 0) {
+                        ArrayList<MessageObject> group = new ArrayList<>();
+                        group.add(message);
+                        while (a + 1 < N && messages.get(a + 1).messageOwner.grouped_id != 0 && messages.get(a + 1).messageOwner.grouped_id == groupId) {
+                            group.add(messages.get(++a));
+                        }
+                        if (group.size() > 1) {
+                            processForwardFromMyName(group, peer, payStars, monoForumPeerId, suggestionParams);
+                        } else {
+                            processForwardFromMyName(message, peer, payStars, monoForumPeerId, suggestionParams);
+                        }
                     } else {
                         processForwardFromMyName(message, peer, payStars, monoForumPeerId, suggestionParams);
                     }
-                } else {
-                    processForwardFromMyName(message, peer, payStars, monoForumPeerId, suggestionParams);
                 }
+            } finally {
+                isCopyForwarding = false;
+                copyForwardDialogId = 0;
             }
             return 0;
         }
@@ -7305,7 +7312,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                             progress.sent++;
                             progress.messageIds.remove(Integer.valueOf(mid));
                             boolean done = progress.sent >= progress.total || progress.messageIds.isEmpty();
-                            if (!done && progress.sent > 0) {
+                            if (!done) {
                                 if (!isSendingMessageIdDialog(did) && !isUploadingMessageIdDialog(did)) {
                                     done = true;
                                 }
