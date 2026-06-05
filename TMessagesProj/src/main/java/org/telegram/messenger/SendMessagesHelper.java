@@ -1689,6 +1689,20 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         for (int a = 0, N = checkReadyToSendGroups.size(); a < N; a++) {
             sendReadyToSendGroup(checkReadyToSendGroups.get(a), false, true);
         }
+        // [Alexgram: Allow Forwarding/Copying] - Start
+        // When a copy-forward message is cancelled while still uploading, it gets removed
+        // from delayedMessages/uploadingMessages but never passes through removeFromSendingMessages.
+        // This means activeCopyForwards is never cleaned up, leaving the overlay stuck forever.
+        // Fix: after cancellation, if no messages are still being sent/uploaded for this dialog,
+        // remove the activeCopyForwards entry and notify the UI to dismiss the overlay.
+        if (dialogId != 0 && activeCopyForwards.containsKey(dialogId)) {
+            boolean anyStillPending = isSendingMessageIdDialog(dialogId) || isUploadingMessageIdDialog(dialogId);
+            if (!anyStillPending) {
+                activeCopyForwards.remove(dialogId);
+                getNotificationCenter().postNotificationName(NotificationCenter.updateInterfaces, 1 << 30);
+            }
+        }
+        // [Alexgram: Allow Forwarding/Copying] - End
         if (objects.size() == 1 && objects.get(0).isEditing() && objects.get(0).previousMedia != null) {
             revertEditingMessageObject(objects.get(0));
         } else if (objects.size() == 1 && objects.get(0).isEditing() && objects.get(0).isPoll()) {
@@ -1706,6 +1720,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
             getMessagesController().deleteMessages(messageIds, null, null, dialogId, topicId, false, mode);
         }
     }
+
 
     public boolean retrySendMessage(MessageObject messageObject, boolean unsent, long payStars) {
         if (messageObject.getId() >= 0) {

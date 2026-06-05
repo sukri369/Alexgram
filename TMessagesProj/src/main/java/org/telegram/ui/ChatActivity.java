@@ -15281,6 +15281,16 @@ public class ChatActivity extends BaseFragment implements
 				waitingForSendingMessageLoad = false;
 				hideFieldPanel(true);
 			});
+		} else if (waitingForSendingMessageLoad && !org.telegram.messenger.SendMessagesHelper.activeCopyForwards.containsKey(dialog_id)) {
+			// [Alexgram: Allow Forwarding/Copying] - Start
+			// No active copy-forward progress was created for this dialog, meaning all
+			// restricted messages had undownloaded media and nothing was actually sent.
+			// Reset the stuck state so the forward banner is properly dismissed.
+			AndroidUtilities.runOnUIThread(() -> {
+				waitingForSendingMessageLoad = false;
+				hideFieldPanel(true);
+			});
+			// [Alexgram: Allow Forwarding/Copying] - End
 		}
 	}
 
