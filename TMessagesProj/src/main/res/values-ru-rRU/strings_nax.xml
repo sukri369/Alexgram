@@ -380,4 +380,5 @@
     <string name="enableSummarizeChat">Суммировать</string>
     <string name="HomeDrawer">Боковое меню</string>
     <string name="DrawerElements">Элементы бокового меню</string>
+    <string name="DirectForwardNotAllowed">Прямая пересылка запрещена.</string>
 </resources>

@@ -345,4 +345,5 @@
     <string name="enableSummarizeChat">要約</string>
     <string name="HomeDrawer">ホームドロワー</string>
     <string name="DrawerElements">ドロワーの要素</string>
+    <string name="DirectForwardNotAllowed">直接転送は許可されていません。</string>
 </resources>

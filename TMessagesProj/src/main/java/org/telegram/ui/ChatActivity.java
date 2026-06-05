@@ -33661,6 +33661,7 @@ public class ChatActivity extends BaseFragment implements
 
 				// [Alexgram: Allow Forwarding/Copying] - Start
 				boolean showNoForwards = ((isPeerNoForwards() || message.messageOwner.noforwards && currentUser != null && currentUser.bot) && message.messageOwner.action == null && message.isSent() && !message.isEditing() && chatMode != MODE_SCHEDULED && chatMode != MODE_SAVED && getDialogId() != UserObject.VERIFY) && !NaConfig.INSTANCE.getAllowForwardingRestriction().Bool();
+				boolean showDirectForwardHint = ((getMessagesController().isPeerNoForwards(message.getDialogId(), true) || message.messageOwner.noforwards && currentUser != null && currentUser.bot) && message.messageOwner.action == null && message.isSent() && !message.isEditing() && chatMode != MODE_SCHEDULED && chatMode != MODE_SAVED && getDialogId() != UserObject.VERIFY) && NaConfig.INSTANCE.getAllowForwardingRestriction().Bool();
 				// [Alexgram: Allow Forwarding/Copying] - End
 				scrimPopupContainerLayout.addView(popupLayout, LayoutHelper.createLinearRelatively(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT, isReactionsAvailable ? 16 : 0, 0, isReactionsAvailable ? 36 : 0, 0));
 				scrimPopupContainerLayout.setPopupWindowLayout(popupLayout);
@@ -33695,6 +33696,25 @@ public class ChatActivity extends BaseFragment implements
 
 					FrameLayout fl = new FrameLayout(contentView.getContext());
 					fl.setBackground(shadowDrawable2);
+					fl.addView(tv, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 11, 11, 11, 11));
+					scrimPopupContainerLayout.addView(fl, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT, isReactionsAvailable ? 16 : 0, -8, isReactionsAvailable ? 36 : 0, 0));
+					scrimPopupContainerLayout.applyViewBottom(fl);
+				}
+
+				if (showDirectForwardHint) {
+					popupLayout.measure(View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED), View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+					TextView tv = new TextView(contentView.getContext());
+					tv.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
+					tv.setTextColor(getThemedColor(Theme.key_actionBarDefaultSubmenuItem));
+					tv.setText(LocaleController.getString(R.string.DirectForwardNotAllowed));
+					tv.setMaxWidth(Math.max(0, popupLayout.getMeasuredWidth() - AndroidUtilities.dp(38)));
+
+					Drawable shadowDrawable2 = ContextCompat.getDrawable(contentView.getContext(), R.drawable.popup_fixed_alert4).mutate();
+					shadowDrawable2.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_actionBarDefaultSubmenuBackground), PorterDuff.Mode.MULTIPLY));
+
+					FrameLayout fl = new FrameLayout(contentView.getContext());
+					fl.setBackground(shadowDrawable2);
+					fl.setTag(R.id.fit_width_tag, 1);
 					fl.addView(tv, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 11, 11, 11, 11));
 					scrimPopupContainerLayout.addView(fl, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT, isReactionsAvailable ? 16 : 0, -8, isReactionsAvailable ? 36 : 0, 0));
 					scrimPopupContainerLayout.applyViewBottom(fl);

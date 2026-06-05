@@ -379,4 +379,5 @@ Non possiamo aiutarti in questo caso; se hai problemi di accesso, contatta il Su
     <string name="enableSummarizeChat">Riassumi</string>
     <string name="HomeDrawer">Menu laterale principale</string>
     <string name="DrawerElements">Elementi del menu laterale</string>
+    <string name="DirectForwardNotAllowed">L\'inoltro diretto non è consentito.</string>
 </resources>

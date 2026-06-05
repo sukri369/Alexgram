@@ -382,4 +382,5 @@
     <string name="enableSummarizeChat">Özetle</string>
     <string name="HomeDrawer">Ana Yan Menü</string>
     <string name="DrawerElements">Yan Menü Ögeleri</string>
+    <string name="DirectForwardNotAllowed">Doğrudan yönlendirmeye izin verilmez.</string>
 </resources>

@@ -347,4 +347,5 @@
     <string name="enableSummarizeChat">總結</string>
     <string name="HomeDrawer">側邊欄設定</string>
     <string name="DrawerElements">側邊欄元素</string>
+    <string name="DirectForwardNotAllowed">不允許直接轉發。</string>
 </resources>
