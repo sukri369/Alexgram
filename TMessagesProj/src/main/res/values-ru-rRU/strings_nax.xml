@@ -381,4 +381,6 @@
     <string name="HomeDrawer">Боковое меню</string>
     <string name="DrawerElements">Элементы бокового меню</string>
     <string name="DirectForwardNotAllowed">Прямая пересылка запрещена.</string>
+    <string name="ForceForwardStatusMediaCopy">Копирование медиа</string>
 </resources>
+

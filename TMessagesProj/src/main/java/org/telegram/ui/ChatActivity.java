@@ -19640,6 +19640,23 @@ public class ChatActivity extends BaseFragment implements
 		boolean hideKeyboard = false;
 		bottomOverlayText.setBackground(null);
 		bottomOverlayText.setOnClickListener(null);
+		org.telegram.messenger.SendMessagesHelper.CopyForwardProgress progress = org.telegram.messenger.SendMessagesHelper.activeCopyForwards.get(dialog_id);
+		if (progress != null) {
+			bottomOverlayText.setText(LocaleController.getString("ForceForwardStatusMediaCopy", R.string.ForceForwardStatusMediaCopy) + " " + progress.sent + "/" + progress.total);
+			bottomOverlay.setVisibility(View.VISIBLE);
+			chatActivityEnterView.setVisibility(View.INVISIBLE);
+			if (mentionListAnimation != null) {
+				mentionListAnimation.cancel();
+				mentionListAnimation = null;
+			}
+			mentionContainer.setVisibility(View.GONE);
+			mentionContainer.setTag(null);
+			updateMessageListAccessibilityVisibility();
+			if (suggestEmojiPanel != null) {
+				suggestEmojiPanel.forceClose();
+			}
+			return;
+		}
 		if (chatMode == MODE_SAVED && getSavedDialogId() == UserObject.ANONYMOUS) {
 			bottomOverlayText.setText(LocaleController.getString(R.string.AuthorHiddenDescription));
 			bottomOverlay.setVisibility(View.VISIBLE);
@@ -19700,6 +19717,7 @@ public class ChatActivity extends BaseFragment implements
 				if (suggestEmojiPanel != null && chatActivityEnterView != null && chatActivityEnterView.hasText()) {
 					suggestEmojiPanel.fireUpdate();
 				}
+				updateBottomOverlay();
 				return;
 			}
 			if (currentEncryptedChat instanceof TLRPC.TL_encryptedChatRequested) {
@@ -28898,6 +28916,12 @@ public class ChatActivity extends BaseFragment implements
 		updateBottomOverlay(false);
 	}
 	public void updateBottomOverlay(boolean animated) {
+		if (org.telegram.messenger.SendMessagesHelper.activeCopyForwards.containsKey(dialog_id)) {
+			if (chatActivityEnterView != null) {
+				chatActivityEnterView.setVisibility(View.INVISIBLE);
+			}
+			return;
+		}
 		if (bottomOverlayChatText == null || chatMode == MODE_SCHEDULED || getContext() == null) {
 			return;
 		}

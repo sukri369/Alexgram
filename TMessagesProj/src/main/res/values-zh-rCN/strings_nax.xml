@@ -381,4 +381,5 @@
     <string name="HomeDrawer">侧边栏设置</string>
     <string name="DrawerElements">侧边栏元素</string>
     <string name="DirectForwardNotAllowed">不允许直接转发。</string>
+    <string name="ForceForwardStatusMediaCopy">正在复制媒体</string>
 </resources>

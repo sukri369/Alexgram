@@ -448,4 +448,6 @@
     <string name="ExperimentalEditFileNameAbout">Add \'Edit File Name\' option when selecting documents or audio files to send.</string>
     <!-- [Alexgram: Native Features] - End -->
     <string name="DirectForwardNotAllowed">Direct forwarding is not allowed.</string>
+    <string name="ForceForwardStatusMediaCopy">Forwarding media copy</string>
 </resources>
+
