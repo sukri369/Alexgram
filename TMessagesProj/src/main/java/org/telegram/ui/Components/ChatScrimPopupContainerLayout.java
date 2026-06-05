@@ -122,7 +122,6 @@ public class ChatScrimPopupContainerLayout extends LinearLayout {
         } else {
             super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         }
-        maxHeight = getMeasuredHeight();
     }
 
     private void updatePopupTranslation() {

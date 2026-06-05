@@ -33482,7 +33482,7 @@ public class ChatActivity extends BaseFragment implements
 					gridContainer.setPadding(0, AndroidUtilities.dp(4), 0, AndroidUtilities.dp(4));
 
 					int totalItems = gridOptions.size();
-					int columns = Math.min(5, totalItems);
+					int columns = 4;
 					int rows = (totalItems + columns - 1) / columns;
 
 					int cellWidth = AndroidUtilities.dp(56);
