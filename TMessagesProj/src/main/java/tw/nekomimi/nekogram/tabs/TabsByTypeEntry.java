@@ -15,7 +15,7 @@ public enum TabsByTypeEntry {
             MessagesController.DIALOG_FILTER_FLAG_ALL_CHATS
                     | MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_READ
                     | MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_ARCHIVED,
-            false,  // not pencil-editable (view/read-only FAB)
+            true,   // editable FAB
             true    // enabled by default
     ),
     PERSONAL(
@@ -74,19 +74,19 @@ public enum TabsByTypeEntry {
     MENTIONED_CHATS(
             R.drawable.fork_filter_icon_mentionbutton,
             MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_ARCHIVED | 0x01000000,
-            false,
+            true,   // editable FAB
             false
     ),
     LIVE_CHATS(
             R.drawable.fork_filter_icon_voicechat,
             MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_ARCHIVED | 0x00800000,
-            false,
+            true,   // editable FAB
             false
     ),
     DELETED_USERS(
             R.drawable.fork_ic_ghost_26,
             MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_ARCHIVED | 0x02000000,
-            false,
+            true,   // editable FAB
             false
     ),
     SECRET_CHATS(

@@ -79,6 +79,9 @@ public class TabsByTypeCell extends LinearLayout {
 
         // ── Right section: circle action button (pencil or eye) ───────────────
         buttonLayout = new FrameLayout(context);
+        // Mark clickable so RecyclerView item-click won't fire when this area is touched
+        buttonLayout.setClickable(true);
+        buttonLayout.setFocusable(true);
 
         actionButton = new RLottieImageView(context);
         actionButton.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
@@ -136,6 +139,10 @@ public class TabsByTypeCell extends LinearLayout {
 
     /** Set listener for the action button (pencil / eye). */
     public void setOnActionButtonClick(OnClickListener listener) {
+        // Wire listener to the whole buttonLayout so the hit area is generous
+        buttonLayout.setOnClickListener(listener);
+        buttonLayout.setClickable(listener != null);
+        // Also wire to actionButton for accessibility
         actionButton.setOnClickListener(listener);
         actionButton.setClickable(listener != null);
     }
