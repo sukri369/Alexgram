@@ -2219,6 +2219,33 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         return sendMessage(messages, peer, forwardFromMyName, hideCaption, notify, scheduleDate, 0, replyToTopMsg, video_timestamp, payStars, 0, null);
     }
 
+    private int getCopyForwardableCount(ArrayList<MessageObject> messages) {
+        int count = 0;
+        for (int a = 0; a < messages.size(); a++) {
+            MessageObject messageObject = messages.get(a);
+            if (messageObject.messageOwner == null) {
+                continue;
+            }
+            if (messageObject.messageOwner.media == null ||
+                messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaEmpty ||
+                messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaWebPage ||
+                messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaGame ||
+                messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaInvoice ||
+                messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaVenue ||
+                messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaGeo ||
+                messageObject.messageOwner.media.phone_number != null) {
+                count++;
+            } else {
+                File f = getFileLoader().getPathToMessage(messageObject.messageOwner);
+                String path = (f != null && f.exists()) ? f.getAbsolutePath() : messageObject.messageOwner.attachPath;
+                if (path != null && new File(path).exists()) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
     public int sendMessage(
         ArrayList<MessageObject> messages,
         final long peer,
@@ -2252,9 +2279,12 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         }
         FileLog.d("NK_DEBUG: sendMessage forceCopySend=" + forceCopySend + " messages=" + messages.size() + " peer=" + peer);
         if (forceCopySend) {
-            CopyForwardProgress progress = new CopyForwardProgress(peer, messages.size());
-            activeCopyForwards.put(peer, progress);
-            getNotificationCenter().postNotificationName(NotificationCenter.updateInterfaces, 1 << 30);
+            int copyForwardableCount = getCopyForwardableCount(messages);
+            if (copyForwardableCount > 0) {
+                CopyForwardProgress progress = new CopyForwardProgress(peer, copyForwardableCount);
+                activeCopyForwards.put(peer, progress);
+                getNotificationCenter().postNotificationName(NotificationCenter.updateInterfaces, 1 << 30);
+            }
 
             isCopyForwarding = true;
             copyForwardDialogId = peer;
