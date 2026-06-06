@@ -171,6 +171,18 @@ public class NotificationIconsSelectorCell extends RecyclerListView implements N
     }
 
     @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        super.onSizeChanged(w, h, oldw, oldh);
+
+        invalidateItemDecorations();
+    }
+
+    @Override
+    protected void onMeasure(int widthSpec, int heightSpec) {
+        super.onMeasure(MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(widthSpec), MeasureSpec.EXACTLY), heightSpec);
+    }
+
+    @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.premiumStatusChangedGlobal);
@@ -228,11 +240,13 @@ public class NotificationIconsSelectorCell extends RecyclerListView implements N
             addView(iconView, LayoutHelper.createLinear(58, 58, Gravity.CENTER_HORIZONTAL));
 
             titleView = new TextView(context);
-            titleView.setSingleLine();
+            titleView.setGravity(Gravity.CENTER_HORIZONTAL);
+            titleView.setMaxLines(2);
+            titleView.setEllipsize(android.text.TextUtils.TruncateAt.END);
             titleView.setClickable(false);
-            titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
+            titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11);
             titleView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
-            addView(titleView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 0, 4, 0, 0));
+            addView(titleView, LayoutHelper.createLinear(64, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 0, 4, 0, 0));
 
             outlinePaint.setStyle(Paint.Style.STROKE);
             outlinePaint.setStrokeWidth(Math.max(2, AndroidUtilities.dp(0.5f)));
