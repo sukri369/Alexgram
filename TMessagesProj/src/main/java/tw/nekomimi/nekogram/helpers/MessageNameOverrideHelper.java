@@ -231,6 +231,17 @@ public class MessageNameOverrideHelper {
             }
             editor.apply();
 
+            if (activity.messages != null) {
+                for (MessageObject msg : activity.messages) {
+                    if (msg != null) {
+                        msg.forceUpdate = true;
+                        if (msg.replyMessageObject != null) {
+                            msg.replyMessageObject.forceUpdate = true;
+                        }
+                    }
+                }
+            }
+
             activity.updateVisibleRows();
             dialog.dismiss();
         }));
