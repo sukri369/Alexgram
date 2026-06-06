@@ -3172,6 +3172,31 @@ public class ImageLoader {
                     }
 
                     if (cacheFile == null) {
+                        if (imageLocation != null) {
+                            if (imageLocation.photoSize != null && imageLocation.photoSize.location instanceof com.radolyn.ayugram.utils.AyuFileLocation) {
+                                cacheFile = new File(((com.radolyn.ayugram.utils.AyuFileLocation) imageLocation.photoSize.location).path);
+                                if (cacheFile.exists()) {
+                                    cacheFileExists = true;
+                                }
+                            } else if (imageLocation.location instanceof com.radolyn.ayugram.utils.AyuFileLocation) {
+                                cacheFile = new File(((com.radolyn.ayugram.utils.AyuFileLocation) imageLocation.location).path);
+                                if (cacheFile.exists()) {
+                                    cacheFileExists = true;
+                                }
+                            }
+                        }
+                        if (cacheFile == null && parentObject instanceof MessageObject) {
+                            MessageObject messageObject = (MessageObject) parentObject;
+                            if (messageObject.localMediaOverridden && !android.text.TextUtils.isEmpty(messageObject.localMediaOverriddenPath)) {
+                                cacheFile = new File(messageObject.localMediaOverriddenPath);
+                                if (cacheFile.exists()) {
+                                    cacheFileExists = true;
+                                }
+                            }
+                        }
+                    }
+
+                    if (cacheFile == null) {
                         if (imageLocation != null && imageLocation.path != null && (imageLocation.path.startsWith("/") || imageLocation.path.startsWith("file://") || (imageLocation.path.length() >= 3 && Character.isLetter(imageLocation.path.charAt(0)) && imageLocation.path.charAt(1) == ':' && (imageLocation.path.charAt(2) == '\\' || imageLocation.path.charAt(2) == '/')))) {
                             String localPath = imageLocation.path;
                             if (localPath.startsWith("file://")) {

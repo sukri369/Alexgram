@@ -503,6 +503,7 @@ public class SpecialForwardActivity extends ChatActivity {
             attributeVideo.w = w;
             attributeVideo.h = h;
             mediaDoc.document.attributes.add(attributeVideo);
+            mediaDoc.document.localPath = newPath;
             
             String coverPath = photoEntry.coverPath != null ? photoEntry.coverPath : photoEntry.thumbPath;
             if (coverPath != null) {
