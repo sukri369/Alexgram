@@ -27,6 +27,7 @@ import org.telegram.ui.Cells.RadioColorCell;
 import org.telegram.ui.ChatActivity;
 import org.telegram.ui.Components.EditTextBoldCursor;
 import org.telegram.ui.Components.LayoutHelper;
+import org.telegram.ui.Components.RadioButton;
 
 import tw.nekomimi.nekogram.NekoConfig;
 
@@ -168,7 +169,7 @@ public class MessageNameOverrideHelper {
         container.addView(editText, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
         contentLayout.addView(container, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 16));
 
-        final RadioColorCell[] optionCells = new RadioColorCell[3];
+        final RadioOptionCell[] optionCells = new RadioOptionCell[3];
         final int[] selectedOpt = new int[]{initialOption};
 
         Runnable updateInputState = () -> {
@@ -178,8 +179,7 @@ public class MessageNameOverrideHelper {
         };
 
         for (int i = 0; i < 3; i++) {
-            RadioColorCell optionCell = new RadioColorCell(context, activity.getResourceProvider());
-            optionCell.setPadding(0, 0, 0, 0);
+            RadioOptionCell optionCell = new RadioOptionCell(context, activity.getResourceProvider());
             final int optIndex = i;
             String optionText = "";
             if (i == 0) {
@@ -190,9 +190,9 @@ public class MessageNameOverrideHelper {
                 optionText = getString(R.string.ChangeSenderNameOptionRestore);
             }
 
-            optionCell.setTextAndValue(optionText, selectedOpt[0] == i);
+            optionCell.setTextAndChecked(optionText, selectedOpt[0] == i);
             optionCells[i] = optionCell;
-            contentLayout.addView(optionCell, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 48));
+            contentLayout.addView(optionCell, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
             optionCell.setOnClickListener(v -> {
                 selectedOpt[0] = optIndex;
@@ -247,5 +247,67 @@ public class MessageNameOverrideHelper {
         }));
 
         activity.showDialog(dialog);
+    }
+
+    private static class RadioOptionCell extends FrameLayout {
+        private TextView textView;
+        private RadioButton radioButton;
+        private Theme.ResourcesProvider resourcesProvider;
+
+        public RadioOptionCell(Context context, Theme.ResourcesProvider resourcesProvider) {
+            super(context);
+            this.resourcesProvider = resourcesProvider;
+
+            radioButton = new RadioButton(context);
+            radioButton.setSize(AndroidUtilities.dp(20));
+            radioButton.setColor(
+                Theme.getColor(Theme.key_dialogRadioBackground, resourcesProvider),
+                Theme.getColor(Theme.key_dialogRadioBackgroundChecked, resourcesProvider)
+            );
+            addView(radioButton, LayoutHelper.createFrame(22, 22, 
+                (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.CENTER_VERTICAL, 
+                (LocaleController.isRTL ? 0 : 18), 0, 
+                (LocaleController.isRTL ? 18 : 0), 0
+            ));
+
+            textView = new TextView(context);
+            textView.setTextColor(Theme.getColor(Theme.key_dialogTextBlack, resourcesProvider));
+            textView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
+            textView.setGravity((LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.CENTER_VERTICAL);
+            addView(textView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 
+                (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.CENTER_VERTICAL, 
+                (LocaleController.isRTL ? 21 : 51), 0, 
+                (LocaleController.isRTL ? 51 : 21), 0
+            ));
+
+            setBackground(Theme.createSelectorDrawable(Theme.getColor(Theme.key_actionBarActionModeDefaultSelector, resourcesProvider), 3));
+        }
+
+        public void setTextAndChecked(CharSequence text, boolean checked) {
+            textView.setText(text);
+            radioButton.setChecked(checked, false);
+        }
+
+        public void setChecked(boolean checked, boolean animated) {
+            radioButton.setChecked(checked, animated);
+        }
+
+        @Override
+        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+            int width = MeasureSpec.getSize(widthMeasureSpec);
+            textView.measure(
+                MeasureSpec.makeMeasureSpec(width - AndroidUtilities.dp(51 + 21), MeasureSpec.EXACTLY),
+                MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
+            );
+            int textHeight = textView.getMeasuredHeight();
+            int cellHeight = Math.max(AndroidUtilities.dp(48), textHeight + AndroidUtilities.dp(16));
+            
+            radioButton.measure(
+                MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(22), MeasureSpec.EXACTLY),
+                MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(22), MeasureSpec.EXACTLY)
+            );
+            
+            setMeasuredDimension(width, cellHeight);
+        }
     }
 }
