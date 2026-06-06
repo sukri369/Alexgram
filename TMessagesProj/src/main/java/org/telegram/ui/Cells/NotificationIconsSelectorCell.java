@@ -288,7 +288,18 @@ public class NotificationIconsSelectorCell extends RecyclerListView implements N
         public void bind(IconItem item, int position) {
             iconView.setImageResource(item.resId);
             iconView.setForeground(item.foregroundResId);
-            iconView.setIsSingleIcon(item.foregroundResId == 0);
+            boolean isMonochromatic = item.resId == R.drawable.nagramx_outline || item.resId == R.drawable.notification;
+            iconView.setIsSingleIcon(isMonochromatic);
+            if (isMonochromatic) {
+                iconView.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(16), AndroidUtilities.dp(16), AndroidUtilities.dp(16));
+                iconView.setOuterPadding(0);
+                iconView.setBackgroundOuterPadding(0);
+            } else {
+                iconView.setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8));
+                iconView.setOuterPadding(AndroidUtilities.dp(5));
+                iconView.setBackgroundOuterPadding(AndroidUtilities.dp(42));
+            }
+            iconView.updatePath();
             titleView.setText(LocaleController.getString(item.titleResId));
             setSelected(NaConfig.INSTANCE.getNotificationIcon().Int() == position, false);
         }

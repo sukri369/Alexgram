@@ -313,13 +313,6 @@ public class AppIconsSelectorCell extends RecyclerListView implements Notificati
 
         public void setIsSingleIcon(boolean value) {
             this.isSingleIcon = value;
-            if (isSingleIcon) {
-                setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(16), AndroidUtilities.dp(16), AndroidUtilities.dp(16));
-            } else {
-                setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8));
-            }
-            updatePath();
-            invalidate();
         }
 
         @Override
@@ -355,7 +348,7 @@ public class AppIconsSelectorCell extends RecyclerListView implements Notificati
             }
         }
 
-        private void updatePath() {
+        public void updatePath() {
             path.rewind();
             path.addCircle(getWidth() / 2f, getHeight() / 2f, Math.min(getWidth() - getPaddingLeft() - getPaddingRight(), getHeight() - getPaddingTop() - getPaddingBottom()) / 2f, Path.Direction.CW);
         }
