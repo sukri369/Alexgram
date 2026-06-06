@@ -124,7 +124,9 @@ public class ChatAttachAlertDocumentLayout extends ChatAttachAlert.AttachAlertLa
 
     private RecyclerListView listView;
     private RecyclerListView backgroundListView;
-    private ListAdapter listAdapter;
+    // [Alexgram: Native Features] - Start
+    public ListAdapter listAdapter;
+    // [Alexgram: Native Features] - End
     private ListAdapter backgroundListAdapter;
     private LinearLayoutManager backgroundLayoutManager;
     private SearchAdapter searchAdapter;
@@ -146,7 +148,7 @@ public class ChatAttachAlertDocumentLayout extends ChatAttachAlert.AttachAlertLa
     private File currentDir;
     private boolean receiverRegistered = false;
     private DocumentSelectActivityDelegate delegate;
-    private HashMap<String, ListItem> selectedFiles = new HashMap<>();
+    public HashMap<String, ListItem> selectedFiles = new HashMap<>();
     public ArrayList<String> selectedFilesOrder = new ArrayList<>();
     private HashMap<FilteredSearchView.MessageHashId, MessageObject> selectedMessages = new HashMap<>();
     private boolean scrolling;
@@ -163,7 +165,7 @@ public class ChatAttachAlertDocumentLayout extends ChatAttachAlert.AttachAlertLa
     public boolean isSoundPicker;
     public boolean isEmojiPicker;
 
-    private static class ListItem {
+    public static class ListItem {
         public int icon;
         public String title;
         public String subtitle = "";
@@ -1421,7 +1423,9 @@ public class ChatAttachAlertDocumentLayout extends ChatAttachAlert.AttachAlertLa
         return path;
     }
 
-    private class ListAdapter extends RecyclerListView.SelectionAdapter {
+    // [Alexgram: Native Features] - Start
+    public class ListAdapter extends RecyclerListView.SelectionAdapter {
+    // [Alexgram: Native Features] - End
 
         private ArrayList<ListItem> items = new ArrayList<>();
         private ArrayList<HistoryEntry> history = new ArrayList<>();

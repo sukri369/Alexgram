@@ -49,6 +49,9 @@ public class ImageLocation {
         if (path == null) {
             return null;
         }
+        if (path.startsWith("file://")) {
+            path = path.substring(7);
+        }
         ImageLocation imageLocation = new ImageLocation();
         imageLocation.path = path;
         return imageLocation;

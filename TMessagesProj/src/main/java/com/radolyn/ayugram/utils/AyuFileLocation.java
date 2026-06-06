@@ -15,6 +15,9 @@ public class AyuFileLocation extends TLRPC.FileLocation {
     public String path;
 
     public AyuFileLocation(String path) {
+        if (path != null && path.startsWith("file://")) {
+            path = path.substring(7);
+        }
         this.path = path;
     }
 }

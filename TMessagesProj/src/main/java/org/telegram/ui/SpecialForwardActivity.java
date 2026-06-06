@@ -72,30 +72,15 @@ public class SpecialForwardActivity extends ChatActivity {
         // Deep copy messages and assign sequential negative unique IDs
         for (MessageObject msg : sourceMessages) {
             try {
-                TLRPC.Message resetClone = cloneMessage(msg.messageOwner);
-                if (resetClone != null) {
-                    int id = nextUniqueId--;
-                    resetClone.id = id;
-                    resetClone.fwd_msg_id = msg.getId();
-                    
-                    // Strip replies, reactions, and forwards metadata
-                    resetClone.flags &= ~0x8D40;
-                    resetClone.reply_to = null;
-                    resetClone.reactions = null;
-                    resetClone.reply_markup = null;
-                    resetClone.fwd_from = null;
-                    resetClone.edit_date = 0;
-                    
-                    MessageObject resetObj = createPreviewMessageObject(resetClone);
-                    resetObj.stableId = ChatActivity.lastStableId++;
-                    resetObj.forceUpdate = true;
-                    resetObj.checkLayout();
-                    
-                    originalMessagesMap.put(id, resetObj);
-                    
-                    TLRPC.Message msgClone = cloneMessage(msg.messageOwner);
+                int id = nextUniqueId--;
+                originalMessagesMap.put(id, msg);
+                
+                TLRPC.Message msgClone = cloneMessage(msg.messageOwner);
+                if (msgClone != null) {
                     msgClone.id = id;
                     msgClone.fwd_msg_id = msg.getId();
+                    
+                    // Strip replies, reactions, and forwards metadata
                     msgClone.flags &= ~0x8D40;
                     msgClone.reply_to = null;
                     msgClone.reactions = null;
@@ -103,8 +88,8 @@ public class SpecialForwardActivity extends ChatActivity {
                     msgClone.fwd_from = null;
                     msgClone.edit_date = 0;
                     
-                    MessageObject clonedObj = createPreviewMessageObject(msgClone);
-                    clonedObj.stableId = resetObj.stableId;
+                    MessageObject clonedObj = createPreviewMessageObject(msgClone, msg);
+                    clonedObj.stableId = ChatActivity.lastStableId++;
                     clonedObj.forceUpdate = true;
                     clonedObj.checkLayout();
                     
@@ -141,9 +126,20 @@ public class SpecialForwardActivity extends ChatActivity {
         }
     }
 
-    private MessageObject createPreviewMessageObject(TLRPC.Message messageOwner) {
+    private MessageObject createPreviewMessageObject(TLRPC.Message messageOwner, MessageObject originalObject) {
+        if (originalObject != null && originalObject.localMediaOverridden && originalObject.messageOwner != null) {
+            messageOwner.media = originalObject.messageOwner.media;
+        }
         MessageObject messageObject = new MessageObject(currentAccount, messageOwner, false, true);
         messageObject.previewForward = true;
+        if (originalObject != null) {
+            messageObject.localGroupId = originalObject.localGroupId;
+            messageObject.localSentGroupId = originalObject.localSentGroupId;
+            messageObject.localMediaOverridden = originalObject.localMediaOverridden;
+            messageObject.localMediaOverriddenPath = originalObject.localMediaOverriddenPath;
+            messageObject.localMediaIsVideo = originalObject.localMediaIsVideo;
+            messageObject.videoEditedInfo = originalObject.videoEditedInfo;
+        }
         return messageObject;
     }
 
@@ -338,7 +334,8 @@ public class SpecialForwardActivity extends ChatActivity {
         inlineDeleteLinkView.setOnClickListener(v -> {
             if (selectedMessage != null) {
                 deleteLinks(selectedMessage, 15);
-                startEditingMessage(selectedMessage);
+                MessageObject updated = updateClonedMessage(selectedMessage);
+                startEditingMessage(updated);
                 Toast.makeText(context, "Deleted all links in message", Toast.LENGTH_SHORT).show();
             }
         });
@@ -388,6 +385,16 @@ public class SpecialForwardActivity extends ChatActivity {
 
     private void startEditingMessage(MessageObject messageObject) {
         if (messageObject == null) return;
+        if (messageObject.getGroupId() != 0) {
+            MessageObject.GroupedMessages groupedMessages = groupedMessagesMap.get(messageObject.getGroupId());
+            if (groupedMessages != null) {
+                if (groupedMessages.captionMessage != null) {
+                    messageObject = groupedMessages.captionMessage;
+                } else if (!groupedMessages.messages.isEmpty()) {
+                    messageObject = groupedMessages.messages.get(0);
+                }
+            }
+        }
         this.selectedMessage = messageObject;
         this.editingMessageObject = messageObject;
         
@@ -396,6 +403,16 @@ public class SpecialForwardActivity extends ChatActivity {
         
         if (chatActivityEnterView != null) {
             chatActivityEnterView.setEditingMessageObject(messageObject, null, !messageObject.isMediaEmpty());
+            
+            CharSequence editingText = messageObject.isMediaEmpty() ? messageObject.messageText : messageObject.caption;
+            if (editingText == null) editingText = "";
+            CharSequence formattedText = org.telegram.ui.Components.ChatActivityEnterView.applyMessageEntities(
+                messageObject.messageOwner.entities,
+                editingText,
+                Theme.chat_msgTextPaint.getFontMetricsInt()
+            );
+            chatActivityEnterView.setFieldText(formattedText);
+
             View doneBtn = chatActivityEnterView.getDoneButton();
             if (doneBtn != null) {
                 doneBtn.setOnClickListener(v -> onDoneEditingMessage(chatActivityEnterView.getFieldText()));
@@ -417,14 +434,14 @@ public class SpecialForwardActivity extends ChatActivity {
                     TLRPC.Message messageClone = cloneMessage(selectedMessage.messageOwner);
                     if (messageClone != null) {
                         messageClone.id = selectedMessage.getId();
-                        MessageObject newCloned = createPreviewMessageObject(messageClone);
+                        MessageObject newCloned = createPreviewMessageObject(messageClone, selectedMessage);
                         newCloned.stableId = selectedMessage.stableId;
                         newCloned.forceUpdate = true;
                         newCloned.checkLayout();
                         messages.set(idx, newCloned);
                         rebuildGroupedMessages();
                         if (chatAdapter != null) {
-                            chatAdapter.notifyItemChanged(idx);
+                            chatAdapter.notifyDataSetChanged();
                         }
                     }
                 } catch (Exception e) {
@@ -432,6 +449,126 @@ public class SpecialForwardActivity extends ChatActivity {
                 }
             }
         }
+        if (chatActivityEnterView != null) {
+            chatActivityEnterView.setEditingMessageObject(null, null, false);
+        }
+        hideFieldPanel(true);
+        selectedMessage = null;
+        editingMessageObject = null;
+        updateBottomOverlay();
+        updateVisibleRows();
+        updateSendBadge();
+    }
+
+    @Override
+    public void sendMedia(org.telegram.messenger.MediaController.PhotoEntry photoEntry, org.telegram.messenger.VideoEditedInfo videoEditedInfo, boolean notify, int scheduleDate, int scheduleRepeatPeriod, boolean forceDocument, long stars) {
+        if (photoEntry == null || editingMessageObject == null) {
+            return;
+        }
+
+        String newPath = photoEntry.imagePath != null ? photoEntry.imagePath : photoEntry.path;
+        if (newPath == null) {
+            return;
+        }
+
+        // Apply media edits/replacements locally
+        if (photoEntry.isVideo) {
+            TLRPC.TL_messageMediaDocument mediaDoc = new TLRPC.TL_messageMediaDocument();
+            mediaDoc.document = new TLRPC.TL_document();
+            mediaDoc.document.id = 0;
+            mediaDoc.document.mime_type = "video/mp4";
+            mediaDoc.document.size = (int) new java.io.File(newPath).length();
+            
+            TLRPC.TL_documentAttributeVideo attributeVideo = new TLRPC.TL_documentAttributeVideo();
+            attributeVideo.duration = videoEditedInfo != null ? (int) (videoEditedInfo.estimatedDuration / 1000) : photoEntry.duration;
+            
+            int w = 800;
+            int h = 600;
+            if (videoEditedInfo != null) {
+                w = videoEditedInfo.originalWidth;
+                h = videoEditedInfo.originalHeight;
+            } else {
+                android.graphics.BitmapFactory.Options opts = new android.graphics.BitmapFactory.Options();
+                opts.inJustDecodeBounds = true;
+                if (photoEntry.coverPath != null) {
+                    android.graphics.BitmapFactory.decodeFile(photoEntry.coverPath, opts);
+                } else if (photoEntry.thumbPath != null) {
+                    android.graphics.BitmapFactory.decodeFile(photoEntry.thumbPath, opts);
+                }
+                if (opts.outWidth > 0) {
+                    w = opts.outWidth;
+                    h = opts.outHeight;
+                }
+            }
+            attributeVideo.w = w;
+            attributeVideo.h = h;
+            mediaDoc.document.attributes.add(attributeVideo);
+            mediaDoc.document.localPath = newPath;
+            
+            String coverPath = photoEntry.coverPath != null ? photoEntry.coverPath : photoEntry.thumbPath;
+            if (coverPath != null) {
+                TLRPC.TL_photoSize thumbSize = new TLRPC.TL_photoSize();
+                thumbSize.type = "x";
+                thumbSize.location = new com.radolyn.ayugram.utils.AyuFileLocation(coverPath);
+                thumbSize.w = w;
+                thumbSize.h = h;
+                thumbSize.size = (int) new java.io.File(coverPath).length();
+                mediaDoc.document.thumbs.add(thumbSize);
+            }
+            editingMessageObject.messageOwner.media = mediaDoc;
+        } else {
+            TLRPC.TL_messageMediaPhoto mediaPhoto = new TLRPC.TL_messageMediaPhoto();
+            mediaPhoto.photo = new TLRPC.TL_photo();
+            mediaPhoto.photo.id = 0;
+            
+            TLRPC.TL_photoSize size = new TLRPC.TL_photoSize();
+            size.type = "x";
+            size.location = new com.radolyn.ayugram.utils.AyuFileLocation(newPath);
+            
+            android.graphics.BitmapFactory.Options opts = new android.graphics.BitmapFactory.Options();
+            opts.inJustDecodeBounds = true;
+            android.graphics.BitmapFactory.decodeFile(newPath, opts);
+            int w = opts.outWidth > 0 ? opts.outWidth : 800;
+            int h = opts.outHeight > 0 ? opts.outHeight : 600;
+            
+            size.w = w;
+            size.h = h;
+            size.size = (int) new java.io.File(newPath).length();
+            mediaPhoto.photo.sizes.add(size);
+            editingMessageObject.messageOwner.media = mediaPhoto;
+        }
+
+        editingMessageObject.messageOwner.attachPath = newPath;
+        editingMessageObject.videoEditedInfo = videoEditedInfo;
+        editingMessageObject.localMediaOverridden = true;
+        editingMessageObject.localMediaOverriddenPath = newPath;
+        editingMessageObject.localMediaIsVideo = photoEntry.isVideo;
+
+        if (photoEntry.caption != null) {
+            updateMessageText(editingMessageObject, photoEntry.caption);
+        }
+
+        int idx = messages.indexOf(editingMessageObject);
+        if (idx >= 0) {
+            try {
+                TLRPC.Message messageClone = cloneMessage(editingMessageObject.messageOwner);
+                if (messageClone != null) {
+                    messageClone.id = editingMessageObject.getId();
+                    MessageObject newCloned = createPreviewMessageObject(messageClone, editingMessageObject);
+                    newCloned.stableId = editingMessageObject.stableId;
+                    newCloned.forceUpdate = true;
+                    newCloned.checkLayout();
+                    messages.set(idx, newCloned);
+                    rebuildGroupedMessages();
+                    if (chatAdapter != null) {
+                        chatAdapter.notifyDataSetChanged();
+                    }
+                }
+            } catch (Exception e) {
+                FileLog.e(e);
+            }
+        }
+
         if (chatActivityEnterView != null) {
             chatActivityEnterView.setEditingMessageObject(null, null, false);
         }
@@ -454,7 +591,7 @@ public class SpecialForwardActivity extends ChatActivity {
                     TLRPC.Message messageClone = cloneMessage(selectedMessage.messageOwner);
                     if (messageClone != null) {
                         messageClone.id = selectedMessage.getId();
-                        MessageObject newCloned = createPreviewMessageObject(messageClone);
+                        MessageObject newCloned = createPreviewMessageObject(messageClone, selectedMessage);
                         newCloned.stableId = selectedMessage.stableId;
                         newCloned.forceUpdate = true;
                         newCloned.checkLayout();
@@ -604,39 +741,131 @@ public class SpecialForwardActivity extends ChatActivity {
         msg.messageOwner.send_state = 0;
     }
 
+    private void updateMessageText(MessageObject msg, CharSequence charSequence, ArrayList<TLRPC.MessageEntity> entities) {
+        if (msg == null) return;
+        msg.messageOwner.message = charSequence == null ? "" : charSequence.toString();
+        TLRPC.Message message = msg.messageOwner;
+        if (entities == null) {
+            entities = new ArrayList<>();
+        }
+        message.entities = entities;
+        msg.messageOwner.send_state = 3;
+        msg.forceUpdate = true;
+        if (!msg.isMediaEmpty()) {
+            msg.caption = null;
+            msg.generateCaption();
+        } else if (TextUtils.isEmpty(msg.messageOwner.message)) {
+            msg.messageOwner.message = "Empty message";
+        }
+        msg.applyNewText();
+        msg.checkLayout();
+        msg.messageOwner.send_state = 0;
+    }
+
+    private MessageObject updateClonedMessage(MessageObject msg) {
+        if (msg == null) return null;
+        int idx = messages.indexOf(msg);
+        if (idx >= 0) {
+            try {
+                TLRPC.Message messageClone = cloneMessage(msg.messageOwner);
+                if (messageClone != null) {
+                    messageClone.id = msg.getId();
+                    MessageObject newCloned = createPreviewMessageObject(messageClone, msg);
+                    newCloned.stableId = msg.stableId;
+                    newCloned.forceUpdate = true;
+                    newCloned.checkLayout();
+                    messages.set(idx, newCloned);
+                    rebuildGroupedMessages();
+                    if (chatAdapter != null) {
+                        chatAdapter.notifyDataSetChanged();
+                    }
+                    if (selectedMessage == msg) {
+                        selectedMessage = newCloned;
+                    }
+                    if (editingMessageObject == msg) {
+                        editingMessageObject = newCloned;
+                    }
+                    return newCloned;
+                }
+            } catch (Exception e) {
+                FileLog.e(e);
+            }
+        }
+        return msg;
+    }
+
     private CharSequence getMessageText(MessageObject msg) {
         if (msg == null) return "";
         return msg.isMediaEmpty() ? msg.messageText : msg.caption;
     }
 
     private void resetSelectedMessage() {
-        if (selectedMessage == null || originalMessagesMap == null) return;
-        MessageObject originalObj = originalMessagesMap.get(selectedMessage.getId());
-        if (originalObj != null) {
-            try {
-                TLRPC.Message messageClone = cloneMessage(originalObj.messageOwner);
-                if (messageClone != null) {
-                    messageClone.id = selectedMessage.getId();
-                    MessageObject newCloned = createPreviewMessageObject(messageClone);
-                    newCloned.stableId = selectedMessage.stableId;
-                    newCloned.forceUpdate = true;
-                    newCloned.checkLayout();
-                    
-                    int idx = messages.indexOf(selectedMessage);
-                    if (idx >= 0) {
-                        messages.set(idx, newCloned);
-                        rebuildGroupedMessages();
-                        if (chatAdapter != null) {
-                            chatAdapter.notifyItemChanged(idx);
-                        }
+        if (selectedMessage == null) {
+            Toast.makeText(getParentActivity(), "Reset error: selectedMessage is null", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (originalMessagesMap == null) {
+            Toast.makeText(getParentActivity(), "Reset error: originalMessagesMap is null", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        int id = selectedMessage.getId();
+        MessageObject originalObj = originalMessagesMap.get(id);
+        if (originalObj == null) {
+            Toast.makeText(getParentActivity(), "Reset error: original message not found for ID " + id, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try {
+            TLRPC.Message messageClone = cloneMessage(originalObj.messageOwner);
+            if (messageClone != null) {
+                messageClone.id = id;
+                messageClone.fwd_msg_id = originalObj.getId();
+                messageClone.flags &= ~0x8D40;
+                messageClone.reply_to = null;
+                messageClone.reactions = null;
+                messageClone.reply_markup = null;
+                messageClone.fwd_from = null;
+                messageClone.edit_date = 0;
+                
+                MessageObject newCloned = createPreviewMessageObject(messageClone, originalObj);
+                newCloned.stableId = selectedMessage.stableId;
+                newCloned.forceUpdate = true;
+                newCloned.checkLayout();
+                
+                int idx = messages.indexOf(selectedMessage);
+                if (idx >= 0) {
+                    messages.set(idx, newCloned);
+                    rebuildGroupedMessages();
+                    if (chatAdapter != null) {
+                        chatAdapter.notifyDataSetChanged();
                     }
-                    
                     startEditingMessage(newCloned);
                     Toast.makeText(getParentActivity(), "Message reset to original", Toast.LENGTH_SHORT).show();
+                } else {
+                    int foundIdx = -1;
+                    for (int i = 0; i < messages.size(); i++) {
+                        if (messages.get(i).getId() == id) {
+                            foundIdx = i;
+                            break;
+                        }
+                    }
+                    if (foundIdx >= 0) {
+                        messages.set(foundIdx, newCloned);
+                        rebuildGroupedMessages();
+                        if (chatAdapter != null) {
+                            chatAdapter.notifyDataSetChanged();
+                        }
+                        startEditingMessage(newCloned);
+                        Toast.makeText(getParentActivity(), "Message reset to original (ID search)", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(getParentActivity(), "Reset error: message not found in list, index: " + idx, Toast.LENGTH_SHORT).show();
+                    }
                 }
-            } catch (Exception e) {
-                FileLog.e(e);
+            } else {
+                Toast.makeText(getParentActivity(), "Reset error: failed to clone original", Toast.LENGTH_SHORT).show();
             }
+        } catch (Exception e) {
+            FileLog.e(e);
+            Toast.makeText(getParentActivity(), "Reset error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -651,7 +880,15 @@ public class SpecialForwardActivity extends ChatActivity {
                     TLRPC.Message messageClone = cloneMessage(originalObj.messageOwner);
                     if (messageClone != null) {
                         messageClone.id = workingObj.getId();
-                        MessageObject newCloned = createPreviewMessageObject(messageClone);
+                        messageClone.fwd_msg_id = originalObj.getId();
+                        messageClone.flags &= ~0x8D40;
+                        messageClone.reply_to = null;
+                        messageClone.reactions = null;
+                        messageClone.reply_markup = null;
+                        messageClone.fwd_from = null;
+                        messageClone.edit_date = 0;
+                        
+                        MessageObject newCloned = createPreviewMessageObject(messageClone, originalObj);
                         newCloned.stableId = workingObj.stableId;
                         newCloned.forceUpdate = true;
                         newCloned.checkLayout();
@@ -777,7 +1014,7 @@ public class SpecialForwardActivity extends ChatActivity {
                     TLRPC.Message messageClone = cloneMessage(msg.messageOwner);
                     if (messageClone != null) {
                         messageClone.id = msg.getId();
-                        MessageObject newCloned = createPreviewMessageObject(messageClone);
+                        MessageObject newCloned = createPreviewMessageObject(messageClone, msg);
                         newCloned.stableId = msg.stableId;
                         newCloned.forceUpdate = true;
                         newCloned.checkLayout();
@@ -851,7 +1088,7 @@ public class SpecialForwardActivity extends ChatActivity {
                     TLRPC.Message messageClone = cloneMessage(msg.messageOwner);
                     if (messageClone != null) {
                         messageClone.id = msg.getId();
-                        MessageObject newCloned = createPreviewMessageObject(messageClone);
+                        MessageObject newCloned = createPreviewMessageObject(messageClone, msg);
                         newCloned.stableId = msg.stableId;
                         newCloned.forceUpdate = true;
                         newCloned.checkLayout();
@@ -866,6 +1103,12 @@ public class SpecialForwardActivity extends ChatActivity {
                 chatAdapter.notifyDataSetChanged();
             }
             if (selectedMessage != null) {
+                for (MessageObject msg : messages) {
+                    if (msg.stableId == selectedMessage.stableId) {
+                        selectedMessage = msg;
+                        break;
+                    }
+                }
                 startEditingMessage(selectedMessage);
             }
             updateSendBadge();
@@ -920,43 +1163,181 @@ public class SpecialForwardActivity extends ChatActivity {
             if (checked[3]) typeMask |= 8;
             
             replaceLinks(selectedMessage, typeMask, newLink);
-            startEditingMessage(selectedMessage);
+            MessageObject updated = updateClonedMessage(selectedMessage);
+            startEditingMessage(updated);
         });
         builder.setNegativeButton("Cancel", null);
         builder.show();
     }
 
     private void replaceLinks(MessageObject msg, int typeMask, CharSequence newLink) {
-        CharSequence text = getMessageText(msg);
-        if (text == null) return;
+        if (msg == null || msg.messageOwner == null) return;
+        String rawText = msg.messageOwner.message;
+        if (rawText == null) rawText = "";
         
-        SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(text);
-        Object[] spans = spannableStringBuilder.getSpans(0, spannableStringBuilder.length(), Object.class);
-        if (spans != null && spans.length > 0) {
-            for (Object obj : spans) {
-                if (obj instanceof URLSpan) {
-                    String url = ((URLSpan) obj).getURL();
-                    boolean shouldReplace = (org.telegram.messenger.browser.Browser.isInternalUrl(url, null) && (typeMask & 1) != 0)
-                            || (url.startsWith("@") && (typeMask & 2) != 0)
-                            || (url.startsWith("#") && (typeMask & 4) != 0)
-                            || (!url.startsWith("@") && !url.startsWith("#") && !org.telegram.messenger.browser.Browser.isInternalUrl(url, null) && (typeMask & 8) != 0);
+        ArrayList<TLRPC.MessageEntity> entities = msg.messageOwner.entities;
+        if (entities == null || entities.isEmpty()) {
+            entities = MediaDataController.getInstance(currentAccount).getEntities(new CharSequence[]{rawText}, true);
+        }
+        if (entities == null) {
+            entities = new ArrayList<>();
+        }
+        
+        StringBuilder textBuilder = new StringBuilder(rawText);
+        String replacementStr = newLink.toString();
+        
+        ArrayList<TLRPC.MessageEntity> workingEntities = new ArrayList<>();
+        for (TLRPC.MessageEntity ent : entities) {
+            workingEntities.add(ent);
+        }
+
+        // Parse missing mentions from text
+        try {
+            java.util.regex.Matcher mentionMatcher = java.util.regex.Pattern.compile("@[a-zA-Z0-9_]{1,32}").matcher(rawText);
+            while (mentionMatcher.find()) {
+                int start = mentionMatcher.start();
+                if (start > 0) {
+                    char prev = rawText.charAt(start - 1);
+                    if (!Character.isWhitespace(prev) && prev != '\n') {
+                        continue;
+                    }
+                }
+                int end = mentionMatcher.end();
+                boolean overlap = false;
+                for (TLRPC.MessageEntity existing : workingEntities) {
+                    if (!(existing.offset >= end || existing.offset + existing.length <= start)) {
+                        overlap = true;
+                        break;
+                    }
+                }
+                if (!overlap) {
+                    TLRPC.TL_messageEntityMention mention = new TLRPC.TL_messageEntityMention();
+                    mention.offset = start;
+                    mention.length = end - start;
+                    workingEntities.add(mention);
+                }
+            }
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+
+        // Parse missing hashtags from text
+        try {
+            java.util.regex.Matcher hashtagMatcher = java.util.regex.Pattern.compile("#[a-zA-Z0-9_]{1,32}").matcher(rawText);
+            while (hashtagMatcher.find()) {
+                int start = hashtagMatcher.start();
+                if (start > 0) {
+                    char prev = rawText.charAt(start - 1);
+                    if (!Character.isWhitespace(prev) && prev != '\n') {
+                        continue;
+                    }
+                }
+                int end = hashtagMatcher.end();
+                boolean overlap = false;
+                for (TLRPC.MessageEntity existing : workingEntities) {
+                    if (!(existing.offset >= end || existing.offset + existing.length <= start)) {
+                        overlap = true;
+                        break;
+                    }
+                }
+                if (!overlap) {
+                    TLRPC.TL_messageEntityHashtag hashtag = new TLRPC.TL_messageEntityHashtag();
+                    hashtag.offset = start;
+                    hashtag.length = end - start;
+                    workingEntities.add(hashtag);
+                }
+            }
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+        
+        ArrayList<TLRPC.MessageEntity> toReplace = new ArrayList<>();
+        for (TLRPC.MessageEntity ent : workingEntities) {
+            if (ent.offset < 0 || ent.offset >= rawText.length() || ent.offset + ent.length > rawText.length()) {
+                continue;
+            }
+            
+            String entText = rawText.substring(ent.offset, ent.offset + ent.length);
+            boolean shouldReplace = false;
+
+            if (ent instanceof TLRPC.TL_messageEntityMention || ent instanceof TLRPC.TL_messageEntityMentionName || ent instanceof TLRPC.TL_inputMessageEntityMentionName) {
+                shouldReplace = (typeMask & 2) != 0;
+            } else if (ent instanceof TLRPC.TL_messageEntityHashtag) {
+                shouldReplace = (typeMask & 4) != 0;
+            } else {
+                String url = null;
+                if (ent instanceof TLRPC.TL_messageEntityUrl) {
+                    url = entText;
+                } else if (ent instanceof TLRPC.TL_messageEntityTextUrl) {
+                    url = ((TLRPC.TL_messageEntityTextUrl) ent).url;
+                }
+                
+                if (url != null) {
+                    boolean isInternal = org.telegram.messenger.browser.Browser.isInternalUrl(url, null);
+                    if (isInternal) {
+                        shouldReplace = (typeMask & 1) != 0;
+                    } else {
+                        shouldReplace = (typeMask & 8) != 0;
+                    }
+                }
+            }
+            
+            if (shouldReplace) {
+                toReplace.add(ent);
+            }
+        }
+        
+        java.util.Collections.sort(toReplace, (e1, e2) -> Integer.compare(e2.offset, e1.offset));
+        
+        for (TLRPC.MessageEntity ent : toReplace) {
+            int oldOffset = ent.offset;
+            int oldLength = ent.length;
+            
+            if (ent instanceof TLRPC.TL_messageEntityTextUrl) {
+                ((TLRPC.TL_messageEntityTextUrl) ent).url = replacementStr;
+                String entText = textBuilder.substring(ent.offset, ent.offset + ent.length);
+                if (entText.startsWith("http://") || entText.startsWith("https://") || entText.startsWith("tg://") || entText.contains("t.me")) {
+                    textBuilder.replace(ent.offset, ent.offset + ent.length, replacementStr);
+                    int lengthDiff = replacementStr.length() - oldLength;
+                    ent.length = replacementStr.length();
                     
-                    if (shouldReplace) {
-                        try {
-                            int spanStart = spannableStringBuilder.getSpanStart(obj);
-                            int spanEnd = spannableStringBuilder.getSpanEnd(obj);
-                            if (spanStart >= 0 && spanEnd >= 0 && spanStart <= spannableStringBuilder.length() && spanEnd <= spannableStringBuilder.length()) {
-                                spannableStringBuilder.replace(spanStart, spanEnd, newLink);
-                                spannableStringBuilder.removeSpan(obj);
-                            }
-                        } catch (Exception e) {
-                            FileLog.e(e);
+                    for (TLRPC.MessageEntity other : workingEntities) {
+                        if (other != ent && other.offset > oldOffset) {
+                            other.offset += lengthDiff;
+                        }
+                    }
+                }
+            } else {
+                textBuilder.replace(ent.offset, ent.offset + ent.length, replacementStr);
+                int lengthDiff = replacementStr.length() - oldLength;
+                
+                TLRPC.MessageEntity newUrlEnt;
+                if (replacementStr.startsWith("@")) {
+                    newUrlEnt = new TLRPC.TL_messageEntityMention();
+                } else if (replacementStr.startsWith("#")) {
+                    newUrlEnt = new TLRPC.TL_messageEntityHashtag();
+                } else {
+                    newUrlEnt = new TLRPC.TL_messageEntityUrl();
+                }
+                newUrlEnt.offset = ent.offset;
+                newUrlEnt.length = replacementStr.length();
+                
+                int index = workingEntities.indexOf(ent);
+                if (index >= 0) {
+                    workingEntities.set(index, newUrlEnt);
+                }
+                
+                for (TLRPC.MessageEntity other : workingEntities) {
+                    if (other != ent && other != newUrlEnt) {
+                        if (other.offset > oldOffset) {
+                            other.offset += lengthDiff;
                         }
                     }
                 }
             }
         }
-        updateMessageText(msg, spannableStringBuilder);
+        
+        updateMessageText(msg, textBuilder.toString(), workingEntities);
     }
 
     private void deleteAllLinks() {
@@ -1001,7 +1382,7 @@ public class SpecialForwardActivity extends ChatActivity {
                     TLRPC.Message messageClone = cloneMessage(msg.messageOwner);
                     if (messageClone != null) {
                         messageClone.id = msg.getId();
-                        MessageObject newCloned = createPreviewMessageObject(messageClone);
+                        MessageObject newCloned = createPreviewMessageObject(messageClone, msg);
                         newCloned.stableId = msg.stableId;
                         newCloned.forceUpdate = true;
                         newCloned.checkLayout();
@@ -1016,6 +1397,12 @@ public class SpecialForwardActivity extends ChatActivity {
                 chatAdapter.notifyDataSetChanged();
             }
             if (selectedMessage != null) {
+                for (MessageObject msg : messages) {
+                    if (msg.stableId == selectedMessage.stableId) {
+                        selectedMessage = msg;
+                        break;
+                    }
+                }
                 startEditingMessage(selectedMessage);
             }
             updateSendBadge();
@@ -1025,36 +1412,155 @@ public class SpecialForwardActivity extends ChatActivity {
     }
 
     private void deleteLinks(MessageObject msg, int typeMask) {
-        CharSequence text = getMessageText(msg);
-        if (text == null) return;
+        if (msg == null || msg.messageOwner == null) return;
+        String rawText = msg.messageOwner.message;
+        if (rawText == null) rawText = "";
         
-        SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(text);
-        Object[] spans = spannableStringBuilder.getSpans(0, spannableStringBuilder.length(), Object.class);
-        if (spans != null && spans.length > 0) {
-            for (Object obj : spans) {
-                if (obj instanceof URLSpan) {
-                    String url = ((URLSpan) obj).getURL();
-                    boolean shouldDelete = (org.telegram.messenger.browser.Browser.isInternalUrl(url, null) && (typeMask & 1) != 0)
-                            || (url.startsWith("@") && (typeMask & 2) != 0)
-                            || (url.startsWith("#") && (typeMask & 4) != 0)
-                            || (!url.startsWith("@") && !url.startsWith("#") && !org.telegram.messenger.browser.Browser.isInternalUrl(url, null) && (typeMask & 8) != 0);
-                    
-                    if (shouldDelete) {
-                        try {
-                            int spanStart = spannableStringBuilder.getSpanStart(obj);
-                            int spanEnd = spannableStringBuilder.getSpanEnd(obj);
-                            if (spanStart >= 0 && spanEnd >= 0 && spanStart <= spannableStringBuilder.length() && spanEnd <= spannableStringBuilder.length()) {
-                                spannableStringBuilder.delete(spanStart, spanEnd);
-                                spannableStringBuilder.removeSpan(obj);
-                            }
-                        } catch (Exception e) {
-                            FileLog.e(e);
-                        }
+        ArrayList<TLRPC.MessageEntity> entities = msg.messageOwner.entities;
+        if (entities == null || entities.isEmpty()) {
+            entities = MediaDataController.getInstance(currentAccount).getEntities(new CharSequence[]{rawText}, true);
+        }
+        if (entities == null) {
+            entities = new ArrayList<>();
+        }
+        
+        StringBuilder textBuilder = new StringBuilder(rawText);
+        
+        ArrayList<TLRPC.MessageEntity> workingEntities = new ArrayList<>();
+        for (TLRPC.MessageEntity ent : entities) {
+            workingEntities.add(ent);
+        }
+
+        // Parse missing mentions from text
+        try {
+            java.util.regex.Matcher mentionMatcher = java.util.regex.Pattern.compile("@[a-zA-Z0-9_]{1,32}").matcher(rawText);
+            while (mentionMatcher.find()) {
+                int start = mentionMatcher.start();
+                if (start > 0) {
+                    char prev = rawText.charAt(start - 1);
+                    if (!Character.isWhitespace(prev) && prev != '\n') {
+                        continue;
+                    }
+                }
+                int end = mentionMatcher.end();
+                boolean overlap = false;
+                for (TLRPC.MessageEntity existing : workingEntities) {
+                    if (!(existing.offset >= end || existing.offset + existing.length <= start)) {
+                        overlap = true;
+                        break;
+                    }
+                }
+                if (!overlap) {
+                    TLRPC.TL_messageEntityMention mention = new TLRPC.TL_messageEntityMention();
+                    mention.offset = start;
+                    mention.length = end - start;
+                    workingEntities.add(mention);
+                }
+            }
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+
+        // Parse missing hashtags from text
+        try {
+            java.util.regex.Matcher hashtagMatcher = java.util.regex.Pattern.compile("#[a-zA-Z0-9_]{1,32}").matcher(rawText);
+            while (hashtagMatcher.find()) {
+                int start = hashtagMatcher.start();
+                if (start > 0) {
+                    char prev = rawText.charAt(start - 1);
+                    if (!Character.isWhitespace(prev) && prev != '\n') {
+                        continue;
+                    }
+                }
+                int end = hashtagMatcher.end();
+                boolean overlap = false;
+                for (TLRPC.MessageEntity existing : workingEntities) {
+                    if (!(existing.offset >= end || existing.offset + existing.length <= start)) {
+                        overlap = true;
+                        break;
+                    }
+                }
+                if (!overlap) {
+                    TLRPC.TL_messageEntityHashtag hashtag = new TLRPC.TL_messageEntityHashtag();
+                    hashtag.offset = start;
+                    hashtag.length = end - start;
+                    workingEntities.add(hashtag);
+                }
+            }
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+        
+        ArrayList<TLRPC.MessageEntity> toDeleteText = new ArrayList<>();
+        ArrayList<TLRPC.MessageEntity> toRemoveEntityOnly = new ArrayList<>();
+        
+        for (TLRPC.MessageEntity ent : workingEntities) {
+            if (ent.offset < 0 || ent.offset >= rawText.length() || ent.offset + ent.length > rawText.length()) {
+                continue;
+            }
+            
+            String entText = rawText.substring(ent.offset, ent.offset + ent.length);
+            boolean isTextUrl = false;
+            boolean shouldDelete = false;
+            
+            if (ent instanceof TLRPC.TL_messageEntityMention || ent instanceof TLRPC.TL_messageEntityMentionName || ent instanceof TLRPC.TL_inputMessageEntityMentionName) {
+                shouldDelete = (typeMask & 2) != 0;
+            } else if (ent instanceof TLRPC.TL_messageEntityHashtag) {
+                shouldDelete = (typeMask & 4) != 0;
+            } else {
+                String url = null;
+                if (ent instanceof TLRPC.TL_messageEntityUrl) {
+                    url = entText;
+                } else if (ent instanceof TLRPC.TL_messageEntityTextUrl) {
+                    url = ((TLRPC.TL_messageEntityTextUrl) ent).url;
+                    isTextUrl = true;
+                }
+                
+                if (url != null) {
+                    boolean isInternal = org.telegram.messenger.browser.Browser.isInternalUrl(url, null);
+                    if (isInternal) {
+                        shouldDelete = (typeMask & 1) != 0;
+                    } else {
+                        shouldDelete = (typeMask & 8) != 0;
                     }
                 }
             }
+            
+            if (shouldDelete) {
+                if (isTextUrl) {
+                    if (entText.startsWith("http://") || entText.startsWith("https://") || entText.startsWith("tg://") || entText.contains("t.me")) {
+                        toDeleteText.add(ent);
+                    } else {
+                        toRemoveEntityOnly.add(ent);
+                    }
+                } else {
+                    toDeleteText.add(ent);
+                }
+            }
         }
-        updateMessageText(msg, spannableStringBuilder);
+        
+        java.util.Collections.sort(toDeleteText, (e1, e2) -> Integer.compare(e2.offset, e1.offset));
+        
+        for (TLRPC.MessageEntity ent : toDeleteText) {
+            int oldOffset = ent.offset;
+            int oldLength = ent.length;
+            
+            textBuilder.delete(ent.offset, ent.offset + ent.length);
+            workingEntities.remove(ent);
+            
+            int lengthDiff = -oldLength;
+            for (TLRPC.MessageEntity other : workingEntities) {
+                if (other.offset > oldOffset) {
+                    other.offset += lengthDiff;
+                }
+            }
+        }
+        
+        for (TLRPC.MessageEntity ent : toRemoveEntityOnly) {
+            workingEntities.remove(ent);
+        }
+        
+        updateMessageText(msg, textBuilder.toString(), workingEntities);
     }
 
     private void deleteAllCaptions() {
@@ -1073,7 +1579,7 @@ public class SpecialForwardActivity extends ChatActivity {
                 TLRPC.Message messageClone = cloneMessage(msg.messageOwner);
                 if (messageClone != null) {
                     messageClone.id = msg.getId();
-                    MessageObject newCloned = createPreviewMessageObject(messageClone);
+                    MessageObject newCloned = createPreviewMessageObject(messageClone, msg);
                     newCloned.stableId = msg.stableId;
                     newCloned.forceUpdate = true;
                     newCloned.checkLayout();
@@ -1111,7 +1617,9 @@ public class SpecialForwardActivity extends ChatActivity {
             }
         }
         for (int i = 0; i < groupedMessagesMap.size(); i++) {
-            groupedMessagesMap.valueAt(i).calculate();
+            MessageObject.GroupedMessages groupedMessages = groupedMessagesMap.valueAt(i);
+            java.util.Collections.sort(groupedMessages.messages, (a, b) -> Integer.compare(a.getId(), b.getId()));
+            groupedMessages.calculate();
         }
     }
 
@@ -1128,6 +1636,112 @@ public class SpecialForwardActivity extends ChatActivity {
             }
         );
         showDialog(shareAlert);
+    }
+
+    private void sendMessagesToPeer(ArrayList<MessageObject> forwardList, long peer, boolean showQuote, boolean keepCaption) {
+        boolean sendAsCopy = !showQuote;
+        if (!sendAsCopy) {
+            for (MessageObject msg : forwardList) {
+                if (msg != null && (getMessagesController().isPeerNoForwards(msg.getDialogId(), true) 
+                        || (msg.messageOwner != null && msg.messageOwner.noforwards)
+                        || msg.localMediaOverridden)) {
+                    sendAsCopy = true;
+                    break;
+                }
+            }
+        }
+        
+        if (sendAsCopy) {
+            for (int a = 0; a < forwardList.size(); a++) {
+                MessageObject message = forwardList.get(a);
+                if (message == null) continue;
+                long groupId = message.messageOwner.grouped_id;
+                if (groupId != 0) {
+                    ArrayList<MessageObject> group = new ArrayList<>();
+                    group.add(message);
+                    while (a + 1 < forwardList.size() && forwardList.get(a + 1).messageOwner.grouped_id != 0 && forwardList.get(a + 1).messageOwner.grouped_id == groupId) {
+                        group.add(forwardList.get(++a));
+                    }
+                    
+                    boolean hasOverridden = false;
+                    for (MessageObject m : group) {
+                        if (m.localMediaOverridden) {
+                            hasOverridden = true;
+                            break;
+                        }
+                    }
+                    
+                    if (hasOverridden) {
+                        ArrayList<SendMessagesHelper.SendingMediaInfo> infos = new ArrayList<>();
+                        boolean forceDocument = false;
+                        for (MessageObject m : group) {
+                            String path = m.localMediaOverridden ? m.localMediaOverriddenPath : null;
+                            if (path == null) {
+                                java.io.File f = getFileLoader().getPathToMessage(m.messageOwner);
+                                if (f != null && f.exists()) {
+                                    path = f.getAbsolutePath();
+                                }
+                            }
+                            if (path == null) {
+                                path = m.messageOwner.attachPath;
+                            }
+                            
+                            boolean isVideo = false;
+                            if (m.localMediaOverridden) {
+                                isVideo = m.localMediaIsVideo;
+                            } else if (m.messageOwner.media.document instanceof TLRPC.TL_document) {
+                                TLRPC.TL_document document = (TLRPC.TL_document) m.messageOwner.media.document;
+                                isVideo = MessageObject.isVideoDocument(document) || m.videoEditedInfo != null;
+                                if (!isVideo) forceDocument = true;
+                            }
+                            
+                            if (path != null) {
+                                SendMessagesHelper.SendingMediaInfo info = new SendMessagesHelper.SendingMediaInfo();
+                                info.path = path;
+                                info.isVideo = isVideo;
+                                info.caption = keepCaption && m.messageOwner.message != null ? m.messageOwner.message : "";
+                                info.entities = keepCaption ? m.messageOwner.entities : null;
+                                if (m.messageOwner.media != null) {
+                                    info.ttl = m.messageOwner.media.ttl_seconds;
+                                    info.hasMediaSpoilers = m.messageOwner.media.spoiler;
+                                }
+                                info.videoEditedInfo = m.videoEditedInfo;
+                                infos.add(info);
+                            }
+                        }
+                        
+                        if (!infos.isEmpty()) {
+                            final boolean finalForceDocument = forceDocument;
+                            final ArrayList<SendMessagesHelper.SendingMediaInfo> finalInfos = infos;
+                            AndroidUtilities.runOnUIThread(() -> {
+                                SendMessagesHelper.prepareSendingMedia(getAccountInstance(), finalInfos, peer, null, null, null, null, finalForceDocument, true, null, true, 0, 0, 0, false, null, null, 0, 0L, false, 0L, 0L, null);
+                            });
+                        }
+                    } else {
+                        if (group.size() > 1) {
+                            SendMessagesHelper.getInstance(currentAccount).processForwardFromMyName(group, peer, 0, 0, null);
+                        } else {
+                            SendMessagesHelper.getInstance(currentAccount).processForwardFromMyName(message, peer, 0, 0, null);
+                        }
+                    }
+                } else {
+                    if (message.localMediaOverridden) {
+                        String path = message.localMediaOverriddenPath;
+                        String caption = keepCaption && message.messageOwner.message != null ? message.messageOwner.message : "";
+                        ArrayList<TLRPC.MessageEntity> entities = keepCaption ? message.messageOwner.entities : null;
+                        if (message.localMediaIsVideo) {
+                            SendMessagesHelper.prepareSendingVideo(getAccountInstance(), path, message.videoEditedInfo, null, null, peer, null, null, null, null, entities, 0, null, true, 0, 0, false, false, caption, null, 0, 0L, 0L);
+                        } else {
+                            SendMessagesHelper.prepareSendingPhoto(getAccountInstance(), path, null, null, peer, null, null, null, null, entities, null, null, 0, null, message.videoEditedInfo, true, 0, 0, false, caption, null, 0, 0L, 0L);
+                        }
+                    } else {
+                        SendMessagesHelper.getInstance(currentAccount).processForwardFromMyName(message, peer, 0, 0, null);
+                    }
+                }
+            }
+        } else {
+            SendMessagesHelper.getInstance(currentAccount).sendMessage(forwardList, peer, false, !keepCaption, true, 0, 0);
+        }
     }
 
     private void performForwardToSelectedChats(ArrayList<Long> dids, boolean showQuote, boolean keepCaption, boolean removeLinkPreview) {
@@ -1161,11 +1775,11 @@ public class SpecialForwardActivity extends ChatActivity {
                     } else {
                         ArrayList<MessageObject> singleList = new ArrayList<>();
                         singleList.add(msg);
-                        SendMessagesHelper.getInstance(currentAccount).sendMessage(singleList, peer, !showQuote, !keepCaption, true, 0, 0);
+                        sendMessagesToPeer(singleList, peer, showQuote, keepCaption);
                     }
                 }
             } else {
-                SendMessagesHelper.getInstance(currentAccount).sendMessage(forwardList, peer, !showQuote, !keepCaption, true, 0, 0);
+                sendMessagesToPeer(forwardList, peer, showQuote, keepCaption);
             }
         }
         finishFragment();

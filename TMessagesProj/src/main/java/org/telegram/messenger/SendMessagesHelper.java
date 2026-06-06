@@ -132,6 +132,33 @@ import xyz.nextalone.nagram.NaConfig;
 
 public class SendMessagesHelper extends BaseController implements NotificationCenter.NotificationCenterDelegate {
 
+    public static class CopyForwardProgress {
+        public long dialogId;
+        public int total;
+        public int sent;
+        public final java.util.ArrayList<Integer> messageIds = new java.util.ArrayList<>();
+        public CopyForwardProgress(long dialogId, int total) {
+            this.dialogId = dialogId;
+            this.total = total;
+            this.sent = 0;
+        }
+    }
+    public static final java.util.concurrent.ConcurrentHashMap<Long, CopyForwardProgress> activeCopyForwards = new java.util.concurrent.ConcurrentHashMap<>();
+    public static boolean isCopyForwarding = false;
+    public static long copyForwardDialogId = 0;
+
+    public static boolean isForwardingToDialog(long dialogId) {
+        return activeCopyForwards.containsKey(dialogId);
+    }
+
+    public static String getStatusForDialog(long dialogId) {
+        CopyForwardProgress progress = activeCopyForwards.get(dialogId);
+        if (progress == null) {
+            return "";
+        }
+        return LocaleController.formatString("ForceForwardStatusMediaCopy", R.string.ForceForwardStatusMediaCopy) + " " + progress.sent + "/" + progress.total;
+    }
+
     public static final int MEDIA_TYPE_DICE = 11;
     public static final int MEDIA_TYPE_STORY = 12;
     private final HashMap<String, ArrayList<DelayedMessage>> delayedMessages = new HashMap<>();
@@ -1662,6 +1689,20 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         for (int a = 0, N = checkReadyToSendGroups.size(); a < N; a++) {
             sendReadyToSendGroup(checkReadyToSendGroups.get(a), false, true);
         }
+        // [Alexgram: Allow Forwarding/Copying] - Start
+        // When a copy-forward message is cancelled while still uploading, it gets removed
+        // from delayedMessages/uploadingMessages but never passes through removeFromSendingMessages.
+        // This means activeCopyForwards is never cleaned up, leaving the overlay stuck forever.
+        // Fix: after cancellation, if no messages are still being sent/uploaded for this dialog,
+        // remove the activeCopyForwards entry and notify the UI to dismiss the overlay.
+        if (dialogId != 0 && activeCopyForwards.containsKey(dialogId)) {
+            boolean anyStillPending = isSendingMessageIdDialog(dialogId) || isUploadingMessageIdDialog(dialogId);
+            if (!anyStillPending) {
+                activeCopyForwards.remove(dialogId);
+                getNotificationCenter().postNotificationName(NotificationCenter.updateInterfaces, 1 << 30);
+            }
+        }
+        // [Alexgram: Allow Forwarding/Copying] - End
         if (objects.size() == 1 && objects.get(0).isEditing() && objects.get(0).previousMedia != null) {
             revertEditingMessageObject(objects.get(0));
         } else if (objects.size() == 1 && objects.get(0).isEditing() && objects.get(0).isPoll()) {
@@ -1679,6 +1720,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
             getMessagesController().deleteMessages(messageIds, null, null, dialogId, topicId, false, mode);
         }
     }
+
 
     public boolean retrySendMessage(MessageObject messageObject, boolean unsent, long payStars) {
         if (messageObject.getId() >= 0) {
@@ -1836,8 +1878,15 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
             FileLog.d("NK_DEBUG: album bypass starting with " + infos.size() + " items, did=" + did);
             final boolean finalForceDocument = forceDocument;
             AndroidUtilities.runOnUIThread(() -> {
-                MessageObject targetReplyMsg = (first.replyMessageObject != null && first.replyMessageObject.getDialogId() == did) ? first.replyMessageObject : null;
-                prepareSendingMedia(AccountInstance.getInstance(currentAccount), infos, did, targetReplyMsg, null, null, null, finalForceDocument, true, null, null, true, 0, 0, 0, false, null, null, 0, 0, false, payStars, monoForumPeerId, suggestionParams);
+                isCopyForwarding = true;
+                copyForwardDialogId = did;
+                try {
+                    MessageObject targetReplyMsg = (first.replyMessageObject != null && first.replyMessageObject.getDialogId() == did) ? first.replyMessageObject : null;
+                    prepareSendingMedia(AccountInstance.getInstance(currentAccount), infos, did, targetReplyMsg, null, null, null, finalForceDocument, true, null, null, true, 0, 0, 0, false, null, null, 0, 0, false, payStars, monoForumPeerId, suggestionParams);
+                } finally {
+                    isCopyForwarding = false;
+                    copyForwardDialogId = 0;
+                }
             });
         } else {
             FileLog.d("NK_DEBUG: album bypass failed, no valid paths found in group of " + group.size());
@@ -1868,7 +1917,14 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                 if (isRestricted && path != null) {
                     final String finalPath = path;
                     AndroidUtilities.runOnUIThread(() -> {
-                        prepareSendingPhoto(AccountInstance.getInstance(currentAccount), finalPath, null, null, did, targetReplyMsg, null, null, null, messageObject.messageOwner.entities, null, null, messageObject.messageOwner.media.ttl_seconds, null, messageObject.videoEditedInfo, true, 0, 0, 0, false, messageObject.messageOwner.message, null, 0, 0, payStars, monoForumPeerId, suggestionParams);
+                        isCopyForwarding = true;
+                        copyForwardDialogId = did;
+                        try {
+                            prepareSendingPhoto(AccountInstance.getInstance(currentAccount), finalPath, null, null, did, targetReplyMsg, null, null, null, messageObject.messageOwner.entities, null, null, messageObject.messageOwner.media.ttl_seconds, null, messageObject.videoEditedInfo, true, 0, 0, 0, false, messageObject.messageOwner.message, null, 0, 0, payStars, monoForumPeerId, suggestionParams);
+                        } finally {
+                            isCopyForwarding = false;
+                            copyForwardDialogId = 0;
+                        }
                     });
                 } else {
                     photo = isRestricted ? cleanPhoto(photo) : photo;
@@ -1885,14 +1941,28 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                     final String finalPath = path;
                     if (MessageObject.isVideoDocument(document) || messageObject.videoEditedInfo != null) {
                         AndroidUtilities.runOnUIThread(() -> {
-                            prepareSendingVideo(AccountInstance.getInstance(currentAccount), finalPath, messageObject.videoEditedInfo, null, null, did, targetReplyMsg, null, null, null, messageObject.messageOwner.entities, messageObject.messageOwner.media.ttl_seconds, null, true, 0, 0, false, false, messageObject.messageOwner.message, null, 0, 0, payStars, monoForumPeerId, suggestionParams);
+                            isCopyForwarding = true;
+                            copyForwardDialogId = did;
+                            try {
+                                prepareSendingVideo(AccountInstance.getInstance(currentAccount), finalPath, messageObject.videoEditedInfo, null, null, did, targetReplyMsg, null, null, null, messageObject.messageOwner.entities, messageObject.messageOwner.media.ttl_seconds, null, true, 0, 0, false, false, messageObject.messageOwner.message, null, 0, 0, payStars, monoForumPeerId, suggestionParams);
+                            } finally {
+                                isCopyForwarding = false;
+                                copyForwardDialogId = 0;
+                            }
                         });
                     } else {
                         ArrayList<String> paths = new ArrayList<>();
                         paths.add(path);
                         final TLRPC.TL_document finalDocument = document;
                         AndroidUtilities.runOnUIThread(() -> {
-                            prepareSendingDocuments(AccountInstance.getInstance(currentAccount), paths, paths, null, messageObject.messageOwner.message, messageObject.messageOwner.entities, finalDocument.mime_type, did, targetReplyMsg, null, null, null, null, true, 0, 0, null, null, 0, 0, false, payStars, monoForumPeerId, suggestionParams);
+                            isCopyForwarding = true;
+                            copyForwardDialogId = did;
+                            try {
+                                prepareSendingDocuments(AccountInstance.getInstance(currentAccount), paths, paths, null, messageObject.messageOwner.message, messageObject.messageOwner.entities, finalDocument.mime_type, did, targetReplyMsg, null, null, null, null, true, 0, 0, null, null, 0, 0, false, payStars, monoForumPeerId, suggestionParams);
+                            } finally {
+                                isCopyForwarding = false;
+                                copyForwardDialogId = 0;
+                            }
                         });
                     }
                 } else {
@@ -2164,6 +2234,33 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         return sendMessage(messages, peer, forwardFromMyName, hideCaption, notify, scheduleDate, 0, replyToTopMsg, video_timestamp, payStars, 0, null);
     }
 
+    private int getCopyForwardableCount(ArrayList<MessageObject> messages) {
+        int count = 0;
+        for (int a = 0; a < messages.size(); a++) {
+            MessageObject messageObject = messages.get(a);
+            if (messageObject.messageOwner == null) {
+                continue;
+            }
+            if (messageObject.messageOwner.media == null ||
+                messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaEmpty ||
+                messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaWebPage ||
+                messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaGame ||
+                messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaInvoice ||
+                messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaVenue ||
+                messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaGeo ||
+                messageObject.messageOwner.media.phone_number != null) {
+                count++;
+            } else {
+                File f = getFileLoader().getPathToMessage(messageObject.messageOwner);
+                String path = (f != null && f.exists()) ? f.getAbsolutePath() : messageObject.messageOwner.attachPath;
+                if (path != null && new File(path).exists()) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
     public int sendMessage(
         ArrayList<MessageObject> messages,
         final long peer,
@@ -2197,23 +2294,37 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         }
         FileLog.d("NK_DEBUG: sendMessage forceCopySend=" + forceCopySend + " messages=" + messages.size() + " peer=" + peer);
         if (forceCopySend) {
-            for (int a = 0, N = messages.size(); a < N; a++) {
-                MessageObject message = messages.get(a);
-                long groupId = message.messageOwner.grouped_id;
-                if (groupId != 0) {
-                    ArrayList<MessageObject> group = new ArrayList<>();
-                    group.add(message);
-                    while (a + 1 < N && messages.get(a + 1).messageOwner.grouped_id != 0 && messages.get(a + 1).messageOwner.grouped_id == groupId) {
-                        group.add(messages.get(++a));
-                    }
-                    if (group.size() > 1) {
-                        processForwardFromMyName(group, peer, payStars, monoForumPeerId, suggestionParams);
+            int copyForwardableCount = getCopyForwardableCount(messages);
+            if (copyForwardableCount > 0) {
+                CopyForwardProgress progress = new CopyForwardProgress(peer, copyForwardableCount);
+                activeCopyForwards.put(peer, progress);
+                getNotificationCenter().postNotificationName(NotificationCenter.updateInterfaces, 1 << 30);
+            }
+
+            isCopyForwarding = true;
+            copyForwardDialogId = peer;
+            try {
+                for (int a = 0, N = messages.size(); a < N; a++) {
+                    MessageObject message = messages.get(a);
+                    long groupId = message.messageOwner.grouped_id;
+                    if (groupId != 0) {
+                        ArrayList<MessageObject> group = new ArrayList<>();
+                        group.add(message);
+                        while (a + 1 < N && messages.get(a + 1).messageOwner.grouped_id != 0 && messages.get(a + 1).messageOwner.grouped_id == groupId) {
+                            group.add(messages.get(++a));
+                        }
+                        if (group.size() > 1) {
+                            processForwardFromMyName(group, peer, payStars, monoForumPeerId, suggestionParams);
+                        } else {
+                            processForwardFromMyName(message, peer, payStars, monoForumPeerId, suggestionParams);
+                        }
                     } else {
                         processForwardFromMyName(message, peer, payStars, monoForumPeerId, suggestionParams);
                     }
-                } else {
-                    processForwardFromMyName(message, peer, payStars, monoForumPeerId, suggestionParams);
                 }
+            } finally {
+                isCopyForwarding = false;
+                copyForwardDialogId = 0;
             }
             return 0;
         }
@@ -4252,6 +4363,13 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         ArrayList<TLRPC.MessageEntity> entities = sendMessageParams.entities;
         TLRPC.ReplyMarkup replyMarkup = sendMessageParams.replyMarkup;
         HashMap<String, String> params = sendMessageParams.params;
+        if (isCopyForwarding && copyForwardDialogId == peer) {
+            if (params == null) {
+                params = new HashMap<>();
+                sendMessageParams.params = params;
+            }
+            params.put("is_copy_forward", "1");
+        }
         boolean notify = sendMessageParams.notify;
         int scheduleDate = sendMessageParams.scheduleDate;
         int scheduleRepeatPeriod = sendMessageParams.scheduleRepeatPeriod;
@@ -7198,6 +7316,15 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         if (message.id > 0) {
             editingMessages.put(message.id, message);
         } else {
+            if (message.params != null && message.params.containsKey("is_copy_forward")) {
+                long did = MessageObject.getDialogId(message);
+                CopyForwardProgress progress = activeCopyForwards.get(did);
+                if (progress != null) {
+                    if (!progress.messageIds.contains(message.id)) {
+                        progress.messageIds.add(message.id);
+                    }
+                }
+            }
             boolean contains = sendingMessages.indexOfKey(message.id) >= 0;
             removeFromUploadingMessages(message.id, scheduled);
             sendingMessages.put(message.id, message);
@@ -7224,6 +7351,23 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                 sendingMessages.remove(mid);
                 if (!scheduled) {
                     long did = MessageObject.getDialogId(message);
+                    CopyForwardProgress progress = activeCopyForwards.get(did);
+                    if (progress != null) {
+                        if (progress.messageIds.contains(mid)) {
+                            progress.sent++;
+                            progress.messageIds.remove(Integer.valueOf(mid));
+                            boolean done = progress.sent >= progress.total || progress.messageIds.isEmpty();
+                            if (!done) {
+                                if (!isSendingMessageIdDialog(did) && !isUploadingMessageIdDialog(did)) {
+                                    done = true;
+                                }
+                            }
+                            if (done) {
+                                activeCopyForwards.remove(did);
+                            }
+                            getNotificationCenter().postNotificationName(NotificationCenter.updateInterfaces, 1 << 30);
+                        }
+                    }
                     Integer currentCount = sendingMessagesIdDialogs.get(did);
                     if (currentCount != null) {
                         int count = currentCount - 1;
@@ -9209,6 +9353,9 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         final String pathFinal = path;
         final String parentFinal = parentObject;
         final HashMap<String, String> params = new HashMap<>();
+        if (isCopyForwarding && copyForwardDialogId == dialogId) {
+            params.put("is_copy_forward", "1");
+        }
         if (originalPath != null) {
             params.put("originalPath", originalPath);
         }
@@ -9318,6 +9465,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
 
     @UiThread
     public static void prepareSendingAudioDocuments(AccountInstance accountInstance, ArrayList<MessageObject> messageObjects, CharSequence caption, long dialogId, MessageObject replyToMsg, MessageObject replyToTopMsg, TL_stories.StoryItem storyItem, boolean notify, int scheduleDate, int scheduledRepeatPeriod, MessageObject editingMessageObject, String quickReplyShortcut, int quickReplyShortcutId, long effectId, boolean invertMedia, long payStars, PollSendParams pollSendParams, ArrayList<Integer> pollSendIndexes, boolean forcedPollDoNotSendFinal, Runnable afterCommandsDone) {
+        final boolean isCopyForward = isCopyForwarding && copyForwardDialogId == dialogId;
         new Thread(() -> {
             final long forcedPollGroupId = pollSendParams != null ? pollSendParams.groupId : 0;
             final boolean forceDisableCheckSentMedia = pollSendParams != null;
@@ -9384,6 +9532,9 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                 final ArrayList<TLRPC.MessageEntity> entities = a == 0 ? accountInstance.getMediaDataController().getEntities(text, true) : null;
                 final String captionFinal = a == 0 ? text[0].toString() : null;
                 final HashMap<String, String> params = new HashMap<>();
+                if (isCopyForward) {
+                    params.put("is_copy_forward", "1");
+                }
                 if (originalPath != null) {
                     params.put("originalPath", originalPath);
                 }
@@ -10219,6 +10370,15 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         if (media.isEmpty()) {
             return;
         }
+        if (isCopyForwarding && copyForwardDialogId == dialogId) {
+            for (int a = 0; a < media.size(); a++) {
+                SendingMediaInfo info = media.get(a);
+                if (info.params == null) {
+                    info.params = new HashMap<>();
+                }
+                info.params.put("is_copy_forward", "1");
+            }
+        }
         for (int a = 0, N = media.size(); a < N; a++) {
             if (media.get(a).ttl > 0) {
                 groupMedia = false;
@@ -10385,6 +10545,9 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                 if (info.searchImage != null && info.videoEditedInfo == null) {
                     if (info.searchImage.type == 1) {
                         final HashMap<String, String> params = new HashMap<>();
+                        if (info.params != null && info.params.containsKey("is_copy_forward")) {
+                            params.put("is_copy_forward", "1");
+                        }
                         TLRPC.TL_document document = null;
                         String parentObject = null;
                         File cacheFile;
@@ -10544,6 +10707,9 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                             final String parentFinal = parentObject;
                             final boolean needDownloadHttpFinal = needDownloadHttp;
                             final HashMap<String, String> params = new HashMap<>();
+                            if (info.params != null && info.params.containsKey("is_copy_forward")) {
+                                params.put("is_copy_forward", "1");
+                            }
                             if (info.searchImage.imageUrl != null) {
                                 params.put("originalPath", info.searchImage.imageUrl);
                             }
@@ -10804,6 +10970,9 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                             final String originalPathFinal = originalPath;
                             final String finalPath = path;
                             final HashMap<String, String> params = new HashMap<>();
+                            if (info.params != null && info.params.containsKey("is_copy_forward")) {
+                                params.put("is_copy_forward", "1");
+                            }
                             final Bitmap thumbFinal = thumb;
                             final String thumbKeyFinal = thumbKey;
                             final TLRPC.PhotoSize coverFinal = cover;
@@ -11011,6 +11180,9 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                                 final TLRPC.TL_photo photoFinal = photo;
                                 final String parentFinal = parentObject;
                                 final HashMap<String, String> params = new HashMap<>();
+                                if (info.params != null && info.params.containsKey("is_copy_forward")) {
+                                    params.put("is_copy_forward", "1");
+                                }
                                 final Bitmap[] bitmapFinal = new Bitmap[1];
                                 final String[] keyFinal = new String[1];
                                 if (photo.has_stickers = info.masks != null && !info.masks.isEmpty()) {
@@ -11446,6 +11618,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         if (videoPath == null || videoPath.length() == 0) {
             return;
         }
+        final boolean isCopyForward = isCopyForwarding && copyForwardDialogId == dialogId;
         new Thread(() -> {
             final VideoEditedInfo videoEditedInfo = info != null ? info : createCompressionSettings(videoPath, 0);
 
@@ -11630,6 +11803,9 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                 final String originalPathFinal = originalPath;
                 final String finalPath = path;
                 final HashMap<String, String> params = new HashMap<>();
+                if (isCopyForward) {
+                    params.put("is_copy_forward", "1");
+                }
                 final Bitmap thumbFinal = thumb;
                 final String thumbKeyFinal = thumbKey;
                 final String captionFinal = caption != null ? caption.toString() : "";

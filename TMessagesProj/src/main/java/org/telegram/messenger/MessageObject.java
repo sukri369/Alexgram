@@ -302,6 +302,9 @@ public class MessageObject {
     public boolean scheduledSent;
     public boolean preview;
     public boolean previewForward;
+    public boolean localMediaOverridden;
+    public String localMediaOverriddenPath;
+    public boolean localMediaIsVideo;
     public boolean sentHighQuality;
 
     public boolean notime;
@@ -11352,6 +11355,9 @@ public class MessageObject {
     }
 
     public boolean canEditMessage(TLRPC.Chat chat) {
+        if (previewForward) {
+            return true;
+        }
         return canEditMessage(currentAccount, messageOwner, chat, scheduled);
     }
 
@@ -11438,7 +11444,7 @@ public class MessageObject {
         if (message.paid_suggested_post_stars || message.paid_suggested_post_ton) {
             return false;
         }
-        if (message.from_id instanceof TLRPC.TL_peerUser && message.from_id.user_id == message.peer_id.user_id && message.from_id.user_id == UserConfig.getInstance(currentAccount).getClientUserId() && !isLiveLocationMessage(message) && !(media instanceof TLRPC.TL_messageMediaContact)) {
+        if (message.from_id instanceof TLRPC.TL_peerUser && message.from_id.user_id == message.peer_id.user_id && message.from_id.user_id == UserConfig.getInstance(currentAccount).getClientUserId() && !isLiveLocationMessage(message)) {
             return true;
         }
         if (chat == null && message.peer_id.channel_id != 0) {
@@ -11454,7 +11460,8 @@ public class MessageObject {
             !(media instanceof TLRPC.TL_messageMediaDocument) &&
             !(media instanceof TLRPC.TL_messageMediaWebPage) &&
             !(media instanceof TLRPC.TL_messageMediaPaidMedia) &&
-            !(media instanceof TLRPC.TL_messageMediaToDo)
+            !(media instanceof TLRPC.TL_messageMediaToDo) &&
+            !(media instanceof TLRPC.TL_messageMediaContact)
         ) {
             return false;
         }
@@ -11475,6 +11482,7 @@ public class MessageObject {
                     media instanceof TLRPC.TL_messageMediaWebPage ||
                     media instanceof TLRPC.TL_messageMediaPaidMedia ||
                     media instanceof TLRPC.TL_messageMediaToDo ||
+                    media instanceof TLRPC.TL_messageMediaContact ||
                     media == null);
         }
         if (chat != null && chat.megagroup && message.out || chat != null && !chat.megagroup && (chat.creator || chat.admin_rights != null && (chat.admin_rights.edit_messages || message.out && chat.admin_rights.post_messages)) && message.post) {
@@ -11484,12 +11492,103 @@ public class MessageObject {
                 media instanceof TLRPC.TL_messageMediaWebPage ||
                 media instanceof TLRPC.TL_messageMediaPaidMedia ||
                 media instanceof TLRPC.TL_messageMediaToDo ||
+                media instanceof TLRPC.TL_messageMediaContact ||
                 media == null
             ) {
                 return true;
             }
         }
         return false;
+    }
+
+    public static String canEditMessageDebugReason(int currentAccount, TLRPC.Message message, TLRPC.Chat chat, boolean scheduled) {
+        if (message == null) return "message=null";
+        if (message.peer_id == null) return "peer_id=null";
+        if (scheduled && message.date < org.telegram.tgnet.ConnectionsManager.getInstance(currentAccount).getCurrentTime() - 60) {
+            return "scheduled & too old";
+        }
+        if (chat != null && (chat.left || chat.kicked) && (!chat.megagroup || !chat.has_link)) {
+            return "chat left or kicked";
+        }
+        TLRPC.MessageMedia media = getMedia(message);
+        if (media != null && (isRoundVideoDocument(media.document) || isStickerDocument(media.document) || isAnimatedStickerDocument(media.document, true) || isLocationMessage(message))) {
+            return "unsupported media type: round/sticker/location";
+        }
+        if (message.action != null && !(message.action instanceof TLRPC.TL_messageActionEmpty)) {
+            return "message action is not empty: " + message.action.getClass().getSimpleName();
+        }
+        if (isForwardedMessage(message)) {
+            return "forwarded message";
+        }
+        if (message.via_bot_id != 0) {
+            return "via bot";
+        }
+        if (message.id < 0) {
+            return "id < 0 (unsent/sending)";
+        }
+        if (message.paid_suggested_post_stars || message.paid_suggested_post_ton) {
+            return "paid suggested post";
+        }
+        if (message.from_id instanceof TLRPC.TL_peerUser && message.from_id.user_id == message.peer_id.user_id && message.from_id.user_id == UserConfig.getInstance(currentAccount).getClientUserId() && !isLiveLocationMessage(message)) {
+            return "PASSED: user self check";
+        }
+        if (chat == null && message.peer_id.channel_id != 0) {
+            chat = MessagesController.getInstance(currentAccount).getChat(message.peer_id.channel_id);
+            if (chat == null) {
+                return "chat is null & getChat returned null (channel_id=" + message.peer_id.channel_id + ")";
+            }
+        }
+        if (
+            media != null &&
+            !(media instanceof TLRPC.TL_messageMediaEmpty) &&
+            !(media instanceof TLRPC.TL_messageMediaPhoto) &&
+            !(media instanceof TLRPC.TL_messageMediaDocument) &&
+            !(media instanceof TLRPC.TL_messageMediaWebPage) &&
+            !(media instanceof TLRPC.TL_messageMediaPaidMedia) &&
+            !(media instanceof TLRPC.TL_messageMediaToDo) &&
+            !(media instanceof TLRPC.TL_messageMediaContact)
+        ) {
+            return "media type not allowed: " + media.getClass().getSimpleName();
+        }
+        if (ChatObject.isChannel(chat) && !chat.megagroup && (chat.creator || chat.admin_rights != null && chat.admin_rights.edit_messages)) {
+            return "PASSED: channel admin check";
+        }
+        if (message.out && chat != null && chat.megagroup && (chat.creator || chat.admin_rights != null && chat.admin_rights.pin_messages || chat.default_banned_rights != null && !chat.default_banned_rights.pin_messages)) {
+            return "PASSED: megagroup own pin check";
+        }
+        if (!scheduled && Math.abs(message.date - org.telegram.tgnet.ConnectionsManager.getInstance(currentAccount).getCurrentTime()) > MessagesController.getInstance(currentAccount).maxEditTime) {
+            return "time expired: diff=" + Math.abs(message.date - org.telegram.tgnet.ConnectionsManager.getInstance(currentAccount).getCurrentTime()) + " max=" + MessagesController.getInstance(currentAccount).maxEditTime;
+        }
+        if (message.peer_id.channel_id == 0) {
+            boolean isOutOrSelf = (message.out || message.from_id instanceof TLRPC.TL_peerUser && message.from_id.user_id == UserConfig.getInstance(currentAccount).getClientUserId());
+            boolean isMediaAllowed = (
+                    media instanceof TLRPC.TL_messageMediaPhoto ||
+                    media instanceof TLRPC.TL_messageMediaDocument && !isStickerMessage(message) && !isAnimatedStickerMessage(message) ||
+                    media instanceof TLRPC.TL_messageMediaEmpty ||
+                    media instanceof TLRPC.TL_messageMediaWebPage ||
+                    media instanceof TLRPC.TL_messageMediaPaidMedia ||
+                    media instanceof TLRPC.TL_messageMediaToDo ||
+                    media instanceof TLRPC.TL_messageMediaContact ||
+                    media == null);
+            if (!isOutOrSelf) return "peer_id.channel_id == 0, but not out & not self";
+            if (!isMediaAllowed) return "peer_id.channel_id == 0, but media not allowed: " + (media != null ? media.getClass().getSimpleName() : "null");
+            return "PASSED: peer_id.channel_id == 0 check";
+        }
+        if (chat != null && chat.megagroup && message.out || chat != null && !chat.megagroup && (chat.creator || chat.admin_rights != null && (chat.admin_rights.edit_messages || message.out && chat.admin_rights.post_messages)) && message.post) {
+            boolean isMediaAllowed = (
+                media instanceof TLRPC.TL_messageMediaPhoto ||
+                media instanceof TLRPC.TL_messageMediaDocument && !isStickerMessage(message) && !isAnimatedStickerMessage(message) ||
+                media instanceof TLRPC.TL_messageMediaEmpty ||
+                media instanceof TLRPC.TL_messageMediaWebPage ||
+                media instanceof TLRPC.TL_messageMediaPaidMedia ||
+                media instanceof TLRPC.TL_messageMediaToDo ||
+                media instanceof TLRPC.TL_messageMediaContact ||
+                media == null
+            );
+            if (!isMediaAllowed) return "megagroup/channel check, but media not allowed: " + (media != null ? media.getClass().getSimpleName() : "null");
+            return "PASSED: megagroup/channel check";
+        }
+        return "fell through: megagroup=" + (chat != null ? chat.megagroup : "null") + " out=" + message.out + " post=" + message.post + " creator=" + (chat != null ? chat.creator : "null") + " admin=" + (chat != null && chat.admin_rights != null);
     }
 
     public boolean canDeleteMessage(boolean inScheduleMode, TLRPC.Chat chat) {

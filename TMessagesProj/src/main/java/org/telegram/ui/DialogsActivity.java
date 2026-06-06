@@ -283,7 +283,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import me.vkryl.android.animator.BoolAnimator;
 import me.vkryl.android.animator.FactorAnimator;
 
-import tw.nekomimi.nekogram.BackButtonMenuRecent;
+import tw.nekomimi.nekogram.ChatHistoryActivity;
 import tw.nekomimi.nekogram.NekoConfig;
 import tw.nekomimi.nekogram.helpers.MainTabsHelper;
 import tw.nekomimi.nekogram.helpers.PasscodeHelper;
@@ -347,6 +347,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     // [Alexgram: Hidden Chats] - Start
     private String customTitle;
     // [Alexgram: Hidden Chats] - End
+    // [Alexgram: Tabs by Type] - target tab ID for single-page smooth drag animation
+    private int singlePagePendingTabId = -1;
 
     private TLRPC.RequestPeerType requestPeerType;
     private long requestPeerBotId;
@@ -463,7 +465,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 if (tabsAnimationInProgress) {
                     if (viewPages[0] == this) {
                         float scrollProgress = Math.abs(viewPages[0].getTranslationX()) / (float) viewPages[0].getMeasuredWidth();
-                        filterTabsView.selectTabWithId(viewPages[1].selectedType, scrollProgress);
+                        if (viewPages.length > 1) {
+                            filterTabsView.selectTabWithId(viewPages[1].selectedType, scrollProgress);
+                        } else if (singlePagePendingTabId >= 0) {
+                            filterTabsView.selectTabWithId(singlePagePendingTabId, scrollProgress);
+                        }
                     }
                 }
                 blur3_InvalidateBlur();
@@ -822,11 +828,28 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         private VelocityTracker velocityTracker;
         private boolean globalIgnoreLayout;
         private int[] pos = new int[2];
+        // [Alexgram: Tabs by Type] - tracks a confirmed horizontal swipe on the tabs view
+        // Used to consume the gesture in archive even at tab boundary (prevents fragment back nav)
+        private boolean tabsHorizontalGestureConsumed = false;
 
         private boolean prepareForMoving(MotionEvent ev, boolean forward) {
             int id = filterTabsView.getNextPageId(forward);
             if (id < 0) {
                 return false;
+            }
+            // [Alexgram: Tabs by Type] - archive has only 1 viewPage;
+            // start real drag tracking so viewPages[0] follows the finger for smooth animation
+            if (viewPages.length < 2) {
+                getParent().requestDisallowInterceptTouchEvent(true);
+                maybeStartTracking = false;
+                startedTracking = true;
+                startedTrackingX = (int) (ev.getX() + additionalOffset);
+                actionBar.setEnabled(false);
+                filterTabsView.setEnabled(false);
+                singlePagePendingTabId = id;
+                animatingForward = forward;
+                showScrollbars(false);
+                return true; // real drag tracking active
             }
             getParent().requestDisallowInterceptTouchEvent(true);
             maybeStartTracking = false;
@@ -855,6 +878,21 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
         public boolean checkTabsAnimationInProgress() {
             if (tabsAnimationInProgress) {
+                // [Alexgram: Tabs by Type] - single-page mode uses ViewPropertyAnimator, not tabsAnimation.
+                // Cancel it, snap viewPages[0] to rest, and report NOT in-progress so the 2-page
+                // interrupt block (which accesses viewPages[1] and tabsAnimation) is never entered.
+                if (viewPages.length < 2) {
+                    viewPages[0].animate().cancel();
+                    viewPages[0].setTranslationX(0);
+                    filterTabsView.selectTabWithId(viewPages[0].selectedType, 1.0f);
+                    showScrollbars(true);
+                    tabsAnimationInProgress = false;
+                    maybeStartTracking = false;
+                    actionBar.setEnabled(true);
+                    filterTabsView.setEnabled(true);
+                    singlePagePendingTabId = -1;
+                    return false;
+                }
                 boolean cancel = false;
                 if (backAnimation) {
                     if (Math.abs(viewPages[0].getTranslationX()) < 1) {
@@ -1381,6 +1419,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                             ) && (
                             initialDialogsType == DIALOGS_TYPE_FORWARD ||
                                     SharedConfig.getChatSwipeAction(currentAccount) == SwipeGestureSettingsView.SWIPE_GESTURE_FOLDERS ||
+                                    (isArchive() && filterTabsView != null && filterTabsView.getVisibility() == VISIBLE) ||
                                     SharedConfig.getChatSwipeAction(currentAccount) == SwipeGestureSettingsView.SWIPE_GESTURE_ARCHIVE &&
                                             viewPages[0] != null && (viewPages[0].dialogsAdapter.getDialogsType() == 7 || viewPages[0].dialogsAdapter.getDialogsType() == 8))
             ) {
@@ -1430,6 +1469,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     tabsAnimationInProgress = false;
                 } else if (ev != null && ev.getAction() == MotionEvent.ACTION_DOWN) {
                     additionalOffset = 0;
+                    tabsHorizontalGestureConsumed = false; // [Alexgram: Tabs by Type] reset on each new touch
                 }
                 if (ev != null && ev.getAction() == MotionEvent.ACTION_DOWN && !startedTracking && !maybeStartTracking && filterTabsView.getVisibility() == VISIBLE) {
                     startedTrackingPointerId = ev.getPointerId(0);
@@ -1445,33 +1485,51 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                             maybeStartTracking = true;
                             startedTracking = false;
                             viewPages[0].setTranslationX(0);
-                            viewPages[1].setTranslationX(animatingForward ? viewPages[0].getMeasuredWidth() : -viewPages[0].getMeasuredWidth());
-                            filterTabsView.selectTabWithId(viewPages[1].selectedType, 0);
+                            // [Alexgram: Tabs by Type] - guard viewPages[1] for single-page mode
+                            if (viewPages.length > 1) {
+                                viewPages[1].setTranslationX(animatingForward ? viewPages[0].getMeasuredWidth() : -viewPages[0].getMeasuredWidth());
+                                filterTabsView.selectTabWithId(viewPages[1].selectedType, 0);
+                            } else {
+                                filterTabsView.selectTabWithId(viewPages[0].selectedType, 1.0f);
+                                singlePagePendingTabId = -1;
+                            }
                         }
                     }
                     if (maybeStartTracking && !startedTracking) {
                         float touchSlop = AndroidUtilities.getPixelsInCM(0.3f, true);
                         int dxLocal = (int) (ev.getX() - startedTrackingX);
                         if (Math.abs(dxLocal) >= touchSlop && Math.abs(dxLocal) > dy) {
+                            // [Alexgram: Tabs by Type] - mark horizontal gesture consumed + prevent
+                            // parent from intercepting (stops archive from closing on boundary swipe)
+                            tabsHorizontalGestureConsumed = true;
+                            getParent().requestDisallowInterceptTouchEvent(true);
                             prepareForMoving(ev, dx < 0);
                         }
                     } else if (startedTracking) {
                         viewPages[0].setTranslationX(dx);
-                        if (animatingForward) {
-                            viewPages[1].setTranslationX(viewPages[0].getMeasuredWidth() + dx);
+                        // [Alexgram: Tabs by Type] - single-page mode: just translate page + update tab
+                        if (viewPages.length < 2) {
+                            float scrollProgress = Math.abs(dx) / (float) viewPages[0].getMeasuredWidth();
+                            if (singlePagePendingTabId >= 0) {
+                                filterTabsView.selectTabWithId(singlePagePendingTabId, scrollProgress);
+                            }
                         } else {
-                            viewPages[1].setTranslationX(dx - viewPages[0].getMeasuredWidth());
-                        }
-                        float scrollProgress = Math.abs(dx) / (float) viewPages[0].getMeasuredWidth();
-                        if (viewPages[1].isLocked && scrollProgress > 0.3f) {
-                            dispatchTouchEvent(MotionEvent.obtain(0, 0, MotionEvent.ACTION_CANCEL, 0, 0, 0));
-                            filterTabsView.shakeLock(viewPages[1].selectedType);
-                            AndroidUtilities.runOnUIThread(() -> {
-                                showDialog(new LimitReachedBottomSheet(DialogsActivity.this, getContext(), LimitReachedBottomSheet.TYPE_FOLDERS, currentAccount, null));
-                            }, 200);
-                            return false;
-                        } else {
-                            filterTabsView.selectTabWithId(viewPages[1].selectedType, scrollProgress);
+                            if (animatingForward) {
+                                viewPages[1].setTranslationX(viewPages[0].getMeasuredWidth() + dx);
+                            } else {
+                                viewPages[1].setTranslationX(dx - viewPages[0].getMeasuredWidth());
+                            }
+                            float scrollProgress = Math.abs(dx) / (float) viewPages[0].getMeasuredWidth();
+                            if (viewPages[1].isLocked && scrollProgress > 0.3f) {
+                                dispatchTouchEvent(MotionEvent.obtain(0, 0, MotionEvent.ACTION_CANCEL, 0, 0, 0));
+                                filterTabsView.shakeLock(viewPages[1].selectedType);
+                                AndroidUtilities.runOnUIThread(() -> {
+                                    showDialog(new LimitReachedBottomSheet(DialogsActivity.this, getContext(), LimitReachedBottomSheet.TYPE_FOLDERS, currentAccount, null));
+                                }, 200);
+                                return false;
+                            } else {
+                                filterTabsView.selectTabWithId(viewPages[1].selectedType, scrollProgress);
+                            }
                         }
                     }
                 } else if (ev == null || ev.getPointerId(0) == startedTrackingPointerId && (ev.getAction() == MotionEvent.ACTION_CANCEL || ev.getAction() == MotionEvent.ACTION_UP || ev.getAction() == MotionEvent.ACTION_POINTER_UP)) {
@@ -1492,95 +1550,168 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     }
                     if (startedTracking) {
                         float x = viewPages[0].getX();
-                        tabsAnimation = new AnimatorSet();
-                        if (viewPages[1].isLocked) {
-                            backAnimation = true;
+
+                        // [Alexgram: Tabs by Type] - single-page (archive) smooth slide animation
+                        if (viewPages.length < 2) {
+                            final int slideWidth = viewPages[0].getMeasuredWidth();
+                            final boolean wasForward = animatingForward;
+                            final int finalTabId = singlePagePendingTabId;
+                            final boolean commitSwitch;
+                            if (ev != null && ev.getAction() != MotionEvent.ACTION_CANCEL
+                                    && Math.abs(velX) >= 1500 && Math.abs(velX) > Math.abs(velY)) {
+                                commitSwitch = wasForward ? velX < 0 : velX > 0;
+                            } else {
+                                commitSwitch = Math.abs(x) >= slideWidth / 3.0f;
+                            }
+                            float dist = commitSwitch ? slideWidth - Math.abs(x) : Math.abs(x);
+                            float spd = Math.abs(velX);
+                            int dur = spd > 0 ? Math.min(350, (int) (dist / spd * 1000)) : 200;
+                            dur = Math.max(80, Math.min(350, dur));
+                            final int animDur = dur;
+
+                            if (commitSwitch && finalTabId >= 0) {
+                                // Slide current content off-screen
+                                viewPages[0].animate()
+                                        .translationX(wasForward ? -slideWidth : slideWidth)
+                                        .setDuration(animDur)
+                                        .setInterpolator(interpolator)
+                                        .withEndAction(() -> {
+                                            // Switch content while off-screen
+                                            viewPages[0].selectedType = finalTabId;
+                                            switchToCurrentSelectedMode(false);
+                                            filterTabsView.selectTabWithId(finalTabId, 1.0f);
+                                            // Enter from the opposite side
+                                            viewPages[0].setTranslationX(wasForward ? slideWidth : -slideWidth);
+                                            // Slide back in
+                                            viewPages[0].animate()
+                                                    .translationX(0)
+                                                    .setDuration(animDur)
+                                                    .setInterpolator(interpolator)
+                                                    .withEndAction(() -> {
+                                                        showScrollbars(true);
+                                                        tabsAnimationInProgress = false;
+                                                        maybeStartTracking = false;
+                                                        actionBar.setEnabled(true);
+                                                        filterTabsView.setEnabled(true);
+                                                        singlePagePendingTabId = -1;
+                                                        checkListLoad(viewPages[0]);
+                                                        updateHomeDrawerAvailability();
+                                                        // [Alexgram: Tabs by Type] - update FAB icon for new tab
+                                                        updateStoriesPosting();
+                                                    }).start();
+                                        }).start();
+                                tabsAnimationInProgress = true;
+                            } else {
+                                // Snap back to original position
+                                filterTabsView.selectTabWithId(viewPages[0].selectedType, 1.0f);
+                                viewPages[0].animate()
+                                        .translationX(0)
+                                        .setDuration(animDur)
+                                        .setInterpolator(interpolator)
+                                        .withEndAction(() -> {
+                                            showScrollbars(true);
+                                            maybeStartTracking = false;
+                                            actionBar.setEnabled(true);
+                                            filterTabsView.setEnabled(true);
+                                            singlePagePendingTabId = -1;
+                                        }).start();
+                            }
+                            startedTracking = false;
+                            singlePagePendingTabId = -1;
                         } else {
-                            if (additionalOffset != 0) {
-                                if (Math.abs(velX) > 1500) {
-                                    backAnimation = animatingForward ? velX > 0 : velX < 0;
-                                } else {
-                                    if (animatingForward) {
-                                        backAnimation = (viewPages[1].getX() > (viewPages[0].getMeasuredWidth() >> 1));
+                            // ── 2-page mode: existing smooth slide animation ──
+                            tabsAnimation = new AnimatorSet();
+                            if (viewPages[1].isLocked) {
+                                backAnimation = true;
+                            } else {
+                                if (additionalOffset != 0) {
+                                    if (Math.abs(velX) > 1500) {
+                                        backAnimation = animatingForward ? velX > 0 : velX < 0;
                                     } else {
-                                        backAnimation = (viewPages[0].getX() < (viewPages[0].getMeasuredWidth() >> 1));
+                                        if (animatingForward) {
+                                            backAnimation = (viewPages[1].getX() > (viewPages[0].getMeasuredWidth() >> 1));
+                                        } else {
+                                            backAnimation = (viewPages[0].getX() < (viewPages[0].getMeasuredWidth() >> 1));
+                                        }
                                     }
+                                } else {
+                                    backAnimation = Math.abs(x) < viewPages[0].getMeasuredWidth() / 3.0f && (Math.abs(velX) < 3500 || Math.abs(velX) < Math.abs(velY));
+                                }
+                            }
+                            float dx;
+                            if (backAnimation) {
+                                dx = Math.abs(x);
+                                if (animatingForward) {
+                                    tabsAnimation.playTogether(
+                                            ObjectAnimator.ofFloat(viewPages[0], View.TRANSLATION_X, 0),
+                                            ObjectAnimator.ofFloat(viewPages[1], View.TRANSLATION_X, viewPages[1].getMeasuredWidth())
+                                    );
+                                } else {
+                                    tabsAnimation.playTogether(
+                                            ObjectAnimator.ofFloat(viewPages[0], View.TRANSLATION_X, 0),
+                                            ObjectAnimator.ofFloat(viewPages[1], View.TRANSLATION_X, -viewPages[1].getMeasuredWidth())
+                                    );
                                 }
                             } else {
-                                backAnimation = Math.abs(x) < viewPages[0].getMeasuredWidth() / 3.0f && (Math.abs(velX) < 3500 || Math.abs(velX) < Math.abs(velY));
-                            }
-                        }
-                        float dx;
-                        if (backAnimation) {
-                            dx = Math.abs(x);
-                            if (animatingForward) {
-                                tabsAnimation.playTogether(
-                                        ObjectAnimator.ofFloat(viewPages[0], View.TRANSLATION_X, 0),
-                                        ObjectAnimator.ofFloat(viewPages[1], View.TRANSLATION_X, viewPages[1].getMeasuredWidth())
-                                );
-                            } else {
-                                tabsAnimation.playTogether(
-                                        ObjectAnimator.ofFloat(viewPages[0], View.TRANSLATION_X, 0),
-                                        ObjectAnimator.ofFloat(viewPages[1], View.TRANSLATION_X, -viewPages[1].getMeasuredWidth())
-                                );
-                            }
-                        } else {
-                            dx = viewPages[0].getMeasuredWidth() - Math.abs(x);
-                            if (animatingForward) {
-                                tabsAnimation.playTogether(
-                                        ObjectAnimator.ofFloat(viewPages[0], View.TRANSLATION_X, -viewPages[0].getMeasuredWidth()),
-                                        ObjectAnimator.ofFloat(viewPages[1], View.TRANSLATION_X, 0)
-                                );
-                            } else {
-                                tabsAnimation.playTogether(
-                                        ObjectAnimator.ofFloat(viewPages[0], View.TRANSLATION_X, viewPages[0].getMeasuredWidth()),
-                                        ObjectAnimator.ofFloat(viewPages[1], View.TRANSLATION_X, 0)
-                                );
-                            }
-                        }
-                        tabsAnimation.setInterpolator(interpolator);
-
-                        int width = getMeasuredWidth();
-                        int halfWidth = width / 2;
-                        float distanceRatio = Math.min(1.0f, 1.0f * dx / (float) width);
-                        float distance = (float) halfWidth + (float) halfWidth * AndroidUtilities.distanceInfluenceForSnapDuration(distanceRatio);
-                        velX = Math.abs(velX);
-                        int duration;
-                        if (velX > 0) {
-                            duration = 4 * Math.round(1000.0f * Math.abs(distance / velX));
-                        } else {
-                            float pageDelta = dx / getMeasuredWidth();
-                            duration = (int) ((pageDelta + 1.0f) * 100.0f);
-                        }
-                        duration = Math.max(150, Math.min(duration, 600));
-
-                        tabsAnimation.setDuration(duration);
-                        tabsAnimation.addListener(new AnimatorListenerAdapter() {
-                            @Override
-                            public void onAnimationEnd(Animator animator) {
-                                tabsAnimation = null;
-                                if (!backAnimation) {
-                                    ViewPage tempPage = viewPages[0];
-                                    viewPages[0] = viewPages[1];
-                                    viewPages[1] = tempPage;
-                                    filterTabsView.selectTabWithId(viewPages[0].selectedType, 1.0f);
-                                    updateCounters(false);
-                                    viewPages[0].dialogsAdapter.resume();
-                                    viewPages[1].dialogsAdapter.pause();
+                                dx = viewPages[0].getMeasuredWidth() - Math.abs(x);
+                                if (animatingForward) {
+                                    tabsAnimation.playTogether(
+                                            ObjectAnimator.ofFloat(viewPages[0], View.TRANSLATION_X, -viewPages[0].getMeasuredWidth()),
+                                            ObjectAnimator.ofFloat(viewPages[1], View.TRANSLATION_X, 0)
+                                    );
+                                } else {
+                                    tabsAnimation.playTogether(
+                                            ObjectAnimator.ofFloat(viewPages[0], View.TRANSLATION_X, viewPages[0].getMeasuredWidth()),
+                                            ObjectAnimator.ofFloat(viewPages[1], View.TRANSLATION_X, 0)
+                                    );
                                 }
-                                viewPages[1].setVisibility(View.GONE);
-                                showScrollbars(true);
-                                tabsAnimationInProgress = false;
-                                maybeStartTracking = false;
-                                actionBar.setEnabled(true);
-                                filterTabsView.setEnabled(true);
-                                checkListLoad(viewPages[0]);
-                                updateHomeDrawerAvailability();
                             }
-                        });
-                        tabsAnimation.start();
-                        tabsAnimationInProgress = true;
-                        startedTracking = false;
+                            tabsAnimation.setInterpolator(interpolator);
+
+                            int width = getMeasuredWidth();
+                            int halfWidth = width / 2;
+                            float distanceRatio = Math.min(1.0f, 1.0f * dx / (float) width);
+                            float distance = (float) halfWidth + (float) halfWidth * AndroidUtilities.distanceInfluenceForSnapDuration(distanceRatio);
+                            velX = Math.abs(velX);
+                            int duration;
+                            if (velX > 0) {
+                                duration = 4 * Math.round(1000.0f * Math.abs(distance / velX));
+                            } else {
+                                float pageDelta = dx / getMeasuredWidth();
+                                duration = (int) ((pageDelta + 1.0f) * 100.0f);
+                            }
+                            duration = Math.max(150, Math.min(duration, 600));
+
+                            tabsAnimation.setDuration(duration);
+                            tabsAnimation.addListener(new AnimatorListenerAdapter() {
+                                @Override
+                                public void onAnimationEnd(Animator animator) {
+                                    tabsAnimation = null;
+                                    if (!backAnimation) {
+                                        ViewPage tempPage = viewPages[0];
+                                        viewPages[0] = viewPages[1];
+                                        viewPages[1] = tempPage;
+                                        filterTabsView.selectTabWithId(viewPages[0].selectedType, 1.0f);
+                                        updateCounters(false);
+                                        viewPages[0].dialogsAdapter.resume();
+                                        viewPages[1].dialogsAdapter.pause();
+                                    }
+                                    viewPages[1].setVisibility(View.GONE);
+                                    showScrollbars(true);
+                                    tabsAnimationInProgress = false;
+                                    maybeStartTracking = false;
+                                    actionBar.setEnabled(true);
+                                    filterTabsView.setEnabled(true);
+                                    checkListLoad(viewPages[0]);
+                                    updateHomeDrawerAvailability();
+                                    // [Alexgram: Tabs by Type] - update FAB icon for new tab
+                                    updateStoriesPosting();
+                                }
+                            });
+                            tabsAnimation.start();
+                            tabsAnimationInProgress = true;
+                            startedTracking = false;
+                        } // end 2-page block
                     } else {
                         maybeStartTracking = false;
                         actionBar.setEnabled(true);
@@ -1591,7 +1722,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         velocityTracker = null;
                     }
                 }
-                return startedTracking;
+                // [Alexgram: Tabs by Type] - consume horizontal gesture in archive even at tab boundary
+                // so that swiping right from the first tab doesn't close the archive screen
+                return startedTracking || tabsHorizontalGestureConsumed;
             }
             return false;
         }
@@ -3631,7 +3764,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
         if (
             (initialDialogsType == DIALOGS_TYPE_DEFAULT && !onlySelect || initialDialogsType == DIALOGS_TYPE_FORWARD) &&
-            folderId == 0 && TextUtils.isEmpty(searchString)
+            (folderId == 0 || (folderId == 1 && tw.nekomimi.nekogram.tabs.TabsByTypeSettings.getInstance().isEnabledInArchive())) && TextUtils.isEmpty(searchString)
         ) {
             filterTabsView = new FilterTabsView(context, resourceProvider) {
                 @Override
@@ -3711,17 +3844,24 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         return;
                     }
 
-                    ArrayList<MessagesController.DialogFilter> dialogFilters = getMessagesController().getDialogFilters();
+                    ArrayList<MessagesController.DialogFilter> dialogFilters = getActiveDialogFilters();
                     if (!tab.isDefault && (tab.id < 0 || tab.id >= dialogFilters.size())) {
                         return;
                     }
-                    viewPages[1].selectedType = tab.id;
-                    viewPages[1].setVisibility(View.VISIBLE);
-                    viewPages[1].setTranslationX(viewPages[0].getMeasuredWidth());
-                    showScrollbars(false);
-                    switchToCurrentSelectedMode(true);
+                    // [Alexgram: Tabs by Type] - archive has only 1 viewPage; switch directly on viewPages[0]
+                    if (viewPages.length > 1) {
+                        viewPages[1].selectedType = tab.id;
+                        viewPages[1].setVisibility(View.VISIBLE);
+                        viewPages[1].setTranslationX(viewPages[0].getMeasuredWidth());
+                        showScrollbars(false);
+                        switchToCurrentSelectedMode(true);
+                    } else {
+                        viewPages[0].selectedType = tab.id;
+                        switchToCurrentSelectedMode(false);
+                    }
                     animatingForward = forward;
                     updateHomeDrawerAvailability();
+                    updateStoriesPosting();
                 }
 
                 @Override
@@ -3731,6 +3871,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
                 @Override
                 public void onPageScrolled(float progress) {
+                    // [Alexgram: Tabs by Type] - archive has only 1 viewPage; skip scroll animation
+                    if (viewPages.length < 2) return;
                     if (progress == 1 && viewPages[1].getVisibility() != View.VISIBLE && !searching) {
                         return;
                     }
@@ -3768,11 +3910,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     if (tabId == filterTabsView.getDefaultTabId()) {
                         return getMessagesStorage().getMainUnreadCount();
                     }
-                    ArrayList<MessagesController.DialogFilter> dialogFilters = getMessagesController().getDialogFilters();
+                    ArrayList<MessagesController.DialogFilter> dialogFilters = getActiveDialogFilters();
                     if (tabId < 0 || tabId >= dialogFilters.size()) {
                         return 0;
                     }
-                    return getMessagesController().getDialogFilters().get(tabId).unreadCount;
+                    return dialogFilters.get(tabId).unreadCount;
                 }
 
                 @Override
@@ -3793,7 +3935,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     if (tabView.getId() == filterTabsView.getDefaultTabId()) {
                         dialogFilter = null;
                     } else {
-                        ArrayList<MessagesController.DialogFilter> dialogFilters = getMessagesController().getDialogFilters();
+                        ArrayList<MessagesController.DialogFilter> dialogFilters = getActiveDialogFilters();
                         final int index = tabView.getId();
                         if (dialogFilters != null && index >= 0 && index < dialogFilters.size()) {
                             dialogFilter = dialogFilters.get(tabView.getId());
@@ -3819,7 +3961,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     // [Alexgram: Hidden Chats] - End
                     MessagesController.DialogFilter filter = null;
                     if (dialogFilter != null) {
-                        filter = getMessagesController().getDialogFilters().get(tabView.getId());
+                        filter = getActiveDialogFilters().get(tabView.getId());
                         if (filter != null) {
                             for (int i = 0; i < dialogs.size(); i++) {
                                 if (!filter.includesDialog(getAccountInstance(), dialogs.get(i).id)) {
@@ -3895,11 +4037,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                                     return PixelFormat.TRANSPARENT;
                                 }
                             })
-                            .addIf(getMessagesController().getDialogFilters().size() > 1, R.drawable.tabs_reorder, LocaleController.getString(R.string.FilterReorder), () -> {
+                            .addIf(getActiveDialogFilters().size() > 1, R.drawable.tabs_reorder, LocaleController.getString(R.string.FilterReorder), () -> {
                                 filterTabsView.setIsEditing(true);
                                 showDoneItem(true);
                             })
-                            .add(R.drawable.msg_edit, defaultTab ? LocaleController.getString(R.string.FilterEditAll) : LocaleController.getString(R.string.FilterEdit), () -> {
+                            .addIf(!tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(dialogFilter), R.drawable.msg_edit, defaultTab ? LocaleController.getString(R.string.FilterEditAll) : LocaleController.getString(R.string.FilterEdit), () -> {
                                 presentFragment(defaultTab ? new FiltersSetupActivity() : new FilterCreateActivity(dialogFilter));
                             })
                             .addIf(dialogFilter != null && !dialogs.isEmpty(), muteAll ? R.drawable.msg_mute : R.drawable.msg_unmute, muteAll ? getString(R.string.FilterMuteAll) : getString(R.string.FilterUnmuteAll), () -> {
@@ -3923,14 +4065,14 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                             .addIf(hasUnread, R.drawable.msg_markread, LocaleController.getString(R.string.MarkAllAsRead), () -> {
                                 markDialogsAsRead(dialogs);
                             })
-                            .addIf(hasShare, R.drawable.msg_share, FilterCreateActivity.withNew(filter != null && filter.isMyChatlist() ? -1 : 0, LocaleController.getString(R.string.LinkActionShare), true), () -> {
+                            .addIf(hasShare && !tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(filter), R.drawable.msg_share, FilterCreateActivity.withNew(filter != null && filter.isMyChatlist() ? -1 : 0, LocaleController.getString(R.string.LinkActionShare), true), () -> {
                                 if (shareEmpty[0]) {
                                     presentFragment(new FilterChatlistActivity(finalFilter, null));
                                 } else {
                                     FilterCreateActivity.FilterInvitesBottomSheet.show(DialogsActivity.this, finalFilter, null);
                                 }
                             })
-                            .addIf(!defaultTab, R.drawable.msg_delete, LocaleController.getString(R.string.FilterDeleteItem), true, () -> {
+                            .addIf(!defaultTab && !tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(dialogFilter), R.drawable.msg_delete, LocaleController.getString(R.string.FilterDeleteItem), true, () -> {
                                 showDeleteAlert(dialogFilter);
                             })
                             .setDimAlpha(0x60)
@@ -3948,7 +4090,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
                 @Override
                 public void onDeletePressed(int id) {
-                    showDeleteAlert(getMessagesController().getDialogFilters().get(id));
+                    MessagesController.DialogFilter f = getActiveDialogFilters().size() > id ? getActiveDialogFilters().get(id) : null;
+                    if (f != null && !tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(f)) {
+                        showDeleteAlert(f);
+                    }
                 }
 
                 @Override
@@ -4101,7 +4246,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     });
                     showDialog(sheet);
                 } else if (id == remove_from_folder) {
-                    MessagesController.DialogFilter filter = getMessagesController().getDialogFilters().get(viewPages[0].selectedType);
+                    MessagesController.DialogFilter filter = getActiveDialogFilters().get(viewPages[0].selectedType);
                     ArrayList<Long> neverShow = FiltersListBottomSheet.getDialogsCount(DialogsActivity.this, filter, selectedDialogs, false, false);
 
                     int currentCount;
@@ -4207,7 +4352,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             }
         };
 
-        int pagesCount = folderId == 0 && (initialDialogsType == DIALOGS_TYPE_DEFAULT && !onlySelect || initialDialogsType == DIALOGS_TYPE_FORWARD) ? 2 : 1;
+        // [Alexgram: Tabs by Type] - Allow 2 pages for Archive Chats (folderId == 1) so folders slide side-by-side smoothly
+        int pagesCount = (folderId == 0 || folderId == 1) && (initialDialogsType == DIALOGS_TYPE_DEFAULT && !onlySelect || initialDialogsType == DIALOGS_TYPE_FORWARD) ? 2 : 1;
         viewPages = new ViewPage[pagesCount];
         for (int a = 0; a < pagesCount; a++) {
             final ViewPage viewPage = new ViewPage(context);
@@ -4922,11 +5068,30 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 }
                 delegate.didSelectDialogs(DialogsActivity.this, topicKeys, null, false, notify, scheduleDate, scheduleRepeatPeriod, null);
             } else {
-                if (MessagesController.getInstance(currentAccount).isFrozen()) {
-                    AccountFrozenAlert.show(currentAccount);
-                    return;
+                MessagesController.DialogFilter filter = null;
+                if (viewPages != null && viewPages[0] != null) {
+                    int selectedType = viewPages[0].selectedType;
+                    ArrayList<MessagesController.DialogFilter> activeFilters = getActiveDialogFilters();
+                    if (selectedType >= 0 && selectedType < activeFilters.size()) {
+                        filter = activeFilters.get(selectedType);
+                    }
                 }
-                openWriteContacts();
+                // [Alexgram: Tabs by Type] - only apply custom FAB for virtual tab-type filters,
+                // NOT for real server-side folders that happen to match by flags/name
+                tw.nekomimi.nekogram.tabs.TabsByTypeEntry tabType =
+                        tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(filter)
+                                ? tw.nekomimi.nekogram.tabs.TabsByTypeManager.getTabFromFilter(filter)
+                                : null;
+                if (tabType != null) {
+                    tw.nekomimi.nekogram.tabs.FloatingActionButtonType fabType = tw.nekomimi.nekogram.tabs.TabsByTypeSettings.getInstance().getTabFabType(tabType);
+                    handleCustomFabClick(fabType);
+                } else {
+                    if (MessagesController.getInstance(currentAccount).isFrozen()) {
+                        AccountFrozenAlert.show(currentAccount);
+                        return;
+                    }
+                    openWriteContacts();
+                }
             }
         });
 
@@ -7003,7 +7168,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             }
         }
         int index = filterTabsView.getTabsCount() - 1;
-        ArrayList<MessagesController.DialogFilter> filters = getMessagesController().getDialogFilters();
+        ArrayList<MessagesController.DialogFilter> filters = getActiveDialogFilters();
         for (int i = 0; i < filters.size(); ++i) {
             if (filters.get(i).id == fid) {
                 index = i;
@@ -7026,16 +7191,19 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         for (int a = 0; a < viewPages.length; a++) {
             viewPages[a].listView.stopScroll();
         }
-        int a = animated ? 1 : 0;
-        if (viewPages[a].selectedType < 0 || viewPages[a].selectedType >= getMessagesController().getDialogFilters().size()) {
+        // [Alexgram: Tabs by Type] - archive uses only 1 viewPage; clamp animated index to valid range
+        int a = (animated && viewPages.length > 1) ? 1 : 0;
+        ArrayList<MessagesController.DialogFilter> activeFilters = getActiveDialogFilters();
+        if (viewPages[a].selectedType < 0 || viewPages[a].selectedType >= activeFilters.size()) {
             return;
         }
-        MessagesController.DialogFilter filter = getMessagesController().getDialogFilters().get(viewPages[a].selectedType);
+        MessagesController.DialogFilter filter = activeFilters.get(viewPages[a].selectedType);
         if (filter.isDefault()) {
             viewPages[a].dialogsType = initialDialogsType;
             viewPages[a].listView.updatePullState();
         } else {
-            if (viewPages[a == 0 ? 1 : 0].dialogsType == 7) {
+            // [Alexgram: Tabs by Type] - guard viewPages[1] when archive only has 1 page
+            if (viewPages.length > 1 && viewPages[a == 0 ? 1 : 0].dialogsType == 7) {
                 viewPages[a].dialogsType = 8;
             } else {
                 viewPages[a].dialogsType = 7;
@@ -7043,7 +7211,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             viewPages[a].listView.setScrollEnabled(true);
             getMessagesController().selectDialogFilter(filter, viewPages[a].dialogsType == 8 ? 1 : 0);
         }
-        viewPages[1].isLocked = filter.locked;
+        // [Alexgram: Tabs by Type] - guard: archive DialogsActivity has only 1 viewPage
+        if (viewPages.length > 1) {
+            viewPages[1].isLocked = filter.locked;
+        }
 
         viewPages[a].dialogsAdapter.setDialogsType(viewPages[a].dialogsType);
         viewPages[a].layoutManager.scrollToPositionWithOffset(viewPages[a].dialogsType == DIALOGS_TYPE_DEFAULT && hasHiddenArchive() && viewPages[a].archivePullViewState == ARCHIVE_ITEM_STATE_HIDDEN ? 1 : 0, (int) scrollYOffset);
@@ -7076,7 +7247,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             filterOptions.dismiss();
             filterOptions = null;
         }
-        final ArrayList<MessagesController.DialogFilter> filters = getMessagesController().getDialogFilters();
+        final ArrayList<MessagesController.DialogFilter> filters = getActiveDialogFilters();
         if (filters.size() > 1) {
             if (force || filterTabsView.getVisibility() != View.VISIBLE) {
                 boolean animatedUpdateItems = animated;
@@ -7146,7 +7317,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 if (startedTracking) {
                     startedTracking = false;
                     viewPages[0].setTranslationX(0);
-                    viewPages[1].setTranslationX(viewPages[0].getMeasuredWidth());
+                    // [Alexgram: Tabs by Type] - archive has only 1 viewPage
+                    if (viewPages.length > 1) {
+                        viewPages[1].setTranslationX(viewPages[0].getMeasuredWidth());
+                    }
                 }
                 if (viewPages[0].selectedType != filterTabsView.getDefaultTabId()) {
                     viewPages[0].selectedType = filterTabsView.getDefaultTabId();
@@ -7154,11 +7328,14 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     viewPages[0].dialogsType = initialDialogsType;
                     viewPages[0].dialogsAdapter.notifyDataSetChanged();
                 }
-                viewPages[1].setVisibility(View.GONE);
-                viewPages[1].selectedType = 0;
-                viewPages[1].dialogsAdapter.setDialogsType(0);
-                viewPages[1].dialogsType = initialDialogsType;
-                viewPages[1].dialogsAdapter.notifyDataSetChanged();
+                // [Alexgram: Tabs by Type] - guard: archive DialogsActivity has only 1 viewPage
+                if (viewPages.length > 1) {
+                    viewPages[1].setVisibility(View.GONE);
+                    viewPages[1].selectedType = 0;
+                    viewPages[1].dialogsAdapter.setDialogsType(0);
+                    viewPages[1].dialogsType = initialDialogsType;
+                    viewPages[1].dialogsAdapter.notifyDataSetChanged();
+                }
                 canShowFilterTabsView = false;
                 updateFilterTabsVisibility(animated);
                 for (int a = 0; a < viewPages.length; a++) {
@@ -7253,6 +7430,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     @Override
     public void onResume() {
         super.onResume();
+        updateStoriesPosting();
         updateHomeDrawerAvailability();
         // [Alexgram: Double Tap On Chats To Filter Unread Chats] - Start
         if (unreadPillView != null) {
@@ -8062,7 +8240,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         boolean load = false;
         boolean loadFromCache = false;
         if (viewPage.dialogsType == DIALOGS_TYPE_FOLDER1 || viewPage.dialogsType == DIALOGS_TYPE_FOLDER2) {
-            ArrayList<MessagesController.DialogFilter> dialogFilters = getMessagesController().getDialogFilters();
+            ArrayList<MessagesController.DialogFilter> dialogFilters = getActiveDialogFilters();
             if (viewPage.selectedType >= 0 && viewPage.selectedType < dialogFilters.size()) {
                 MessagesController.DialogFilter filter = dialogFilters.get(viewPage.selectedType);
                 if ((filter.flags & MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_ARCHIVED) == 0) {
@@ -8745,11 +8923,12 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             scrollView.addView(linearLayout);
             final boolean backButtonAtTop = true;
 
-            final int foldersCount = getMessagesController().dialogFilters.size();
+            final ArrayList<MessagesController.DialogFilter> allFolders = getMessagesController().getDialogFilters();
+            final int foldersCount = allFolders.size();
             ActionBarMenuSubItem lastItem = null;
             for (int i = 0; i < foldersCount; ++i) {
-                MessagesController.DialogFilter folder = getMessagesController().dialogFilters.get(i);
-                if (folder.isDefault()) {
+                MessagesController.DialogFilter folder = allFolders.get(i);
+                if (folder.isDefault() || tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(folder)) {
                     continue;
                 }
                 final boolean contains = folder.includesDialog(AccountInstance.getInstance(currentAccount), dialogId);
@@ -9086,8 +9265,34 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             floatingButton3.setImageResource(R.drawable.floating_check);
             floatingButton3.setContentDescription(LocaleController.getString(R.string.Done));
         } else {
-            floatingButton3.setImageResource(R.drawable.filled_fab_compose_32);
-            floatingButton3.setContentDescription(LocaleController.getString(R.string.NewMessageTitle));
+            MessagesController.DialogFilter filter = null;
+            if (viewPages != null && viewPages[0] != null) {
+                int selectedType = viewPages[0].selectedType;
+                ArrayList<MessagesController.DialogFilter> activeFilters = getActiveDialogFilters();
+                if (selectedType >= 0 && selectedType < activeFilters.size()) {
+                    filter = activeFilters.get(selectedType);
+                }
+            }
+            // [Alexgram: Tabs by Type] - only apply custom FAB icon for virtual tab-type filters,
+            // NOT for real server-side folders that happen to match by flags/name
+            tw.nekomimi.nekogram.tabs.TabsByTypeEntry tabType =
+                    tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(filter)
+                            ? tw.nekomimi.nekogram.tabs.TabsByTypeManager.getTabFromFilter(filter)
+                            : null;
+            if (tabType != null) {
+                tw.nekomimi.nekogram.tabs.FloatingActionButtonType fabType = tw.nekomimi.nekogram.tabs.TabsByTypeSettings.getInstance().getTabFabType(tabType);
+                floatingButton3.imageView.clearAnimationDrawable();
+                fabType.bindBig(floatingButton3.imageView);
+                floatingButton3.updateColors();
+                floatingButton3.setContentDescription(fabType.getTitle(getParentActivity()));
+            } else {
+                // [Alexgram: Tabs by Type] - always show the default compose icon for real
+                // server-side folders; do NOT reflect the folder's emoticon on the FAB
+                floatingButton3.imageView.clearAnimationDrawable();
+                floatingButton3.setImageResource(R.drawable.filled_fab_compose_32);
+                floatingButton3.updateColors();
+                floatingButton3.setContentDescription(LocaleController.getString(R.string.NewMessageTitle));
+            }
         }
     }
 
@@ -10948,6 +11153,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             }
         } else if (id == NotificationCenter.dialogFiltersUpdated) {
             updateFilterTabs(true, true);
+            updateStoriesPosting();
         } else if (id == NotificationCenter.filterSettingsUpdated) {
             showFiltersHint();
         } else if (id == NotificationCenter.newSuggestionsAvailable) {
@@ -11870,6 +12076,53 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     public boolean isArchive() {
         return folderId == 1;
+    }
+
+    public ArrayList<MessagesController.DialogFilter> getActiveDialogFilters() {
+        ArrayList<MessagesController.DialogFilter> allFilters = getMessagesController().getDialogFilters();
+        ArrayList<MessagesController.DialogFilter> activeFilters = new ArrayList<>();
+        if (allFilters.isEmpty()) {
+            return activeFilters;
+        }
+        MessagesController.DialogFilter defaultFilter = null;
+        for (int a = 0; a < allFilters.size(); a++) {
+            if (allFilters.get(a).isDefault()) {
+                defaultFilter = allFilters.get(a);
+                break;
+            }
+        }
+        if (folderId == 0) {
+            if (defaultFilter != null) {
+                activeFilters.add(defaultFilter);
+            }
+            for (int a = 0; a < allFilters.size(); a++) {
+                MessagesController.DialogFilter filter = allFilters.get(a);
+                if (filter.isDefault()) {
+                    continue;
+                }
+                if (!tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(filter) || 
+                    (filter.flags & MessagesController.DIALOG_FILTER_FLAG_ONLY_ARCHIVED) == 0) {
+                    activeFilters.add(filter);
+                }
+            }
+        } else if (folderId == 1) {
+            if (defaultFilter != null) {
+                activeFilters.add(defaultFilter);
+            }
+            for (int a = 0; a < allFilters.size(); a++) {
+                MessagesController.DialogFilter filter = allFilters.get(a);
+                if (filter.isDefault()) {
+                    continue;
+                }
+                if (tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(filter) && 
+                    (filter.flags & MessagesController.DIALOG_FILTER_FLAG_ONLY_ARCHIVED) != 0) {
+                    activeFilters.add(filter);
+                }
+            }
+        } else {
+            activeFilters.addAll(allFilters);
+        }
+        return activeFilters;
     }
 
     public int getType() {
@@ -12978,7 +13231,18 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         if (initialDialogsType == DIALOGS_TYPE_FORWARD && filterTabsView != null && filterTabsView.getVisibility() == View.VISIBLE) {
             return filterTabsView.isFirstTab();
         }
+        if (isArchive() && filterTabsView != null && filterTabsView.getVisibility() == View.VISIBLE) {
+            return filterTabsView.isFirstTab();
+        }
         return true;
+    }
+
+    @Override
+    public boolean isSwipeBackEnabled(MotionEvent event) {
+        if (isArchive() && filterTabsView != null && filterTabsView.getVisibility() == View.VISIBLE) {
+            return filterTabsView.isFirstTab();
+        }
+        return super.isSwipeBackEnabled(event);
     }
 
     public void updateStoriesVisibility(boolean animated) {
@@ -13956,12 +14220,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 });
             }
             io.addGapIf(hideBottomNavigationBar);
-            if (hideBottomNavigationBar) {
-                io.add(R.drawable.menu_recent, getString(R.string.RecentChats), () -> {
-                    io.dismiss();
-                    BackButtonMenuRecent.show(currentAccount, this, optionsItem);
-                });
-            }
+            io.add(R.drawable.msg_recent_solar, getString(R.string.RecentChats), () -> {
+                presentFragment(new ChatHistoryActivity());
+            });
             if (hideBottomNavigationBar && NaConfig.INSTANCE.getHideArchive().Bool()) {
                 io.add(R.drawable.msg_archive, getString(R.string.ArchivedChats), () -> {
                     Bundle args = new Bundle();
@@ -14854,4 +15115,61 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         return shouldShowIdleSearchField() ? dp(SEARCH_FIELD_HEIGHT) : 0;
     }
 
+    private void handleCustomFabClick(tw.nekomimi.nekogram.tabs.FloatingActionButtonType fabType) {
+        if (fabType == null) return;
+        switch (fabType) {
+            case CREATE_CHAT:
+                openWriteContacts();
+                break;
+            case BOOKMARKS:
+                presentFragment(new tw.nekomimi.nekogram.ui.BookmarkManagerActivity());
+                break;
+            case ARCHIVE: {
+                Bundle args = new Bundle();
+                args.putInt("folderId", 1);
+                presentFragment(new DialogsActivity(args));
+                break;
+            }
+            case CLOUD: {
+                Bundle args = new Bundle();
+                args.putLong("user_id", getUserConfig().getClientUserId());
+                presentFragment(new ChatActivity(args));
+                break;
+            }
+            case MARK_ALL_READ: {
+                MessagesController.DialogFilter filter = null;
+                if (filterTabsView != null) {
+                    int currentTabId = filterTabsView.getCurrentTabId();
+                    ArrayList<MessagesController.DialogFilter> activeFilters = getActiveDialogFilters();
+                    if (currentTabId >= 0 && currentTabId < activeFilters.size()) {
+                        filter = activeFilters.get(currentTabId);
+                    }
+                }
+                if (filter != null) {
+                    ArrayList<TLRPC.Dialog> dialogs = getDialogsArray(currentAccount, viewPages[0].dialogsType, filter.id, false);
+                    if (dialogs != null) {
+                        for (int i = 0; i < dialogs.size(); i++) {
+                            TLRPC.Dialog d = dialogs.get(i);
+                            if (d != null) {
+                                markAsRead(d.id);
+                            }
+                        }
+                    }
+                }
+                break;
+            }
+            case WALLET:
+                org.telegram.messenger.browser.Browser.openUrl(getParentActivity(), "tg://resolve?domain=wallet");
+                break;
+            case CONTACTS:
+                presentFragment(new ContactsActivity(null));
+                break;
+            case CREATE_STORY:
+                openStoriesRecorder();
+                break;
+            case MINI_APPS:
+                org.telegram.messenger.browser.Browser.openUrl(getParentActivity(), "tg://resolve?domain=tapps");
+                break;
+        }
+    }
 }

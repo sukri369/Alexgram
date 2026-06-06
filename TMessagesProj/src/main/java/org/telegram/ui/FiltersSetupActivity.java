@@ -579,11 +579,22 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
             if (listView != null) listView.forcedSections.add(AndroidUtilities.pack(start, items.size() - 1));
             items.add(ItemInner.asShadow(null));
         }
-        if (!dialogFilters.isEmpty()) {
+        // [Alexgram: Tabs by Type] - only count real (non-virtual) filters for display and limit
+        int realFilterCount = 0;
+        for (int i = 0; i < dialogFilters.size(); ++i) {
+            if (!tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(dialogFilters.get(i))) {
+                realFilterCount++;
+            }
+        }
+        if (realFilterCount > 0) {
             filtersSectionStart = items.size();
             items.add(ItemInner.asHeader(LocaleController.getString(R.string.Filters)));
             filtersStartPosition = items.size();
             for (int i = 0; i < dialogFilters.size(); ++i) {
+                // [Alexgram: Tabs by Type] - skip virtual filters; they live in the Tabs by Type section
+                if (tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(dialogFilters.get(i))) {
+                    continue;
+                }
                 items.add(ItemInner.asFilter(dialogFilters.get(i)));
                 if (MessagesController.getInstance(currentAccount).folderTags && dialogFilters.get(i).color >= 0) {
                     loadedColors = true;
@@ -591,14 +602,18 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
             }
             filtersSectionEnd = items.size();
 
-            if (listView != null) listView.forcedSections.add(AndroidUtilities.pack(filtersSectionStart, filtersSectionEnd - 1 + (dialogFilters.size() < getMessagesController().dialogFiltersLimitPremium ? 1 : 0)));
+            if (listView != null) listView.forcedSections.add(AndroidUtilities.pack(filtersSectionStart, filtersSectionEnd - 1 + (realFilterCount < getMessagesController().dialogFiltersLimitPremium ? 1 : 0)));
         } else {
             filtersSectionStart = filtersSectionEnd = -1;
         }
-        if (dialogFilters.size() < getMessagesController().dialogFiltersLimitPremium) {
+        if (realFilterCount < getMessagesController().dialogFiltersLimitPremium) {
             items.add(ItemInner.asButton(LocaleController.getString(R.string.CreateNewFilter)));
         }
         items.add(ItemInner.asShadow(null));
+        // [Alexgram: Tabs by Type] - Start
+        items.add(ItemInner.asTabsByType());
+        items.add(ItemInner.asShadow(null));
+        // [Alexgram: Tabs by Type] - End
         folderTagsPosition = items.size();
         showTagsRow = items.size();
         items.add(ItemInner.asCheck(LocaleController.getString(R.string.FolderShowTags)));
@@ -626,6 +641,10 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
             ArrayList<MessagesController.DialogFilter> filters = getMessagesController().getDialogFilters();
             for (int a = 0, N = filters.size(); a < N; a++) {
                 MessagesController.DialogFilter filter = filters.get(a);
+                // [Alexgram: Tabs by Type] - skip local-only virtual filters
+                if (tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(filter)) {
+                    continue;
+                }
                 req.order.add(filter.id);
             }
             getConnectionsManager().sendRequest(req, (response, error) -> {
@@ -716,6 +735,10 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
                 }
             } else if (item.viewType == VIEW_TYPE_BUTTON) {
                 createFolder(getParentLayout());
+            // [Alexgram: Tabs by Type] - Start
+            } else if (item.viewType == VIEW_TYPE_TABS_BY_TYPE) {
+                presentFragment(new tw.nekomimi.nekogram.tabs.TabsByTypeActivity());
+            // [Alexgram: Tabs by Type] - End
             }
         });
 
@@ -784,6 +807,9 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
     private static final int VIEW_TYPE_BUTTON = 4;
     private static final int VIEW_TYPE_FILTER_SUGGESTION = 5;
     private static final int VIEW_TYPE_CHECK = 6;
+    // [Alexgram: Tabs by Type] - Start
+    private static final int VIEW_TYPE_TABS_BY_TYPE = 7;
+    // [Alexgram: Tabs by Type] - End
 
     private int shiftDp = -4;
 
@@ -831,6 +857,11 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
             i.text = text;
             return i;
         }
+        // [Alexgram: Tabs by Type] - Start
+        public static ItemInner asTabsByType() {
+            return new ItemInner(VIEW_TYPE_TABS_BY_TYPE);
+        }
+        // [Alexgram: Tabs by Type] - End
 
         @Override
         public boolean equals(Object obj) {
@@ -881,6 +912,37 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
         public boolean isEnabled(RecyclerView.ViewHolder holder) {
             int type = holder.getItemViewType();
             return type != VIEW_TYPE_SHADOW && type != VIEW_TYPE_HEADER && type != VIEW_TYPE_FILTER_SUGGESTION && type != VIEW_TYPE_HINT;
+        }
+
+        // [Alexgram: Tabs by Type] - helper to build the row cell
+        private View createTabsByTypeView(Context ctx) {
+            FrameLayout cell = new FrameLayout(ctx);
+            cell.setLayoutParams(new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            cell.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
+            cell.setMinimumHeight(AndroidUtilities.dp(50));
+
+            android.widget.ImageView iconView = new android.widget.ImageView(ctx);
+            iconView.setScaleType(android.widget.ImageView.ScaleType.CENTER_INSIDE);
+            iconView.setImageResource(R.drawable.msg_folder_solar);
+            iconView.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText4), PorterDuff.Mode.SRC_IN));
+            cell.addView(iconView, LayoutHelper.createFrame(24, 50, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.CENTER_VERTICAL, LocaleController.isRTL ? 0 : 16, 0, LocaleController.isRTL ? 16 : 0, 0));
+
+            android.widget.TextView titleView = new android.widget.TextView(ctx);
+            titleView.setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 16);
+            titleView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+            titleView.setGravity(Gravity.CENTER_VERTICAL);
+            titleView.setSingleLine(true);
+            titleView.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            titleView.setText(LocaleController.getString(R.string.TabsByType));
+            cell.addView(titleView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 50, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.CENTER_VERTICAL, LocaleController.isRTL ? 16 : 52, 0, LocaleController.isRTL ? 52 : 50, 0));
+
+            android.widget.ImageView chevron = new android.widget.ImageView(ctx);
+            chevron.setScaleType(android.widget.ImageView.ScaleType.CENTER_INSIDE);
+            chevron.setImageResource(LocaleController.isRTL ? R.drawable.ic_ab_back : R.drawable.baseline_arrow_forward_24);
+            chevron.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText3), PorterDuff.Mode.SRC_IN));
+            cell.addView(chevron, LayoutHelper.createFrame(24, 50, (LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT) | Gravity.CENTER_VERTICAL, LocaleController.isRTL ? 12 : 0, 0, LocaleController.isRTL ? 0 : 12, 0));
+
+            return cell;
         }
 
         @Override
@@ -976,6 +1038,11 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
                 case VIEW_TYPE_CHECK:
                     view = new TextCheckCell(mContext);
                     break;
+                // [Alexgram: Tabs by Type] - Start
+                case VIEW_TYPE_TABS_BY_TYPE:
+                    view = createTabsByTypeView(mContext);
+                    break;
+                // [Alexgram: Tabs by Type] - End
                 case VIEW_TYPE_FILTER_SUGGESTION:
                 default:
                     SuggestedFilterCell suggestedFilterCell = new SuggestedFilterCell(mContext);
@@ -1123,10 +1190,16 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
             int temp = from.filter.order;
             from.filter.order = to.filter.order;
             to.filter.order = temp;
+            // [Alexgram: Tabs by Type] - use indexOf because virtual filters may be in the raw list
+            // so position offset arithmetic is no longer reliable
             ArrayList<MessagesController.DialogFilter> filters = getMessagesController().dialogFilters;
+            int fromIdx = filters.indexOf(from.filter);
+            int toIdx   = filters.indexOf(to.filter);
             try {
-                filters.set(fromPosition - filtersStartPosition, to.filter);
-                filters.set(toPosition - filtersStartPosition, from.filter);
+                if (fromIdx >= 0 && toIdx >= 0) {
+                    filters.set(fromIdx, to.filter);
+                    filters.set(toIdx, from.filter);
+                }
             } catch (Exception ignore) {}
             orderChanged = true;
             updateRows(true);

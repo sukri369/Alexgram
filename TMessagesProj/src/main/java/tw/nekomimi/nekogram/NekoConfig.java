@@ -161,6 +161,7 @@ public class NekoConfig {
     public static ConfigItem hideGroupSticker = addConfig("hideGroupSticker", configTypeBool, false);
     public static ConfigItem rememberAllBackMessages = addConfig("rememberAllBackMessages", configTypeBool, false);
     public static ConfigItem hideSendAsChannel = addConfig("hideSendAsChannel", configTypeBool, false);
+    public static ConfigItem sendToDiscussWithoutJoin = addConfig("sendToDiscussWithoutJoin", configTypeBool, true);
     public static ConfigItem showSpoilersDirectly = addConfig("showSpoilersDirectly", configTypeBool, false);
 
     public static ConfigItem disableAutoDownloadingWin32Executable = addConfig("Win32ExecutableFiles", configTypeBool, true);
@@ -173,6 +174,16 @@ public class NekoConfig {
     public static ConfigItem mapDriftingFixForGoogleMaps = addConfig("mapDriftingFixForGoogleMaps", configTypeBool, true);
 
     public static ConfigItem localPremium = addConfig("localPremium", configTypeBool, false);
+
+    // [Alexgram: Native Features] - Start
+    public static ConfigItem forceMusicSpeedControl = addConfig("forceMusicSpeedControl", configTypeBool, false);
+    public static ConfigItem enableEditFileName = addConfig("enableEditFileName", configTypeBool, false);
+    public static ConfigItem enableChangeNameInGroups = addConfig("enableChangeNameInGroups", configTypeBool, false);
+    // [Alexgram: Quick Edit Icon] - Start
+    public static ConfigItem showQuickEditIconInChatList = addConfig("showQuickEditIconInChatList", configTypeBool, false);
+    public static ConfigItem quickEditIconOnlyForOwnMessages = addConfig("quickEditIconOnlyForOwnMessages", configTypeBool, true);
+    // [Alexgram: Quick Edit Icon] - End
+    // [Alexgram: Native Features] - End
 
     public static ConfigItem usePersianCalendar = addConfig("UsePersianCalendar", configTypeBool, false);
     public static ConfigItem displayPersianCalendarByLatin = addConfig("DisplayPersianCalendarByLatin", configTypeBool, false);

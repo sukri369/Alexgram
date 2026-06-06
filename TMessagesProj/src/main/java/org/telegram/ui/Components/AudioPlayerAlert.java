@@ -2437,11 +2437,13 @@ public class AudioPlayerAlert extends BottomSheet implements NotificationCenter.
                 durationTextView.setText(duration != 0 ? AndroidUtilities.formatShortDuration(duration) : "-:--");
             }
 
-            if (duration > 60 * 10) {
+            // [Alexgram: Native Features] - Start
+            if (duration > 60 * 10 || tw.nekomimi.nekogram.NekoConfig.forceMusicSpeedControl.Bool()) {
                 playbackSpeedButton.setVisibility(View.VISIBLE);
             } else {
                 playbackSpeedButton.setVisibility(View.GONE);
             }
+            // [Alexgram: Native Features] - End
 
             if (!sameMessageObject) {
                 preloadNeighboringThumbs();

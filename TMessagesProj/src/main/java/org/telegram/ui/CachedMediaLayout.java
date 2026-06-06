@@ -39,6 +39,13 @@ import org.telegram.messenger.R;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.Utilities;
 import org.telegram.tgnet.TLObject;
+// [Alexgram: Forward from Storage Usage - Imports] - Start
+import org.telegram.messenger.AccountInstance;
+import org.telegram.messenger.MessagesStorage;
+import org.telegram.messenger.NotificationCenter;
+import org.telegram.messenger.SendMessagesHelper;
+import org.telegram.ui.Components.Forum.ForumUtilities;
+// [Alexgram: Forward from Storage Usage - Imports] - End
 import org.telegram.tgnet.TLRPC;
 import org.telegram.tgnet.tl.TL_stories;
 import org.telegram.ui.ActionBar.ActionBarMenuItem;
@@ -222,6 +229,157 @@ public class CachedMediaLayout extends FrameLayout implements NestedSizeNotifier
                                 }
                             });
                         }
+                        // [Alexgram: Forward from Storage Usage - Menu Option] - Start
+                        if (itemInner.file.file != null && itemInner.file.file.exists()) {
+                            ActionBarMenuItem.addItem(popupWindowLayout, R.drawable.msg_forward, LocaleController.getString(R.string.Forward), false, null).setOnClickListener(v -> {
+                                if (popupWindow != null) {
+                                    popupWindow.dismiss();
+                                }
+                                TLRPC.Message message = (itemInner.file.dialogId != 0 && itemInner.file.messageId != 0)
+                                        ? MessagesStorage.getInstance(parentFragment.getCurrentAccount()).getMessage(itemInner.file.dialogId, itemInner.file.messageId)
+                                        : null;
+                                if (message != null) {
+                                    MessageObject messageObject = new MessageObject(parentFragment.getCurrentAccount(), message, true, true);
+                                    ArrayList<MessageObject> fmessages = new ArrayList<>();
+                                    fmessages.add(messageObject);
+
+                                    Bundle args = new Bundle();
+                                    args.putBoolean("onlySelect", true);
+                                    args.putBoolean("canSelectTopics", true);
+                                    args.putInt("dialogsType", DialogsActivity.DIALOGS_TYPE_FORWARD);
+                                    DialogsActivity fragment = new DialogsActivity(args);
+                                    fragment.setDelegate((fragment1, dids, msgText, param, notify, scheduleDate, scheduleRepeatPeriod, topicsFragment) -> {
+                                        if (dids.size() > 1 || dids.get(0).dialogId == parentFragment.getUserConfig().getClientUserId() || msgText != null) {
+                                            for (int a = 0; a < dids.size(); a++) {
+                                                long did = dids.get(a).dialogId;
+                                                if (msgText != null) {
+                                                    SendMessagesHelper.getInstance(parentFragment.getCurrentAccount()).sendMessage(msgText.toString(), did, null, null, null, true, null, null, null, notify, scheduleDate, 0, null, false);
+                                                }
+                                                SendMessagesHelper.getInstance(parentFragment.getCurrentAccount()).sendMessage(fmessages, did, false, false, notify, scheduleDate, 0);
+                                            }
+                                            fragment1.finishFragment();
+                                        } else {
+                                            long did = dids.get(0).dialogId;
+                                            Bundle args1 = new Bundle();
+                                            args1.putBoolean("scrollToTopOnResume", true);
+                                            if (DialogObject.isEncryptedDialog(did)) {
+                                                args1.putInt("enc_id", DialogObject.getEncryptedChatId(did));
+                                            } else {
+                                                if (DialogObject.isUserDialog(did)) {
+                                                    args1.putLong("user_id", did);
+                                                } else {
+                                                    args1.putLong("chat_id", -did);
+                                                }
+                                                if (!parentFragment.getMessagesController().checkCanOpenChat(args1, fragment1)) {
+                                                    return true;
+                                                }
+                                            }
+                                            parentFragment.getNotificationCenter().postNotificationName(NotificationCenter.closeChats);
+                                            ChatActivity chatActivity = new ChatActivity(args1);
+                                            ForumUtilities.applyTopic(chatActivity, dids.get(0));
+                                            fragment1.presentFragment(chatActivity, true);
+                                            chatActivity.showFieldPanelForForward(true, fmessages);
+                                        }
+                                        delegate.dismiss();
+                                        return true;
+                                    });
+                                    parentFragment.presentFragment(fragment);
+                                } else {
+                                    Bundle args = new Bundle();
+                                    args.putBoolean("onlySelect", true);
+                                    args.putBoolean("canSelectTopics", true);
+                                    args.putInt("dialogsType", DialogsActivity.DIALOGS_TYPE_FORWARD);
+                                    DialogsActivity fragment = new DialogsActivity(args);
+                                    fragment.setDelegate((fragment1, dids, msgText, param, notify, scheduleDate, scheduleRepeatPeriod, topicsFragment) -> {
+                                        for (int a = 0; a < dids.size(); a++) {
+                                            long did = dids.get(a).dialogId;
+                                            if (msgText != null) {
+                                                SendMessagesHelper.getInstance(parentFragment.getCurrentAccount()).sendMessage(msgText.toString(), did, null, null, null, true, null, null, null, notify, scheduleDate, 0, null, false);
+                                            }
+                                            String filePath = itemInner.file.file.getAbsolutePath();
+                                            if (itemInner.file.type == 0) { // TYPE_PHOTOS
+                                                SendMessagesHelper.prepareSendingPhoto(
+                                                    parentFragment.getAccountInstance(),
+                                                    filePath,
+                                                    null,
+                                                    did,
+                                                    null,
+                                                    null,
+                                                    null,
+                                                    null,
+                                                    null,
+                                                    null,
+                                                    null,
+                                                    0,
+                                                    null,
+                                                    notify,
+                                                    scheduleDate,
+                                                    0,
+                                                    null,
+                                                    0
+                                                );
+                                            } else if (itemInner.file.type == 1) { // TYPE_VIDEOS
+                                                SendMessagesHelper.prepareSendingVideo(
+                                                    parentFragment.getAccountInstance(),
+                                                    filePath,
+                                                    null,
+                                                    null,
+                                                    null,
+                                                    did,
+                                                    null,
+                                                    null,
+                                                    null,
+                                                    null,
+                                                    null,
+                                                    0,
+                                                    null,
+                                                    notify,
+                                                    scheduleDate,
+                                                    0,
+                                                    false,
+                                                    false,
+                                                    null,
+                                                    null,
+                                                    0,
+                                                    0,
+                                                    0
+                                                );
+                                            } else {
+                                                ArrayList<String> paths = new ArrayList<>();
+                                                paths.add(filePath);
+                                                SendMessagesHelper.prepareSendingDocuments(
+                                                    parentFragment.getAccountInstance(),
+                                                    paths,
+                                                    paths,
+                                                    null,
+                                                    null,
+                                                    null,
+                                                    did,
+                                                    null,
+                                                    null,
+                                                    null,
+                                                    null,
+                                                    null,
+                                                    notify,
+                                                    scheduleDate,
+                                                    null,
+                                                    null,
+                                                    0,
+                                                    0,
+                                                    false,
+                                                    0
+                                                );
+                                            }
+                                        }
+                                        fragment1.finishFragment();
+                                        delegate.dismiss();
+                                        return true;
+                                    });
+                                    parentFragment.presentFragment(fragment);
+                                }
+                            });
+                        }
+                        // [Alexgram: Forward from Storage Usage - Menu Option] - End
                         ActionBarMenuItem.addItem(popupWindowLayout, R.drawable.msg_select,
                                 !cacheModel.selectedFiles.contains(itemInner.file) ? LocaleController.getString(R.string.Select) : LocaleController.getString(R.string.Deselect),
                                 false, null).setOnClickListener(v -> {

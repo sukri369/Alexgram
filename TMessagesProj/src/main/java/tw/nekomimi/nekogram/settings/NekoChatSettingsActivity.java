@@ -120,6 +120,10 @@ public class NekoChatSettingsActivity extends BaseNekoXSettingsActivity implemen
     private final AbstractConfigCell deleteChatForBothSidesRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getDeleteChatForBothSides()));
     private final AbstractConfigCell showMessageIDRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getShowMessageID()));
     private final AbstractConfigCell showSeconds = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.showSeconds));
+    // [Alexgram: Quick Edit Icon] - Start
+    private final AbstractConfigCell showQuickEditIconRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.showQuickEditIconInChatList, getString(R.string.ShowQuickEditIconDesc), getString(R.string.ShowQuickEditIcon)));
+    private final AbstractConfigCell quickEditIconOnlyOwnRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.quickEditIconOnlyForOwnMessages, getString(R.string.QuickEditIconOnlyOwnDesc), getString(R.string.QuickEditIconOnlyOwn)));
+    // [Alexgram: Quick Edit Icon] - End
     private final AbstractConfigCell useEditedIconRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getUseEditedIcon()));
     private final AbstractConfigCell customEditedMessageRow = cellGroup.appendCell(new ConfigCellTextInput(null, NaConfig.INSTANCE.getCustomEditedMessage(), "", null));
     private final AbstractConfigCell dateOfForwardMsgRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getDateOfForwardedMsg()));
@@ -218,7 +222,7 @@ public class NekoChatSettingsActivity extends BaseNekoXSettingsActivity implemen
             showDialog(showMessageMenuConfigAlert(this, R.string.MessageMenu, new ArrayList<>() {{
                 add(new ConfigCellTextCheckIcon(NekoConfig.showAddToSavedMessages, getString(R.string.AddToSavedMessages), R.drawable.msg_saved));
                 add(new ConfigCellTextCheckIcon(NekoConfig.showRepeat, getString(R.string.Repeat), R.drawable.msg_repeat));
-                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getShowRepeatAsCopy(), R.drawable.msg_repeat));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getShowRepeatAsCopy(), getString(R.string.RepeatAsCopy), R.drawable.msg_repeat));
                 add(new ConfigCellTextCheckIcon(NekoConfig.showViewHistory, getString(R.string.ViewHistory), R.drawable.menu_recent));
                 add(new ConfigCellTextCheckIcon(NekoConfig.showMessageDetails, getString(R.string.MessageDetails), R.drawable.msg_info));
                 add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getShowAddToBookmark(), getString(R.string.AddBookmark), R.drawable.msg_fave));
@@ -226,18 +230,18 @@ public class NekoChatSettingsActivity extends BaseNekoXSettingsActivity implemen
                 add(new ConfigCellTextCheckIcon(NekoConfig.showMessageHide, getString(R.string.Hide), R.drawable.msg_disable));
                 add(new ConfigCellTextCheckIcon(NekoConfig.showReport, getString(R.string.ReportChat), R.drawable.msg_report));
                 add(new ConfigCellTextCheckIcon(NekoConfig.showShareMessages, getString(R.string.ShareMessages), R.drawable.msg_shareout));
-                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getShowReactions(), R.drawable.msg_reactions2));
-                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getShowReplyInPrivate(), R.drawable.menu_reply));
-                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getShowCopyLink(), R.drawable.msg_link));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getShowReactions(), getString(R.string.Reactions), R.drawable.msg_reactions2));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getShowReplyInPrivate(), getString(R.string.ReplyInPrivate), R.drawable.menu_reply));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getShowCopyLink(), getString(R.string.CopyLink), R.drawable.msg_link));
                 add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getShowCopyFrame(), getString(R.string.CopyVideoFrame), R.drawable.msg_copy_photo));
-                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getShowCopyPhoto(), R.drawable.msg_copy_photo));
-                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getShowCopyAsSticker(), R.drawable.msg_copy_photo));
-                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getShowAddToStickers(), R.drawable.msg_sticker));
-                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getShowAddToFavorites(), R.drawable.msg_fave));
-                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getShowNoQuoteForward(), R.drawable.msg_forward_noquote));
-                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getShowSetReminder(), R.drawable.msg_calendar2));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getShowCopyPhoto(), getString(R.string.CopyPhoto), R.drawable.msg_copy_photo));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getShowCopyAsSticker(), getString(R.string.CopyPhotoAsSticker), R.drawable.msg_copy_photo));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getShowAddToStickers(), getString(R.string.AddToStickers), R.drawable.msg_sticker));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getShowAddToFavorites(), getString(R.string.AddToFavorites), R.drawable.msg_fave));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getShowNoQuoteForward(), getString(R.string.NoQuoteForward), R.drawable.msg_forward_noquote));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getShowSetReminder(), getString(R.string.SetReminder), R.drawable.msg_calendar2));
                 add(new ConfigCellTextCheckIcon(NekoConfig.showDeleteDownloadedFile, getString(R.string.DeleteDownloadedFile), R.drawable.msg_clear));
-                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getShowTranslateMessageLLM(), R.drawable.magic_stick_solar));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getShowTranslateMessageLLM(), getString(R.string.TranslateMessageLLM), R.drawable.magic_stick_solar));
                 add(new ConfigCellTextCheckIcon(NekoConfig.showAdminActions, getString(R.string.EditAdminRights), R.drawable.profile_admin));
                 add(new ConfigCellTextCheckIcon(NekoConfig.showChangePermissions, getString(R.string.ChangePermissions), R.drawable.msg_permissions));
                 if (NaConfig.INSTANCE.getEnableAIReply().Bool()) {
@@ -460,6 +464,7 @@ public class NekoChatSettingsActivity extends BaseNekoXSettingsActivity implemen
     // Channels
     private final AbstractConfigCell headerChannels = cellGroup.appendCell(new ConfigCellHeader(getString(R.string.ChannelsTab)));
     private final AbstractConfigCell hideSendAsChannelRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.hideSendAsChannel));
+    private final AbstractConfigCell sendToDiscussWithoutJoinRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.sendToDiscussWithoutJoin, getString(R.string.sendToDiscussWithoutJoinInfo)));
     private final AbstractConfigCell hideShareButtonInChannelRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getHideShareButtonInChannel()));
     private final AbstractConfigCell disableChannelMuteButtonRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getDisableChannelMuteButton()));
     private final AbstractConfigCell disableSwipeToNextRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.disableSwipeToNext));
@@ -499,6 +504,10 @@ public class NekoChatSettingsActivity extends BaseNekoXSettingsActivity implemen
         }
         if (!BuildVars.LOGS_ENABLED) {
             cellGroup.rows.remove(markdownParserRow);
+        }
+        // [Alexgram: Quick Edit Icon]
+        if (!NekoConfig.showQuickEditIconInChatList.Bool()) {
+            cellGroup.rows.remove(quickEditIconOnlyOwnRow);
         }
         checkSkipOpenLinkConfirmRows();
         checkConfirmAVRows();
@@ -579,6 +588,21 @@ public class NekoChatSettingsActivity extends BaseNekoXSettingsActivity implemen
                 }
             } else if (key.equals("PremiumElements")) {
                 addRowsToMap(cellGroup);
+            // [Alexgram: Quick Edit Icon]
+            } else if (key.equals(NekoConfig.showQuickEditIconInChatList.getKey())) {
+                if ((boolean) newValue) {
+                    if (!cellGroup.rows.contains(quickEditIconOnlyOwnRow)) {
+                        final int index = cellGroup.rows.indexOf(showQuickEditIconRow) + 1;
+                        cellGroup.rows.add(index, quickEditIconOnlyOwnRow);
+                        listAdapter.notifyItemInserted(index);
+                    }
+                } else {
+                    if (cellGroup.rows.contains(quickEditIconOnlyOwnRow)) {
+                        final int index = cellGroup.rows.indexOf(quickEditIconOnlyOwnRow);
+                        cellGroup.rows.remove(quickEditIconOnlyOwnRow);
+                        listAdapter.notifyItemRemoved(index);
+                    }
+                }
             }
         };
 

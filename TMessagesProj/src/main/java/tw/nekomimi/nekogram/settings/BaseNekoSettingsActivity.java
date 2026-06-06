@@ -220,45 +220,56 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
             var key = getKey();
             if (key != null && holder != null && listAdapter.isEnabled(holder) && rowMapReverse.containsKey(position)) {
                 String rowKey = rowMapReverse.get(position);
+                boolean isOnOff = false;
+                if (view != null) {
+                    String simpleName = view.getClass().getSimpleName();
+                    if (simpleName.contains("Check") || simpleName.contains("Switch")) {
+                        isOnOff = true;
+                    }
+                }
+
                 ArrayList<CharSequence> items = new ArrayList<>();
                 items.add(getString(R.string.CopyLink));
-                if (!QuickSettingsController.getInstance().isAdded(rowKey)) {
-                    items.add("Add to Quick Settings");
-                } else {
-                    items.add("Remove from Quick Settings");
+                if (isOnOff) {
+                    if (!QuickSettingsController.getInstance().isAdded(rowKey)) {
+                        items.add("Add to Quick Settings");
+                    } else {
+                        items.add("Remove from Quick Settings");
+                    }
                 }
                 showDialog(new AlertDialog.Builder(context).setItems(items.toArray(new CharSequence[0]), (dialogInterface, i) -> {
-                    if (i == 0) {
+                    CharSequence clickedItem = items.get(i);
+                    if (getString(R.string.CopyLink).equals(clickedItem)) {
                         AndroidUtilities.addToClipboard(String.format(Locale.getDefault(), "https://%s/alexsettings/%s?r=%s", getMessagesController().linkPrefix, getKey(), rowKey));
                         BulletinFactory.of(BaseNekoSettingsActivity.this).createCopyLinkBulletin().show();
-                    } else if (i == 1) {
-                        if (!QuickSettingsController.getInstance().isAdded(rowKey)) {
-                            String title = "";
-                            String subtitle = null;
-                            int type = QuickSettingEntry.TYPE_NAVIGATE;
-                            if (view instanceof TextSettingsCell) {
-                                title = ((TextSettingsCell) view).getTextView().getText().toString();
-                                try {
-                                    subtitle = ((TextSettingsCell) view).getValueTextView().getText().toString();
-                                } catch (Exception ignored) {}
-                            } else if (view instanceof TextCheckCell) {
-                                title = ((TextCheckCell) view).getTextView().getText().toString();
-                                type = QuickSettingEntry.TYPE_SWITCH;
-                            } else if (view instanceof TextDetailSettingsCell) {
-                                title = ((TextDetailSettingsCell) view).getTextView().getText().toString();
-                            } else if (view instanceof NotificationsCheckCell) {
-                                title = ((NotificationsCheckCell) view).getTextView().getText().toString();
-                                type = QuickSettingEntry.TYPE_SWITCH;
+                    } else if ("Add to Quick Settings".equals(clickedItem)) {
+                        String title = "";
+                        String subtitle = null;
+                        int type = QuickSettingEntry.TYPE_SWITCH;
+                        if (view instanceof TextCheckCell) {
+                            title = ((TextCheckCell) view).getTextView().getText().toString();
+                        } else if (view instanceof NotificationsCheckCell) {
+                            title = ((NotificationsCheckCell) view).getTextView().getText().toString();
+                        } else if (view instanceof CheckBoxCell) {
+                            title = ((CheckBoxCell) view).getTextView().getText().toString();
+                        } else if (view instanceof android.view.ViewGroup) {
+                            java.util.List<android.widget.TextView> textViews = new java.util.ArrayList<>();
+                            findTextViews(view, textViews);
+                            if (textViews.size() >= 1) {
+                                title = textViews.get(0).getText().toString();
                             }
-
-                            if (title != null && !title.isEmpty()) {
-                                QuickSettingsController.getInstance().addQuickSetting(new QuickSettingEntry(rowKey, title, subtitle, "msg_settings", 0xFF2196F3, type, getClass().getName()));
-                                BulletinFactory.of(BaseNekoSettingsActivity.this).createSimpleBulletin(R.drawable.msg_settings, "Added to Quick Settings").show();
+                            if (textViews.size() >= 2) {
+                                subtitle = textViews.get(1).getText().toString();
                             }
-                        } else {
-                            QuickSettingsController.getInstance().removeQuickSetting(rowKey);
-                            BulletinFactory.of(BaseNekoSettingsActivity.this).createSimpleBulletin(R.drawable.msg_delete, "Removed from Quick Settings").show();
                         }
+
+                        if (title != null && !title.isEmpty()) {
+                            QuickSettingsController.getInstance().addQuickSetting(new QuickSettingEntry(rowKey, title, subtitle, "msg_settings", 0xFF2196F3, type, getClass().getName()));
+                            BulletinFactory.of(BaseNekoSettingsActivity.this).createSimpleBulletin(R.drawable.msg_settings, "Added to Quick Settings").show();
+                        }
+                    } else if ("Remove from Quick Settings".equals(clickedItem)) {
+                        QuickSettingsController.getInstance().removeQuickSetting(rowKey);
+                        BulletinFactory.of(BaseNekoSettingsActivity.this).createSimpleBulletin(R.drawable.msg_delete, "Removed from Quick Settings").show();
                     }
                 }).create());
                 return true;
@@ -272,6 +283,17 @@ public abstract class BaseNekoSettingsActivity extends BaseFragment {
             frameLayout.addView(actionBar, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
         }
         return fragmentView;
+    }
+
+    private void findTextViews(View view, java.util.List<android.widget.TextView> out) {
+        if (view instanceof android.widget.TextView) {
+            out.add((android.widget.TextView) view);
+        } else if (view instanceof android.view.ViewGroup) {
+            android.view.ViewGroup group = (android.view.ViewGroup) view;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                findTextViews(group.getChildAt(i), out);
+            }
+        }
     }
 
     protected boolean isAlexgramTheme() {

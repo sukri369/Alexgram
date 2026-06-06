@@ -1220,7 +1220,6 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
 
         parentFragment.getOrCreateStoryViewer().open(mContext, null, peerIds, 0, null, null, StoriesListPlaceProvider.of(recyclerListView, true), false);
     }
-
     public void setIsTransitionSupport() {
         this.isTransitionSupport = true;
     }
