@@ -49307,12 +49307,13 @@ public class ChatActivity extends BaseFragment implements
 		if (tw.nekomimi.nekogram.NekoConfig.enableChangeNameInGroups.Bool()
 				&& tw.nekomimi.nekogram.helpers.MessageNameOverrideHelper.isGroupChat(currentAccount, getDialogId())
 				&& message != null
+				&& !message.isOutOwner()
 				&& message.getFromChatId() != 0
 				&& !isAyuDeleted
 				&& message.getId() > 0) {
 			items.add(LocaleController.getString("ChangeSenderNameMenu", R.string.ChangeSenderNameMenu));
 			options.add(OPTION_CHANGE_SENDER_NAME);
-			icons.add(R.drawable.profile_admin);
+			icons.add(R.drawable.msg_change_name_nax);
 		}
 		if (NekoConfig.showMessageDetails.Bool()) {
 			items.add(LocaleController.getString(R.string.MessageDetails));
