@@ -6252,10 +6252,13 @@ public class NotificationsController extends BaseController {
             }
             allowedIcons.add(icon);
         }
-        if (notificationIconConfigValue >= 0 && notificationIconConfigValue < allowedIcons.size()) {
-            return allowedIcons.get(notificationIconConfigValue).background;
+        if (notificationIconConfigValue == 1) {
+            return R.drawable.notification;
         }
-        return R.drawable.ic_launcher_alexgram_blue;
+        if (notificationIconConfigValue > 1 && notificationIconConfigValue <= allowedIcons.size() + 1) {
+            return allowedIcons.get(notificationIconConfigValue - 2).background;
+        }
+        return R.drawable.nagramx_outline;
     }
 
     public void loadTopicsNotificationsExceptions(long dialogId, Consumer<HashSet<Integer>> consumer) {

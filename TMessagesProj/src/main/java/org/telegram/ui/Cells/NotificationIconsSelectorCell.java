@@ -138,6 +138,8 @@ public class NotificationIconsSelectorCell extends RecyclerListView implements N
     @SuppressLint("NotifyDataSetChanged")
     private void updateIconsVisibility() {
         availableIcons.clear();
+        availableIcons.add(new IconItem(R.drawable.nagramx_outline, 0, R.string.Default));
+        availableIcons.add(new IconItem(R.drawable.notification, 0, R.string.AppIconTelegramOriginal));
 
         for (LauncherIconController.LauncherIcon icon : LauncherIconController.LauncherIcon.values()) {
             if (icon == LauncherIconController.LauncherIcon.TELEGRAM ||
@@ -272,6 +274,7 @@ public class NotificationIconsSelectorCell extends RecyclerListView implements N
         public void bind(IconItem item, int position) {
             iconView.setImageResource(item.resId);
             iconView.setForeground(item.foregroundResId);
+            iconView.setIsSingleIcon(item.foregroundResId == 0);
             titleView.setText(LocaleController.getString(item.titleResId));
             setSelected(NaConfig.INSTANCE.getNotificationIcon().Int() == position, false);
         }
