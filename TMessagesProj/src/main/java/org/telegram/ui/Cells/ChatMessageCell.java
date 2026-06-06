@@ -21683,9 +21683,15 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
 
         // For grouped messages (albums), only show the edit button on one cell (the bottom-left/right one)
         if (currentMessagesGroup != null && currentPosition != null) {
-            boolean last = (currentPosition.flags & MessageObject.POSITION_FLAG_BOTTOM) != 0 && (currentPosition.flags & (msg.isOutOwner() ? MessageObject.POSITION_FLAG_LEFT : MessageObject.POSITION_FLAG_RIGHT)) != 0;
-            if (!currentMessagesGroup.isDocuments && !last) {
-                return false;
+            if (currentMessagesGroup.isDocuments) {
+                if (!currentPosition.last) {
+                    return false;
+                }
+            } else {
+                boolean last = (currentPosition.flags & MessageObject.POSITION_FLAG_BOTTOM) != 0 && (currentPosition.flags & (msg.isOutOwner() ? MessageObject.POSITION_FLAG_LEFT : MessageObject.POSITION_FLAG_RIGHT)) != 0;
+                if (!last) {
+                    return false;
+                }
             }
         }
 
