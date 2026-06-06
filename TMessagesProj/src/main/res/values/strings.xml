@@ -3109,7 +3109,7 @@
     <string name="TabsByTypeArchive">Archive</string>
     <string name="TabsByTypeAutoSorting">Auto-sorting chats</string>
     <string name="TabsByTypeAutoSortingHint">Enable auto-sorting to automatically organize chats into tabs by type.</string>
-    <string name="TabsByTypeDragHint">Drag rows to reorder tabs.</string>
+    <string name="TabsByTypeDragHint">Drag rows to reorder tabs.\n\nTelegram server folders will appear first, followed by tabs by type.</string>
     <string name="TabsByTypeUnread">Unread chats</string>
     <string name="TabsByTypePersonal">Private chats</string>
     <string name="TabsByTypeGroups">Groups</string>
