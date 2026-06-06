@@ -418,6 +418,16 @@ public class SpecialForwardActivity extends ChatActivity {
         
         if (chatActivityEnterView != null) {
             chatActivityEnterView.setEditingMessageObject(messageObject, null, !messageObject.isMediaEmpty());
+            
+            CharSequence editingText = messageObject.isMediaEmpty() ? messageObject.messageText : messageObject.caption;
+            if (editingText == null) editingText = "";
+            CharSequence formattedText = org.telegram.ui.Components.ChatActivityEnterView.applyMessageEntities(
+                messageObject.messageOwner.entities,
+                editingText,
+                Theme.chat_msgTextPaint.getFontMetricsInt()
+            );
+            chatActivityEnterView.setFieldText(formattedText);
+
             View doneBtn = chatActivityEnterView.getDoneButton();
             if (doneBtn != null) {
                 doneBtn.setOnClickListener(v -> onDoneEditingMessage(chatActivityEnterView.getFieldText()));
@@ -1268,7 +1278,14 @@ public class SpecialForwardActivity extends ChatActivity {
                 textBuilder.replace(ent.offset, ent.offset + ent.length, replacementStr);
                 int lengthDiff = replacementStr.length() - oldLength;
                 
-                TLRPC.TL_messageEntityUrl newUrlEnt = new TLRPC.TL_messageEntityUrl();
+                TLRPC.MessageEntity newUrlEnt;
+                if (replacementStr.startsWith("@")) {
+                    newUrlEnt = new TLRPC.TL_messageEntityMention();
+                } else if (replacementStr.startsWith("#")) {
+                    newUrlEnt = new TLRPC.TL_messageEntityHashtag();
+                } else {
+                    newUrlEnt = new TLRPC.TL_messageEntityUrl();
+                }
                 newUrlEnt.offset = ent.offset;
                 newUrlEnt.length = replacementStr.length();
                 
