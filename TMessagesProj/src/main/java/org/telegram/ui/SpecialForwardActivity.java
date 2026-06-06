@@ -1147,6 +1147,66 @@ public class SpecialForwardActivity extends ChatActivity {
         for (TLRPC.MessageEntity ent : entities) {
             workingEntities.add(ent);
         }
+
+        // Parse missing mentions from text
+        try {
+            java.util.regex.Matcher mentionMatcher = java.util.regex.Pattern.compile("@[a-zA-Z0-9_]{1,32}").matcher(rawText);
+            while (mentionMatcher.find()) {
+                int start = mentionMatcher.start();
+                if (start > 0) {
+                    char prev = rawText.charAt(start - 1);
+                    if (!Character.isWhitespace(prev) && prev != '\n') {
+                        continue;
+                    }
+                }
+                int end = mentionMatcher.end();
+                boolean overlap = false;
+                for (TLRPC.MessageEntity existing : workingEntities) {
+                    if (!(existing.offset >= end || existing.offset + existing.length <= start)) {
+                        overlap = true;
+                        break;
+                    }
+                }
+                if (!overlap) {
+                    TLRPC.TL_messageEntityMention mention = new TLRPC.TL_messageEntityMention();
+                    mention.offset = start;
+                    mention.length = end - start;
+                    workingEntities.add(mention);
+                }
+            }
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+
+        // Parse missing hashtags from text
+        try {
+            java.util.regex.Matcher hashtagMatcher = java.util.regex.Pattern.compile("#[a-zA-Z0-9_]{1,32}").matcher(rawText);
+            while (hashtagMatcher.find()) {
+                int start = hashtagMatcher.start();
+                if (start > 0) {
+                    char prev = rawText.charAt(start - 1);
+                    if (!Character.isWhitespace(prev) && prev != '\n') {
+                        continue;
+                    }
+                }
+                int end = hashtagMatcher.end();
+                boolean overlap = false;
+                for (TLRPC.MessageEntity existing : workingEntities) {
+                    if (!(existing.offset >= end || existing.offset + existing.length <= start)) {
+                        overlap = true;
+                        break;
+                    }
+                }
+                if (!overlap) {
+                    TLRPC.TL_messageEntityHashtag hashtag = new TLRPC.TL_messageEntityHashtag();
+                    hashtag.offset = start;
+                    hashtag.length = end - start;
+                    workingEntities.add(hashtag);
+                }
+            }
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
         
         ArrayList<TLRPC.MessageEntity> toReplace = new ArrayList<>();
         for (TLRPC.MessageEntity ent : workingEntities) {
@@ -1155,26 +1215,29 @@ public class SpecialForwardActivity extends ChatActivity {
             }
             
             String entText = rawText.substring(ent.offset, ent.offset + ent.length);
-            String url = null;
-            
-            if (ent instanceof TLRPC.TL_messageEntityMention || ent instanceof TLRPC.TL_messageEntityMentionName) {
-                url = entText;
+            boolean shouldReplace = false;
+
+            if (ent instanceof TLRPC.TL_messageEntityMention || ent instanceof TLRPC.TL_messageEntityMentionName || ent instanceof TLRPC.TL_inputMessageEntityMentionName) {
+                shouldReplace = (typeMask & 2) != 0;
             } else if (ent instanceof TLRPC.TL_messageEntityHashtag) {
-                url = entText;
-            } else if (ent instanceof TLRPC.TL_messageEntityUrl) {
-                url = entText;
-            } else if (ent instanceof TLRPC.TL_messageEntityTextUrl) {
-                url = ((TLRPC.TL_messageEntityTextUrl) ent).url;
+                shouldReplace = (typeMask & 4) != 0;
+            } else {
+                String url = null;
+                if (ent instanceof TLRPC.TL_messageEntityUrl) {
+                    url = entText;
+                } else if (ent instanceof TLRPC.TL_messageEntityTextUrl) {
+                    url = ((TLRPC.TL_messageEntityTextUrl) ent).url;
+                }
+                
+                if (url != null) {
+                    boolean isInternal = org.telegram.messenger.browser.Browser.isInternalUrl(url, null);
+                    if (isInternal) {
+                        shouldReplace = (typeMask & 1) != 0;
+                    } else {
+                        shouldReplace = (typeMask & 8) != 0;
+                    }
+                }
             }
-            
-            if (url == null) {
-                continue;
-            }
-            
-            boolean shouldReplace = (org.telegram.messenger.browser.Browser.isInternalUrl(url, null) && (typeMask & 1) != 0)
-                    || (url.startsWith("@") && (typeMask & 2) != 0)
-                    || (url.startsWith("#") && (typeMask & 4) != 0)
-                    || (!url.startsWith("@") && !url.startsWith("#") && !org.telegram.messenger.browser.Browser.isInternalUrl(url, null) && (typeMask & 8) != 0);
             
             if (shouldReplace) {
                 toReplace.add(ent);
@@ -1317,6 +1380,66 @@ public class SpecialForwardActivity extends ChatActivity {
         for (TLRPC.MessageEntity ent : entities) {
             workingEntities.add(ent);
         }
+
+        // Parse missing mentions from text
+        try {
+            java.util.regex.Matcher mentionMatcher = java.util.regex.Pattern.compile("@[a-zA-Z0-9_]{1,32}").matcher(rawText);
+            while (mentionMatcher.find()) {
+                int start = mentionMatcher.start();
+                if (start > 0) {
+                    char prev = rawText.charAt(start - 1);
+                    if (!Character.isWhitespace(prev) && prev != '\n') {
+                        continue;
+                    }
+                }
+                int end = mentionMatcher.end();
+                boolean overlap = false;
+                for (TLRPC.MessageEntity existing : workingEntities) {
+                    if (!(existing.offset >= end || existing.offset + existing.length <= start)) {
+                        overlap = true;
+                        break;
+                    }
+                }
+                if (!overlap) {
+                    TLRPC.TL_messageEntityMention mention = new TLRPC.TL_messageEntityMention();
+                    mention.offset = start;
+                    mention.length = end - start;
+                    workingEntities.add(mention);
+                }
+            }
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+
+        // Parse missing hashtags from text
+        try {
+            java.util.regex.Matcher hashtagMatcher = java.util.regex.Pattern.compile("#[a-zA-Z0-9_]{1,32}").matcher(rawText);
+            while (hashtagMatcher.find()) {
+                int start = hashtagMatcher.start();
+                if (start > 0) {
+                    char prev = rawText.charAt(start - 1);
+                    if (!Character.isWhitespace(prev) && prev != '\n') {
+                        continue;
+                    }
+                }
+                int end = hashtagMatcher.end();
+                boolean overlap = false;
+                for (TLRPC.MessageEntity existing : workingEntities) {
+                    if (!(existing.offset >= end || existing.offset + existing.length <= start)) {
+                        overlap = true;
+                        break;
+                    }
+                }
+                if (!overlap) {
+                    TLRPC.TL_messageEntityHashtag hashtag = new TLRPC.TL_messageEntityHashtag();
+                    hashtag.offset = start;
+                    hashtag.length = end - start;
+                    workingEntities.add(hashtag);
+                }
+            }
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
         
         ArrayList<TLRPC.MessageEntity> toDeleteText = new ArrayList<>();
         ArrayList<TLRPC.MessageEntity> toRemoveEntityOnly = new ArrayList<>();
@@ -1327,28 +1450,31 @@ public class SpecialForwardActivity extends ChatActivity {
             }
             
             String entText = rawText.substring(ent.offset, ent.offset + ent.length);
-            String url = null;
             boolean isTextUrl = false;
+            boolean shouldDelete = false;
             
-            if (ent instanceof TLRPC.TL_messageEntityMention || ent instanceof TLRPC.TL_messageEntityMentionName) {
-                url = entText;
+            if (ent instanceof TLRPC.TL_messageEntityMention || ent instanceof TLRPC.TL_messageEntityMentionName || ent instanceof TLRPC.TL_inputMessageEntityMentionName) {
+                shouldDelete = (typeMask & 2) != 0;
             } else if (ent instanceof TLRPC.TL_messageEntityHashtag) {
-                url = entText;
-            } else if (ent instanceof TLRPC.TL_messageEntityUrl) {
-                url = entText;
-            } else if (ent instanceof TLRPC.TL_messageEntityTextUrl) {
-                url = ((TLRPC.TL_messageEntityTextUrl) ent).url;
-                isTextUrl = true;
+                shouldDelete = (typeMask & 4) != 0;
+            } else {
+                String url = null;
+                if (ent instanceof TLRPC.TL_messageEntityUrl) {
+                    url = entText;
+                } else if (ent instanceof TLRPC.TL_messageEntityTextUrl) {
+                    url = ((TLRPC.TL_messageEntityTextUrl) ent).url;
+                    isTextUrl = true;
+                }
+                
+                if (url != null) {
+                    boolean isInternal = org.telegram.messenger.browser.Browser.isInternalUrl(url, null);
+                    if (isInternal) {
+                        shouldDelete = (typeMask & 1) != 0;
+                    } else {
+                        shouldDelete = (typeMask & 8) != 0;
+                    }
+                }
             }
-            
-            if (url == null) {
-                continue;
-            }
-            
-            boolean shouldDelete = (org.telegram.messenger.browser.Browser.isInternalUrl(url, null) && (typeMask & 1) != 0)
-                    || (url.startsWith("@") && (typeMask & 2) != 0)
-                    || (url.startsWith("#") && (typeMask & 4) != 0)
-                    || (!url.startsWith("@") && !url.startsWith("#") && !org.telegram.messenger.browser.Browser.isInternalUrl(url, null) && (typeMask & 8) != 0);
             
             if (shouldDelete) {
                 if (isTextUrl) {
