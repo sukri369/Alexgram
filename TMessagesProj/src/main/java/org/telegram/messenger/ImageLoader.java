@@ -3178,11 +3178,6 @@ public class ImageLoader {
                                 if (cacheFile.exists()) {
                                     cacheFileExists = true;
                                 }
-                            } else if (imageLocation.location instanceof com.radolyn.ayugram.utils.AyuFileLocation) {
-                                cacheFile = new File(((com.radolyn.ayugram.utils.AyuFileLocation) imageLocation.location).path);
-                                if (cacheFile.exists()) {
-                                    cacheFileExists = true;
-                                }
                             }
                         }
                         if (cacheFile == null && parentObject instanceof MessageObject) {
