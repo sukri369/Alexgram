@@ -72,30 +72,15 @@ public class SpecialForwardActivity extends ChatActivity {
         // Deep copy messages and assign sequential negative unique IDs
         for (MessageObject msg : sourceMessages) {
             try {
-                TLRPC.Message resetClone = cloneMessage(msg.messageOwner);
-                if (resetClone != null) {
-                    int id = nextUniqueId--;
-                    resetClone.id = id;
-                    resetClone.fwd_msg_id = msg.getId();
-                    
-                    // Strip replies, reactions, and forwards metadata
-                    resetClone.flags &= ~0x8D40;
-                    resetClone.reply_to = null;
-                    resetClone.reactions = null;
-                    resetClone.reply_markup = null;
-                    resetClone.fwd_from = null;
-                    resetClone.edit_date = 0;
-                    
-                    MessageObject resetObj = createPreviewMessageObject(resetClone, msg);
-                    resetObj.stableId = ChatActivity.lastStableId++;
-                    resetObj.forceUpdate = true;
-                    resetObj.checkLayout();
-                    
-                    originalMessagesMap.put(id, resetObj);
-                    
-                    TLRPC.Message msgClone = cloneMessage(msg.messageOwner);
+                int id = nextUniqueId--;
+                originalMessagesMap.put(id, msg);
+                
+                TLRPC.Message msgClone = cloneMessage(msg.messageOwner);
+                if (msgClone != null) {
                     msgClone.id = id;
                     msgClone.fwd_msg_id = msg.getId();
+                    
+                    // Strip replies, reactions, and forwards metadata
                     msgClone.flags &= ~0x8D40;
                     msgClone.reply_to = null;
                     msgClone.reactions = null;
@@ -104,7 +89,7 @@ public class SpecialForwardActivity extends ChatActivity {
                     msgClone.edit_date = 0;
                     
                     MessageObject clonedObj = createPreviewMessageObject(msgClone, msg);
-                    clonedObj.stableId = resetObj.stableId;
+                    clonedObj.stableId = ChatActivity.lastStableId++;
                     clonedObj.forceUpdate = true;
                     clonedObj.checkLayout();
                     
@@ -832,6 +817,14 @@ public class SpecialForwardActivity extends ChatActivity {
             TLRPC.Message messageClone = cloneMessage(originalObj.messageOwner);
             if (messageClone != null) {
                 messageClone.id = id;
+                messageClone.fwd_msg_id = originalObj.getId();
+                messageClone.flags &= ~0x8D40;
+                messageClone.reply_to = null;
+                messageClone.reactions = null;
+                messageClone.reply_markup = null;
+                messageClone.fwd_from = null;
+                messageClone.edit_date = 0;
+                
                 MessageObject newCloned = createPreviewMessageObject(messageClone, originalObj);
                 newCloned.stableId = selectedMessage.stableId;
                 newCloned.forceUpdate = true;
@@ -886,6 +879,14 @@ public class SpecialForwardActivity extends ChatActivity {
                     TLRPC.Message messageClone = cloneMessage(originalObj.messageOwner);
                     if (messageClone != null) {
                         messageClone.id = workingObj.getId();
+                        messageClone.fwd_msg_id = originalObj.getId();
+                        messageClone.flags &= ~0x8D40;
+                        messageClone.reply_to = null;
+                        messageClone.reactions = null;
+                        messageClone.reply_markup = null;
+                        messageClone.fwd_from = null;
+                        messageClone.edit_date = 0;
+                        
                         MessageObject newCloned = createPreviewMessageObject(messageClone, originalObj);
                         newCloned.stableId = workingObj.stableId;
                         newCloned.forceUpdate = true;
