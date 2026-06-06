@@ -814,33 +814,64 @@ public class SpecialForwardActivity extends ChatActivity {
     }
 
     private void resetSelectedMessage() {
-        if (selectedMessage == null || originalMessagesMap == null) return;
-        MessageObject originalObj = originalMessagesMap.get(selectedMessage.getId());
-        if (originalObj != null) {
-            try {
-                TLRPC.Message messageClone = cloneMessage(originalObj.messageOwner);
-                if (messageClone != null) {
-                    messageClone.id = selectedMessage.getId();
-                    MessageObject newCloned = createPreviewMessageObject(messageClone, originalObj);
-                    newCloned.stableId = selectedMessage.stableId;
-                    newCloned.forceUpdate = true;
-                    newCloned.checkLayout();
-                    
-                    int idx = messages.indexOf(selectedMessage);
-                    if (idx >= 0) {
-                        messages.set(idx, newCloned);
+        if (selectedMessage == null) {
+            Toast.makeText(getParentActivity(), "Reset error: selectedMessage is null", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (originalMessagesMap == null) {
+            Toast.makeText(getParentActivity(), "Reset error: originalMessagesMap is null", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        int id = selectedMessage.getId();
+        MessageObject originalObj = originalMessagesMap.get(id);
+        if (originalObj == null) {
+            Toast.makeText(getParentActivity(), "Reset error: original message not found for ID " + id, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try {
+            TLRPC.Message messageClone = cloneMessage(originalObj.messageOwner);
+            if (messageClone != null) {
+                messageClone.id = id;
+                MessageObject newCloned = createPreviewMessageObject(messageClone, originalObj);
+                newCloned.stableId = selectedMessage.stableId;
+                newCloned.forceUpdate = true;
+                newCloned.checkLayout();
+                
+                int idx = messages.indexOf(selectedMessage);
+                if (idx >= 0) {
+                    messages.set(idx, newCloned);
+                    rebuildGroupedMessages();
+                    if (chatAdapter != null) {
+                        chatAdapter.notifyDataSetChanged();
+                    }
+                    startEditingMessage(newCloned);
+                    Toast.makeText(getParentActivity(), "Message reset to original", Toast.LENGTH_SHORT).show();
+                } else {
+                    int foundIdx = -1;
+                    for (int i = 0; i < messages.size(); i++) {
+                        if (messages.get(i).getId() == id) {
+                            foundIdx = i;
+                            break;
+                        }
+                    }
+                    if (foundIdx >= 0) {
+                        messages.set(foundIdx, newCloned);
                         rebuildGroupedMessages();
                         if (chatAdapter != null) {
                             chatAdapter.notifyDataSetChanged();
                         }
+                        startEditingMessage(newCloned);
+                        Toast.makeText(getParentActivity(), "Message reset to original (ID search)", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(getParentActivity(), "Reset error: message not found in list, index: " + idx, Toast.LENGTH_SHORT).show();
                     }
-                    
-                    startEditingMessage(newCloned);
-                    Toast.makeText(getParentActivity(), "Message reset to original", Toast.LENGTH_SHORT).show();
                 }
-            } catch (Exception e) {
-                FileLog.e(e);
+            } else {
+                Toast.makeText(getParentActivity(), "Reset error: failed to clone original", Toast.LENGTH_SHORT).show();
             }
+        } catch (Exception e) {
+            FileLog.e(e);
+            Toast.makeText(getParentActivity(), "Reset error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 
