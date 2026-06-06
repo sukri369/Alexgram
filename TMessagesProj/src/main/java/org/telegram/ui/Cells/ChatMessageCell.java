@@ -19041,7 +19041,10 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             currentNameStatus = null;
             nameStatusSlug = null;
             currentNameBotVerificationId = 0;
-            if (messageObject.customName != null) {
+            String customNameOverride = tw.nekomimi.nekogram.helpers.MessageNameOverrideHelper.getCustomName(messageObject);
+            if (customNameOverride != null) {
+                currentNameString = customNameOverride;
+            } else if (messageObject.customName != null) {
                 currentNameString = messageObject.customName;
             } else if (needAuthorName) {
                 currentNameString = getAuthorName();
@@ -19539,6 +19542,13 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                                     name = AndroidUtilities.removeDiacritics(chat.title);
                                 }
                             }
+                        }
+                    }
+
+                    if (messageObject.replyMessageObject != null) {
+                        String customReplyNameOverride = tw.nekomimi.nekogram.helpers.MessageNameOverrideHelper.getCustomName(messageObject.replyMessageObject);
+                        if (customReplyNameOverride != null) {
+                            name = customReplyNameOverride;
                         }
                     }
 

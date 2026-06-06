@@ -347,5 +347,16 @@
     <string name="DrawerElements">ドロワーの要素</string>
     <string name="DirectForwardNotAllowed">直接転送は許可されていません。</string>
     <string name="ForceForwardStatusMediaCopy">メディアをコピー中</string>
+    <string name="ExperimentalChangeSenderName">グループ内での送信者名変更</string>
+    <string name="ExperimentalChangeSenderNameAbout">グループメッセージで送信者名をローカルで変更するオプションを追加します。</string>
+    <string name="ChangeSenderNameMenu">名前を変更</string>
+    <string name="ChangeSenderNameTitle">送信者名の変更</string>
+    <string name="ChangeSenderNameOriginal">元の名前: %s</string>
+    <string name="ChangeSenderNameNew">新しい名前</string>
+    <string name="ChangeSenderNameHint">名前を入力してください...</string>
+    <string name="ChangeSenderNameOptionMessage">このメッセージのみ変更</string>
+    <string name="ChangeSenderNameOptionAll">このグループのすべてのメッセージに適用</string>
+    <string name="ChangeSenderNameOptionRestore">元の名前に戻す</string>
+    <string name="ChangeSenderNameApply">適用</string>
 </resources>
 

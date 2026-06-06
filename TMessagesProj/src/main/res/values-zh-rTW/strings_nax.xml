@@ -349,4 +349,15 @@
     <string name="DrawerElements">側邊欄元素</string>
     <string name="DirectForwardNotAllowed">不允許直接轉發。</string>
     <string name="ForceForwardStatusMediaCopy">正在複製媒體</string>
+    <string name="ExperimentalChangeSenderName">群組內修改發送者名稱</string>
+    <string name="ExperimentalChangeSenderNameAbout">允許在群組訊息中本地修改發送者的顯示名稱。</string>
+    <string name="ChangeSenderNameMenu">修改名稱</string>
+    <string name="ChangeSenderNameTitle">修改發送者名稱</string>
+    <string name="ChangeSenderNameOriginal">原始名稱: %s</string>
+    <string name="ChangeSenderNameNew">新名稱</string>
+    <string name="ChangeSenderNameHint">輸入新名稱...</string>
+    <string name="ChangeSenderNameOptionMessage">僅對此訊息生效</string>
+    <string name="ChangeSenderNameOptionAll">對此發送者在群組內的所有訊息生效</string>
+    <string name="ChangeSenderNameOptionRestore">恢復原始名稱</string>
+    <string name="ChangeSenderNameApply">套用</string>
 </resources>

@@ -139,6 +139,7 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
     // [Alexgram: Native Features] - Start
     private final AbstractConfigCell forceMusicSpeedControlRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.forceMusicSpeedControl, getString(R.string.ExperimentalMusicSpeedControlAbout), getString(R.string.ExperimentalMusicSpeedControl)));
     private final AbstractConfigCell enableEditFileNameRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.enableEditFileName, getString(R.string.ExperimentalEditFileNameAbout), getString(R.string.ExperimentalEditFileName)));
+    private final AbstractConfigCell enableChangeNameInGroupsRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.enableChangeNameInGroups, getString(R.string.ExperimentalChangeSenderNameAbout), getString(R.string.ExperimentalChangeSenderName)));
     // [Alexgram: Native Features] - End
     private final AbstractConfigCell dividerGeneral = cellGroup.appendCell(new ConfigCellDivider());
     private final AbstractConfigCell runInBackgroundRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getRunInBackground(), getString(R.string.RunInBackgroundInfo)));
@@ -429,6 +430,8 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
             } else if (key.equals(NekoConfig.forceMusicSpeedControl.getKey())) {
                 tooltip.showWithAction(0, UndoView.ACTION_NEED_RESTART, null, null);
             } else if (key.equals(NekoConfig.enableEditFileName.getKey())) {
+                tooltip.showWithAction(0, UndoView.ACTION_NEED_RESTART, null, null);
+            } else if (key.equals(NekoConfig.enableChangeNameInGroups.getKey())) {
                 tooltip.showWithAction(0, UndoView.ACTION_NEED_RESTART, null, null);
             // [Alexgram: Native Features] - End
             }

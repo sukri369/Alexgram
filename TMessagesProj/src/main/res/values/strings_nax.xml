@@ -446,6 +446,17 @@
     <string name="ExperimentalMusicSpeedControlAbout">Enable playback speed control for all music files regardless of duration.</string>
     <string name="ExperimentalEditFileName">Edit File Name</string>
     <string name="ExperimentalEditFileNameAbout">Add \'Edit File Name\' option when selecting documents or audio files to send.</string>
+    <string name="ExperimentalChangeSenderName">Change Sender Name in Groups</string>
+    <string name="ExperimentalChangeSenderNameAbout">Add options to change sender names locally in group messages.</string>
+    <string name="ChangeSenderNameMenu">Change Name</string>
+    <string name="ChangeSenderNameTitle">Change Sender Name</string>
+    <string name="ChangeSenderNameOriginal">Original Name: %s</string>
+    <string name="ChangeSenderNameNew">NEW NAME</string>
+    <string name="ChangeSenderNameHint">Enter name...</string>
+    <string name="ChangeSenderNameOptionMessage">Change only for this message</string>
+    <string name="ChangeSenderNameOptionAll">Apply to all their messages in this group</string>
+    <string name="ChangeSenderNameOptionRestore">Restore original name</string>
+    <string name="ChangeSenderNameApply">Apply</string>
     <!-- [Alexgram: Native Features] - End -->
     <string name="DirectForwardNotAllowed">Direct forwarding is not allowed.</string>
     <string name="ForceForwardStatusMediaCopy">Forwarding media copy</string>

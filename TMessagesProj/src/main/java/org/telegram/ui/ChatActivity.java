@@ -1346,6 +1346,7 @@ public class ChatActivity extends BaseFragment implements
 	private final static int OPTION_COPY_PHOTO = 150;
 	private final static int OPTION_COPY_PHOTO_AS_STICKER = 151;
 	private final static int OPTION_COPY_FRAME = 152;
+	public final static int OPTION_CHANGE_SENDER_NAME = 160;
 
 	private final static int[] allowedNotificationsDuringChatListAnimations = new int[]{
 			AyuConstants.MESSAGES_DELETED_NOTIFICATION,
@@ -35043,6 +35044,10 @@ public class ChatActivity extends BaseFragment implements
 				presentFragment(fragment);
 				break;
 			}
+			case OPTION_CHANGE_SENDER_NAME: {
+				tw.nekomimi.nekogram.helpers.MessageNameOverrideHelper.showChangeNameDialog(this, selectedObject);
+				break;
+			}
 			case OPTION_COPY: {
 				if (selectedObject.isDice()) {
 					AndroidUtilities.addToClipboard(selectedObject.getDiceEmoji());
@@ -49299,6 +49304,16 @@ public class ChatActivity extends BaseFragment implements
 			}
 		}
 		// [Alexgram: Customizable Message Menu] - End
+		if (tw.nekomimi.nekogram.NekoConfig.enableChangeNameInGroups.Bool()
+				&& tw.nekomimi.nekogram.helpers.MessageNameOverrideHelper.isGroupChat(currentAccount, getDialogId())
+				&& message != null
+				&& message.getFromChatId() != 0
+				&& !isAyuDeleted
+				&& message.getId() > 0) {
+			items.add(LocaleController.getString("ChangeSenderNameMenu", R.string.ChangeSenderNameMenu));
+			options.add(OPTION_CHANGE_SENDER_NAME);
+			icons.add(R.drawable.profile_admin);
+		}
 		if (NekoConfig.showMessageDetails.Bool()) {
 			items.add(LocaleController.getString(R.string.MessageDetails));
 			options.add(nkbtn_detail);
