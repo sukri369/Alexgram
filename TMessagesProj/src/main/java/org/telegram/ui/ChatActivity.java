@@ -33291,6 +33291,18 @@ public class ChatActivity extends BaseFragment implements
 					final int i = a;
 					if (option == OPTION_LOCAL_EDITOR_PLUS) {
 						cell.setRightIcon(R.drawable.msg_arrowright);
+						final boolean subShowChangeName = tw.nekomimi.nekogram.NekoConfig.enableChangeNameInGroups.Bool()
+								&& tw.nekomimi.nekogram.helpers.MessageNameOverrideHelper.isGroupChat(currentAccount, getDialogId())
+								&& message != null
+								&& !message.isOutOwner()
+								&& message.getFromChatId() != 0
+								&& !isAyuDeleted
+								&& message.getId() > 0;
+						final boolean subShowLocalEditor = tw.nekomimi.nekogram.NekoConfig.enableLocalEditorPlus.Bool()
+								&& message != null
+								&& !isAyuDeleted
+								&& message.getId() > 0;
+
 						android.widget.LinearLayout subLayout = new android.widget.LinearLayout(getParentActivity());
 						subLayout.setOrientation(android.widget.LinearLayout.VERTICAL);
 						subLayout.setBackgroundColor(getThemedColor(Theme.key_actionBarDefaultSubmenuBackground));
@@ -33305,26 +33317,40 @@ public class ChatActivity extends BaseFragment implements
 						});
 						subLayout.addView(backCell, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
-						ActionBarMenuSubItem editCell = new ActionBarMenuSubItem(getParentActivity(), false, false, themeDelegate);
-						editCell.setItemHeight(44);
-						editCell.setTextAndIcon(LocaleController.getString("LocalEditorEditOption", R.string.LocalEditorEditOption), R.drawable.msg_edit);
-						editCell.setOnClickListener(v2 -> {
-							closeMenu();
-							showLocalEditMessageDialog(selectedObject);
-						});
-						subLayout.addView(editCell, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+						if (subShowChangeName) {
+							ActionBarMenuSubItem changeNameCell = new ActionBarMenuSubItem(getParentActivity(), false, !subShowLocalEditor, themeDelegate);
+							changeNameCell.setItemHeight(44);
+							changeNameCell.setTextAndIcon(LocaleController.getString("ChangeSenderNameMenu", R.string.ChangeSenderNameMenu), R.drawable.msg_change_name_nax);
+							changeNameCell.setOnClickListener(v2 -> {
+								closeMenu();
+								processSelectedOption(OPTION_CHANGE_SENDER_NAME);
+							});
+							subLayout.addView(changeNameCell, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+						}
 
-						ActionBarMenuSubItem deleteCell = new ActionBarMenuSubItem(getParentActivity(), false, true, themeDelegate);
-						deleteCell.setItemHeight(44);
-						deleteCell.setTextAndIcon(LocaleController.getString("LocalEditorDeleteOption", R.string.LocalEditorDeleteOption), R.drawable.msg_delete);
-						deleteCell.setOnClickListener(v2 -> {
-							closeMenu();
-							ArrayList<Integer> ids = new ArrayList<>();
-							ids.add(selectedObject.getId());
-							MessagesController.getInstance(currentAccount).deleteMessages(ids, null, null, selectedObject.getDialogId(), (int) getTopicId(), false, chatMode, true);
-							updateVisibleRows();
-						});
-						subLayout.addView(deleteCell, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+						if (subShowLocalEditor) {
+							ActionBarMenuSubItem editCell = new ActionBarMenuSubItem(getParentActivity(), false, false, themeDelegate);
+							editCell.setItemHeight(44);
+							editCell.setTextAndIcon(LocaleController.getString("LocalEditorEditOption", R.string.LocalEditorEditOption), R.drawable.msg_edit);
+							editCell.setOnClickListener(v2 -> {
+								closeMenu();
+								showLocalEditMessageDialog(selectedObject);
+							});
+							subLayout.addView(editCell, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+
+							ActionBarMenuSubItem deleteCell = new ActionBarMenuSubItem(getParentActivity(), false, true, themeDelegate);
+							deleteCell.setItemHeight(44);
+							deleteCell.setTextAndIcon(LocaleController.getString("LocalEditorDeleteOption", R.string.LocalEditorDeleteOption), R.drawable.msg_delete);
+							deleteCell.setOnClickListener(v2 -> {
+								closeMenu();
+								com.radolyn.ayugram.utils.AyuState.permitDeleteMessage(selectedObject.getDialogId(), selectedObject.getId());
+								ArrayList<Integer> ids = new ArrayList<>();
+								ids.add(selectedObject.getId());
+								MessagesController.getInstance(currentAccount).deleteMessages(ids, null, null, selectedObject.getDialogId(), (int) getTopicId(), false, chatMode, true);
+								updateVisibleRows();
+							});
+							subLayout.addView(deleteCell, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+						}
 
 						final int subMenuIndex = popupLayout.addViewToSwipeBack(subLayout);
 						cell.setOnClickListener(v1 -> {
@@ -33333,6 +33359,7 @@ public class ChatActivity extends BaseFragment implements
 							}
 						});
 					} else {
+
 						cell.setOnClickListener(v1 -> {
 							if (selectedObject == null || i >= options.size()) {
 								return;
@@ -49358,25 +49385,24 @@ public class ChatActivity extends BaseFragment implements
 			}
 		}
 		// [Alexgram: Customizable Message Menu] - End
-		if (tw.nekomimi.nekogram.NekoConfig.enableChangeNameInGroups.Bool()
+		boolean showChangeName = tw.nekomimi.nekogram.NekoConfig.enableChangeNameInGroups.Bool()
 				&& tw.nekomimi.nekogram.helpers.MessageNameOverrideHelper.isGroupChat(currentAccount, getDialogId())
 				&& message != null
 				&& !message.isOutOwner()
 				&& message.getFromChatId() != 0
 				&& !isAyuDeleted
-				&& message.getId() > 0) {
-			items.add(LocaleController.getString("ChangeSenderNameMenu", R.string.ChangeSenderNameMenu));
-			options.add(OPTION_CHANGE_SENDER_NAME);
-			icons.add(R.drawable.msg_change_name_nax);
-		}
-		if (tw.nekomimi.nekogram.NekoConfig.enableLocalEditorPlus.Bool()
+				&& message.getId() > 0;
+		boolean showLocalEditor = tw.nekomimi.nekogram.NekoConfig.enableLocalEditorPlus.Bool()
 				&& message != null
 				&& !isAyuDeleted
-				&& message.getId() > 0) {
+				&& message.getId() > 0;
+
+		if (showChangeName || showLocalEditor) {
 			items.add(LocaleController.getString("LocalEditorMenuOption", R.string.LocalEditorMenuOption));
 			options.add(OPTION_LOCAL_EDITOR_PLUS);
 			icons.add(R.drawable.ic_local_editor);
 		}
+
 		if (NekoConfig.showMessageDetails.Bool()) {
 
 			items.add(LocaleController.getString(R.string.MessageDetails));
@@ -51080,6 +51106,7 @@ public class ChatActivity extends BaseFragment implements
 			if (which == 0) {
 				showLocalEditMessageDialog(messageObject);
 			} else if (which == 1) {
+				com.radolyn.ayugram.utils.AyuState.permitDeleteMessage(messageObject.getDialogId(), messageObject.getId());
 				ArrayList<Integer> ids = new ArrayList<>();
 				ids.add(messageObject.getId());
 				MessagesController.getInstance(currentAccount).deleteMessages(ids, null, null, messageObject.getDialogId(), (int) getTopicId(), false, chatMode, true);
@@ -51142,16 +51169,22 @@ public class ChatActivity extends BaseFragment implements
 				
 				int newTimestampSec = (int) (originalCal.getTimeInMillis() / 1000);
 				
-				// Save to local editor helper
-				tw.nekomimi.nekogram.helpers.LocalEditorHelper.saveEdit(messageObject.getDialogId(), messageObject.getId(), newText, newTimestampSec);
-				
-				// Apply to in-memory messageObject
-				messageObject.messageOwner.message = newText;
-				if (messageObject.caption != null) {
-					messageObject.caption = newText;
+				String origText = messageObject.messageOwner.message != null ? messageObject.messageOwner.message : "";
+				int origDate = messageObject.messageOwner.date;
+				if (tw.nekomimi.nekogram.helpers.LocalEditorHelper.hasEdit(messageObject.getDialogId(), messageObject.getId())) {
+					String storedOrigText = tw.nekomimi.nekogram.helpers.LocalEditorHelper.getOriginalText(messageObject.getDialogId(), messageObject.getId());
+					int storedOrigDate = tw.nekomimi.nekogram.helpers.LocalEditorHelper.getOriginalDate(messageObject.getDialogId(), messageObject.getId());
+					if (storedOrigText != null && storedOrigDate != 0) {
+						origText = storedOrigText;
+						origDate = storedOrigDate;
+					}
 				}
-				messageObject.messageOwner.date = newTimestampSec;
-				messageObject.applyNewText(newText);
+
+				// Save to local editor helper
+				tw.nekomimi.nekogram.helpers.LocalEditorHelper.saveEdit(messageObject.getDialogId(), messageObject.getId(), newText, newTimestampSec, origText, origDate);
+				
+				// Apply layout changes
+				messageObject.applyLocalEdit(newText, newTimestampSec);
 				
 				updateVisibleRows();
 			} catch (Exception e) {
@@ -51159,8 +51192,20 @@ public class ChatActivity extends BaseFragment implements
 			}
 		});
 		builder.setNegativeButton(LocaleController.getString(R.string.Cancel), (dialog, which) -> dialog.dismiss());
+		if (tw.nekomimi.nekogram.helpers.LocalEditorHelper.hasEdit(messageObject.getDialogId(), messageObject.getId())) {
+			builder.setNeutralButton(LocaleController.getString("LocalEditorRestore", R.string.LocalEditorRestore), (dialog, which) -> {
+				String origText = tw.nekomimi.nekogram.helpers.LocalEditorHelper.getOriginalText(messageObject.getDialogId(), messageObject.getId());
+				int origDate = tw.nekomimi.nekogram.helpers.LocalEditorHelper.getOriginalDate(messageObject.getDialogId(), messageObject.getId());
+				if (origText != null && origDate != 0) {
+					messageObject.applyLocalEdit(origText, origDate);
+				}
+				tw.nekomimi.nekogram.helpers.LocalEditorHelper.removeEdit(messageObject.getDialogId(), messageObject.getId());
+				updateVisibleRows();
+			});
+		}
 		showDialog(builder.create());
 	}
+
 
 	protected void multiChatOnPause() {}
 	protected void multiChatOnResume() {}

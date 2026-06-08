@@ -469,6 +469,8 @@
 
     <string name="LocalEditorEditOption">Edit locally</string>
     <string name="LocalEditorDeleteOption">Delete locally</string>
+    <string name="LocalEditorRestore">Restore</string>
 </resources>
+
 
 

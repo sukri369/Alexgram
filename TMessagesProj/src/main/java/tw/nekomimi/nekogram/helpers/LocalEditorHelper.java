@@ -12,12 +12,36 @@ public class LocalEditorHelper {
         return ApplicationLoader.applicationContext.getSharedPreferences("local_editor_plus_edits", Context.MODE_PRIVATE);
     }
 
-    public static void saveEdit(long dialogId, int messageId, String text, int date) {
+    public static void saveEdit(long dialogId, int messageId, String text, int date, String originalText, int originalDate) {
         String key = dialogId + "_" + messageId;
-        getPreferences().edit()
-                .putString(key + "_text", text)
+        SharedPreferences.Editor editor = getPreferences().edit();
+        if (!getPreferences().contains(key + "_original_text")) {
+            editor.putString(key + "_original_text", originalText != null ? originalText : "");
+            editor.putInt(key + "_original_date", originalDate);
+        }
+        editor.putString(key + "_text", text)
                 .putInt(key + "_date", date)
                 .apply();
+    }
+
+    public static void removeEdit(long dialogId, int messageId) {
+        String key = dialogId + "_" + messageId;
+        getPreferences().edit()
+                .remove(key + "_text")
+                .remove(key + "_date")
+                .remove(key + "_original_text")
+                .remove(key + "_original_date")
+                .apply();
+    }
+
+    public static String getOriginalText(long dialogId, int messageId) {
+        String key = dialogId + "_" + messageId;
+        return getPreferences().getString(key + "_original_text", null);
+    }
+
+    public static int getOriginalDate(long dialogId, int messageId) {
+        String key = dialogId + "_" + messageId;
+        return getPreferences().getInt(key + "_original_date", 0);
     }
 
     public static String getEditText(long dialogId, int messageId) {

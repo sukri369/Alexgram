@@ -3774,6 +3774,25 @@ public class MessageObject {
         setType();
     }
 
+    public void applyLocalEdit(String newText, int newTimestampSec) {
+        messageOwner.message = newText;
+        messageOwner.date = newTimestampSec;
+
+        java.util.Calendar rightNow = new java.util.GregorianCalendar();
+        rightNow.setTimeInMillis((long) (messageOwner.date) * 1000);
+        int dateDay = rightNow.get(java.util.Calendar.DAY_OF_YEAR);
+        int dateYear = rightNow.get(java.util.Calendar.YEAR);
+        int dateMonth = rightNow.get(java.util.Calendar.MONTH);
+        dateKey = String.format("%d_%02d_%02d", dateYear, dateMonth, dateDay);
+        dateKeyInt = dateYear + 10000 * dateMonth + 10000 * 100 * dateDay;
+        monthKey = String.format("%d_%02d", dateYear, dateMonth);
+
+        updateMessageText();
+        generateCaption();
+        generateLayout(null);
+    }
+
+
     private boolean allowsBigEmoji() {
         if (!SharedConfig.allowBigEmoji) {
             return false;

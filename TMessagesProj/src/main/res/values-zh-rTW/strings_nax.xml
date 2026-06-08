@@ -435,5 +435,7 @@
 
     <string name="LocalEditorEditOption">本機編輯</string>
     <string name="LocalEditorDeleteOption">本機刪除</string>
+    <string name="LocalEditorRestore">還原</string>
 </resources>
+
 
