@@ -11,16 +11,20 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import org.telegram.messenger.LocaleController;
+import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
+import org.telegram.ui.Cells.TextInfoPrivacyCell;
 import org.telegram.ui.Components.RecyclerListView;
 import org.telegram.ui.Components.UndoView;
 
 import tw.nekomimi.nekogram.NekoConfig;
 import tw.nekomimi.nekogram.config.CellGroup;
 import tw.nekomimi.nekogram.config.cell.AbstractConfigCell;
+import tw.nekomimi.nekogram.config.cell.ConfigCellCustom;
 import tw.nekomimi.nekogram.config.cell.ConfigCellHeader;
 import tw.nekomimi.nekogram.config.cell.ConfigCellTextCheck;
 import tw.nekomimi.nekogram.config.cell.ConfigCellTextCheckIcon;
+import tw.nekomimi.nekogram.ui.cells.AvatarCornersPreviewCell;
 import xyz.nextalone.nagram.NaConfig;
 
 @SuppressLint("RtlHardcoded")
@@ -28,6 +32,7 @@ import xyz.nextalone.nagram.NaConfig;
 public class NekoCustomizationSettingsActivity extends BaseNekoXSettingsActivity {
 
     private ListAdapter listAdapter;
+    private AvatarCornersPreviewCell avatarCornersPreviewCell;
 
     @Override
     protected RecyclerListView.SelectionAdapter getListAdapter() {
@@ -47,6 +52,15 @@ public class NekoCustomizationSettingsActivity extends BaseNekoXSettingsActivity
     private final CellGroup cellGroup = new CellGroup(this);
 
     // Customization Settings
+    private final AbstractConfigCell avatarCornersPreviewRow = cellGroup.appendCell(new ConfigCellCustom("AvatarCorners", ConfigCellCustom.CUSTOM_ITEM_AvatarCorners, false));
+    private final AbstractConfigCell singleCornerRadiusRow = cellGroup.appendCell(
+            new ConfigCellTextCheck(
+                    NaConfig.INSTANCE.getSingleCornerRadius(),
+                    null,
+                    getString(R.string.SingleCornerRadius)
+            )
+    );
+    private final AbstractConfigCell avatarCornersInfoRow = cellGroup.appendCell(new ConfigCellCustom("SingleCornerRadiusInfo", CellGroup.ITEM_TYPE_TEXT, false));
     private final AbstractConfigCell headerCustomization = cellGroup.appendCell(new ConfigCellHeader(LocaleController.getString("Customization", R.string.Customization)));
     private final AbstractConfigCell pillStackRow = cellGroup.appendCell(
             new ConfigCellTextCheckIcon(null, "PillStack", getString(R.string.PillStackPills), R.drawable.ic_ab_search, false, () ->
@@ -78,7 +92,9 @@ public class NekoCustomizationSettingsActivity extends BaseNekoXSettingsActivity
         setupDefaultListeners();
 
         cellGroup.callBackSettingsChanged = (key, newValue) -> {
-            if (key.equals(NekoConfig.showQuickEditIconInChatList.getKey())) {
+            if (key.equals(NaConfig.INSTANCE.getSingleCornerRadius().getKey())) {
+                reloadAvatarCorners();
+            } else if (key.equals(NekoConfig.showQuickEditIconInChatList.getKey())) {
                 if ((boolean) newValue) {
                     if (!cellGroup.rows.contains(quickEditIconOnlyOwnRow)) {
                         final int index = cellGroup.rows.indexOf(showQuickEditIconRow) + 1;
@@ -120,10 +136,42 @@ public class NekoCustomizationSettingsActivity extends BaseNekoXSettingsActivity
         return LocaleController.getString("Customization", R.string.Customization);
     }
 
+    private void reloadAvatarCorners() {
+        if (avatarCornersPreviewCell != null) {
+            avatarCornersPreviewCell.invalidate();
+        }
+        NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.reloadInterface);
+        getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload, true);
+        if (getParentLayout() != null) {
+            getParentLayout().rebuildAllFragmentViews(false, false);
+        }
+    }
+
     private class ListAdapter extends BaseListAdapter {
 
         public ListAdapter(Context context) {
             super(context);
+        }
+
+        @Override
+        protected void onBindCustomViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+            AbstractConfigCell row = cellGroup.rows.get(position);
+            if (row == avatarCornersInfoRow) {
+                TextInfoPrivacyCell textInfoPrivacyCell = (TextInfoPrivacyCell) holder.itemView;
+                textInfoPrivacyCell.setText(getString(R.string.SingleCornerRadiusInfo));
+            }
+        }
+
+        @Override
+        protected View onCreateCustomViewHolder(@NonNull ViewGroup parent, int viewType) {
+            if (viewType == ConfigCellCustom.CUSTOM_ITEM_AvatarCorners) {
+                avatarCornersPreviewCell = new AvatarCornersPreviewCell(
+                        mContext,
+                        NekoCustomizationSettingsActivity.this::reloadAvatarCorners
+                );
+                return avatarCornersPreviewCell;
+            }
+            return null;
         }
     }
 }

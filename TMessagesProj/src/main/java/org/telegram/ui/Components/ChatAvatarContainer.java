@@ -369,7 +369,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             }
         }
         avatarImageView.setContentDescription(getString(R.string.AccDescrProfilePicture));
-        avatarImageView.setRoundRadius(dp(21));
+        avatarImageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(42.0f));
         addView(avatarImageView);
         if (avatarClickable) {
             avatarImageView.setOnClickListener(v -> {
@@ -1543,7 +1543,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         avatarDrawable.setInfo(currentAccount, chat);
         if (avatarImageView != null) {
             avatarImageView.setForUserOrChat(chat, avatarDrawable);
-            avatarImageView.setRoundRadius(ChatObject.isForum(chat) ? dp(ChatObject.hasStories(chat) ? 11 : 16) : dp(21));
+            avatarImageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(42.0f, ChatObject.isForum(chat), ChatObject.isForum(chat) && ChatObject.hasStories(chat)));
         }
     }
 
@@ -1651,7 +1651,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                 avatarImageView.setAnimatedEmojiDrawable(null);
                 ForumUtilities.setMonoForumAvatar(currentAccount, chat, avatarDrawable, avatarImageView);
             }
-            avatarImageView.setRoundRadius(dp(21));
+            avatarImageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(42.0f));
         } else if (chat != null) {
             avatarDrawable.setScaleSize(1f);
             avatarDrawable.setInfo(currentAccount, chat);
@@ -1659,7 +1659,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             if (avatarImageView != null) {
                 avatarImageView.setAnimatedEmojiDrawable(null);
                 avatarImageView.setForUserOrChat(chat, avatarDrawable);
-                avatarImageView.setRoundRadius(chat.forum ? dp(ChatObject.hasStories(chat) ? 11 : 16) : dp(21));
+                avatarImageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(42.0f, chat.forum, chat.forum && ChatObject.hasStories(chat)));
             }
         }
     }

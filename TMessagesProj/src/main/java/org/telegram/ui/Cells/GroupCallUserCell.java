@@ -264,7 +264,7 @@ public class GroupCallUserCell extends FrameLayout {
         setClipChildren(false);
 
         avatarImageView = new BackupImageView(context);
-        avatarImageView.setRoundRadius(AndroidUtilities.dp(24));
+        avatarImageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(46.0f));
         addView(avatarImageView, LayoutHelper.createFrame(46, 46, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, LocaleController.isRTL ? 0 : 11, 6, LocaleController.isRTL ? 11 : 0, 0));
 
         avatarProgressView = new RadialProgressView(context) {
@@ -476,6 +476,7 @@ public class GroupCallUserCell extends FrameLayout {
             currentUser = accountInstance.getMessagesController().getUser(id);
             currentChat = null;
             avatarDrawable.setInfo(accountInstance.getCurrentAccount(), currentUser);
+            avatarImageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(46.0f));
 
             nameTextView.setText(UserObject.getUserName(currentUser));
             botVerificationIcon = DialogObject.getBotVerificationIcon(currentUser);
@@ -515,6 +516,7 @@ public class GroupCallUserCell extends FrameLayout {
             currentChat = accountInstance.getMessagesController().getChat(-id);
             currentUser = null;
             avatarDrawable.setInfo(accountInstance.getCurrentAccount(), currentChat);
+            avatarImageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(46.0f, currentChat != null && (ChatObject.isForum(currentChat) || ChatObject.isMonoForum(currentChat))));
 
             botVerificationIcon = DialogObject.getBotVerificationIcon(currentChat);
             if (currentChat != null) {

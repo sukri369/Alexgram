@@ -53,7 +53,7 @@ public class AccountSelectCell extends FrameLayout {
         avatarDrawable.setTextSize(dp(12));
 
         imageView = new BackupImageView(context);
-        imageView.setRoundRadius(dp(18));
+        imageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(36.0f));
         addView(imageView, LayoutHelper.createFrame(36, 36, Gravity.LEFT | Gravity.TOP, 10, 10, 0, 0));
 
         textView = new SimpleTextView(context);
@@ -121,11 +121,13 @@ public class AccountSelectCell extends FrameLayout {
             TLRPC.User user = (TLRPC.User) object;
             avatarDrawable.setInfo(user);
             infoTextView.setText(ContactsController.formatName(user.first_name, user.last_name));
+            imageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(36.0f));
             imageView.setForUserOrChat(user, avatarDrawable);
         } else {
             TLRPC.Chat chat = (TLRPC.Chat) object;
             avatarDrawable.setInfo(chat);
             infoTextView.setText(chat == null ? "" : chat.title);
+            imageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(36.0f, chat != null && (org.telegram.messenger.ChatObject.isForum(chat) || org.telegram.messenger.ChatObject.isMonoForum(chat))));
             imageView.setForUserOrChat(chat, avatarDrawable);
         }
     }
@@ -136,6 +138,7 @@ public class AccountSelectCell extends FrameLayout {
         avatarDrawable.setInfo(account, user);
         textView.setText(ContactsController.formatName(user.first_name, user.last_name));
         imageView.getImageReceiver().setCurrentAccount(account);
+        imageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(36.0f));
         imageView.setForUserOrChat(user, avatarDrawable);
         checkImageView.setVisibility(check && account == UserConfig.selectedAccount ? VISIBLE : INVISIBLE);
     }
