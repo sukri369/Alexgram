@@ -3787,8 +3787,15 @@ public class MessageObject {
         dateKeyInt = dateYear + 10000 * dateMonth + 10000 * 100 * dateDay;
         monthKey = String.format("%d_%02d", dateYear, dateMonth);
 
+        // Reset cached caption so generateCaption() doesn't skip due to equality check
+        caption = null;
+
         updateMessageText();
         generateCaption();
+        // Reset layout blocks so generateLayout() fully recalculates bubble size
+        if (textLayoutBlocks != null) {
+            textLayoutBlocks.clear();
+        }
         generateLayout(null);
     }
 

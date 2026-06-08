@@ -51183,10 +51183,15 @@ public class ChatActivity extends BaseFragment implements
 				// Save to local editor helper
 				tw.nekomimi.nekogram.helpers.LocalEditorHelper.saveEdit(messageObject.getDialogId(), messageObject.getId(), newText, newTimestampSec, origText, origDate);
 				
-				// Apply layout changes
+				// Apply layout changes in-memory only (no server call)
 				messageObject.applyLocalEdit(newText, newTimestampSec);
 				
-				updateVisibleRows();
+				// Force full cell rebind so timestamp text and bubble size both update
+				if (chatAdapter != null) {
+					chatAdapter.notifyDataSetChanged(false);
+				} else {
+					updateVisibleRows();
+				}
 			} catch (Exception e) {
 				org.telegram.ui.Components.BulletinFactory.of(ChatActivity.this).createErrorBulletin("Wrong timestamp format!", themeDelegate).show();
 			}
@@ -51200,7 +51205,12 @@ public class ChatActivity extends BaseFragment implements
 					messageObject.applyLocalEdit(origText, origDate);
 				}
 				tw.nekomimi.nekogram.helpers.LocalEditorHelper.removeEdit(messageObject.getDialogId(), messageObject.getId());
-				updateVisibleRows();
+				// Force full cell rebind so timestamp text and bubble size both update
+				if (chatAdapter != null) {
+					chatAdapter.notifyDataSetChanged(false);
+				} else {
+					updateVisibleRows();
+				}
 			});
 		}
 		showDialog(builder.create());
