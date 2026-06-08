@@ -51186,12 +51186,14 @@ public class ChatActivity extends BaseFragment implements
 				// Apply layout changes in-memory only (no server call)
 				messageObject.applyLocalEdit(newText, newTimestampSec);
 				
-				// Force full cell rebind so timestamp text and bubble size both update
-				if (chatAdapter != null) {
-					chatAdapter.notifyDataSetChanged(false);
-				} else {
+				// Force immediate re-bind of this cell after dialog dismisses
+				AndroidUtilities.runOnUIThread(() -> {
+					int msgIndex = messages.indexOf(messageObject);
+					if (chatAdapter != null && msgIndex >= 0) {
+						chatAdapter.notifyItemChanged(chatAdapter.messagesStartRow + msgIndex);
+					}
 					updateVisibleRows();
-				}
+				});
 			} catch (Exception e) {
 				org.telegram.ui.Components.BulletinFactory.of(ChatActivity.this).createErrorBulletin("Wrong timestamp format!", themeDelegate).show();
 			}
@@ -51205,12 +51207,14 @@ public class ChatActivity extends BaseFragment implements
 					messageObject.applyLocalEdit(origText, origDate);
 				}
 				tw.nekomimi.nekogram.helpers.LocalEditorHelper.removeEdit(messageObject.getDialogId(), messageObject.getId());
-				// Force full cell rebind so timestamp text and bubble size both update
-				if (chatAdapter != null) {
-					chatAdapter.notifyDataSetChanged(false);
-				} else {
+				// Force immediate re-bind of this cell after dialog dismisses
+				AndroidUtilities.runOnUIThread(() -> {
+					int msgIndex = messages.indexOf(messageObject);
+					if (chatAdapter != null && msgIndex >= 0) {
+						chatAdapter.notifyItemChanged(chatAdapter.messagesStartRow + msgIndex);
+					}
 					updateVisibleRows();
-				}
+				});
 			});
 		}
 		showDialog(builder.create());

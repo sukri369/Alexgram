@@ -3792,6 +3792,8 @@ public class MessageObject {
 
         updateMessageText();
         generateCaption();
+        layoutCreated = false;
+        forceUpdate = true;
         // Reset layout blocks so generateLayout() fully recalculates bubble size
         if (textLayoutBlocks != null) {
             textLayoutBlocks.clear();
