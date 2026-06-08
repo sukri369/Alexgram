@@ -20,6 +20,8 @@ import tw.nekomimi.nekogram.config.CellGroup;
 import tw.nekomimi.nekogram.config.cell.AbstractConfigCell;
 import tw.nekomimi.nekogram.config.cell.ConfigCellHeader;
 import tw.nekomimi.nekogram.config.cell.ConfigCellTextCheck;
+import tw.nekomimi.nekogram.config.cell.ConfigCellTextCheckIcon;
+import xyz.nextalone.nagram.NaConfig;
 
 @SuppressLint("RtlHardcoded")
 @SuppressWarnings({"unused", "FieldCanBeLocal"})
@@ -46,11 +48,16 @@ public class NekoCustomizationSettingsActivity extends BaseNekoXSettingsActivity
 
     // Customization Settings
     private final AbstractConfigCell headerCustomization = cellGroup.appendCell(new ConfigCellHeader(LocaleController.getString("Customization", R.string.Customization)));
+    private final AbstractConfigCell pillStackRow = cellGroup.appendCell(
+            new ConfigCellTextCheckIcon(null, "PillStack", getString(R.string.PillStackPills), R.drawable.ic_ab_search, false, () ->
+                    presentFragment(new com.exteragram.messenger.pillstack.ui.PillStackPreferencesActivity()))
+    );
     private final AbstractConfigCell showQuickEditIconRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.showQuickEditIconInChatList, LocaleController.getString("ShowQuickEditIconDesc", R.string.ShowQuickEditIconDesc), LocaleController.getString("ShowQuickEditIcon", R.string.ShowQuickEditIcon)));
     private final AbstractConfigCell quickEditIconOnlyOwnRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.quickEditIconOnlyForOwnMessages, LocaleController.getString("QuickEditIconOnlyOwnDesc", R.string.QuickEditIconOnlyOwnDesc), LocaleController.getString("QuickEditIconOnlyOwn", R.string.QuickEditIconOnlyOwn)));
     private final AbstractConfigCell forceMusicSpeedControlRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.forceMusicSpeedControl, LocaleController.getString("ExperimentalMusicSpeedControlAbout", R.string.ExperimentalMusicSpeedControlAbout), LocaleController.getString("ExperimentalMusicSpeedControl", R.string.ExperimentalMusicSpeedControl)));
     private final AbstractConfigCell enableEditFileNameRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.enableEditFileName, LocaleController.getString("ExperimentalEditFileNameAbout", R.string.ExperimentalEditFileNameAbout), LocaleController.getString("ExperimentalEditFileName", R.string.ExperimentalEditFileName)));
     private final AbstractConfigCell enableChangeNameInGroupsRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.enableChangeNameInGroups, LocaleController.getString("ExperimentalChangeSenderNameAbout", R.string.ExperimentalChangeSenderNameAbout), LocaleController.getString("ExperimentalChangeSenderName", R.string.ExperimentalChangeSenderName)));
+    private final AbstractConfigCell sendVideoAsRoundRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getSendVideoAsRound()));
 
     public NekoCustomizationSettingsActivity() {
         if (!NekoConfig.showQuickEditIconInChatList.Bool()) {

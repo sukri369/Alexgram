@@ -306,6 +306,7 @@ public class NotificationCenter {
     public static final int didSetNewWallpapper = totalEvents++;
     public static final int proxySettingsChanged = totalEvents++;
     public static final int proxyCheckDone = totalEvents++;
+    public static final int proxyPingUpdated = totalEvents++;
     public static final int proxyChangedByRotation = totalEvents++;
     public static final int liveLocationsChanged = totalEvents++;
     public static final int newLocationAvailable = totalEvents++;
@@ -373,6 +374,8 @@ public class NotificationCenter {
     public static final int callTabsVisibleToggled = totalEvents++;
     public static final int setTabsVisible = totalEvents++;
     public static final int contactsPermissionBadgeCheck = totalEvents++;
+    public static final int pillStackSettingsChanged = totalEvents++;
+    public static final int pillStackLayoutChanged = totalEvents++;
 
     public static boolean alreadyLogged;
 

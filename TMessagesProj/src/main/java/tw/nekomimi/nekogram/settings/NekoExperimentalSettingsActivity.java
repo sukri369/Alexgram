@@ -153,7 +153,6 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
     private final AbstractConfigCell sendMp4DocumentAsVideoRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getSendMp4DocumentAsVideo()));
     private final AbstractConfigCell enhancedVideoBitrateRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getEnhancedVideoBitrate()));
     private final AbstractConfigCell musicGraphRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getMusicGraph(), getString(R.string.MusicGraphInfo)));
-    private final AbstractConfigCell sendVideoAsRoundRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getSendVideoAsRound()));
     // [Alexgram: Special Forward] - Start
     private final AbstractConfigCell specialForwardRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getSpecialForward(), getString(R.string.SpecialForwardAbout), getString(R.string.SpecialForward)));
     // [Alexgram: Special Forward] - End
