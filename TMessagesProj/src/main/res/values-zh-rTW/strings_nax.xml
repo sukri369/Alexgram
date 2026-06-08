@@ -427,4 +427,6 @@
     <string name="ExperimentalMusicSpeedControlAbout">無論播放時長如何，對所有音乐文件啟用播放速度控制。</string>
     <string name="ExperimentalEditFileName">編輯檔案名稱</string>
     <string name="ExperimentalEditFileNameAbout">選擇要發送的文檔或音頻文件時，添加“編輯檔案名稱”選項。</string>
+    <string name="SendLockedCustomEmojiAsSticker">將進階表情符號作為貼圖傳送</string>
+    <string name="SendLockedCustomEmojiAsStickerInfo">僅支援 WebP/WebM 自訂表情符號，排除僅支援 TGS 的表情符號。</string>
 </resources>

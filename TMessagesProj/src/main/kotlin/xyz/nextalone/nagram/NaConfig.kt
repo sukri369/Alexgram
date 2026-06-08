@@ -658,6 +658,12 @@ object NaConfig {
             ConfigItem.configTypeBool,
             true
         )
+    val sendLockedCustomEmojiAsSticker =
+        addConfig(
+            "SendLockedCustomEmojiAsSticker",
+            ConfigItem.configTypeBool,
+            false
+        )
 
     @JvmStatic
     fun getVoiceChangerEffectValue(): Int {

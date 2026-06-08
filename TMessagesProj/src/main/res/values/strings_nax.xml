@@ -461,5 +461,7 @@
     <string name="DirectForwardNotAllowed">Direct forwarding is not allowed.</string>
     <string name="ForceForwardStatusMediaCopy">Forwarding media copy</string>
     <string name="Customization">Customization</string>
+    <string name="SendLockedCustomEmojiAsSticker">Send Premium Emoji as Sticker</string>
+    <string name="SendLockedCustomEmojiAsStickerInfo">Only supports WebP/WebM custom emoji. TGS-only emoji are excluded.</string>
 </resources>
 
