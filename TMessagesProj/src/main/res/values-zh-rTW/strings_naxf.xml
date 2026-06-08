@@ -33,4 +33,8 @@
     <string name="CryptoCurrencyInr">印度盧比</string>
     <string name="NavigationDrawerProxyPingShort">延遲 %1$d ms</string>
     <string name="LastSeenPillAutoRefresh">自動重新整理</string>
+    <string name="CreationDateChat">**%1$s** 建立於 **%2$s**。</string>
+    <string name="JoinDateChat">您於 **%2$s** 加入 **%1$s**。</string>
+    <string name="CreationDateUserApproximately">**%1$s** 約於 **%2$s** 建立帳號。</string>
+    <string name="CreationDateSelfApproximately">您約於 **%1$s** 建立了帳號。</string>
 </resources>

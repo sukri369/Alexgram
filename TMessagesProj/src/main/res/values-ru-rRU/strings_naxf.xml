@@ -33,4 +33,8 @@
     <string name="CryptoCurrencyInr">Индийская рупия</string>
     <string name="NavigationDrawerProxyPingShort">Пинг %1$d мс</string>
     <string name="LastSeenPillAutoRefresh">Автообновление</string>
+    <string name="CreationDateChat">**%1$s** был создан **%2$s**.</string>
+    <string name="JoinDateChat">Вы присоединились к **%1$s** **%2$s**.</string>
+    <string name="CreationDateUserApproximately">**%1$s** создал(а) свой аккаунт примерно **%2$s**.</string>
+    <string name="CreationDateSelfApproximately">Вы создали свой аккаунт примерно **%1$s**.</string>
 </resources>

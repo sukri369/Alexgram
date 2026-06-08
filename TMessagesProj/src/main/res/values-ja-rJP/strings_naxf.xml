@@ -33,4 +33,8 @@
     <string name="CryptoCurrencyInr">インド・ルピー</string>
     <string name="NavigationDrawerProxyPingShort">Ping %1$d ms</string>
     <string name="LastSeenPillAutoRefresh">自動更新</string>
+    <string name="CreationDateChat">**%1$s** は **%2$s** に作成されました。</string>
+    <string name="JoinDateChat">あなたは **%2$s** に **%1$s** に参加しました。</string>
+    <string name="CreationDateUserApproximately">**%1$s** はおよそ **%2$s** にアカウントを作成しました。</string>
+    <string name="CreationDateSelfApproximately">あなたはおよそ **%1$s** にアカウントを作成しました。</string>
 </resources>
