@@ -12096,9 +12096,13 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             if (defaultFilter != null) {
                 activeFilters.add(defaultFilter);
             }
+            boolean hideFolders = tw.nekomimi.nekogram.tabs.TabsByTypeSettings.getInstance().isHideFolders();
             for (int a = 0; a < allFilters.size(); a++) {
                 MessagesController.DialogFilter filter = allFilters.get(a);
                 if (filter.isDefault()) {
+                    continue;
+                }
+                if (hideFolders && !tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(filter)) {
                     continue;
                 }
                 if (!tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(filter) || 
@@ -12121,7 +12125,14 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 }
             }
         } else {
-            activeFilters.addAll(allFilters);
+            boolean hideFolders = tw.nekomimi.nekogram.tabs.TabsByTypeSettings.getInstance().isHideFolders();
+            for (int a = 0; a < allFilters.size(); a++) {
+                MessagesController.DialogFilter filter = allFilters.get(a);
+                if (hideFolders && !filter.isDefault() && !tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(filter)) {
+                    continue;
+                }
+                activeFilters.add(filter);
+            }
         }
         return activeFilters;
     }

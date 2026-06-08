@@ -3124,6 +3124,8 @@
     <string name="TabsByTypeDeleted">Deleted accounts</string>
     <string name="TabsByTypeSecret">Secret chats</string>
     <string name="TabsByTypeAlbums">Albums</string>
+    <string name="HideFolders">Hide Folders</string>
+    <string name="HideFoldersInfo">Hide Telegram server folders and only show tabs by type.</string>
     <!--passcode view-->
     <string name="Passcode">Passcode Lock</string>
     <string name="ChangePasscode">Change Passcode</string>

@@ -402,6 +402,8 @@
     <string name="TabsByTypeDeleted">已注销账户</string>
     <string name="TabsByTypeSecret">加密私聊</string>
     <string name="TabsByTypeAlbums">相册</string>
+    <string name="HideFolders">隐藏文件夹</string>
+    <string name="HideFoldersInfo">隐藏 Telegram 服务器文件夹，只显示按类型分组的标签页。</string>
     <string name="ShowQuickEditIcon">消息旁边的快速编辑按钮</string>
     <string name="ShowQuickEditIconDesc">在消息旁边显示铅笔图标以快速编辑消息</string>
     <string name="QuickEditIconOnlyOwn">仅限可编辑的消息</string>

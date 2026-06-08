@@ -16,6 +16,7 @@ public class TabsByTypeSettings {
     private static final String PREFS_NAME = "tabsByType";
     private static final String KEY_ENABLED_MAIN    = "tabsByType_enabled_main";
     private static final String KEY_ENABLED_ARCHIVE = "tabsByType_enabled_archive";
+    private static final String KEY_HIDE_FOLDERS    = "tabsByType_hide_folders";
 
     private static TabsByTypeSettings instance;
 
@@ -60,6 +61,14 @@ public class TabsByTypeSettings {
         } else {
             setEnabledInMain(enabled);
         }
+    }
+
+    public boolean isHideFolders() {
+        return prefs.getBoolean(KEY_HIDE_FOLDERS, false);
+    }
+
+    public void setHideFolders(boolean hide) {
+        prefs.edit().putBoolean(KEY_HIDE_FOLDERS, hide).apply();
     }
 
     // ── Per-tab enable/disable ─────────────────────────────────────────────────

@@ -380,6 +380,8 @@
     <string name="TabsByTypeDeleted">已註銷帳戶</string>
     <string name="TabsByTypeSecret">加密私聊</string>
     <string name="TabsByTypeAlbums">相簿</string>
+    <string name="HideFolders">隱藏資料夾</string>
+    <string name="HideFoldersInfo">隱藏 Telegram 伺服器資料夾，只顯示按類型分組的標籤頁。</string>
     <string name="ShowQuickEditIcon">訊息旁邊的快速編輯按鈕</string>
     <string name="ShowQuickEditIconDesc">在訊息旁邊顯示鉛筆圖示以快速編輯訊息</string>
     <string name="QuickEditIconOnlyOwn">僅限可編輯的訊息</string>

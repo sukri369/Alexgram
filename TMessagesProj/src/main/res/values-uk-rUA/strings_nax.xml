@@ -356,6 +356,8 @@
     <string name="TabsByTypeDeleted">Видалені акаунти</string>
     <string name="TabsByTypeSecret">Секретні чати</string>
     <string name="TabsByTypeAlbums">Альбоми</string>
+    <string name="HideFolders">Приховати папки</string>
+    <string name="HideFoldersInfo">Приховати сервери папок Telegram і показувати лише вкладки за типами.</string>
     <string name="ShowQuickEditIcon">Кнопка швидкого редагування поруч із повідомленнями</string>
     <string name="ShowQuickEditIconDesc">Показувати значок олівця поруч із повідомленнями для швидкого доступу до редагування</string>
     <string name="QuickEditIconOnlyOwn">Тільки для повідомлень, які можна редагувати</string>
