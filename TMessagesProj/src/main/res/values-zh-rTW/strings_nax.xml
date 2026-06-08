@@ -431,7 +431,8 @@
     <string name="SendLockedCustomEmojiAsStickerInfo">僅支援 WebP/WebM 自訂表情符號，排除僅支援 TGS 的表情符號。</string>
     <string name="LocalEditorPlus">本機編輯器+</string>
     <string name="LocalEditorPlusAbout">在本機上編輯訊息內容與日期，或僅在該裝置上刪除訊息，不傳送伺服器請求。</string>
-    <string name="LocalEditorMenuOption">本機編輯器</string>
+    <string name="LocalEditorMenuOption">更多</string>
+
     <string name="LocalEditorEditOption">本機編輯</string>
     <string name="LocalEditorDeleteOption">本機刪除</string>
 </resources>

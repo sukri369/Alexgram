@@ -33289,12 +33289,58 @@ public class ChatActivity extends BaseFragment implements
 					}
 					popupLayout.addView(cell);
 					final int i = a;
-					cell.setOnClickListener(v1 -> {
-						if (selectedObject == null || i >= options.size()) {
-							return;
-						}
-						processSelectedOption(options.get(i));
-					});
+					if (option == OPTION_LOCAL_EDITOR_PLUS) {
+						cell.setRightIcon(R.drawable.msg_arrowright);
+						android.widget.LinearLayout subLayout = new android.widget.LinearLayout(getParentActivity());
+						subLayout.setOrientation(android.widget.LinearLayout.VERTICAL);
+						subLayout.setBackgroundColor(getThemedColor(Theme.key_actionBarDefaultSubmenuBackground));
+
+						ActionBarMenuSubItem backCell = new ActionBarMenuSubItem(getParentActivity(), true, false, themeDelegate);
+						backCell.setItemHeight(44);
+						backCell.setTextAndIcon(LocaleController.getString(R.string.Back), R.drawable.msg_arrow_back);
+						backCell.setOnClickListener(v2 -> {
+							if (popupLayout.getSwipeBack() != null) {
+								popupLayout.getSwipeBack().closeForeground();
+							}
+						});
+						subLayout.addView(backCell, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+
+						ActionBarMenuSubItem editCell = new ActionBarMenuSubItem(getParentActivity(), false, false, themeDelegate);
+						editCell.setItemHeight(44);
+						editCell.setTextAndIcon(LocaleController.getString("LocalEditorEditOption", R.string.LocalEditorEditOption), R.drawable.msg_edit);
+						editCell.setOnClickListener(v2 -> {
+							closeMenu();
+							showLocalEditMessageDialog(selectedObject);
+						});
+						subLayout.addView(editCell, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+
+						ActionBarMenuSubItem deleteCell = new ActionBarMenuSubItem(getParentActivity(), false, true, themeDelegate);
+						deleteCell.setItemHeight(44);
+						deleteCell.setTextAndIcon(LocaleController.getString("LocalEditorDeleteOption", R.string.LocalEditorDeleteOption), R.drawable.msg_delete);
+						deleteCell.setOnClickListener(v2 -> {
+							closeMenu();
+							ArrayList<Integer> ids = new ArrayList<>();
+							ids.add(selectedObject.getId());
+							MessagesController.getInstance(currentAccount).deleteMessages(ids, null, null, selectedObject.getDialogId(), (int) getTopicId(), false, chatMode, true);
+							updateVisibleRows();
+						});
+						subLayout.addView(deleteCell, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+
+						final int subMenuIndex = popupLayout.addViewToSwipeBack(subLayout);
+						cell.setOnClickListener(v1 -> {
+							if (popupLayout.getSwipeBack() != null) {
+								popupLayout.getSwipeBack().openForeground(subMenuIndex);
+							}
+						});
+					} else {
+						cell.setOnClickListener(v1 -> {
+							if (selectedObject == null || i >= options.size()) {
+								return;
+							}
+							processSelectedOption(options.get(i));
+						});
+					}
+
 					/*if (option == OPTION_TRANSLATE) {
 						final boolean translateEnabled = getMessagesController().getTranslateController().isContextTranslateEnabled();
 						String toLangDefault = LocaleController.getInstance().getCurrentLocale().getLanguage();

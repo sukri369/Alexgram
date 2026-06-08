@@ -465,7 +465,8 @@
     <string name="SendLockedCustomEmojiAsStickerInfo">Only supports WebP/WebM custom emoji. TGS-only emoji are excluded.</string>
     <string name="LocalEditorPlus">Local Editor+</string>
     <string name="LocalEditorPlusAbout">Edit message text and date, or delete messages locally on this device only without sending server requests.</string>
-    <string name="LocalEditorMenuOption">Local Editor</string>
+    <string name="LocalEditorMenuOption">More</string>
+
     <string name="LocalEditorEditOption">Edit locally</string>
     <string name="LocalEditorDeleteOption">Delete locally</string>
 </resources>
