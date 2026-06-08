@@ -71,7 +71,15 @@ public class NekoCustomizationSettingsActivity extends BaseNekoXSettingsActivity
     private final AbstractConfigCell forceMusicSpeedControlRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.forceMusicSpeedControl, LocaleController.getString("ExperimentalMusicSpeedControlAbout", R.string.ExperimentalMusicSpeedControlAbout), LocaleController.getString("ExperimentalMusicSpeedControl", R.string.ExperimentalMusicSpeedControl)));
     private final AbstractConfigCell enableEditFileNameRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.enableEditFileName, LocaleController.getString("ExperimentalEditFileNameAbout", R.string.ExperimentalEditFileNameAbout), LocaleController.getString("ExperimentalEditFileName", R.string.ExperimentalEditFileName)));
     private final AbstractConfigCell enableChangeNameInGroupsRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.enableChangeNameInGroups, LocaleController.getString("ExperimentalChangeSenderNameAbout", R.string.ExperimentalChangeSenderNameAbout), LocaleController.getString("ExperimentalChangeSenderName", R.string.ExperimentalChangeSenderName)));
+    private final AbstractConfigCell enableLocalEditorPlusRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.enableLocalEditorPlus, LocaleController.getString("LocalEditorPlusAbout", R.string.LocalEditorPlusAbout), LocaleController.getString("LocalEditorPlus", R.string.LocalEditorPlus)));
+
     private final AbstractConfigCell sendVideoAsRoundRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getSendVideoAsRound()));
+    private final AbstractConfigCell sendLockedCustomEmojiAsStickerRow = cellGroup.appendCell(
+            new ConfigCellTextCheck(
+                    NaConfig.INSTANCE.getSendLockedCustomEmojiAsSticker(),
+                    getString(R.string.SendLockedCustomEmojiAsStickerInfo)
+            )
+    );
 
     public NekoCustomizationSettingsActivity() {
         if (!NekoConfig.showQuickEditIconInChatList.Bool()) {
@@ -115,7 +123,10 @@ public class NekoCustomizationSettingsActivity extends BaseNekoXSettingsActivity
                 tooltip.showWithAction(0, UndoView.ACTION_NEED_RESTART, null, null);
             } else if (key.equals(NekoConfig.enableChangeNameInGroups.getKey())) {
                 tooltip.showWithAction(0, UndoView.ACTION_NEED_RESTART, null, null);
+            } else if (key.equals(NekoConfig.enableLocalEditorPlus.getKey())) {
+                tooltip.showWithAction(0, UndoView.ACTION_NEED_RESTART, null, null);
             }
+
         };
 
         return superView;

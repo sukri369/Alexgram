@@ -1908,6 +1908,11 @@ public class MessageObject {
         messageOwner = message;
         replyMessageObject = replyToMessage;
         eventId = eid;
+
+        if (tw.nekomimi.nekogram.NekoConfig.enableLocalEditorPlus.Bool()) {
+            tw.nekomimi.nekogram.helpers.LocalEditorHelper.applyLocalEdit(getDialogId(message), message);
+        }
+
         wasUnread = !messageOwner.out && messageOwner.unread;
 
         if (message.replyMessage != null) {

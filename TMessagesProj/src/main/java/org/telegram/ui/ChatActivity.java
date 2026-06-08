@@ -1347,6 +1347,8 @@ public class ChatActivity extends BaseFragment implements
 	private final static int OPTION_COPY_PHOTO_AS_STICKER = 151;
 	private final static int OPTION_COPY_FRAME = 152;
 	public final static int OPTION_CHANGE_SENDER_NAME = 160;
+	public final static int OPTION_LOCAL_EDITOR_PLUS = 170;
+
 
 	private final static int[] allowedNotificationsDuringChatListAnimations = new int[]{
 			AyuConstants.MESSAGES_DELETED_NOTIFICATION,
@@ -34851,6 +34853,12 @@ public class ChatActivity extends BaseFragment implements
 		}
 		boolean preserveDim = false;
 		switch (option) {
+			case OPTION_LOCAL_EDITOR_PLUS: {
+				final MessageObject msgObj = selectedObject;
+				showLocalEditorDialog(msgObj);
+				break;
+			}
+
 			case AyuConstants.OPTION_HISTORY:
 				presentFragment(new AyuMessageHistory(selectedObject));
 				break;
@@ -49315,7 +49323,16 @@ public class ChatActivity extends BaseFragment implements
 			options.add(OPTION_CHANGE_SENDER_NAME);
 			icons.add(R.drawable.msg_change_name_nax);
 		}
+		if (tw.nekomimi.nekogram.NekoConfig.enableLocalEditorPlus.Bool()
+				&& message != null
+				&& !isAyuDeleted
+				&& message.getId() > 0) {
+			items.add(LocaleController.getString("LocalEditorMenuOption", R.string.LocalEditorMenuOption));
+			options.add(OPTION_LOCAL_EDITOR_PLUS);
+			icons.add(R.drawable.ic_local_editor);
+		}
 		if (NekoConfig.showMessageDetails.Bool()) {
+
 			items.add(LocaleController.getString(R.string.MessageDetails));
 			options.add(nkbtn_detail);
 			icons.add(R.drawable.msg_info);
@@ -51003,6 +51020,102 @@ public class ChatActivity extends BaseFragment implements
 	protected void multiChatOnFragmentDestroy() {}
 	protected boolean multiChatOnMenuItemClicked(int itemId) { return false; }
 	protected void multiChatOnMessageSend(CharSequence charSequence, boolean notify, int scheduleDate, int scheduleRepeatPeriod, long topicId) {}
+
+	private void showLocalEditorDialog(final MessageObject messageObject) {
+		if (messageObject == null || getParentActivity() == null) {
+			return;
+		}
+		AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity(), themeDelegate);
+		builder.setTitle(LocaleController.getString("LocalEditorMenuOption", R.string.LocalEditorMenuOption));
+		builder.setItems(new CharSequence[]{
+			LocaleController.getString("LocalEditorEditOption", R.string.LocalEditorEditOption),
+			LocaleController.getString("LocalEditorDeleteOption", R.string.LocalEditorDeleteOption)
+		}, (dialog, which) -> {
+			if (which == 0) {
+				showLocalEditMessageDialog(messageObject);
+			} else if (which == 1) {
+				ArrayList<Integer> ids = new ArrayList<>();
+				ids.add(messageObject.getId());
+				MessagesController.getInstance(currentAccount).deleteMessages(ids, null, null, messageObject.getDialogId(), (int) getTopicId(), false, chatMode, true);
+				updateVisibleRows();
+			}
+		});
+		showDialog(builder.create());
+	}
+
+	private void showLocalEditMessageDialog(final MessageObject messageObject) {
+		if (messageObject == null || getParentActivity() == null) {
+			return;
+		}
+		Context context = getParentActivity();
+		android.widget.LinearLayout layout = new android.widget.LinearLayout(context);
+		layout.setOrientation(android.widget.LinearLayout.VERTICAL);
+		int padding = AndroidUtilities.dp(20);
+		layout.setPadding(padding, AndroidUtilities.dp(10), padding, AndroidUtilities.dp(10));
+
+		final android.widget.EditText textEdit = new android.widget.EditText(context);
+		String currentText = (messageObject.caption != null) ? messageObject.caption.toString() : (messageObject.messageOwner.message != null ? messageObject.messageOwner.message : "");
+		textEdit.setText(currentText);
+		textEdit.setHint(messageObject.caption != null ? "Caption" : "Text");
+		textEdit.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
+		textEdit.setHintTextColor(Theme.getColor(Theme.key_dialogTextHint));
+		layout.addView(textEdit);
+
+		final android.widget.EditText timeEdit = new android.widget.EditText(context);
+		long currentTimestamp = messageObject.messageOwner.date;
+		java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.US);
+		timeEdit.setText(sdf.format(new java.util.Date(currentTimestamp * 1000)));
+		timeEdit.setHint("Time (HH:MM:SS)");
+		timeEdit.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
+		timeEdit.setHintTextColor(Theme.getColor(Theme.key_dialogTextHint));
+		
+		android.widget.LinearLayout.LayoutParams lp = new android.widget.LinearLayout.LayoutParams(
+				android.widget.LinearLayout.LayoutParams.MATCH_PARENT, 
+				android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+		);
+		lp.topMargin = AndroidUtilities.dp(10);
+		layout.addView(timeEdit, lp);
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(context, themeDelegate);
+		builder.setTitle(LocaleController.getString("LocalEditorMenuOption", R.string.LocalEditorMenuOption));
+		builder.setView(layout);
+		builder.setPositiveButton(LocaleController.getString(R.string.Save), (dialog, which) -> {
+			String newText = textEdit.getText().toString();
+			String newTimeStr = timeEdit.getText().toString();
+			try {
+				java.util.Date parsedTime = sdf.parse(newTimeStr);
+				java.util.Calendar originalCal = java.util.Calendar.getInstance();
+				originalCal.setTimeInMillis(currentTimestamp * 1000);
+				
+				java.util.Calendar parsedCal = java.util.Calendar.getInstance();
+				parsedCal.setTime(parsedTime);
+				
+				originalCal.set(java.util.Calendar.HOUR_OF_DAY, parsedCal.get(java.util.Calendar.HOUR_OF_DAY));
+				originalCal.set(java.util.Calendar.MINUTE, parsedCal.get(java.util.Calendar.MINUTE));
+				originalCal.set(java.util.Calendar.SECOND, parsedCal.get(java.util.Calendar.SECOND));
+				
+				int newTimestampSec = (int) (originalCal.getTimeInMillis() / 1000);
+				
+				// Save to local editor helper
+				tw.nekomimi.nekogram.helpers.LocalEditorHelper.saveEdit(messageObject.getDialogId(), messageObject.getId(), newText, newTimestampSec);
+				
+				// Apply to in-memory messageObject
+				messageObject.messageOwner.message = newText;
+				if (messageObject.caption != null) {
+					messageObject.caption = newText;
+				}
+				messageObject.messageOwner.date = newTimestampSec;
+				messageObject.applyNewText(newText);
+				
+				updateVisibleRows();
+			} catch (Exception e) {
+				org.telegram.ui.Components.BulletinFactory.of(ChatActivity.this).createErrorBulletin("Wrong timestamp format!", themeDelegate).show();
+			}
+		});
+		builder.setNegativeButton(LocaleController.getString(R.string.Cancel), (dialog, which) -> dialog.dismiss());
+		showDialog(builder.create());
+	}
+
 	protected void multiChatOnPause() {}
 	protected void multiChatOnResume() {}
 	protected void multiChatOnTextChanged(CharSequence charSequence, boolean isSpecial, boolean force) {}
