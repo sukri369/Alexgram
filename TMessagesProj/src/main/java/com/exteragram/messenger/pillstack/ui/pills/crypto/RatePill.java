@@ -145,7 +145,7 @@ public abstract class RatePill extends BasePill implements NotificationCenter.No
         if (fragment == null) return false;
 
         final ItemOptions options = ItemOptions.makeOptions(fragment, this, true);
-        final ItemOptions swipeback = options.makeSwipeback()
+        final ItemOptions swipeback = options.makeSwipeback(true)
                 .add(R.drawable.ic_ab_back, LocaleController.getString(R.string.Back), options::closeSwipeback)
                 .addGap();
 
