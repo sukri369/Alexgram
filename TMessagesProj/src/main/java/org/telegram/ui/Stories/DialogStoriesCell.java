@@ -1508,8 +1508,8 @@ public class DialogStoriesCell extends FrameLayout implements NotificationCenter
             }
             createTextView();
             addView(textViewContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
-            avatarImage.setRoundRadius(dp(48) / 2);
-            crossfadeToAvatarImage.setRoundRadius(dp(48) / 2);
+            avatarImage.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(48.0f));
+            crossfadeToAvatarImage.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(48.0f));
         }
 
         private void createTextView() {
@@ -1522,8 +1522,8 @@ public class DialogStoriesCell extends FrameLayout implements NotificationCenter
             textView.setMaxLines(1);
 
             textViewContainer.addView(textView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 1, 0, 1, 0));
-            avatarImage.setRoundRadius(dp(48) / 2);
-            crossfadeToAvatarImage.setRoundRadius(dp(48) / 2);
+            avatarImage.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(48.0f));
+            crossfadeToAvatarImage.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(48.0f));
         }
 
         public void setDialogId(long dialogId) {
@@ -1684,7 +1684,8 @@ public class DialogStoriesCell extends FrameLayout implements NotificationCenter
             params.originalAvatarRect.set(x, y, x + finalSize, y + finalSize);
             params.additionalInset = dpf2(1.33f) * progressToCollapsed;
             avatarImage.setAlpha(1f);
-            avatarImage.setRoundRadius((int) radius);
+            avatarImage.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadiusPx(finalSize));
+            crossfadeToAvatarImage.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadiusPx(finalSize));
 
             cx = x + radius;
             cy = y + radius;

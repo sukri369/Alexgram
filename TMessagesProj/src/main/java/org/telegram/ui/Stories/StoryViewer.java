@@ -803,7 +803,8 @@ public class StoryViewer implements NotificationCenter.NotificationCenterDelegat
                                     headerView.backupImageView.getImageReceiver().setImageCoords(rect3);
 
                                     Integer cellAvatarImageRadius = transitionViewHolder != null ? transitionViewHolder.getAvatarImageRoundRadius() : null;
-                                    int newRoundRadius = (int) (lerp(rect3.width() / 2f, cellAvatarImageRadius != null ? cellAvatarImageRadius : rect3.width() / 2f, 1f - progressToOpen));
+                                    int headerAvatarRadius = org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadiusPx(rect3.width());
+                                    int newRoundRadius = (int) (lerp(headerAvatarRadius, cellAvatarImageRadius != null ? cellAvatarImageRadius : headerAvatarRadius, 1f - progressToOpen));
 
                                     headerView.backupImageView.getImageReceiver().setRoundRadius(newRoundRadius);
                                     headerView.backupImageView.getImageReceiver().setVisible(true, false);
@@ -836,7 +837,7 @@ public class StoryViewer implements NotificationCenter.NotificationCenterDelegat
                                     int oldRadius = transitionViewHolder.crossfadeToAvatarImage.getRoundRadius()[0];
                                     boolean isVisible = transitionViewHolder.crossfadeToAvatarImage.getVisible();
                                     transitionViewHolder.crossfadeToAvatarImage.setImageCoords(rect3);
-                                    transitionViewHolder.crossfadeToAvatarImage.setRoundRadius((int) (rect3.width() / 2f));
+                                    transitionViewHolder.crossfadeToAvatarImage.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadiusPx(rect3.width()));
                                     transitionViewHolder.crossfadeToAvatarImage.setVisible(true, false);
                                     canvas.saveLayerAlpha(rect3, (int) (255 * (1f - progressToOpen)), Canvas.ALL_SAVE_FLAG);
                                     transitionViewHolder.crossfadeToAvatarImage.draw(canvas);

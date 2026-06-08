@@ -386,7 +386,7 @@ public class ProfileMetaballView extends View {
         float scaledRadius;
 
         if (!isBackward && !imageView.hasStories) {
-            imageView.setRoundRadiusCollapse(lerp(dp(22), radius, Utilities.clamp01((vr - dp(34)) / dp(6))));
+            imageView.setRoundRadiusCollapse(lerp(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(44.0f), radius, Utilities.clamp01((vr - dp(34)) / dp(6))));
             scaledRadius = vr / dp(22) * imageView.roundRadiusCollapse;
         } else {
             scaledRadius = vr / dp(21) * radius;

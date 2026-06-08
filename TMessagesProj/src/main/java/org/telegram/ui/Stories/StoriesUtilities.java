@@ -203,6 +203,7 @@ public class StoriesUtilities {
         params.showProgress = showProgress;
         if (NaConfig.INSTANCE.getDisableStories().Bool() || params.currentState == STATE_EMPTY && params.progressToSate == 1f) {
             avatarImage.setImageCoords(params.originalAvatarRect);
+            avatarImage.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadiusPx(params.originalAvatarRect.width(), isForum, isForum && hasStories));
             avatarImage.draw(canvas);
             return;
         }
@@ -226,10 +227,12 @@ public class StoriesUtilities {
         );
         if (insetTo == 0) {
             avatarImage.setImageCoords(params.originalAvatarRect);
+            avatarImage.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadiusPx(params.originalAvatarRect.width(), isForum, isForum && hasStories));
         } else {
             rectTmp.set(params.originalAvatarRect);
             rectTmp.inset(insetTo, insetTo);
             avatarImage.setImageCoords(rectTmp);
+            avatarImage.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadiusPx(rectTmp.width(), isForum, isForum && hasStories));
         }
         if (drawLive > 0) {
             canvas.saveLayerAlpha(

@@ -3025,10 +3025,10 @@ public class StoryPrivacyBottomSheet extends BottomSheet implements Notification
             super(context);
             this.resourcesProvider = resourcesProvider;
 
-            avatarDrawable.setRoundRadius(AndroidUtilities.dp(40));
+            avatarDrawable.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(40.0f));
 
             imageView = new BackupImageView(context);
-            imageView.setRoundRadius(AndroidUtilities.dp(20));
+            imageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(40.0f));
             addView(imageView);
 
             titleTextView = new SimpleTextView(context);
@@ -3140,7 +3140,7 @@ public class StoryPrivacyBottomSheet extends BottomSheet implements Notification
             dialogId = user == null ? 0 : user.id;
 
             avatarDrawable.setInfo(user);
-            imageView.setRoundRadius(dp(20));
+            imageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(40.0f));
             imageView.setForUserOrChat(user, avatarDrawable);
 
             CharSequence text = UserObject.getUserName(user);
@@ -3164,7 +3164,7 @@ public class StoryPrivacyBottomSheet extends BottomSheet implements Notification
             dialogId = chat == null ? 0 : -chat.id;
 
             avatarDrawable.setInfo(chat);
-            imageView.setRoundRadius(dp(ChatObject.isForum(chat) ? 12 : 20));
+            imageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(40.0f, ChatObject.isForum(chat) || ChatObject.isMonoForum(chat)));
             imageView.setForUserOrChat(chat, avatarDrawable);
 
             CharSequence text = chat.title;
@@ -3286,7 +3286,7 @@ public class StoryPrivacyBottomSheet extends BottomSheet implements Notification
             checkBox.setVisibility(View.GONE);
             radioButton.setVisibility(needCheck ? View.VISIBLE : View.GONE);
             imageView.setImageDrawable(avatarDrawable);
-            imageView.setRoundRadius(dp(20));
+            imageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(40.0f));
         }
 
         private void setSubtitle(CharSequence text) {
