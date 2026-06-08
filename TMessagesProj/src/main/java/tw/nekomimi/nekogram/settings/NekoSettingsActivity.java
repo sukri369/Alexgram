@@ -477,6 +477,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
                 } else if (position == coreSettingsRow) {
                     List<CoreItem> items = new ArrayList<>();
                     items.add(new CoreItem("General", "Appearance, Language, Behavior", R.drawable.msg_settings, 0xFF2196F3, v -> presentFragment(new NekoGeneralSettingsActivity())));
+                    items.add(new CoreItem(LocaleController.getString("Customization", R.string.Customization), "Icons, Styles, Theme & Decoration", R.drawable.msg_theme, 0xFFFF9C00, v -> presentFragment(new NekoCustomizationSettingsActivity())));
                     items.add(new CoreItem("Translator", "Messages, Languages, Engine", R.drawable.ic_translate, 0xFF9C27B0, v -> presentFragment(new NekoTranslatorSettingsActivity())));
                     items.add(new CoreItem("AI Assistance", "Alexgram assistant behavior & animations", R.drawable.settings_chat, 0xFF8E44AD, v -> presentFragment(new AIAssistanceSettingsActivity())));
                     items.add(new CoreItem("Chats", "UI, Privacy, Media", R.drawable.msg_discussion, 0xFF4CAF50, v -> presentFragment(new NekoChatSettingsActivity())));
