@@ -42,6 +42,9 @@ import org.telegram.ui.Components.SeekBarView;
 import org.telegram.ui.Components.TextStyleSpan;
 import org.telegram.ui.Components.TypefaceSpan;
 import org.telegram.ui.Components.UndoView;
+// [Alexgram: Templates Settings Row] - Start
+import org.telegram.ui.Templates.TemplatesManager;
+// [Alexgram: Templates Settings Row] - End
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -115,6 +118,9 @@ public class NekoChatSettingsActivity extends BaseNekoXSettingsActivity implemen
     private final AbstractConfigCell unreadBadgeOnBackButton = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.unreadBadgeOnBackButton));
     private final AbstractConfigCell sendCommentAfterForwardRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.sendCommentAfterForward));
     private final AbstractConfigCell useChatAttachMediaMenuRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.useChatAttachMediaMenu, getString(R.string.UseChatAttachEnterMenuNotice)));
+    // [Alexgram: Templates Settings Row] - Start
+    private final AbstractConfigCell templatesPanelTypeRow = cellGroup.appendCell(new ConfigCellCustom("TemplatesPanelType", CellGroup.ITEM_TYPE_TEXT_SETTINGS_CELL, true));
+    // [Alexgram: Templates Settings Row] - End
     private final AbstractConfigCell fixLinkPreviewRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getFixLinkPreview(), "x.com -> fixupx.com"));
     private final AbstractConfigCell disableLinkPreviewByDefaultRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.disableLinkPreviewByDefault));
     private final AbstractConfigCell deleteChatForBothSidesRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getDeleteChatForBothSides()));
@@ -626,6 +632,10 @@ public class NekoChatSettingsActivity extends BaseNekoXSettingsActivity implemen
             } catch (Exception e) {
                 FileLog.e(e);
             }
+        // [Alexgram: Templates Settings Row] - Start
+        } else if (position == cellGroup.rows.indexOf(templatesPanelTypeRow)) {
+            showTemplatesPanelTypePopup(view, position);
+        // [Alexgram: Templates Settings Row] - End
         } else if (position == cellGroup.rows.indexOf(maxRecentStickerCountRow)) {
             final int[] counts = {20, 30, 40, 50, 80, 100, 120, 150, 180, 200};
             List<String> types = Arrays.stream(counts)
@@ -923,6 +933,38 @@ public class NekoChatSettingsActivity extends BaseNekoXSettingsActivity implemen
         }
     }
 
+    // [Alexgram: Templates Settings Row] - Start
+    private String getTemplatesPanelTypeTitle() {
+        return switch (TemplatesManager.getInstance(currentAccount).getPanelType()) {
+            case OVAL -> getString(R.string.chat_templates_mode_oval);
+            case ATTACH -> getString(R.string.chat_templates_mode_attach);
+            case OFF -> getString(R.string.chat_templates_mode_off);
+        };
+    }
+
+    private void showTemplatesPanelTypePopup(View view, int position) {
+        TemplatesManager.PanelType[] values = new TemplatesManager.PanelType[] {
+                TemplatesManager.PanelType.OVAL,
+                TemplatesManager.PanelType.ATTACH,
+                TemplatesManager.PanelType.OFF
+        };
+        ArrayList<String> items = new ArrayList<>();
+        items.add(getString(R.string.chat_templates_mode_oval));
+        items.add(getString(R.string.chat_templates_mode_attach));
+        items.add(getString(R.string.chat_templates_mode_off));
+
+        PopupBuilder builder = new PopupBuilder(view);
+        builder.setItems(items, (i, str) -> {
+            TemplatesManager.getInstance(currentAccount).setPanelType(values[i]);
+            if (listAdapter != null) {
+                listAdapter.notifyItemChanged(position);
+            }
+            return Unit.INSTANCE;
+        });
+        builder.show();
+    }
+    // [Alexgram: Templates Settings Row] - End
+
     //impl ListAdapter
     private class ListAdapter extends BaseListAdapter {
 
@@ -939,6 +981,10 @@ public class NekoChatSettingsActivity extends BaseNekoXSettingsActivity implemen
                     String path = NaConfig.INSTANCE.getLiveVideoWallpaperPath().String();
                     String val = TextUtils.isEmpty(path) ? getString(R.string.None) : new java.io.File(path).getName();
                     textCell.setTextAndValue("Video Wallpaper", val, true);
+                // [Alexgram: Templates Settings Row] - Start
+                } else if (position == cellGroup.rows.indexOf(templatesPanelTypeRow)) {
+                    textCell.setTextAndValue(getString(R.string.chat_templates), getTemplatesPanelTypeTitle(), true);
+                // [Alexgram: Templates Settings Row] - End
                 } else if (position == cellGroup.rows.indexOf(doubleTapActionRow)) {
                     textCell.setTextAndValue(getString(R.string.DoubleTapIncoming), DoubleTap.doubleTapActionMap.get(NaConfig.INSTANCE.getDoubleTapAction().Int()), true);
                 } else if (position == cellGroup.rows.indexOf(doubleTapActionOutRow)) {
