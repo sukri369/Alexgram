@@ -2623,6 +2623,16 @@ public class ChatActivity extends BaseFragment implements
 			openAttachMenu();
 		}
 
+		// [Alexgram: Templates Oval Input] - Start
+		@Override
+		public void didPressTemplatesButton() {
+			if (chatAttachAlert != null) {
+				chatAttachAlert.setEditingMessageObject(0, null);
+			}
+			openTemplatesMenu();
+		}
+		// [Alexgram: Templates Oval Input] - End
+
 		@Override
 		public void didPressSuggestionButton() {
 			new MessageSuggestionOfferSheet(getContext(), currentAccount, dialog_id, messageSuggestionParams != null ? messageSuggestionParams: MessageSuggestionParams.empty(), ChatActivity.this, getResourceProvider(), MessageSuggestionOfferSheet.MODE_INPUT, ChatActivity.this::showFieldPanelForSuggestionParams).show();
@@ -14450,6 +14460,18 @@ public class ChatActivity extends BaseFragment implements
 		chatAttachAlert.parentThemeDelegate = themeDelegate;
 		showDialog(chatAttachAlert);
 	}
+
+	// [Alexgram: Templates Oval Input] - Start
+	private void openTemplatesMenu() {
+		if (getParentActivity() == null || chatActivityEnterView != null && !TextUtils.isEmpty(chatActivityEnterView.getSlowModeTimer())) {
+			return;
+		}
+		openAttachMenu();
+		if (chatAttachAlert != null) {
+			chatAttachAlert.openTemplatesLayout();
+		}
+	}
+	// [Alexgram: Templates Oval Input] - End
 
 	public void openAttachMenuForCreatingSticker() {
 		ContentPreviewViewer.getInstance().setStickerSetForCustomSticker(null);

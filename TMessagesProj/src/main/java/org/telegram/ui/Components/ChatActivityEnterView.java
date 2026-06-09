@@ -207,6 +207,9 @@ import org.telegram.ui.StickersActivity;
 import org.telegram.ui.Stories.HighlightMessageSheet;
 import org.telegram.ui.Stories.recorder.CaptionContainerView;
 import org.telegram.ui.Stories.recorder.HintView2;
+// [Alexgram: Templates Oval Input] - Start
+import org.telegram.ui.Templates.TemplatesManager;
+// [Alexgram: Templates Oval Input] - End
 import org.telegram.ui.bots.BotCommandsMenuContainer;
 import org.telegram.ui.bots.BotCommandsMenuView;
 import org.telegram.ui.bots.BotKeyboardView;
@@ -332,6 +335,10 @@ public class ChatActivityEnterView extends FrameLayout implements
         void onMessageEditEnd(boolean loading);
 
         void didPressAttachButton();
+
+        // [Alexgram: Templates Oval Input] - Start
+        default void didPressTemplatesButton() {}
+        // [Alexgram: Templates Oval Input] - End
 
         default void didPressSuggestionButton() {}
 
@@ -623,6 +630,9 @@ public class ChatActivityEnterView extends FrameLayout implements
     private ActionBarPopupWindow cameraSelectionPopup; // nax
     private ImageView cancelBotButton;
     private ChatActivityEnterViewAnimatedIconView emojiButton;
+    // [Alexgram: Templates Oval Input] - Start
+    private TemplateOvalButton templatesOvalButton;
+    // [Alexgram: Templates Oval Input] - End
     @Nullable
     private ImageView expandStickersButton;
     private boolean emojiViewFrozen;
@@ -2669,6 +2679,9 @@ public class ChatActivityEnterView extends FrameLayout implements
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.didUpdatePremiumGiftFieldIcon);
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.fileLoaded);
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.fileLoadFailed);
+        // [Alexgram: Templates Oval Input] - Start
+        NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.templatesSettingsUpdated);
+        // [Alexgram: Templates Oval Input] - End
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.emojiLoaded);
 
         parentActivity = context;
@@ -2799,6 +2812,23 @@ public class ChatActivityEnterView extends FrameLayout implements
         });
         messageEditTextContainer.addView(emojiButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.LEFT, 2, 0, 0, 0));
         setEmojiButtonImage(false, false);
+
+        // [Alexgram: Templates Oval Input] - Start
+        templatesOvalButton = new TemplateOvalButton(context, resourcesProvider);
+        templatesOvalButton.setContentDescription(getString(R.string.chat_templates));
+        templatesOvalButton.setVisibility(GONE);
+        ScaleStateListAnimator.apply(templatesOvalButton);
+        templatesOvalButton.setOnClickListener(v -> {
+            if (adjustPanLayoutHelper != null && adjustPanLayoutHelper.animationInProgress()) {
+                return;
+            }
+            if (delegate != null) {
+                delegate.didPressTemplatesButton();
+            }
+        });
+        messageEditTextContainer.addView(templatesOvalButton, LayoutHelper.createFrame(TemplateOvalButton.WIDTH_DP, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.LEFT, 4, 0, 0, 0));
+        updateTemplatesOvalButton(false);
+        // [Alexgram: Templates Oval Input] - End
 
         if (isChat) {
             attachLayout = new LinearLayout(context) {
@@ -7136,6 +7166,9 @@ public class ChatActivityEnterView extends FrameLayout implements
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.didUpdatePremiumGiftFieldIcon);
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.fileLoaded);
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.fileLoadFailed);
+        // [Alexgram: Templates Oval Input] - Start
+        NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.templatesSettingsUpdated);
+        // [Alexgram: Templates Oval Input] - End
         pendingCustomEmojiStickerSends.clear();
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.emojiLoaded);
         if (emojiView != null) {
@@ -7381,6 +7414,9 @@ public class ChatActivityEnterView extends FrameLayout implements
             }
         }
         setRecordVideoButtonVisible(currentModeVideo, false);
+        // [Alexgram: Templates Oval Input] - Start
+        updateTemplatesOvalButton(false);
+        // [Alexgram: Templates Oval Input] - End
     }
 
     public void onBeginHide() {
@@ -7486,6 +7522,9 @@ public class ChatActivityEnterView extends FrameLayout implements
             NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.sendingMessagesChanged);
             NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.fileLoaded);
             NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.fileLoadFailed);
+            // [Alexgram: Templates Oval Input] - Start
+            NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.templatesSettingsUpdated);
+            // [Alexgram: Templates Oval Input] - End
             pendingCustomEmojiStickerSends.clear();
             currentAccount = account;
             accountInstance = AccountInstance.getInstance(currentAccount);
@@ -7505,6 +7544,9 @@ public class ChatActivityEnterView extends FrameLayout implements
             NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.sendingMessagesChanged);
             NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.fileLoaded);
             NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.fileLoadFailed);
+            // [Alexgram: Templates Oval Input] - Start
+            NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.templatesSettingsUpdated);
+            // [Alexgram: Templates Oval Input] - End
         }
 
         sendPlainEnabled = true;
@@ -7518,6 +7560,9 @@ public class ChatActivityEnterView extends FrameLayout implements
         checkRoundVideo();
         checkChannelRights();
         updateFieldHint(false);
+        // [Alexgram: Templates Oval Input] - Start
+        updateTemplatesOvalButton(false);
+        // [Alexgram: Templates Oval Input] - End
         if (messageEditText != null) {
             updateSendAsButton(parentFragment != null && parentFragment.getFragmentBeginToShow());
         }
@@ -12063,6 +12108,35 @@ public class ChatActivityEnterView extends FrameLayout implements
         return botMenuButtonType == BotMenuButtonType.WEB_VIEW;
     }
 
+    // [Alexgram: Templates Oval Input] - Start
+    private boolean shouldShowTemplatesOvalButton() {
+        return isChat
+                && !isStories
+                && !isSpecialForward()
+                && sendPlainEnabled
+                && parentFragment != null
+                && parentFragment.getChatMode() == ChatActivity.MODE_DEFAULT
+                && botMenuButtonType == BotMenuButtonType.NO_BUTTON
+                && TemplatesManager.getInstance(currentAccount).getPanelType() == TemplatesManager.PanelType.OVAL;
+    }
+
+    private void updateTemplatesOvalButton(boolean animated) {
+        if (templatesOvalButton == null) {
+            return;
+        }
+        boolean show = shouldShowTemplatesOvalButton();
+        boolean wasVisible = templatesOvalButton.getTag() != null;
+        if (show == wasVisible) {
+            return;
+        }
+        if (animated) {
+            beginDelayedTransition();
+        }
+        AndroidUtilities.updateViewVisibilityAnimated(templatesOvalButton, show, 0.5f, animated);
+        requestLayout();
+    }
+    // [Alexgram: Templates Oval Input] - End
+
     private void updateBotButton(boolean animated) {
         if (!isChat) {
             return;
@@ -14434,9 +14508,16 @@ public class ChatActivityEnterView extends FrameLayout implements
                 }
 
                 updateBotButton(false);
+                // [Alexgram: Templates Oval Input] - Start
+                updateTemplatesOvalButton(false);
+                // [Alexgram: Templates Oval Input] - End
             }
         } else if (id == NotificationCenter.didUpdatePremiumGiftFieldIcon) {
             updateGiftButton(true);
+        // [Alexgram: Templates Oval Input] - Start
+        } else if (id == NotificationCenter.templatesSettingsUpdated) {
+            updateTemplatesOvalButton(true);
+        // [Alexgram: Templates Oval Input] - End
         }
     }
 
@@ -15330,7 +15411,17 @@ public class ChatActivityEnterView extends FrameLayout implements
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         int wasHeight = textFieldContainer.getMeasuredHeight();
-        if (botCommandsMenuButton != null && botCommandsMenuButton.getTag() != null) {
+        // [Alexgram: Templates Oval Input] - Start
+        if (templatesOvalButton != null && templatesOvalButton.getTag() != null) {
+            int width = templatesOvalButton.getLayoutParams().width;
+            int height = templatesOvalButton.getLayoutParams().height;
+            templatesOvalButton.measure(MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY));
+            ((MarginLayoutParams) emojiButton.getLayoutParams()).leftMargin = dp(8) + width;
+            if (messageEditText != null) {
+                ((MarginLayoutParams) messageEditText.getLayoutParams()).leftMargin = dp(55) + width;
+            }
+        // [Alexgram: Templates Oval Input] - End
+        } else if (botCommandsMenuButton != null && botCommandsMenuButton.getTag() != null) {
             botCommandsMenuButton.measure(widthMeasureSpec, heightMeasureSpec);
             ((MarginLayoutParams) emojiButton.getLayoutParams()).leftMargin = dp(10) + (botCommandsMenuButton == null ? 0 : botCommandsMenuButton.getMeasuredWidth());
             if (messageEditText != null) {
@@ -15434,6 +15525,9 @@ public class ChatActivityEnterView extends FrameLayout implements
         }
 
         updateBotButton(animate);
+        // [Alexgram: Templates Oval Input] - Start
+        updateTemplatesOvalButton(animate);
+        // [Alexgram: Templates Oval Input] - End
     }
 
     public boolean botCommandsMenuIsShowing() {
@@ -15658,6 +15752,46 @@ public class ChatActivityEnterView extends FrameLayout implements
             recordCircle.setSendButtonInvisible();
         }
     }
+
+    // [Alexgram: Templates Oval Input] - Start
+    @SuppressLint("ViewConstructor")
+    private static class TemplateOvalButton extends View {
+        private static final int WIDTH_DP = 64;
+
+        private final Theme.ResourcesProvider resourcesProvider;
+        private final Paint backgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final RectF rect = new RectF();
+        private final Drawable icon;
+
+        TemplateOvalButton(Context context, Theme.ResourcesProvider resourcesProvider) {
+            super(context);
+            this.resourcesProvider = resourcesProvider;
+            icon = ContextCompat.getDrawable(context, R.drawable.fork_templates);
+            setWillNotDraw(false);
+            setFocusable(true);
+        }
+
+        @Override
+        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+            setMeasuredDimension(dp(WIDTH_DP), dp(DEFAULT_HEIGHT));
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            super.onDraw(canvas);
+            backgroundPaint.setColor(Theme.getColor(Theme.key_chat_messagePanelSend, resourcesProvider));
+            rect.set(dp(4), dp(3), getWidth() - dp(4), getHeight() - dp(3));
+            canvas.drawRoundRect(rect, dp(21), dp(21), backgroundPaint);
+            if (icon != null) {
+                int size = dp(34);
+                int left = (getWidth() - size) / 2;
+                int top = (getHeight() - size) / 2;
+                icon.setBounds(left, top, left + size, top + size);
+                icon.draw(canvas);
+            }
+        }
+    }
+    // [Alexgram: Templates Oval Input] - End
 
     public enum BotMenuButtonType {
         NO_BUTTON,

@@ -4863,7 +4863,7 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
     }
 
     // [Alexgram: Templates Open Layout] - Start
-    private void openTemplatesLayout() {
+    public void openTemplatesLayout() {
         if (templatesLayout == null) {
             layouts[10] = templatesLayout = new ChatAttachAlertTemplatesLayout(this, getContext(), resourcesProvider);
         }
