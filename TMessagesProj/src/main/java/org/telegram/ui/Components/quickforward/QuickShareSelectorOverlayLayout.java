@@ -25,6 +25,10 @@ import java.util.HashSet;
 import java.util.Map;
 
 public class QuickShareSelectorOverlayLayout extends View {
+    // [Alexgram: Templates Quick Share Target] - Start
+    public static final long TEMPLATES_DIALOG_ID = Long.MIN_VALUE + 4242L;
+    // [Alexgram: Templates Quick Share Target] - End
+
     private final HashMap<String, QuickShareSelectorDrawable> drawableHashMap = new HashMap<>();
     private final ArrayList<String> drawablesForRemove = new ArrayList<>();
 
@@ -147,6 +151,9 @@ public class QuickShareSelectorOverlayLayout extends View {
 
         final UserConfig config = UserConfig.getInstance(currentAccount);
         long selfUserId = config.clientUserId;
+        // [Alexgram: Templates Quick Share Target] - Start
+        dialogs.add(TEMPLATES_DIALOG_ID);
+        // [Alexgram: Templates Quick Share Target] - End
         dialogs.add(selfUserId);
 
         if (config.suggestContacts) {
@@ -217,11 +224,17 @@ public class QuickShareSelectorOverlayLayout extends View {
         ArrayList<Long> result = new ArrayList<>();
         for (Long item : list) {
             if (seen.add(item)) {
-                if (DialogObject.isUserDialog(item)) {
+                if (isTemplatesDialogId(item) || DialogObject.isUserDialog(item)) {
                     result.add(item);
                 }
             }
         }
         return result;
     }
+
+    // [Alexgram: Templates Quick Share Target] - Start
+    public static boolean isTemplatesDialogId(long dialogId) {
+        return dialogId == TEMPLATES_DIALOG_ID;
+    }
+    // [Alexgram: Templates Quick Share Target] - End
 }

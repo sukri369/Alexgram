@@ -5,13 +5,17 @@ import static org.telegram.messenger.AndroidUtilities.dp;
 import android.animation.ValueAnimator;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
 import android.graphics.RectF;
+import android.graphics.drawable.Drawable;
 import android.text.Layout;
 import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ContactsController;
@@ -37,6 +41,11 @@ class QuickShareAvatarCell implements ValueAnimator.AnimatorUpdateListener {
     private final ChatMessageCell cell;
     private final ImageReceiver imageReceiver;
     private final AvatarDrawable avatarDrawable = new AvatarDrawable();
+    // [Alexgram: Templates Quick Share Avatar] - Start
+    private final Paint templateBackgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private Drawable templateDrawable;
+    private boolean templatesDialog;
+    // [Alexgram: Templates Quick Share Avatar] - End
     private final int currentAccount = UserConfig.selectedAccount;
     public final long dialogId;
 
@@ -169,8 +178,24 @@ class QuickShareAvatarCell implements ValueAnimator.AnimatorUpdateListener {
         c.save();
         c.translate(cx - radius, cy - radius);
         c.scale(radius / dp(QuickShareSelectorDrawable.Sizes.AVATAR_RADIUS), radius / dp(QuickShareSelectorDrawable.Sizes.AVATAR_RADIUS));
-        imageReceiver.setAlpha((0.75f + 0.25f * alphaFactor) * alpha);
-        imageReceiver.draw(c);
+        // [Alexgram: Templates Quick Share Avatar] - Start
+        if (templatesDialog) {
+            templateBackgroundPaint.setColor(Theme.getColor(Theme.key_avatar_backgroundSaved, cell.getResourcesProvider()));
+            templateBackgroundPaint.setAlpha((int) (255 * (0.75f + 0.25f * alphaFactor) * alpha));
+            float avatarRadius = dp(QuickShareSelectorDrawable.Sizes.AVATAR_RADIUS);
+            c.drawCircle(avatarRadius, avatarRadius, avatarRadius, templateBackgroundPaint);
+            if (templateDrawable != null) {
+                int iconSize = dp(24);
+                int left = (dp(QuickShareSelectorDrawable.Sizes.AVATAR) - iconSize) / 2;
+                templateDrawable.setAlpha((int) (255 * alpha));
+                templateDrawable.setBounds(left, left, left + iconSize, left + iconSize);
+                templateDrawable.draw(c);
+            }
+        } else {
+            imageReceiver.setAlpha((0.75f + 0.25f * alphaFactor) * alpha);
+            imageReceiver.draw(c);
+        }
+        // [Alexgram: Templates Quick Share Avatar] - End
         c.restore();
     }
 
@@ -300,7 +325,17 @@ class QuickShareAvatarCell implements ValueAnimator.AnimatorUpdateListener {
         CharSequence displayName;
         avatarDrawable.setScaleSize(1f);
 
-        if (DialogObject.isUserDialog(uid)) {
+        // [Alexgram: Templates Quick Share Avatar] - Start
+        if (QuickShareSelectorOverlayLayout.isTemplatesDialogId(uid)) {
+            templatesDialog = true;
+            displayName = LocaleController.getString(R.string.chat_templates);
+            templateDrawable = ContextCompat.getDrawable(parent.parent.getContext(), R.drawable.fork_templates);
+            if (templateDrawable != null) {
+                templateDrawable = templateDrawable.mutate();
+                templateDrawable.setColorFilter(new PorterDuffColorFilter(0xffffffff, PorterDuff.Mode.SRC_IN));
+            }
+        } else if (DialogObject.isUserDialog(uid)) {
+        // [Alexgram: Templates Quick Share Avatar] - End
             final TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(uid);
             avatarDrawable.setInfo(currentAccount, user);
             if (UserObject.isUserSelf(user)) {

@@ -162,6 +162,7 @@ import org.telegram.ui.Stories.recorder.HintView2;
 import org.telegram.ui.Stories.recorder.StoryEntry;
 // [Alexgram: Templates Attach Import] - Start
 import org.telegram.ui.Templates.ChatAttachAlertTemplatesLayout;
+import org.telegram.ui.Templates.TemplatesManager;
 // [Alexgram: Templates Attach Import] - End
 import org.telegram.ui.WebAppDisclaimerAlert;
 import org.telegram.ui.web.BotWebViewContainer;
@@ -1344,6 +1345,9 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.attachMenuBotsDidLoad);
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.currentUserPremiumStatusChanged);
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.quickRepliesUpdated);
+        // [Alexgram: Templates Settings Observer] - Start
+        NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.templatesSettingsUpdated);
+        // [Alexgram: Templates Settings Observer] - End
         exclusionRects.add(exclustionRect);
 
         sizeNotifierFrameLayout = new SizeNotifierFrameLayout(context) {
@@ -2882,6 +2886,12 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
             }
         });
         buttonsRecyclerView.setOnItemLongClickListener((view, position) -> {
+            // [Alexgram: Templates Attach Long Press] - Start
+            if (view instanceof AttachButton && view.getTag() instanceof Integer && (Integer) view.getTag() == LAYOUT_TYPE_TEMPLATES) {
+                showTemplatesPanelTypeChooserDialog();
+                return true;
+            }
+            // [Alexgram: Templates Attach Long Press] - End
             if (view instanceof AttachBotButton) {
                 AttachBotButton button = (AttachBotButton) view;
                 if (destroyed || button.currentUser == null) {
@@ -4859,6 +4869,29 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
         }
         showLayout(templatesLayout);
     }
+
+    private void showTemplatesPanelTypeChooserDialog() {
+        TemplatesManager.PanelType[] values = new TemplatesManager.PanelType[] {
+                TemplatesManager.PanelType.OVAL,
+                TemplatesManager.PanelType.ATTACH,
+                TemplatesManager.PanelType.OFF
+        };
+        CharSequence[] items = new CharSequence[] {
+                getString(R.string.chat_templates_mode_oval),
+                getString(R.string.chat_templates_mode_attach),
+                getString(R.string.chat_templates_mode_off)
+        };
+        new AlertDialog.Builder(getContext(), resourcesProvider)
+                .setTitle(getString(R.string.chat_templates))
+                .setMessage(getString(R.string.chat_templates_mode_hint))
+                .setItems(items, (dialog, which) -> {
+                    TemplatesManager.getInstance(currentAccount).setPanelType(values[which]);
+                    if (buttonsAdapter != null) {
+                        buttonsAdapter.notifyDataSetChanged();
+                    }
+                })
+                .show();
+    }
     // [Alexgram: Templates Open Layout] - End
 
     public boolean checkCanRemoveRestrictionsByBoosts() {
@@ -5461,7 +5494,7 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
 
     @Override
     public void didReceivedNotification(int id, int account, Object... args) {
-        if (id == NotificationCenter.reloadInlineHints || id == NotificationCenter.attachMenuBotsDidLoad || id == NotificationCenter.quickRepliesUpdated) {
+        if (id == NotificationCenter.reloadInlineHints || id == NotificationCenter.attachMenuBotsDidLoad || id == NotificationCenter.quickRepliesUpdated || id == NotificationCenter.templatesSettingsUpdated) {
             if (buttonsAdapter != null) {
                 buttonsAdapter.notifyDataSetChanged();
             }
@@ -6043,6 +6076,9 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.attachMenuBotsDidLoad);
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.currentUserPremiumStatusChanged);
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.quickRepliesUpdated);
+        // [Alexgram: Templates Settings Observer] - Start
+        NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.templatesSettingsUpdated);
+        // [Alexgram: Templates Settings Observer] - End
         destroyed = true;
         if (commentTextView != null) {
             commentTextView.onDestroy();
@@ -6581,7 +6617,9 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
                     quickRepliesButton = buttonsCount++;
                 }
                 // [Alexgram: Templates Attach Button Add] - Start
-                if (plainTextEnabled && baseFragment instanceof ChatActivity && ((ChatActivity) baseFragment).getChatMode() == 0 && !paidUser) {
+                TemplatesManager.PanelType templatesPanelType = TemplatesManager.getInstance(currentAccount).getPanelType();
+                boolean showTemplatesButton = templatesPanelType == TemplatesManager.PanelType.ATTACH || templatesPanelType == TemplatesManager.PanelType.OVAL && user != null && user.bot;
+                if (plainTextEnabled && baseFragment instanceof ChatActivity && ((ChatActivity) baseFragment).getChatMode() == 0 && !paidUser && showTemplatesButton) {
                     templatesButton = buttonsCount++;
                 }
                 // [Alexgram: Templates Attach Button Add] - End

@@ -22,10 +22,17 @@ public class TemplatesManager {
         USAGE
     }
 
+    public enum PanelType {
+        OVAL,
+        ATTACH,
+        OFF
+    }
+
     private static final String PREF_PREFIX = "alexgram_templates_";
     private static final String KEY_TEMPLATES = "templates";
     private static final String KEY_NEXT_ID = "next_id";
     private static final String KEY_SORTING = "sorting";
+    private static final String KEY_PANEL_TYPE = "panel_type";
 
     private static volatile TemplatesManager[] Instance = new TemplatesManager[UserConfig.MAX_ACCOUNT_COUNT];
 
@@ -86,6 +93,23 @@ public class TemplatesManager {
             sortingType = SortingType.DATE;
         }
         preferences.edit().putString(KEY_SORTING, sortingType.name()).apply();
+        notifyUpdated();
+    }
+
+    public PanelType getPanelType() {
+        String value = preferences.getString(KEY_PANEL_TYPE, PanelType.ATTACH.name());
+        try {
+            return PanelType.valueOf(value);
+        } catch (Exception ignored) {
+            return PanelType.ATTACH;
+        }
+    }
+
+    public void setPanelType(PanelType panelType) {
+        if (panelType == null) {
+            panelType = PanelType.ATTACH;
+        }
+        preferences.edit().putString(KEY_PANEL_TYPE, panelType.name()).apply();
         notifyUpdated();
     }
 

@@ -318,6 +318,9 @@ import org.telegram.ui.Components.poll.PollSendParams;
 import org.telegram.ui.Components.poll.PollUtils;
 import org.telegram.ui.Components.poll.sheets.PollStatisticsBottomSheet;
 import org.telegram.ui.Components.quickforward.QuickShareSelectorOverlayLayout;
+// [Alexgram: Templates Message Share Import] - Start
+import org.telegram.ui.Templates.TemplatesManager;
+// [Alexgram: Templates Message Share Import] - End
 import org.telegram.ui.Components.spoilers.SpoilerEffect;
 import org.telegram.ui.Components.voip.CellFlickerDrawable;
 import org.telegram.ui.Components.voip.VoIPHelper;
@@ -461,6 +464,9 @@ public class ChatActivity extends BaseFragment implements
 	private final static int nkbtn_special_forward = 2060;
 	// [Alexgram: Special Forward] - End
 	private final static int nkbtn_sharemessage = 2030;
+	// [Alexgram: Templates Message Share Action] - Start
+	private final static int nkbtn_save_to_templates = 2130;
+	// [Alexgram: Templates Message Share Action] - End
 
 	// chat click menu buttons
 	private final static int nkbtn_detail = 2012;
@@ -10952,6 +10958,9 @@ public class ChatActivity extends BaseFragment implements
 		actionModeOtherItem.addSubItem(combine_message, R.drawable.msg_replace, LocaleController.getString(R.string.CombineMessage));
 		actionModeOtherItem.addSubItem(nkbtn_translate, LlmConfig.llmIsDefaultProvider() ? R.drawable.magic_stick_solar : R.drawable.ic_translate, LocaleController.getString(R.string.Translate));
 		actionModeOtherItem.addSubItem(nkbtn_sharemessage, R.drawable.msg_shareout, LocaleController.getString(R.string.ShareMessages));
+		// [Alexgram: Templates Action Mode Menu] - Start
+		actionModeOtherItem.addSubItem(nkbtn_save_to_templates, R.drawable.fork_templates, LocaleController.getString(R.string.chat_templates));
+		// [Alexgram: Templates Action Mode Menu] - End
 		actionModeOtherItem.addSubItem(nkbtn_unpin, R.drawable.msg_unpin, LocaleController.getString(R.string.UnpinMessage));
 		if (!noforward) {
 			actionModeOtherItem.addSubItem(nkbtn_savemessage, R.drawable.menu_saved, LocaleController.getString(R.string.AddToSavedMessages));
@@ -20430,6 +20439,9 @@ public class ChatActivity extends BaseFragment implements
 
 				if (actionModeOtherItem != null) {
 					actionModeOtherItem.setSubItemVisibility(nkbtn_sharemessage, selectedMessagesCanCopyIds[0].size() + selectedMessagesCanCopyIds[1].size() > 0);
+					// [Alexgram: Templates Action Mode Visibility] - Start
+					actionModeOtherItem.setSubItemVisibility(nkbtn_save_to_templates, hasSelectedMessagesWithTemplateText());
+					// [Alexgram: Templates Action Mode Visibility] - End
 				}
 
 				boolean allowPin = false;
@@ -31946,6 +31958,153 @@ public class ChatActivity extends BaseFragment implements
 		return caption;
 	}
 
+	// [Alexgram: Templates Message Share Helpers] - Start
+	private boolean hasSelectedMessagesWithTemplateText() {
+		for (int a = 1; a >= 0; a--) {
+			for (int b = 0; b < selectedMessagesIds[a].size(); b++) {
+				if (!TextUtils.isEmpty(getTemplateTextFromMessage(selectedMessagesIds[a].valueAt(b)))) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	private boolean canSaveToTemplates(MessageObject messageObject, MessageObject.GroupedMessages group) {
+		return !TextUtils.isEmpty(buildTemplateText(getTemplateSourceMessages(messageObject, group)));
+	}
+
+	private ArrayList<MessageObject> getTemplateSourceMessages(MessageObject messageObject, MessageObject.GroupedMessages group) {
+		ArrayList<MessageObject> result = new ArrayList<>();
+		if (group != null && group.messages != null && !group.messages.isEmpty()) {
+			result.addAll(group.messages);
+		 } else if (messageObject != null) {
+			result.add(messageObject);
+		}
+		return result;
+	}
+
+	private ArrayList<MessageObject> getQuickShareSourceMessages(MessageObject messageObject) {
+		ArrayList<MessageObject> result = new ArrayList<>();
+		if (messageObject != null && messageObject.getGroupId() != 0) {
+			MessageObject.GroupedMessages group = groupedMessagesMap.get(messageObject.getGroupId());
+			if (group != null && group.messages != null && !group.messages.isEmpty()) {
+				result.addAll(group.messages);
+			}
+		}
+		if (result.isEmpty() && messageObject != null) {
+			result.add(messageObject);
+		}
+		return result;
+	}
+
+	private String getTemplateTextFromMessage(MessageObject messageObject) {
+		if (messageObject == null) {
+			return "";
+		}
+		CharSequence text = messageObject.caption;
+		if (TextUtils.isEmpty(text) && messageObject.messageOwner != null && !TextUtils.isEmpty(messageObject.messageOwner.message)) {
+			text = messageObject.messageOwner.message;
+		}
+		if (TextUtils.isEmpty(text) && messageObject.type == MessageObject.TYPE_TEXT) {
+			text = messageObject.messageText;
+		}
+		return text == null ? "" : text.toString().trim();
+	}
+
+	private String buildTemplateText(ArrayList<MessageObject> messages) {
+		StringBuilder builder = new StringBuilder();
+		for (int i = 0; i < messages.size(); i++) {
+			String text = getTemplateTextFromMessage(messages.get(i));
+			if (TextUtils.isEmpty(text)) {
+				continue;
+			}
+			if (builder.length() > 0) {
+				builder.append("\n\n");
+			}
+			builder.append(text);
+		}
+		return builder.toString();
+	}
+
+	private String makeTemplateName(String text) {
+		String name = text == null ? "" : text.replace('\n', ' ').trim().replaceAll("\\s+", " ");
+		if (name.length() > 40) {
+			name = name.substring(0, 40).trim();
+		}
+		return TextUtils.isEmpty(name) ? LocaleController.getString(R.string.chat_template) : name;
+	}
+
+	private boolean saveMessagesToTemplates(ArrayList<MessageObject> messages, String name) {
+		String text = buildTemplateText(messages);
+		if (TextUtils.isEmpty(text)) {
+			return false;
+		}
+		TemplatesManager.getInstance(currentAccount).addTemplate(TextUtils.isEmpty(name) ? makeTemplateName(text) : name, text);
+		return true;
+	}
+
+	private void showSaveToTemplatesDialog(ArrayList<MessageObject> messages) {
+		if (getParentActivity() == null) {
+			return;
+		}
+		String text = buildTemplateText(messages);
+		if (TextUtils.isEmpty(text)) {
+			showTemplateNoTextBulletin();
+			return;
+		}
+		EditText editText = new EditText(getParentActivity());
+		editText.setSingleLine(true);
+		editText.setText(makeTemplateName(text));
+		editText.setSelectAllOnFocus(true);
+		editText.setTextColor(getThemedColor(Theme.key_dialogTextBlack));
+		editText.setHintTextColor(getThemedColor(Theme.key_dialogTextHint));
+		editText.setHint(LocaleController.getString(R.string.chat_template_name_hint));
+		editText.setPadding(0, 0, 0, 0);
+
+		FrameLayout container = new FrameLayout(getParentActivity());
+		container.addView(editText, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 24, 4, 24, 0));
+
+		AlertDialog dialog = new AlertDialog.Builder(getParentActivity(), themeDelegate)
+				.setTitle(LocaleController.getString(R.string.chat_templates))
+				.setMessage(LocaleController.getString(R.string.chat_template_name_info))
+				.setView(container)
+				.setPositiveButton(LocaleController.getString(R.string.Save), (dialogInterface, which) -> {
+					if (saveMessagesToTemplates(messages, editText.getText().toString())) {
+						showTemplateSavedBulletin();
+					} else {
+						showTemplateNoTextBulletin();
+					}
+				})
+				.setNegativeButton(LocaleController.getString(R.string.Cancel), null)
+				.create();
+		showDialog(dialog);
+		editText.requestFocus();
+		AndroidUtilities.showKeyboard(editText);
+	}
+
+	private Bulletin createTemplateSavedBulletin() {
+		Drawable drawable = ContextCompat.getDrawable(getParentActivity() != null ? getParentActivity() : ApplicationLoader.applicationContext, R.drawable.fork_templates);
+		if (drawable != null) {
+			drawable = drawable.mutate();
+			drawable.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_undo_infoColor), PorterDuff.Mode.SRC_IN));
+		}
+		return BulletinFactory.of(this).createSimpleBulletin(drawable, LocaleController.getString(R.string.chat_templates_added));
+	}
+
+	private void showTemplateSavedBulletin() {
+		createTemplateSavedBulletin().show();
+	}
+
+	private Bulletin createTemplateNoTextBulletin() {
+		return BulletinFactory.of(this).createErrorBulletin(LocaleController.getString(R.string.chat_templates_no_text), themeDelegate);
+	}
+
+	private void showTemplateNoTextBulletin() {
+		createTemplateNoTextBulletin().show();
+	}
+	// [Alexgram: Templates Message Share Helpers] - End
+
 	private boolean createMenu(View v, boolean single, boolean listView, float x, float y, boolean searchGroup, boolean longpress) {
 		return createMenu(v, single, listView, x, y, searchGroup, longpress, false, false);
 	}
@@ -41141,21 +41300,18 @@ public class ChatActivity extends BaseFragment implements
 				return null;
 			}
 
+			ArrayList<MessageObject> arrayList = getQuickShareSourceMessages(messageObject);
+			// [Alexgram: Templates Quick Share Save] - Start
+			if (QuickShareSelectorOverlayLayout.isTemplatesDialogId(did)) {
+				if (saveMessagesToTemplates(arrayList, null)) {
+					return createTemplateSavedBulletin().allowBlur().show(false);
+				}
+				return createTemplateNoTextBulletin().allowBlur().show(false);
+			}
+			// [Alexgram: Templates Quick Share Save] - End
+
 			if (AlertsCreator.checkSlowMode(getContext(), currentAccount, did, false)) {
 				return null;
-			}
-
-
-			ArrayList<MessageObject> arrayList = null;
-			if (messageObject.getGroupId() != 0) {
-				MessageObject.GroupedMessages groupedMessages = groupedMessagesMap.get(messageObject.getGroupId());
-				if (groupedMessages != null) {
-					arrayList = groupedMessages.messages;
-				}
-			}
-			if (arrayList == null) {
-				arrayList = new ArrayList<>();
-				arrayList.add(messageObject);
 			}
 
 			final boolean isSavedMessages = did == UserConfig.getInstance(UserConfig.selectedAccount).clientUserId;
@@ -46522,6 +46678,12 @@ public class ChatActivity extends BaseFragment implements
 			} catch (Exception e) {
 				AlertUtil.showToast(e);
 			}
+		// [Alexgram: Templates Action Mode Save] - Start
+		} else if (id == nkbtn_save_to_templates) {
+			ArrayList<MessageObject> messages = getSelectedMessages1();
+			showSaveToTemplatesDialog(messages);
+			clearSelectionMode();
+		// [Alexgram: Templates Action Mode Save] - End
 		} else if (id == shortcuts_administrators || id == shortcuts_permissions || id == shortcuts_members) {
 			Bundle args = new Bundle();
 			args.putLong("chat_id", currentChat.id);
@@ -46587,6 +46749,10 @@ public class ChatActivity extends BaseFragment implements
 				return "TranslateMessageLLM";
 			case nkbtn_sharemessage:
 				return "showShareMessages";
+			// [Alexgram: Templates Message Share Action] - Start
+			case nkbtn_save_to_templates:
+				return "showSaveToTemplates";
+			// [Alexgram: Templates Message Share Action] - End
 			case nkbtn_hide:
 				return "showMessageHide";
 			case nkbtn_report:
@@ -46754,6 +46920,12 @@ public class ChatActivity extends BaseFragment implements
 				}
 				break;
 			}
+			// [Alexgram: Templates Message Menu Save] - Start
+			case nkbtn_save_to_templates: {
+				showSaveToTemplatesDialog(getTemplateSourceMessages(selectedObject, selectedObjectGroup));
+				break;
+			}
+			// [Alexgram: Templates Message Menu Save] - End
 			case nkbtn_stickerdl: {
 				if ((Build.VERSION.SDK_INT <= 28 || BuildVars.NO_SCOPED_STORAGE) && getParentActivity().checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
 					getParentActivity().requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 4);
@@ -49112,6 +49284,13 @@ public class ChatActivity extends BaseFragment implements
 						options.add(nkbtn_sharemessage);
 						icons.add(R.drawable.msg_shareout);
 					}
+					// [Alexgram: Templates Message Menu Item] - Start
+					if (canSaveToTemplates(selectedObject, selectedObjectGroup)) {
+						items.add(LocaleController.getString(R.string.chat_templates));
+						options.add(nkbtn_save_to_templates);
+						icons.add(R.drawable.fork_templates);
+					}
+					// [Alexgram: Templates Message Menu Item] - End
 				}
 				if (NekoConfig.showMessageHide.Bool()) {
 					items.add(LocaleController.getString(R.string.Hide));

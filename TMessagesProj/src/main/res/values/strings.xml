@@ -1150,8 +1150,11 @@
     <string name="chat_templates">Templates</string>
     <string name="chat_templates_info">Send messages here and name it for quick sending received templates in chats</string>
     <string name="chat_templates_list_header">No templates</string>
+    <string name="chat_templates_added">Added to Templates</string>
+    <string name="chat_templates_no_text">This message has no text for a template</string>
     <string name="chat_templates_mode_attach">Attach menu</string>
     <string name="chat_templates_mode_hint">You can always change this in \nSettings &gt; Tools &gt; Chats &gt; Templates</string>
+    <string name="chat_templates_mode_off">Off</string>
     <string name="chat_templates_mode_oval">Oval</string>
     <string name="create_chat_template">Create template</string>
     <string name="dialogs_albums_sort_alphabetically">Alphabetically</string>
