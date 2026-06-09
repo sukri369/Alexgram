@@ -533,6 +533,9 @@ public class GlassTabView extends FrameLayout implements MainTabsLayout.Tab, Fac
         POLL(R.raw.tab_poll, R.raw.tab_poll_reverse),
         SYMBOLS(R.raw.tab_symbols, R.raw.tab_symbols_reverse),
         REPLIES(R.raw.tab_reply, R.raw.tab_reply_reverse),
+        // [Alexgram: Templates Tab Animation] - Start
+        TEMPLATES(R.raw.fork_attach_templates),
+        // [Alexgram: Templates Tab Animation] - End
         WALLET(R.raw.tab_wallet, R.raw.tab_wallet_reverse),
 
         BOOSTS(R.raw.boosts, 25, 49),

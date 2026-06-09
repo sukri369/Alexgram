@@ -1140,6 +1140,24 @@
     <string name="NoAudioFoundInfo2">There are no matches with **%1$s**.</string>
     <string name="NoAudioFoundPlayerInfo">There are no matches for **%1$s**.</string>
     <string name="AttachMusic">Music</string>
+    <!-- [Alexgram: Templates Strings] - Start -->
+    <string name="chat_template">Template</string>
+    <string name="chat_template_name_hint">Template name</string>
+    <string name="chat_template_text_hint">Template text</string>
+    <string name="chat_template_name_info">Please enter the name of the template that the sent message will match</string>
+    <string name="chat_template_subtitle_created_at">created</string>
+    <string name="chat_template_subtitle_sent">sent</string>
+    <string name="chat_templates">Templates</string>
+    <string name="chat_templates_info">Send messages here and name it for quick sending received templates in chats</string>
+    <string name="chat_templates_list_header">No templates</string>
+    <string name="chat_templates_mode_attach">Attach menu</string>
+    <string name="chat_templates_mode_hint">You can always change this in \nSettings &gt; Tools &gt; Chats &gt; Templates</string>
+    <string name="chat_templates_mode_oval">Oval</string>
+    <string name="create_chat_template">Create template</string>
+    <string name="dialogs_albums_sort_alphabetically">Alphabetically</string>
+    <string name="dialogs_albums_sort_date">Newest first</string>
+    <string name="sort_by_usage">Recently used</string>
+    <!-- [Alexgram: Templates Strings] - End -->
     <string name="AudioUnknownArtist">Unknown artist</string>
     <string name="AudioUnknownTitle">Unknown title</string>
     <string name="RepeatSong">Repeat song</string>

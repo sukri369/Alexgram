@@ -160,6 +160,9 @@ import org.telegram.ui.Stars.StarsIntroActivity;
 import org.telegram.ui.Stars.MessageSuggestionOfferSheet;
 import org.telegram.ui.Stories.recorder.HintView2;
 import org.telegram.ui.Stories.recorder.StoryEntry;
+// [Alexgram: Templates Attach Import] - Start
+import org.telegram.ui.Templates.ChatAttachAlertTemplatesLayout;
+// [Alexgram: Templates Attach Import] - End
 import org.telegram.ui.WebAppDisclaimerAlert;
 import org.telegram.ui.web.BotWebViewContainer;
 import org.telegram.ui.bots.BotWebViewMenuContainer;
@@ -204,6 +207,9 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
     public static final int LAYOUT_TYPE_TODO = 12;
     public static final int LAYOUT_TYPE_STICKERS = 13;
     public static final int LAYOUT_TYPE_EMOJI = 14;
+    // [Alexgram: Templates Attach Layout Id] - Start
+    public static final int LAYOUT_TYPE_TEMPLATES = 15;
+    // [Alexgram: Templates Attach Layout Id] - End
 
     private static final int ANIMATOR_ID_CAPTION_ABOVE = 0;
     private static final int ANIMATOR_ID_CAPTION_VISIBLE = 1;
@@ -992,9 +998,14 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
     private ChatAttachAlertPhotoLayoutPreview photoPreviewLayout;
     public ChatAttachAlertColorsLayout colorsLayout;
     private ChatAttachAlertQuickRepliesLayout quickRepliesLayout;
+    // [Alexgram: Templates Attach Layout Field] - Start
+    private ChatAttachAlertTemplatesLayout templatesLayout;
+    // [Alexgram: Templates Attach Layout Field] - End
     private ChatAttachAlertEmojiLayout emojiLayout;
     private ChatAttachAlertEmojiLayout stickersLayout;
-    private AttachAlertLayout[] layouts = new AttachAlertLayout[10];
+    // [Alexgram: Templates Attach Layout Slots] - Start
+    private AttachAlertLayout[] layouts = new AttachAlertLayout[11];
+    // [Alexgram: Templates Attach Layout Slots] - End
     private LongSparseArray<ChatAttachAlertBotWebViewLayout> botAttachLayouts = new LongSparseArray<>();
     private AttachAlertLayout currentAttachLayout;
     private AttachAlertLayout nextAttachLayout;
@@ -2802,6 +2813,10 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
                     }
                 } else if (num == 11) {
                     openQuickRepliesLayout();
+                // [Alexgram: Templates Attach Click] - Start
+                } else if (num == LAYOUT_TYPE_TEMPLATES) {
+                    openTemplatesLayout();
+                // [Alexgram: Templates Attach Click] - End
                 } else if (num == 12) {
                     if (!todoEnabled && checkCanRemoveRestrictionsByBoosts()) {
                         return;
@@ -4267,6 +4282,12 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
         }
     }
 
+    // [Alexgram: Templates Send Bridge] - Start
+    public void pressSendButton() {
+        onWriteButtonPressed();
+    }
+    // [Alexgram: Templates Send Bridge] - End
+
     public void updateCommentTextViewPosition() {
         commentTextView.getLocationOnScreen(commentTextViewLocation);
         if (mentionContainer != null) {
@@ -4504,6 +4525,10 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
             newId = 10;
         } else if (layout == quickRepliesLayout) {
             newId = LAYOUT_TYPE_REPLIES;
+        // [Alexgram: Templates Layout Selection] - Start
+        } else if (layout == templatesLayout) {
+            newId = LAYOUT_TYPE_TEMPLATES;
+        // [Alexgram: Templates Layout Selection] - End
         } else if (layout == todoLayout) {
             newId = LAYOUT_TYPE_TODO;
         } else if (layout == emojiLayout) {
@@ -4743,7 +4768,9 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
         float isGray = 0;
         for (ListAnimator.Entry<Long> entry : animatorCurrentVisibleLayout) {
             long id = entry.item;
-            if (id == LAYOUT_TYPE_MUSIC || id == LAYOUT_TYPE_DOCUMENTS || id == LAYOUT_TYPE_CONTACTS || id == LAYOUT_TYPE_LOCATION || id == LAYOUT_TYPE_POLL || id == LAYOUT_TYPE_REPLIES || id == LAYOUT_TYPE_TODO) {
+            // [Alexgram: Templates Attach Gray Layout] - Start
+            if (id == LAYOUT_TYPE_MUSIC || id == LAYOUT_TYPE_DOCUMENTS || id == LAYOUT_TYPE_CONTACTS || id == LAYOUT_TYPE_LOCATION || id == LAYOUT_TYPE_POLL || id == LAYOUT_TYPE_REPLIES || id == LAYOUT_TYPE_TEMPLATES || id == LAYOUT_TYPE_TODO) {
+            // [Alexgram: Templates Attach Gray Layout] - End
                 isGray += entry.getVisibility();
             }
         }
@@ -4824,6 +4851,15 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
         }
         showLayout(quickRepliesLayout);
     }
+
+    // [Alexgram: Templates Open Layout] - Start
+    private void openTemplatesLayout() {
+        if (templatesLayout == null) {
+            layouts[10] = templatesLayout = new ChatAttachAlertTemplatesLayout(this, getContext(), resourcesProvider);
+        }
+        showLayout(templatesLayout);
+    }
+    // [Alexgram: Templates Open Layout] - End
 
     public boolean checkCanRemoveRestrictionsByBoosts() {
         return (baseFragment instanceof ChatActivity) && ((ChatActivity) baseFragment).checkCanRemoveRestrictionsByBoosts();
@@ -6326,6 +6362,9 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
         private int todoButton;
         private int contactButton;
         private int quickRepliesButton;
+        // [Alexgram: Templates Attach Button Field] - Start
+        private int templatesButton;
+        // [Alexgram: Templates Attach Button Field] - End
         private int locationButton;
         private int stickerButton;
         private int emojiButton;
@@ -6388,6 +6427,11 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
                         attachButton.setTextAndIcon(11, getString(R.string.AttachQuickReplies), GlassTabView.TabAnimation.REPLIES);
                         attachButton.setTag(11);
                         needPremium = true;
+                    // [Alexgram: Templates Attach Button Bind] - Start
+                    } else if (position == templatesButton) {
+                        attachButton.setTextAndIcon(LAYOUT_TYPE_TEMPLATES, getString(R.string.chat_templates), GlassTabView.TabAnimation.TEMPLATES);
+                        attachButton.setTag(LAYOUT_TYPE_TEMPLATES);
+                    // [Alexgram: Templates Attach Button Bind] - End
                     } else if (position == todoButton) {
                         attachButton.setTextAndIcon(12, getString(R.string.Todo), GlassTabView.TabAnimation.CHECKLIST);
                         attachButton.setTag(12);
@@ -6449,6 +6493,9 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
             todoButton = -1;
             contactButton = -1;
             quickRepliesButton = -1;
+            // [Alexgram: Templates Attach Button Reset] - Start
+            templatesButton = -1;
+            // [Alexgram: Templates Attach Button Reset] - End
             locationButton = -1;
             stickerButton = -1;
             emojiButton = -1;
@@ -6533,6 +6580,11 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
                 if (baseFragment instanceof ChatActivity && ((ChatActivity) baseFragment).getChatMode() == 0 && user != null && !paidUser && !user.bot && QuickRepliesController.getInstance(currentAccount).hasReplies()) {
                     quickRepliesButton = buttonsCount++;
                 }
+                // [Alexgram: Templates Attach Button Add] - Start
+                if (plainTextEnabled && baseFragment instanceof ChatActivity && ((ChatActivity) baseFragment).getChatMode() == 0 && !paidUser) {
+                    templatesButton = buttonsCount++;
+                }
+                // [Alexgram: Templates Attach Button Add] - End
                 musicButton = buttonsCount++;
             }
             super.notifyDataSetChanged();
@@ -6572,6 +6624,9 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
         }
         contactsLayout = null;
         quickRepliesLayout = null;
+        // [Alexgram: Templates Layout Cleanup] - Start
+        templatesLayout = null;
+        // [Alexgram: Templates Layout Cleanup] - End
         audioLayout = null;
         pollLayout = null;
         todoLayout = null;

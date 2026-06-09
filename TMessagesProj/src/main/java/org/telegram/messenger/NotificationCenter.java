@@ -149,6 +149,9 @@ public class NotificationCenter {
     public static final int businessMessagesUpdated = totalEvents++;
     public static final int quickRepliesUpdated = totalEvents++;
     public static final int quickRepliesDeleted = totalEvents++;
+    // [Alexgram: Templates Notifications] - Start
+    public static final int templatesSettingsUpdated = totalEvents++;
+    // [Alexgram: Templates Notifications] - End
     public static final int bookmarkAdded = totalEvents++;
     public static final int starReactionAnonymousUpdate = totalEvents++;
     public static final int businessLinksUpdated = totalEvents++;
