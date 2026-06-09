@@ -7487,6 +7487,7 @@ public class ChatActivityEnterView extends FrameLayout implements
             AndroidUtilities.showKeyboard(messageEditText);
             if (!AndroidUtilities.usingHardwareInput && !keyboardVisible && !AndroidUtilities.isInMultiwindow) {
                 waitingForKeyboardOpen = true;
+                updateTemplatesOvalButton(true);
                 AndroidUtilities.cancelRunOnUIThread(openKeyboardRunnable);
                 AndroidUtilities.runOnUIThread(openKeyboardRunnable, 100);
             }
@@ -12114,10 +12115,28 @@ public class ChatActivityEnterView extends FrameLayout implements
                 && !isStories
                 && !isSpecialForward()
                 && sendPlainEnabled
+                && !keyboardVisible
+                && !waitingForKeyboardOpen
                 && parentFragment != null
                 && parentFragment.getChatMode() == ChatActivity.MODE_DEFAULT
                 && botMenuButtonType == BotMenuButtonType.NO_BUTTON
                 && TemplatesManager.getInstance(currentAccount).getPanelType() == TemplatesManager.PanelType.OVAL;
+    }
+
+    private boolean isTemplatesOvalButtonVisible() {
+        return templatesOvalButton != null && templatesOvalButton.getTag() != null;
+    }
+
+    private boolean isSenderSelectViewVisible() {
+        return senderSelectView != null && senderSelectView.getVisibility() == View.VISIBLE;
+    }
+
+    private int getSenderSelectOccupiedWidth() {
+        if (!isSenderSelectViewVisible()) {
+            return 0;
+        }
+        MarginLayoutParams params = (MarginLayoutParams) senderSelectView.getLayoutParams();
+        return params.leftMargin + senderSelectView.getLayoutParams().width + dp(4);
     }
 
     private void updateTemplatesOvalButton(boolean animated) {
@@ -12125,7 +12144,7 @@ public class ChatActivityEnterView extends FrameLayout implements
             return;
         }
         boolean show = shouldShowTemplatesOvalButton();
-        boolean wasVisible = templatesOvalButton.getTag() != null;
+        boolean wasVisible = isTemplatesOvalButtonVisible();
         if (show == wasVisible) {
             return;
         }
@@ -14001,6 +14020,7 @@ public class ChatActivityEnterView extends FrameLayout implements
             showKeyboardOnResume = true;
         } else if (!AndroidUtilities.usingHardwareInput && !keyboardVisible && !AndroidUtilities.isInMultiwindow && (parentFragment == null || !parentFragment.isInBubbleMode())) {
             waitingForKeyboardOpen = true;
+            updateTemplatesOvalButton(true);
             if (emojiView != null) {
                 emojiView.onTouchEvent(MotionEvent.obtain(SystemClock.uptimeMillis(), SystemClock.uptimeMillis(), MotionEvent.ACTION_CANCEL, 0, 0, 0));
             }
@@ -14039,6 +14059,10 @@ public class ChatActivityEnterView extends FrameLayout implements
     }
 
     public void closeKeyboard() {
+        if (waitingForKeyboardOpen) {
+            waitingForKeyboardOpen = false;
+            updateTemplatesOvalButton(true);
+        }
         AndroidUtilities.hideKeyboard(messageEditText);
     }
 
@@ -14087,8 +14111,12 @@ public class ChatActivityEnterView extends FrameLayout implements
         if (searchingType != 0) {
             lastSizeChangeValue1 = height;
             lastSizeChangeValue2 = isWidthGreater;
+            boolean oldValue = keyboardVisible;
             keyboardVisible = height > 0;
             checkBotMenu();
+            if (oldValue != keyboardVisible) {
+                updateTemplatesOvalButton(true);
+            }
             return;
         }
         if (height > dp(50) && keyboardVisible && !AndroidUtilities.isInMultiwindow) {
@@ -14190,6 +14218,9 @@ public class ChatActivityEnterView extends FrameLayout implements
         boolean oldValue = keyboardVisible;
         keyboardVisible = height > 0;
         checkBotMenu();
+        if (oldValue != keyboardVisible) {
+            updateTemplatesOvalButton(true);
+        }
         if (keyboardVisible && isPopupShowing() && stickersExpansionAnim == null) {
             showPopup(0, currentPopupContentType);
         } else if (!keyboardVisible && !isPopupShowing() && botButtonsMessageObject != null && replyingMessageObject != botButtonsMessageObject && (!hasBotWebView() && !botCommandsMenuIsShowing() && !BaseFragment.hasSheets(parentFragment)) && (messageEditText == null || TextUtils.isEmpty(messageEditText.getText())) && botReplyMarkup != null && !botReplyMarkup.rows.isEmpty()) {
@@ -15412,13 +15443,15 @@ public class ChatActivityEnterView extends FrameLayout implements
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         int wasHeight = textFieldContainer.getMeasuredHeight();
         // [Alexgram: Templates Oval Input] - Start
-        if (templatesOvalButton != null && templatesOvalButton.getTag() != null) {
+        if (isTemplatesOvalButtonVisible()) {
             int width = templatesOvalButton.getLayoutParams().width;
             int height = templatesOvalButton.getLayoutParams().height;
+            int leftOffset = getSenderSelectOccupiedWidth();
+            ((MarginLayoutParams) templatesOvalButton.getLayoutParams()).leftMargin = dp(4) + leftOffset;
             templatesOvalButton.measure(MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY));
-            ((MarginLayoutParams) emojiButton.getLayoutParams()).leftMargin = dp(8) + width;
+            ((MarginLayoutParams) emojiButton.getLayoutParams()).leftMargin = dp(8) + width + leftOffset;
             if (messageEditText != null) {
-                ((MarginLayoutParams) messageEditText.getLayoutParams()).leftMargin = dp(55) + width;
+                ((MarginLayoutParams) messageEditText.getLayoutParams()).leftMargin = dp(55) + width + leftOffset;
             }
         // [Alexgram: Templates Oval Input] - End
         } else if (botCommandsMenuButton != null && botCommandsMenuButton.getTag() != null) {
