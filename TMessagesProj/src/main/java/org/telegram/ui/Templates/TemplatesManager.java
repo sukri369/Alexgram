@@ -114,13 +114,18 @@ public class TemplatesManager {
     }
 
     public TemplateSettings addTemplate(String name, String text) {
+        return addTemplate(name, text, null);
+    }
+
+    public TemplateSettings addTemplate(String name, String text, ArrayList<String> messagePayloads) {
         ensureLoaded();
         TemplateSettings template = new TemplateSettings(
                 preferences.getLong(KEY_NEXT_ID, 1),
                 normalizeName(name),
                 text == null ? "" : text,
                 System.currentTimeMillis(),
-                0
+                0,
+                messagePayloads
         );
         templates.add(template);
         preferences.edit().putLong(KEY_NEXT_ID, template.id + 1).apply();

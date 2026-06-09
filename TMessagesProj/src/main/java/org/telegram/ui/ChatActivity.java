@@ -319,6 +319,7 @@ import org.telegram.ui.Components.poll.PollUtils;
 import org.telegram.ui.Components.poll.sheets.PollStatisticsBottomSheet;
 import org.telegram.ui.Components.quickforward.QuickShareSelectorOverlayLayout;
 // [Alexgram: Templates Message Share Import] - Start
+import org.telegram.ui.Templates.TemplateSettings;
 import org.telegram.ui.Templates.TemplatesManager;
 // [Alexgram: Templates Message Share Import] - End
 import org.telegram.ui.Components.spoilers.SpoilerEffect;
@@ -31984,7 +31985,7 @@ public class ChatActivity extends BaseFragment implements
 	private boolean hasSelectedMessagesWithTemplateText() {
 		for (int a = 1; a >= 0; a--) {
 			for (int b = 0; b < selectedMessagesIds[a].size(); b++) {
-				if (!TextUtils.isEmpty(getTemplateTextFromMessage(selectedMessagesIds[a].valueAt(b)))) {
+				if (canSaveToTemplates(selectedMessagesIds[a].valueAt(b), null)) {
 					return true;
 				}
 			}
@@ -31993,7 +31994,7 @@ public class ChatActivity extends BaseFragment implements
 	}
 
 	private boolean canSaveToTemplates(MessageObject messageObject, MessageObject.GroupedMessages group) {
-		return !TextUtils.isEmpty(buildTemplateText(getTemplateSourceMessages(messageObject, group)));
+		return hasTemplateContent(getTemplateSourceMessages(messageObject, group));
 	}
 
 	private ArrayList<MessageObject> getTemplateSourceMessages(MessageObject messageObject, MessageObject.GroupedMessages group) {
@@ -32036,6 +32037,9 @@ public class ChatActivity extends BaseFragment implements
 
 	private String buildTemplateText(ArrayList<MessageObject> messages) {
 		StringBuilder builder = new StringBuilder();
+		if (messages == null) {
+			return "";
+		}
 		for (int i = 0; i < messages.size(); i++) {
 			String text = getTemplateTextFromMessage(messages.get(i));
 			if (TextUtils.isEmpty(text)) {
@@ -32049,6 +32053,43 @@ public class ChatActivity extends BaseFragment implements
 		return builder.toString();
 	}
 
+	private boolean canSerializeTemplateMessage(MessageObject messageObject) {
+		return messageObject != null && messageObject.contentType == 0 && messageObject.messageOwner != null && !(messageObject.messageOwner instanceof TLRPC.TL_messageService);
+	}
+
+	private boolean hasTemplateContent(ArrayList<MessageObject> messages) {
+		if (!TextUtils.isEmpty(buildTemplateText(messages))) {
+			return true;
+		}
+		if (messages == null) {
+			return false;
+		}
+		for (int i = 0; i < messages.size(); i++) {
+			if (canSerializeTemplateMessage(messages.get(i))) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private ArrayList<String> buildTemplateMessagePayloads(ArrayList<MessageObject> messages) {
+		ArrayList<String> result = new ArrayList<>();
+		if (messages == null) {
+			return result;
+		}
+		for (int i = 0; i < messages.size(); i++) {
+			MessageObject messageObject = messages.get(i);
+			if (!canSerializeTemplateMessage(messageObject)) {
+				continue;
+			}
+			String payload = TemplateSettings.serializeMessage(messageObject);
+			if (!TextUtils.isEmpty(payload)) {
+				result.add(payload);
+			}
+		}
+		return result;
+	}
+
 	private String makeTemplateName(String text) {
 		String name = text == null ? "" : text.replace('\n', ' ').trim().replaceAll("\\s+", " ");
 		if (name.length() > 40) {
@@ -32059,10 +32100,11 @@ public class ChatActivity extends BaseFragment implements
 
 	private boolean saveMessagesToTemplates(ArrayList<MessageObject> messages, String name) {
 		String text = buildTemplateText(messages);
-		if (TextUtils.isEmpty(text)) {
+		ArrayList<String> messagePayloads = buildTemplateMessagePayloads(messages);
+		if (TextUtils.isEmpty(text) && messagePayloads.isEmpty()) {
 			return false;
 		}
-		TemplatesManager.getInstance(currentAccount).addTemplate(TextUtils.isEmpty(name) ? makeTemplateName(text) : name, text);
+		TemplatesManager.getInstance(currentAccount).addTemplate(TextUtils.isEmpty(name) ? makeTemplateName(text) : name, text, messagePayloads);
 		return true;
 	}
 
@@ -32071,7 +32113,7 @@ public class ChatActivity extends BaseFragment implements
 			return;
 		}
 		String text = buildTemplateText(messages);
-		if (TextUtils.isEmpty(text)) {
+		if (!hasTemplateContent(messages)) {
 			showTemplateNoTextBulletin();
 			return;
 		}

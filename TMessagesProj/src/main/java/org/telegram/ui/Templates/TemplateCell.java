@@ -82,6 +82,9 @@ public class TemplateCell extends FrameLayout {
         avatarView.setImageDrawable(avatarDrawable);
         titleView.setText(template.name);
         String preview = template.text.replace('\n', ' ').trim();
+        if (TextUtils.isEmpty(preview) && template.hasMessages()) {
+            preview = LocaleController.formatPluralString("Messages", template.getMessageCount());
+        }
         if (template.usageRating > 0) {
             subtitleView.setText(LocaleController.getString(R.string.chat_template_subtitle_sent) + " " + LocaleController.formatPluralString("Times", template.usageRating) + " - " + preview);
         } else {

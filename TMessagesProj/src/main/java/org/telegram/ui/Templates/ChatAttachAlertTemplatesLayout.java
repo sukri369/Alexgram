@@ -128,8 +128,9 @@ public class ChatAttachAlertTemplatesLayout extends ChatAttachAlert.AttachAlertL
         }
         TemplateSettings template = selectedTemplate;
         selectedTemplate = null;
-        parentAlert.updateCountButton(1);
-        return AlertsCreator.ensurePaidMessageConfirmation(parentAlert.currentAccount, parentAlert.getDialogId(), 1, payStars -> sendTemplate(template, notify, scheduleDate, scheduleRepeatPeriod, effectId, payStars));
+        int messagesCount = Math.max(1, template.hasMessages() ? template.getMessageCount() : 1);
+        parentAlert.updateCountButton(messagesCount);
+        return AlertsCreator.ensurePaidMessageConfirmation(parentAlert.currentAccount, parentAlert.getDialogId(), messagesCount, payStars -> sendTemplate(template, notify, scheduleDate, scheduleRepeatPeriod, effectId, payStars));
     }
 
     @Override
@@ -205,6 +206,11 @@ public class ChatAttachAlertTemplatesLayout extends ChatAttachAlert.AttachAlertL
 
     private void useTemplate(TemplateSettings template, boolean send) {
         selectedTemplate = template;
+        if (template.hasMessages()) {
+            parentAlert.updateCountButton(Math.max(1, template.getMessageCount()));
+            parentAlert.pressSendButton();
+            return;
+        }
         parentAlert.getCommentView().setText(template.text);
         parentAlert.getCommentView().setSelection(template.text.length(), template.text.length());
         if (send) {
@@ -217,7 +223,7 @@ public class ChatAttachAlertTemplatesLayout extends ChatAttachAlert.AttachAlertL
     }
 
     private void sendTemplate(TemplateSettings template, boolean notify, int scheduleDate, int scheduleRepeatPeriod, long effectId, long payStars) {
-        if (TextUtils.isEmpty(template.text)) {
+        if (template == null || (!template.hasMessages() && TextUtils.isEmpty(template.text))) {
             return;
         }
         BaseFragment fragment = parentAlert.baseFragment;
@@ -231,6 +237,17 @@ public class ChatAttachAlertTemplatesLayout extends ChatAttachAlert.AttachAlertL
             replyToTop = chatActivity.getThreadMessage();
             quote = chatActivity.getReplyQuote();
             monoForumPeer = chatActivity.getSendMonoForumPeerId();
+        }
+        if (template.hasMessages()) {
+            ArrayList<MessageObject> messages = template.toMessageObjects(parentAlert.currentAccount);
+            if (messages.isEmpty()) {
+                return;
+            }
+            int result = SendMessagesHelper.getInstance(parentAlert.currentAccount).sendMessage(messages, parentAlert.getDialogId(), true, false, notify, scheduleDate, scheduleRepeatPeriod, replyToTop, -1, payStars, monoForumPeer, fragment instanceof ChatActivity ? ((ChatActivity) fragment).getSendMessageSuggestionParams() : null);
+            AlertsCreator.showSendMediaAlert(result, parentAlert.baseFragment, resourcesProvider);
+            manager.incrementUsage(template.id);
+            parentAlert.dismiss();
+            return;
         }
         SendMessagesHelper.SendMessageParams params = SendMessagesHelper.SendMessageParams.of(template.text, parentAlert.getDialogId(), replyTo, replyToTop, null, true, null, null, null, notify, scheduleDate, scheduleRepeatPeriod, null, false);
         params.replyQuote = quote;
@@ -329,7 +346,8 @@ public class ChatAttachAlertTemplatesLayout extends ChatAttachAlert.AttachAlertL
         builder.setPositiveButton(LocaleController.getString(R.string.Done), (dialogInterface, which) -> {
             String name = nameField.getText().toString().trim();
             String text = textField.getText().toString();
-            if (TextUtils.isEmpty(name) || TextUtils.isEmpty(text.trim())) {
+            boolean needsText = currentTemplate == null || !currentTemplate.hasMessages();
+            if (TextUtils.isEmpty(name) || (needsText && TextUtils.isEmpty(text.trim()))) {
                 AndroidUtilities.shakeView(TextUtils.isEmpty(name) ? nameField : textField);
                 return;
             }
