@@ -27,6 +27,7 @@ public class TemplateCell extends FrameLayout {
     private final BackupImageView avatarView;
     private final TextView titleView;
     private final TextView subtitleView;
+    private final ImageView previewButton;
     private final ImageView sendButton;
     private boolean needDivider;
     private TemplateSettings template;
@@ -66,6 +67,14 @@ public class TemplateCell extends FrameLayout {
         subtitleView.setGravity(LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT);
         textContainer.addView(subtitleView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 20));
 
+        previewButton = new ImageView(context);
+        previewButton.setScaleType(ImageView.ScaleType.CENTER);
+        previewButton.setBackground(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelector)));
+        previewButton.setImageResource(R.drawable.msg_views_solar);
+        previewButton.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText), PorterDuff.Mode.SRC_IN));
+        previewButton.setContentDescription(LocaleController.getString(R.string.Open));
+        row.addView(previewButton, LayoutHelper.createLinear(42, 42, Gravity.CENTER_VERTICAL));
+
         sendButton = new ImageView(context);
         sendButton.setScaleType(ImageView.ScaleType.CENTER);
         sendButton.setBackground(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelector)));
@@ -74,7 +83,7 @@ public class TemplateCell extends FrameLayout {
         row.addView(sendButton, LayoutHelper.createLinear(42, 42, Gravity.CENTER_VERTICAL));
     }
 
-    public void bind(TemplateSettings template, boolean divider, Runnable sendCallback) {
+    public void bind(TemplateSettings template, boolean divider, Runnable previewCallback, Runnable sendCallback) {
         this.template = template;
         needDivider = divider;
         AvatarDrawable avatarDrawable = new AvatarDrawable();
@@ -90,6 +99,11 @@ public class TemplateCell extends FrameLayout {
         } else {
             subtitleView.setText(preview);
         }
+        previewButton.setOnClickListener(v -> {
+            if (previewCallback != null) {
+                previewCallback.run();
+            }
+        });
         sendButton.setOnClickListener(v -> {
             if (sendCallback != null) {
                 sendCallback.run();

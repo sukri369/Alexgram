@@ -234,6 +234,15 @@ public class ChatAttachAlertTemplatesLayout extends ChatAttachAlert.AttachAlertL
         }
     }
 
+    private void openTemplatePreview(TemplateSettings template) {
+        BaseFragment fragment = parentAlert.baseFragment;
+        if (fragment == null || template == null) {
+            return;
+        }
+        fragment.presentFragment(new TemplatesPreviewActivity(template));
+        parentAlert.dismiss(true);
+    }
+
     private void sendTemplate(TemplateSettings template, boolean notify, int scheduleDate, int scheduleRepeatPeriod, long effectId, long payStars) {
         if (template == null || (!template.hasMessages() && TextUtils.isEmpty(template.text))) {
             return;
@@ -466,7 +475,7 @@ public class ChatAttachAlertTemplatesLayout extends ChatAttachAlert.AttachAlertL
                 ((HeaderView) holder.itemView).bind();
             } else if (holder.getItemViewType() == 1) {
                 TemplateSettings template = templates.get(position);
-                ((TemplateCell) holder.itemView).bind(template, position != templates.size() - 1, () -> useTemplate(template, true));
+                ((TemplateCell) holder.itemView).bind(template, position != templates.size() - 1, () -> openTemplatePreview(template), () -> useTemplate(template, true));
             }
         }
 
