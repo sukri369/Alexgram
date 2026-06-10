@@ -32118,6 +32118,7 @@ public class ChatActivity extends BaseFragment implements
 			return;
 		}
 		EditText editText = new EditText(getParentActivity());
+		editText.setBackground(null);
 		editText.setSingleLine(true);
 		editText.setText(makeTemplateName(text));
 		editText.setSelectAllOnFocus(true);

@@ -4,6 +4,7 @@ import static org.telegram.messenger.AndroidUtilities.dp;
 import static org.telegram.messenger.LocaleController.getString;
 
 import android.content.Context;
+import android.os.SystemClock;
 import android.text.Editable;
 import android.text.InputFilter;
 import android.text.TextUtils;
@@ -46,6 +47,8 @@ import org.telegram.ui.Components.AlertsCreator;
 import java.util.ArrayList;
 
 public class ChatAttachAlertTemplatesLayout extends ChatAttachAlert.AttachAlertLayout implements NotificationCenter.NotificationCenterDelegate {
+    private static final long TEMPLATE_SEND_DEBOUNCE_MS = 1500;
+
     private final TemplatesManager manager;
     private final ArrayList<TemplateSettings> templates = new ArrayList<>();
     private final RecyclerListView listView;
@@ -53,6 +56,12 @@ public class ChatAttachAlertTemplatesLayout extends ChatAttachAlert.AttachAlertL
     private final ListAdapter listAdapter;
     private final EmptyTextProgressView emptyView;
     private TemplateSettings selectedTemplate;
+    private long lastTemplateSendRequestId = Long.MIN_VALUE;
+    private long lastTemplateSendRequestDialogId;
+    private long lastTemplateSendRequestTime;
+    private long lastTemplateSendDispatchId = Long.MIN_VALUE;
+    private long lastTemplateSendDispatchDialogId;
+    private long lastTemplateSendDispatchTime;
 
     public ChatAttachAlertTemplatesLayout(ChatAttachAlert alert, Context context, Theme.ResourcesProvider resourcesProvider) {
         super(alert, context, resourcesProvider);
@@ -205,6 +214,9 @@ public class ChatAttachAlertTemplatesLayout extends ChatAttachAlert.AttachAlertL
     }
 
     private void useTemplate(TemplateSettings template, boolean send) {
+        if ((send || template.hasMessages()) && shouldIgnoreDuplicateTemplateSendRequest(template)) {
+            return;
+        }
         selectedTemplate = template;
         if (template.hasMessages()) {
             parentAlert.updateCountButton(Math.max(1, template.getMessageCount()));
@@ -224,6 +236,9 @@ public class ChatAttachAlertTemplatesLayout extends ChatAttachAlert.AttachAlertL
 
     private void sendTemplate(TemplateSettings template, boolean notify, int scheduleDate, int scheduleRepeatPeriod, long effectId, long payStars) {
         if (template == null || (!template.hasMessages() && TextUtils.isEmpty(template.text))) {
+            return;
+        }
+        if (shouldIgnoreDuplicateTemplateSendDispatch(template)) {
             return;
         }
         BaseFragment fragment = parentAlert.baseFragment;
@@ -260,6 +275,30 @@ public class ChatAttachAlertTemplatesLayout extends ChatAttachAlert.AttachAlertL
         SendMessagesHelper.getInstance(parentAlert.currentAccount).sendMessage(params);
         manager.incrementUsage(template.id);
         parentAlert.dismiss();
+    }
+
+    private boolean shouldIgnoreDuplicateTemplateSendRequest(TemplateSettings template) {
+        long now = SystemClock.elapsedRealtime();
+        long dialogId = parentAlert.getDialogId();
+        if (lastTemplateSendRequestId == template.id && lastTemplateSendRequestDialogId == dialogId && now - lastTemplateSendRequestTime < TEMPLATE_SEND_DEBOUNCE_MS) {
+            return true;
+        }
+        lastTemplateSendRequestId = template.id;
+        lastTemplateSendRequestDialogId = dialogId;
+        lastTemplateSendRequestTime = now;
+        return false;
+    }
+
+    private boolean shouldIgnoreDuplicateTemplateSendDispatch(TemplateSettings template) {
+        long now = SystemClock.elapsedRealtime();
+        long dialogId = parentAlert.getDialogId();
+        if (lastTemplateSendDispatchId == template.id && lastTemplateSendDispatchDialogId == dialogId && now - lastTemplateSendDispatchTime < TEMPLATE_SEND_DEBOUNCE_MS) {
+            return true;
+        }
+        lastTemplateSendDispatchId = template.id;
+        lastTemplateSendDispatchDialogId = dialogId;
+        lastTemplateSendDispatchTime = now;
+        return false;
     }
 
     private void showTemplateOptions(TemplateSettings template) {
@@ -304,6 +343,7 @@ public class ChatAttachAlertTemplatesLayout extends ChatAttachAlert.AttachAlertL
         container.setPadding(dp(24), dp(4), dp(24), dp(8));
 
         EditTextBoldCursor nameField = new EditTextBoldCursor(context);
+        nameField.setBackground(null);
         nameField.setTextSize(18);
         nameField.setSingleLine(true);
         nameField.setImeOptions(EditorInfo.IME_ACTION_NEXT);
@@ -315,6 +355,7 @@ public class ChatAttachAlertTemplatesLayout extends ChatAttachAlert.AttachAlertL
         container.addView(nameField, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 48));
 
         EditTextBoldCursor textField = new EditTextBoldCursor(context);
+        textField.setBackground(null);
         textField.setTextSize(18);
         textField.setMinLines(3);
         textField.setMaxLines(6);
