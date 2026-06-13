@@ -478,7 +478,7 @@ public class GroupCallUserCell extends FrameLayout {
             avatarDrawable.setInfo(accountInstance.getCurrentAccount(), currentUser);
             avatarImageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(46.0f));
 
-            nameTextView.setText(formatNameWithAdminTag(UserObject.getUserName(currentUser), currentUser.id));
+            setNameWithAdminTag(UserObject.getUserName(currentUser), currentUser.id);
             botVerificationIcon = DialogObject.getBotVerificationIcon(currentUser);
             if (currentUser != null && currentUser.verified) {
                 rightDrawable.set(verifiedDrawable = (verifiedDrawable == null ? new VerifiedDrawable(getContext()) : verifiedDrawable), animated);
@@ -520,7 +520,7 @@ public class GroupCallUserCell extends FrameLayout {
 
             botVerificationIcon = DialogObject.getBotVerificationIcon(currentChat);
             if (currentChat != null) {
-                nameTextView.setText(formatNameWithAdminTag(currentChat.title, -currentChat.id));
+                setNameWithAdminTag(currentChat.title, -currentChat.id);
                 if (currentChat.verified) {
                     rightDrawable.set(verifiedDrawable = (verifiedDrawable == null ? new VerifiedDrawable(getContext()) : verifiedDrawable), animated);
                 } else if (currentChat != null && DialogObject.getEmojiStatusDocumentId(currentChat.emoji_status) != 0) {
@@ -550,7 +550,7 @@ public class GroupCallUserCell extends FrameLayout {
         applyParticipantChanges(animated);
     }
 
-    private CharSequence formatNameWithAdminTag(CharSequence name, long peerId) {
+    private void setNameWithAdminTag(CharSequence name, long peerId) {
         if (tw.nekomimi.nekogram.NekoConfig.showAdminTagInVoiceChat.Bool() && currentCall != null) {
             String rank = accountInstance.getMessagesController().getAdminRank(currentCall.chatId, peerId);
             boolean isOwner = accountInstance.getMessagesController().isOwner(currentCall.chatId, peerId);
@@ -559,10 +559,6 @@ public class GroupCallUserCell extends FrameLayout {
                 rank = LocaleController.getString(isOwner ? R.string.ChatTagOwner : R.string.ChatTagAdmin);
             }
             if (rank != null) {
-                android.text.SpannableStringBuilder builder = new android.text.SpannableStringBuilder(name);
-                builder.append(" ");
-                int start = builder.length();
-                builder.append(rank);
                 int color;
                 if (isOwner) {
                     color = Theme.getColor(Theme.key_chat_tagCreator);
@@ -571,50 +567,70 @@ public class GroupCallUserCell extends FrameLayout {
                 } else {
                     color = Theme.getColor(Theme.key_chat_inAdminText);
                 }
-                builder.setSpan(new AdminTagSpan(rank, color), start, builder.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                return builder;
+                nameTextView.setText(name);
+                nameTextView.setRightDrawable2(new AdminTagDrawable(rank, color));
+                return;
             }
         }
-        return name;
+        nameTextView.setText(name);
+        nameTextView.setRightDrawable2(null);
     }
 
-    private static class AdminTagSpan extends android.text.style.ReplacementSpan {
+    private static class AdminTagDrawable extends android.graphics.drawable.Drawable {
         private final android.graphics.Paint bgPaint = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
-        private final android.graphics.Paint textPaint = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
+        private final android.text.TextPaint textPaint = new android.text.TextPaint(android.graphics.Paint.ANTI_ALIAS_FLAG);
         private final String text;
         private final int textColor;
+        private final int width;
+        private final int height;
 
-        public AdminTagSpan(String text, int textColor) {
+        public AdminTagDrawable(String text, int textColor) {
             this.text = text;
             this.textColor = textColor;
             bgPaint.setStyle(android.graphics.Paint.Style.FILL);
             textPaint.setTypeface(AndroidUtilities.bold());
+            textPaint.setTextSize(AndroidUtilities.dp(12)); // 15dp text size * 0.8 scale
+            this.width = AndroidUtilities.dp(8) + (int) textPaint.measureText(this.text);
+            this.height = AndroidUtilities.dp(16);
         }
 
         @Override
-        public int getSize(@androidx.annotation.NonNull android.graphics.Paint paint, CharSequence text, int start, int end, @androidx.annotation.Nullable android.graphics.Paint.FontMetricsInt fm) {
-            textPaint.setTextSize(paint.getTextSize() * 0.8f);
-            return AndroidUtilities.dp(10) + (int) textPaint.measureText(this.text);
+        public int getIntrinsicWidth() {
+            return this.width;
         }
 
         @Override
-        public void draw(@androidx.annotation.NonNull android.graphics.Canvas canvas, CharSequence text, int start, int end, float x, int top, int y, int bottom, @androidx.annotation.NonNull android.graphics.Paint paint) {
-            textPaint.setTextSize(paint.getTextSize() * 0.8f);
-            float textWidth = textPaint.measureText(this.text);
-            bgPaint.setColor(textColor);
+        public int getIntrinsicHeight() {
+            return this.height;
+        }
+
+        @Override
+        public void draw(@androidx.annotation.NonNull android.graphics.Canvas canvas) {
+            android.graphics.Rect bounds = getBounds();
+            bgPaint.setColor(this.textColor);
             bgPaint.setAlpha((int) (255 * 0.15f));
-            textPaint.setColor(textColor);
-            float cy = (bottom + top) / 2f;
-            float height = AndroidUtilities.dp(16);
-            float badgeTop = cy - height / 2f;
-            float badgeBottom = cy + height / 2f;
-            float badgeLeft = x + AndroidUtilities.dp(4);
-            float badgeRight = badgeLeft + textWidth + AndroidUtilities.dp(8);
-            android.graphics.RectF rect = new android.graphics.RectF(badgeLeft, badgeTop, badgeRight, badgeBottom);
+            textPaint.setColor(this.textColor);
+            android.graphics.RectF rect = new android.graphics.RectF(bounds);
             canvas.drawRoundRect(rect, AndroidUtilities.dp(4), AndroidUtilities.dp(4), bgPaint);
+            float cy = bounds.centerY();
             android.graphics.Paint.FontMetricsInt fontMetrics = textPaint.getFontMetricsInt();
             float textY = cy - (fontMetrics.bottom + fontMetrics.top) / 2f;
-            canvas.drawText(this.text, badgeLeft + AndroidUtilities.dp(4), textY, textPaint);
+            canvas.drawText(this.text, bounds.left + AndroidUtilities.dp(4), textY, textPaint);
+        }
+
+        @Override
+        public void setAlpha(int alpha) {
+            bgPaint.setAlpha((int) (alpha * 0.15f));
+            textPaint.setAlpha(alpha);
+        }
+
+        @Override
+        public void setColorFilter(@androidx.annotation.Nullable android.graphics.ColorFilter colorFilter) {
+        }
+
+        @Override
+        public int getOpacity() {
+            return android.graphics.PixelFormat.TRANSPARENT;
         }
     }
 
