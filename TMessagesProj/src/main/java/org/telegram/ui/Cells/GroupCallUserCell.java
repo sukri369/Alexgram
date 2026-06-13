@@ -563,13 +563,54 @@ public class GroupCallUserCell extends FrameLayout {
                 builder.append(" ");
                 int start = builder.length();
                 builder.append(rank);
-                int color = Theme.getColor(Theme.key_voipgroup_listeningText);
-                builder.setSpan(new android.text.style.ForegroundColorSpan(color), start, builder.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                builder.setSpan(new android.text.style.RelativeSizeSpan(0.8f), start, builder.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                int colorIndex = org.telegram.ui.Components.AvatarDrawable.getColorIndex(peerId);
+                int colorKey = org.telegram.ui.ActionBar.Theme.keys_avatar_nameInMessage[colorIndex];
+                int color = org.telegram.ui.ActionBar.Theme.getColor(colorKey);
+                builder.setSpan(new AdminTagSpan(rank, color), start, builder.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 return builder;
             }
         }
         return name;
+    }
+
+    private static class AdminTagSpan extends android.text.style.ReplacementSpan {
+        private final android.graphics.Paint bgPaint = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
+        private final android.graphics.Paint textPaint = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
+        private final String text;
+        private final int textColor;
+
+        public AdminTagSpan(String text, int textColor) {
+            this.text = text;
+            this.textColor = textColor;
+            bgPaint.setStyle(android.graphics.Paint.Style.FILL);
+            textPaint.setTypeface(AndroidUtilities.bold());
+        }
+
+        @Override
+        public int getSize(@androidx.annotation.NonNull android.graphics.Paint paint, CharSequence text, int start, int end, @androidx.annotation.Nullable android.graphics.Paint.FontMetricsInt fm) {
+            textPaint.setTextSize(paint.getTextSize() * 0.8f);
+            return AndroidUtilities.dp(10) + (int) textPaint.measureText(this.text);
+        }
+
+        @Override
+        public void draw(@androidx.annotation.NonNull android.graphics.Canvas canvas, CharSequence text, int start, int end, float x, int top, int y, int bottom, @androidx.annotation.NonNull android.graphics.Paint paint) {
+            textPaint.setTextSize(paint.getTextSize() * 0.8f);
+            float textWidth = textPaint.measureText(this.text);
+            bgPaint.setColor(textColor);
+            bgPaint.setAlpha((int) (255 * 0.15f));
+            textPaint.setColor(textColor);
+            float cy = (bottom + top) / 2f;
+            float height = AndroidUtilities.dp(16);
+            float badgeTop = cy - height / 2f;
+            float badgeBottom = cy + height / 2f;
+            float badgeLeft = x + AndroidUtilities.dp(4);
+            float badgeRight = badgeLeft + textWidth + AndroidUtilities.dp(8);
+            android.graphics.RectF rect = new android.graphics.RectF(badgeLeft, badgeTop, badgeRight, badgeBottom);
+            canvas.drawRoundRect(rect, AndroidUtilities.dp(4), AndroidUtilities.dp(4), bgPaint);
+            android.graphics.Paint.FontMetricsInt fontMetrics = textPaint.getFontMetricsInt();
+            float textY = cy - (fontMetrics.bottom + fontMetrics.top) / 2f;
+            canvas.drawText(this.text, badgeLeft + AndroidUtilities.dp(4), textY, textPaint);
+        }
     }
 
     public void setDrawDivider(boolean draw) {
