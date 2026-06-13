@@ -112,6 +112,7 @@ import androidx.collection.LongSparseArray;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.core.graphics.ColorUtils;
+import androidx.core.graphics.PathParser;
 import androidx.core.math.MathUtils;
 import androidx.core.view.NestedScrollingParent3;
 import androidx.core.view.NestedScrollingParentHelper;
@@ -217,6 +218,7 @@ import org.telegram.ui.Components.AnimatedTextView;
 import org.telegram.ui.Components.AnimationProperties;
 import org.telegram.ui.Components.AudioPlayerAlert;
 import org.telegram.ui.Components.AutoDeletePopupWrapper;
+import org.telegram.ui.Components.PopupSwipeBackLayout;
 import org.telegram.ui.Components.AvatarDrawable;
 import org.telegram.ui.Components.BackButtonMenu;
 import org.telegram.ui.Components.BackupImageView;
@@ -490,6 +492,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private ImageView ttlIconView;
     private ActionBarMenuSubItem autoDeleteItem;
     AutoDeletePopupWrapper autoDeletePopupWrapper;
+    private int ayuLayoutIndex;
+    private ActionBarMenuSubItem ayuItem;
     protected float headerShadowAlpha = 1.0f;
     private int actionBarBackgroundColor;
     private TopView topView;
@@ -12436,9 +12440,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         if (currentEncryptedChat == null) {
                             createAutoDeleteItem(context);
                         }
-                        createGhostModeExclusionItem(userId);
-                        createSaveExclusionItem(userId);
-                        createMessageFilterItem();
+                        createAyugramItem(context);
                         createExtraItems(otherItem);
                         otherItem.addSubItem(add_shortcut, R.drawable.msg_home, LocaleController.getString(R.string.AddShortcut));
                         if (isBot) {
@@ -12479,9 +12481,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     if (currentEncryptedChat == null) {
                         createAutoDeleteItem(context);
                     }
-                    createGhostModeExclusionItem(userId);
-                    createSaveExclusionItem(userId);
-                    createMessageFilterItem();
+                    createAyugramItem(context);
                     createExtraItems(otherItem);
                     if (!TextUtils.isEmpty(user.phone)) {
                         otherItem.addSubItem(share_contact, R.drawable.msg_share, LocaleController.getString(R.string.ShareContact));
@@ -12523,9 +12523,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             if (topicId == 0 && ChatObject.canChangeChatInfo(chat)) {
                 createAutoDeleteItem(context);
             }
-            createGhostModeExclusionItem(chatId);
-            createSaveExclusionItem(chatId);
-            createMessageFilterItem();
+            createAyugramItem(context);
             if (chat.forum) {
                 createCustomForumTabsItem();
             }
@@ -12775,43 +12773,81 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         updateStoriesViewBounds(false);
     }
 
-    private void createGhostModeExclusionItem(long chatId) {
-        if (!NekoConfig.showGhostInDrawer.Bool() || ChatObject.isChannelAndNotMegaGroup(currentChat)) {
+    private void createAyugramItem(Context context) {
+        boolean showGhost = NekoConfig.showGhostInDrawer.Bool() && !ChatObject.isChannelAndNotMegaGroup(currentChat);
+        boolean showSave = NaConfig.INSTANCE.getEnableSaveDeletedMessages().Bool();
+        boolean showFilters = NaConfig.INSTANCE.getRegexFiltersEnabled().Bool();
+        if (!showGhost && !showSave && !showFilters) {
             return;
         }
-        if (currentEncryptedChat instanceof TLRPC.TL_encryptedChat) {
-            chatId = currentEncryptedChat.id;
-        }
-        var ghostModePopupWrapper = new GhostModeExclusionPopupWrapper(ProfileActivity.this, otherItem.getPopupLayout().getSwipeBack(), chatId, getResourceProvider());
-        otherItem.addSwipeBackItem(R.drawable.ayu_ghost_solar, null, getString(R.string.GhostMode), ghostModePopupWrapper.windowLayout);
-    }
 
-    private void createSaveExclusionItem(long chatId) {
-        if (!NaConfig.INSTANCE.getEnableSaveDeletedMessages().Bool()) return;
-        var autoTranslatePopupWrapper = new SaveExclusionPopupWrapper(ProfileActivity.this, otherItem.getPopupLayout().getSwipeBack(), chatId, getResourceProvider());
-        otherItem.addSwipeBackItem(R.drawable.msg_delete_24_solar, null, getString(R.string.SaveDeletedExclusionMenu), autoTranslatePopupWrapper.windowLayout);
-    }
+        ActionBarPopupWindow.ActionBarPopupWindowLayout ayuLayout = new ActionBarPopupWindow.ActionBarPopupWindowLayout(context, 0, resourcesProvider, ActionBarPopupWindow.ActionBarPopupWindowLayout.FLAG_USE_SWIPEBACK);
+        ayuLayout.setFitItems(true);
 
-    private void createMessageFilterItem() {
-        if (!NaConfig.INSTANCE.getRegexFiltersEnabled().Bool()) {
-            return;
+        PopupSwipeBackLayout swipeBack = otherItem.getPopupLayout().getSwipeBack();
+        if (swipeBack != null) {
+            ActionBarMenuSubItem backItem = ActionBarMenuItem.addItem(ayuLayout, R.drawable.msg_arrow_back, LocaleController.getString("Back", R.string.Back), false, resourcesProvider);
+            backItem.setOnClickListener(view -> swipeBack.closeForeground());
+            ActionBarMenuItem.addColoredGap(ayuLayout, resourcesProvider);
         }
-        var popupLayout = otherItem.getPopupLayout();
-        var popupWrapper = new RegexFiltersExclusionPopupWrapper(ProfileActivity.this, popupLayout.getSwipeBack(), chatId != 0 ? -chatId : userId, getResourceProvider());
-        int swipeBackIndex = popupLayout.addViewToSwipeBack(popupWrapper.windowLayout);
-        ActionBarMenuSubItem cell = otherItem.addSubItem(message_filter, R.drawable.hide_title, getString(R.string.RegexFilters));
-        cell.setOnLongClickListener(v -> {
-            if (otherItem != null) {
-                otherItem.toggleSubMenu();
-            }
-            AndroidUtilities.runOnUIThread(() -> presentFragment(new RegexFiltersSettingActivity()), 50);
-            return true;
-        });
-        cell.setRightIcon(R.drawable.msg_arrowright, v -> {
-            if (popupLayout.getSwipeBack() != null) {
-                popupLayout.getSwipeBack().openForeground(swipeBackIndex);
-            }
-        });
+
+        long id = chatId != 0 ? chatId : userId;
+        long filterId = chatId != 0 ? -chatId : userId;
+
+        if (showGhost) {
+            long finalChatId = (currentEncryptedChat instanceof TLRPC.TL_encryptedChat) ? currentEncryptedChat.id : id;
+            var ghostModePopupWrapper = new GhostModeExclusionPopupWrapper(ProfileActivity.this, swipeBack, finalChatId, getResourceProvider());
+            int ghostLayoutIndex = otherItem.getPopupLayout().addViewToSwipeBack(ghostModePopupWrapper.windowLayout);
+
+            ActionBarMenuSubItem cell = ActionBarMenuItem.addItem(ayuLayout, R.drawable.ayu_ghost_solar, LocaleController.getString(R.string.GhostMode), false, resourcesProvider);
+            cell.setRightIcon(R.drawable.msg_arrowright);
+            cell.setOnClickListener(v -> {
+                if (swipeBack != null) {
+                    swipeBack.setBackgroundViewIndex(ayuLayoutIndex);
+                    swipeBack.openForeground(ghostLayoutIndex);
+                }
+            });
+        }
+
+        if (showSave) {
+            var autoTranslatePopupWrapper = new SaveExclusionPopupWrapper(ProfileActivity.this, swipeBack, id, getResourceProvider());
+            int saveLayoutIndex = otherItem.getPopupLayout().addViewToSwipeBack(autoTranslatePopupWrapper.windowLayout);
+
+            ActionBarMenuSubItem cell = ActionBarMenuItem.addItem(ayuLayout, R.drawable.msg_delete_24_solar, LocaleController.getString(R.string.SaveDeletedExclusionMenu), false, resourcesProvider);
+            cell.setRightIcon(R.drawable.msg_arrowright);
+            cell.setOnClickListener(v -> {
+                if (swipeBack != null) {
+                    swipeBack.setBackgroundViewIndex(ayuLayoutIndex);
+                    swipeBack.openForeground(saveLayoutIndex);
+                }
+            });
+        }
+
+        if (showFilters) {
+            var popupWrapper = new RegexFiltersExclusionPopupWrapper(ProfileActivity.this, swipeBack, filterId, getResourceProvider());
+            int filterLayoutIndex = otherItem.getPopupLayout().addViewToSwipeBack(popupWrapper.windowLayout);
+
+            ActionBarMenuSubItem cell = ActionBarMenuItem.addItem(ayuLayout, R.drawable.hide_title, LocaleController.getString(R.string.RegexFilters), false, resourcesProvider);
+            cell.setRightIcon(R.drawable.msg_arrowright);
+            cell.setOnClickListener(v -> {
+                if (swipeBack != null) {
+                    swipeBack.setBackgroundViewIndex(ayuLayoutIndex);
+                    swipeBack.openForeground(filterLayoutIndex);
+                }
+            });
+            cell.setOnLongClickListener(v -> {
+                if (otherItem != null) {
+                    otherItem.toggleSubMenu();
+                }
+                AndroidUtilities.runOnUIThread(() -> presentFragment(new RegexFiltersSettingActivity()), 50);
+                return true;
+            });
+        }
+
+        String heartPath = "M16.5 3C19.5376 3 22 5.5 22 9C22 16 14.5 20 12 21.5C9.5 20 2 16 2 9C2 5.5 4.5 3 7.5 3C9.35997 3 11 4 12 5C13 4 14.64 3 16.5 3ZM12.9339 18.6038C13.8155 18.0485 14.61 17.4955 15.3549 16.9029C18.3337 14.533 20 11.9435 20 9C20 6.64076 18.463 5 16.5 5C15.4241 5 14.2593 5.56911 13.4142 6.41421L12 7.82843L10.5858 6.41421C9.74068 5.56911 8.5759 5 7.5 5C5.55906 5 4 6.6565 4 9C4 11.9435 5.66627 14.533 8.64514 16.9029C9.39 17.4955 10.1845 18.0485 11.0661 18.6038C11.3646 18.7919 11.6611 18.9729 12 19.1752C12.3389 18.9729 12.6354 18.7919 12.9339 18.6038Z";
+        ayuItem = otherItem.addSwipeBackItem(0, new GenericPathDrawable(heartPath, 24, 24), LocaleController.getString(R.string.Ayugram), ayuLayout);
+        ayuLayoutIndex = otherItem.getPopupLayout().getSwipeBack().getChildCount() - 1;
+        otherItem.addColoredGap();
     }
 
     private void createCustomForumTabsItem() {
@@ -17821,5 +17857,57 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
         });
         showDialog(sheet);
+    }
+
+    private static class GenericPathDrawable extends Drawable {
+        private final Path path;
+        private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final int width;
+        private final int height;
+
+        public GenericPathDrawable(String pathData, int width, int height) {
+            this.path = PathParser.createPathFromPathData(pathData);
+            this.width = width;
+            this.height = height;
+            paint.setColor(0xffffffff);
+            paint.setStyle(Paint.Style.FILL);
+            paint.setAntiAlias(true);
+        }
+
+        @Override
+        public void draw(Canvas canvas) {
+            Rect bounds = getBounds();
+            canvas.save();
+            float scale = Math.min((float) bounds.width() / width, (float) bounds.height() / height) * 0.8f;
+            canvas.translate(bounds.centerX() - (width * scale) / 2f, bounds.centerY() - (height * scale) / 2f);
+            canvas.scale(scale, scale);
+            canvas.drawPath(path, paint);
+            canvas.restore();
+        }
+
+        @Override
+        public void setAlpha(int alpha) {
+            paint.setAlpha(alpha);
+        }
+
+        @Override
+        public void setColorFilter(ColorFilter colorFilter) {
+            paint.setColorFilter(colorFilter);
+        }
+
+        @Override
+        public int getOpacity() {
+            return PixelFormat.TRANSLUCENT;
+        }
+
+        @Override
+        public int getIntrinsicWidth() {
+            return AndroidUtilities.dp(width);
+        }
+
+        @Override
+        public int getIntrinsicHeight() {
+            return AndroidUtilities.dp(height);
+        }
     }
 }

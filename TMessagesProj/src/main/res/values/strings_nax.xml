@@ -475,6 +475,7 @@
     <string name="ShowAdminTagInVoiceChat">Show Admin Tag in Voice Chat</string>
     <string name="ShowAdminTagInVoiceChatDesc">Display admin or owner badges next to user names in voice/video chats.</string>
     <!-- [Alexgram: Admin Tag in Voice Chat] - End -->
+    <string name="Ayugram">Ayugram</string>
 </resources>
 
 
