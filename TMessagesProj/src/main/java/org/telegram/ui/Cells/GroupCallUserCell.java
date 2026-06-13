@@ -553,7 +553,6 @@ public class GroupCallUserCell extends FrameLayout {
     private CharSequence formatNameWithAdminTag(CharSequence name, long peerId) {
         if (tw.nekomimi.nekogram.NekoConfig.showAdminTagInVoiceChat.Bool() && currentCall != null) {
             String rank = accountInstance.getMessagesController().getAdminRank(currentCall.chatId, peerId);
-            boolean isCustom = rank != null;
             boolean isOwner = accountInstance.getMessagesController().isOwner(currentCall.chatId, peerId);
             boolean isAdmin = accountInstance.getMessagesController().isAdmin(currentCall.chatId, peerId);
             if (rank == null && (isOwner || isAdmin)) {
@@ -565,9 +564,7 @@ public class GroupCallUserCell extends FrameLayout {
                 int start = builder.length();
                 builder.append(rank);
                 int color;
-                if (isCustom) {
-                    color = Theme.getColor(Theme.key_chat_inAdminText);
-                } else if (isOwner) {
+                if (isOwner) {
                     color = Theme.getColor(Theme.key_chat_tagCreator);
                 } else if (isAdmin) {
                     color = Theme.getColor(Theme.key_chat_tagAdmin);
