@@ -1331,6 +1331,7 @@ public class AnimatedEmojiDrawable extends Drawable {
             if (drawables[0] instanceof AnimatedEmojiDrawable && ((AnimatedEmojiDrawable) drawables[0]).getDocumentId() == documentId) {
                 return false;
             }
+            boolean wasEmpty = isEmpty();
             if (animated) {
                 changeProgress.set(0, true);
                 if (drawables[1] != null) {
@@ -1360,6 +1361,9 @@ public class AnimatedEmojiDrawable extends Drawable {
             colorFilterLastColor = 0;
             play();
             invalidate();
+            if (wasEmpty != isEmpty() && parentView != null) {
+                parentView.requestLayout();
+            }
             return true;
         }
 
@@ -1380,6 +1384,7 @@ public class AnimatedEmojiDrawable extends Drawable {
             if (drawables[0] instanceof AnimatedEmojiDrawable && document != null && ((AnimatedEmojiDrawable) drawables[0]).getDocumentId() == document.id) {
                 return;
             }
+            boolean wasEmpty = isEmpty();
             if (animated) {
                 changeProgress.set(0, true);
                 if (drawables[1] != null) {
@@ -1417,12 +1422,16 @@ public class AnimatedEmojiDrawable extends Drawable {
             colorFilterLastColor = 0;
             play();
             invalidate();
+            if (wasEmpty != isEmpty() && parentView != null) {
+                parentView.requestLayout();
+            }
         }
 
         public void set(Drawable drawable, boolean animated) {
             if (drawables[0] == drawable) {
                 return;
             }
+            boolean wasEmpty = isEmpty();
             if (animated) {
                 changeProgress.set(0, true);
                 if (drawables[1] != null) {
@@ -1449,6 +1458,9 @@ public class AnimatedEmojiDrawable extends Drawable {
             colorFilterLastColor = 0;
             play();
             invalidate();
+            if (wasEmpty != isEmpty() && parentView != null) {
+                parentView.requestLayout();
+            }
         }
 
         public void detach() {
@@ -1479,12 +1491,12 @@ public class AnimatedEmojiDrawable extends Drawable {
 
         @Override
         public int getIntrinsicWidth() {
-            return size;
+            return isEmpty() ? 0 : size;
         }
 
         @Override
         public int getIntrinsicHeight() {
-            return size;
+            return isEmpty() ? 0 : size;
         }
 
         @Override
