@@ -184,6 +184,9 @@ public class NekoConfig {
     public static ConfigItem showQuickEditIconInChatList = addConfig("showQuickEditIconInChatList", configTypeBool, false);
     public static ConfigItem quickEditIconOnlyForOwnMessages = addConfig("quickEditIconOnlyForOwnMessages", configTypeBool, true);
     // [Alexgram: Quick Edit Icon] - End
+    // [Alexgram: Admin Tag in Voice Chat] - Start
+    public static ConfigItem showAdminTagInVoiceChat = addConfig("showAdminTagInVoiceChat", configTypeBool, true);
+    // [Alexgram: Admin Tag in Voice Chat] - End
     // [Alexgram: Native Features] - End
 
 

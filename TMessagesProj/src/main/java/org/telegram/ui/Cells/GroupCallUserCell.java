@@ -478,7 +478,7 @@ public class GroupCallUserCell extends FrameLayout {
             avatarDrawable.setInfo(accountInstance.getCurrentAccount(), currentUser);
             avatarImageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(46.0f));
 
-            nameTextView.setText(UserObject.getUserName(currentUser));
+            nameTextView.setText(formatNameWithAdminTag(UserObject.getUserName(currentUser), currentUser.id));
             botVerificationIcon = DialogObject.getBotVerificationIcon(currentUser);
             if (currentUser != null && currentUser.verified) {
                 rightDrawable.set(verifiedDrawable = (verifiedDrawable == null ? new VerifiedDrawable(getContext()) : verifiedDrawable), animated);
@@ -520,7 +520,7 @@ public class GroupCallUserCell extends FrameLayout {
 
             botVerificationIcon = DialogObject.getBotVerificationIcon(currentChat);
             if (currentChat != null) {
-                nameTextView.setText(currentChat.title);
+                nameTextView.setText(formatNameWithAdminTag(currentChat.title, -currentChat.id));
                 if (currentChat.verified) {
                     rightDrawable.set(verifiedDrawable = (verifiedDrawable == null ? new VerifiedDrawable(getContext()) : verifiedDrawable), animated);
                 } else if (currentChat != null && DialogObject.getEmojiStatusDocumentId(currentChat.emoji_status) != 0) {
@@ -548,6 +548,28 @@ public class GroupCallUserCell extends FrameLayout {
             nameTextView.setLeftDrawable(null);
         }
         applyParticipantChanges(animated);
+    }
+
+    private CharSequence formatNameWithAdminTag(CharSequence name, long peerId) {
+        if (tw.nekomimi.nekogram.NekoConfig.showAdminTagInVoiceChat.Bool() && currentCall != null) {
+            String rank = accountInstance.getMessagesController().getAdminRank(currentCall.chatId, peerId);
+            boolean isOwner = accountInstance.getMessagesController().isOwner(currentCall.chatId, peerId);
+            boolean isAdmin = accountInstance.getMessagesController().isAdmin(currentCall.chatId, peerId);
+            if (rank == null && (isOwner || isAdmin)) {
+                rank = LocaleController.getString(isOwner ? R.string.ChatTagOwner : R.string.ChatTagAdmin);
+            }
+            if (rank != null) {
+                android.text.SpannableStringBuilder builder = new android.text.SpannableStringBuilder(name);
+                builder.append(" ");
+                int start = builder.length();
+                builder.append(rank);
+                int color = Theme.getColor(Theme.key_voipgroup_listeningText);
+                builder.setSpan(new android.text.style.ForegroundColorSpan(color), start, builder.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                builder.setSpan(new android.text.style.RelativeSizeSpan(0.8f), start, builder.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                return builder;
+            }
+        }
+        return name;
     }
 
     public void setDrawDivider(boolean draw) {
