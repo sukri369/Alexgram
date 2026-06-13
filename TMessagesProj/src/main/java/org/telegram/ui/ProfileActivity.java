@@ -17878,7 +17878,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         public void draw(Canvas canvas) {
             Rect bounds = getBounds();
             canvas.save();
-            float scale = Math.min((float) bounds.width() / width, (float) bounds.height() / height) * 0.8f;
+            float scale = Math.min((float) bounds.width() / width, (float) bounds.height() / height) * 1.0f;
             canvas.translate(bounds.centerX() - (width * scale) / 2f, bounds.centerY() - (height * scale) / 2f);
             canvas.scale(scale, scale);
             canvas.drawPath(path, paint);
