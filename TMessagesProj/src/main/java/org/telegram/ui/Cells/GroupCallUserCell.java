@@ -553,6 +553,7 @@ public class GroupCallUserCell extends FrameLayout {
     private CharSequence formatNameWithAdminTag(CharSequence name, long peerId) {
         if (tw.nekomimi.nekogram.NekoConfig.showAdminTagInVoiceChat.Bool() && currentCall != null) {
             String rank = accountInstance.getMessagesController().getAdminRank(currentCall.chatId, peerId);
+            boolean isCustom = rank != null;
             boolean isOwner = accountInstance.getMessagesController().isOwner(currentCall.chatId, peerId);
             boolean isAdmin = accountInstance.getMessagesController().isAdmin(currentCall.chatId, peerId);
             if (rank == null && (isOwner || isAdmin)) {
@@ -563,9 +564,16 @@ public class GroupCallUserCell extends FrameLayout {
                 builder.append(" ");
                 int start = builder.length();
                 builder.append(rank);
-                int colorIndex = org.telegram.ui.Components.AvatarDrawable.getColorIndex(peerId);
-                int colorKey = org.telegram.ui.ActionBar.Theme.keys_avatar_nameInMessage[colorIndex];
-                int color = org.telegram.ui.ActionBar.Theme.getColor(colorKey);
+                int color;
+                if (isCustom) {
+                    color = Theme.getColor(Theme.key_chat_inAdminText);
+                } else if (isOwner) {
+                    color = Theme.getColor(Theme.key_chat_tagCreator);
+                } else if (isAdmin) {
+                    color = Theme.getColor(Theme.key_chat_tagAdmin);
+                } else {
+                    color = Theme.getColor(Theme.key_chat_inAdminText);
+                }
                 builder.setSpan(new AdminTagSpan(rank, color), start, builder.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 return builder;
             }
