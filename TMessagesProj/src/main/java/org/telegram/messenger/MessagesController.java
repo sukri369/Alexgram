@@ -885,9 +885,21 @@ public class MessagesController extends BaseController implements NotificationCe
 
     public void lockFiltersInternal() {
         boolean changed = false;
-        if (!getUserConfig().isPremium() && dialogFilters.size() - 1 > dialogFiltersLimitDefault) {
-            int n = dialogFilters.size() - 1 - dialogFiltersLimitDefault;
-            ArrayList<DialogFilter> filtersSortedById = new ArrayList<>(dialogFilters);
+        int realFilterCount = 0;
+        for (int i = 0; i < dialogFilters.size(); i++) {
+            if (!tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(dialogFilters.get(i))) {
+                realFilterCount++;
+            }
+        }
+        if (!getUserConfig().isPremium() && realFilterCount - 1 > dialogFiltersLimitDefault) {
+            int n = realFilterCount - 1 - dialogFiltersLimitDefault;
+            ArrayList<DialogFilter> filtersSortedById = new ArrayList<>();
+            for (int i = 0; i < dialogFilters.size(); i++) {
+                DialogFilter filter = dialogFilters.get(i);
+                if (!tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(filter)) {
+                    filtersSortedById.add(filter);
+                }
+            }
             Collections.reverse(filtersSortedById);
             for (int i = 0; i < filtersSortedById.size(); i++) {
                 if (i < n) {
@@ -900,6 +912,23 @@ public class MessagesController extends BaseController implements NotificationCe
                         changed = true;
                     }
                     filtersSortedById.get(i).locked = false;
+                }
+            }
+            for (int i = 0; i < dialogFilters.size(); i++) {
+                DialogFilter filter = dialogFilters.get(i);
+                if (tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(filter)) {
+                    if (filter.locked) {
+                        filter.locked = false;
+                        changed = true;
+                    }
+                }
+            }
+        } else {
+            for (int i = 0; i < dialogFilters.size(); i++) {
+                DialogFilter filter = dialogFilters.get(i);
+                if (filter.locked) {
+                    filter.locked = false;
+                    changed = true;
                 }
             }
         }

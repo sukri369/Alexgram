@@ -572,7 +572,14 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
         ArrayList<TLRPC.TL_dialogFilterSuggested> suggestedFilters = getMessagesController().suggestedFilters;
         ArrayList<MessagesController.DialogFilter> dialogFilters = getMessagesController().getDialogFilters();
         items.add(ItemInner.asHint());
-        if (!suggestedFilters.isEmpty() && dialogFilters.size() < 10) {
+        // [Alexgram: Tabs by Type] - only count real (non-virtual) filters for display and limit
+        int realFilterCount = 0;
+        for (int i = 0; i < dialogFilters.size(); ++i) {
+            if (!tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(dialogFilters.get(i))) {
+                realFilterCount++;
+            }
+        }
+        if (!suggestedFilters.isEmpty() && realFilterCount < 10) {
             int start = items.size();
             items.add(ItemInner.asHeader(LocaleController.getString(R.string.FilterRecommended)));
             for (int i = 0; i < suggestedFilters.size(); ++i) {
@@ -580,13 +587,6 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
             }
             if (listView != null) listView.forcedSections.add(AndroidUtilities.pack(start, items.size() - 1));
             items.add(ItemInner.asShadow(null));
-        }
-        // [Alexgram: Tabs by Type] - only count real (non-virtual) filters for display and limit
-        int realFilterCount = 0;
-        for (int i = 0; i < dialogFilters.size(); ++i) {
-            if (!tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(dialogFilters.get(i))) {
-                realFilterCount++;
-            }
         }
         if (realFilterCount > 0) {
             filtersSectionStart = items.size();
@@ -766,10 +766,16 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
     }
 
     public void createFolder(INavigationLayout navigationLayout) {
-        final int count = getMessagesController().getDialogFilters().size();
+        int realFilterCount = 0;
+        ArrayList<MessagesController.DialogFilter> dialogFilters = getMessagesController().getDialogFilters();
+        for (int i = 0; i < dialogFilters.size(); i++) {
+            if (!tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(dialogFilters.get(i))) {
+                realFilterCount++;
+            }
+        }
         if (
-            count - 1 >= getMessagesController().dialogFiltersLimitDefault && !getUserConfig().isPremium() ||
-            count >= getMessagesController().dialogFiltersLimitPremium
+            realFilterCount - 1 >= getMessagesController().dialogFiltersLimitDefault && !getUserConfig().isPremium() ||
+            realFilterCount >= getMessagesController().dialogFiltersLimitPremium
         ) {
             showDialog(new LimitReachedBottomSheet(this, getContext(), LimitReachedBottomSheet.TYPE_FOLDERS, currentAccount, null));
         } else if (navigationLayout != null) {
