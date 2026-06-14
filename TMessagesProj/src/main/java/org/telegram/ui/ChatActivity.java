@@ -34219,7 +34219,12 @@ public class ChatActivity extends BaseFragment implements
 			}
 			int popupY;
 			int minY = (int) (chatListView.getY() + dp(24));
-			int maxY = totalHeight - height - dp(8);
+			// Subtract navigationBarHeight from maxY: contentView.getHeight() doesn't include the
+			// navigation bar, but showAtLocation() places popups in the full window coordinate system.
+			// Without this, the popup's maxHeight is too small on devices with navigation bars,
+			// causing the menu to be cut off at the bottom on those devices.
+			int navBarHeight = keyboardHeight > AndroidUtilities.dp(20) ? 0 : AndroidUtilities.navigationBarHeight;
+			int maxY = totalHeight - height - dp(8) - navBarHeight;
 			if (height < totalHeight) {
 				popupY = (int) (chatListView.getY() + v.getTop() + y);
 				if (isInsideContainer) {
