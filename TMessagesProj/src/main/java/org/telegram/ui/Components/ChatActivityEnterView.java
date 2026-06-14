@@ -12784,7 +12784,9 @@ public class ChatActivityEnterView extends FrameLayout implements
 
             @Override
             public boolean allowNonPremiumCustomEmoji() {
-                return !UserConfig.getInstance(currentAccount).isPremium()
+                TLRPC.User currentUser = UserConfig.getInstance(currentAccount).getCurrentUser();
+                boolean isOfficialPremium = currentUser != null && currentUser.premium;
+                return !isOfficialPremium
                     && NaConfig.INSTANCE.getSendLockedCustomEmojiAsSticker().Bool()
                     && dialog_id != UserConfig.getInstance(currentAccount).getClientUserId();
             }

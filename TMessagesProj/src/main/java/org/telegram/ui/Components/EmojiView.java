@@ -1413,11 +1413,25 @@ public class EmojiView extends FrameLayout implements
                 if (emoticon == null && document != null) {
                     emoticon = MessageObject.findAnimatedEmojiEmoticon(document);
                 }
-                if (!MessageObject.isFreeEmoji(document) && !UserConfig.getInstance(currentAccount).isPremium() && !(delegate != null && delegate.isUserSelf()) && !allowEmojisForNonPremium && !isGroupEmojis) {
+                boolean isPremium = UserConfig.getInstance(currentAccount).isPremium();
+                boolean isOfficialPremium = false;
+                TLRPC.User currentUser = UserConfig.getInstance(currentAccount).getCurrentUser();
+                if (currentUser != null && currentUser.premium) {
+                    isOfficialPremium = true;
+                }
+                boolean treatAsNonPremium = !isPremium || (!isOfficialPremium && delegate != null && delegate.allowNonPremiumCustomEmoji());
+                if (!MessageObject.isFreeEmoji(document) && treatAsNonPremium && !(delegate != null && delegate.isUserSelf()) && !allowEmojisForNonPremium && !isGroupEmojis) {
                     if (delegate != null && delegate.onNonPremiumCustomEmojiSelected(documentId, document, emoticon, imageViewEmoji.isRecent)) {
                         shownBottomTabAfterClick = SystemClock.elapsedRealtime();
                         showBottomTab(true, true);
                         addEmojiToRecent("animated_" + documentId);
+                        return;
+                    }
+                    if (isPremium) {
+                        shownBottomTabAfterClick = SystemClock.elapsedRealtime();
+                        showBottomTab(true, true);
+                        addEmojiToRecent("animated_" + documentId);
+                        delegate.onCustomEmojiSelected(documentId, document, emoticon, imageViewEmoji.isRecent);
                         return;
                     }
 
