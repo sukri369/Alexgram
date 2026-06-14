@@ -3,15 +3,15 @@
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
-    <!-- Left leg (aligned slope, rounded caps) -->
+    <!-- Left leg (less flared, aligned slope, rounded caps) -->
     <path
-        android:pathData="M 3.55,18.0 L 1.27,21.5"
+        android:pathData="M 7.13,16.5 L 5.0,21.5"
         android:strokeColor="#ffffff"
         android:strokeWidth="2.2"
         android:strokeLineCap="round"/>
-    <!-- Right leg (aligned slope, rounded caps) -->
+    <!-- Right leg (less flared, aligned slope, rounded caps) -->
     <path
-        android:pathData="M 20.45,18.0 L 22.73,21.5"
+        android:pathData="M 16.87,16.5 L 19.0,21.5"
         android:strokeColor="#ffffff"
         android:strokeWidth="2.2"
         android:strokeLineCap="round"/>
