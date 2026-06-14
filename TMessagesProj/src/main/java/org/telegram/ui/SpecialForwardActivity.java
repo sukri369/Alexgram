@@ -2177,7 +2177,7 @@ public class SpecialForwardActivity extends ChatActivity {
 
         private long getDialogDate(TLRPC.Dialog dialog) {
             if (dialog == null) return 0;
-            MessageObject draftMessage = MediaDataController.getInstance(currentAccount).getDraft(dialog.id, 0);
+            TLRPC.DraftMessage draftMessage = MediaDataController.getInstance(currentAccount).getDraft(dialog.id, 0);
             return DialogObject.getLastMessageOrDraftDate(dialog, draftMessage);
         }
 
@@ -2255,7 +2255,7 @@ public class SpecialForwardActivity extends ChatActivity {
                     TLRPC.User user = org.telegram.messenger.MessagesController.getInstance(currentAccount).getUser(dialogId);
                     if (user == null || !user.bot) continue;
                 } else if (activeTab.id > 0 && activeTab.filter != null) { // Custom folder
-                    if (!activeTab.filter.includesDialog(getAccountInstance(), dialogId, dialog)) continue;
+                    if (!activeTab.filter.includesDialog(org.telegram.messenger.AccountInstance.getInstance(currentAccount), dialogId, dialog)) continue;
                 }
                 
                 filteredDialogs.add(dialog);
