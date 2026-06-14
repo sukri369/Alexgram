@@ -31,6 +31,7 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.TransitionDrawable;
+import android.graphics.drawable.RippleDrawable;
 import android.os.Build;
 import android.os.SystemClock;
 import android.text.Layout;
@@ -288,6 +289,42 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
 
         public int getSelectionBottomPadding(View view) {
             return 0;
+        }
+
+        public int getSelectionBottomPadding(View view, int position) {
+            return getSelectionBottomPadding(view);
+        }
+
+        public int getSelectionLeftPadding(View view) {
+            return 0;
+        }
+
+        public int getSelectionLeftPadding(View view, int position) {
+            return getSelectionLeftPadding(view);
+        }
+
+        public int getSelectionRightPadding(View view) {
+            return 0;
+        }
+
+        public int getSelectionRightPadding(View view, int position) {
+            return getSelectionRightPadding(view);
+        }
+
+        public int getSelectionTopPadding(View view) {
+            return 0;
+        }
+
+        public int getSelectionTopPadding(View view, int position) {
+            return getSelectionTopPadding(view);
+        }
+
+        public float[] getSelectionRadii(View view) {
+            return null;
+        }
+
+        public float[] getSelectionRadii(View view, int position) {
+            return getSelectionRadii(view);
         }
     }
 
@@ -2384,22 +2421,57 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
             return;
         }
         final boolean positionChanged = position != selectorPosition;
-        int bottomPadding;
+        int leftPadding = 0;
+        int topPadding = 0;
+        int rightPadding = 0;
+        int bottomPadding = 0;
         if (getAdapter() instanceof SelectionAdapter) {
-            bottomPadding = ((SelectionAdapter) getAdapter()).getSelectionBottomPadding(sel);
-        } else {
-            bottomPadding = 0;
+            SelectionAdapter adapter = (SelectionAdapter) getAdapter();
+            leftPadding = adapter.getSelectionLeftPadding(sel, position);
+            topPadding = adapter.getSelectionTopPadding(sel, position);
+            rightPadding = adapter.getSelectionRightPadding(sel, position);
+            bottomPadding = adapter.getSelectionBottomPadding(sel, position);
         }
         if (position != NO_POSITION) {
             selectorPosition = position;
         }
         selectorView = sel;
-        if (selectorType == 8) {
-            Theme.setMaskDrawableRad(selectorDrawable, selectorRadius, 0);
-        } else if (topBottomSelectorRadius > 0 && getAdapter() != null) {
-            Theme.setMaskDrawableRad(selectorDrawable, position == 0 ? topBottomSelectorRadius : 0, position == getAdapter().getItemCount() - 2 ? topBottomSelectorRadius : 0);
+        float[] radii = null;
+        if (getAdapter() instanceof SelectionAdapter) {
+            radii = ((SelectionAdapter) getAdapter()).getSelectionRadii(sel, position);
         }
-        selectorRect.set(sel.getLeft(), sel.getTop(), sel.getRight(), sel.getBottom() - bottomPadding);
+        if (radii != null && radii.length >= 4) {
+            boolean hasMask = false;
+            if (selectorDrawable instanceof RippleDrawable) {
+                RippleDrawable rd = (RippleDrawable) selectorDrawable;
+                int count = rd.getNumberOfLayers();
+                for (int a = 0; a < count; a++) {
+                    if (rd.getDrawable(a) instanceof Theme.RippleRadMaskDrawable) {
+                        hasMask = true;
+                        break;
+                    }
+                }
+            }
+            if (!hasMask) {
+                int color = getThemedColor(hasSections() ? Theme.key_settings_listSelector : Theme.key_listSelector);
+                Integer customColor = getSelectorColor(position);
+                if (customColor != null) {
+                    color = customColor;
+                }
+                selectorDrawable = Theme.createRadSelectorDrawable(color, 0, 0);
+                selectorDrawable.setCallback(this);
+            }
+            Theme.setMaskDrawableRad(selectorDrawable, radii[0], radii[1], radii[2], radii[3]);
+        } else {
+            if (selectorType == 8) {
+                Theme.setMaskDrawableRad(selectorDrawable, selectorRadius, 0);
+            } else if (topBottomSelectorRadius > 0 && getAdapter() != null) {
+                Theme.setMaskDrawableRad(selectorDrawable, position == 0 ? topBottomSelectorRadius : 0, position == getAdapter().getItemCount() - 2 ? topBottomSelectorRadius : 0);
+            } else {
+                Theme.setMaskDrawableRad(selectorDrawable, 0, 0);
+            }
+        }
+        selectorRect.set(sel.getLeft() + leftPadding, sel.getTop() + topPadding, sel.getRight() - rightPadding, sel.getBottom() - bottomPadding);
 //        selectorRect.offset((int) sel.getTranslationX(), (int) sel.getTranslationY());
 
         final boolean enabled = sel.isEnabled();
@@ -2639,13 +2711,18 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
         }
 
         if ((translateSelector == -2 || translateSelector == selectorPosition) && selectorView != null) {
-            int bottomPadding;
+            int leftPadding = 0;
+            int topPadding = 0;
+            int rightPadding = 0;
+            int bottomPadding = 0;
             if (getAdapter() instanceof SelectionAdapter) {
-                bottomPadding = ((SelectionAdapter) getAdapter()).getSelectionBottomPadding(selectorView);
-            } else {
-                bottomPadding = 0;
+                SelectionAdapter adapter = (SelectionAdapter) getAdapter();
+                leftPadding = adapter.getSelectionLeftPadding(selectorView, selectorPosition);
+                topPadding = adapter.getSelectionTopPadding(selectorView, selectorPosition);
+                rightPadding = adapter.getSelectionRightPadding(selectorView, selectorPosition);
+                bottomPadding = adapter.getSelectionBottomPadding(selectorView, selectorPosition);
             }
-            selectorDrawable.setBounds(selectorView.getLeft(), selectorView.getTop(), selectorView.getRight(), selectorView.getBottom() - bottomPadding);
+            selectorDrawable.setBounds(selectorView.getLeft() + leftPadding, selectorView.getTop() + topPadding, selectorView.getRight() - rightPadding, selectorView.getBottom() - bottomPadding);
         } else {
             selectorDrawable.setBounds(selectorRect);
         }
