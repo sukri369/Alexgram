@@ -307,8 +307,8 @@
     <string name="BackAnimationSpring">Yay (Spring)</string>
     <string name="BackAnimationPredictive">Öngörücü</string>
     <string name="AddToFilter">Filtreye Ekle</string>
-    <string name="UnifiedPushNeverReceivedNotifications">Nagram X başlatıldığından beri UnifiedPush ile hiç bildirim almadınız.</string>
-    <string name="UnifiedPushLastReceivedNotification">UnifiedPush ile en son alınan bildirim %1$d saniye önceydi.\n\nNagram X başlatıldığından beri %2$d bildirim aldınız.</string>
+    <string name="UnifiedPushNeverReceivedNotifications">Alexgram başlatıldığından beri UnifiedPush ile hiç bildirim almadınız.</string>
+    <string name="UnifiedPushLastReceivedNotification">UnifiedPush ile en son alınan bildirim %1$d saniye önceydi.\n\nAlexgram başlatıldığından beri %2$d bildirim aldınız.</string>
     <string name="UnifiedPushCurrentEndpoint">Mevcut UnifiedPush uç noktası: %1$s</string>
     <string name="PlayOnce">Bir kez oynat</string>
     <string name="StorageSettings">Depolama</string>

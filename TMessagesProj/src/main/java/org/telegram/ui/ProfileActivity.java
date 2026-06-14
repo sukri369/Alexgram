@@ -13403,7 +13403,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     return;
                 }
 
-                File logcatFile = new File(dir, "NagramX-" + System.currentTimeMillis() + ".log");
+                File logcatFile = new File(dir, "Alexgram-" + System.currentTimeMillis() + ".log");
                 try {
                     ProcessBuilder pb1 = new ProcessBuilder("logcat", "-df", logcatFile.getPath());
                     pb1.inheritIO();

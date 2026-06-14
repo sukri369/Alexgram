@@ -221,7 +221,7 @@ public class NekoConfig {
 
     public static void init() {
         loadConfig(false);
-        if ("Nagram".equals(customSavePath.String())) {
+        if ("Nagram".equals(customSavePath.String()) || "NagramX".equals(customSavePath.String())) {
             customSavePath.setConfigString("Alexgram");
         }
     }

@@ -172,7 +172,7 @@ strings = {
     <string name="AmbientMode">環境模式</string>"""
 }
 
-base_dir = r"D:\NagramX\TMessagesProj\src\main\res"
+base_dir = r"D:\Alexgram\TMessagesProj\src\main\res"
 
 for lang, new_strings in strings.items():
     file_path = os.path.join(base_dir, lang, "strings_nax.xml")
