@@ -645,6 +645,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private final static int clear_cache = 104;
     private final static int add_to_folder = 105;
     private final static int shadow_ban = 107;
+    private final static int manage_privacy = 108;
 
     private Rect rect = new Rect();
 
@@ -2631,6 +2632,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     onBlockContactClicked(false);
                 } else if (id == shadow_ban) {
                     onShadowBanClicked();
+                } else if (id == manage_privacy) {
+                    TLRPC.User user = getMessagesController().getUser(userId);
+                    if (user != null) {
+                        presentFragment(new ProfilePrivacyActivity(user));
+                    }
                 } else if (id == add_contact) {
                     TLRPC.User user = getMessagesController().getUser(userId);
                     Bundle args = new Bundle();
@@ -12510,6 +12516,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         final boolean forwardsAllowed = !userInfo.noforwards_my_enabled && !userInfo.noforwards_peer_enabled;
                         otherItem.setSubItemShown(enable_no_forwards, forwardsAllowed);
                         otherItem.setSubItemShown(disable_no_forwards, !forwardsAllowed);
+                    }
+                    if (NekoConfig.enableCustomPrivacy.Bool()) {
+                        otherItem.addSubItem(manage_privacy, R.drawable.menu_privacy_policy, LocaleController.getString("ProfilePrivacyManager", R.string.ProfilePrivacyManager));
                     }
                 }
                 if (!isBot && getContactsController().contactsDict.get(userId) != null) {

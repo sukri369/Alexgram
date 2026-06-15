@@ -187,6 +187,7 @@ public class NekoConfig {
     // [Alexgram: Admin Tag in Voice Chat] - Start
     public static ConfigItem showAdminTagInVoiceChat = addConfig("showAdminTagInVoiceChat", configTypeBool, true);
     // [Alexgram: Admin Tag in Voice Chat] - End
+    public static ConfigItem enableCustomPrivacy = addConfig("enableCustomPrivacy", configTypeBool, true);
     // [Alexgram: Native Features] - End
 
 

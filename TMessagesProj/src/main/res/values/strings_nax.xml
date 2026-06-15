@@ -476,6 +476,8 @@
     <string name="ShowAdminTagInVoiceChatDesc">Display admin or owner badges next to user names in voice/video chats.</string>
     <!-- [Alexgram: Admin Tag in Voice Chat] - End -->
     <string name="Ayugram">Ayugram</string>
+    <string name="ProfilePrivacyManager">Profile Privacy Manager</string>
+    <string name="ProfilePrivacyManagerAbout">Allows managing individual user privacy settings directly from their profile menu.</string>
 </resources>
 
 
