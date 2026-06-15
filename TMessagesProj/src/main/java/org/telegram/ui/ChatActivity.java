@@ -10937,7 +10937,7 @@ public class ChatActivity extends BaseFragment implements
 		actionModeViews.add(actionMode.addItemWithWidth(star, R.drawable.msg_fave, AndroidUtilities.dp(54), LocaleController.getString(R.string.AddToFavorites)));
 		actionModeViews.add(actionMode.addItemWithWidth(copy, R.drawable.msg_copy, AndroidUtilities.dp(54), LocaleController.getString(R.string.Copy)));
 		if (currentEncryptedChat == null && getDialogId() != UserObject.VERIFY && NaConfig.INSTANCE.getActionBarButtonForward().Bool()) {
-			actionModeViews.add(actionMode.addItemWithWidth(forward, R.drawable.msg_forward_noquote, AndroidUtilities.dp(54), LocaleController.getString(R.string.Forward)));
+			actionModeViews.add(actionMode.addItemWithWidth(forward, R.drawable.msg_forward, AndroidUtilities.dp(54), LocaleController.getString(R.string.Forward)));
 		}
 		// [Alexgram: Special Forward] - Start
 		if (currentEncryptedChat == null && NaConfig.INSTANCE.getSpecialForward().Bool()) {
@@ -33466,7 +33466,7 @@ public class ChatActivity extends BaseFragment implements
 						coreItems.add("Edit");
 					} else if (this.lastMessageMenuStatus.allowForward) {
 						coreOptions.add(OPTION_FORWARD);
-						coreIcons.add(R.drawable.msg_forward_noquote);
+						coreIcons.add(R.drawable.msg_forward);
 						coreItems.add("Forward");
 					}
 
@@ -49253,7 +49253,7 @@ public class ChatActivity extends BaseFragment implements
 					if (!GroupedIconsView.useGroupedIcons() || allowEdit) {
 						items.add(LocaleController.getString(R.string.Forward));
 						options.add(OPTION_FORWARD);
-						icons.add(NaConfig.INSTANCE.getShowNoQuoteForward().Bool() ? R.drawable.msg_forward : R.drawable.msg_forward_noquote);
+						icons.add(R.drawable.msg_forward);
 					}
 				}
 				// --- NagramX Start ---
