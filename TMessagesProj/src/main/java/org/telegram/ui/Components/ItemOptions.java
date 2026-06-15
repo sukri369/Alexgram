@@ -305,7 +305,13 @@ public class ItemOptions {
     }
 
     public LinearLayout getLinearLayout() {
-        return linearLayout;
+        if (linearLayout != null) {
+            return linearLayout;
+        }
+        if (lastLayout != null) {
+            return lastLayout.getLinearLayout();
+        }
+        return null;
     }
 
     public void openSwipeback(ItemOptions options) {

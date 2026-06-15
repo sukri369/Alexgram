@@ -270,6 +270,10 @@ public class ActionBarPopupWindow extends PopupWindow {
             return swipeBackLayout;
         }
 
+        public LinearLayout getLinearLayout() {
+            return linearLayout;
+        }
+
         public int addViewToSwipeBack(View v) {
             swipeBackLayout.addView(v, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, shownFromBottom ? Gravity.BOTTOM : Gravity.TOP));
             return swipeBackLayout.getChildCount() - 1;
