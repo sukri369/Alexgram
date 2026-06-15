@@ -744,8 +744,18 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             try {
                 accountsReorderId = adapter.reorderSectionStart();
                 items.add(AccountHeaderCell.Factory.of(1000, getString(R.string.SettingsAccounts)));
-                for (int i = 0; i < accountNumbers.size(); ++i) {
-                    items.add(AccountCell.Factory.of(i + 2000, accountNumbers.get(i)));
+                boolean settingsAccountsShown = MessagesController.getGlobalMainSettings().getBoolean("settingsAccountsShown", true);
+                if (settingsAccountsShown || accountNumbers.size() <= 1) {
+                    for (int i = 0; i < accountNumbers.size(); ++i) {
+                        items.add(AccountCell.Factory.of(i + 2000, accountNumbers.get(i)));
+                    }
+                } else {
+                    int activeAccount = UserConfig.selectedAccount;
+                    if (accountNumbers.contains(activeAccount)) {
+                        items.add(AccountCell.Factory.of(accountNumbers.indexOf(activeAccount) + 2000, activeAccount));
+                    } else {
+                        items.add(AccountCell.Factory.of(2000, accountNumbers.get(0)));
+                    }
                 }
                 adapter.reorderSectionEnd();
                 items.add(UItem.asShadow(null));
@@ -1045,6 +1055,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         private final Theme.ResourcesProvider resourcesProvider;
         private final SimpleTextView titleView;
         private final ImageView pinView;
+        private final ImageView arrowView;
 
         public AccountHeaderCell(Context context, Theme.ResourcesProvider resourcesProvider) {
             super(context);
@@ -1055,7 +1066,10 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             titleView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlueHeader, resourcesProvider));
             titleView.setGravity(Gravity.CENTER_VERTICAL | (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT));
             titleView.setTypeface(AndroidUtilities.bold());
-            addView(titleView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.FILL, 22, 0, 52, 0));
+            
+            int titleLeftMargin = LocaleController.isRTL ? 92 : 22;
+            int titleRightMargin = LocaleController.isRTL ? 22 : 92;
+            addView(titleView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.FILL, titleLeftMargin, 0, titleRightMargin, 0));
 
             pinView = new ImageView(context);
             pinView.setScaleType(ImageView.ScaleType.CENTER);
@@ -1068,13 +1082,38 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                     ((UniversalAdapter) v.getTag()).update(true);
                 }
             });
-            addView(pinView, LayoutHelper.createFrame(40, 40, (LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT) | Gravity.CENTER_VERTICAL, 8, 0, 8, 0));
+            int pinMargin = 8;
+            addView(pinView, LayoutHelper.createFrame(40, 40, (LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT) | Gravity.CENTER_VERTICAL, LocaleController.isRTL ? pinMargin : 0, 0, LocaleController.isRTL ? 0 : pinMargin, 0));
+
+            arrowView = new ImageView(context);
+            arrowView.setScaleType(ImageView.ScaleType.CENTER);
+            arrowView.setImageResource(R.drawable.msg_expand);
+            boolean expanded = org.telegram.messenger.MessagesController.getGlobalMainSettings().getBoolean("settingsAccountsShown", true);
+            arrowView.setRotation(expanded ? 180.0f : 0.0f);
+            arrowView.setOnClickListener(v -> {
+                boolean exp = !org.telegram.messenger.MessagesController.getGlobalMainSettings().getBoolean("settingsAccountsShown", true);
+                org.telegram.messenger.MessagesController.getGlobalMainSettings().edit().putBoolean("settingsAccountsShown", exp).apply();
+                updateArrow(exp, true);
+                org.telegram.messenger.BotWebViewVibrationEffect.APP_ERROR.vibrate();
+                if (v.getTag() instanceof UniversalAdapter) {
+                    ((UniversalAdapter) v.getTag()).update(true);
+                }
+            });
+            int arrowMargin = 48;
+            addView(arrowView, LayoutHelper.createFrame(40, 40, (LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT) | Gravity.CENTER_VERTICAL, LocaleController.isRTL ? arrowMargin : 0, 0, LocaleController.isRTL ? 0 : arrowMargin, 0));
         }
 
         public void set(CharSequence title, boolean pin, UniversalAdapter adapter) {
+            set(title, pin, org.telegram.messenger.MessagesController.getGlobalMainSettings().getBoolean("settingsAccountsShown", true), 0, adapter);
+        }
+
+        public void set(CharSequence title, boolean pin, boolean expanded, int accountsCount, UniversalAdapter adapter) {
             titleView.setText(title);
             updatePin(pin);
+            updateArrow(expanded, false);
+            arrowView.setVisibility(accountsCount > 1 ? View.VISIBLE : View.GONE);
             pinView.setTag(adapter);
+            arrowView.setTag(adapter);
         }
 
         private void updatePin(boolean pin) {
@@ -1082,9 +1121,24 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             pinView.setContentDescription(pin ? "Unpin" : "Pin");
         }
 
+        private void updateArrow(boolean expanded, boolean animated) {
+            float rotation = expanded ? 180.0f : 0.0f;
+            if (animated) {
+                arrowView.animate().cancel();
+                arrowView.animate().rotation(rotation).setDuration(220).setInterpolator(org.telegram.ui.Components.CubicBezierInterpolator.EASE_OUT).start();
+            } else {
+                arrowView.animate().cancel();
+                arrowView.setRotation(rotation);
+            }
+            arrowView.setContentDescription(expanded ? "Collapse Accounts" : "Expand Accounts");
+        }
+
         @Override
         public void updateColors() {
-            titleView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlueHeader, resourcesProvider));
+            int color = Theme.getColor(Theme.key_windowBackgroundWhiteBlueHeader, resourcesProvider);
+            titleView.setTextColor(color);
+            arrowView.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN));
+            pinView.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN));
         }
 
         @Override
@@ -1105,7 +1159,18 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
 
             @Override
             public void bindView(View view, UItem item, boolean divider, UniversalAdapter adapter, UniversalRecyclerView listView) {
-                ((AccountHeaderCell) view).set(item.text, NaConfig.INSTANCE.getPinAccountOrder().Bool(), adapter);
+                boolean pin = NaConfig.INSTANCE.getPinAccountOrder().Bool();
+                boolean expanded = org.telegram.messenger.MessagesController.getGlobalMainSettings().getBoolean("settingsAccountsShown", true);
+                
+                int accountsCount = 0;
+                for (int a = 0; a < org.telegram.messenger.UserConfig.MAX_ACCOUNT_COUNT; a++) {
+                    if (tw.nekomimi.nekogram.helpers.PasscodeHelper.isAccountHidden(a)) continue;
+                    if (org.telegram.messenger.UserConfig.getInstance(a).isClientActivated()) {
+                        accountsCount++;
+                    }
+                }
+                
+                ((AccountHeaderCell) view).set(item.text, pin, expanded, accountsCount, adapter);
             }
 
             public static UItem of(int id, CharSequence title) {

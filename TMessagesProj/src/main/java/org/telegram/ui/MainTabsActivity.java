@@ -25,7 +25,11 @@ import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.graphics.PorterDuffColorFilter;
+import android.graphics.PorterDuff;
+import android.animation.LayoutTransition;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -565,6 +569,48 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
 
         if (accountNumbers.size() > 0) {
             if (o.getItemsCount() > 0) o.addGap();
+            final ArrayList<View> accountViews = new ArrayList<>();
+            final boolean expanded = org.telegram.messenger.MessagesController.getGlobalMainSettings().getBoolean("settingsAccountsShown", true);
+            
+            if (accountNumbers.size() > 1) {
+                o.getLinearLayout().setLayoutTransition(new LayoutTransition());
+                
+                FrameLayout header = new FrameLayout(getContext());
+                TextView headerTitle = new TextView(getContext());
+                headerTitle.setText(getString(R.string.SettingsAccounts));
+                headerTitle.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
+                headerTitle.setTypeface(AndroidUtilities.bold());
+                headerTitle.setTextColor(getThemedColor(Theme.key_dialogTextBlue2));
+                int titleLeftMargin = LocaleController.isRTL ? 0 : 18;
+                int titleRightMargin = LocaleController.isRTL ? 18 : 0;
+                header.addView(headerTitle, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.CENTER_VERTICAL, titleLeftMargin, 8, titleRightMargin, 8));
+                
+                ImageView arrow = new ImageView(getContext());
+                arrow.setImageResource(R.drawable.msg_expand);
+                arrow.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_dialogTextBlue2), PorterDuff.Mode.SRC_IN));
+                arrow.setRotation(expanded ? 180.0f : 0.0f);
+                int arrowLeftMargin = LocaleController.isRTL ? 16 : 0;
+                int arrowRightMargin = LocaleController.isRTL ? 0 : 16;
+                header.addView(arrow, LayoutHelper.createFrame(24, 24, (LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT) | Gravity.CENTER_VERTICAL, arrowLeftMargin, 0, arrowRightMargin, 0));
+                
+                header.setOnClickListener(v -> {
+                    boolean exp = !org.telegram.messenger.MessagesController.getGlobalMainSettings().getBoolean("settingsAccountsShown", true);
+                    org.telegram.messenger.MessagesController.getGlobalMainSettings().edit().putBoolean("settingsAccountsShown", exp).apply();
+                    
+                    float rotation = exp ? 180.0f : 0.0f;
+                    arrow.animate().cancel();
+                    arrow.animate().rotation(rotation).setDuration(220).setInterpolator(org.telegram.ui.Components.CubicBezierInterpolator.EASE_OUT).start();
+                    
+                    for (int i = 0; i < accountNumbers.size(); i++) {
+                        int acc = accountNumbers.get(i);
+                        if (acc != currentAccount) {
+                            accountViews.get(i).setVisibility(exp ? View.VISIBLE : View.GONE);
+                        }
+                    }
+                });
+                o.addView(header, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+            }
+            
             for (int acc : accountNumbers) {
                 final int account = acc;
                 final View btn = accountView(acc, currentAccount == acc);
@@ -575,7 +621,13 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
                         LaunchActivity.instance.switchToAccount(account, true);
                     }
                 });
+                
+                if (!expanded && acc != currentAccount && accountNumbers.size() > 1) {
+                    btn.setVisibility(View.GONE);
+                }
+                
                 o.addView(btn, LayoutHelper.createLinear(230, 48));
+                accountViews.add(btn);
             }
         }
 
