@@ -19,6 +19,7 @@ import android.Manifest;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
+import android.animation.LayoutTransition;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
@@ -214,6 +215,7 @@ import org.telegram.messenger.VideoEditedInfo;
 import org.telegram.messenger.browser.Browser;
 import org.telegram.messenger.camera.CameraView;
 import org.telegram.messenger.support.LongSparseIntArray;
+import org.telegram.messenger.utils.FBool;
 import org.telegram.messenger.utils.OnPostDrawView;
 import org.telegram.messenger.utils.PhotoUtilities;
 import org.telegram.messenger.utils.RectFMergeBounding;
@@ -226,6 +228,7 @@ import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.tgnet.tl.TL_account;
 import org.telegram.tgnet.tl.TL_bots;
+import org.telegram.tgnet.tl.TL_iv;
 import org.telegram.tgnet.tl.TL_phone;
 import org.telegram.tgnet.tl.TL_stats;
 import org.telegram.tgnet.tl.TL_stories;
@@ -266,6 +269,7 @@ import org.telegram.ui.Cells.ChatUnreadCell;
 import org.telegram.ui.Cells.CheckBoxCell;
 import org.telegram.ui.Cells.ContextLinkCell;
 import org.telegram.ui.Cells.DialogCell;
+import org.telegram.ui.Cells.IMessageCell;
 import org.telegram.ui.Cells.MentionCell;
 import org.telegram.ui.Cells.ProfileChannelCell;
 import org.telegram.ui.Cells.ShareDialogCell;
@@ -300,6 +304,7 @@ import org.telegram.ui.Components.blur3.utils.Blur3Utils;
 import org.telegram.ui.Components.chat.ChatActivityBottomViewsVisibilityController;
 import org.telegram.ui.Components.chat.ChatActivityDraftMessageMeasureController;
 import org.telegram.ui.Components.chat.ChatActivityMessageMetricsView;
+import org.telegram.ui.Components.chat.ChatActivitySearchContainer;
 import org.telegram.ui.Components.chat.ChatActivityTopFadeView;
 import org.telegram.ui.Components.chat.layouts.ChatActivityActionsButtonsLayout;
 import org.telegram.ui.Components.chat.layouts.ChatActivityChannelButtonsLayout;
@@ -17715,6 +17720,7 @@ public class ChatActivity extends BaseFragment implements
 	public static final int PROGRESS_GIFT = 4;
 	public static final int PROGRESS_PAID_MEDIA = 5;
 	public static final int PROGRESS_FORWARD = 6;
+	public static final int PROGRESS_FULL_ARTICLE = 7;
 
 	private int progressDialogAtMessageId;
 	private int progressDialogAtMessageType;
@@ -47446,7 +47452,7 @@ public class ChatActivity extends BaseFragment implements
 		options.setOnDismiss(dialog::dismissFast);
 
 		final boolean allowCustomTabs = !str.startsWith("video?") && !Browser.isInternalUri(Uri.parse(str), null);
-		final boolean customTabs = SharedConfig.inappBrowser && allowCustomTabs;
+		final boolean customTabs = allowCustomTabs && MessagesController.getInstance(currentAccount).isWebBrowserOpenInApp(str);
 		final boolean isHashtag = str.startsWith("#") || str.startsWith("$");
 		final boolean isMail = str.startsWith("mailto:");
 
@@ -47467,7 +47473,7 @@ public class ChatActivity extends BaseFragment implements
 			options.add(R.drawable.msg_language, getString(R.string.OpenInSystemBrowser), () -> {
 				Browser.openInExternalBrowser(getParentActivity(), str, false);
 			});
-		} else if (!isMail && !isHashtag && !customTabs && allowCustomTabs && !SharedConfig.inappBrowser) {
+		} else if (!isMail && !isHashtag && !customTabs && allowCustomTabs && !MessagesController.getInstance(currentAccount).isWebBrowserOpenInApp(str)) {
 			options.add(R.drawable.msg_language, getString(R.string.OpenInTelegramBrowser), () -> {
 				Browser.openInTelegramBrowser(getParentActivity(), str, null);
 			});

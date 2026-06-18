@@ -1104,6 +1104,7 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
 
             blurredTagDrawable = factory.create(fastScroll, backgroundProvider);
             blurredTagDrawable.setPadding(dp(6));
+            blurredTagDrawable.setThickness(dp(4));
             blurredTagDrawable.setRadius(dp(14));
         }
 
