@@ -574,7 +574,6 @@
             android:exported="false"
         />
 
-        <!--
         <receiver
             android:name=".AutoMessageHeardReceiver"
             android:exported="false">
@@ -582,7 +581,6 @@
                 <action android:name="org.telegram.messenger.ACTION_MESSAGE_HEARD"/>
             </intent-filter>
         </receiver>
-        -->
 
         <receiver
             android:name=".CopyCodeReceiver"
