@@ -32603,7 +32603,7 @@ public class ChatActivity extends BaseFragment implements
 			final boolean isReactionsAvailableFinal = !suggestEdit && isReactionsAvailable;
 
 			int flags = 0;
-			if (isReactionsViewAvailable || showMessageSeen || showSponsorInfo || options.contains(OPTION_REPLY) || options.contains(OPTION_COPY) || options.contains(OPTION_COPY_PHOTO) || options.contains(OPTION_FORWARD) || options.contains(nkbtn_translate)) {
+			if (isReactionsViewAvailable || showMessageSeen || showSponsorInfo || options.contains(OPTION_REPLY) || options.contains(OPTION_COPY) || options.contains(OPTION_COPY_PHOTO) || options.contains(OPTION_FORWARD) || options.contains(nkbtn_translate) || options.contains(OPTION_LOCAL_EDITOR_PLUS)) {
 				flags |= ActionBarPopupWindow.ActionBarPopupWindowLayout.FLAG_USE_SWIPEBACK;
 			}
 
