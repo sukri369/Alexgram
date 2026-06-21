@@ -7,6 +7,7 @@ import android.content.Context;
 import android.os.SystemClock;
 import android.text.Editable;
 import android.text.InputFilter;
+import android.text.InputType;
 import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
@@ -372,6 +373,7 @@ public class ChatAttachAlertTemplatesLayout extends ChatAttachAlert.AttachAlertL
         EditTextBoldCursor textField = new EditTextBoldCursor(context);
         textField.setBackground(null);
         textField.setTextSize(18);
+        textField.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
         textField.setMinLines(3);
         textField.setMaxLines(6);
         textField.setGravity(Gravity.TOP | (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT));
