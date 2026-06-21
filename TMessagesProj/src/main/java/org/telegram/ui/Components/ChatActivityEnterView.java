@@ -6463,6 +6463,7 @@ public class ChatActivityEnterView extends FrameLayout implements
                     }
                 }
                 updateSendButtonPaid();
+                updateTemplatesOvalButton(true);
             }
 
             @Override
@@ -12136,7 +12137,8 @@ public class ChatActivityEnterView extends FrameLayout implements
                 && parentFragment != null
                 && parentFragment.getChatMode() == ChatActivity.MODE_DEFAULT
                 && botMenuButtonType == BotMenuButtonType.NO_BUTTON
-                && TemplatesManager.getInstance(currentAccount).getPanelType() == TemplatesManager.PanelType.OVAL;
+                && TemplatesManager.getInstance(currentAccount).getPanelType() == TemplatesManager.PanelType.OVAL
+                && !hasText();
     }
 
     private boolean isTemplatesOvalButtonVisible() {
