@@ -23,7 +23,7 @@ import org.telegram.ui.Components.AvatarDrawable;
 import org.telegram.ui.Components.BackupImageView;
 import org.telegram.ui.Components.LayoutHelper;
 
-public class TemplateCell extends FrameLayout {
+public class TemplateCell extends android.widget.LinearLayout {
     private final BackupImageView avatarView;
     private final TextView titleView;
     private final TextView subtitleView;
@@ -36,19 +36,16 @@ public class TemplateCell extends FrameLayout {
         super(context);
         setWillNotDraw(false);
         setPadding(dp(16), dp(7), dp(8), dp(7));
-
-        LinearLayout row = new LinearLayout(context);
-        row.setGravity(Gravity.CENTER_VERTICAL);
-        row.setOrientation(LinearLayout.HORIZONTAL);
-        addView(row, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        setOrientation(android.widget.LinearLayout.HORIZONTAL);
+        setGravity(android.view.Gravity.CENTER_VERTICAL);
 
         avatarView = new BackupImageView(context);
         avatarView.setRoundRadius(dp(20));
-        row.addView(avatarView, LayoutHelper.createLinear(40, 40, Gravity.CENTER_VERTICAL));
+        addView(avatarView, LayoutHelper.createLinear(40, 40, Gravity.CENTER_VERTICAL));
 
-        LinearLayout textContainer = new LinearLayout(context);
-        textContainer.setOrientation(LinearLayout.VERTICAL);
-        row.addView(textContainer, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f, 14, 0, 12, 0));
+        android.widget.LinearLayout textContainer = new android.widget.LinearLayout(context);
+        textContainer.setOrientation(android.widget.LinearLayout.VERTICAL);
+        addView(textContainer, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f, 14, 0, 12, 0));
 
         titleView = new TextView(context);
         titleView.setSingleLine(true);
@@ -73,14 +70,14 @@ public class TemplateCell extends FrameLayout {
         previewButton.setImageResource(R.drawable.msg_views_solar);
         previewButton.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText), PorterDuff.Mode.SRC_IN));
         previewButton.setContentDescription(LocaleController.getString(R.string.Open));
-        row.addView(previewButton, LayoutHelper.createLinear(42, 42, Gravity.CENTER_VERTICAL));
+        addView(previewButton, LayoutHelper.createLinear(42, 42, Gravity.CENTER_VERTICAL));
 
         sendButton = new ImageView(context);
         sendButton.setScaleType(ImageView.ScaleType.CENTER);
         sendButton.setBackground(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelector)));
         sendButton.setImageResource(R.drawable.ic_send);
         sendButton.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chat_messagePanelSend), PorterDuff.Mode.SRC_IN));
-        row.addView(sendButton, LayoutHelper.createLinear(42, 42, Gravity.CENTER_VERTICAL));
+        addView(sendButton, LayoutHelper.createLinear(42, 42, Gravity.CENTER_VERTICAL));
     }
 
     public void bind(TemplateSettings template, boolean divider, Runnable previewCallback, Runnable sendCallback) {
