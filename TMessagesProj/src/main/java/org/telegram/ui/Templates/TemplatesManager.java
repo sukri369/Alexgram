@@ -10,6 +10,14 @@ import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.UserConfig;
+import org.telegram.tgnet.ConnectionsManager;
+import org.telegram.tgnet.TLRPC;
+import org.telegram.messenger.MessagesController;
+import org.telegram.messenger.SendMessagesHelper;
+import org.telegram.messenger.MessageObject;
+import org.telegram.messenger.Utilities;
+import org.telegram.messenger.NotificationsController;
+
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -131,6 +139,23 @@ public class TemplatesManager {
         preferences.edit().putLong(KEY_NEXT_ID, template.id + 1).apply();
         save();
         notifyUpdated();
+
+        // Cloud sync to templates private channel
+        getOrCreateTemplatesChannel(channelId -> {
+            if (channelId != 0) {
+                if (messagePayloads != null && !messagePayloads.isEmpty()) {
+                    ArrayList<MessageObject> messageObjects = template.toMessageObjects(currentAccount);
+                    if (!messageObjects.isEmpty()) {
+                        SendMessagesHelper.getInstance(currentAccount).sendMessage(messageObjects, channelId, true, false, true, 0, 0, null, -1, 0, 0, null);
+                    }
+                } else if (!TextUtils.isEmpty(text)) {
+                    SendMessagesHelper.getInstance(currentAccount).sendMessage(SendMessagesHelper.SendMessageParams.of(
+                            text, channelId, null, null, null, true, null, null, null, true, 0, 0, null, false
+                    ));
+                }
+            }
+        });
+
         return template;
     }
 
@@ -209,5 +234,114 @@ public class TemplatesManager {
 
     private void notifyUpdated() {
         AndroidUtilities.runOnUIThread(() -> NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.templatesSettingsUpdated));
+    }
+
+    private void muteChannel(long dialogId) {
+        SharedPreferences notifPrefs = MessagesController.getNotificationsSettings(currentAccount);
+        if (!notifPrefs.contains("notify2_" + dialogId)) {
+            notifPrefs.edit().putInt("notify2_" + dialogId, 2).apply();
+            NotificationsController.getInstance(currentAccount).updateServerNotificationsSettings(dialogId, 0, true);
+        }
+    }
+
+    private boolean creatingChannel = false;
+    private final ArrayList<Utilities.Callback<Long>> pendingCallbacks = new ArrayList<>();
+
+    public void getOrCreateTemplatesChannel(Utilities.Callback<Long> callback) {
+        long channelId = preferences.getLong("templates_channel_id", 0);
+        if (channelId != 0) {
+            callback.run(channelId);
+            return;
+        }
+        synchronized (pendingCallbacks) {
+            pendingCallbacks.add(callback);
+            if (creatingChannel) {
+                return;
+            }
+            creatingChannel = true;
+        }
+
+        TLRPC.TL_channels_createChannel req = new TLRPC.TL_channels_createChannel();
+        req.title = "Alexgram Templates";
+        req.about = "Private channel for Alexgram templates storage.";
+        req.broadcast = true;
+        
+        ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response, error) -> {
+            long resultChannelId = 0;
+            if (error == null) {
+                TLRPC.Updates updates = (TLRPC.Updates) response;
+                MessagesController.getInstance(currentAccount).processUpdates(updates, false);
+                if (updates.chats != null && !updates.chats.isEmpty()) {
+                    TLRPC.Chat chat = updates.chats.get(0);
+                    resultChannelId = -chat.id;
+                    preferences.edit().putLong("templates_channel_id", resultChannelId).apply();
+                    muteChannel(resultChannelId);
+                    uploadChannelAvatar(resultChannelId);
+                }
+            }
+            final long finalChannelId = resultChannelId;
+            AndroidUtilities.runOnUIThread(() -> {
+                ArrayList<Utilities.Callback<Long>> callbacks;
+                synchronized (pendingCallbacks) {
+                    creatingChannel = false;
+                    callbacks = new ArrayList<>(pendingCallbacks);
+                    pendingCallbacks.clear();
+                }
+                for (Utilities.Callback<Long> cb : callbacks) {
+                    cb.run(finalChannelId);
+                }
+            });
+        });
+    }
+
+    private void uploadChannelAvatar(final long channelId) {
+        try {
+            android.graphics.drawable.Drawable drawable = ApplicationLoader.applicationContext.getResources().getDrawable(R.drawable.fork_templates);
+            android.graphics.Bitmap bitmap;
+            if (drawable instanceof android.graphics.drawable.BitmapDrawable) {
+                bitmap = ((android.graphics.drawable.BitmapDrawable) drawable).getBitmap();
+            } else {
+                bitmap = android.graphics.Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), android.graphics.Bitmap.Config.ARGB_8888);
+                android.graphics.Canvas canvas = new android.graphics.Canvas(bitmap);
+                drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+                drawable.draw(canvas);
+            }
+            if (bitmap != null) {
+                final TLRPC.PhotoSize bigPhoto = org.telegram.messenger.ImageLoader.scaleAndSaveImage(bitmap, 800, 800, 80, false, 320, 320);
+                final TLRPC.PhotoSize smallPhoto = org.telegram.messenger.ImageLoader.scaleAndSaveImage(bitmap, 150, 150, 80, false, 150, 150);
+                if (bigPhoto != null && smallPhoto != null) {
+                    final String uploadingImage = org.telegram.messenger.FileLoader.getDirectory(org.telegram.messenger.FileLoader.MEDIA_DIR_CACHE) + "/" + bigPhoto.location.volume_id + "_" + bigPhoto.location.local_id + ".jpg";
+                    NotificationCenter.NotificationCenterDelegate observer = new NotificationCenter.NotificationCenterDelegate() {
+                        @Override
+                        public void didReceivedNotification(int id, int account, Object... args) {
+                            if (id == NotificationCenter.fileUploaded) {
+                                String location = (String) args[0];
+                                if (location.equals(uploadingImage)) {
+                                    NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.fileUploaded);
+                                    NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.fileUploadFailed);
+                                    TLRPC.InputFile uploadedPhoto = (TLRPC.InputFile) args[1];
+                                    MessagesController.getInstance(currentAccount).changeChatAvatar(-channelId, null, uploadedPhoto, null, null, 0, null, smallPhoto.location, bigPhoto.location, null);
+                                }
+                            } else if (id == NotificationCenter.fileUploadFailed) {
+                                String location = (String) args[0];
+                                if (location.equals(uploadingImage)) {
+                                    NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.fileUploaded);
+                                    NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.fileUploadFailed);
+                                }
+                            }
+                        }
+                    };
+                    NotificationCenter.getInstance(currentAccount).addObserver(observer, NotificationCenter.fileUploaded);
+                    NotificationCenter.getInstance(currentAccount).addObserver(observer, NotificationCenter.fileUploadFailed);
+                    org.telegram.messenger.FileLoader.getInstance(currentAccount).uploadFile(uploadingImage, false, true, ConnectionsManager.FileTypePhoto);
+                }
+            }
+        } catch (Throwable e) {
+            org.telegram.messenger.FileLog.e(e);
+        }
+    }
+
+    public long getTemplatesChannelId() {
+        return preferences.getLong("templates_channel_id", 0);
     }
 }

@@ -4587,6 +4587,9 @@ public class ChatActivity extends BaseFragment implements
 
 			@Override
 			protected boolean onAvatarClick() {
+				if (dialog_id == TemplatesManager.getInstance(currentAccount).getTemplatesChannelId()) {
+					return true;
+				}
 				if (isTitleCentered()) {
 					if (editTextItem != null && editTextItem.getView() != null && editTextItem.getView().getVisibility() == VISIBLE) {
 						editTextItem.getView().performClick();
@@ -10973,8 +10976,7 @@ public class ChatActivity extends BaseFragment implements
 		// Move combine_message to overflow to free up space in main bar
 		actionModeOtherItem.addSubItem(combine_message, R.drawable.msg_replace, LocaleController.getString(R.string.CombineMessage));
 		actionModeOtherItem.addSubItem(nkbtn_translate, LlmConfig.llmIsDefaultProvider() ? R.drawable.magic_stick_solar : R.drawable.ic_translate, LocaleController.getString(R.string.Translate));
-		actionModeOtherItem.addSubItem(nkbtn_sharemessage, R.drawable.msg_shareout, LocaleController.getString(R.string.ShareMessages));
-
+		actionModeOtherItem.addSubItem(nkbtn_save_to_templates, R.drawable.fork_templates, LocaleController.getString(R.string.chat_templates));
 		actionModeOtherItem.addSubItem(nkbtn_unpin, R.drawable.msg_unpin, LocaleController.getString(R.string.UnpinMessage));
 		if (!noforward) {
 			actionModeOtherItem.addSubItem(nkbtn_savemessage, R.drawable.menu_saved, LocaleController.getString(R.string.AddToSavedMessages));
@@ -20465,9 +20467,9 @@ public class ChatActivity extends BaseFragment implements
 				}
 
 				if (actionModeOtherItem != null) {
-					actionModeOtherItem.setSubItemVisibility(nkbtn_sharemessage, selectedMessagesCanCopyIds[0].size() + selectedMessagesCanCopyIds[1].size() > 0);
-
+					actionModeOtherItem.setSubItemVisibility(nkbtn_save_to_templates, hasSelectedMessagesWithTemplateText());
 				}
+
 
 				boolean allowPin = false;
 				if (currentChat != null) {
@@ -49356,7 +49358,11 @@ public class ChatActivity extends BaseFragment implements
 						options.add(nkbtn_sharemessage);
 						icons.add(R.drawable.msg_shareout);
 					}
-
+					if (canSaveToTemplates(selectedObject, selectedObjectGroup)) {
+						items.add(LocaleController.getString(R.string.chat_templates));
+						options.add(nkbtn_save_to_templates);
+						icons.add(R.drawable.fork_templates);
+					}
 				}
 				if (NekoConfig.showMessageHide.Bool()) {
 					items.add(LocaleController.getString(R.string.Hide));

@@ -239,8 +239,14 @@ public class ChatAttachAlertTemplatesLayout extends ChatAttachAlert.AttachAlertL
         if (fragment == null || template == null) {
             return;
         }
-        fragment.presentFragment(new TemplatesPreviewActivity(template));
-        parentAlert.dismiss(true);
+        manager.getOrCreateTemplatesChannel(id -> {
+            if (id != 0) {
+                android.os.Bundle args = new android.os.Bundle();
+                args.putLong("chat_id", -id);
+                fragment.presentFragment(new ChatActivity(args));
+                parentAlert.dismiss(true);
+            }
+        });
     }
 
     private void sendTemplate(TemplateSettings template, boolean notify, int scheduleDate, int scheduleRepeatPeriod, long effectId, long payStars) {
