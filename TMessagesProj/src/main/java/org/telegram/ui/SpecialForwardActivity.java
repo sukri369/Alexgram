@@ -1793,7 +1793,7 @@ public class SpecialForwardActivity extends ChatActivity {
         finishFragment();
     }
 
-    public static class SpecialForwardShareAlert extends BottomSheet {
+    public static class SpecialForwardShareAlert extends BottomSheet implements org.telegram.messenger.NotificationCenter.NotificationCenterDelegate {
         private final int currentAccount;
         private final ArrayList<MessageObject> messages;
         private boolean forwardAsFile;
@@ -1832,6 +1832,11 @@ public class SpecialForwardActivity extends ChatActivity {
             this.messages = messages;
             this.forwardAsFile = asFile;
             this.callback = callback;
+
+            org.telegram.ui.DialogsActivity.loadDialogs(org.telegram.messenger.AccountInstance.getInstance(currentAccount));
+            org.telegram.messenger.MessagesController.getInstance(currentAccount).loadDialogs(0, 0, 200, true);
+            org.telegram.messenger.MessagesController.getInstance(currentAccount).loadDialogs(1, 0, 200, true);
+            org.telegram.messenger.NotificationCenter.getInstance(currentAccount).addObserver(this, org.telegram.messenger.NotificationCenter.dialogsNeedReload);
 
             // Initialize standard tabs
             CategoryTab tabAll = new CategoryTab();
@@ -2383,6 +2388,20 @@ public class SpecialForwardActivity extends ChatActivity {
             public Holder(View itemView) {
                 super(itemView);
             }
+        }
+
+        @Override
+        public void didReceivedNotification(int id, int account, Object... args) {
+            if (id == org.telegram.messenger.NotificationCenter.dialogsNeedReload) {
+                allDialogs = new ArrayList<>(org.telegram.messenger.MessagesController.getInstance(currentAccount).getAllDialogs());
+                filterDialogs();
+            }
+        }
+
+        @Override
+        public void dismiss() {
+            super.dismiss();
+            org.telegram.messenger.NotificationCenter.getInstance(currentAccount).removeObserver(this, org.telegram.messenger.NotificationCenter.dialogsNeedReload);
         }
     }
 }
