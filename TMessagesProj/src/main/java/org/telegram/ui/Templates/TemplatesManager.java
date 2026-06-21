@@ -296,7 +296,7 @@ public class TemplatesManager {
 
     private void uploadChannelAvatar(final long channelId) {
         try {
-            android.graphics.drawable.Drawable drawable = ApplicationLoader.applicationContext.getResources().getDrawable(R.drawable.fork_templates);
+            android.graphics.drawable.Drawable drawable = ApplicationLoader.applicationContext.getResources().getDrawable(org.telegram.messenger.R.drawable.fork_templates);
             android.graphics.Bitmap bitmap;
             if (drawable instanceof android.graphics.drawable.BitmapDrawable) {
                 bitmap = ((android.graphics.drawable.BitmapDrawable) drawable).getBitmap();
