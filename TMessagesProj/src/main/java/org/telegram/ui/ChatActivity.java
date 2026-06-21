@@ -10974,9 +10974,7 @@ public class ChatActivity extends BaseFragment implements
 		actionModeOtherItem.addSubItem(combine_message, R.drawable.msg_replace, LocaleController.getString(R.string.CombineMessage));
 		actionModeOtherItem.addSubItem(nkbtn_translate, LlmConfig.llmIsDefaultProvider() ? R.drawable.magic_stick_solar : R.drawable.ic_translate, LocaleController.getString(R.string.Translate));
 		actionModeOtherItem.addSubItem(nkbtn_sharemessage, R.drawable.msg_shareout, LocaleController.getString(R.string.ShareMessages));
-		// [Alexgram: Templates Action Mode Menu] - Start
-		actionModeOtherItem.addSubItem(nkbtn_save_to_templates, R.drawable.fork_templates, LocaleController.getString(R.string.chat_templates));
-		// [Alexgram: Templates Action Mode Menu] - End
+
 		actionModeOtherItem.addSubItem(nkbtn_unpin, R.drawable.msg_unpin, LocaleController.getString(R.string.UnpinMessage));
 		if (!noforward) {
 			actionModeOtherItem.addSubItem(nkbtn_savemessage, R.drawable.menu_saved, LocaleController.getString(R.string.AddToSavedMessages));
@@ -20468,9 +20466,7 @@ public class ChatActivity extends BaseFragment implements
 
 				if (actionModeOtherItem != null) {
 					actionModeOtherItem.setSubItemVisibility(nkbtn_sharemessage, selectedMessagesCanCopyIds[0].size() + selectedMessagesCanCopyIds[1].size() > 0);
-					// [Alexgram: Templates Action Mode Visibility] - Start
-					actionModeOtherItem.setSubItemVisibility(nkbtn_save_to_templates, hasSelectedMessagesWithTemplateText());
-					// [Alexgram: Templates Action Mode Visibility] - End
+
 				}
 
 				boolean allowPin = false;
@@ -49360,13 +49356,7 @@ public class ChatActivity extends BaseFragment implements
 						options.add(nkbtn_sharemessage);
 						icons.add(R.drawable.msg_shareout);
 					}
-					// [Alexgram: Templates Message Menu Item] - Start
-					if (canSaveToTemplates(selectedObject, selectedObjectGroup)) {
-						items.add(LocaleController.getString(R.string.chat_templates));
-						options.add(nkbtn_save_to_templates);
-						icons.add(R.drawable.fork_templates);
-					}
-					// [Alexgram: Templates Message Menu Item] - End
+
 				}
 				if (NekoConfig.showMessageHide.Bool()) {
 					items.add(LocaleController.getString(R.string.Hide));
