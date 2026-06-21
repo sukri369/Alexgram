@@ -460,4 +460,31 @@
     <string name="ChangeSenderNameOptionRestore">Orijinal adı geri yükle</string>
     <string name="ChangeSenderNameApply">Uygula</string>
     <string name="ForceForwardStatusMediaCopy">Medya kopyası yönlendiriliyor</string>
+
+    <!-- New Settings and Features -->
+    <string name="usePollinationsAi">Pollinations.ai Kullan</string>
+    <string name="usePollinationsAiAbout">Ücretsiz yapay zeka yanıtları, özetleme ve yapay zeka yardımı için Pollinations.ai kullanın. API anahtarı gerekmez.</string>
+    <string name="AiAssistanceSettings">Yapay Zeka Yardımı Ayarları</string>
+    <string name="aiModelUrl">Yapay Zeka Model URL'si 1</string>
+    <string name="aiApiKey">Yapay Zeka API Anahtarı 1</string>
+    <string name="TestAiApi">API Bağlantısını Test Et 1</string>
+    <string name="aiModelUrl2">Yapay Zeka Model URL'si 2 (Yedek)</string>
+    <string name="aiApiKey2">Yapay Zeka API Anahtarı 2 (Yedek)</string>
+    <string name="TestAiApi2">API Bağlantısını Test Et 2</string>
+    <string name="DefaultScheduleDelay">Varsayılan gecikme</string>
+    <string name="CustomReplyWord">Özel Yanıt Kelimesi</string>
+    <string name="Customization">Özelleştirme</string>
+    <string name="SendLockedCustomEmojiAsSticker">Premium Emojiyi Çıkartma Olarak Gönder</string>
+    <string name="SendLockedCustomEmojiAsStickerInfo">Yalnızca WebP/WebM özel emojilerini destekler. Yalnızca TGS olan emojiler hariç tutulur.</string>
+    <string name="LocalEditorPlus">Yerel Düzenleyici+</string>
+    <string name="LocalEditorPlusAbout">Sunucu istekleri göndermeden mesaj metnini ve tarihini düzenleyin veya mesajları yalnızca bu cihazda yerel olarak silin.</string>
+    <string name="LocalEditorMenuOption">Daha Fazla</string>
+    <string name="LocalEditorEditOption">Yerel olarak düzenle</string>
+    <string name="LocalEditorDeleteOption">Yerel olarak sil</string>
+    <string name="LocalEditorRestore">Geri Yükle</string>
+    <string name="ShowAdminTagInVoiceChat">Sesli Sohbette Yönetici Etiketini Göster</string>
+    <string name="ShowAdminTagInVoiceChatDesc">Sesli/görüntülü sohbetlerde kullanıcı adlarının yanında yönetici veya sahip rozetlerini gösterir.</string>
+    <string name="Ayugram">Ayugram</string>
+    <string name="ProfilePrivacyManager">Profil Gizlilik Yöneticisi</string>
+    <string name="ProfilePrivacyManagerAbout">Bireysel kullanıcı gizlilik ayarlarının doğrudan profil menülerinden yönetilmesini sağlar.</string>
 </resources>

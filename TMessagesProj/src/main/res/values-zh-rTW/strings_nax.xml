@@ -436,6 +436,25 @@
     <string name="LocalEditorEditOption">本機編輯</string>
     <string name="LocalEditorDeleteOption">本機刪除</string>
     <string name="LocalEditorRestore">還原</string>
+
+    <!-- New Settings and Features -->
+    <string name="usePollinationsAi">使用 Pollinations.ai</string>
+    <string name="usePollinationsAiAbout">使用 Pollinations.ai 獲取免費的 AI 回覆、總結和 AI 助手。無需 API 金鑰。</string>
+    <string name="AiAssistanceSettings">AI 助手設定</string>
+    <string name="aiModelUrl">AI 模型 URL 1</string>
+    <string name="aiApiKey">AI API 金鑰 1</string>
+    <string name="TestAiApi">測試 API 連線 1</string>
+    <string name="aiModelUrl2">AI 模型 URL 2（備用）</string>
+    <string name="aiApiKey2">AI API 金鑰 2（備用）</string>
+    <string name="TestAiApi2">測試 API 連線 2</string>
+    <string name="DefaultScheduleDelay">預設延遲</string>
+    <string name="CustomReplyWord">自訂回覆詞</string>
+    <string name="Customization">個性化</string>
+    <string name="ShowAdminTagInVoiceChat">在語音聊天中顯示管理員標籤</string>
+    <string name="ShowAdminTagInVoiceChatDesc">在語音/視訊聊天中在用戶名旁顯示管理員或所有者徽章。</string>
+    <string name="Ayugram">Ayugram</string>
+    <string name="ProfilePrivacyManager">個人檔案隱私管理器</string>
+    <string name="ProfilePrivacyManagerAbout">允許直接從用戶的個人檔案功能表管理單個用戶的隱私設定。</string>
 </resources>
 
 

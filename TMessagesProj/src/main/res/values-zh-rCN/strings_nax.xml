@@ -460,4 +460,31 @@
     <string name="ChangeSenderNameOptionAll">应用于该发送者在此群组中的所有消息</string>
     <string name="ChangeSenderNameOptionRestore">恢复原始姓名</string>
     <string name="ChangeSenderNameApply">应用</string>
+
+    <!-- New Settings and Features -->
+    <string name="usePollinationsAi">使用 Pollinations.ai</string>
+    <string name="usePollinationsAiAbout">使用 Pollinations.ai 获取免费的 AI 回复、总结和 AI 助手。无需 API 密钥。</string>
+    <string name="AiAssistanceSettings">AI 助手设置</string>
+    <string name="aiModelUrl">AI 模型 URL 1</string>
+    <string name="aiApiKey">AI API 密钥 1</string>
+    <string name="TestAiApi">测试 API 连接 1</string>
+    <string name="aiModelUrl2">AI 模型 URL 2（备用）</string>
+    <string name="aiApiKey2">AI API 密钥 2（备用）</string>
+    <string name="TestAiApi2">测试 API 连接 2</string>
+    <string name="DefaultScheduleDelay">默认延迟</string>
+    <string name="CustomReplyWord">自定义回复词</string>
+    <string name="Customization">个性化</string>
+    <string name="SendLockedCustomEmojiAsSticker">将特权表情作为贴纸发送</string>
+    <string name="SendLockedCustomEmojiAsStickerInfo">仅支持 WebP/WebM 自定义表情。不包括仅支持 TGS 的表情。</string>
+    <string name="LocalEditorPlus">本地编辑器+</string>
+    <string name="LocalEditorPlusAbout">仅在此设备上本地编辑消息文本和日期，或删除消息，而不发送服务器请求。</string>
+    <string name="LocalEditorMenuOption">更多</string>
+    <string name="LocalEditorEditOption">本地编辑</string>
+    <string name="LocalEditorDeleteOption">本地删除</string>
+    <string name="LocalEditorRestore">还原</string>
+    <string name="ShowAdminTagInVoiceChat">在语音聊天中显示管理员标签</string>
+    <string name="ShowAdminTagInVoiceChatDesc">在语音/视频聊天中在用户名旁显示管理员或所有者徽章。</string>
+    <string name="Ayugram">Ayugram</string>
+    <string name="ProfilePrivacyManager">个人档案隐私管理器</string>
+    <string name="ProfilePrivacyManagerAbout">允许直接从用户的个人档案菜单管理单个用户的隐私设置。</string>
 </resources>

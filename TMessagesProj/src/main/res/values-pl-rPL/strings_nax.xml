@@ -409,4 +409,31 @@
     <string name="ChangeSenderNameApply">Zastosuj</string>
     <string name="DirectForwardNotAllowed">Bezpośrednie przekazywanie jest niedozwolone.</string>
     <string name="ForceForwardStatusMediaCopy">Przekazywanie kopii multimediów</string>
+
+    <!-- New Settings and Features -->
+    <string name="usePollinationsAi">Użyj Pollinations.ai</string>
+    <string name="usePollinationsAiAbout">Użyj Pollinations.ai do darmowych odpowiedzi AI, podsumowań i asystenta AI. Nie wymaga klucza API.</string>
+    <string name="AiAssistanceSettings">Ustawienia asystenta AI</string>
+    <string name="aiModelUrl">Adres URL modelu AI 1</string>
+    <string name="aiApiKey">Klucz API AI 1</string>
+    <string name="TestAiApi">Testuj połączenie API 1</string>
+    <string name="aiModelUrl2">Adres URL modelu AI 2 (zapasowy)</string>
+    <string name="aiApiKey2">Klucz API AI 2 (zapasowy)</string>
+    <string name="TestAiApi2">Testuj połączenie API 2</string>
+    <string name="DefaultScheduleDelay">Domyślne opóźnienie</string>
+    <string name="CustomReplyWord">Własne słowo odpowiedzi</string>
+    <string name="Customization">Personalizacja</string>
+    <string name="SendLockedCustomEmojiAsSticker">Wyślij emotikonę premium jako naklejkę</string>
+    <string name="SendLockedCustomEmojiAsStickerInfo">Obsługuje tylko niestandardowe emotikony WebP/WebM. Emotikony tylko TGS są wykluczone.</string>
+    <string name="LocalEditorPlus">Lokalny edytor+</string>
+    <string name="LocalEditorPlusAbout">Edytuj tekst i datę wiadomości lub usuwaj wiadomości lokalnie tylko na tym urządzeniu bez wysyłania żądań do serwera.</string>
+    <string name="LocalEditorMenuOption">Więcej</string>
+    <string name="LocalEditorEditOption">Edytuj lokalnie</string>
+    <string name="LocalEditorDeleteOption">Usuń lokalnie</string>
+    <string name="LocalEditorRestore">Przywróć</string>
+    <string name="ShowAdminTagInVoiceChat">Pokaż tag administratora na czacie głosowym</string>
+    <string name="ShowAdminTagInVoiceChatDesc">Wyświetlaj odznaki administratora lub właściciela obok nazw użytkowników na czatach głosowych/wideo.</string>
+    <string name="Ayugram">Ayugram</string>
+    <string name="ProfilePrivacyManager">Menedżer prywatności profilu</string>
+    <string name="ProfilePrivacyManagerAbout">Umożliwia zarządzanie ustawieniami prywatności poszczególnych użytkowników bezpośrednio z poziomu ich profilu.</string>
 </resources>

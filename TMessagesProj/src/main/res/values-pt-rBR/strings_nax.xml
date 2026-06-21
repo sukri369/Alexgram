@@ -454,4 +454,31 @@
     <string name="ChangeSenderNameOptionRestore">Restaurar nome original</string>
     <string name="ChangeSenderNameApply">Aplicar</string>
     <string name="ForceForwardStatusMediaCopy">Encaminhando cópia de mídia</string>
+
+    <!-- New Settings and Features -->
+    <string name="usePollinationsAi">Usar Pollinations.ai</string>
+    <string name="usePollinationsAiAbout">Use o Pollinations.ai para respostas, resumos e assistência de IA gratuitos. Nenhuma chave de API é necessária.</string>
+    <string name="AiAssistanceSettings">Configurações de Assistência de IA</string>
+    <string name="aiModelUrl">URL do Modelo de IA 1</string>
+    <string name="aiApiKey">Chave de API de IA 1</string>
+    <string name="TestAiApi">Testar Conexão de API 1</string>
+    <string name="aiModelUrl2">URL do Modelo de IA 2 (Failover)</string>
+    <string name="aiApiKey2">Chave de API de IA 2 (Failover)</string>
+    <string name="TestAiApi2">Testar Conexão de API 2</string>
+    <string name="DefaultScheduleDelay">Atraso padrão</string>
+    <string name="CustomReplyWord">Palavra de resposta personalizada</string>
+    <string name="Customization">Personalização</string>
+    <string name="SendLockedCustomEmojiAsSticker">Enviar emoji premium como sticker</string>
+    <string name="SendLockedCustomEmojiAsStickerInfo">Suporta apenas emojis personalizados WebP/WebM. Emojis apenas TGS são excluídos.</string>
+    <string name="LocalEditorPlus">Editor Local+</string>
+    <string name="LocalEditorPlusAbout">Edite o texto e a data da mensagem, ou exclua mensagens localmente apenas neste dispositivo, sem enviar solicitações ao servidor.</string>
+    <string name="LocalEditorMenuOption">Mais</string>
+    <string name="LocalEditorEditOption">Editar localmente</string>
+    <string name="LocalEditorDeleteOption">Excluir localmente</string>
+    <string name="LocalEditorRestore">Restaurar</string>
+    <string name="ShowAdminTagInVoiceChat">Mostrar tag de admin no chat de voz</string>
+    <string name="ShowAdminTagInVoiceChatDesc">Exibe emblemas de administrador ou proprietário ao lado dos nomes de usuário em chats de voz/vídeo.</string>
+    <string name="Ayugram">Ayugram</string>
+    <string name="ProfilePrivacyManager">Gerenciador de Privacidade do Perfil</string>
+    <string name="ProfilePrivacyManagerAbout">Permite gerenciar as configurações de privacidade de usuários individuais diretamente de seus menus de perfil.</string>
 </resources>
