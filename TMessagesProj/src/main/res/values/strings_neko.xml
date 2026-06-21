@@ -284,4 +284,7 @@
     <string name="BirthdayMakeWish">Make a Wish 🌟</string>
     <string name="BirthdayWishSent">Wish Sent to the Stars! 🌌✨</string>
     <!-- [Alexgram: Birthday Wish] - End -->
+    <string name="SelectRangeSharedMedia">Select Range in Shared Media</string>
+    <string name="SelectRangeSharedMediaAbout">Enable double checkmark button to select all media items between the first and last selected items.</string>
+    <string name="SelectTwoItemsToSelectRange">Please select at least two items to select a range.</string>
 </resources>

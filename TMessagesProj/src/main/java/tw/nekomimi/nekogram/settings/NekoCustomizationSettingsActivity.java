@@ -74,6 +74,11 @@ public class NekoCustomizationSettingsActivity extends BaseNekoXSettingsActivity
     private final AbstractConfigCell enableLocalEditorPlusRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.enableLocalEditorPlus, LocaleController.getString("LocalEditorPlusAbout", R.string.LocalEditorPlusAbout), LocaleController.getString("LocalEditorPlus", R.string.LocalEditorPlus)));
     private final AbstractConfigCell showAdminTagInVoiceChatRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.showAdminTagInVoiceChat, LocaleController.getString("ShowAdminTagInVoiceChatDesc", R.string.ShowAdminTagInVoiceChatDesc), LocaleController.getString("ShowAdminTagInVoiceChat", R.string.ShowAdminTagInVoiceChat)));
     private final AbstractConfigCell enableCustomPrivacyRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.enableCustomPrivacy, LocaleController.getString("ProfilePrivacyManagerAbout", R.string.ProfilePrivacyManagerAbout), LocaleController.getString("ProfilePrivacyManager", R.string.ProfilePrivacyManager)));
+    private final AbstractConfigCell enableSelectRangeInSharedMediaRow = cellGroup.appendCell(new ConfigCellTextCheck(
+            NekoConfig.enableSelectRangeInSharedMedia,
+            LocaleController.getString("SelectRangeSharedMediaAbout", R.string.SelectRangeSharedMediaAbout),
+            LocaleController.getString("SelectRangeSharedMedia", R.string.SelectRangeSharedMedia)
+    ));
 
     private final AbstractConfigCell sendVideoAsRoundRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getSendVideoAsRound()));
     private final AbstractConfigCell sendLockedCustomEmojiAsStickerRow = cellGroup.appendCell(
