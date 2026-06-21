@@ -13,10 +13,14 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Canvas;
+import android.graphics.LinearGradient;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
+import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
+import android.graphics.Shader;
 import android.graphics.drawable.Drawable;
 import android.text.Layout;
 import android.text.Spannable;
@@ -30,6 +34,8 @@ import android.view.HapticFeedbackConstants;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.accessibility.AccessibilityEvent;
+import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.animation.OvershootInterpolator;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -49,6 +55,7 @@ import org.telegram.messenger.BotWebViewVibrationEffect;
 import org.telegram.messenger.BuildConfig;
 import org.telegram.messenger.DialogObject;
 import org.telegram.messenger.Emoji;
+import org.telegram.messenger.FileLog;
 import org.telegram.messenger.ImageReceiver;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
@@ -320,20 +327,24 @@ public class DialogStoriesCell extends FrameLayout implements NotificationCenter
         titleView = new AnimatedTextView(getContext(), true, true, false);
         titleView.setGravity(Gravity.LEFT);
         titleView.setTextColor(getTextLogoColor());
-        titleView.setEllipsizeByGradient(true);
         titleView.setTypeface(AndroidUtilities.bold());
         titleView.setPadding(0, dp(8), 0, dp(8));
         titleView.setTextSize(dp(!AndroidUtilities.isTablet() && getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE ? 18 : 20));
+        titleView.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES);
+        titleView.setFocusableInTouchMode(true);
         addView(titleView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
         telegramLogoView = new AnimatedTextView(getContext(), true, true, false);
         telegramLogoView.setGravity(Gravity.LEFT);
         telegramLogoView.setTextColor(getTextColor());
         telegramLogoView.setEllipsizeByGradient(true);
+        telegramLogoView.setContentDescription(getString(R.string.AppName));
         telegramLogoView.setTypeface(AndroidUtilities.bold());
         telegramLogoView.setPadding(0, dp(8), 0, dp(8));
         telegramLogoView.setTextSize(dp(!AndroidUtilities.isTablet() && getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE ? 18 : 20));
         telegramLogoView.setText(TypefaceHelper.getTitleText(currentAccount));
+        telegramLogoView.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES);
+        telegramLogoView.setFocusableInTouchMode(true);
         addView(telegramLogoView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
         statusDrawable = new AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable(null, dp(26));
@@ -754,10 +765,10 @@ public class DialogStoriesCell extends FrameLayout implements NotificationCenter
                 if (adapterPosition > animateFromPosition && adapterPosition < animateFromPosition + animateToDialogIds.size()) {
                     StoryCell previousCell = (StoryCell) recyclerListView.getChildAt(i - 1);
                     if (previousCell != null) {
-                        float size = AndroidUtilities.dp(48);
-                        float collapsedSize = AndroidUtilities.dp(COLLAPSED_SIZE);
-                        float previousSize = AndroidUtilities.lerp(size, collapsedSize, previousCell.progressToCollapsed) + AndroidUtilities.dp(8);
-                        float currentSize = AndroidUtilities.lerp(size, collapsedSize, cell.progressToCollapsed) + AndroidUtilities.dp(8);
+                        float size = dp(48);
+                        float collapsedSize = dp(COLLAPSED_SIZE);
+                        float previousSize = AndroidUtilities.lerp(size, collapsedSize, previousCell.progressToCollapsed) + dp(8);
+                        float currentSize = AndroidUtilities.lerp(size, collapsedSize, cell.progressToCollapsed) + dp(8);
                         float radiusPrev = previousSize / 2f;
                         float radiusCurrent = currentSize / 2f ;
 
@@ -800,7 +811,7 @@ public class DialogStoriesCell extends FrameLayout implements NotificationCenter
                 }
 
                 float ovescrollSelectProgress = Utilities.clamp((overscrollProgress - 0.5f) / 0.5f, 1f, 0f);
-                float overScrollOffset = AndroidUtilities.dp(16) * ovescrollSelectProgress;
+                float overScrollOffset = dp(16) * ovescrollSelectProgress;
                 float overscrollAlpha = (float) (0.5 + 0.5f * (1f - ovescrollSelectProgress));
 
                 float translationX = 0;
@@ -809,9 +820,9 @@ public class DialogStoriesCell extends FrameLayout implements NotificationCenter
                 if (adapterPosition <= animateFromPosition) {
                     toX = 0;
                 } else if (adapterPosition == animateFromPosition + 1) {
-                    toX = AndroidUtilities.dp(COLLAPSED_DIS) * cellCollapsedProgress - AndroidUtilities.dpf2(0.5f) + AndroidUtilities.lerp(AndroidUtilities.dp(COLLAPSED_DIS), 0f, collapsedProgress);
+                    toX = dp(COLLAPSED_DIS) * cellCollapsedProgress - AndroidUtilities.dpf2(0.5f) + AndroidUtilities.lerp(dp(COLLAPSED_DIS), 0f, collapsedProgress);
                 } else {
-                    toX = AndroidUtilities.dp(COLLAPSED_DIS) + AndroidUtilities.dp(COLLAPSED_DIS) * cellCollapsedProgress - AndroidUtilities.dpf2(0.5f) + AndroidUtilities.lerp(AndroidUtilities.dp(COLLAPSED_DIS + COLLAPSED_DIS), 0f, collapsedProgress);
+                    toX = dp(COLLAPSED_DIS) + dp(COLLAPSED_DIS) * cellCollapsedProgress - AndroidUtilities.dpf2(0.5f) + AndroidUtilities.lerp(dp(COLLAPSED_DIS + COLLAPSED_DIS), 0f, collapsedProgress);
                 }
                 toX += menuItemsOffset;
                 if (!collapsed) {
@@ -912,6 +923,17 @@ public class DialogStoriesCell extends FrameLayout implements NotificationCenter
         }
 
         float progress = Math.min(collapsedProgress, collapsedProgress2);
+
+        final float clipRightPadding = actionBar.menu.getVisibleItemsMeasuredWidthWithAlpha() * progress - dp(6);
+        final boolean needSaveLayer = progress != 0 && clipRightPadding > 0;
+        if (needSaveLayer) {
+            final float clipWidth = getWidth() - clipRightPadding;
+            final float layerWidth = getWidth(); // - clipRightPadding;
+            canvas.saveLayer(0, 0, layerWidth, getHeight(), null);
+            canvas.save();
+            canvas.clipRect(0, 0, clipWidth, getHeight());
+        }
+
         if (progress != 0) {
             final float translationOffset = subtitleOverlayContainer.getTotalVisibility() * -dp(10);
 
@@ -919,7 +941,7 @@ public class DialogStoriesCell extends FrameLayout implements NotificationCenter
             titleView.setPivotX(0);
             titleView.setScaleX(lerp(1f, 0.95f, subtitleOverlayContainer.getTotalVisibility()));
             titleView.setScaleY(lerp(1f, 0.95f, subtitleOverlayContainer.getTotalVisibility()));
-            titleView.setTranslationY(bottomY + AndroidUtilities.dp(14) - offset + AndroidUtilities.dp(FAKE_TOP_PADDING) - dp(6) * subtitleOverlayContainer.getTotalVisibility());
+            titleView.setTranslationY(bottomY + dp(14) - offset + dp(FAKE_TOP_PADDING) - dp(6) * subtitleOverlayContainer.getTotalVisibility());
             int cellWidth = dp(72);
             lastViewRight += -cellWidth + getAvatarRight(cellWidth, collapsedProgress) + dp(12);
             titleView.setTranslationX(lastViewRight);
@@ -947,8 +969,30 @@ public class DialogStoriesCell extends FrameLayout implements NotificationCenter
                 canvas.restore();
             }
         }
+
+        if (needSaveLayer) {
+            final float w = dp(16);
+            if (ellipsizeGradient == null) {
+                ellipsizeGradient = new LinearGradient(0, 0, w, 0, new int[] {0x00ff0000, 0xffff0000}, new float[] {0, 1}, Shader.TileMode.CLAMP);
+                ellipsizeGradientMatrix = new Matrix();
+                ellipsizePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+                ellipsizePaint.setShader(ellipsizeGradient);
+                ellipsizePaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_OUT));
+            }
+            ellipsizeGradientMatrix.reset();
+            ellipsizeGradientMatrix.postTranslate(getWidth() - clipRightPadding - w, 0);
+            ellipsizeGradient.setLocalMatrix(ellipsizeGradientMatrix);
+            canvas.drawRect(getWidth() - clipRightPadding - w, 0, getWidth() - clipRightPadding + dp(1), getHeight(), ellipsizePaint);
+            canvas.restore();
+            canvas.restore();
+        }
+
         canvas.restore();
     }
+
+    private LinearGradient ellipsizeGradient;
+    private Matrix ellipsizeGradientMatrix;
+    private Paint ellipsizePaint;
 
     @Override
     protected void onAttachedToWindow() {
@@ -976,7 +1020,7 @@ public class DialogStoriesCell extends FrameLayout implements NotificationCenter
         titleView.setTextSize(dp(!AndroidUtilities.isTablet() && getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE ? 18 : 20));
         currentCellWidth = dp(ITEM_WIDTH);
         AndroidUtilities.rectTmp.set(0, 0, getMeasuredWidth(), getMeasuredHeight());
-        super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(85 + FAKE_TOP_PADDING), MeasureSpec.EXACTLY));
+        super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(dp(85 + FAKE_TOP_PADDING), MeasureSpec.EXACTLY));
     }
 
     @Override
@@ -1248,15 +1292,15 @@ public class DialogStoriesCell extends FrameLayout implements NotificationCenter
                 overlayTextId = textId;
                 String title = LocaleController.getString(titleOverlayText, textId);
                 CharSequence textToSet = title;
-                if (!TextUtils.isEmpty(title)) {
-                    int index = TextUtils.indexOf(textToSet, "...");
-                    if (index >= 0) {
-                        SpannableString spannableString = SpannableString.valueOf(textToSet);
-                        ellipsizeSpanAnimator.wrap(spannableString, index);
-                        hasEllipsizedText = true;
-                        textToSet = spannableString;
-                    }
-                }
+//                if (!TextUtils.isEmpty(title)) {
+//                    int index = TextUtils.indexOf(textToSet, "...");
+//                    if (index >= 0) {
+//                        SpannableString spannableString = SpannableString.valueOf(textToSet);
+//                        ellipsizeSpanAnimator.wrap(spannableString, index);
+//                        hasEllipsizedText = true;
+//                        textToSet = spannableString;
+//                    }
+//                }
                 titleView.setText(textToSet, !LocaleController.isRTL);
             }
         } else {
@@ -1464,8 +1508,8 @@ public class DialogStoriesCell extends FrameLayout implements NotificationCenter
             }
             createTextView();
             addView(textViewContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
-            avatarImage.setRoundRadius(dp(48) / 2);
-            crossfadeToAvatarImage.setRoundRadius(dp(48) / 2);
+            avatarImage.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(48.0f));
+            crossfadeToAvatarImage.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(48.0f));
         }
 
         private void createTextView() {
@@ -1478,8 +1522,8 @@ public class DialogStoriesCell extends FrameLayout implements NotificationCenter
             textView.setMaxLines(1);
 
             textViewContainer.addView(textView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 1, 0, 1, 0));
-            avatarImage.setRoundRadius(dp(48) / 2);
-            crossfadeToAvatarImage.setRoundRadius(dp(48) / 2);
+            avatarImage.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(48.0f));
+            crossfadeToAvatarImage.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(48.0f));
         }
 
         public void setDialogId(long dialogId) {
@@ -1640,7 +1684,8 @@ public class DialogStoriesCell extends FrameLayout implements NotificationCenter
             params.originalAvatarRect.set(x, y, x + finalSize, y + finalSize);
             params.additionalInset = dpf2(1.33f) * progressToCollapsed;
             avatarImage.setAlpha(1f);
-            avatarImage.setRoundRadius((int) radius);
+            avatarImage.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadiusPx(finalSize));
+            crossfadeToAvatarImage.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadiusPx(finalSize));
 
             cx = x + radius;
             cy = y + radius;

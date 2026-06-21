@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+﻿<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="N_Config">A-設定</string>
     <string name="CombineMessage">メッセージを結合</string>
@@ -137,4 +137,22 @@
     <string name="HiddenChatsAbout">メインリストから機密チャットを非表示にします。パスコードまたは生体認証でロックを解除した後、タイトルバーを長押ししてアクセスします。</string>
     <string name="HideContacts">連絡先を非表示にする</string>
     <string name="RestartRequired">変更を適用するには再起動が必要です</string>
+    <string name="MaxActiveAccounts">最大アクティブアカウント数</string>
+    <string name="LimitReachedAccountsNa">申し訳ありませんが、**%1$d**個以上のアカウントを追加できません。**A設定 &gt; 一般**でこの制限（最大100）を増やすことができます。</string>
+    <string name="MaxActiveAccountsWarning">現在%1$d個のアクティブアカウントがあります。上限を%2$dに設定すると、一部からログアウトするまで新しいアカウントを追加できなくなります。</string>
+    <string name="SplitChat">画面分割チャット</string>
+    <string name="SplitChatClose">分割画面を閉じる</string>
+    <string name="SplitChatSelectChat">横に開くチャットを選択</string>
+    <string name="SplitChatHint">最小化されたチャットを復元するにはアイコンをタップします</string>
+    <string name="SplitChatMinimized">チャットが最小化されました</string>
+    <string name="ChangeFont">フォント変更</string>
+    <string name="ShadowBanChannelAdded">チャンネルが **シャドウバン** に追加されました</string>
+    <string name="ShadowBanChannelRemoved">チャンネルが **シャドウバン** から削除されました</string>
+    <string name="ExperimentalForceMaxFPSInfo">画面のリフレッシュレートを強制的に最大化します。</string>
+    <string name="ExperimentalForceMaxFPS">最大FPSを強制</string>
+    <string name="RegexFiltersSpoilerInsteadOfHide">メッセージを非表示にする代わりにスポイラーを使用</string>
+    <string name="MaskBlockedUserMessages">ブロックされたユーザーのメッセージを隠す</string>
+    <string name="MaskBlockedUserMessagesAbout">ブロックされた／シャドウバンされたユーザーのメッセージを完全に非表示にするのではなく、スポイラーマスクの後ろに表示します。</string>
+    <string name="RegexFiltersSpoilerMatchOnly">一致した正規表現のみをマスク</string>
+    <string name="RegexFiltersSpoilerColor">マスク粒子的色</string>
 </resources>

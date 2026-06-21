@@ -49,7 +49,10 @@ public class RegexFiltersSettingActivity extends BaseNekoSettingsActivity {
     private int filtersOptionHeaderRow;
     private int regexFiltersEnableInChatsRow;
     private int ignoreBlockedRow;
+    private int maskBlockedUserMessagesRow;
+    private int blockedUserMaskColorRow;
     private int filtersOptionDividerRow;
+
     private int filtersHeaderRow;
     private int sharedFiltersPageRow;
     private int userFiltersPageRow;
@@ -82,7 +85,14 @@ public class RegexFiltersSettingActivity extends BaseNekoSettingsActivity {
         filtersOptionHeaderRow = rowCount++;
         regexFiltersEnableInChatsRow = rowCount++;
         ignoreBlockedRow = rowCount++;
+        maskBlockedUserMessagesRow = rowCount++;
+        if (NaConfig.INSTANCE.getMaskBlockedUserMessages().Bool()) {
+            blockedUserMaskColorRow = rowCount++;
+        } else {
+            blockedUserMaskColorRow = -1;
+        }
         filtersOptionDividerRow = rowCount++;
+
 
         filtersHeaderRow = rowCount++;
         sharedFiltersPageRow = rowCount++;
@@ -361,6 +371,25 @@ public class RegexFiltersSettingActivity extends BaseNekoSettingsActivity {
             boolean enabled = !cell.isChecked();
             cell.setChecked(enabled);
             NekoConfig.ignoreBlocked.setConfigBool(enabled);
+        } else if (position == maskBlockedUserMessagesRow) {
+            boolean enabled = !NaConfig.INSTANCE.getMaskBlockedUserMessages().Bool();
+            NaConfig.INSTANCE.getMaskBlockedUserMessages().setConfigBool(enabled);
+            AyuFilter.invalidateFilteredCache();
+            refreshRows();
+        } else if (position == blockedUserMaskColorRow) {
+            int currentColor = NaConfig.INSTANCE.getBlockedUserMaskColor().Int();
+            org.telegram.ui.Components.Paint.ColorPickerBottomSheet sheet =
+                    new org.telegram.ui.Components.Paint.ColorPickerBottomSheet(getContext(), getResourceProvider());
+            sheet.setColorListener(color -> {
+                NaConfig.INSTANCE.getBlockedUserMaskColor().setConfigInt(color);
+                if (listAdapter != null) {
+                    listAdapter.notifyItemChanged(position);
+                }
+            });
+            sheet.setColor(currentColor);
+            sheet.show();
+
+
         } else if (position == sharedFiltersPageRow) {
             presentFragment(new RegexSharedFiltersListActivity());
         } else if (position == userFiltersPageRow) {
@@ -476,7 +505,10 @@ public class RegexFiltersSettingActivity extends BaseNekoSettingsActivity {
                         textCheckCell.setTextAndCheck(getString(R.string.RegexFiltersEnableInChats), NaConfig.INSTANCE.getRegexFiltersEnableInChats().Bool(), true);
                     } else if (position == ignoreBlockedRow) {
                         textCheckCell.setTextAndCheck(getString(R.string.IgnoreBlocked), NekoConfig.ignoreBlocked.Bool(), true);
+                    } else if (position == maskBlockedUserMessagesRow) {
+                        textCheckCell.setTextAndCheck(getString(R.string.MaskBlockedUserMessages), NaConfig.INSTANCE.getMaskBlockedUserMessages().Bool(), blockedUserMaskColorRow != -1);
                     }
+
                     break;
                 case TYPE_TEXT:
                     TextCell textCell = (TextCell) holder.itemView;
@@ -485,12 +517,18 @@ public class RegexFiltersSettingActivity extends BaseNekoSettingsActivity {
                     break;
                 case TYPE_SETTINGS:
                     TextSettingsCell settingsCell = (TextSettingsCell) holder.itemView;
-                    if (position == sharedFiltersPageRow) {
+                    if (position == blockedUserMaskColorRow) {
+                        int color = NaConfig.INSTANCE.getBlockedUserMaskColor().Int();
+                        String colorHex = String.format("#%06X", 0xFFFFFF & color);
+                        settingsCell.setTextAndValue(getString(R.string.RegexFiltersSpoilerColor), colorHex, false);
+                    } else if (position == sharedFiltersPageRow) {
                         settingsCell.setTextAndValue(getString(R.string.RegexFiltersSharedHeader), String.valueOf(AyuFilter.getRegexFilters().size()), true);
                     } else if (position == userFiltersPageRow) {
                         settingsCell.setTextAndValue(getString(R.string.ShadowBan), String.valueOf(AyuFilter.getCustomFilteredUsersList().size()), false);
                     }
+
                     break;
+
                 case TYPE_ACCOUNT:
                     if (position >= chatFiltersStartRow && position < chatFiltersEndRow) {
                         int idx = position - chatFiltersStartRow;
@@ -523,7 +561,7 @@ public class RegexFiltersSettingActivity extends BaseNekoSettingsActivity {
                 return TYPE_SHADOW;
             } else if (position == filtersHeaderRow || position == filtersOptionHeaderRow || position == chatFiltersHeaderRow) {
                 return TYPE_HEADER;
-            } else if (position == sharedFiltersPageRow || position == userFiltersPageRow) {
+            } else if (position == sharedFiltersPageRow || position == userFiltersPageRow || position == blockedUserMaskColorRow) {
                 return TYPE_SETTINGS;
             } else if (position == addChatFilterBtnRow) {
                 return TYPE_TEXT;
@@ -531,6 +569,7 @@ public class RegexFiltersSettingActivity extends BaseNekoSettingsActivity {
                 return TYPE_ACCOUNT;
             }
             return TYPE_CHECK;
+
         }
     }
 }

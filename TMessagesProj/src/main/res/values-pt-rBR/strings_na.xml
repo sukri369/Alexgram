@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+﻿<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="N_Config">A-Configurações</string>
     <string name="CombineMessage">Combinar mensagens</string>
@@ -137,4 +137,22 @@
     <string name="HiddenChatsAbout">Oculta chats sensíveis da lista principal. Acesse-os mantendo pressionada a barra de título após desbloquear com uma senha ou biometria.</string>
     <string name="HideContacts">Ocultar contatos</string>
     <string name="RestartRequired">Reinicialização necessária para aplicar as alterações</string>
+    <string name="MaxActiveAccounts">Número máximo de contas ativas</string>
+    <string name="LimitReachedAccountsNa">Desculpe, você não pode adicionar mais de **%1$d** contas. Você pode aumentar este limite (até 100) em **A-Configurações &gt; Geral**.</string>
+    <string name="MaxActiveAccountsWarning">Você atualmente tem %1$d contas ativas. Definir o limite para %2$d impedirá que você adicione novas contas até que saia de algumas.</string>
+    <string name="SplitChat">Dividir Tela</string>
+    <string name="SplitChatClose">Fechar Tela Dividida</string>
+    <string name="SplitChatSelectChat">Selecione uma conversa para abrir ao lado</string>
+    <string name="SplitChatHint">Toque no ícone para restaurar a conversa minimizada</string>
+    <string name="SplitChatMinimized">Conversa minimizada</string>
+    <string name="ChangeFont">Alterar Fonte</string>
+    <string name="ShadowBanChannelAdded">Canal adicionado ao **banimento fantasma**</string>
+    <string name="ShadowBanChannelRemoved">Canal removido do **banimento fantasma**</string>
+    <string name="ExperimentalForceMaxFPSInfo">Forçar a taxa de atualização máxima.</string>
+    <string name="ExperimentalForceMaxFPS">Forçar FPS Máximo</string>
+    <string name="RegexFiltersSpoilerInsteadOfHide">Usar spoiler em vez de ocultar a mensagem</string>
+    <string name="MaskBlockedUserMessages">Ocultar mensagens de usuários bloqueados</string>
+    <string name="MaskBlockedUserMessagesAbout">Mostra mensagens de usuários bloqueados/banidos sob um spoiler em vez de ocultá-las completamente.</string>
+    <string name="RegexFiltersSpoilerMatchOnly">Apenas ocultar regex correspondente</string>
+    <string name="RegexFiltersSpoilerColor">Cor das partículas do spoiler</string>
 </resources>

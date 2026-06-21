@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="PillStackPills">胶囊栈</string>
+    <string name="PillStackPillsInfo">在搜索栏中显示交互式胶囊</string>
+    <string name="PillStackActivePills">已启用的胶囊</string>
+    <string name="PillStackHiddenPills">已隐藏的胶囊</string>
+    <string name="PillStackPillsSettingsInfo">点击胶囊切换显示状态。长按拖拽可排序。</string>
+    <string name="PillStackInfiniteScrolling">无限滚动</string>
+    <string name="WeatherPill">天气</string>
+    <string name="WeatherPillTopInfo">在搜索栏旁显示天气胶囊，展示当前位置的温度和天气状况。</string>
+    <string name="WeatherLocation">位置</string>
+    <string name="WeatherSettingsInfo">打开对话列表时刷新天气。点击胶囊可快速操作。</string>
+    <string name="WeatherLocationPermissionGrant">授予位置权限</string>
+    <string name="WeatherLocationPermissionNo">允许位置访问以获取当前位置的天气。</string>
+    <string name="WeatherLocationServicesEnable">启用位置服务</string>
+    <string name="CurrentLocation">当前位置</string>
+    <string name="SelectLocation">选择位置</string>
+    <string name="CryptoPillTargetCurrency">目标货币</string>
+    <string name="CryptoCurrencyUsd">美元</string>
+    <string name="CryptoCurrencyEur">欧元</string>
+    <string name="CryptoCurrencyRub">卢布</string>
+    <string name="CryptoCurrencyGbp">英镑</string>
+    <string name="CryptoCurrencyKzt">腾格</string>
+    <string name="CryptoCurrencyTry">里拉</string>
+    <string name="CryptoCurrencyUah">格里夫纳</string>
+    <string name="CryptoCurrencyPln">兹罗提</string>
+    <string name="CryptoCurrencyAed">迪拉姆</string>
+    <string name="CryptoCurrencyCny">人民币</string>
+    <string name="CryptoCurrencyJpy">日元</string>
+    <string name="CryptoCurrencyByn">白俄罗斯卢布</string>
+    <string name="CryptoCurrencyIls">新谢克尔</string>
+    <string name="CryptoCurrencyCzk">克朗</string>
+    <string name="CryptoCurrencyInr">印度卢比</string>
+    <string name="NavigationDrawerProxyPingShort">延迟 %1$d ms</string>
+    <string name="LastSeenPillAutoRefresh">自动刷新</string>
+    <string name="CreationDateChat">**%1$s** 创建于 **%2$s**。</string>
+    <string name="JoinDateChat">您于 **%2$s** 加入 **%1$s**。</string>
+    <string name="CreationDateUserApproximately">**%1$s** 大约于 **%2$s** 创建账户。</string>
+    <string name="CreationDateSelfApproximately">您大约在 **%1$s** 创建了账户。</string>
+</resources>

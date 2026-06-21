@@ -2465,16 +2465,19 @@ public class CameraView extends FrameLayout implements TextureView.SurfaceTextur
                         ByteBuffer byteBuffer = buffer.buffer[a];
                         byteBuffer.rewind();
                         readResult = audioRecorder.read(byteBuffer, 2048);
-                        if (readResult > 0 && a % 2 == 0) {
-                            byteBuffer.limit(readResult);
-                            double s = 0;
-                            for (int i = 0; i < readResult / 2; i++) {
-                                short p = byteBuffer.getShort();
-                                s += p * p;
+                        if (readResult > 0) {
+                            xyz.nextalone.nagram.utils.VoiceChanger.process(byteBuffer, readResult);
+                            if (a % 2 == 0) {
+                                byteBuffer.limit(readResult);
+                                double s = 0;
+                                for (int i = 0; i < readResult / 2; i++) {
+                                    short p = byteBuffer.getShort();
+                                    s += p * p;
+                                }
+                                double amplitude = Math.sqrt(s / readResult / 2);
+                                AndroidUtilities.runOnUIThread(() -> receivedAmplitude(amplitude));
+                                byteBuffer.position(0);
                             }
-                            double amplitude = Math.sqrt(s / readResult / 2);
-                            AndroidUtilities.runOnUIThread(() -> receivedAmplitude(amplitude));
-                            byteBuffer.position(0);
                         }
                         if (readResult <= 0) {
                             buffer.results = a;

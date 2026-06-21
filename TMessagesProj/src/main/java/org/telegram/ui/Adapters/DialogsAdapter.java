@@ -84,6 +84,7 @@ import java.util.Objects;
 
 import tw.nekomimi.nekogram.helpers.HiddenChatsController;
 import tw.nekomimi.nekogram.ui.HiddenChatsActivity;
+import org.telegram.ui.Templates.TemplatesManager;
 
 public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements DialogCell.DialogCellDelegate {
     public final static int VIEW_TYPE_DIALOG = 0,
@@ -256,7 +257,7 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
         return -1;
     }
 
-    public int fixScrollGap(RecyclerListView animationSupportListView, int p, int offset, boolean hasHidenArchive, boolean hasStories, boolean hasTabs, boolean oppened) {
+    public int fixScrollGap(RecyclerListView animationSupportListView, int p, int offset, boolean hasHiddenArchive, boolean hasStories, boolean hasTabs, boolean oppened) {
 //        int itemsToEnd = getItemCount() - p;
         int cellHeight = AndroidUtilities.dp(SharedConfig.useThreeLinesLayout ? 76 : 70);
 //        int bottom = offset + animationSupportListView.getPaddingTop() + itemsToEnd * cellHeight + itemsToEnd - 1;
@@ -273,7 +274,7 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
 //        } else {
 //            bottom += additionalHeight;
 //        }
-        if (hasHidenArchive) {
+        if (hasHiddenArchive) {
             top += cellHeight;
         }
         int paddingTop = animationSupportListView.getPaddingTop();
@@ -1220,7 +1221,6 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
 
         parentFragment.getOrCreateStoryViewer().open(mContext, null, peerIds, 0, null, null, StoriesListPlaceProvider.of(recyclerListView, true), false);
     }
-
     public void setIsTransitionSupport() {
         this.isTransitionSupport = true;
     }
@@ -1497,7 +1497,21 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
 
         if (array == null) {
             array = new ArrayList<>();
-        } else if (dialogsType == 0) {
+        } else {
+            long templatesChannelId = TemplatesManager.getInstance(currentAccount).getTemplatesChannelId();
+            if (templatesChannelId != 0) {
+                ArrayList<TLRPC.Dialog> filtered = new ArrayList<>();
+                for (TLRPC.Dialog dialog : array) {
+                    if (dialog.id == templatesChannelId) {
+                        continue;
+                    }
+                    filtered.add(dialog);
+                }
+                array = filtered;
+            }
+        }
+
+        if (dialogsType == 0) {
             boolean isHiddenScreen = parentFragment instanceof HiddenChatsActivity; 
             ArrayList<TLRPC.Dialog> filtered = new ArrayList<>();
             for (TLRPC.Dialog dialog : array) {

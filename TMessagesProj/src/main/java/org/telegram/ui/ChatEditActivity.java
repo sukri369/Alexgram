@@ -705,7 +705,7 @@ public class ChatEditActivity extends BaseFragment implements ImageUpdater.Image
                 super.invalidate(l, t, r, b);
             }
         };
-        avatarImage.setRoundRadius(forum ? dp(16) : dp(32));
+        avatarImage.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(64.0f, forum));
 
         if (canEditBotInfo() || currentUser == null && ChatObject.canChangeChatInfo(currentChat)) {
             frameLayout.addView(avatarImage, LayoutHelper.createFrame(64, 64, Gravity.TOP | (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT), LocaleController.isRTL ? 0 : 16, 12, LocaleController.isRTL ? 16 : 0, 8));
@@ -1126,7 +1126,7 @@ public class ChatEditActivity extends BaseFragment implements ImageUpdater.Image
                     fragment.setOnForumChanged(forum, forumTabs, (newForum, newTabs) -> {
                         forum = newForum;
                         forumTabs = newTabs;
-                        avatarImage.animateToRoundRadius(forum ? dp(16) : dp(32));
+                        avatarImage.animateToRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(64.0f, forum));
                         ((TextCell) v).setChecked(forum);
                         updateFields(false, true);
 
@@ -1689,7 +1689,7 @@ public class ChatEditActivity extends BaseFragment implements ImageUpdater.Image
         if (currentUser != null ? currentUser.photo != null : currentChat.photo != null) {
             TLObject obj = currentUser != null ? currentUser : currentChat;
             avatar = currentUser != null ? currentUser.photo.photo_small : currentChat.photo.photo_small;
-            ImageLocation location = ImageLocation.getForUserOrChat(obj, ImageLocation.TYPE_SMALL);
+            ImageLocation location = ImageLocation.getForUserOrChat(currentAccount, obj, ImageLocation.TYPE_SMALL);
             avatarImage.setForUserOrChat(obj, avatarDrawable);
             hasPhoto = location != null;
         } else {
@@ -2385,7 +2385,7 @@ public class ChatEditActivity extends BaseFragment implements ImageUpdater.Image
                         blockCell.setTextAndValueAndIcon(getString("ChannelBlacklist", R.string.ChannelBlacklist), String.format("%d", Math.max(info.banned_count, info.kicked_count)), R.drawable.msg_user_remove, logCell != null && logCell.getVisibility() == View.VISIBLE);
                     } else {
                         int count = 0;
-                        int totalCount = forum ? 15 : 14;
+                        int totalCount = forum ? 16 : 15;
                         totalCount += 3;
                         if (currentChat.default_banned_rights != null) {
                             if (!currentChat.default_banned_rights.send_plain) {

@@ -11,6 +11,7 @@ package org.telegram.ui;
 import static org.telegram.messenger.AndroidUtilities.dp;
 import static org.telegram.messenger.AndroidUtilities.replaceArrows;
 import static org.telegram.messenger.AndroidUtilities.replaceSingleTag;
+import static org.telegram.messenger.LocaleController.formatPluralStringComma;
 import static org.telegram.messenger.LocaleController.formatString;
 import static org.telegram.messenger.LocaleController.getString;
 import static org.telegram.messenger.MessagesController.findUpdatesAndRemove;
@@ -150,6 +151,7 @@ import org.telegram.tgnet.SerializedData;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.tgnet.tl.TL_account;
+import org.telegram.tgnet.tl.TL_update;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.ActionBarMenuItem;
 import org.telegram.ui.ActionBar.AlertDialog;
@@ -269,7 +271,10 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
             VIEW_CODE_WORD = 16,
             VIEW_CODE_PHRASE = 17,
             VIEW_PAY = 18,
-            VIEW_QR_LOGIN = 19;
+            VIEW_QR_LOGIN = 19,
+            // [Alexgram: Bot Login] - Start
+            VIEW_BOT_LOGIN = 20;
+            // [Alexgram: Bot Login] - End
 
     public final static int COUNTRY_STATE_NOT_SET_OR_VALID = 0,
             COUNTRY_STATE_EMPTY = 1,
@@ -318,7 +323,10 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
             VIEW_CODE_WORD,
             VIEW_CODE_PHRASE,
             VIEW_PAY,
-            VIEW_QR_LOGIN
+            VIEW_QR_LOGIN,
+            // [Alexgram: Bot Login] - Start
+            VIEW_BOT_LOGIN
+            // [Alexgram: Bot Login] - End
     })
     private @interface ViewNumber {}
 
@@ -331,7 +339,9 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
 
     @ViewNumber
     private int currentViewNum;
-    private final SlideView[] views = new SlideView[20];
+    // [Alexgram: Bot Login] - Start
+    private final SlideView[] views = new SlideView[21];
+    // [Alexgram: Bot Login] - End
     private CustomPhoneKeyboardView keyboardView;
     private ValueAnimator keyboardAnimator;
     private boolean paid;
@@ -699,6 +709,9 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
         views[VIEW_CODE_PHRASE] = new LoginActivityPhraseView(context, AUTH_TYPE_PHRASE);
         views[VIEW_QR_LOGIN] = new LoginActivityQrView(context);
         views[VIEW_PAY] = new LoginPayView(context);
+        // [Alexgram: Bot Login] - Start
+        views[VIEW_BOT_LOGIN] = new BotLoginView(context);
+        // [Alexgram: Bot Login] - End
 
         for (int a = 0; a < views.length; a++) {
             views[a].setVisibility(a == 0 ? View.VISIBLE : View.GONE);
@@ -761,7 +774,7 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
                 finishFragment();
             }
         });
-        backButtonView.setContentDescription(getString(R.string.Back));
+        backButtonView.setContentDescription(getString(R.string.AccDescrGoBack));
         int padding = AndroidUtilities.dp(4);
         backButtonView.setPadding(padding, padding, padding, padding);
         sizeNotifierFrameLayout.addView(backButtonView, LayoutHelper.createFrame(32, 32, Gravity.LEFT | Gravity.TOP, 16, 16, 0, 0));
@@ -797,6 +810,9 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
         if (BuildVars.SUPPORTS_PASSKEYS) moreButtonView.addSubItem(4, R.drawable.menu_passkey_add, getString(R.string.PasskeyLogin));
         moreButtonView.addSubItem(2, R.drawable.msg_permissions_solar, getString(R.string.CustomApi)).setContentDescription(getString(R.string.CustomApi));
         moreButtonView.addSubItem(3, R.drawable.msg_retry_solar, getString(R.string.TestBackend));
+        // [Alexgram: Bot Login] - Start
+        moreButtonView.addSubItem(5, R.drawable.msg_bot, getString(R.string.BotLoginBotToken));
+        // [Alexgram: Bot Login] - End
         moreButtonView.setDelegate(id -> {
             if (id == 0) {
                 presentFragment(new ProxyListActivity());
@@ -818,6 +834,10 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
                 if (phoneView != null) {
                     phoneView.requestPasskey(true, true);
                 }
+            // [Alexgram: Bot Login] - Start
+            } else if (id == 5) {
+                setPage(VIEW_BOT_LOGIN, true, null, false);
+            // [Alexgram: Bot Login] - End
             }
         });
         moreButtonView.setSubMenuOpenSide(1);
@@ -865,7 +885,9 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
                 currentDoneType = DONE_TYPE_FLOATING;
                 boolean needFloatingButton = a == VIEW_PHONE_INPUT || a == VIEW_REGISTER ||
                         a == VIEW_PASSWORD || a == VIEW_NEW_PASSWORD_STAGE_1 || a == VIEW_NEW_PASSWORD_STAGE_2 ||
-                        a == VIEW_ADD_EMAIL;
+                        // [Alexgram: Bot Login] - Start
+                        a == VIEW_ADD_EMAIL || a == VIEW_BOT_LOGIN;
+                        // [Alexgram: Bot Login] - End
                 showDoneButton(needFloatingButton, false);
                 if (a == VIEW_CODE_MESSAGE || a == VIEW_CODE_SMS || a == VIEW_CODE_FLASH_CALL || a == VIEW_CODE_CALL) {
                     currentDoneType = DONE_TYPE_ACTION;
@@ -889,7 +911,7 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
     }
 
     private boolean isCustomKeyboardForceDisabled() {
-        return AndroidUtilities.displaySize.x > AndroidUtilities.displaySize.y || AndroidUtilities.isTablet() || AndroidUtilities.isAccessibilityTouchExplorationEnabled();
+        return /*AndroidUtilities.displaySize.x > AndroidUtilities.displaySize.y || AndroidUtilities.isTablet() || */ AndroidUtilities.isAccessibilityTouchExplorationEnabled();
     }
 
     private boolean isCustomKeyboardVisible() {
@@ -1554,7 +1576,10 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
 
     public void setPage(@ViewNumber int page, boolean animated, Bundle params, boolean back) {
         boolean needFloatingButton = page == VIEW_PHONE_INPUT || page == VIEW_REGISTER || page == VIEW_PASSWORD ||
-                page == VIEW_NEW_PASSWORD_STAGE_1 || page == VIEW_NEW_PASSWORD_STAGE_2 || page == VIEW_ADD_EMAIL || page == VIEW_CODE_PHRASE || page == VIEW_CODE_WORD;
+                page == VIEW_NEW_PASSWORD_STAGE_1 || page == VIEW_NEW_PASSWORD_STAGE_2 || page == VIEW_ADD_EMAIL || page == VIEW_CODE_PHRASE || page == VIEW_CODE_WORD ||
+                // [Alexgram: Bot Login] - Start
+                page == VIEW_BOT_LOGIN;
+                // [Alexgram: Bot Login] - End
         if (page == currentViewNum) {
             animated = false;
         }
@@ -1723,6 +1748,7 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
         MessagesController.getInstance(currentAccount).checkPromoInfo(true);
         ConnectionsManager.getInstance(currentAccount).updateDcSettings();
         MessagesController.getInstance(currentAccount).loadAppConfig();
+        MessagesController.getInstance(currentAccount).loadWebBrowserConfig();
         MessagesController.getInstance(currentAccount).checkPeerColors(false);
 
         if (res.future_auth_token != null) {
@@ -1818,6 +1844,7 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
             params.putString("support_email_address", auth.support_email_address);
             params.putString("support_email_subject", auth.support_email_subject);
             params.putString("currency", auth.currency);
+            params.putInt("premium_days", auth.premium_days);
             params.putLong("amount", auth.amount);
             setPage(VIEW_PAY, true, params, true);
             return;
@@ -10154,12 +10181,6 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
             final String countryCode = params == null ? null : params.getString("country");
             final String countryName = LocaleController.getCountryName(countryCode);
 
-            if (TextUtils.isEmpty(countryName)) {
-                cells[0].subtitleView.setText(getString(R.string.SMSFee1Text));
-            } else {
-                cells[0].subtitleView.setText(formatString(R.string.SMSFee1TextCountry, countryName));
-            }
-
             final String product = params == null ? null : params.getString("product");
             final String phone = params == null ? null : params.getString("phoneFormated");
             final String phoneHash = params == null ? null : params.getString("phoneHash");
@@ -10167,6 +10188,15 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
             final String support_email_subject = params == null ? null : params.getString("support_email_subject");
             final String currency = params == null ? null : params.getString("currency");
             final long amount = params == null ? 0 : params.getLong("amount");
+            final int premium_days = params == null ? 0 : params.getInt("premium_days");
+
+            if (TextUtils.isEmpty(countryName)) {
+                cells[0].subtitleView.setText(getString(R.string.SMSFee1Text));
+            } else {
+                cells[0].subtitleView.setText(formatString(R.string.SMSFee1TextCountry, countryName));
+            }
+
+            cells[2].setSubtitle(premium_days == 7 ? getString(R.string.SMSFee3Text) : formatPluralStringComma("SMSFee3TextDays", premium_days));
 
             optionsButton.setOnClickListener(v -> {
                 ItemOptions.makeOptions(LoginActivity.this, optionsButton)
@@ -10304,7 +10334,7 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
                     button.setVisibility(View.VISIBLE);
                     button.setLoading(false);
                     button.setText(formatString(R.string.SMSFeePurchaseTitle, BillingController.getInstance().formatCurrency(amount, currency)), false);
-                    button.setSubText(getString(R.string.SMSFeePurchaseText), false);
+                    button.setSubText(premium_days == 7 ? getString(R.string.SMSFeePurchaseText) : formatPluralStringComma("SMSFeePurchaseTextDays", premium_days), false);
                     button.setOnClickListener(v -> {
                         if (button.isLoading())
                             return;
@@ -10315,6 +10345,7 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
                         purpose.amount = amount;
                         purpose.phone_code_hash = TextUtils.isEmpty(phoneHash) ? "" : phoneHash;
                         purpose.phone_number = phone;
+                        purpose.premium_days = premium_days;
 
                         final TLRPC.TL_inputInvoicePremiumAuthCode invoice = new TLRPC.TL_inputInvoicePremiumAuthCode();
                         invoice.purpose = purpose;
@@ -10405,6 +10436,7 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
                             purpose.amount = (long) ((offer.getPriceAmountMicros() / Math.pow(10, 6)) * Math.pow(10, BillingController.getInstance().getCurrencyExp(purpose.currency)));
                             purpose.phone_code_hash = TextUtils.isEmpty(phoneHash) ? "" : phoneHash;
                             purpose.phone_number = phone;
+                            purpose.premium_days = premium_days;
 
                             FileLog.d("LoginBilling found \"" + product + "\" product, with currency=" + purpose.currency + " amount=" + purpose.amount + "; phone=" + phone + ", phone_code_hash=" + phoneHash);
 
@@ -10414,7 +10446,7 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
                                 FileLog.d("LoginBilling canPurchaseStore returned " + res + " " + err);
                                 if (res instanceof TLRPC.TL_boolTrue) {
                                     button.setText(formatString(R.string.SMSFeePurchaseTitle, offer.getFormattedPrice()), false);
-                                    button.setSubText(getString(R.string.SMSFeePurchaseText), false);
+                                    button.setSubText(premium_days == 7 ? getString(R.string.SMSFeePurchaseText) : formatPluralStringComma("SMSFeePurchaseTextDays", premium_days), false);
                                     button.setLoading(false);
                                     button.setOnClickListener(v -> {
                                         if (button.isLoading()) return;
@@ -10461,7 +10493,7 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
                                                             req2.purpose = purpose;
                                                             getConnectionsManager().sendRequest(req2, (response, error) -> {
                                                                 if (response instanceof TLRPC.Updates) {
-                                                                    for (TLRPC.TL_updateSentPhoneCode u : findUpdatesAndRemove((TLRPC.Updates) response, TLRPC.TL_updateSentPhoneCode.class)) {
+                                                                    for (TL_update.TL_updateSentPhoneCode u : findUpdatesAndRemove((TLRPC.Updates) response, TL_update.TL_updateSentPhoneCode.class)) {
                                                                         AndroidUtilities.runOnUIThread(() -> {
                                                                             paid = true;
                                                                             LoginActivity fragment = LaunchActivity.findFragment(LoginActivity.class);
@@ -10621,4 +10653,221 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
     public boolean isActionBarCrossfadeEnabled() {
         return false;
     }
+
+    // [Alexgram: Bot Login] - Start
+    public class BotLoginView extends SlideView {
+
+        private boolean nextPressed = false;
+        private OutlineTextContainerView outlineField;
+        private EditTextBoldCursor codeField;
+        private TextView titleTextView;
+        private TextView subtitleTextView;
+        private TextView switchPhoneNumberView;
+        private TextView limitsTextView;
+
+        public BotLoginView(Context context) {
+            super(context);
+            setOrientation(VERTICAL);
+
+            titleTextView = new TextView(context);
+            titleTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 18);
+            titleTextView.setTypeface(AndroidUtilities.bold());
+            titleTextView.setText(getString("BotLoginTitle", R.string.BotLoginTitle));
+            titleTextView.setGravity(Gravity.CENTER_HORIZONTAL);
+            titleTextView.setLineSpacing(AndroidUtilities.dp(2), 1.0f);
+            addView(titleTextView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 32, 20, 32, 0));
+
+            subtitleTextView = new TextView(context);
+            subtitleTextView.setText(getString("BotLoginStartText", R.string.BotLoginStartText));
+            subtitleTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
+            subtitleTextView.setGravity(Gravity.CENTER_HORIZONTAL);
+            subtitleTextView.setLineSpacing(AndroidUtilities.dp(2), 1.0f);
+            addView(subtitleTextView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 32, 8, 32, 0));
+
+            outlineField = new OutlineTextContainerView(context);
+            outlineField.setText(getString("BotLoginTitle", R.string.BotLoginTitle));
+            addView(outlineField, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 16, 8, 16, 8));
+
+            codeField = new EditTextBoldCursor(context);
+            codeField.setCursorSize(AndroidUtilities.dp(20));
+            codeField.setCursorWidth(1.5f);
+            codeField.setImeOptions(EditorInfo.IME_ACTION_NEXT | EditorInfo.IME_FLAG_NO_EXTRACT_UI);
+            codeField.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 17);
+            codeField.setMaxLines(1);
+            codeField.setSingleLine();
+            codeField.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+            codeField.setOnFocusChangeListener((view, hasFocus) -> outlineField.animateSelection(hasFocus ? 1.0f : 0.0f));
+            codeField.setBackground(null);
+            codeField.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(16 - 2.66f), AndroidUtilities.dp(16), AndroidUtilities.dp(16 - 2.66f));
+            codeField.setGravity(LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT);
+            outlineField.attachEditText(codeField);
+            outlineField.addView(codeField, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.FILL, 0, 0, 0, 0));
+
+            codeField.addTextChangedListener(new TextWatcher() {
+                private boolean ignoreTextChange = false;
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+                @Override
+                public void afterTextChanged(Editable editable) {
+                    if (ignoreTextChange) {
+                        return;
+                    }
+                    int selectionStart = codeField.getSelectionStart();
+                    String string = codeField.getText().toString();
+                    StringBuilder sb = new StringBuilder(string.length());
+                    for (int i = 0; i < string.length(); i++) {
+                        String strSubstring = string.substring(i, i + 1);
+                        if ("0123456789:abcdefghijklmnopqrstuvwxyz-ABCDEFGHIJKLMNOPQRSTUVWXYZ_".contains(strSubstring)) {
+                            sb.append(strSubstring);
+                        }
+                    }
+                    ignoreTextChange = true;
+                    codeField.setText(sb);
+                    if (selectionStart >= 0) {
+                        codeField.setSelection(Math.min(selectionStart, codeField.getText().length()));
+                    }
+                    codeField.invalidate();
+                    ignoreTextChange = false;
+                }
+            });
+            codeField.setOnEditorActionListener((textView, actionId, keyEvent) -> {
+                if (actionId == EditorInfo.IME_ACTION_NEXT) {
+                    onNextPressed(null);
+                    return true;
+                }
+                return false;
+            });
+
+            switchPhoneNumberView = new TextView(context);
+            switchPhoneNumberView.setText(getString("BotLoginPhoneNumber", R.string.BotLoginPhoneNumber));
+            switchPhoneNumberView.setGravity(LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT);
+            switchPhoneNumberView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
+            switchPhoneNumberView.setLineSpacing(AndroidUtilities.dp(2), 1.0f);
+            switchPhoneNumberView.setPadding(0, AndroidUtilities.dp(2), 0, AndroidUtilities.dp(12));
+            addView(switchPhoneNumberView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT, 16, 20, 16, 0));
+            switchPhoneNumberView.setOnClickListener(view -> setPage(VIEW_PHONE_INPUT, true, null, true));
+
+            limitsTextView = new TextView(context);
+            limitsTextView.setText(getString("BotLoginLimits", R.string.BotLoginLimits));
+            limitsTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
+            limitsTextView.setGravity(LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT);
+            limitsTextView.setLineSpacing(AndroidUtilities.dp(2), 1.0f);
+            addView(limitsTextView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT, 16, 20, 16, 10));
+        }
+
+        @Override
+        public boolean needBackButton() {
+            return true;
+        }
+
+        @Override
+        public boolean onBackPressed(boolean force) {
+            setPage(VIEW_PHONE_INPUT, true, null, true);
+            return false;
+        }
+
+        @Override
+        public void onCancelPressed() {
+            nextPressed = false;
+        }
+
+        @Override
+        public String getHeaderName() {
+            return getString("BotLoginTitle", R.string.BotLoginTitle);
+        }
+
+        @Override
+        public void onShow() {
+            super.onShow();
+            if (codeField != null) {
+                codeField.requestFocus();
+                codeField.setSelection(codeField.getText().length());
+                AndroidUtilities.showKeyboard(codeField);
+            }
+            AndroidUtilities.runOnUIThread(() -> {
+                if (codeField != null) {
+                    codeField.requestFocus();
+                    codeField.setSelection(codeField.getText().length());
+                    AndroidUtilities.showKeyboard(codeField);
+                }
+            }, 100);
+        }
+
+        @Override
+        public void onNextPressed(String code) {
+            if (getParentActivity() == null || nextPressed) {
+                return;
+            }
+            if (codeField.getText().length() == 0) {
+                onFieldError(outlineField, true);
+                return;
+            }
+            AndroidUtilities.hideKeyboard(codeField);
+            nextPressed = true;
+            needShowProgress(0);
+            ConnectionsManager.getInstance(currentAccount).cleanup(false);
+            
+            TLRPC.TL_auth_importBotAuthorization request = new TLRPC.TL_auth_importBotAuthorization();
+            request.api_hash = BuildVars.APP_HASH;
+            request.api_id = BuildVars.APP_ID;
+            request.bot_auth_token = codeField.getText().toString();
+            request.flags = 0;
+            
+            int requestId = ConnectionsManager.getInstance(currentAccount).sendRequest(request, (response, error) -> {
+                AndroidUtilities.runOnUIThread(() -> {
+                    nextPressed = false;
+                    needHideProgress(true);
+                    if (error == null) {
+                        onAuthSuccess((TLRPC.TL_auth_authorization) response);
+                    } else {
+                        String str = error.text;
+                        if (str != null) {
+                            if (str.contains("ACCESS_TOKEN_INVALID")) {
+                                AlertsCreator.showSimpleAlert(LoginActivity.this, getString("BotLoginInvalidAccessToken", R.string.BotLoginInvalidAccessToken));
+                            } else if (str.startsWith("FLOOD_WAIT")) {
+                                AlertsCreator.showSimpleAlert(LoginActivity.this, getString("FloodWait", R.string.FloodWait));
+                            } else if (error.code != -1000) {
+                                AlertsCreator.showSimpleAlert(LoginActivity.this, error.text);
+                            }
+                        }
+                    }
+                });
+            }, 10);
+            
+            progressRequestId = requestId;
+        }
+
+        @Override
+        public void updateColors() {
+            titleTextView.setTextColor(getThemedColor(Theme.key_windowBackgroundWhiteBlackText));
+            subtitleTextView.setTextColor(getThemedColor(Theme.key_windowBackgroundWhiteGrayText6));
+            codeField.setTextColor(getThemedColor(Theme.key_windowBackgroundWhiteBlackText));
+            codeField.setCursorColor(getThemedColor(Theme.key_windowBackgroundWhiteInputFieldActivated));
+            codeField.setHintTextColor(getThemedColor(Theme.key_windowBackgroundWhiteHintText));
+            outlineField.updateColor();
+            switchPhoneNumberView.setTextColor(getThemedColor(Theme.key_windowBackgroundWhiteBlueText4));
+            limitsTextView.setTextColor(getThemedColor(Theme.key_windowBackgroundWhiteGrayText6));
+        }
+        
+        @Override
+        public void saveStateParams(Bundle bundle) {
+            String token = codeField.getText().toString();
+            if (token.length() != 0) {
+                bundle.putString("bot_token_view_token", token);
+            }
+        }
+
+        @Override
+        public void restoreStateParams(Bundle bundle) {
+            String token = bundle.getString("bot_token_view_token");
+            if (token != null) {
+                codeField.setText(token);
+            }
+        }
+    }
+    // [Alexgram: Bot Login] - End
 }

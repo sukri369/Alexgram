@@ -138,6 +138,8 @@ public class NotificationIconsSelectorCell extends RecyclerListView implements N
     @SuppressLint("NotifyDataSetChanged")
     private void updateIconsVisibility() {
         availableIcons.clear();
+        availableIcons.add(new IconItem(R.drawable.nagramx_outline, 0, R.string.Default));
+        availableIcons.add(new IconItem(R.drawable.notification, 0, R.string.AppIconTelegramOriginal));
 
         for (LauncherIconController.LauncherIcon icon : LauncherIconController.LauncherIcon.values()) {
             if (icon == LauncherIconController.LauncherIcon.TELEGRAM ||
@@ -166,6 +168,18 @@ public class NotificationIconsSelectorCell extends RecyclerListView implements N
         if (current >= 0 && current < availableIcons.size()) {
             linearLayoutManager.scrollToPositionWithOffset(current, AndroidUtilities.dp(16));
         }
+    }
+
+    @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        super.onSizeChanged(w, h, oldw, oldh);
+
+        invalidateItemDecorations();
+    }
+
+    @Override
+    protected void onMeasure(int widthSpec, int heightSpec) {
+        super.onMeasure(MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(widthSpec), MeasureSpec.EXACTLY), heightSpec);
     }
 
     @Override
@@ -214,6 +228,7 @@ public class NotificationIconsSelectorCell extends RecyclerListView implements N
         private TextView titleView;
 
         private float progress;
+        private boolean isMonochromatic;
 
         private IconHolderView(@NonNull Context context) {
             super(context);
@@ -226,11 +241,13 @@ public class NotificationIconsSelectorCell extends RecyclerListView implements N
             addView(iconView, LayoutHelper.createLinear(58, 58, Gravity.CENTER_HORIZONTAL));
 
             titleView = new TextView(context);
-            titleView.setSingleLine();
+            titleView.setGravity(Gravity.CENTER_HORIZONTAL);
+            titleView.setMaxLines(2);
+            titleView.setEllipsize(android.text.TextUtils.TruncateAt.END);
             titleView.setClickable(false);
-            titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
+            titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11);
             titleView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
-            addView(titleView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 0, 4, 0, 0));
+            addView(titleView, LayoutHelper.createLinear(64, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 0, 4, 0, 0));
 
             outlinePaint.setStyle(Paint.Style.STROKE);
             outlinePaint.setStrokeWidth(Math.max(2, AndroidUtilities.dp(0.5f)));
@@ -240,6 +257,10 @@ public class NotificationIconsSelectorCell extends RecyclerListView implements N
 
         @Override
         public void draw(Canvas canvas) {
+            fillPaint.setColor(Theme.getColor(Theme.key_windowBackgroundWhite));
+            if (isMonochromatic) {
+                iconView.setColorFilter(new android.graphics.PorterDuffColorFilter(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText), android.graphics.PorterDuff.Mode.SRC_IN));
+            }
             float stroke = outlinePaint.getStrokeWidth();
             AndroidUtilities.rectTmp.set(iconView.getLeft() + stroke, iconView.getTop() + stroke, iconView.getRight() - stroke, iconView.getBottom() - stroke);
             canvas.drawRoundRect(AndroidUtilities.rectTmp, AndroidUtilities.dp(AppIconsSelectorCell.ICONS_ROUND_RADIUS), AndroidUtilities.dp(AppIconsSelectorCell.ICONS_ROUND_RADIUS), fillPaint);
@@ -272,6 +293,20 @@ public class NotificationIconsSelectorCell extends RecyclerListView implements N
         public void bind(IconItem item, int position) {
             iconView.setImageResource(item.resId);
             iconView.setForeground(item.foregroundResId);
+            isMonochromatic = item.resId == R.drawable.nagramx_outline || item.resId == R.drawable.notification;
+            iconView.setIsSingleIcon(isMonochromatic);
+            if (isMonochromatic) {
+                iconView.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(16), AndroidUtilities.dp(16), AndroidUtilities.dp(16));
+                iconView.setOuterPadding(0);
+                iconView.setBackgroundOuterPadding(0);
+                iconView.setColorFilter(new android.graphics.PorterDuffColorFilter(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText), android.graphics.PorterDuff.Mode.SRC_IN));
+            } else {
+                iconView.setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8));
+                iconView.setOuterPadding(AndroidUtilities.dp(5));
+                iconView.setBackgroundOuterPadding(AndroidUtilities.dp(42));
+                iconView.setColorFilter(null);
+            }
+            iconView.updatePath();
             titleView.setText(LocaleController.getString(item.titleResId));
             setSelected(NaConfig.INSTANCE.getNotificationIcon().Int() == position, false);
         }

@@ -207,6 +207,7 @@ public class FilterTabsView extends FrameLayout {
         private int textOffsetX;
         private String currentEmoticon;
         private Drawable icon;
+        private int lastLoadedTabId = -999999;
 
         public boolean animateChange;
         public float changeProgress;
@@ -258,6 +259,22 @@ public class FilterTabsView extends FrameLayout {
         private float lastWidth;
         private float rotation;
         private float progressToLocked;
+
+        private MessagesController.DialogFilter getFilterForTab(Tab tab) {
+            if (tab == null) return null;
+            int stableId = positionToStableId.get(tab.id, -1);
+            if (stableId == -1) return null;
+            
+            ArrayList<MessagesController.DialogFilter> dialogFilters = 
+                MessagesController.getInstance(UserConfig.selectedAccount).dialogFilters;
+            for (int i = 0; i < dialogFilters.size(); i++) {
+                MessagesController.DialogFilter filter = dialogFilters.get(i);
+                if (filter != null && filter.localId == stableId) {
+                    return filter;
+                }
+            }
+            return null;
+        }
 
         public TabView(Context context) {
             super(context);
@@ -476,10 +493,19 @@ public class FilterTabsView extends FrameLayout {
             int iconX = 0;
             if (tabType != NekoXConfig.TITLE_TYPE_TEXT) {
                 int emoticonSize = FolderIconHelper.getIconWidth();
-                if (!TextUtils.equals(currentTab.emoticon, currentEmoticon)) {
+                MessagesController.DialogFilter filter = getFilterForTab(currentTab);
+                tw.nekomimi.nekogram.tabs.TabsByTypeEntry tabEntry = tw.nekomimi.nekogram.tabs.TabsByTypeManager.getTabFromFilter(filter);
+                boolean isVirtual = tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(filter);
+
+                if (icon == null || !TextUtils.equals(currentTab.emoticon, currentEmoticon) || lastLoadedTabId != (filter != null ? filter.id : -999999)) {
                     currentEmoticon = currentTab.emoticon;
+                    lastLoadedTabId = filter != null ? filter.id : -999999;
                     android.graphics.Rect bounds = new android.graphics.Rect(0, 0, emoticonSize, emoticonSize);
-                    icon = getResources().getDrawable(FolderIconHelper.getTabIcon(currentTab.id != getDefaultTabId() ? currentTab.emoticon:"\uD83D\uDCAC")).mutate();
+                    if (isVirtual && tabEntry != null) {
+                        icon = getResources().getDrawable(tabEntry.iconResId).mutate();
+                    } else {
+                        icon = getResources().getDrawable(FolderIconHelper.getTabIcon(currentTab.id != getDefaultTabId() ? currentTab.emoticon : "\uD83D\uDCAC")).mutate();
+                    }
                     icon.setBounds(bounds);
                 }
                 if (icon != null) {
@@ -632,6 +658,8 @@ public class FilterTabsView extends FrameLayout {
             }
 
             lastEmoticon = currentEmoticon;
+            MessagesController.DialogFilter currentFilter = getFilterForTab(currentTab);
+            lastLoadedTabId = currentFilter != null ? currentFilter.id : -999999;
             lastTextX = textX;
             lastIconX = iconX;
             lastTabCount = currentTab.counter;
@@ -811,11 +839,50 @@ public class FilterTabsView extends FrameLayout {
                     changed = true;
                 }
 
-                if (lastEmoticon != null && !currentTab.emoticon.equals(lastEmoticon)) {
+                boolean iconChanged = false;
+                MessagesController.DialogFilter currentFilter = getFilterForTab(currentTab);
+                tw.nekomimi.nekogram.tabs.TabsByTypeEntry currentTabEntry = tw.nekomimi.nekogram.tabs.TabsByTypeManager.getTabFromFilter(currentFilter);
+                boolean currentIsVirtual = tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(currentFilter);
+
+                tw.nekomimi.nekogram.tabs.TabsByTypeEntry lastTabEntry = null;
+                int lastFilterId = lastLoadedTabId;
+                ArrayList<MessagesController.DialogFilter> dialogFilters = MessagesController.getInstance(UserConfig.selectedAccount).dialogFilters;
+                MessagesController.DialogFilter lastFilter = null;
+                for (int i = 0; i < dialogFilters.size(); i++) {
+                    if (dialogFilters.get(i).id == lastFilterId) {
+                        lastFilter = dialogFilters.get(i);
+                        break;
+                    }
+                }
+                boolean lastIsVirtual = tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(lastFilter);
+                if (lastIsVirtual) {
+                    lastTabEntry = tw.nekomimi.nekogram.tabs.TabsByTypeManager.getTabFromFilter(lastFilter);
+                }
+
+                int currentFilterId = currentFilter != null ? currentFilter.id : -999999;
+                if (currentIsVirtual || lastIsVirtual) {
+                    if (currentFilterId != lastFilterId) {
+                        iconChanged = true;
+                    }
+                } else {
+                    if (lastEmoticon != null && !currentTab.emoticon.equals(lastEmoticon)) {
+                        iconChanged = true;
+                    }
+                }
+
+                if (iconChanged) {
                     int emoticonWidth = FolderIconHelper.getIconWidth();
                     android.graphics.Rect bounds = new android.graphics.Rect(0, 0, emoticonWidth, emoticonWidth);
-                    iconAnimateOutDrawable = getResources().getDrawable(FolderIconHelper.getTabIcon(lastEmoticon)).mutate();
-                    iconAnimateInDrawable = getResources().getDrawable(FolderIconHelper.getTabIcon(currentTab.emoticon)).mutate();
+                    if (lastIsVirtual && lastTabEntry != null) {
+                        iconAnimateOutDrawable = getResources().getDrawable(lastTabEntry.iconResId).mutate();
+                    } else {
+                        iconAnimateOutDrawable = getResources().getDrawable(FolderIconHelper.getTabIcon(lastEmoticon != null ? lastEmoticon : "\uD83D\uDCAC")).mutate();
+                    }
+                    if (currentIsVirtual && currentTabEntry != null) {
+                        iconAnimateInDrawable = getResources().getDrawable(currentTabEntry.iconResId).mutate();
+                    } else {
+                        iconAnimateInDrawable = getResources().getDrawable(FolderIconHelper.getTabIcon(currentTab.emoticon)).mutate();
+                    }
                     iconAnimateOutDrawable.setBounds(bounds);
                     iconAnimateInDrawable.setBounds(bounds);
                     iconAnimateOutDrawable.setTint(textPaint.getColor());
@@ -2106,6 +2173,9 @@ public class FilterTabsView extends FrameLayout {
                 AndroidUtilities.runOnUIThread(resetDefaultPosition, 320);
             }
             super.onSelectedChanged(viewHolder, actionState);
+            if (viewHolder != null) {
+                viewHolder.itemView.setTag(R.id.dragging, actionState == ItemTouchHelper.ACTION_STATE_DRAG ? true : null);
+            }
         }
 
         @Override
@@ -2118,6 +2188,7 @@ public class FilterTabsView extends FrameLayout {
             super.clearView(recyclerView, viewHolder);
             viewHolder.itemView.setPressed(false);
             viewHolder.itemView.setBackground(null);
+            viewHolder.itemView.setTag(R.id.dragging, null);
         }
     }
 

@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="AppName">Nagram X</string>
+    <string name="AppName">Alexgram</string>
     <string name="AppNameBeta">텔레그램</string>
     <string name="LanguageName">한국어</string>
     <string name="English">영어</string>
@@ -1136,4 +1136,6 @@
     <string name="RemindDayAt">MMM d HH:mm\'에 알리기\'</string>
     <string name="RemindDayYearAt">yyyy\'년\' M\'월\' d\'일\' HH:mm\'에 알림\'</string>
     <string name="BotsMenuTitle">메뉴</string>
+    <!-- [Alexgram: Bot Warmup Banner] -->
+    <string name="BotWarmupMessage">⏳ 첫 번째 새 메시지는 나타나는 데 최대 30분이 걸릴 수 있습니다. 메시지가 도착하면 이 알림은 자동으로 사라집니다.</string>
 </resources>

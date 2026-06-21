@@ -21,6 +21,7 @@ import tw.nekomimi.nekogram.settings.NekoChatSettingsActivity;
 import tw.nekomimi.nekogram.settings.NekoEmojiSettingsActivity;
 import tw.nekomimi.nekogram.settings.NekoExperimentalSettingsActivity;
 import tw.nekomimi.nekogram.settings.NekoGeneralSettingsActivity;
+import tw.nekomimi.nekogram.settings.NekoCustomizationSettingsActivity;
 import tw.nekomimi.nekogram.settings.NekoPasscodeSettingsActivity;
 import tw.nekomimi.nekogram.settings.NekoSettingsActivity;
 import tw.nekomimi.nekogram.settings.NekoTranslatorSettingsActivity;
@@ -64,6 +65,11 @@ public class SettingsHelper {
                 case "general":
                 case "g":
                     fragment = nekox_fragment = new NekoGeneralSettingsActivity();
+                    break;
+                case "customization":
+                case "cust":
+                case "cust_settings":
+                    fragment = nekox_fragment = new NekoCustomizationSettingsActivity();
                     break;
                 case "translator":
                 case "translate":
@@ -112,6 +118,7 @@ public class SettingsHelper {
         ArrayList<SettingsSearchResult> items = new ArrayList<>();
         ArrayList<BaseNekoXSettingsActivity> fragments = new ArrayList<>();
         fragments.add(new NekoGeneralSettingsActivity());
+        fragments.add(new NekoCustomizationSettingsActivity());
         fragments.add(new NekoChatSettingsActivity());
         fragments.add(new NekoExperimentalSettingsActivity());
         fragments.add(new NekoTranslatorSettingsActivity());

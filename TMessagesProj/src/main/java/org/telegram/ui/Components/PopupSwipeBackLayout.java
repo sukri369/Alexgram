@@ -63,6 +63,16 @@ public class PopupSwipeBackLayout extends FrameLayout {
 
     private Rect hitRect = new Rect();
 
+    private int backgroundViewIndex = 0;
+
+    public void setBackgroundViewIndex(int index) {
+        this.backgroundViewIndex = index;
+    }
+
+    public int getBackgroundViewIndex() {
+        return backgroundViewIndex;
+    }
+
     public PopupSwipeBackLayout(@NonNull Context context, Theme.ResourcesProvider resourcesProvider) {
         super(context);
         this.resourcesProvider = resourcesProvider;
@@ -77,7 +87,7 @@ public class PopupSwipeBackLayout extends FrameLayout {
             @Override
             public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
                 if (!isProcessingSwipe && !isSwipeDisallowed) {
-                    if (!isSwipeBackDisallowed && transitionProgress == 1 && distanceX <= -touchSlop && Math.abs(distanceX) >= Math.abs(distanceY * 1.5f) && !isDisallowedView(e2, getChildAt(transitionProgress > 0.5f ? 1 : 0))) {
+                    if (!isSwipeBackDisallowed && transitionProgress == 1 && distanceX <= -touchSlop && Math.abs(distanceX) >= Math.abs(distanceY * 1.5f) && !isDisallowedView(e2, getChildAt(transitionProgress > 0.5f ? currentForegroundIndex : backgroundViewIndex))) {
                         isProcessingSwipe = true;
 
                         MotionEvent c = MotionEvent.obtain(0, 0, MotionEvent.ACTION_CANCEL, 0, 0, 0);
@@ -133,7 +143,7 @@ public class PopupSwipeBackLayout extends FrameLayout {
     protected boolean drawChild(Canvas canvas, View child, long drawingTime) {
         int i = indexOfChild(child);
         int s = canvas.save();
-        if (i != 0) {
+        if (i != backgroundViewIndex) {
             if (foregroundColor == 0) {
                 foregroundPaint.setColor(Theme.getColor(Theme.key_actionBarDefaultSubmenuBackground, resourcesProvider));
             } else {
@@ -142,7 +152,7 @@ public class PopupSwipeBackLayout extends FrameLayout {
             canvas.drawRect(child.getX(), 0, child.getX() + child.getMeasuredWidth(), getMeasuredHeight(), foregroundPaint);
         }
         boolean b = super.drawChild(canvas, child, drawingTime);
-        if (i == 0) {
+        if (i == backgroundViewIndex) {
             overlayPaint.setAlpha((int) (transitionProgress * 0x40));
             canvas.drawRect(0, 0, getWidth(), getHeight(), overlayPaint);
         }
@@ -169,7 +179,7 @@ public class PopupSwipeBackLayout extends FrameLayout {
             lastTransitionProgress = transitionProgress;
         }
 
-        View backgroundView = getChildAt(0);
+        View backgroundView = getChildAt(backgroundViewIndex);
         View foregroundView = null;
         if (currentForegroundIndex >= 0 && currentForegroundIndex < getChildCount()) {
             foregroundView = getChildAt(currentForegroundIndex);
@@ -247,7 +257,7 @@ public class PopupSwipeBackLayout extends FrameLayout {
             return super.dispatchTouchEvent(ev);
         }
 
-        View bv = getChildAt(0);
+        View bv = getChildAt(backgroundViewIndex);
         View fv = getChildAt(currentForegroundIndex);
 
         boolean b = (transitionProgress > 0.5f ? fv : bv).dispatchTouchEvent(ev);
@@ -319,7 +329,13 @@ public class PopupSwipeBackLayout extends FrameLayout {
                 notificationsLocker.unlock();
                 transitionProgress = f;
                 if (f <= 0) {
-                    currentForegroundIndex = -1;
+                    if (backgroundViewIndex != 0) {
+                        currentForegroundIndex = backgroundViewIndex;
+                        backgroundViewIndex = 0;
+                        transitionProgress = 1.0f;
+                    } else {
+                        currentForegroundIndex = -1;
+                    }
                 }
                 invalidateTransforms();
                 isAnimationInProgress = false;
@@ -412,7 +428,7 @@ public class PopupSwipeBackLayout extends FrameLayout {
         if (getChildCount() == 0) {
             return;
         }
-        View backgroundView = getChildAt(0);
+        View backgroundView = getChildAt(backgroundViewIndex);
         float fY = backgroundView.getTop(), fW = backgroundView.getMeasuredWidth(), fH = backgroundView.getMeasuredHeight();
         float y, w, h;
         if (currentForegroundIndex == -1 || currentForegroundIndex >= getChildCount()) {
@@ -487,7 +503,7 @@ public class PopupSwipeBackLayout extends FrameLayout {
         for (int i = 0; i < getChildCount(); i++) {
             View child = getChildAt(i);
 
-            if (i == 0) {
+            if (i == backgroundViewIndex) {
                 if (transitionProgress == 1 && child.getVisibility() != INVISIBLE)
                     child.setVisibility(INVISIBLE);
                 if (transitionProgress != 1 && child.getVisibility() != VISIBLE)

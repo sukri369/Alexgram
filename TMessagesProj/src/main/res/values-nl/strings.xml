@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="AppName">Nagram X</string>
+    <string name="AppName">Alexgram</string>
     <string name="AppNameBeta">Telegram-bèta</string>
     <string name="LanguageName">Nederlands</string>
     <string name="English">Engels</string>
@@ -1084,4 +1084,6 @@
     <string name="RemindDayAt">\'Herinner op\' d MMM \'om\' HH:mm</string>
     <string name="RemindDayYearAt">\'Herinner op\' d MMM yyyy \'om\' HH:mm</string>
     <string name="BotsMenuTitle">Menu</string>
+    <!-- [Alexgram: Bot Warmup Banner] -->
+    <string name="BotWarmupMessage">⏳ Je eerste nieuwe bericht kan tot 30 minuten duren voordat het verschijnt. Deze melding verdwijnt automatisch zodra er berichten binnenkomen.</string>
 </resources>

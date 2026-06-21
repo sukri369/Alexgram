@@ -18,6 +18,7 @@ import tw.nekomimi.nekogram.DatacenterActivity;
 public class NekoAboutActivity extends BaseNekoSettingsActivity {
 
     private int xChannelRow;
+    private int desktopChannelRow;
     private int channelTipsRow;
     private int sourceCodeRow;
     private int datacenterStatusRow;
@@ -27,6 +28,7 @@ public class NekoAboutActivity extends BaseNekoSettingsActivity {
         super.updateRows();
 
         xChannelRow = addRow();
+        desktopChannelRow = addRow();
         channelTipsRow = addRow();
         sourceCodeRow = addRow();
         datacenterStatusRow = addRow();
@@ -41,6 +43,8 @@ public class NekoAboutActivity extends BaseNekoSettingsActivity {
     protected void onItemClick(View view, int position, float x, float y) {
         if (position == xChannelRow) {
             MessagesController.getInstance(currentAccount).openByUserName("AlexgramApp", NekoAboutActivity.this, 1);
+        } else if (position == desktopChannelRow) {
+            MessagesController.getInstance(currentAccount).openByUserName("AlexgramDesktop", NekoAboutActivity.this, 1);
         } else if (position == channelTipsRow) {
             MessagesController.getInstance(currentAccount).openByUserName("Alexgramtips", NekoAboutActivity.this, 1);
         } else if (position == sourceCodeRow) {
@@ -68,6 +72,8 @@ public class NekoAboutActivity extends BaseNekoSettingsActivity {
                 TextSettingsCell textCell = (TextSettingsCell) holder.itemView;
                 if (position == xChannelRow) {
                     textCell.setTextAndValue("Alexgram Channel", "@AlexgramApp", true);
+                } else if (position == desktopChannelRow) {
+                    textCell.setTextAndValue("Alexgram Desktop", "@AlexgramDesktop", true);
                 } else if (position == channelTipsRow) {
                     textCell.setTextAndValue("Features Tips Channel", "@Alexgramtips", true);
                 } else if (position == sourceCodeRow) {

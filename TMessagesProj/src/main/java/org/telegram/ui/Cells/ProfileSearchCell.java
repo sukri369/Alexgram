@@ -157,7 +157,7 @@ public class ProfileSearchCell extends BaseCell implements NotificationCenter.No
         this.resourcesProvider = resourcesProvider;
 
         avatarImage = new ImageReceiver(this);
-        avatarImage.setRoundRadius(dp(23));
+        avatarImage.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(46.0f));
         avatarDrawable = new AvatarDrawable();
 
         checkBox = new CheckBox2(context, 21, resourcesProvider);
@@ -834,7 +834,7 @@ public class ProfileSearchCell extends BaseCell implements NotificationCenter.No
                         thumb = user.photo.strippedBitmap;
                     }
                 }
-                avatarImage.setImage(ImageLocation.getForUserOrChat(user, ImageLocation.TYPE_SMALL), "50_50", ImageLocation.getForUserOrChat(user, ImageLocation.TYPE_STRIPPED), "50_50", thumb, user, 0);
+                avatarImage.setImage(ImageLocation.getForUserOrChat(currentAccount, user, ImageLocation.TYPE_SMALL), "50_50", ImageLocation.getForUserOrChat(user, ImageLocation.TYPE_STRIPPED), "50_50", thumb, user, 0);
             }
         } else if (chat != null) {
             Drawable thumb = avatarDrawable;
@@ -848,7 +848,7 @@ public class ProfileSearchCell extends BaseCell implements NotificationCenter.No
                 ForumUtilities.setMonoForumAvatar(currentAccount, chat, avatarDrawable, avatarImage);
             } else {
                 avatarDrawable.setInfo(currentAccount, chat);
-                avatarImage.setImage(ImageLocation.getForUserOrChat(chat, ImageLocation.TYPE_SMALL), "50_50", ImageLocation.getForUserOrChat(chat, ImageLocation.TYPE_STRIPPED), "50_50", thumb, chat, 0);
+                avatarImage.setImage(ImageLocation.getForUserOrChat(currentAccount, chat, ImageLocation.TYPE_SMALL), "50_50", ImageLocation.getForUserOrChat(chat, ImageLocation.TYPE_STRIPPED), "50_50", thumb, chat, 0);
             }
         } else if (contact != null) {
             avatarDrawable.setInfo(0, contact.first_name, contact.last_name);
@@ -858,7 +858,7 @@ public class ProfileSearchCell extends BaseCell implements NotificationCenter.No
             avatarImage.setImage(null, null, avatarDrawable, null, null, 0);
         }
 
-        avatarImage.setRoundRadius(chat != null && chat.monoforum ? 0 : rectangularAvatar ? dp(10) : chat != null && chat.forum ? dp(16) : dp(23));
+        avatarImage.setRoundRadius(chat != null && chat.monoforum ? 0 : rectangularAvatar ? dp(10) : org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(46.0f, chat != null && chat.forum));
         if (mask != 0) {
             boolean continueUpdate = false;
             if ((mask & MessagesController.UPDATE_MASK_AVATAR) != 0 && user != null || (mask & MessagesController.UPDATE_MASK_CHAT_AVATAR) != 0 && chat != null) {

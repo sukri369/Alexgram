@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+﻿<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="N_Config">A-Ayarlar</string>
     <string name="CombineMessage">Mesajları Birleştir</string>
@@ -137,4 +137,22 @@
     <string name="HiddenChatsAbout">Hassas sohbetleri ana listeden gizleyin. Şifre veya biyometrik ile kilidi açtıktan sonra Başlık çubuğuna basılı tutarak bunlara erişin.</string>
     <string name="HideContacts">Kişileri gizle</string>
     <string name="RestartRequired">Değişiklikleri uygulamak için yeniden başlatma gerekiyor</string>
+    <string name="MaxActiveAccounts">Maksimum Aktif Hesap Sayısı</string>
+    <string name="LimitReachedAccountsNa">Üzgünüz, **%1$d**\'den fazla hesap ekleyemezsiniz. Bu sınırı (100\'e kadar) **A-Ayarlar &gt; Genel** bölümünden artırabilirsiniz.</string>
+    <string name="MaxActiveAccountsWarning">Şu anda %1$d aktif hesabınız var. Sınırı %2$d olarak ayarlamak, bazılarından çıkış yapana kadar yeni hesap eklemenizi engelleyecektir.</string>
+    <string name="SplitChat">Sohbeti Böl</string>
+    <string name="SplitChatClose">Bölmeyi Kapat</string>
+    <string name="SplitChatSelectChat">Yan yana açmak için bir sohbet seçin</string>
+    <string name="SplitChatHint">Küçültülmüş sohbeti geri yüklemek için simgeye dokunun</string>
+    <string name="SplitChatMinimized">Sohbet küçültüldü</string>
+    <string name="ChangeFont">Yazı Tipini Değiştir</string>
+    <string name="ShadowBanChannelAdded">Kanal **Gölge Yasaklama** listesine eklendi</string>
+    <string name="ShadowBanChannelRemoved">Kanal **Gölge Yasaklama** listesinden kaldırıldı</string>
+    <string name="ExperimentalForceMaxFPSInfo">Maksimum ekran yenileme hızını zorla.</string>
+    <string name="ExperimentalForceMaxFPS">Maksimum FPS\'i Zorla</string>
+    <string name="RegexFiltersSpoilerInsteadOfHide">Mesajı gizlemek yerine spoyler maskesi kullan</string>
+    <string name="MaskBlockedUserMessages">Engellenen Kullanıcıların Mesajlarını Maskele</string>
+    <string name="MaskBlockedUserMessagesAbout">Engellenen/gölge yasaklı kullanıcıların mesajlarını gizlemek yerine spoyler maskesi arkasında göster.</string>
+    <string name="RegexFiltersSpoilerMatchOnly">Yalnızca eşleşen düzenli ifadeleri maskele</string>
+    <string name="RegexFiltersSpoilerColor">Maske parçacık rengi</string>
 </resources>

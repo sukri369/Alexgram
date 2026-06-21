@@ -244,7 +244,7 @@ public class ContactAddActivity extends BaseFragment implements NotificationCent
         infoLayout.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
 
         avatarImage = new BackupImageView(context);
-        avatarImage.setRoundRadius(dp(32));
+        avatarImage.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(64.0f));
         infoLayout.addView(avatarImage, LayoutHelper.createFrame(64, 64, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, 16, 13, 16, 13));
 
         Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -933,7 +933,7 @@ public class ContactAddActivity extends BaseFragment implements NotificationCent
                         src.renameTo(destFile);
                         String oldKey = avatar.volume_id + "_" + avatar.local_id + "@50_50";
                         String newKey = smallSize2.location.volume_id + "_" + smallSize2.location.local_id + "@50_50";
-                        ImageLoader.getInstance().replaceImageInCache(oldKey, newKey, ImageLocation.getForUser(user, ImageLocation.TYPE_SMALL), false);
+                        ImageLoader.getInstance().replaceImageInCache(oldKey, newKey, ImageLocation.getForUser(currentAccount, user, ImageLocation.TYPE_SMALL), false);
                     }
 
                     if (bigSize2 != null && bigAvatar != null) {

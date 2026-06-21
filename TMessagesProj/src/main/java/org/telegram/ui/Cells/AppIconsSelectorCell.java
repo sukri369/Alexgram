@@ -225,10 +225,12 @@ public class AppIconsSelectorCell extends RecyclerListView implements Notificati
             addView(iconView, LayoutHelper.createLinear(58, 58, Gravity.CENTER_HORIZONTAL));
 
             titleView = new TextView(context);
-            titleView.setSingleLine();
-            titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
+            titleView.setGravity(Gravity.CENTER_HORIZONTAL);
+            titleView.setMaxLines(2);
+            titleView.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11);
             titleView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
-            addView(titleView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 0, 4, 0, 0));
+            addView(titleView, LayoutHelper.createLinear(64, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 0, 4, 0, 0));
 
             outlinePaint.setStyle(Paint.Style.STROKE);
             outlinePaint.setStrokeWidth(Math.max(2, AndroidUtilities.dp(0.5f)));
@@ -346,7 +348,7 @@ public class AppIconsSelectorCell extends RecyclerListView implements Notificati
             }
         }
 
-        private void updatePath() {
+        public void updatePath() {
             path.rewind();
             path.addCircle(getWidth() / 2f, getHeight() / 2f, Math.min(getWidth() - getPaddingLeft() - getPaddingRight(), getHeight() - getPaddingTop() - getPaddingBottom()) / 2f, Path.Direction.CW);
         }

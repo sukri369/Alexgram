@@ -362,7 +362,7 @@ public class MessageSeenView extends FrameLayout {
         public UserCell(Context context) {
             super(context);
             avatarImageView = new BackupImageView(context);
-            avatarImageView.setRoundRadius(AndroidUtilities.dp(18));
+            avatarImageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(34.0f));
 
             nameView = new SimpleTextView(context);
             nameView.setTextSize(16);
@@ -408,7 +408,7 @@ public class MessageSeenView extends FrameLayout {
 
             if (object != null) {
                 avatarDrawable.setInfo(currentAccount, object);
-                ImageLocation imageLocation = ImageLocation.getForUserOrChat(object, ImageLocation.TYPE_SMALL);
+                ImageLocation imageLocation = ImageLocation.getForUserOrChat(currentAccount, object, ImageLocation.TYPE_SMALL);
                 avatarImageView.setImage(imageLocation, "50_50", avatarDrawable, object);
                 nameView.setText(ContactsController.formatName(object));
             }

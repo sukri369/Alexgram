@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="NekoSettings">A-設定</string>
     <string name="IPv6">偏好 IPv6</string>
@@ -70,7 +70,7 @@
     <string name="CallTo">撥打給 **%1$s**？</string>
     <string name="DisableNumberRounding">停用數字四捨五入</string>
     <string name="Categories">分類</string>
-    <string name="OfficialChannel">Nagram 頻道</string>
+    <string name="OfficialChannel">Alexgram 頻道</string>
     <string name="About">關於</string>
     <string name="IgnoreBlockedAbout">您將不會再看到被封鎖的使用者在群組中的訊息。</string>
     <string name="SourceCode">原始碼</string>
@@ -271,4 +271,13 @@
     <string name="EmojiUseDefault">使用系統 Emoji</string>
     <string name="Chat">聊天</string>
     <string name="Appearance">外觀</string>
+    <!-- [Alexgram: Important Announcement] -->
+    <string name="GetImportantAnnouncementFromAlexgram">取得 Alexgram 的重要公告</string>
+    <!-- [Alexgram: Birthday Wish] - Start -->
+    <string name="BirthdayTitle">生日快樂，\n%1$s！🎉</string>
+    <string name="BirthdayMessage">今天完全屬於你！✨ 又是一年主角光環加持。祝你新的一年蓬勃成長、贏個不停、負能量全部退散。去創造精彩吧！🚀🎂</string>
+    <string name="BirthdayMakeWish">許個願吧 🌟</string>
+    <string name="BirthdayWishSent">願望已寄往星空！🌌✨</string>
+    <!-- [Alexgram: Birthday Wish] - End -->
 </resources>
+

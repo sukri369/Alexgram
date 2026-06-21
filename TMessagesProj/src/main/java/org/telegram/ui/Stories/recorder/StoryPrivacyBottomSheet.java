@@ -38,6 +38,7 @@ import android.view.HapticFeedbackConstants;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.ViewGroup;
 import android.view.animation.LinearInterpolator;
 import android.view.inputmethod.EditorInfo;
@@ -3024,10 +3025,10 @@ public class StoryPrivacyBottomSheet extends BottomSheet implements Notification
             super(context);
             this.resourcesProvider = resourcesProvider;
 
-            avatarDrawable.setRoundRadius(AndroidUtilities.dp(40));
+            avatarDrawable.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(40.0f));
 
             imageView = new BackupImageView(context);
-            imageView.setRoundRadius(AndroidUtilities.dp(20));
+            imageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(40.0f));
             addView(imageView);
 
             titleTextView = new SimpleTextView(context);
@@ -3139,7 +3140,7 @@ public class StoryPrivacyBottomSheet extends BottomSheet implements Notification
             dialogId = user == null ? 0 : user.id;
 
             avatarDrawable.setInfo(user);
-            imageView.setRoundRadius(dp(20));
+            imageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(40.0f));
             imageView.setForUserOrChat(user, avatarDrawable);
 
             CharSequence text = UserObject.getUserName(user);
@@ -3163,7 +3164,7 @@ public class StoryPrivacyBottomSheet extends BottomSheet implements Notification
             dialogId = chat == null ? 0 : -chat.id;
 
             avatarDrawable.setInfo(chat);
-            imageView.setRoundRadius(dp(ChatObject.isForum(chat) ? 12 : 20));
+            imageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(40.0f, ChatObject.isForum(chat) || ChatObject.isMonoForum(chat)));
             imageView.setForUserOrChat(chat, avatarDrawable);
 
             CharSequence text = chat.title;
@@ -3285,7 +3286,7 @@ public class StoryPrivacyBottomSheet extends BottomSheet implements Notification
             checkBox.setVisibility(View.GONE);
             radioButton.setVisibility(needCheck ? View.VISIBLE : View.GONE);
             imageView.setImageDrawable(avatarDrawable);
-            imageView.setRoundRadius(dp(20));
+            imageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(40.0f));
         }
 
         private void setSubtitle(CharSequence text) {
@@ -3351,6 +3352,20 @@ public class StoryPrivacyBottomSheet extends BottomSheet implements Notification
             if (arrowPath != null && arrowPaint != null && !needCheck && sendAs && drawArrow) {
                 canvas.drawPath(arrowPath, arrowPaint);
             }
+        }
+
+        @Override
+        public void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo info) {
+            super.onInitializeAccessibilityNodeInfo(info);
+            try {
+                boolean checkboxVisible = checkBox != null && checkBox.getVisibility() == View.VISIBLE;
+                boolean radioVisible = radioButton != null && radioButton.getVisibility() == View.VISIBLE;
+                if (checkboxVisible || radioVisible) {
+                    info.setCheckable(true);
+                    info.setChecked(checkboxVisible ? checkBox.isChecked() : radioButton.isChecked());
+                    info.setClassName(checkboxVisible ? "android.widget.CheckBox" : "android.widget.RadioButton");
+                }
+            } catch (Exception ignored) {}
         }
     }
 
@@ -3508,7 +3523,7 @@ public class StoryPrivacyBottomSheet extends BottomSheet implements Notification
             editText.setCursorColor(Theme.getColor(Theme.key_groupcreate_cursor, resourcesProvider));
             editText.setHandlesColor(Theme.getColor(Theme.key_groupcreate_cursor, resourcesProvider));
             editText.setCursorWidth(1.5f);
-            editText.setInputType(InputType.TYPE_TEXT_VARIATION_FILTER | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+            editText.setInputType(editText.getInputType() | InputType.TYPE_TEXT_VARIATION_FILTER);
             editText.setSingleLine(true);
             editText.setBackgroundDrawable(null);
             editText.setVerticalScrollBarEnabled(false);

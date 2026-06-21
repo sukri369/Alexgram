@@ -26,8 +26,10 @@ import tw.nekomimi.nekogram.NekoConfig;
 public class UserConfig extends BaseController {
 
     public static int selectedAccount;
+    // [Alexgram: Max Active Accounts] - Start
     public final static int MAX_ACCOUNT_DEFAULT_COUNT = 10;
-    public final static int MAX_ACCOUNT_COUNT = 10;
+    public final static int MAX_ACCOUNT_COUNT = 100;
+    // [Alexgram: Max Active Accounts] - End
 
     private final Object sync = new Object();
     private volatile boolean configLoaded;
@@ -44,6 +46,7 @@ public class UserConfig extends BaseController {
     public TL_account.tmpPassword tmpPassword;
     public int ratingLoadTime;
     public int botRatingLoadTime;
+    public int botGuestRatingLoadTime;
     public int webappRatingLoadTime;
     public boolean contactsReimported;
     public boolean hasValidDialogLoadIds;
@@ -122,9 +125,15 @@ public class UserConfig extends BaseController {
         return false;
     }
 
+    // [Alexgram: Max Active Accounts] - Start
     public static int getMaxAccountCount() {
-        return hasPremiumOnAccounts() ? 5 : 3;
+        try {
+            return tw.nekomimi.nekogram.NekoConfig.getPreferences().getInt("MaxActiveAccounts", 10);
+        } catch (Exception e) {
+            return 10;
+        }
     }
+    // [Alexgram: Max Active Accounts] - End
 
     public int getNewMessageId() {
         int id;
@@ -156,6 +165,7 @@ public class UserConfig extends BaseController {
                     editor.putBoolean("unreadDialogsLoaded", unreadDialogsLoaded);
                     editor.putInt("ratingLoadTime", ratingLoadTime);
                     editor.putInt("botRatingLoadTime", botRatingLoadTime);
+                    editor.putInt("botGuestRatingLoadTime", botGuestRatingLoadTime);
                     editor.putInt("webappRatingLoadTime", webappRatingLoadTime);
                     editor.putBoolean("contactsReimported", contactsReimported);
                     editor.putInt("loginTime", loginTime);
@@ -240,6 +250,13 @@ public class UserConfig extends BaseController {
         }
     }
 
+    public boolean isBot() {
+        synchronized (sync) {
+            return currentUser != null && currentUser.bot;
+        }
+    }
+
+
     public long getClientUserId() {
         synchronized (sync) {
             return currentUser != null ? currentUser.id : 0;
@@ -308,6 +325,7 @@ public class UserConfig extends BaseController {
             contactsReimported = preferences.getBoolean("contactsReimported", false);
             ratingLoadTime = preferences.getInt("ratingLoadTime", 0);
             botRatingLoadTime = preferences.getInt("botRatingLoadTime", 0);
+            botGuestRatingLoadTime = preferences.getInt("botGuestRatingLoadTime", 0);
             webappRatingLoadTime = preferences.getInt("webappRatingLoadTime", 0);
             loginTime = preferences.getInt("loginTime", currentAccount);
             syncContacts = preferences.getBoolean("syncContacts", true);
@@ -478,6 +496,7 @@ public class UserConfig extends BaseController {
         migrateOffsetAccess = -1;
         ratingLoadTime = 0;
         botRatingLoadTime = 0;
+        botGuestRatingLoadTime = 0;
         webappRatingLoadTime = 0;
         draftsLoaded = false;
         contactsReimported = true;
@@ -572,15 +591,15 @@ public class UserConfig extends BaseController {
     public boolean isPremium() {
         TLRPC.User user = currentUser;
         if (user == null) {
-            return false;
+            return NekoConfig.localPremium.Bool();
         }
-        return user.premium;
+        return user.premium || NekoConfig.localPremium.Bool();
     }
 
     public boolean isPremiumOrLocal() {
         TLRPC.User user = currentUser;
         if (user == null) {
-            return false;
+            return NekoConfig.localPremium.Bool();
         }
         return user.premium || NekoConfig.localPremium.Bool();
     }

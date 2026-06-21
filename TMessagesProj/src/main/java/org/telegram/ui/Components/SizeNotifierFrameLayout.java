@@ -35,14 +35,16 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.text.MeasuredText;
-import android.media.MediaPlayer;
 import android.os.Build;
 import android.util.Log;
+import android.view.View;
+import android.widget.FrameLayout;
+// [Alexgram: Live Video Wallpaper] - Start
+import android.media.MediaPlayer;
 import android.graphics.SurfaceTexture;
 import android.view.Surface;
 import android.view.TextureView;
-import android.view.View;
-import android.widget.FrameLayout;
+// [Alexgram: Live Video Wallpaper] - End
 
 import androidx.annotation.NonNull;
 
@@ -98,8 +100,7 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
     SnowflakesEffect snowflakesEffect;
     public View backgroundView;
     boolean attached;
-    public boolean backgroundImageUnderActionBar;
-
+    // [Alexgram: Live Video Wallpaper] - Start
     private TextureView videoTextureView;
     private MediaPlayer videoMediaPlayer;
     private boolean videoWallpaperPlaying;
@@ -113,6 +114,7 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
             checkVideoWallpaper();
         }
     }
+    // [Alexgram: Live Video Wallpaper] - End
 
 
     //blur variables
@@ -248,7 +250,7 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
                 if (drawable instanceof MotionBackgroundDrawable) {
                     MotionBackgroundDrawable motionBackgroundDrawable = (MotionBackgroundDrawable) drawable;
                     if (motionBackgroundDrawable.hasPattern()) {
-                        int actionBarHeight = (!backgroundImageUnderActionBar && isActionBarVisible() ? ActionBar.getCurrentActionBarHeight() : 0) + (!backgroundImageUnderActionBar && isStatusBarVisible() && Build.VERSION.SDK_INT >= 21 && occupyStatusBar ? AndroidUtilities.statusBarHeight : 0);
+                        int actionBarHeight = (isActionBarVisible() ? ActionBar.getCurrentActionBarHeight() : 0) + (isStatusBarVisible() && occupyStatusBar ? AndroidUtilities.statusBarHeight : 0);
                         int viewHeight = useRootView() ? getRootView().getMeasuredHeight() - actionBarHeight : getHeight();
                         float scaleX = (float) getMeasuredWidth() / (float) drawable.getIntrinsicWidth();
                         float scaleY = (float) (viewHeight) / (float) drawable.getIntrinsicHeight();
@@ -258,9 +260,7 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
                         int x = (getMeasuredWidth() - width) / 2 + (int) translationX;
                         int y = backgroundTranslationY + (viewHeight - height) / 2 + actionBarHeight + (int) translationY;
                         canvas.save();
-                        if (!backgroundImageUnderActionBar) {
-                            canvas.clipRect(0, actionBarHeight, width, getMeasuredHeight() - bottomClip);
-                        }
+                        canvas.clipRect(0, actionBarHeight, width, getMeasuredHeight() - bottomClip);
                         drawable.setBounds(x, y, x + width, y + height);
                         drawable.draw(canvas);
                         checkSnowflake(canvas);
@@ -272,11 +272,6 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
                         }
                         motionBackgroundDrawable.setTranslationY(backgroundTranslationY);
                         int bottom = (int) (getRootView().getMeasuredHeight() - backgroundTranslationY + translationY);
-                        if (animationInProgress) {
-                            bottom -= emojiOffset;
-                        } else if (emojiHeight != 0) {
-                            bottom -= emojiHeight;
-                        }
                         drawable.setBounds(0, 0, getMeasuredWidth(), bottom);
                         drawable.draw(canvas);
                         if (bottomClip != 0) {
@@ -316,7 +311,7 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
                         checkSnowflake(canvas);
                         canvas.restore();
                     } else {
-                        int actionBarHeight = (!backgroundImageUnderActionBar && isActionBarVisible() ? ActionBar.getCurrentActionBarHeight() : 0) + (!backgroundImageUnderActionBar && isStatusBarVisible() && Build.VERSION.SDK_INT >= 21 && occupyStatusBar ? AndroidUtilities.statusBarHeight : 0);
+                        int actionBarHeight = (isActionBarVisible() ? ActionBar.getCurrentActionBarHeight() : 0) + (isStatusBarVisible() && occupyStatusBar ? AndroidUtilities.statusBarHeight : 0);
                         int viewHeight = useRootView() ? getRootView().getMeasuredHeight() - actionBarHeight : getHeight();
                         float scaleX = (float) getMeasuredWidth() / (float) drawable.getIntrinsicWidth();
                         float scaleY = (float) (viewHeight) / (float) drawable.getIntrinsicHeight();
@@ -326,9 +321,7 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
                         int x = (getMeasuredWidth() - width) / 2 + (int) translationX;
                         int y = backgroundTranslationY + (viewHeight - height) / 2 + actionBarHeight + (int) translationY;
                         canvas.save();
-                        if (!backgroundImageUnderActionBar) {
-                            canvas.clipRect(0, actionBarHeight, width, getMeasuredHeight() - bottomClip);
-                        }
+                        canvas.clipRect(0, actionBarHeight, width, getMeasuredHeight() - bottomClip);
                         drawable.setBounds(x, y, x + width, y + height);
                         drawable.draw(canvas);
                         checkSnowflake(canvas);
@@ -390,6 +383,7 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
 
     }
 
+    // [Alexgram: Live Video Wallpaper] - Start
     private boolean checkVideoWallpaper() {
         if (!canPlayVideo) {
             if (videoTextureView != null) {
@@ -499,8 +493,10 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
         }
         videoWallpaperPlaying = false;
     }
+    // [Alexgram: Live Video Wallpaper] - End
 
 
+    // [Alexgram: Live Video Wallpaper] - Start
     public void setBackgroundImage(Drawable bitmap, boolean motion) {
         boolean video = checkVideoWallpaper();
         if (backgroundDrawable == bitmap) {
@@ -569,6 +565,7 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
         backgroundView.invalidate();
         checkLayerType();
     }
+    // [Alexgram: Live Video Wallpaper] - End
 
     private void checkMotion() {
         boolean motion = oldBackgroundMotion || backgroundMotion;
@@ -641,46 +638,9 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
     }
 
     @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        if (backgroundImageUnderActionBar) {
-            int fullWidth = getMeasuredWidth();
-            int fullHeight = getMeasuredHeight();
-            if (backgroundView != null) {
-                backgroundView.measure(
-                    MeasureSpec.makeMeasureSpec(fullWidth, MeasureSpec.EXACTLY),
-                    MeasureSpec.makeMeasureSpec(fullHeight, MeasureSpec.EXACTLY)
-                );
-            }
-            if (videoTextureView != null) {
-                videoTextureView.measure(
-                    MeasureSpec.makeMeasureSpec(fullWidth, MeasureSpec.EXACTLY),
-                    MeasureSpec.makeMeasureSpec(fullHeight, MeasureSpec.EXACTLY)
-                );
-            }
-        }
-    }
-
-    @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         super.onLayout(changed, l, t, r, b);
-        if (backgroundImageUnderActionBar && backgroundView != null) {
-            backgroundView.layout(0, 0, r - l, b - t);
-        }
-        if (backgroundImageUnderActionBar && videoTextureView != null) {
-            videoTextureView.layout(0, 0, r - l, b - t);
-        }
         notifyHeightChanged();
-    }
-
-    public void setBackgroundImageUnderActionBar(boolean value) {
-        if (backgroundImageUnderActionBar != value) {
-            backgroundImageUnderActionBar = value;
-            if (backgroundView != null) {
-                backgroundView.invalidate();
-            }
-            requestLayout();
-        }
     }
 
     public int measureKeyboardHeight() {
@@ -735,11 +695,6 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
 
     public int getBackgroundTranslationY() {
         if (backgroundDrawable instanceof MotionBackgroundDrawable) {
-            if (animationInProgress) {
-                return (int) emojiOffset;
-            } else if (emojiHeight != 0) {
-                return emojiHeight;
-            }
             return backgroundTranslationY;
         } else if (backgroundDrawable instanceof ChatBackgroundDrawable) {
             return backgroundTranslationY;
@@ -749,20 +704,7 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
 
     public int getBackgroundSizeY() {
         int offset = 0;
-        if (backgroundDrawable instanceof MotionBackgroundDrawable) {
-            MotionBackgroundDrawable motionBackgroundDrawable = (MotionBackgroundDrawable) backgroundDrawable;
-            if (!motionBackgroundDrawable.hasPattern()) {
-                if (animationInProgress) {
-                    offset = (int) emojiOffset;
-                } else if (emojiHeight != 0) {
-                    offset = emojiHeight;
-                } else {
-                    offset = backgroundTranslationY;
-                }
-            } else {
-                offset = backgroundTranslationY != 0 ? 0 : -keyboardHeight;
-            }
-        } else if (backgroundDrawable instanceof ChatBackgroundDrawable) {
+        if (backgroundDrawable instanceof ChatBackgroundDrawable) {
             offset = backgroundTranslationY;
         }
         return getMeasuredHeight() - offset;
@@ -797,7 +739,6 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
                 snowflakesEffect = new SnowflakesEffect(1);
                 snowflakesEffect.setForcedColor(0xFFFFFFFF);
             }
-            snowflakesEffect.setForce(NaConfig.INSTANCE.getChatDecoration().Int() == 1);
             snowflakesEffect.onDraw(backgroundView, canvas);
         }
     }
@@ -1079,7 +1020,9 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
+        // [Alexgram: Live Video Wallpaper] - Start
         checkVideoWallpaper();
+        // [Alexgram: Live Video Wallpaper] - End
         attached = true;
         if (needBlur && !blurIsRunning) {
             blurIsRunning = true;
@@ -1102,7 +1045,9 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
+        // [Alexgram: Live Video Wallpaper] - Start
         releaseVideo();
+        // [Alexgram: Live Video Wallpaper] - End
         attached = false;
         blurPaintTop.setShader(null);
         blurPaintTop2.setShader(null);
@@ -1207,14 +1152,10 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
 
     public void drawBlurRect(Canvas canvas, float y, Rect rectTmp, Paint blurScrimPaint, boolean top, float alpha) {
         int blurAlpha = Color.alpha(Theme.getColor(DRAW_USING_RENDERNODE() && SharedConfig.getDevicePerformanceClass() == SharedConfig.PERFORMANCE_CLASS_HIGH ? Theme.key_chat_BlurAlpha : Theme.key_chat_BlurAlphaSlow, getResourceProvider()));
-        drawBlurRect(canvas, y, rectTmp, blurScrimPaint, top, lerp(0xFF, blurAlpha, alpha), 255);
+        drawBlurRect(canvas, y, rectTmp, blurScrimPaint, top, lerp(0xFF, blurAlpha, alpha));
     }
 
     public void drawBlurRect(Canvas canvas, float y, Rect rectTmp, Paint blurScrimPaint, boolean top, int blurAlpha) {
-        drawBlurRect(canvas, y, rectTmp, blurScrimPaint, top, blurAlpha, 255);
-    }
-
-    public void drawBlurRect(Canvas canvas, float y, Rect rectTmp, Paint blurScrimPaint, boolean top, int blurAlpha, int blurSourceAlpha) {
         if (NekoConfig.forceBlurInChat.Bool()) blurAlpha = NekoConfig.chatBlueAlphaValue.Int();
         if (!SharedConfig.chatBlurEnabled()) {
             canvas.drawRect(rectTmp, blurScrimPaint);

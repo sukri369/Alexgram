@@ -145,7 +145,7 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
     private BaseFragment fragment;
     private ChatActivityInterface chatActivity;
     private View applyingView;
-    private BlurredFrameLayout frameLayout;
+    private FrameLayout frameLayout;
     private FrameLayout groupCallMessagesContainer;
     private View shadow;
     private View selector;
@@ -243,12 +243,14 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
     private boolean checkLiveStoryAfterAnimation;
     private boolean checkPlayerAfterAnimation;
     private boolean checkImportAfterAnimation;
+    // [Alexgram: Music Graph] - Start
     private MusicVisualizerView visualizerView;
 
     private static Visualizer globalVisualizer;
     private static int globalAudioSessionId = -1;
     private static final ArrayList<MusicVisualizerView> visualizerViews = new ArrayList<>();
     private static byte[] globalVisualizerBytes;
+    // [Alexgram: Music Graph] - End
 
     private final static float[] speeds = new float[] {
         .5f, 1f, 1.2f, 1.5f, 1.7f, 2f
@@ -323,11 +325,7 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
         }
 
         final Context context = getContext();
-        SizeNotifierFrameLayout sizeNotifierFrameLayout = null;
-        if (!isInsideBubble && fragment.getFragmentView() instanceof SizeNotifierFrameLayout) {
-            sizeNotifierFrameLayout = (SizeNotifierFrameLayout) fragment.getFragmentView();
-        }
-        frameLayout = new BlurredFrameLayout(context, sizeNotifierFrameLayout) {
+        frameLayout = new FrameLayout(context) {
 
             @Override
             public void invalidate() {
@@ -408,7 +406,6 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
                 return who == notifyText || super.verifyDrawable(who);
             }
         };
-        frameLayout.drawBlur = !isInsideBubble;
         notifyButtonBounce = new ButtonBounce(frameLayout);
         notifyText.setOverrideFullWidth(AndroidUtilities.displaySize.x);
         notifyText.setScaleProperty(.4f);
@@ -1495,6 +1492,7 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
             }
         }
 
+        // [Alexgram: Music Graph] - Start
         if (currentStyle == STYLE_AUDIO_PLAYER && NaConfig.INSTANCE.getMusicGraph().Bool()) {
             if (visualizerView == null) {
                 visualizerView = new MusicVisualizerView(getContext());
@@ -1504,6 +1502,7 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
             }
             visualizerView.start(MediaController.getInstance().getAudioSessionId());
         }
+        // [Alexgram: Music Graph] - End
 
         if (currentStyle == STYLE_ACTIVE_GROUP_CALL || currentStyle == STYLE_CONNECTING_GROUP_CALL) {
             Theme.getFragmentContextViewWavesDrawable().addParent(this);
@@ -1864,10 +1863,12 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
                 checkCall(false);
                 return;
             }
+            // [Alexgram: Music Graph] - Start
             if (visualizerView != null) {
                 visualizerView.setVisibility(GONE);
                 visualizerView.stop();
             }
+            // [Alexgram: Music Graph] - End
             if (visible) {
                 if (playbackSpeedButton != null && playbackSpeedButton.isSubMenuShowing()) {
                     playbackSpeedButton.toggleSubMenu();
@@ -2011,14 +2012,17 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
                     }
 
                     updatePlaybackButton(false);
+                    // [Alexgram: Music Graph] - Start
                     if (visualizerView != null) {
                         visualizerView.setVisibility(GONE);
                         visualizerView.stop();
                     }
+                    // [Alexgram: Music Graph] - End
                 } else {
                     isMusic = true;
                     if (playbackSpeedButton != null) {
-                        if (messageObject.getDuration() >= 10 * 60) {
+                        // [Alexgram: Native Features] - Start
+                        if (messageObject.getDuration() >= 10 * 60 || tw.nekomimi.nekogram.NekoConfig.forceMusicSpeedControl.Bool()) {
                             playbackSpeedButton.setAlpha(1.0f);
                             playbackSpeedButton.setEnabled(true);
                             titleTextView.setPadding(0, 0, dp(44) + joinButtonWidth, 0);
@@ -2028,6 +2032,7 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
                             playbackSpeedButton.setEnabled(false);
                             titleTextView.setPadding(0, 0, joinButtonWidth, 0);
                         }
+                        // [Alexgram: Native Features] - End
                     } else {
                         titleTextView.setPadding(0, 0, joinButtonWidth, 0);
                     }
@@ -2039,6 +2044,7 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
                         }
                         textView.setEllipsize(TextUtils.TruncateAt.END);
                     }
+                    // [Alexgram: Music Graph] - Start
                     if (NaConfig.INSTANCE.getMusicGraph().Bool()) {
                         if (visualizerView == null) {
                             visualizerView = new MusicVisualizerView(getContext());
@@ -2048,6 +2054,7 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
                         visualizerView.setColor(getThemedColor(Theme.key_inappPlayerTitle));
                         visualizerView.start(MediaController.getInstance().getAudioSessionId());
                     }
+                    // [Alexgram: Music Graph] - End
                 }
                 TypefaceSpan span = new TypefaceSpan(AndroidUtilities.bold(), 0, getThemedColor(Theme.key_inappPlayerPerformer));
                 stringBuilder.setSpan(span, 0, messageObject.getMusicAuthor().length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
@@ -2979,6 +2986,7 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
         }
     }
 
+    // [Alexgram: Music Graph] - Start
     private class MusicVisualizerView extends View {
         private Paint mPaint;
         private final int numBars = 75; // More bars for detailed look
@@ -3203,4 +3211,5 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
             invalidate(); 
         }
     }
+    // [Alexgram: Music Graph] - End
 }

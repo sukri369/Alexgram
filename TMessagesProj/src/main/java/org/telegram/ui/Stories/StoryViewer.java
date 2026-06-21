@@ -803,7 +803,8 @@ public class StoryViewer implements NotificationCenter.NotificationCenterDelegat
                                     headerView.backupImageView.getImageReceiver().setImageCoords(rect3);
 
                                     Integer cellAvatarImageRadius = transitionViewHolder != null ? transitionViewHolder.getAvatarImageRoundRadius() : null;
-                                    int newRoundRadius = (int) (lerp(rect3.width() / 2f, cellAvatarImageRadius != null ? cellAvatarImageRadius : rect3.width() / 2f, 1f - progressToOpen));
+                                    int headerAvatarRadius = org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadiusPx(rect3.width());
+                                    int newRoundRadius = (int) (lerp(headerAvatarRadius, cellAvatarImageRadius != null ? cellAvatarImageRadius : headerAvatarRadius, 1f - progressToOpen));
 
                                     headerView.backupImageView.getImageReceiver().setRoundRadius(newRoundRadius);
                                     headerView.backupImageView.getImageReceiver().setVisible(true, false);
@@ -836,7 +837,7 @@ public class StoryViewer implements NotificationCenter.NotificationCenterDelegat
                                     int oldRadius = transitionViewHolder.crossfadeToAvatarImage.getRoundRadius()[0];
                                     boolean isVisible = transitionViewHolder.crossfadeToAvatarImage.getVisible();
                                     transitionViewHolder.crossfadeToAvatarImage.setImageCoords(rect3);
-                                    transitionViewHolder.crossfadeToAvatarImage.setRoundRadius((int) (rect3.width() / 2f));
+                                    transitionViewHolder.crossfadeToAvatarImage.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadiusPx(rect3.width()));
                                     transitionViewHolder.crossfadeToAvatarImage.setVisible(true, false);
                                     canvas.saveLayerAlpha(rect3, (int) (255 * (1f - progressToOpen)), Canvas.ALL_SAVE_FLAG);
                                     transitionViewHolder.crossfadeToAvatarImage.draw(canvas);
@@ -2100,7 +2101,18 @@ public class StoryViewer implements NotificationCenter.NotificationCenterDelegat
             }
         }
         if (placeProvider != null) {
-            placeProvider.preLayout(storiesViewPager.getCurrentDialogId(), messageId, () -> {
+            long preLayoutDid = storiesViewPager.getCurrentDialogId();
+            int preLayoutMessageId = messageId;
+            if (storiesList instanceof StoriesController.StoryRepostsList) {
+                final PeerStoriesView peerView = storiesViewPager.getCurrentPeerView();
+                int position = peerView == null ? 0 : peerView.getSelectedPosition();
+                TL_stories.StoryItem si = peerView == null || position < 0 || position >= peerView.storyItems.size() ? null : peerView.storyItems.get(position);
+                if (si != null) {
+                    preLayoutDid = si.dialogId;
+                    preLayoutMessageId = si.id;
+                }
+            }
+            placeProvider.preLayout(preLayoutDid, preLayoutMessageId, () -> {
                 updateTransitionParams();
                 if (transitionViewHolder.avatarImage != null) {
                     transitionViewHolder.avatarImage.setVisible(false, true);
@@ -2132,6 +2144,9 @@ public class StoryViewer implements NotificationCenter.NotificationCenterDelegat
             if (storiesList instanceof StoriesController.SearchStoriesList && storyItem != null) {
                 did = storyItem.dialogId;
                 storyId = storyItem.messageId;
+            } else if (storiesList instanceof StoriesController.StoryRepostsList && storyItem != null) {
+                did = storyItem.dialogId;
+                storyId = storyItem.id;
             } else if (storiesList != null) {
                 storyId = dayStoryId;
             }
@@ -2591,6 +2606,9 @@ public class StoryViewer implements NotificationCenter.NotificationCenterDelegat
                     if (currentPlayerScope != null) {
                         currentPlayerScope.invalidate();
                     }
+                    if (surfaceView != null) {
+                        surfaceView.setVisibility(View.INVISIBLE);
+                    }
                     release();
                     try {
                         AndroidUtilities.runOnUIThread(() -> {
@@ -2619,10 +2637,8 @@ public class StoryViewer implements NotificationCenter.NotificationCenterDelegat
                     }
                 }
             });
-            openCloseAnimator.setDuration(400);
+            openCloseAnimator.setDuration(320);
             openCloseAnimator.setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT);
-//            openCloseAnimator.setDuration(2000);
-//            openCloseAnimator.setInterpolator(CubicBezierInterpolator.DEFAULT);
             openCloseAnimator.start();
         }, 16);
     }

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="RunInBackground">Im Hintergrund ausführen</string>
     <string name="RunInBackgroundInfo">App im Hintergrund laufen lassen, um zuverlässige Benachrichtigungen zu gewährleisten.</string>
@@ -137,4 +137,22 @@
     <string name="HiddenChatsAbout">Verstecken Sie sensible Chats aus der Hauptliste. Zugriff durch langes Drücken der Titelleiste nach dem Entsperren.</string>
     <string name="HideContacts">Kontakte ausblenden</string>
     <string name="RestartRequired">Neustart erforderlich, um Änderungen zu übernehmen</string>
+    <string name="MaxActiveAccounts">Maximale Anzahl aktiver Konten</string>
+    <string name="LimitReachedAccountsNa">Es tut uns leid, du kannst nicht mehr als **%1$d** Konten hinzufügen. Du kannst dieses Limit (bis zu 100) in **A-Einstellungen &gt; Allgemein** erhöhen.</string>
+    <string name="MaxActiveAccountsWarning">Du hast derzeit %1$d aktive Konten. Wenn du das Limit auf %2$d setzt, kannst du keine neuen Konten mehr hinzufügen, bis du dich von einigen abmeldest.</string>
+    <string name="SplitChat">Geteilter Bildschirm</string>
+    <string name="SplitChatClose">Bildschirmteilung schließen</string>
+    <string name="SplitChatSelectChat">Wähle einen Chat zum Öffnen daneben</string>
+    <string name="SplitChatHint">Tippe auf das Symbol, um den minimierten Chat wiederherzustellen</string>
+    <string name="SplitChatMinimized">Chat minimiert</string>
+    <string name="ChangeFont">Schriftart ändern</string>
+    <string name="ShadowBanChannelAdded">Kanal zum **Shadowban** hinzugefügt</string>
+    <string name="ShadowBanChannelRemoved">Kanal aus dem **Shadowban** entfernt</string>
+    <string name="ExperimentalForceMaxFPSInfo">Maximale Bildwiederholrate erzwingen.</string>
+    <string name="ExperimentalForceMaxFPS">Max FPS erzwingen</string>
+    <string name="RegexFiltersSpoilerInsteadOfHide">Spoiler anstelle von Ausblenden der Nachricht verwenden</string>
+    <string name="MaskBlockedUserMessages">Nachrichten von blockierten Benutzern verschleiern</string>
+    <string name="MaskBlockedUserMessagesAbout">Zeigt Nachrichten von blockierten/schattengebannte Benutzern hinter einem Spoiler-Schleier an, anstatt sie auszublenden.</string>
+    <string name="RegexFiltersSpoilerMatchOnly">Nur übereinstimmende reguläre Ausdrücke verschleiern</string>
+    <string name="RegexFiltersSpoilerColor">Spoiler-Partikelfarbe</string>
 </resources>

@@ -172,12 +172,14 @@ object NaConfig {
             ConfigItem.configTypeBool,
             false
         )
+    // [Alexgram: Special Forward] - Start
     val specialForward =
         addConfig(
             "SpecialForward",
             ConfigItem.configTypeBool,
             false
         )
+    // [Alexgram: Special Forward] - End
     val showNoQuoteForward =
         addConfig(
             "NoQuoteForward",
@@ -496,9 +498,33 @@ object NaConfig {
             ConfigItem.configTypeString,
             "[]"
         )
+    val maskBlockedUserMessages =
+        addConfig(
+            "MaskBlockedUserMessages",
+            ConfigItem.configTypeBool,
+            false
+        )
+    val blockedUserMaskColor =
+        addConfig(
+            "BlockedUserMaskColor",
+            ConfigItem.configTypeInt,
+            0xFF888888.toInt()
+        )
     val showTimeHint =
         addConfig(
             "ShowTimeHint",
+            ConfigItem.configTypeBool,
+            false
+        )
+    val avatarCorners =
+        addConfig(
+            "avatarCorners",
+            ConfigItem.configTypeFloat,
+            28.0f
+        )
+    val singleCornerRadius =
+        addConfig(
+            "singleCornerRadius",
             ConfigItem.configTypeBool,
             false
         )
@@ -618,11 +644,25 @@ object NaConfig {
             ConfigItem.configTypeInt,
             0
         )
+    // [Alexgram: Max Active Accounts] - Start
+    val maxActiveAccounts =
+        addConfig(
+            "MaxActiveAccounts",
+            ConfigItem.configTypeInt,
+            10
+        )
+    // [Alexgram: Max Active Accounts] - End
     val showVoiceChangerInChatMenu =
         addConfig(
             "ShowVoiceChangerInChatMenu",
             ConfigItem.configTypeBool,
             true
+        )
+    val sendLockedCustomEmojiAsSticker =
+        addConfig(
+            "SendLockedCustomEmojiAsSticker",
+            ConfigItem.configTypeBool,
+            false
         )
 
     @JvmStatic
@@ -786,6 +826,14 @@ object NaConfig {
             ConfigItem.configTypeBool,
             false
         )
+    // [Alexgram: Important Announcement] - Start
+    val getImportantAnnouncementFromAlexgram =
+        addConfig(
+            "GetImportantAnnouncementFromAlexgram",
+            ConfigItem.configTypeBool,
+            true
+        )
+    // [Alexgram: Important Announcement] - End
     val liveVideoBlurIntensity =
         addConfig(
             "LiveVideoBlurIntensity",
@@ -918,6 +966,12 @@ object NaConfig {
             ConfigItem.configTypeBool,
             true
         )
+    val translucentDeletedMessagesAlpha =
+        addConfig(
+            "TranslucentDeletedMessagesAlpha",
+            ConfigItem.configTypeInt,
+            75
+        )
     val enableSeparateArticleTranslator =
         addConfig(
             "EnableSeparateArticleTranslator",
@@ -996,6 +1050,14 @@ object NaConfig {
             ConfigItem.configTypeBool,
             true
         )
+    // [Alexgram: Deleted Icon Color] - Start
+    val deletedIconColor =
+        addConfig(
+            "DeletedIconColor",
+            ConfigItem.configTypeInt,
+            0
+        )
+    // [Alexgram: Deleted Icon Color] - End
     val useEditedIcon =
         addConfig(
             "UseEditedIcon",
@@ -1290,6 +1352,26 @@ object NaConfig {
             ConfigItem.configTypeBool,
             true
         )
+    // [Alexgram: Customizable Message Menu] - Start
+    val showInvert =
+        addConfig(
+            "showInvert",
+            ConfigItem.configTypeBool,
+            false
+        )
+    val showCustomReply =
+        addConfig(
+            "showCustomReply",
+            ConfigItem.configTypeBool,
+            false
+        )
+    val customReplyWord =
+        addConfig(
+            "CustomReplyWord",
+            ConfigItem.configTypeString,
+            "Great"
+        )
+    // [Alexgram: Customizable Message Menu] - End
     val preferCommonGroupsTab =
         addConfig(
             "PreferCommonGroupsTab",
@@ -1580,6 +1662,108 @@ object NaConfig {
             70
         )
 
+    // [Alexgram: Default Schedule Delay] - Start
+    val defaultScheduledTime =
+        addConfig(
+            "DefaultScheduledTime",
+            ConfigItem.configTypeInt,
+            10
+        )
+    // [Alexgram: Default Schedule Delay] - End
+
+    // [Alexgram: Home Drawer Items] - Start
+    val drawerItemMyProfile =
+        addConfig(
+            "DrawerItemMyProfile",
+            ConfigItem.configTypeBool,
+            true
+        )
+    val drawerItemSetEmojiStatus =
+        addConfig(
+            "DrawerItemSetEmojiStatus",
+            ConfigItem.configTypeBool,
+            true
+        )
+    val drawerItemNewGroup =
+        addConfig(
+            "DrawerItemNewGroup",
+            ConfigItem.configTypeBool,
+            true
+        )
+    val drawerItemNewChannel =
+        addConfig(
+            "DrawerItemNewChannel",
+            ConfigItem.configTypeBool,
+            false
+        )
+    val drawerItemContacts =
+        addConfig(
+            "DrawerItemContacts",
+            ConfigItem.configTypeBool,
+            true
+        )
+    val drawerItemCalls =
+        addConfig(
+            "DrawerItemCalls",
+            ConfigItem.configTypeBool,
+            true
+        )
+    val drawerItemRecentChats =
+        addConfig(
+            "DrawerItemRecentChats",
+            ConfigItem.configTypeBool,
+            true
+        )
+    val drawerItemSaved =
+        addConfig(
+            "DrawerItemSaved",
+            ConfigItem.configTypeBool,
+            true
+        )
+    val drawerItemSettings =
+        addConfig(
+            "DrawerItemSettings",
+            ConfigItem.configTypeBool,
+            true
+        )
+    val drawerItemNSettings =
+        addConfig(
+            "DrawerItemNSettings",
+            ConfigItem.configTypeBool,
+            true
+        )
+    val drawerItemQrLogin =
+        addConfig(
+            "DrawerItemQrLogin",
+            ConfigItem.configTypeBool,
+            false
+        )
+    val drawerItemArchivedChats =
+        addConfig(
+            "DrawerItemArchivedChats",
+            ConfigItem.configTypeBool,
+            false
+        )
+    val drawerItemRestartApp =
+        addConfig(
+            "DrawerItemRestartApp",
+            ConfigItem.configTypeBool,
+            false
+        )
+    val drawerItemBrowser =
+        addConfig(
+            "DrawerItemBrowser",
+            ConfigItem.configTypeBool,
+            false
+        )
+    val drawerItemSessions =
+        addConfig(
+            "DrawerItemSessions",
+            ConfigItem.configTypeBool,
+            false
+        )
+    // [Alexgram: Home Drawer Items] - End
+
     val preferredTranslateTargetLangList = ArrayList<String>()
     fun updatePreferredTranslateTargetLangList() {
         AndroidUtilities.runOnUIThread({
@@ -1655,10 +1839,10 @@ object NaConfig {
         if (normalizedLlmApiUrl != currentLlmApiUrl) {
             llmApiUrl.setConfigString(normalizedLlmApiUrl)
         }
-        if (customTitle.String() == "Nagram") {
+        if (customTitle.String() == "Nagram" || customTitle.String() == "NagramX") {
             customTitle.setConfigString("Alexgram")
         }
-        if (NekoConfig.customSavePath.String() == "Nagram") {
+        if (NekoConfig.customSavePath.String() == "Nagram" || NekoConfig.customSavePath.String() == "NagramX") {
             NekoConfig.customSavePath.setConfigString("Alexgram")
         }
     }

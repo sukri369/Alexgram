@@ -161,6 +161,7 @@ public class NekoConfig {
     public static ConfigItem hideGroupSticker = addConfig("hideGroupSticker", configTypeBool, false);
     public static ConfigItem rememberAllBackMessages = addConfig("rememberAllBackMessages", configTypeBool, false);
     public static ConfigItem hideSendAsChannel = addConfig("hideSendAsChannel", configTypeBool, false);
+    public static ConfigItem sendToDiscussWithoutJoin = addConfig("sendToDiscussWithoutJoin", configTypeBool, true);
     public static ConfigItem showSpoilersDirectly = addConfig("showSpoilersDirectly", configTypeBool, false);
 
     public static ConfigItem disableAutoDownloadingWin32Executable = addConfig("Win32ExecutableFiles", configTypeBool, true);
@@ -173,6 +174,23 @@ public class NekoConfig {
     public static ConfigItem mapDriftingFixForGoogleMaps = addConfig("mapDriftingFixForGoogleMaps", configTypeBool, true);
 
     public static ConfigItem localPremium = addConfig("localPremium", configTypeBool, false);
+
+    // [Alexgram: Native Features] - Start
+    public static ConfigItem forceMusicSpeedControl = addConfig("forceMusicSpeedControl", configTypeBool, false);
+    public static ConfigItem enableEditFileName = addConfig("enableEditFileName", configTypeBool, false);
+    public static ConfigItem enableChangeNameInGroups = addConfig("enableChangeNameInGroups", configTypeBool, false);
+    public static ConfigItem enableLocalEditorPlus = addConfig("enableLocalEditorPlus", configTypeBool, false);
+    // [Alexgram: Quick Edit Icon] - Start
+    public static ConfigItem showQuickEditIconInChatList = addConfig("showQuickEditIconInChatList", configTypeBool, false);
+    public static ConfigItem quickEditIconOnlyForOwnMessages = addConfig("quickEditIconOnlyForOwnMessages", configTypeBool, true);
+    // [Alexgram: Quick Edit Icon] - End
+    // [Alexgram: Admin Tag in Voice Chat] - Start
+    public static ConfigItem showAdminTagInVoiceChat = addConfig("showAdminTagInVoiceChat", configTypeBool, true);
+    // [Alexgram: Admin Tag in Voice Chat] - End
+    public static ConfigItem enableCustomPrivacy = addConfig("enableCustomPrivacy", configTypeBool, true);
+    public static ConfigItem enableSelectRangeInSharedMedia = addConfig("enableSelectRangeInSharedMedia", configTypeBool, true);
+    // [Alexgram: Native Features] - End
+
 
     public static ConfigItem usePersianCalendar = addConfig("UsePersianCalendar", configTypeBool, false);
     public static ConfigItem displayPersianCalendarByLatin = addConfig("DisplayPersianCalendarByLatin", configTypeBool, false);
@@ -187,6 +205,8 @@ public class NekoConfig {
     public static ConfigItem sendOfflinePacketAfterOnline = addConfig("sendOfflinePacketAfterOnline", configTypeBool, false);
     public static ConfigItem markReadAfterSend = addConfig("markReadAfterSend", configTypeBool, true);
     public static ConfigItem showGhostInDrawer = addConfig("showGhostInDrawer", configTypeBool, false);
+    // --- Home Drawer ---
+    public static ConfigItem navigationDrawerEnabled = addConfig("navigationDrawerEnabled", configTypeBool, false);
     public static ConfigItem showGhostModeStatus = addConfig("showGhostModeStatus", configTypeBool, false);
 
     // --- Locked Status ---
@@ -203,7 +223,7 @@ public class NekoConfig {
 
     public static void init() {
         loadConfig(false);
-        if ("Nagram".equals(customSavePath.String())) {
+        if ("Nagram".equals(customSavePath.String()) || "NagramX".equals(customSavePath.String())) {
             customSavePath.setConfigString("Alexgram");
         }
     }

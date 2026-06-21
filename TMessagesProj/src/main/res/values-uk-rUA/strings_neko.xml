@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="NekoSettings">А-Налаштування</string>
     <string name="IPv6">Віддавати перевагу IPv6</string>
@@ -70,7 +70,7 @@
     <string name="CallTo">Зателефонувати до **%1$s**?</string>
     <string name="DisableNumberRounding">Вимкнути округлення чисел</string>
     <string name="Categories">Налаштування</string>
-    <string name="OfficialChannel">Канал Nagram</string>
+    <string name="OfficialChannel">Канал Alexgram</string>
     <string name="About">Про нас</string>
     <string name="IgnoreBlockedAbout">\nВи більше не бачитимете повідомлення від заблокованих користувачів.</string>
     <string name="SourceCode">Вихідний код</string>
@@ -270,4 +270,13 @@
     <string name="EmojiUseDefault">Використовувати системні емодзі</string>
     <string name="Chat">Чати</string>
     <string name="Appearance">Зовнішній вигляд</string>
+    <!-- [Alexgram: Important Announcement] -->
+    <string name="GetImportantAnnouncementFromAlexgram">Отримати важливі оголошення від Alexgram</string>
+    <!-- [Alexgram: Birthday Wish] - Start -->
+    <string name="BirthdayTitle">З днем народження,\n%1$s! 🎉</string>
+    <string name="BirthdayMessage">Цей день повністю твій! ✨ Ще один рік з енергією головного героя. Бажаємо року чистого зростання, нескінченних перемог і повної відсутності негативу. Іди та перемагай! 🚀🎂</string>
+    <string name="BirthdayMakeWish">Загадати бажання 🌟</string>
+    <string name="BirthdayWishSent">Бажання відправлено до зірок! 🌌✨</string>
+    <!-- [Alexgram: Birthday Wish] - End -->
 </resources>
+

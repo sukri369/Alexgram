@@ -72,7 +72,7 @@ public class FiltersListBottomSheet extends BottomSheet implements NotificationC
 //        dialogFilters = getCanAddDialogFilters(baseFragment, selectedDialogs);
         dialogFilters = new ArrayList<>(baseFragment.getMessagesController().dialogFilters);
         for (int i = 0; i < dialogFilters.size(); ++i) {
-            if (dialogFilters.get(i).isDefault()) {
+            if (dialogFilters.get(i).isDefault() || tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(dialogFilters.get(i))) {
                 dialogFilters.remove(i);
                 i--;
             }

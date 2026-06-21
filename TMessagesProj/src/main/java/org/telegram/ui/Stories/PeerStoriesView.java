@@ -186,6 +186,7 @@ import org.telegram.ui.Components.blur3.source.BlurredBackgroundSource;
 import org.telegram.ui.Components.blur3.source.BlurredBackgroundSourceColor;
 import org.telegram.ui.Components.blur3.source.BlurredBackgroundSourceRenderNode;
 import org.telegram.ui.Components.chat.ViewPositionWatcher;
+import org.telegram.ui.Components.chat.layouts.ChatActivitySideControlsButtonsLayout;
 import org.telegram.ui.Components.voip.CellFlickerDrawable;
 import org.telegram.ui.DialogsActivity;
 import org.telegram.ui.EmojiAnimationsOverlay;
@@ -328,6 +329,7 @@ public class PeerStoriesView extends SizeNotifierFrameLayout implements Notifica
     private PaidReactionButton starsButton;
     private MuteButton muteButton;
     ChatActivityEnterView chatActivityEnterView;
+    ChatActivitySideControlsButtonsLayout sideControlsButtonsLayout;
     HintView2 highlightMessageHintView;
     private ValueAnimator changeBoundAnimator;
     ReactionsContainerLayout reactionsContainerLayout;
@@ -3684,7 +3686,19 @@ public class PeerStoriesView extends SizeNotifierFrameLayout implements Notifica
             chatActivityEnterView.setVisibility(View.GONE);
         }
 
+        sideControlsButtonsLayout = new ChatActivitySideControlsButtonsLayout(getContext(), resourcesProvider, blurredBackgroundColorProvider, blurredBackgroundDrawableFactory);
+        sideControlsButtonsLayout.setOnClickListener(this::onSideControlButtonOnClick);
+        addView(sideControlsButtonsLayout, LayoutHelper.createFrame(57, 300, Gravity.RIGHT | Gravity.BOTTOM));
+        sideControlsButtonsLayout.setVisibility(View.GONE);
+        chatActivityEnterView.setSideButtonsForAttach(sideControlsButtonsLayout);
+
         reactionsContainerIndex = getChildCount();
+    }
+
+    private void onSideControlButtonOnClick(int buttonId, View view) {
+        if (buttonId == ChatActivitySideControlsButtonsLayout.BUTTON_ATTACH) {
+            openAttachMenu();
+        }
     }
 
     private void createMentionsContainer() {
@@ -4000,8 +4014,10 @@ public class PeerStoriesView extends SizeNotifierFrameLayout implements Notifica
                         sparseIntArray.put(Theme.key_chat_messagePanelIcons, ColorUtils.blendARGB(Color.BLACK, Color.WHITE, 0.5f));
                     }
                 };
+                // [Alexgram: Allow Forwarding/Copying] - Start
                 TLRPC.Chat chat = isChannel ? MessagesController.getInstance(currentAccount).getChat(-dialogId) : null;
-                final boolean canRepost = !DISABLE_STORY_REPOSTING && MessagesController.getInstance(currentAccount).storiesEnabled() && (!isChannel && !UserObject.isService(dialogId) || ChatObject.isPublic(chat));
+                final boolean canRepost = !DISABLE_STORY_REPOSTING && MessagesController.getInstance(currentAccount).storiesEnabled() && ((!isChannel && !UserObject.isService(dialogId) || ChatObject.isPublic(chat)) || xyz.nextalone.nagram.NaConfig.INSTANCE.getAllowForwardingRestriction().Bool());
+                // [Alexgram: Allow Forwarding/Copying] - End
                 shareAlert = new ShareAlert(storyViewer.fragment.getContext(), null, null, link, null, false, link, null, false, false, canRepost, null, shareResourceProvider) {
 
                     @Override
@@ -5131,27 +5147,29 @@ public class PeerStoriesView extends SizeNotifierFrameLayout implements Notifica
                 storyItem.dialogId = dialogId;
                 storyAreasView.set(preload ? null : storyItem, emojiAnimationsOverlay);
                 currentStory.set(storyItem);
+                // [Alexgram: Allow Forwarding/Copying] - Start
                 allowShare = allowShareLink = !unsupported && currentStory.storyItem != null && !(currentStory.storyItem instanceof TL_stories.TL_storyItemDeleted) && !(currentStory.storyItem instanceof TL_stories.TL_storyItemSkipped);
                 if (allowShare) {
-                    allowShare = currentStory.allowScreenshots() && currentStory.storyItem.isPublic;
+                    allowShare = (currentStory.allowScreenshots() && currentStory.storyItem.isPublic) || xyz.nextalone.nagram.NaConfig.INSTANCE.getAllowForwardingRestriction().Bool();
                 }
                 if (allowShare) {
-                    allowShare = currentStory.storyItem.pinned || !StoriesUtilities.isExpired(currentAccount, currentStory.storyItem);
+                    allowShare = currentStory.storyItem.pinned || !StoriesUtilities.isExpired(currentAccount, currentStory.storyItem) || xyz.nextalone.nagram.NaConfig.INSTANCE.getAllowForwardingRestriction().Bool();
                 }
                 allowRepost = allowShare;
                 if (allowRepost && isChannel) {
                     final TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-dialogId);
-                    allowRepost = chat != null && ChatObject.isPublic(chat);
+                    allowRepost = (chat != null && ChatObject.isPublic(chat)) || xyz.nextalone.nagram.NaConfig.INSTANCE.getAllowForwardingRestriction().Bool();
                 }
                 if (allowShareLink) {
                     if (isChannel) {
                         final TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-dialogId);
-                        allowShareLink = chat != null && ChatObject.getPublicUsername(chat) != null;
+                        allowShareLink = (chat != null && ChatObject.getPublicUsername(chat) != null) || xyz.nextalone.nagram.NaConfig.INSTANCE.getAllowForwardingRestriction().Bool();
                     } else {
                         final TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(dialogId);
-                        allowShareLink = user != null && UserObject.getPublicUsername(user) != null && currentStory.storyItem.isPublic;
+                        allowShareLink = (user != null && UserObject.getPublicUsername(user) != null && currentStory.storyItem.isPublic) || xyz.nextalone.nagram.NaConfig.INSTANCE.getAllowForwardingRestriction().Bool();
                     }
                 }
+                // [Alexgram: Allow Forwarding/Copying] - End
                 NotificationsController.getInstance(currentAccount).processReadStories(dialogId, storyItem.id);
             }
         }
@@ -5506,6 +5524,9 @@ public class PeerStoriesView extends SizeNotifierFrameLayout implements Notifica
             if (bottomActionsLinearLayout != null) {
                 bottomActionsLinearLayout.setVisibility(isBotsPreview() ? View.GONE : View.VISIBLE);
             }
+        }
+        if (sideControlsButtonsLayout != null) {
+            sideControlsButtonsLayout.setVisibility(chatActivityEnterView != null && chatActivityEnterView.getVisibility() == View.VISIBLE && !currentStory.isLive ? View.VISIBLE : View.GONE);
         }
         if (commentButton != null) {
             commentButton.setVisibility(!unsupported && currentStory.isLive ? View.VISIBLE : View.GONE);
@@ -6672,7 +6693,7 @@ public class PeerStoriesView extends SizeNotifierFrameLayout implements Notifica
                     super.onDraw(canvas);
                 }
             };
-            backupImageView.setRoundRadius(dp(16));
+            backupImageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(32.0f));
             addView(backupImageView, LayoutHelper.createFrame(32, 32, 0, 12, 2, 0, 0));
             setClipChildren(false);
 
@@ -7596,6 +7617,10 @@ public class PeerStoriesView extends SizeNotifierFrameLayout implements Notifica
                     translationY -= chatActivityEnterView.getMeasuredHeight() - chatActivityEnterView.getAnimatedTop();
                     alpha = progressToKeyboard;
                     child.invalidate();
+                }
+                if (child == sideControlsButtonsLayout) {
+                    translationY -= chatActivityEnterView.getMeasuredHeight() - chatActivityEnterView.getAnimatedTop();
+                    alpha *= progressToKeyboard;
                 }
                 if (child == reactionsContainerLayout) {
                     float finalProgress = progressToKeyboard * (1f - progressToRecording.get()) * (1f - progressToStickerExpandedLocal) * (1f - progressToTextA.get());

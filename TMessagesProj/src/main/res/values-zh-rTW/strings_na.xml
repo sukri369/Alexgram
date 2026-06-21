@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+﻿<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="N_Config">A-設定</string>
     <string name="CombineMessage">合併訊息</string>
@@ -64,7 +64,7 @@
     <string name="CenterActionBarTitleType">標題置中</string>
     <string name="ShowQuickReplyInBotCommands">在與機器人聊天時顯示快速回覆按鈕</string>
     <string name="PushServiceType">推播服務類型</string>
-    <string name="PushServiceTypeInApp">Nagram X</string>
+    <string name="PushServiceTypeInApp">Alexgram</string>
     <string name="PushServiceTypeInAppDialog">使用常駐通知</string>
     <string name="SendMp4DocumentAsVideo">MP4 影片作為檔案傳送時可預覽</string>
     <string name="StickersChooseShortNameForStickerPack">為您的貼圖包選擇一個簡短的名稱</string>
@@ -137,4 +137,22 @@
     <string name="HiddenChatsAbout">從主列表中隱藏敏感聊天。解鎖後長按標題欄即可訪問。</string>
     <string name="HideContacts">隱藏聯絡人</string>
     <string name="RestartRequired">需要重啟以應用更改</string>
+    <string name="MaxActiveAccounts">最大活躍帳號數</string>
+    <string name="LimitReachedAccountsNa">抱歉，您最多只能新增 **%1$d** 個帳號。您可以在 **A-設定 &gt; 一般** 中將此限制提高（最多100個）。</string>
+    <string name="MaxActiveAccountsWarning">您目前有 %1$d 個活躍帳號。將限制設定為 %2$d 將阻止您新增帳號，直到您退出部分帳號。</string>
+    <string name="SplitChat">分螢幕聊天</string>
+    <string name="SplitChatClose">關閉分螢幕</string>
+    <string name="SplitChatSelectChat">選擇一個要同時開啟的聊天</string>
+    <string name="SplitChatHint">輕觸圖示以恢復最小化的聊天</string>
+    <string name="SplitChatMinimized">聊天已最小化</string>
+    <string name="ChangeFont">變更字型</string>
+    <string name="ShadowBanChannelAdded">頻道已新增至 **小黑屋(Shadow Ban)**</string>
+    <string name="ShadowBanChannelRemoved">頻道已從小黑屋(Shadow Ban)移除</string>
+    <string name="ExperimentalForceMaxFPSInfo">強制使用最大螢幕重新整理率。</string>
+    <string name="ExperimentalForceMaxFPS">強制最大畫面播放速率 (FPS)</string>
+    <string name="RegexFiltersSpoilerInsteadOfHide">使用模糊遮罩(Spoiler標籤)代替隱藏訊息</string>
+    <string name="MaskBlockedUserMessages">遮罩已封鎖使用者的訊息</string>
+    <string name="MaskBlockedUserMessagesAbout">在 Spoiler 遮罩下顯示已封鎖/被小黑屋使用者的訊息，而不是直接隱藏它們。</string>
+    <string name="RegexFiltersSpoilerMatchOnly">僅對符合的規則運算式進行遮罩</string>
+    <string name="RegexFiltersSpoilerColor">遮罩粒子顏色</string>
 </resources>

@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+﻿<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="N_Config">تنظیمات-A</string>
     <string name="CombineMessage">ترکیب پیام‌ها</string>
@@ -137,4 +137,22 @@
     <string name="HiddenChatsAbout">گفتگوهای حساس را از لیست اصلی پنهان کنید. با نگه داشتن نوار عنوان و پس از باز کردن قفل با گذرواژه یا بیومتریک، به آن‌ها دسترسی پیدا کنید.</string>
     <string name="HideContacts">پنهان کردن مخاطبین</string>
     <string name="RestartRequired">برای اعمال تغییرات، راه‌اندازی مجدد لازم است</string>
+    <string name="MaxActiveAccounts">حداکثر تعداد حساب‌های فعال</string>
+    <string name="LimitReachedAccountsNa">متأسفیم، نمی‌توانید بیش از **%1$d** حساب اضافه کنید. می‌توانید این محدودیت را (تا ۱۰۰) در **تنظیمات-A &gt; عمومی** افزایش دهید.</string>
+    <string name="MaxActiveAccountsWarning">در حال حاضر %1$d حساب فعال دارید. تنظیم محدودیت به %2$d مانع اضافه کردن حساب جدید می‌شود تا زمانی که از برخی خارج شوید.</string>
+    <string name="SplitChat">تقسیم صفحه گفتگو</string>
+    <string name="SplitChatClose">بستن تقسیم صفحه</string>
+    <string name="SplitChatSelectChat">گفتگویی را برای باز شدن در کنار هم انتخاب کنید</string>
+    <string name="SplitChatHint">برای بازیابی گفتگوی کوچک شده، روی آیکون ضربه بزنید</string>
+    <string name="SplitChatMinimized">گفتگو کوچک شد</string>
+    <string name="ChangeFont">تغییر قلم</string>
+    <string name="ShadowBanChannelAdded">کانال به **مسدودیت سایه** اضافه شد</string>
+    <string name="ShadowBanChannelRemoved">کانال از **مسدودیت سایه** حذف شد</string>
+    <string name="ExperimentalForceMaxFPSInfo">اجبار به استفاده از حداکثر نرخ تازه‌سازی صفحه.</string>
+    <string name="ExperimentalForceMaxFPS">اجبار به حداکثر فریم در ثانیه (FPS)</string>
+    <string name="RegexFiltersSpoilerInsteadOfHide">استفاده از ماسک (اسپویلر) به جای پنهان کردن پیام</string>
+    <string name="MaskBlockedUserMessages">ماسک کردن پیام‌های کاربران مسدود شده</string>
+    <string name="MaskBlockedUserMessagesAbout">نمایش پیام‌های کاربران مسدود شده یا مسدود سایه در زیر یک ماسک اسپویلر به جای پنهان کردن کامل آن‌ها.</string>
+    <string name="RegexFiltersSpoilerMatchOnly">فقط ماسک کردن عبارات باقاعده مطابقت یافته</string>
+    <string name="RegexFiltersSpoilerColor">رنگ ذرات ماسک</string>
 </resources>

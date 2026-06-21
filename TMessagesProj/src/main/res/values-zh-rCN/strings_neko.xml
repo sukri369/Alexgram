@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="NekoSettings">A-设置</string>
     <string name="IPv6">偏好 IPv6</string>
@@ -70,7 +70,7 @@
     <string name="CallTo">呼叫 **%1$s**？</string>
     <string name="DisableNumberRounding">禁用数字舍入</string>
     <string name="Categories">类别</string>
-    <string name="OfficialChannel">Nagram 频道</string>
+    <string name="OfficialChannel">Alexgram 频道</string>
     <string name="About">关于</string>
     <string name="IgnoreBlockedAbout">您将不会再看到被屏蔽的用户在群组中的消息。</string>
     <string name="SourceCode">源代码</string>
@@ -276,4 +276,13 @@
     <string name="StarFallInChat">流星效果</string>
     <string name="StarFallInChatDescription">在聊天中显示流星动画。</string>
     <string name="NekoX">NekoX 设置</string>
+    <!-- [Alexgram: Important Announcement] -->
+    <string name="GetImportantAnnouncementFromAlexgram">获取 Alexgram 的重要公告</string>
+    <!-- [Alexgram: Birthday Wish] - Start -->
+    <string name="BirthdayTitle">生日快乐，\n%1$s！🎉</string>
+    <string name="BirthdayMessage">今天完全属于你！✨ 又是一年主角光环加持。祝你新的一年蓬勃成长、赢个不停、负能量全部退散。去创造精彩吧！🚀🎂</string>
+    <string name="BirthdayMakeWish">许个愿吧 🌟</string>
+    <string name="BirthdayWishSent">愿望已寄往星空！🌌✨</string>
+    <!-- [Alexgram: Birthday Wish] - End -->
 </resources>
+

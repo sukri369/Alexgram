@@ -264,7 +264,7 @@ public class GroupCallUserCell extends FrameLayout {
         setClipChildren(false);
 
         avatarImageView = new BackupImageView(context);
-        avatarImageView.setRoundRadius(AndroidUtilities.dp(24));
+        avatarImageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(46.0f));
         addView(avatarImageView, LayoutHelper.createFrame(46, 46, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, LocaleController.isRTL ? 0 : 11, 6, LocaleController.isRTL ? 11 : 0, 0));
 
         avatarProgressView = new RadialProgressView(context) {
@@ -476,8 +476,9 @@ public class GroupCallUserCell extends FrameLayout {
             currentUser = accountInstance.getMessagesController().getUser(id);
             currentChat = null;
             avatarDrawable.setInfo(accountInstance.getCurrentAccount(), currentUser);
+            avatarImageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(46.0f));
 
-            nameTextView.setText(UserObject.getUserName(currentUser));
+            setNameWithAdminTag(UserObject.getUserName(currentUser), currentUser.id);
             botVerificationIcon = DialogObject.getBotVerificationIcon(currentUser);
             if (currentUser != null && currentUser.verified) {
                 rightDrawable.set(verifiedDrawable = (verifiedDrawable == null ? new VerifiedDrawable(getContext()) : verifiedDrawable), animated);
@@ -507,7 +508,7 @@ public class GroupCallUserCell extends FrameLayout {
                 hasAvatar = true;
                 avatarImageView.setImage(ImageLocation.getForLocal(uploadingAvatar), "50_50", avatarDrawable, null);
             } else {
-                ImageLocation imageLocation = ImageLocation.getForUser(currentUser, ImageLocation.TYPE_SMALL);
+                ImageLocation imageLocation = ImageLocation.getForUser(account.getCurrentAccount(), currentUser, ImageLocation.TYPE_SMALL);
                 hasAvatar = imageLocation != null;
                 avatarImageView.setImage(imageLocation, "50_50", avatarDrawable, currentUser);
             }
@@ -515,10 +516,11 @@ public class GroupCallUserCell extends FrameLayout {
             currentChat = accountInstance.getMessagesController().getChat(-id);
             currentUser = null;
             avatarDrawable.setInfo(accountInstance.getCurrentAccount(), currentChat);
+            avatarImageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(46.0f, currentChat != null && (ChatObject.isForum(currentChat) || ChatObject.isMonoForum(currentChat))));
 
             botVerificationIcon = DialogObject.getBotVerificationIcon(currentChat);
             if (currentChat != null) {
-                nameTextView.setText(currentChat.title);
+                setNameWithAdminTag(currentChat.title, -currentChat.id);
                 if (currentChat.verified) {
                     rightDrawable.set(verifiedDrawable = (verifiedDrawable == null ? new VerifiedDrawable(getContext()) : verifiedDrawable), animated);
                 } else if (currentChat != null && DialogObject.getEmojiStatusDocumentId(currentChat.emoji_status) != 0) {
@@ -546,6 +548,90 @@ public class GroupCallUserCell extends FrameLayout {
             nameTextView.setLeftDrawable(null);
         }
         applyParticipantChanges(animated);
+    }
+
+    private void setNameWithAdminTag(CharSequence name, long peerId) {
+        if (tw.nekomimi.nekogram.NekoConfig.showAdminTagInVoiceChat.Bool() && currentCall != null) {
+            String rank = accountInstance.getMessagesController().getAdminRank(currentCall.chatId, peerId);
+            boolean isOwner = accountInstance.getMessagesController().isOwner(currentCall.chatId, peerId);
+            boolean isAdmin = accountInstance.getMessagesController().isAdmin(currentCall.chatId, peerId);
+            if (rank == null && (isOwner || isAdmin)) {
+                rank = LocaleController.getString(isOwner ? R.string.ChatTagOwner : R.string.ChatTagAdmin);
+            }
+            if (rank != null) {
+                int color;
+                if (isOwner) {
+                    color = Theme.getColor(Theme.key_chat_tagCreator);
+                } else if (isAdmin) {
+                    color = Theme.getColor(Theme.key_chat_tagAdmin);
+                } else {
+                    color = Theme.getColor(Theme.key_chat_inAdminText);
+                }
+                nameTextView.setText(name);
+                nameTextView.setRightDrawable2(new AdminTagDrawable(rank, color));
+                return;
+            }
+        }
+        nameTextView.setText(name);
+        nameTextView.setRightDrawable2(null);
+    }
+
+    private static class AdminTagDrawable extends android.graphics.drawable.Drawable {
+        private final android.graphics.Paint bgPaint = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
+        private final android.text.TextPaint textPaint = new android.text.TextPaint(android.graphics.Paint.ANTI_ALIAS_FLAG);
+        private final String text;
+        private final int textColor;
+        private final int width;
+        private final int height;
+
+        public AdminTagDrawable(String text, int textColor) {
+            this.text = text;
+            this.textColor = textColor;
+            bgPaint.setStyle(android.graphics.Paint.Style.FILL);
+            textPaint.setTypeface(AndroidUtilities.bold());
+            textPaint.setTextSize(AndroidUtilities.dp(12)); // 15dp text size * 0.8 scale
+            this.width = AndroidUtilities.dp(8) + (int) textPaint.measureText(this.text);
+            this.height = AndroidUtilities.dp(16);
+        }
+
+        @Override
+        public int getIntrinsicWidth() {
+            return this.width;
+        }
+
+        @Override
+        public int getIntrinsicHeight() {
+            return this.height;
+        }
+
+        @Override
+        public void draw(@androidx.annotation.NonNull android.graphics.Canvas canvas) {
+            android.graphics.Rect bounds = getBounds();
+            bgPaint.setColor(this.textColor);
+            bgPaint.setAlpha((int) (255 * 0.15f));
+            textPaint.setColor(this.textColor);
+            android.graphics.RectF rect = new android.graphics.RectF(bounds);
+            canvas.drawRoundRect(rect, AndroidUtilities.dp(4), AndroidUtilities.dp(4), bgPaint);
+            float cy = bounds.centerY();
+            android.graphics.Paint.FontMetricsInt fontMetrics = textPaint.getFontMetricsInt();
+            float textY = cy - (fontMetrics.bottom + fontMetrics.top) / 2f;
+            canvas.drawText(this.text, bounds.left + AndroidUtilities.dp(4), textY, textPaint);
+        }
+
+        @Override
+        public void setAlpha(int alpha) {
+            bgPaint.setAlpha((int) (alpha * 0.15f));
+            textPaint.setAlpha(alpha);
+        }
+
+        @Override
+        public void setColorFilter(@androidx.annotation.Nullable android.graphics.ColorFilter colorFilter) {
+        }
+
+        @Override
+        public int getOpacity() {
+            return android.graphics.PixelFormat.TRANSPARENT;
+        }
     }
 
     public void setDrawDivider(boolean draw) {

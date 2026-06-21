@@ -70,7 +70,7 @@
     <string name="CallTo">**%1$s** kişisi aransın mı?</string>
     <string name="DisableNumberRounding">Sayı Yuvarlamayı Devre Dışı Bırak</string>
     <string name="Categories">Kategoriler</string>
-    <string name="OfficialChannel">Nagram Kanalı</string>
+    <string name="OfficialChannel">Alexgram Kanalı</string>
     <string name="About">Hakkında</string>
     <string name="IgnoreBlockedAbout">Artık gruplarda engellenen kullanıcılardan gelen mesajları görmeyeceksiniz.</string>
     <string name="SourceCode">Kaynak Kod</string>
@@ -270,4 +270,13 @@
     <string name="EmojiUseDefault">Sistem emojilerini kullan</string>
     <string name="Chat">Sohbetler</string>
     <string name="Appearance">Görünüm</string>
+    <!-- [Alexgram: Important Announcement] -->
+    <string name="GetImportantAnnouncementFromAlexgram">Alexgram\'dan Önemli Duyuruları Al</string>
+    <!-- [Alexgram: Birthday Wish] - Start -->
+    <string name="BirthdayTitle">Doğum Günün Kutlu Olsun,\n%1$s! 🎉</string>
+    <string name="BirthdayMessage">Bugün tamamen senin günün! ✨ Başrol enerjisiyle dolu bir yıl daha. Saf büyüme, sonsuz zaferler ve sıfır kötü enerjiyle dolu bir yıl dileriz. Git ve ortalığı salla! 🚀🎂</string>
+    <string name="BirthdayMakeWish">Bir Dilek Tut 🌟</string>
+    <string name="BirthdayWishSent">Dileğin Yıldızlara Gönderildi! 🌌✨</string>
+    <!-- [Alexgram: Birthday Wish] - End -->
 </resources>
+

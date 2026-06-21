@@ -91,7 +91,7 @@ public class SharingLiveLocationCell extends FrameLayout {
         this.padding = padding;
 
         avatarImageView = new BackupImageView(context);
-        avatarImageView.setRoundRadius(dp(21));
+        avatarImageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(42.0f));
 
         avatarDrawable = new AvatarDrawable();
 
@@ -153,6 +153,7 @@ public class SharingLiveLocationCell extends FrameLayout {
             if (user != null) {
                 avatarDrawable = new AvatarDrawable(user);
                 name = UserObject.getUserName(user);
+                avatarImageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(42.0f));
                 avatarImageView.setForUserOrChat(user, avatarDrawable);
             }
         } else {
@@ -160,6 +161,7 @@ public class SharingLiveLocationCell extends FrameLayout {
             if (chat != null) {
                 avatarDrawable = new AvatarDrawable(chat);
                 name = chat.title;
+                avatarImageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(42.0f, org.telegram.messenger.ChatObject.isForum(chat) || org.telegram.messenger.ChatObject.isMonoForum(chat)));
                 avatarImageView.setForUserOrChat(chat, avatarDrawable);
             }
         }
@@ -272,6 +274,7 @@ public class SharingLiveLocationCell extends FrameLayout {
                 if (user != null) {
                     avatarDrawable = new AvatarDrawable(user);
                     name = UserObject.getUserName(user);
+                    avatarImageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(42.0f));
                     avatarImageView.setForUserOrChat(user, avatarDrawable);
                 } else {
                     noTitle = false;
@@ -282,6 +285,7 @@ public class SharingLiveLocationCell extends FrameLayout {
                 if (chat != null) {
                     avatarDrawable = new AvatarDrawable(chat);
                     name = chat.title;
+                    avatarImageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(42.0f, org.telegram.messenger.ChatObject.isForum(chat) || org.telegram.messenger.ChatObject.isMonoForum(chat)));
                     avatarImageView.setForUserOrChat(chat, avatarDrawable);
                 } else {
                     noTitle = false;
@@ -341,6 +345,7 @@ public class SharingLiveLocationCell extends FrameLayout {
             if (user != null) {
                 avatarDrawable.setInfo(currentAccount, user);
                 nameTextView.setText(ContactsController.formatName(user.first_name, user.last_name));
+                avatarImageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(42.0f));
                 avatarImageView.setForUserOrChat(user, avatarDrawable);
             }
         } else {
@@ -348,6 +353,7 @@ public class SharingLiveLocationCell extends FrameLayout {
             if (chat != null) {
                 avatarDrawable.setInfo(currentAccount, chat);
                 nameTextView.setText(chat.title);
+                avatarImageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(42.0f, org.telegram.messenger.ChatObject.isForum(chat) || org.telegram.messenger.ChatObject.isMonoForum(chat)));
                 avatarImageView.setForUserOrChat(chat, avatarDrawable);
             }
         }
@@ -373,6 +379,7 @@ public class SharingLiveLocationCell extends FrameLayout {
             if (user != null) {
                 avatarDrawable.setInfo(currentAccount, user);
                 nameTextView.setText(ContactsController.formatName(user.first_name, user.last_name));
+                avatarImageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(42.0f));
                 avatarImageView.setForUserOrChat(user, avatarDrawable);
             }
         } else {
@@ -380,6 +387,7 @@ public class SharingLiveLocationCell extends FrameLayout {
             if (chat != null) {
                 avatarDrawable.setInfo(currentAccount, chat);
                 nameTextView.setText(chat.title);
+                avatarImageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(42.0f, org.telegram.messenger.ChatObject.isForum(chat) || org.telegram.messenger.ChatObject.isMonoForum(chat)));
                 avatarImageView.setForUserOrChat(chat, avatarDrawable);
             }
         }

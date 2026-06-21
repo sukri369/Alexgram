@@ -23,7 +23,6 @@ import android.view.KeyEvent;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.EditText;
@@ -50,8 +49,10 @@ import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
+import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.Utilities;
+import org.telegram.messenger.utils.WindowVisibilityManager;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBarPopupWindow;
 import org.telegram.ui.ActionBar.AdjustPanLayoutHelper;
@@ -89,6 +90,7 @@ public class MessageSendPreview extends Dialog implements NotificationCenter.Not
     public final Theme.ResourcesProvider resourcesProvider;
     public final int currentAccount = UserConfig.selectedAccount;
 
+    private WindowVisibilityManager.Controller activityVisibilityController;
     private Insets insets = Insets.NONE;
     private Bitmap blurBitmap;
     private BitmapShader blurBitmapShader;
@@ -152,9 +154,14 @@ public class MessageSendPreview extends Dialog implements NotificationCenter.Not
         this.context = context;
         this.resourcesProvider = resourcesProvider;
 
+        activityVisibilityController = LaunchActivity.obtainActivityVisibilityController();
         windowView = new FrameLayout(context) {
             @Override
-            protected void dispatchDraw(Canvas canvas) {
+            protected void dispatchDraw(@NonNull Canvas canvas) {
+                if (activityVisibilityController != null) {
+                    activityVisibilityController.setHidden(openProgress == 1 && blurBitmapPaint != null);
+                }
+
                 if (openProgress > 0 && blurBitmapPaint != null) {
                     blurMatrix.reset();
                     final float s = (float) getWidth() / blurBitmap.getWidth();
@@ -195,23 +202,20 @@ public class MessageSendPreview extends Dialog implements NotificationCenter.Not
         windowView.setOnClickListener(v -> {
             onBackPressed();
         });
-        windowView.getViewTreeObserver().addOnGlobalFocusChangeListener(new ViewTreeObserver.OnGlobalFocusChangeListener() {
-            @Override
-            public void onGlobalFocusChanged(View oldFocus, View newFocus) {
-                if (!focusable && newFocus instanceof EditText) {
-                    AndroidUtilities.hideKeyboard(editText);
+        windowView.getViewTreeObserver().addOnGlobalFocusChangeListener((oldFocus, newFocus) -> {
+            if (!focusable && newFocus instanceof EditText) {
+                AndroidUtilities.hideKeyboard(editText);
+                AndroidUtilities.runOnUIThread(() -> {
+                    makeFocusable();
                     AndroidUtilities.runOnUIThread(() -> {
-                        makeFocusable();
-                        AndroidUtilities.runOnUIThread(() -> {
-                            AndroidUtilities.showKeyboard(newFocus);
-                            if (anchorSendButton != null) {
-                                anchorSendButton.getLocationOnScreen(sendButtonInitialPosition);
+                        AndroidUtilities.showKeyboard(newFocus);
+                        if (anchorSendButton != null) {
+                            anchorSendButton.getLocationOnScreen(sendButtonInitialPosition);
 //                                sendButtonInitialPosition[0] = Math.min(sendButtonInitialPosition[0] + anchorSendButton.getWidth(), AndroidUtilities.displaySize.x) - anchorSendButton.getWidth();
-                                sendButtonInitialPosition[0] += anchorSendButton.getWidth() - anchorSendButton.width(anchorSendButton.getHeight()) - dp(6);
-                            }
-                        }, 100);
-                    }, 200);
-                }
+                            sendButtonInitialPosition[0] += anchorSendButton.getWidth() - anchorSendButton.width(anchorSendButton.getHeight()) - dp(6);
+                        }
+                    }, 100);
+                }, 200);
             }
         });
 
@@ -478,6 +482,8 @@ public class MessageSendPreview extends Dialog implements NotificationCenter.Not
 
             @Override
             protected void dispatchDraw(Canvas canvas) {
+                updateMessagesVisiblePart();
+
                 canvas.saveLayerAlpha(0, getScrollY() + 1, getWidth(), getScrollY() + getHeight() - 1, 0xFF, Canvas.ALL_SAVE_FLAG);
                 canvas.save();
                 drawChatBackgroundElements(canvas);
@@ -996,6 +1002,7 @@ public class MessageSendPreview extends Dialog implements NotificationCenter.Not
                 cell.setMessageObject(messageObject, group, false, false, false);
                 if (position == getMainMessageCellPosition() && !messageObject.needDrawForwarded()) {
                     mainMessageCell = cell;
+                    mainMessageCell.setParentViewSize(AndroidUtilities.displaySize.x, AndroidUtilities.displaySize.y);
                     mainMessageCellId = messageObject.getId();
                 }
             }
@@ -1054,6 +1061,40 @@ public class MessageSendPreview extends Dialog implements NotificationCenter.Not
         };
     }
 
+    private void updateMessagesVisiblePart() {
+        final int height = containerView.getMeasuredHeight();
+        final int recyclerChatViewHeight = height;
+
+        for (int a = 0, N = chatListView.getChildCount(); a < N; a++) {
+            final View view = chatListView.getChildAt(a);
+            if (view instanceof ChatMessageCell) {
+                float y = ViewPositionWatcher.computeYCoordinateInParent(view, containerView);
+
+                final ChatMessageCell cell = (ChatMessageCell) view;
+
+                final int top = (int) y;
+                final int bottom = top + view.getMeasuredHeight();
+                int viewTop = top >= 0 ? 0 : -top;
+                int viewBottom = view.getMeasuredHeight();
+                if (viewBottom > height) {
+                    viewBottom = viewTop + height;
+                }
+
+                cell.setVisiblePart(
+                    viewTop,
+                    viewBottom - viewTop,
+                    recyclerChatViewHeight,
+                    y,
+                    y,
+                    containerView.getMeasuredWidth(),
+                    containerView.getMeasuredHeight(),
+                    0,
+                    0,
+                    0);
+            }
+        }
+    }
+
     @Override
     public void onBackPressed() {
         if (keyboardVisible) {
@@ -1075,17 +1116,14 @@ public class MessageSendPreview extends Dialog implements NotificationCenter.Not
         public MessageCell(Context context, int currentAccount, boolean canDrawBackgroundInParent, ChatMessageSharedResources sharedResources, Theme.ResourcesProvider resourcesProvider) {
             super(context, currentAccount, canDrawBackgroundInParent, sharedResources, resourcesProvider);
         }
-
         @Override
         protected SpoilerEffect2 makeSpoilerEffect() {
             return SpoilerEffect2.getInstance(SpoilerEffect2.TYPE_PREVIEW, this, windowView);
         }
-
         @Override
         public boolean isPressed() {
             return false;
         }
-
         public int top = Integer.MAX_VALUE;
         public int bottom = Integer.MAX_VALUE;
         private int pastId = -1;
@@ -1093,17 +1131,10 @@ public class MessageSendPreview extends Dialog implements NotificationCenter.Not
         protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
             super.onLayout(changed, left, top, right, bottom);
             if (transitionParams.animateBackgroundBoundsInner && top != 0 && this.top != Integer.MAX_VALUE && bottom != 0 && this.bottom != Integer.MAX_VALUE && pastId == (getMessageObject() == null ? 0 : getMessageObject().getId())) {
-//                if (!scrolledToLast) {
-//                } else {
-//                    setTranslationY(-(bottom - this.bottom));
-//                }
                 if (!scrolledToLast) {
                     setTranslationY(-(top - this.top));
                     animate().translationY(0).setDuration(320).setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT).start();
-                } else {
-
                 }
-
                 this.top = getTop();
                 this.bottom = getBottom();
                 pastId = getMessageObject() == null ? 0 : getMessageObject().getId();
@@ -1127,13 +1158,11 @@ public class MessageSendPreview extends Dialog implements NotificationCenter.Not
         params.flags &= ~WindowManager.LayoutParams.FLAG_DIM_BEHIND;
         params.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE;
         params.flags |= WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM;
-        if (Build.VERSION.SDK_INT >= 21) {
-            params.flags |= WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
-                    WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR |
-                    WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS |
-                    WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION |
-                    WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS;
-        }
+        params.flags |= WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
+                WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR |
+                WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS |
+                WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION |
+                WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS;
         params.flags |= WindowManager.LayoutParams.FLAG_FULLSCREEN;
         params.flags |= WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON;
         if (Build.VERSION.SDK_INT >= 28) {
@@ -1241,6 +1270,44 @@ public class MessageSendPreview extends Dialog implements NotificationCenter.Not
     public void setItemOptions(ItemOptions options) {
         options.setGapBackgroundColor(Theme.multAlpha(Theme.getColor(Theme.key_actionBarDefaultSubmenuItem, resourcesProvider), 0.06f));
         options.setBlurBackground(iBlur3Factory, BlurredBackgroundProviderImpl.scrimMenuBackground(resourcesProvider), false);
+
+        // [Alexgram: Native Features] - Start
+        if (tw.nekomimi.nekogram.NekoConfig.enableEditFileName.Bool()) {
+            org.telegram.ui.ActionBar.BaseFragment fragment = org.telegram.ui.LaunchActivity.getLastFragment();
+            if (fragment instanceof org.telegram.ui.ChatActivity) {
+                org.telegram.ui.ChatActivity chatActivity = (org.telegram.ui.ChatActivity) fragment;
+                if (chatActivity.chatAttachAlert != null && chatActivity.chatAttachAlert.isShowing()) {
+                    org.telegram.ui.Components.ChatAttachAlert.AttachAlertLayout currentLayout = chatActivity.chatAttachAlert.getCurrentAttachLayout();
+                    boolean hasSelection = false;
+                    String filePath = null;
+                    if (currentLayout instanceof org.telegram.ui.Components.ChatAttachAlertDocumentLayout) {
+                        org.telegram.ui.Components.ChatAttachAlertDocumentLayout documentLayout = (org.telegram.ui.Components.ChatAttachAlertDocumentLayout) currentLayout;
+                        if (documentLayout.selectedFilesOrder != null && !documentLayout.selectedFilesOrder.isEmpty()) {
+                            filePath = documentLayout.selectedFilesOrder.get(0);
+                            hasSelection = true;
+                        }
+                    } else if (currentLayout instanceof org.telegram.ui.Components.ChatAttachAlertAudioLayout) {
+                        org.telegram.ui.Components.ChatAttachAlertAudioLayout audioLayout = (org.telegram.ui.Components.ChatAttachAlertAudioLayout) currentLayout;
+                        if (audioLayout.selectedAudios != null && !audioLayout.selectedAudios.isEmpty()) {
+                            org.telegram.messenger.MediaController.AudioEntry audioEntry = audioLayout.selectedAudios.iterator().next();
+                            if (audioEntry != null) {
+                                filePath = audioEntry.path;
+                                hasSelection = true;
+                            }
+                        }
+                    }
+                    if (hasSelection && filePath != null) {
+                        final String fPath = filePath;
+                        final org.telegram.ui.Components.ChatAttachAlert.AttachAlertLayout fLayout = currentLayout;
+                        options.add(R.drawable.msg_edit, LocaleController.getString("ExperimentalEditFileName", R.string.ExperimentalEditFileName), () -> {
+                            dismiss();
+                            showFileNameEditDialog(fPath, fLayout);
+                        });
+                    }
+                }
+            }
+        }
+        // [Alexgram: Native Features] - End
 
         optionsView = options.getLayout();
         containerView.addView(optionsView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
@@ -1374,7 +1441,7 @@ public class MessageSendPreview extends Dialog implements NotificationCenter.Not
         } else {
             NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.availableEffectsUpdate);
         }
-        if (effectSelector != null) {
+        if (effectSelector != null /*&& SharedConfig.getDevicePerformanceClass() < SharedConfig.PERFORMANCE_CLASS_HIGH*/) {
             effectSelector.setPaused(true, true);
         }
 
@@ -1637,7 +1704,7 @@ public class MessageSendPreview extends Dialog implements NotificationCenter.Not
         });
         windowView.invalidate();
 
-        NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.availableEffectsUpdate);
+        afterDismiss();
     }
 
     public void dismiss(boolean sent) {
@@ -1655,7 +1722,7 @@ public class MessageSendPreview extends Dialog implements NotificationCenter.Not
         }
         super.dismiss();
 
-        NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.availableEffectsUpdate);
+        afterDismiss();
     }
 
     @Override
@@ -1677,7 +1744,15 @@ public class MessageSendPreview extends Dialog implements NotificationCenter.Not
         });
         windowView.invalidate();
 
+        afterDismiss();
+    }
+
+    private void afterDismiss() {
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.availableEffectsUpdate);
+        if (activityVisibilityController != null) {
+            activityVisibilityController.destroy();
+            activityVisibilityController = null;
+        }
     }
 
     private ValueAnimator openAnimator;
@@ -1922,5 +1997,183 @@ public class MessageSendPreview extends Dialog implements NotificationCenter.Not
             optionsView.invalidate();
         }
     }
+
+    // [Alexgram: Native Features] - Start
+    private void showFileNameEditDialog(final String filePath, final org.telegram.ui.Components.ChatAttachAlert.AttachAlertLayout currentLayout) {
+        org.telegram.ui.ActionBar.BaseFragment fragment = org.telegram.ui.LaunchActivity.getLastFragment();
+        if (fragment == null) return;
+        android.app.Activity activity = fragment.getParentActivity();
+        if (activity == null) return;
+
+        final String originalFilename = new java.io.File(filePath).getName();
+
+        final org.telegram.ui.Components.EditTextBoldCursor editText = new org.telegram.ui.Components.EditTextBoldCursor(activity);
+        editText.setHint("File Name");
+        editText.setText(originalFilename);
+        editText.setInputType(android.text.InputType.TYPE_CLASS_TEXT);
+        editText.setMaxLines(1);
+        editText.setSingleLine(true);
+        editText.setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 18);
+        editText.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText, resourcesProvider));
+        editText.setHintTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteHintText, resourcesProvider));
+        editText.setBackground(Theme.createEditTextDrawable(activity, true));
+        editText.setCursorColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlueHeader, resourcesProvider));
+        editText.setCursorSize(AndroidUtilities.dp(20));
+        editText.setCursorWidth(1.5f);
+        editText.setPadding(0, 0, 0, 0);
+        editText.setFocusable(true);
+
+        org.telegram.ui.ActionBar.AlertDialog.Builder builder = new org.telegram.ui.ActionBar.AlertDialog.Builder(activity, resourcesProvider);
+        builder.setTitle(LocaleController.getString("ExperimentalEditFileName", R.string.ExperimentalEditFileName));
+        builder.setMessage("Enter the new file name");
+        builder.setView(editText);
+
+        builder.setPositiveButton("Save", (dialog, which) -> {
+            String newFilename = editText.getText().toString().trim();
+            applyFilenameChange(newFilename, filePath, currentLayout, dialog);
+        });
+        builder.setNegativeButton("Cancel", (dialog, which) -> {
+            try {
+                AndroidUtilities.hideKeyboard(editText);
+            } catch (Exception ignore) {}
+            dialog.dismiss();
+        });
+
+        final org.telegram.ui.ActionBar.AlertDialog dialog = builder.show();
+
+        AndroidUtilities.runOnUIThread(() -> {
+            try {
+                android.view.ViewGroup.LayoutParams layoutParams = editText.getLayoutParams();
+                if (layoutParams instanceof android.widget.FrameLayout.LayoutParams) {
+                    ((android.widget.FrameLayout.LayoutParams) layoutParams).gravity = android.view.Gravity.CENTER_HORIZONTAL;
+                }
+                if (layoutParams instanceof android.view.ViewGroup.MarginLayoutParams) {
+                    android.view.ViewGroup.MarginLayoutParams marginParams = (android.view.ViewGroup.MarginLayoutParams) layoutParams;
+                    marginParams.rightMargin = AndroidUtilities.dp(24);
+                    marginParams.leftMargin = AndroidUtilities.dp(24);
+                    marginParams.height = AndroidUtilities.dp(36);
+                    marginParams.bottomMargin = AndroidUtilities.dp(15);
+                    editText.setLayoutParams(layoutParams);
+                }
+                editText.requestFocus();
+                int textLength = editText.getText() != null ? editText.getText().length() : 0;
+                editText.setSelection(0, textLength);
+            } catch (Exception ignore) {}
+        }, 100);
+    }
+
+    private void applyFilenameChange(String newFilename, String oldPath, org.telegram.ui.Components.ChatAttachAlert.AttachAlertLayout currentLayout, android.content.DialogInterface dialog) {
+        try {
+            if (newFilename == null || newFilename.trim().isEmpty()) {
+                dialog.dismiss();
+                return;
+            }
+            newFilename = newFilename.trim();
+            int dot = oldPath.lastIndexOf('.');
+            if (dot >= 0) {
+                String ext = oldPath.substring(dot);
+                if (!newFilename.toLowerCase().endsWith(ext.toLowerCase())) {
+                    newFilename += ext;
+                }
+            }
+
+            if (currentLayout instanceof org.telegram.ui.Components.ChatAttachAlertDocumentLayout) {
+                org.telegram.ui.Components.ChatAttachAlertDocumentLayout documentLayout = (org.telegram.ui.Components.ChatAttachAlertDocumentLayout) currentLayout;
+                java.io.File oldFile = new java.io.File(oldPath);
+                if (oldFile.exists()) {
+                    java.io.File cacheDir = org.telegram.messenger.ApplicationLoader.applicationContext.getCacheDir();
+                    java.io.File tempDir = new java.io.File(cacheDir, "renamed_files");
+                    if (!tempDir.exists()) {
+                        tempDir.mkdirs();
+                    }
+                    java.io.File newFile = new java.io.File(tempDir, newFilename);
+                    copyFile(oldFile, newFile);
+
+                    if (documentLayout.selectedFilesOrder != null && documentLayout.selectedFiles != null) {
+                        int index = documentLayout.selectedFilesOrder.indexOf(oldPath);
+                        if (index >= 0) {
+                            documentLayout.selectedFilesOrder.set(index, newFile.getAbsolutePath());
+                        }
+
+                        org.telegram.ui.Components.ChatAttachAlertDocumentLayout.ListItem oldListItem = documentLayout.selectedFiles.get(oldPath);
+                        if (oldListItem != null) {
+                            documentLayout.selectedFiles.remove(oldPath);
+                            oldListItem.file = newFile;
+                            oldListItem.title = newFilename;
+                            documentLayout.selectedFiles.put(newFile.getAbsolutePath(), oldListItem);
+
+                            if (documentLayout.listAdapter != null) {
+                                documentLayout.listAdapter.notifyDataSetChanged();
+                            }
+                        }
+                    }
+                }
+            } else if (currentLayout instanceof org.telegram.ui.Components.ChatAttachAlertAudioLayout) {
+                java.io.File cacheDir = org.telegram.messenger.ApplicationLoader.applicationContext.getCacheDir();
+                java.io.File tempDir = new java.io.File(cacheDir, "renamed_files");
+                if (!tempDir.exists()) {
+                    tempDir.mkdirs();
+                }
+                java.io.File newFile = new java.io.File(tempDir, newFilename);
+
+                org.telegram.ui.Components.ChatAttachAlertAudioLayout audioLayout = (org.telegram.ui.Components.ChatAttachAlertAudioLayout) currentLayout;
+                if (audioLayout.selectedAudios != null && !audioLayout.selectedAudios.isEmpty()) {
+                    org.telegram.messenger.MediaController.AudioEntry audioEntry = audioLayout.selectedAudios.iterator().next();
+                    if (audioEntry != null) {
+                        java.io.File oldFile = new java.io.File(oldPath);
+                        if (oldFile.exists()) {
+                            copyFile(oldFile, newFile);
+
+                            audioEntry.path = newFile.getAbsolutePath();
+                            audioEntry.title = newFilename;
+
+                            org.telegram.messenger.MessageObject msgObj = audioEntry.messageObject;
+                            if (msgObj != null) {
+                                org.telegram.tgnet.TLRPC.Message msg = msgObj.messageOwner;
+                                if (msg != null) {
+                                    msg.attachPath = newFile.getAbsolutePath();
+
+                                    if (msg.media != null && msg.media.document != null && msg.media.document.attributes != null) {
+                                        for (int i = 0; i < msg.media.document.attributes.size(); i++) {
+                                            org.telegram.tgnet.TLRPC.DocumentAttribute attr = msg.media.document.attributes.get(i);
+                                            if (attr instanceof org.telegram.tgnet.TLRPC.TL_documentAttributeFilename) {
+                                                ((org.telegram.tgnet.TLRPC.TL_documentAttributeFilename) attr).file_name = newFilename;
+                                            }
+                                            if (attr instanceof org.telegram.tgnet.TLRPC.TL_documentAttributeAudio) {
+                                                String nameWithoutExt = newFilename;
+                                                int dotIndex = nameWithoutExt.lastIndexOf('.');
+                                                if (dotIndex > 0) {
+                                                    nameWithoutExt = nameWithoutExt.substring(0, dotIndex);
+                                                }
+                                                ((org.telegram.tgnet.TLRPC.TL_documentAttributeAudio) attr).title = nameWithoutExt;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (audioLayout.listView != null && audioLayout.listView.adapter != null) {
+                                audioLayout.listView.adapter.update(true);
+                            }
+                        }
+                    }
+                }
+            }
+
+            dialog.dismiss();
+        } catch (Exception ignore) {
+            try {
+                dialog.dismiss();
+            } catch (Exception ignore2) {}
+        }
+    }
+
+    private void copyFile(java.io.File source, java.io.File dest) throws java.io.IOException {
+        try (java.nio.channels.FileChannel sourceChannel = new java.io.FileInputStream(source).getChannel();
+             java.nio.channels.FileChannel destChannel = new java.io.FileOutputStream(dest).getChannel()) {
+            destChannel.transferFrom(sourceChannel, 0, sourceChannel.size());
+        }
+    }
+    // [Alexgram: Native Features] - End
 
 }

@@ -65,6 +65,11 @@ import tw.nekomimi.nekogram.config.cell.WithOnClick;
 import tw.nekomimi.nekogram.helpers.QuickSettingEntry;
 import tw.nekomimi.nekogram.helpers.QuickSettingsController;
 import tw.nekomimi.nekogram.ui.cells.HeaderCell;
+// [Alexgram: Customizable Message Menu] - Start
+import android.content.SharedPreferences;
+import android.widget.ScrollView;
+import tw.nekomimi.nekogram.ui.cells.MessageMenuConfigCell;
+// [Alexgram: Customizable Message Menu] - End
 
 public class BaseNekoXSettingsActivity extends BaseFragment {
     protected BlurredRecyclerView listView;
@@ -333,54 +338,53 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
             BulletinFactory.of(this).createCopyLinkBulletin().show();
         });
 
-        if (!QuickSettingsController.getInstance().isAdded(key)) {
-            options.add(R.drawable.msg_settings, "Add to Quick Settings", () -> {
-                CellGroup cellGroup = getCellGroup();
-                if (cellGroup != null && position >= 0 && position < cellGroup.rows.size()) {
-                    AbstractConfigCell cell = cellGroup.rows.get(position);
-                    CharSequence title = null;
-                    String subtitle = null;
-                    String iconResName = "msg_settings";
-                    int type = QuickSettingEntry.TYPE_NAVIGATE;
-                    
-                    if (cell instanceof ConfigCellTextCheck) {
-                        title = ((ConfigCellTextCheck) cell).getTitle();
-                        type = QuickSettingEntry.TYPE_SWITCH;
-                    } else if (cell instanceof ConfigCellTextCheckIcon) {
-                        ConfigCellTextCheckIcon iconCell = (ConfigCellTextCheckIcon) cell;
-                        title = iconCell.getTitle();
-                        type = QuickSettingEntry.TYPE_SWITCH;
-                        try {
-                            iconResName = getContext().getResources().getResourceEntryName(iconCell.getResId());
-                        } catch (Exception ignored) {}
-                    } else if (cell instanceof ConfigCellTextDetail) {
-                        title = ((ConfigCellTextDetail) cell).getTitle();
-                    } else if (cell instanceof ConfigCellSelectBox) {
-                        title = ((ConfigCellSelectBox) cell).getTitle();
-                        type = QuickSettingEntry.TYPE_DIALOG;
-                    } else if (cell instanceof ConfigCellTextInput) {
-                        title = ((ConfigCellTextInput) cell).getKey();
-                        type = QuickSettingEntry.TYPE_DIALOG;
-                    }
+        CellGroup cellGroup = getCellGroup();
+        boolean isOnOff = false;
+        if (cellGroup != null && position >= 0 && position < cellGroup.rows.size()) {
+            AbstractConfigCell cell = cellGroup.rows.get(position);
+            if (cell instanceof ConfigCellTextCheck || cell instanceof ConfigCellTextCheck2 || cell instanceof ConfigCellCheckBox) {
+                isOnOff = true;
+            } else if (cell instanceof ConfigCellTextCheckIcon) {
+                isOnOff = ((ConfigCellTextCheckIcon) cell).getBindConfig() != null;
+            }
+        }
 
-                    if (view instanceof org.telegram.ui.Cells.TextSettingsCell) {
-                        org.telegram.ui.Components.AnimatedTextView vtv = ((org.telegram.ui.Cells.TextSettingsCell) view).getValueTextView();
-                        if (vtv != null && vtv.getVisibility() == View.VISIBLE) {
-                            subtitle = vtv.getText().toString();
+        if (isOnOff) {
+            if (!QuickSettingsController.getInstance().isAdded(key)) {
+                options.add(R.drawable.msg_settings, "Add to Quick Settings", () -> {
+                    if (cellGroup != null && position >= 0 && position < cellGroup.rows.size()) {
+                        AbstractConfigCell cell = cellGroup.rows.get(position);
+                        CharSequence title = null;
+                        String subtitle = null;
+                        String iconResName = "msg_settings";
+                        int type = QuickSettingEntry.TYPE_SWITCH;
+
+                        if (cell instanceof ConfigCellTextCheck) {
+                            title = ((ConfigCellTextCheck) cell).getTitle();
+                        } else if (cell instanceof ConfigCellTextCheckIcon) {
+                            ConfigCellTextCheckIcon iconCell = (ConfigCellTextCheckIcon) cell;
+                            title = iconCell.getTitle();
+                            try {
+                                iconResName = getContext().getResources().getResourceEntryName(iconCell.getResId());
+                            } catch (Exception ignored) {}
+                        } else if (cell instanceof ConfigCellTextCheck2) {
+                            title = ((ConfigCellTextCheck2) cell).getTitle();
+                        } else if (cell instanceof ConfigCellCheckBox) {
+                            title = ((ConfigCellCheckBox) cell).getTitle();
+                        }
+
+                        if (title != null && title.length() > 0) {
+                            QuickSettingsController.getInstance().addQuickSetting(new QuickSettingEntry(key, title.toString(), subtitle, iconResName, 0xFF2196F3, type, getClass().getName()));
+                            BulletinFactory.of(BaseNekoXSettingsActivity.this).createSimpleBulletin(R.drawable.msg_settings, "Added to Quick Settings").show();
                         }
                     }
-
-                    if (title != null && title.length() > 0) {
-                        QuickSettingsController.getInstance().addQuickSetting(new QuickSettingEntry(key, title.toString(), subtitle, iconResName, 0xFF2196F3, type, getClass().getName()));
-                        BulletinFactory.of(BaseNekoXSettingsActivity.this).createSimpleBulletin(R.drawable.msg_settings, "Added to Quick Settings").show();
-                    }
-                }
-            });
-        } else {
-            options.add(R.drawable.msg_delete, "Remove from Quick Settings", () -> {
-                QuickSettingsController.getInstance().removeQuickSetting(key);
-                BulletinFactory.of(BaseNekoXSettingsActivity.this).createSimpleBulletin(R.drawable.msg_delete, "Removed from Quick Settings").show();
-            });
+                });
+            } else {
+                options.add(R.drawable.msg_delete, "Remove from Quick Settings", () -> {
+                    QuickSettingsController.getInstance().removeQuickSetting(key);
+                    BulletinFactory.of(BaseNekoXSettingsActivity.this).createSimpleBulletin(R.drawable.msg_delete, "Removed from Quick Settings").show();
+                });
+            }
         }
     }
 
@@ -809,4 +813,53 @@ public class BaseNekoXSettingsActivity extends BaseFragment {
         builder.setView(linearLayout);
         return builder.create();
     }
+
+    // [Alexgram: Customizable Message Menu] - Start
+    public static int getMessageMenuMode(String key, boolean defaultVal) {
+        SharedPreferences prefs = NekoConfig.getPreferences();
+        String modeKey = key + "_mode";
+        if (prefs.contains(modeKey)) {
+            return prefs.getInt(modeKey, defaultVal ? 1 : 0);
+        }
+        // Fallback to original boolean
+        boolean boolVal = prefs.getBoolean(key, defaultVal);
+        return boolVal ? 1 : 0;
+    }
+
+    public static void setMessageMenuMode(String key, int mode) {
+        SharedPreferences prefs = NekoConfig.getPreferences();
+        prefs.edit().putInt(key + "_mode", mode).apply();
+        // Sync legacy boolean
+        prefs.edit().putBoolean(key, mode != 0).apply();
+        NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.reloadInterface);
+    }
+
+    public static AlertDialog showMessageMenuConfigAlert(BaseFragment bf, int titleKeyRes, ArrayList<ConfigCellTextCheckIcon> configItems) {
+        Context context = bf.getContext();
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle(getString(titleKeyRes));
+
+        ScrollView scrollView = new ScrollView(context);
+        LinearLayout container = new LinearLayout(context);
+        container.setOrientation(LinearLayout.VERTICAL);
+        scrollView.addView(container);
+
+        for (int a = 0; a < configItems.size(); a++) {
+            ConfigCellTextCheckIcon configItem = configItems.get(a);
+            MessageMenuConfigCell cell = new MessageMenuConfigCell(
+                context,
+                configItem.getKey(),
+                configItem.getTitle().toString(),
+                configItem.getResId(),
+                configItem.getBindConfig() != null ? (boolean) configItem.getBindConfig().defaultValue : true,
+                () -> NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.reloadInterface)
+            );
+            container.addView(cell, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+        }
+
+        builder.setPositiveButton(getString(R.string.OK), null);
+        builder.setView(scrollView);
+        return builder.create();
+    }
+    // [Alexgram: Customizable Message Menu] - End
 }

@@ -1,10 +1,14 @@
 package org.telegram.ui.Components;
 
+import android.app.Activity;
 import org.telegram.messenger.ChatObject;
+import org.telegram.messenger.MessageObject;
+import org.telegram.messenger.MessagesController;
+import org.telegram.messenger.NotificationCenter;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.Theme;
-
+import tw.nekomimi.nekogram.helpers.MessageHelper;
 public interface ChatActivityInterface {
 
     default ChatObject.Call getGroupCall() {
@@ -56,4 +60,36 @@ public interface ChatActivityInterface {
     ActionBar getActionBar();
 
     Theme.ResourcesProvider getResourceProvider();
+
+    default int getCurrentAccount() {
+        return 0;
+    }
+
+    default NotificationCenter getNotificationCenter() {
+        return null;
+    }
+
+    default MessagesController getMessagesController() {
+        return null;
+    }
+
+    default Activity getParentActivity() {
+        return null;
+    }
+
+    default MessageObject getMessageForTranslate() {
+        return null;
+    }
+
+    default MessageObject.GroupedMessages getSelectedObjectGroup() {
+        return null;
+    }
+
+    default java.util.ArrayList<MessageObject> getChatAdapterMessages() {
+        return null;
+    }
+
+    default MessageHelper getMessageHelper() {
+        return null;
+    }
 }

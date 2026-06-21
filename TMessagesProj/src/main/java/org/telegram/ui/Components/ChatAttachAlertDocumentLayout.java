@@ -124,7 +124,9 @@ public class ChatAttachAlertDocumentLayout extends ChatAttachAlert.AttachAlertLa
 
     private RecyclerListView listView;
     private RecyclerListView backgroundListView;
-    private ListAdapter listAdapter;
+    // [Alexgram: Native Features] - Start
+    public ListAdapter listAdapter;
+    // [Alexgram: Native Features] - End
     private ListAdapter backgroundListAdapter;
     private LinearLayoutManager backgroundLayoutManager;
     private SearchAdapter searchAdapter;
@@ -146,7 +148,7 @@ public class ChatAttachAlertDocumentLayout extends ChatAttachAlert.AttachAlertLa
     private File currentDir;
     private boolean receiverRegistered = false;
     private DocumentSelectActivityDelegate delegate;
-    private HashMap<String, ListItem> selectedFiles = new HashMap<>();
+    public HashMap<String, ListItem> selectedFiles = new HashMap<>();
     public ArrayList<String> selectedFilesOrder = new ArrayList<>();
     private HashMap<FilteredSearchView.MessageHashId, MessageObject> selectedMessages = new HashMap<>();
     private boolean scrolling;
@@ -163,7 +165,7 @@ public class ChatAttachAlertDocumentLayout extends ChatAttachAlert.AttachAlertLa
     public boolean isSoundPicker;
     public boolean isEmojiPicker;
 
-    private static class ListItem {
+    public static class ListItem {
         public int icon;
         public String title;
         public String subtitle = "";
@@ -346,17 +348,18 @@ public class ChatAttachAlertDocumentLayout extends ChatAttachAlert.AttachAlertLa
         listView.setSections();
         iBlur3Capture = listView;
         iBlur3CaptureView = listView;
+        occupyStatusBar = true;
         occupyNavigationBar = true;
         listView.setSectionsType(RecyclerListView.SECTIONS_TYPE_DATE);
         listView.setVerticalScrollBarEnabled(false);
-        listView.setLayoutManager(layoutManager = new FillLastLinearLayoutManager(context, LinearLayoutManager.VERTICAL, false, AndroidUtilities.dp(56), listView) {
+        listView.setLayoutManager(layoutManager = new FillLastLinearLayoutManager(context, LinearLayoutManager.VERTICAL, false, AndroidUtilities.dp(56) + AndroidUtilities.statusBarHeight, listView) {
             @Override
             public void smoothScrollToPosition(RecyclerView recyclerView, RecyclerView.State state, int position) {
                 LinearSmoothScroller linearSmoothScroller = new LinearSmoothScroller(recyclerView.getContext()) {
                     @Override
                     public int calculateDyToMakeVisible(View view, int snapPreference) {
                         int dy = super.calculateDyToMakeVisible(view, snapPreference);
-                        dy -= (listView.getPaddingTop() - AndroidUtilities.dp(56));
+                        dy -= (listView.getPaddingTop() - AndroidUtilities.statusBarHeight - AndroidUtilities.dp(56));
                         return dy;
                     }
 
@@ -400,8 +403,11 @@ public class ChatAttachAlertDocumentLayout extends ChatAttachAlert.AttachAlertLa
                     int top = parentAlert.scrollOffsetY[0] - backgroundPaddingTop - offset;
                     if (top + backgroundPaddingTop < ActionBar.getCurrentActionBarHeight()) {
                         RecyclerListView.Holder holder = (RecyclerListView.Holder) listView.findViewHolderForAdapterPosition(0);
-                        if (holder != null && holder.itemView.getTop() > AndroidUtilities.dp(56)) {
-                            listView.smoothScrollBy(0, holder.itemView.getTop() - AndroidUtilities.dp(56));
+                        if (holder != null) {
+                            final int dy = holder.itemView.getTop() - AndroidUtilities.statusBarHeight - AndroidUtilities.dp(56);
+                            if (dy > 0) {
+                                listView.smoothScrollBy(0, dy);
+                            }
                         }
                     }
                 }
@@ -684,7 +690,7 @@ public class ChatAttachAlertDocumentLayout extends ChatAttachAlert.AttachAlertLa
         }
         View child = listView.getChildAt(0);
         RecyclerListView.Holder holder = (RecyclerListView.Holder) listView.findContainingViewHolder(child);
-        int top = (int) child.getY() - AndroidUtilities.dp(4) - AndroidUtilities.dp(8);
+        int top = (int) child.getY() - AndroidUtilities.statusBarHeight - AndroidUtilities.dp(4) - AndroidUtilities.dp(8);
         int newOffset = top > 0 && holder != null && holder.getAdapterPosition() == 0 ? top : 0;
         if (top >= 0 && holder != null && holder.getAdapterPosition() == 0) {
             newOffset = top;
@@ -726,6 +732,7 @@ public class ChatAttachAlertDocumentLayout extends ChatAttachAlert.AttachAlertLa
             }
             parentAlert.setAllowNestedScroll(true);
         }
+        padding += AndroidUtilities.statusBarHeight;
         listView.setPaddingWithoutRequestLayout(0, padding, 0, listPaddingBottom);
         FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) filtersView.getLayoutParams();
         layoutParams.topMargin = ActionBar.getCurrentActionBarHeight();
@@ -1421,7 +1428,9 @@ public class ChatAttachAlertDocumentLayout extends ChatAttachAlert.AttachAlertLa
         return path;
     }
 
-    private class ListAdapter extends RecyclerListView.SelectionAdapter {
+    // [Alexgram: Native Features] - Start
+    public class ListAdapter extends RecyclerListView.SelectionAdapter {
+    // [Alexgram: Native Features] - End
 
         private ArrayList<ListItem> items = new ArrayList<>();
         private ArrayList<HistoryEntry> history = new ArrayList<>();

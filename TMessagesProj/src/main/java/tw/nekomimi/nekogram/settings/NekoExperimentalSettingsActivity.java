@@ -17,6 +17,7 @@ import android.text.TextUtils;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.SeekBar;
 
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -54,7 +55,11 @@ import org.telegram.ui.ActionBar.ActionBarLayout;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BottomSheet;
 import org.telegram.ui.ActionBar.Theme;
+// [Alexgram: AI Reply] - Start
 import org.telegram.ui.AIAssistanceSettingsActivity;
+import org.telegram.ui.Components.EditTextBoldCursor;
+import tw.nekomimi.nekogram.config.ConfigItem;
+// [Alexgram: AI Reply] - End
 import org.telegram.ui.Cells.TextCell;
 import org.telegram.ui.Cells.TextCheckBoxCell;
 import org.telegram.ui.Cells.TextCheckCell;
@@ -84,6 +89,7 @@ import tw.nekomimi.nekogram.config.cell.ConfigCellTextCheck;
 import tw.nekomimi.nekogram.config.cell.ConfigCellTextCheckIcon;
 import tw.nekomimi.nekogram.config.cell.ConfigCellTextInput;
 import tw.nekomimi.nekogram.filters.RegexFiltersSettingActivity;
+import tw.nekomimi.nekogram.helpers.TimeStringHelper;
 import tw.nekomimi.nekogram.ui.PopupBuilder;
 import tw.nekomimi.nekogram.ui.cells.HeaderCell;
 import xyz.nextalone.nagram.NaConfig;
@@ -130,6 +136,7 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
     private final AbstractConfigCell localPremiumRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.localPremium));
     private final AbstractConfigCell unlimitedPinnedDialogsRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.unlimitedPinnedDialogs, getString(R.string.UnlimitedPinnedDialogsAbout)));
     private final AbstractConfigCell unlimitedFavedStickersRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.unlimitedFavedStickers, getString(R.string.UnlimitedFavoredStickersAbout)));
+
     private final AbstractConfigCell dividerGeneral = cellGroup.appendCell(new ConfigCellDivider());
     private final AbstractConfigCell runInBackgroundRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getRunInBackground(), getString(R.string.RunInBackgroundInfo)));
 
@@ -146,8 +153,9 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
     private final AbstractConfigCell sendMp4DocumentAsVideoRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getSendMp4DocumentAsVideo()));
     private final AbstractConfigCell enhancedVideoBitrateRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getEnhancedVideoBitrate()));
     private final AbstractConfigCell musicGraphRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getMusicGraph(), getString(R.string.MusicGraphInfo)));
-    private final AbstractConfigCell sendVideoAsRoundRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getSendVideoAsRound()));
+    // [Alexgram: Special Forward] - Start
     private final AbstractConfigCell specialForwardRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getSpecialForward(), getString(R.string.SpecialForwardAbout), getString(R.string.SpecialForward)));
+    // [Alexgram: Special Forward] - End
     private final AbstractConfigCell customAudioBitrateRow = cellGroup.appendCell(new ConfigCellCustom("customGroupVoipAudioBitrate", CellGroup.ITEM_TYPE_TEXT_SETTINGS_CELL, true));
     private final AbstractConfigCell playerDecoderRow = cellGroup.appendCell(new ConfigCellSelectBox(null, NaConfig.INSTANCE.getPlayerDecoder(), new String[]{
             getString(R.string.VideoPlayerDecoderHardware),
@@ -166,9 +174,12 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
     private final AbstractConfigCell messageSavingSaveMediaRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getMessageSavingSaveMedia(), getString(R.string.MessageSavingSaveMediaHint)));
     private final AbstractConfigCell saveDeletedMessageForBotsUserRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getSaveDeletedMessageForBotUser()));
     private final AbstractConfigCell saveDeletedMessageInBotChatRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getSaveDeletedMessageForBot()));
-    private final AbstractConfigCell translucentDeletedMessagesRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getTranslucentDeletedMessages()));
+    private final AbstractConfigCell translucentDeletedMessagesRow = cellGroup.appendCell(new ConfigCellText("TranslucentDeletedMessages", null));
     private final AbstractConfigCell useDeletedIconRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getUseDeletedIcon()));
     private final AbstractConfigCell customDeletedMarkRow = cellGroup.appendCell(new ConfigCellTextInput(null, NaConfig.INSTANCE.getCustomDeletedMark(), "", null));
+    // [Alexgram: Deleted Icon Color Row] - Start
+    private final AbstractConfigCell deletedIconColorRow = cellGroup.appendCell(new ConfigCellText("DeletedIconColor", null));
+    // [Alexgram: Deleted Icon Color Row] - End
     private final AbstractConfigCell clearMessageDatabaseRow = cellGroup.appendCell(new ConfigCellTextCheckIcon(null, "ClearMessageDatabase", null, AyuData.totalSize > 0 ? AndroidUtilities.formatFileSize(AyuData.totalSize) : "...", R.drawable.msg_clear_solar, false, () -> new AlertDialog.Builder(getContext(), getResourceProvider())
             .setTitle(getString(R.string.ClearMessageDatabase))
             .setMessage(getString(R.string.AreYouSure))
@@ -188,6 +199,30 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
             .setNegativeButton(getString(R.string.Cancel), (d, w) -> d.dismiss())
             .makeRed(AlertDialog.BUTTON_POSITIVE)
             .show()));
+    // [Alexgram: Home Drawer] - Start
+    private final AbstractConfigCell navigationDrawerRow = cellGroup.appendCell(
+            new ConfigCellTextCheck(NekoConfig.navigationDrawerEnabled, null, getString(R.string.HomeDrawer))
+    );
+    private final AbstractConfigCell drawerElementsRow = cellGroup.appendCell(new ConfigCellTextCheckIcon(null, "DrawerElements", getString(R.string.DrawerElements), R.drawable.menu_newfilter, false, () ->
+            showDialog(showConfigMenuWithIconAlert(this, R.string.DrawerElements, new java.util.ArrayList<>() {{
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemMyProfile(), getString(R.string.MyProfile), R.drawable.left_status_profile));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemSetEmojiStatus(), getString(R.string.SetEmojiStatus), R.drawable.msg_status_set_solar, true));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemArchivedChats(), getString(R.string.ArchivedChats), R.drawable.msg_archive, true));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemNewGroup(), getString(R.string.NewGroup), R.drawable.msg_groups));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemNewChannel(), getString(R.string.NewChannel), R.drawable.msg_channel));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemContacts(), getString(R.string.Contacts), R.drawable.msg_contacts));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemCalls(), getString(R.string.Calls), R.drawable.msg_calls));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemRecentChats(), getString(R.string.RecentChats), R.drawable.msg_recent_solar));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemSaved(), getString(R.string.SavedMessages), R.drawable.msg_saved));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemSettings(), getString(R.string.Settings), R.drawable.msg_settings_old, true));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemNSettings(), getString(R.string.NekoSettings), R.drawable.nagramx_outline));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemBrowser(), getString(R.string.InappBrowser), R.drawable.web_browser));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemQrLogin(), getString(R.string.ImportLogin), R.drawable.msg_qrcode));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemSessions(), getString(R.string.Devices), R.drawable.msg2_devices, true));
+                add(new ConfigCellTextCheckIcon(NaConfig.INSTANCE.getDrawerItemRestartApp(), getString(R.string.RestartApp), R.drawable.msg_retry));
+            }}))
+    ));
+    // [Alexgram: Home Drawer] - End
     private final AbstractConfigCell dividerAyuMoments = cellGroup.appendCell(new ConfigCellDivider());
 
     // N-Config
@@ -201,8 +236,10 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
             getString(R.string.PerformanceClassAverage),
             getString(R.string.PerformanceClassLow),
     }, null));
+    // [Alexgram: Force Max FPS] - Start
     private final AbstractConfigCell forceMaxRefreshRateRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getForceMaxRefreshRate(), getString(R.string.ExperimentalForceMaxFPSInfo), getString(R.string.ExperimentalForceMaxFPS)));
     private final AbstractConfigCell dividerForceMaxFPS = cellGroup.appendCell(new ConfigCellDivider());
+    // [Alexgram: Force Max FPS] - End
 
     // Story
     private final AbstractConfigCell headerStory = cellGroup.appendCell(new ConfigCellHeader(getString(R.string.Story)));
@@ -215,31 +252,65 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
     private final AbstractConfigCell enablePanguOnSendingRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getEnablePanguOnSending(), getString(R.string.PanguInfo)));
     private final AbstractConfigCell dividerPangu = cellGroup.appendCell(new ConfigCellDivider());
 
+    // [Alexgram: AI Reply] - Start
     // AI Reply
     private final AbstractConfigCell headerAiReply = cellGroup.appendCell(new ConfigCellHeader("AI Reply"));
     private final AbstractConfigCell aiAssistanceSettingsRow = cellGroup.appendCell(new ConfigCellText("AiAssistanceSettings", () -> presentFragment(new AIAssistanceSettingsActivity())));
     private final AbstractConfigCell enableAIReplyRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getEnableAIReply()));
     private final AbstractConfigCell enableSummarizeChatRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getEnableSummarizeChat()));
     private final AbstractConfigCell usePollinationsAiRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getUsePollinationsAi(), getString(R.string.usePollinationsAiAbout)));
-    private final AbstractConfigCell aiModelUrlRow = cellGroup.appendCell(new ConfigCellTextInput("AI Model URL", NaConfig.INSTANCE.getAiModelUrl(), "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash", null));
-    private final AbstractConfigCell aiApiKeyRow = cellGroup.appendCell(new ConfigCellTextInput("AI API Key", NaConfig.INSTANCE.getAiApiKey(), "Api Key", null));
-    private final AbstractConfigCell testAiApiRow = cellGroup.appendCell(new ConfigCellText("TestAiApi", () -> {
-        String url = NaConfig.INSTANCE.getAiModelUrl().String();
-        String key = NaConfig.INSTANCE.getAiApiKey().String();
-        testAiApi(url != null ? url : "", key != null ? key : "");
-    }));
-    private final AbstractConfigCell aiModelUrl2Row = cellGroup.appendCell(new ConfigCellTextInput("AI Model URL 2", NaConfig.INSTANCE.getAiModelUrl2(), "https://api.openai.com/v1/chat/completions", null));
-    private final AbstractConfigCell aiApiKey2Row = cellGroup.appendCell(new ConfigCellTextInput("AI API Key 2", NaConfig.INSTANCE.getAiApiKey2(), "sk-...", null));
-    private final AbstractConfigCell testAiApi2Row = cellGroup.appendCell(new ConfigCellText("TestAiApi2", () -> {
-        String url = NaConfig.INSTANCE.getAiModelUrl2().String();
-        String key = NaConfig.INSTANCE.getAiApiKey2().String();
-        testAiApi(url != null ? url : "", key != null ? key : "");
-    }));
+    private final AbstractConfigCell aiApiKeyRow = cellGroup.appendCell(new ConfigCellText("AI API Key", null, () -> showAiSettingsBottomSheet(false)) {
+        private org.telegram.ui.Cells.TextSettingsCell customCell;
+
+        @Override
+        public void setEnabled(boolean enabled) {
+            super.setEnabled(enabled);
+            if (this.customCell != null) {
+                this.customCell.setEnabled(enabled);
+            }
+        }
+
+        @Override
+        public void onBindViewHolder(RecyclerView.ViewHolder holder) {
+            org.telegram.ui.Cells.TextSettingsCell cell = (org.telegram.ui.Cells.TextSettingsCell) holder.itemView;
+            this.customCell = cell;
+            String keyStr = NaConfig.INSTANCE.getAiApiKey().String();
+            String displayVal = TextUtils.isEmpty(keyStr) ? "Not Configured" : maskKey(keyStr);
+            cell.setTextAndValue("AI API Key", displayVal, false, cellGroup.needSetDivider(this), true);
+            cell.setEnabled(isEnabled());
+        }
+    });
+    private final AbstractConfigCell aiApiKey2Row = cellGroup.appendCell(new ConfigCellText("API Key (Failover)", null, () -> showAiSettingsBottomSheet(true)) {
+        private org.telegram.ui.Cells.TextSettingsCell customCell;
+
+        @Override
+        public void setEnabled(boolean enabled) {
+            super.setEnabled(enabled);
+            if (this.customCell != null) {
+                this.customCell.setEnabled(enabled);
+            }
+        }
+
+        @Override
+        public void onBindViewHolder(RecyclerView.ViewHolder holder) {
+            org.telegram.ui.Cells.TextSettingsCell cell = (org.telegram.ui.Cells.TextSettingsCell) holder.itemView;
+            this.customCell = cell;
+            String keyStr = NaConfig.INSTANCE.getAiApiKey2().String();
+            String displayVal = TextUtils.isEmpty(keyStr) ? "Not Configured" : maskKey(keyStr);
+            cell.setTextAndValue("API Key (Failover)", displayVal, false, cellGroup.needSetDivider(this), true);
+            cell.setEnabled(isEnabled());
+        }
+    });
     private final AbstractConfigCell dividerAiReply = cellGroup.appendCell(new ConfigCellDivider());
+    // [Alexgram: AI Reply] - End
 
     public NekoExperimentalSettingsActivity() {
         if (NaConfig.INSTANCE.getUseDeletedIcon().Bool()) {
             cellGroup.rows.remove(customDeletedMarkRow);
+        } else {
+            // [Alexgram: Deleted Icon Color Init] - Start
+            cellGroup.rows.remove(deletedIconColorRow);
+            // [Alexgram: Deleted Icon Color Init] - End
         }
         if (!NaConfig.INSTANCE.getSaveDeletedMessageForBotUser().Bool()) {
             cellGroup.rows.remove(saveDeletedMessageInBotChatRow);
@@ -247,10 +318,16 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
         if (NaConfig.INSTANCE.getBackAnimationStyle().Int() != ActionBarLayout.BACK_ANIMATION_SPRING) {
             cellGroup.rows.remove(springAnimationCrossfadeRow);
         }
+        // [Alexgram: Home Drawer] - Start
+        if (!NekoConfig.navigationDrawerEnabled.Bool()) {
+            cellGroup.rows.remove(drawerElementsRow);
+        }
+        // [Alexgram: Home Drawer] - End
         checkStoriesRows();
         checkUseDeletedIconRows();
         checkSaveBotMsgRows();
         checkSaveDeletedRows();
+        checkAiApiRows();
         addRowsToMap(cellGroup);
     }
 
@@ -328,13 +405,22 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
                 tooltip.showWithAction(0, UndoView.ACTION_NEED_RESTART, null, null);
             } else if (key.equals(NaConfig.INSTANCE.getRunInBackground().getKey())) {
                 updateRunInBackground((Boolean) newValue);
+            // [Alexgram: Force Max FPS] - Start
             } else if (key.equals(NaConfig.INSTANCE.getForceMaxRefreshRate().getKey())) {
                 tooltip.showWithAction(0, UndoView.ACTION_NEED_RESTART, null, null);
                 if (getParentActivity() != null) {
                     AndroidUtilities.setPreferredMaxRefreshRate(getParentActivity().getWindow());
                 }
+            // [Alexgram: Force Max FPS] - End
             } else if (key.equals(NaConfig.INSTANCE.getV8dAudio().getKey())) {
                 tooltip.showWithAction(0, UndoView.ACTION_NEED_RESTART, null, null);
+            // [Alexgram: Home Drawer] - Start
+            } else if (key.equals(NekoConfig.navigationDrawerEnabled.getKey())) {
+                checkDrawerElementsRow();
+                tooltip.showWithAction(0, UndoView.ACTION_NEED_RESTART, null, null);
+            // [Alexgram: Home Drawer] - End
+            } else if (key.equals(NaConfig.INSTANCE.getUsePollinationsAi().getKey())) {
+                checkAiApiRows();
             }
         };
 
@@ -353,6 +439,18 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
             return;
         }
         AbstractConfigCell a = cellGroup.rows.get(position);
+        // [Alexgram: Translucent Click] - Start
+        if (a == translucentDeletedMessagesRow) {
+            showTranslucentOptions();
+            return;
+        }
+        // [Alexgram: Translucent Click] - End
+        // [Alexgram: Deleted Icon Color Click] - Start
+        if (a == deletedIconColorRow) {
+            showDeletedColorOptions(view);
+            return;
+        }
+        // [Alexgram: Deleted Icon Color Click] - End
         if (a instanceof ConfigCellTextCheck) {
             if (position == cellGroup.rows.indexOf(musicGraphRow)) {
                 if (!NaConfig.INSTANCE.getMusicGraph().Bool()) {
@@ -525,7 +623,35 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
             CellGroup cellGroup = getCellGroup();
             if (cellGroup == null) return;
             AbstractConfigCell a = cellGroup.rows.get(position);
-            if (a instanceof ConfigCellTextCheckIcon) {
+            // [Alexgram: Translucent Deleted Messages Bind] - Start
+            if (a == translucentDeletedMessagesRow) {
+                if (holder.itemView instanceof TextSettingsCell textCell) {
+                    boolean enabled = NaConfig.INSTANCE.getTranslucentDeletedMessages().Bool();
+                    if (enabled) {
+                        int alpha = NaConfig.INSTANCE.getTranslucentDeletedMessagesAlpha().Int();
+                        textCell.setTextAndValue("Translucent Deleted Messages", alpha + "% Opacity", false, cellGroup.needSetDivider(a), true);
+                    } else {
+                        textCell.setTextAndValue("Translucent Deleted Messages", "Off", false, cellGroup.needSetDivider(a), true);
+                    }
+                }
+            }
+            // [Alexgram: Translucent Deleted Messages Bind] - End
+            // [Alexgram: Deleted Icon Color Bind] - Start
+            else if (a == deletedIconColorRow) {
+                if (holder.itemView instanceof TextSettingsCell textCell) {
+                    int currentColor = NaConfig.INSTANCE.getDeletedIconColor().Int();
+                    if (currentColor == 0) {
+                        textCell.setTextAndValue("Deleted Icon Color", getString(R.string.Default), false, cellGroup.needSetDivider(a), true);
+                        textCell.setTextValueColor(Theme.getColor(Theme.key_windowBackgroundWhiteValueText));
+                    } else {
+                        String hex = String.format("#%08X", currentColor);
+                        textCell.setTextAndValue("Deleted Icon Color", "⬤ " + hex, false, cellGroup.needSetDivider(a), true);
+                        textCell.setTextValueColor(currentColor);
+                    }
+                }
+            }
+            // [Alexgram: Deleted Icon Color Bind] - End
+            else if (a instanceof ConfigCellTextCheckIcon) {
                 if (holder.itemView instanceof TextCell textCell) {
                     if (position == cellGroup.rows.indexOf(clearMessageDatabaseRow)) {
                         textCell.setColors(Theme.key_text_RedRegular, Theme.key_text_RedRegular);
@@ -533,8 +659,28 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
                 }
             }
         }
+
+        // [Alexgram: Deleted Icon Color Adapter Bind] - Start
+        @Override
+        public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+            super.onBindViewHolder(holder, position);
+            CellGroup cellGroup = getCellGroup();
+            if (cellGroup != null && position >= 0 && position < cellGroup.rows.size()) {
+                AbstractConfigCell a = cellGroup.rows.get(position);
+                if (a == deletedIconColorRow) {
+                    if (holder.itemView instanceof TextSettingsCell textCell) {
+                        int currentColor = NaConfig.INSTANCE.getDeletedIconColor().Int();
+                        if (currentColor != 0) {
+                            textCell.setTextValueColor(currentColor);
+                        }
+                    }
+                }
+            }
+        }
+        // [Alexgram: Deleted Icon Color Adapter Bind] - End
     }
 
+    // [Alexgram: AI Reply] - Start
     private void testAiApi(String url, String key) {
         if (TextUtils.isEmpty(url) || TextUtils.isEmpty(key)) {
             BulletinFactory.of(this).createSimpleBulletin(R.raw.error, "URL and API Key cannot be empty").show();
@@ -725,15 +871,356 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
             clipboard.setPrimaryClip(clip);
             BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Copied to clipboard").show();
         });
-        
+
         AlertDialog dialog = builder.create();
         showDialog(dialog);
-        
+
         // Haptic Feedback
         try {
             root.performHapticFeedback(success ? android.view.HapticFeedbackConstants.VIRTUAL_KEY : android.view.HapticFeedbackConstants.LONG_PRESS);
         } catch (Exception ignore) {}
     }
+
+    private String maskKey(String key) {
+        if (TextUtils.isEmpty(key)) return "";
+        if (key.length() > 8) {
+            return key.substring(0, 4) + "••••••••" + key.substring(key.length() - 4);
+        } else {
+            return "••••••••";
+        }
+    }
+
+    private void checkAiApiRows() {
+        boolean usePollinations = NaConfig.INSTANCE.getUsePollinationsAi().Bool();
+        if (listAdapter == null) {
+            if (usePollinations) {
+                cellGroup.rows.remove(aiApiKeyRow);
+                cellGroup.rows.remove(aiApiKey2Row);
+            }
+            return;
+        }
+        if (!usePollinations) {
+            final int index = cellGroup.rows.indexOf(usePollinationsAiRow);
+            int insertIndex = index + 1;
+            boolean inserted = false;
+            if (!cellGroup.rows.contains(aiApiKeyRow)) {
+                cellGroup.rows.add(insertIndex, aiApiKeyRow);
+                listAdapter.notifyItemInserted(insertIndex);
+                insertIndex++;
+                inserted = true;
+            }
+            if (!cellGroup.rows.contains(aiApiKey2Row)) {
+                cellGroup.rows.add(insertIndex, aiApiKey2Row);
+                listAdapter.notifyItemInserted(insertIndex);
+                inserted = true;
+            }
+            if (inserted) {
+                addRowsToMap(cellGroup);
+            }
+        } else {
+            boolean removed = false;
+            final int index1 = cellGroup.rows.indexOf(aiApiKeyRow);
+            if (index1 != -1) {
+                cellGroup.rows.remove(aiApiKeyRow);
+                listAdapter.notifyItemRemoved(index1);
+                removed = true;
+            }
+            final int index2 = cellGroup.rows.indexOf(aiApiKey2Row);
+            if (index2 != -1) {
+                cellGroup.rows.remove(aiApiKey2Row);
+                listAdapter.notifyItemRemoved(index2);
+                removed = true;
+            }
+            if (removed) {
+                addRowsToMap(cellGroup);
+            }
+        }
+    }
+
+    private void showAiSettingsBottomSheet(final boolean isFailover) {
+        if (getParentActivity() == null) {
+            return;
+        }
+
+        final ConfigItem modelUrlConfig = isFailover ? NaConfig.INSTANCE.getAiModelUrl2() : NaConfig.INSTANCE.getAiModelUrl();
+        final ConfigItem apiKeyConfig = isFailover ? NaConfig.INSTANCE.getAiApiKey2() : NaConfig.INSTANCE.getAiApiKey();
+        final String defaultUrl = isFailover ? "https://api.openai.com/v1/chat/completions" : "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash";
+        final String defaultHint = isFailover ? "sk-..." : "Api Key";
+        final String titleText = isFailover ? "API Key (Failover)" : "AI API Key Settings";
+
+        BottomSheet.Builder builder = new BottomSheet.Builder(getParentActivity(), true);
+        builder.setApplyTopPadding(true);
+        builder.setApplyBottomPadding(true);
+
+        LinearLayout contentLayout = new LinearLayout(getParentActivity());
+        contentLayout.setOrientation(LinearLayout.VERTICAL);
+        contentLayout.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(16), AndroidUtilities.dp(24), AndroidUtilities.dp(20));
+
+        // Header: Title and description
+        TextView titleView = new TextView(getParentActivity());
+        titleView.setText(titleText);
+        titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 20);
+        titleView.setTypeface(AndroidUtilities.bold());
+        titleView.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
+        titleView.setGravity(Gravity.LEFT);
+        contentLayout.addView(titleView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 8));
+
+        TextView descView = new TextView(getParentActivity());
+        descView.setText(isFailover ? "Configure the secondary backup AI model URL and API Key. It will be used if the primary key fails." : "Configure your custom AI API Key and model URL. Leave URL empty to use default.");
+        descView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
+        descView.setTextColor(Theme.getColor(Theme.key_dialogTextGray));
+        contentLayout.addView(descView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 20));
+
+        // Input 1: API Key
+        TextView apiKeyLabel = new TextView(getParentActivity());
+        apiKeyLabel.setText("API KEY");
+        apiKeyLabel.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11);
+        apiKeyLabel.setTypeface(AndroidUtilities.bold());
+        apiKeyLabel.setTextColor(Theme.getColor(Theme.key_dialogTextBlue2));
+        contentLayout.addView(apiKeyLabel, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 6));
+
+        FrameLayout apiKeyContainer = new FrameLayout(getParentActivity());
+        android.graphics.drawable.GradientDrawable inputBg = new android.graphics.drawable.GradientDrawable();
+        inputBg.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
+        inputBg.setCornerRadius(AndroidUtilities.dp(10));
+        inputBg.setColor(isDark ? 0x15FFFFFF : 0x0F000000);
+        inputBg.setStroke(AndroidUtilities.dp(1), isDark ? 0x20FFFFFF : 0x1A000000);
+        apiKeyContainer.setBackground(inputBg);
+
+        EditTextBoldCursor apiKeyEdit = new EditTextBoldCursor(getParentActivity());
+        apiKeyEdit.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
+        apiKeyEdit.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
+        apiKeyEdit.setHintTextColor(Theme.getColor(Theme.key_dialogTextGray));
+        apiKeyEdit.setHandlesColor(Theme.getColor(Theme.key_chat_TextSelectionCursor));
+        apiKeyEdit.setFocusable(true);
+        apiKeyEdit.setBackground(null);
+        apiKeyEdit.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(10), AndroidUtilities.dp(12), AndroidUtilities.dp(10));
+        apiKeyEdit.setText(apiKeyConfig.String());
+        apiKeyEdit.setHint(defaultHint);
+        apiKeyContainer.addView(apiKeyEdit, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+        contentLayout.addView(apiKeyContainer, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 16));
+
+        // Input 2: Model URL
+        TextView urlLabel = new TextView(getParentActivity());
+        urlLabel.setText("AI MODEL URL");
+        urlLabel.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11);
+        urlLabel.setTypeface(AndroidUtilities.bold());
+        urlLabel.setTextColor(Theme.getColor(Theme.key_dialogTextBlue2));
+        contentLayout.addView(urlLabel, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 6));
+
+        FrameLayout urlContainer = new FrameLayout(getParentActivity());
+        android.graphics.drawable.GradientDrawable inputBg2 = new android.graphics.drawable.GradientDrawable();
+        inputBg2.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
+        inputBg2.setCornerRadius(AndroidUtilities.dp(10));
+        inputBg2.setColor(isDark ? 0x15FFFFFF : 0x0F000000);
+        inputBg2.setStroke(AndroidUtilities.dp(1), isDark ? 0x20FFFFFF : 0x1A000000);
+        urlContainer.setBackground(inputBg2);
+
+        EditTextBoldCursor urlEdit = new EditTextBoldCursor(getParentActivity());
+        urlEdit.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
+        urlEdit.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
+        urlEdit.setHintTextColor(Theme.getColor(Theme.key_dialogTextGray));
+        urlEdit.setHandlesColor(Theme.getColor(Theme.key_chat_TextSelectionCursor));
+        urlEdit.setFocusable(true);
+        urlEdit.setBackground(null);
+        urlEdit.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(10), AndroidUtilities.dp(12), AndroidUtilities.dp(10));
+        urlEdit.setText(modelUrlConfig.String());
+        urlEdit.setHint(defaultUrl);
+        urlContainer.addView(urlEdit, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+        contentLayout.addView(urlContainer, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 20));
+
+        // Testing indicator / output area
+        LinearLayout testOutputContainer = new LinearLayout(getParentActivity());
+        testOutputContainer.setOrientation(LinearLayout.VERTICAL);
+        testOutputContainer.setVisibility(View.GONE);
+        testOutputContainer.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(12), AndroidUtilities.dp(12), AndroidUtilities.dp(12));
+        android.graphics.drawable.GradientDrawable testBg = new android.graphics.drawable.GradientDrawable();
+        testBg.setCornerRadius(AndroidUtilities.dp(8));
+        testBg.setColor(isDark ? 0x10FFFFFF : 0x08000000);
+        testOutputContainer.setBackground(testBg);
+        
+        TextView testStatusText = new TextView(getParentActivity());
+        testStatusText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
+        testStatusText.setTypeface(AndroidUtilities.bold());
+        testOutputContainer.addView(testStatusText, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 4));
+
+        TextView testDetailsText = new TextView(getParentActivity());
+        testDetailsText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
+        testDetailsText.setTextColor(Theme.getColor(Theme.key_dialogTextGray));
+        testOutputContainer.addView(testDetailsText, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+
+        contentLayout.addView(testOutputContainer, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 20));
+
+        // Buttons Layout
+        LinearLayout buttonsLayout = new LinearLayout(getParentActivity());
+        buttonsLayout.setOrientation(LinearLayout.HORIZONTAL);
+        buttonsLayout.setGravity(Gravity.RIGHT);
+
+        // Test button
+        TextView testButton = new TextView(getParentActivity());
+        testButton.setText("TEST");
+        testButton.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
+        testButton.setTypeface(AndroidUtilities.bold());
+        testButton.setTextColor(Theme.getColor(Theme.key_dialogTextBlue2));
+        testButton.setGravity(Gravity.CENTER);
+        testButton.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(10), AndroidUtilities.dp(16), AndroidUtilities.dp(10));
+        testButton.setBackground(Theme.getSelectorDrawable(true));
+        buttonsLayout.addView(testButton, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
+
+        // Spacer
+        View spacer = new View(getParentActivity());
+        buttonsLayout.addView(spacer, LayoutHelper.createLinear(0, 0, 1f));
+
+        // Cancel button
+        TextView cancelButton = new TextView(getParentActivity());
+        cancelButton.setText("CANCEL");
+        cancelButton.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
+        cancelButton.setTypeface(AndroidUtilities.bold());
+        cancelButton.setTextColor(Theme.getColor(Theme.key_dialogTextBlue2));
+        cancelButton.setGravity(Gravity.CENTER);
+        cancelButton.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(10), AndroidUtilities.dp(16), AndroidUtilities.dp(10));
+        cancelButton.setBackground(Theme.getSelectorDrawable(true));
+        buttonsLayout.addView(cancelButton, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
+
+        // Save button
+        TextView saveButton = new TextView(getParentActivity());
+        saveButton.setText("SAVE");
+        saveButton.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
+        saveButton.setTypeface(AndroidUtilities.bold());
+        saveButton.setTextColor(Theme.getColor(Theme.key_dialogTextBlue2));
+        saveButton.setGravity(Gravity.CENTER);
+        saveButton.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(10), AndroidUtilities.dp(16), AndroidUtilities.dp(10));
+        saveButton.setBackground(Theme.getSelectorDrawable(true));
+        buttonsLayout.addView(saveButton, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
+
+        contentLayout.addView(buttonsLayout, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+
+        builder.setCustomView(contentLayout);
+        BottomSheet bottomSheet = builder.create();
+
+        cancelButton.setOnClickListener(v -> bottomSheet.dismiss());
+
+        saveButton.setOnClickListener(v -> {
+            String newKey = apiKeyEdit.getText().toString().trim();
+            String newUrl = urlEdit.getText().toString().trim();
+            apiKeyConfig.setConfigString(newKey);
+            modelUrlConfig.setConfigString(newUrl);
+
+            if (listAdapter != null) {
+                listAdapter.notifyDataSetChanged();
+            }
+            if (getParentLayout() != null) {
+                getParentLayout().rebuildAllFragmentViews(false, false);
+            }
+            bottomSheet.dismiss();
+            BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Settings Saved").show();
+        });
+
+        testButton.setOnClickListener(v -> {
+            String testKey = apiKeyEdit.getText().toString().trim();
+            String testUrl = urlEdit.getText().toString().trim();
+            if (TextUtils.isEmpty(testUrl)) {
+                testUrl = defaultUrl;
+            }
+
+            testStatusText.setText("Testing Connection...");
+            testStatusText.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
+            testDetailsText.setText("Please wait while we reach the server...");
+            testOutputContainer.setVisibility(View.VISIBLE);
+
+            final String finalTestUrl = testUrl;
+            final boolean isGeminiNative = (finalTestUrl.contains("generativelanguage.googleapis.com") || finalTestUrl.contains("googleapis.com")) && !finalTestUrl.contains("openai");
+            
+            String reqUrl = finalTestUrl;
+            if (isGeminiNative && !reqUrl.contains(":generateContent")) {
+                if (reqUrl.endsWith("/")) {
+                    reqUrl = reqUrl.substring(0, reqUrl.length() - 1) + ":generateContent";
+                } else {
+                    reqUrl = reqUrl + ":generateContent";
+                }
+            }
+            final String requestUrl = reqUrl;
+
+            Utilities.globalQueue.postRunnable(() -> {
+                try {
+                    OkHttpClient client = new OkHttpClient.Builder()
+                            .connectTimeout(10, TimeUnit.SECONDS)
+                            .readTimeout(10, TimeUnit.SECONDS)
+                            .build();
+
+                    JSONObject jsonBody = new JSONObject();
+                    if (isGeminiNative) {
+                        JSONArray contents = new JSONArray();
+                        JSONObject contentObj = new JSONObject();
+                        JSONArray parts = new JSONArray();
+                        JSONObject textPart = new JSONObject();
+                        textPart.put("text", "Say ping");
+                        parts.put(textPart);
+                        contentObj.put("parts", parts);
+                        contents.put(contentObj);
+                        jsonBody.put("contents", contents);
+                    } else {
+                        jsonBody.put("model", "gpt-3.5-turbo");
+                        JSONArray messages = new JSONArray();
+                        JSONObject userMsg = new JSONObject();
+                        userMsg.put("role", "user");
+                        userMsg.put("content", "Say ping");
+                        messages.put(userMsg);
+                        jsonBody.put("messages", messages);
+                        jsonBody.put("max_tokens", 5);
+                    }
+
+                    Request.Builder requestBuilder = new Request.Builder()
+                            .url(requestUrl)
+                            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), jsonBody.toString()));
+
+                    if (isGeminiNative) {
+                        requestBuilder.addHeader("x-goog-api-key", testKey);
+                    } else {
+                        requestBuilder.addHeader("Authorization", "Bearer " + testKey);
+                    }
+
+                    client.newCall(requestBuilder.build()).enqueue(new Callback() {
+                        @Override
+                        public void onFailure(Call call, java.io.IOException e) {
+                            AndroidUtilities.runOnUIThread(() -> {
+                                testStatusText.setText("Connection Failed");
+                                testStatusText.setTextColor(Theme.getColor(Theme.key_text_RedRegular));
+                                testDetailsText.setText("Error: " + e.getMessage());
+                            });
+                        }
+
+                        @Override
+                        public void onResponse(Call call, Response response) throws java.io.IOException {
+                            String body = response.body().string();
+                            int code = response.code();
+                            AndroidUtilities.runOnUIThread(() -> {
+                                if (response.isSuccessful()) {
+                                    testStatusText.setText("Connection Successful!");
+                                    testStatusText.setTextColor(isDark ? 0xFF4CAF50 : 0xFF2E7D32);
+                                    testDetailsText.setText("HTTP Code: " + code + "\nAPI Type: " + (isGeminiNative ? "Gemini Native" : "OpenAI Compatible"));
+                                } else {
+                                    testStatusText.setText("Connection Failed (HTTP " + code + ")");
+                                    testStatusText.setTextColor(Theme.getColor(Theme.key_text_RedRegular));
+                                    testDetailsText.setText("Response: " + body);
+                                }
+                            });
+                        }
+                    });
+                } catch (Exception e) {
+                    AndroidUtilities.runOnUIThread(() -> {
+                        testStatusText.setText("Local Error");
+                        testStatusText.setTextColor(Theme.getColor(Theme.key_text_RedRegular));
+                        testDetailsText.setText("Error: " + e.getMessage());
+                    });
+                }
+            });
+        });
+
+        showDialog(bottomSheet);
+    }
+    // [Alexgram: AI Reply] - End
+
 
     private void showBottomSheet() {
         if (getParentActivity() == null) {
@@ -815,6 +1302,32 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
         }
     }
 
+    // [Alexgram: Home Drawer] - Start
+    private void checkDrawerElementsRow() {
+        boolean enabled = NekoConfig.navigationDrawerEnabled.Bool();
+        if (listAdapter == null) {
+            if (!enabled) {
+                cellGroup.rows.remove(drawerElementsRow);
+            }
+            return;
+        }
+        if (enabled) {
+            final int index = cellGroup.rows.indexOf(navigationDrawerRow);
+            if (!cellGroup.rows.contains(drawerElementsRow)) {
+                cellGroup.rows.add(index + 1, drawerElementsRow);
+                listAdapter.notifyItemInserted(index + 1);
+            }
+        } else {
+            final int index = cellGroup.rows.indexOf(drawerElementsRow);
+            if (index != -1) {
+                cellGroup.rows.remove(drawerElementsRow);
+                listAdapter.notifyItemRemoved(index);
+            }
+        }
+        addRowsToMap(cellGroup);
+    }
+    // [Alexgram: Home Drawer] - End
+
     private void checkStoriesRows() {
         boolean disabled = NaConfig.INSTANCE.getDisableStories().Bool();
         if (listAdapter == null) {
@@ -846,7 +1359,10 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
                 saveDeletedMessageInBotChatRow,
                 translucentDeletedMessagesRow,
                 useDeletedIconRow,
-                customDeletedMarkRow
+                customDeletedMarkRow,
+                // [Alexgram: Deleted Icon Color Save Managed] - Start
+                deletedIconColorRow
+                // [Alexgram: Deleted Icon Color Save Managed] - End
         );
         if (listAdapter == null) {
             if (!isSaveEnabled) {
@@ -881,6 +1397,10 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
             rowsToAdd.add(useDeletedIconRow);
             if (!NaConfig.INSTANCE.getUseDeletedIcon().Bool()) {
                 rowsToAdd.add(customDeletedMarkRow);
+            } else {
+                // [Alexgram: Deleted Icon Color Save Add] - Start
+                rowsToAdd.add(deletedIconColorRow);
+                // [Alexgram: Deleted Icon Color Save Add] - End
             }
             cellGroup.rows.addAll(anchorIndex + 1, rowsToAdd);
             listAdapter.notifyItemRangeInserted(anchorIndex + 1, rowsToAdd.size());
@@ -912,15 +1432,23 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
         addRowsToMap(cellGroup);
     }
 
+    // [Alexgram: Deleted Icon Color Visibility] - Start
     private void checkUseDeletedIconRows() {
         boolean enabled = NaConfig.INSTANCE.getUseDeletedIcon().Bool();
         if (listAdapter == null) {
             if (enabled) {
                 cellGroup.rows.remove(customDeletedMarkRow);
+            } else {
+                cellGroup.rows.remove(deletedIconColorRow);
             }
             return;
         }
         if (!enabled) {
+            final int colorIndex = cellGroup.rows.indexOf(deletedIconColorRow);
+            if (colorIndex != -1) {
+                cellGroup.rows.remove(deletedIconColorRow);
+                listAdapter.notifyItemRemoved(colorIndex);
+            }
             final int index = cellGroup.rows.indexOf(useDeletedIconRow);
             if (!cellGroup.rows.contains(customDeletedMarkRow)) {
                 cellGroup.rows.add(index + 1, customDeletedMarkRow);
@@ -932,9 +1460,15 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
                 cellGroup.rows.remove(customDeletedMarkRow);
                 listAdapter.notifyItemRemoved(index);
             }
+            final int useIconIndex = cellGroup.rows.indexOf(useDeletedIconRow);
+            if (!cellGroup.rows.contains(deletedIconColorRow)) {
+                cellGroup.rows.add(useIconIndex + 1, deletedIconColorRow);
+                listAdapter.notifyItemInserted(useIconIndex + 1);
+            }
         }
         addRowsToMap(cellGroup);
     }
+    // [Alexgram: Deleted Icon Color Visibility] - End
 
     private void updateRunInBackground(boolean enabled) {
         MessagesController.getGlobalNotificationsSettings().edit()
@@ -1002,5 +1536,267 @@ public class NekoExperimentalSettingsActivity extends BaseNekoXSettingsActivity 
             }
         }
     }
+
+    // [Alexgram: Deleted Icon Color Helper] - Start
+    private void showDeletedColorOptions(View view) {
+        PopupBuilder builder = new PopupBuilder(view);
+        builder.setItems(new String[]{
+                getString(R.string.Default),
+                "Choose Custom Color..."
+        }, (i, __) -> {
+            if (i == 0) {
+                NaConfig.INSTANCE.getDeletedIconColor().setConfigInt(0);
+                if (listAdapter != null) {
+                    listAdapter.notifyItemChanged(cellGroup.rows.indexOf(deletedIconColorRow));
+                }
+                TimeStringHelper.deletedSpan = null;
+                org.telegram.messenger.NotificationCenter.getGlobalInstance().postNotificationName(org.telegram.messenger.NotificationCenter.reloadInterface);
+            } else if (i == 1) {
+                showDeletedColorPicker();
+            }
+            return kotlin.Unit.INSTANCE;
+        });
+        builder.show();
+    }
+
+    private void showDeletedColorPicker() {
+        if (getParentActivity() == null) return;
+
+        org.telegram.ui.Components.Paint.ColorPickerBottomSheet colorPicker =
+                new org.telegram.ui.Components.Paint.ColorPickerBottomSheet(getParentActivity(), getResourceProvider());
+
+        colorPicker.setPipetteDelegate(new org.telegram.ui.Components.Paint.ColorPickerBottomSheet.PipetteDelegate() {
+            @Override
+            public boolean isPipetteAvailable() { return false; }
+            @Override
+            public boolean isPipetteVisible() { return false; }
+            @Override
+            public android.view.ViewGroup getContainerView() { return null; }
+            @Override
+            public android.view.View getSnapshotDrawingView() { return null; }
+            @Override
+            public void onDrawImageOverCanvas(android.graphics.Bitmap bitmap, android.graphics.Canvas canvas) {}
+            @Override
+            public void onStartColorPipette() {}
+            @Override
+            public void onStopColorPipette() {}
+            @Override
+            public void onColorSelected(int color) {}
+        });
+
+        colorPicker.setColorListener(color -> {
+            NaConfig.INSTANCE.getDeletedIconColor().setConfigInt(color);
+            if (listAdapter != null) {
+                listAdapter.notifyItemChanged(cellGroup.rows.indexOf(deletedIconColorRow));
+            }
+            TimeStringHelper.deletedSpan = null;
+            org.telegram.messenger.NotificationCenter.getGlobalInstance().postNotificationName(org.telegram.messenger.NotificationCenter.reloadInterface);
+        });
+
+        int currentColor = NaConfig.INSTANCE.getDeletedIconColor().Int();
+        colorPicker.setColor(currentColor != 0 ? currentColor : 0xFFFF0000);
+        showDialog(colorPicker);
+    }
+    // [Alexgram: Deleted Icon Color Helper] - End
+
+    // [Alexgram: Translucent Helper] - Start
+    private void showTranslucentOptions() {
+        if (getParentActivity() == null) return;
+
+        LinearLayout contentLayout = new LinearLayout(getParentActivity());
+        contentLayout.setOrientation(LinearLayout.VERTICAL);
+        contentLayout.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(16), AndroidUtilities.dp(24), AndroidUtilities.dp(16));
+
+        // Switch to enable/disable Translucent Deleted Messages (Custom layout to prevent truncation)
+        LinearLayout checkboxLayout = new LinearLayout(getParentActivity());
+        checkboxLayout.setOrientation(LinearLayout.HORIZONTAL);
+        checkboxLayout.setGravity(Gravity.CENTER_VERTICAL);
+        checkboxLayout.setPadding(0, AndroidUtilities.dp(8), 0, AndroidUtilities.dp(8));
+        checkboxLayout.setBackground(Theme.getSelectorDrawable(false));
+
+        TextView checkboxText = new TextView(getParentActivity());
+        checkboxText.setText("Enable Translucent Deleted Messages");
+        checkboxText.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
+        checkboxText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
+        checkboxLayout.addView(checkboxText, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1.0f, Gravity.LEFT | Gravity.CENTER_VERTICAL, 0, 0, 8, 0));
+
+        org.telegram.ui.Components.CheckBoxSquare checkBoxSquare = new org.telegram.ui.Components.CheckBoxSquare(getParentActivity(), true);
+        checkBoxSquare.setChecked(NaConfig.INSTANCE.getTranslucentDeletedMessages().Bool(), false);
+        checkboxLayout.addView(checkBoxSquare, LayoutHelper.createLinear(18, 18, Gravity.RIGHT | Gravity.CENTER_VERTICAL, 0, 0, 4, 0));
+        
+        contentLayout.addView(checkboxLayout, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+
+        // Translucency percentage label
+        TextView valueLabel = new TextView(getParentActivity());
+        valueLabel.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
+        valueLabel.setTextColor(Theme.getColor(Theme.key_dialogTextGray2));
+        contentLayout.addView(valueLabel, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 12, 0, 4));
+
+        // SeekBar (Slider)
+        SeekBar seekBar = new SeekBar(getParentActivity());
+        seekBar.setMax(100);
+        int currentAlpha = NaConfig.INSTANCE.getTranslucentDeletedMessagesAlpha().Int();
+        seekBar.setProgress(currentAlpha);
+        contentLayout.addView(seekBar, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 4, 0, 16));
+
+        // Live Preview Title
+        TextView previewTitle = new TextView(getParentActivity());
+        previewTitle.setText("Live Preview");
+        previewTitle.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
+        previewTitle.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+        previewTitle.setTextColor(Theme.getColor(Theme.key_dialogTextBlue2));
+        contentLayout.addView(previewTitle, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 8, 0, 8));
+
+        // Live Preview Container (Chat Background)
+        FrameLayout previewContainer = new FrameLayout(getParentActivity());
+        previewContainer.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(16), AndroidUtilities.dp(12), AndroidUtilities.dp(16));
+        
+        android.graphics.drawable.Drawable wallpaperDrawable = Theme.getCachedWallpaper();
+        if (wallpaperDrawable != null) {
+            previewContainer.setBackground(wallpaperDrawable);
+        } else {
+            int chatWallpaperColor = Theme.getColor(Theme.key_chat_wallpaper);
+            if (chatWallpaperColor == 0) {
+                chatWallpaperColor = 0xFFECE5DD;
+            }
+            android.graphics.drawable.GradientDrawable containerBg = new android.graphics.drawable.GradientDrawable();
+            containerBg.setColor(chatWallpaperColor);
+            previewContainer.setBackground(containerBg);
+        }
+
+        previewContainer.setOutlineProvider(new android.view.ViewOutlineProvider() {
+            @Override
+            public void getOutline(android.view.View view, android.graphics.Outline outline) {
+                outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), AndroidUtilities.dp(12));
+            }
+        });
+        previewContainer.setClipToOutline(true);
+        
+        contentLayout.addView(previewContainer, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 8));
+
+        // Outgoing Deleted Message bubble
+        LinearLayout messageBubble = new LinearLayout(getParentActivity());
+        messageBubble.setOrientation(LinearLayout.VERTICAL);
+        messageBubble.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(8), AndroidUtilities.dp(12), AndroidUtilities.dp(8));
+        
+        int outBubbleColor = Theme.getColor(Theme.key_chat_outBubble);
+        if (outBubbleColor == 0) {
+            outBubbleColor = 0xFFE2F9C3;
+        }
+        android.graphics.drawable.GradientDrawable bubbleBg = new android.graphics.drawable.GradientDrawable();
+        bubbleBg.setColor(outBubbleColor);
+        bubbleBg.setCornerRadii(new float[] {
+            AndroidUtilities.dp(16), AndroidUtilities.dp(16),
+            AndroidUtilities.dp(16), AndroidUtilities.dp(16),
+            AndroidUtilities.dp(2), AndroidUtilities.dp(2),
+            AndroidUtilities.dp(16), AndroidUtilities.dp(16)
+        });
+        messageBubble.setBackground(bubbleBg);
+
+        // Preview text inside message bubble
+        TextView messageText = new TextView(getParentActivity());
+        messageText.setText("This is a deleted message.\nDrag the slider to adjust translucent level!");
+        int outTextColor = Theme.getColor(Theme.key_chat_messageTextOut);
+        if (outTextColor == 0) {
+            outTextColor = 0xFF000000;
+        }
+        messageText.setTextColor(outTextColor);
+        messageText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
+        messageBubble.addView(messageText, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
+
+        // Time and Deleted Icon
+        LinearLayout infoLayout = new LinearLayout(getParentActivity());
+        infoLayout.setOrientation(LinearLayout.HORIZONTAL);
+        infoLayout.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
+        
+        TextView timeView = new TextView(getParentActivity());
+        timeView.setText("12:00 PM ");
+        timeView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11);
+        int outTimeColor = Theme.getColor(Theme.key_chat_outTimeText);
+        if (outTimeColor == 0) {
+            outTimeColor = 0xFF70B15C;
+        }
+        timeView.setTextColor(outTimeColor);
+        infoLayout.addView(timeView);
+
+        boolean useDeletedIcon = NaConfig.INSTANCE.getUseDeletedIcon().Bool();
+        int deletedColor = NaConfig.INSTANCE.getDeletedIconColor().Int();
+        if (deletedColor == 0) {
+            deletedColor = outTimeColor;
+        }
+
+        if (useDeletedIcon) {
+            android.widget.ImageView deletedIconView = new android.widget.ImageView(getParentActivity());
+            deletedIconView.setImageResource(R.drawable.msg_delete_solar);
+            deletedIconView.setColorFilter(deletedColor, android.graphics.PorterDuff.Mode.SRC_IN);
+            infoLayout.addView(deletedIconView, LayoutHelper.createLinear(14, 14, Gravity.CENTER_VERTICAL, 0, 0, 0, 0));
+        } else {
+            TextView deletedTextView = new TextView(getParentActivity());
+            String customMark = NaConfig.INSTANCE.getCustomDeletedMark().String();
+            deletedTextView.setText(!TextUtils.isEmpty(customMark) ? customMark : "Deleted");
+            deletedTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11);
+            deletedTextView.setTextColor(outTimeColor); // Watermark text inherits standard theme time text color, ignoring custom icon color
+            deletedTextView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+            infoLayout.addView(deletedTextView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_VERTICAL, 0, 0, 0, 0));
+        }
+
+        messageBubble.addView(infoLayout, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.RIGHT, 0, 4, 0, 0));
+
+        FrameLayout.LayoutParams bubbleParams = new FrameLayout.LayoutParams(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT);
+        bubbleParams.gravity = Gravity.RIGHT | Gravity.CENTER_VERTICAL;
+        bubbleParams.rightMargin = AndroidUtilities.dp(8);
+        bubbleParams.leftMargin = AndroidUtilities.dp(48);
+        previewContainer.addView(messageBubble, bubbleParams);
+
+        // Update preview dynamically
+        Runnable updatePreview = () -> {
+            boolean enabled = checkBoxSquare.isChecked();
+            int alphaPercent = seekBar.getProgress();
+            
+            seekBar.setEnabled(enabled);
+            valueLabel.setText("Opacity: " + alphaPercent + "%");
+            
+            if (enabled) {
+                messageBubble.setAlpha(alphaPercent / 100.0f);
+            } else {
+                messageBubble.setAlpha(1.0f);
+            }
+        };
+
+        checkboxLayout.setOnClickListener(v -> {
+            checkBoxSquare.setChecked(!checkBoxSquare.isChecked(), true);
+            updatePreview.run();
+        });
+
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                updatePreview.run();
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+
+        updatePreview.run();
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+        builder.setTitle("Translucent Deleted Messages");
+        builder.setView(contentLayout);
+        builder.setPositiveButton(getString(R.string.Save), (dialog, which) -> {
+            NaConfig.INSTANCE.getTranslucentDeletedMessages().setConfigBool(checkBoxSquare.isChecked());
+            NaConfig.INSTANCE.getTranslucentDeletedMessagesAlpha().setConfigInt(seekBar.getProgress());
+            if (listAdapter != null) {
+                listAdapter.notifyItemChanged(cellGroup.rows.indexOf(translucentDeletedMessagesRow));
+            }
+            org.telegram.messenger.NotificationCenter.getGlobalInstance().postNotificationName(org.telegram.messenger.NotificationCenter.reloadInterface);
+        });
+        builder.setNegativeButton(getString(R.string.Cancel), null);
+        showDialog(builder.create());
+    }
+    // [Alexgram: Translucent Helper] - End
 
 }

@@ -708,7 +708,7 @@ public class ConnectionsManager extends BaseController {
 
     public void switchBackend(boolean restart) {
         SharedPreferences preferences = MessagesController.getGlobalMainSettings();
-        preferences.edit().remove("language_showed2").commit();
+        preferences.edit().remove("language_showed3").commit();
         native_switchBackend(currentAccount, restart);
     }
 
@@ -825,6 +825,11 @@ public class ConnectionsManager extends BaseController {
         AndroidUtilities.runOnUIThread(() -> {
             getInstance(currentAccount).connectionState = state;
             AccountInstance.getInstance(currentAccount).getNotificationCenter().postNotificationName(NotificationCenter.didUpdateConnectionState);
+            // [Alexgram: Bot Login] - Start
+            if (state == ConnectionStateConnected && UserConfig.getInstance(currentAccount).isBot()) {
+                Utilities.stageQueue.postRunnable(() -> AccountInstance.getInstance(currentAccount).getMessagesController().getDifference());
+            }
+            // [Alexgram: Bot Login] - End
         });
     }
 

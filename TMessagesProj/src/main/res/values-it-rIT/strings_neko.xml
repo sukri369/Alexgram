@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="NekoSettings">A-Impostazioni</string>
     <string name="IPv6">Preferisci IPv6</string>
@@ -70,7 +70,7 @@
     <string name="CallTo">Chiamare **%1$s**?</string>
     <string name="DisableNumberRounding">Disabilita l\'arrotondamento dei numeri</string>
     <string name="Categories">Categorie</string>
-    <string name="OfficialChannel">Canale Nagram</string>
+    <string name="OfficialChannel">Canale Alexgram</string>
     <string name="About">Informazioni</string>
     <string name="IgnoreBlockedAbout">Non vedrai più i messaggi degli utenti bloccati nei gruppi.</string>
     <string name="SourceCode">Codice Sorgente</string>
@@ -275,4 +275,13 @@
     <string name="StarFallInChatDescription">Mostra l\'animazione delle stelle cadenti nelle chat.</string>
     <string name="NekoX">Impostazioni NekoX</string>
     <string name="ProviderTelegramAPI">API Ufficiale Telegram</string>
+    <!-- [Alexgram: Important Announcement] -->
+    <string name="GetImportantAnnouncementFromAlexgram">Ricevi annunci importanti da Alexgram</string>
+    <!-- [Alexgram: Birthday Wish] - Start -->
+    <string name="BirthdayTitle">Buon compleanno,\n%1$s! 🎉</string>
+    <string name="BirthdayMessage">Oggi è tutta per te! ✨ Un altro anno con l\'energia del protagonista. Ti auguriamo un anno di pura crescita, vittorie infinite e zero vibrazioni negative. Spacca tutto! 🚀🎂</string>
+    <string name="BirthdayMakeWish">Esprimi un desiderio 🌟</string>
+    <string name="BirthdayWishSent">Desiderio inviato alle stelle! 🌌✨</string>
+    <!-- [Alexgram: Birthday Wish] - End -->
 </resources>
+
