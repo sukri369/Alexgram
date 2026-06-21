@@ -49,7 +49,7 @@ public class AdminedChannelCell extends FrameLayout {
 
         avatarDrawable = new AvatarDrawable();
         avatarImageView = new BackupImageView(context);
-        avatarImageView.setRoundRadius(AndroidUtilities.dp(24));
+        avatarImageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(48.0f));
         addView(avatarImageView, LayoutHelper.createFrame(48, 48, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, LocaleController.isRTL ? 0 : 12 + padding, 6, LocaleController.isRTL ? 12 + padding : 0, 6));
 
         if (needCheck) {
@@ -89,6 +89,7 @@ public class AdminedChannelCell extends FrameLayout {
         final String url = MessagesController.getInstance(currentAccount).linkPrefix + "/";
         currentChannel = channel;
         avatarDrawable.setInfo(currentAccount, channel);
+        avatarImageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(48.0f, channel != null && (ChatObject.isForum(channel) || ChatObject.isMonoForum(channel))));
         nameTextView.setText(channel.title);
         SpannableStringBuilder stringBuilder = new SpannableStringBuilder(url + ChatObject.getPublicUsername(channel));
         stringBuilder.setSpan(new URLSpanNoUnderline(""), url.length(), stringBuilder.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
@@ -99,6 +100,7 @@ public class AdminedChannelCell extends FrameLayout {
 
     public void update() {
         avatarDrawable.setInfo(currentAccount, currentChannel);
+        avatarImageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(48.0f, currentChannel != null && (ChatObject.isForum(currentChannel) || ChatObject.isMonoForum(currentChannel))));
         avatarImageView.invalidate();
     }
 

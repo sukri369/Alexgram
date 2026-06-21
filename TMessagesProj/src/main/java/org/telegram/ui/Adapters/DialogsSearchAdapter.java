@@ -73,6 +73,7 @@ import org.telegram.ui.FilteredSearchView;
 
 import tw.nekomimi.nekogram.helpers.HiddenChatsController;
 import tw.nekomimi.nekogram.ui.HiddenChatsActivity;
+import org.telegram.ui.Templates.TemplatesManager;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -301,6 +302,10 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
             dialogId = -((TLRPC.Chat) obj).id;
         } else if (obj instanceof TLRPC.EncryptedChat) {
             dialogId = DialogObject.makeEncryptedDialogId(((TLRPC.EncryptedChat) obj).id);
+        }
+
+        if (dialogId != 0 && dialogId == TemplatesManager.getInstance(currentAccount).getTemplatesChannelId()) {
+            return false;
         }
 
         boolean isHidden = HiddenChatsController.getInstance().isHidden(currentAccount, dialogId);

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="XChannel">Canal de Nagram X</string>
+    <string name="XChannel">Canal de Alexgram</string>
     <string name="EnableSaveDeletedMessages">Guardar Mensajes Borrados</string>
     <string name="DeletedMessage">eliminado</string>
     <string name="EnableSaveEditsHistory">Guardar Historial de Edición</string>
@@ -306,8 +306,8 @@
     <string name="BackAnimationSpring">Primavera</string>
     <string name="BackAnimationPredictive">Predictivo</string>
     <string name="AddToFilter">Añadir al filtro</string>
-    <string name="UnifiedPushNeverReceivedNotifications">Nunca recibiste notificaciones con UnifiedPush desde que se inició Nagram X.</string>
-    <string name="UnifiedPushLastReceivedNotification">La última notificación recibida con UnifiedPush fue hace %1$d segundos.\n\nHas recibido %2$d notificaciones desde que Nagram X se inició.</string>
+    <string name="UnifiedPushNeverReceivedNotifications">Nunca recibiste notificaciones con UnifiedPush desde que se inició Alexgram.</string>
+    <string name="UnifiedPushLastReceivedNotification">La última notificación recibida con UnifiedPush fue hace %1$d segundos.\n\nHas recibido %2$d notificaciones desde que Alexgram se inició.</string>
     <string name="UnifiedPushCurrentEndpoint">El endpoint UnifiedPush actual es: %1$s</string>
     <string name="PlayOnce">Reproducir una vez</string>
     <string name="StorageSettings">Almacenamiento</string>
@@ -451,4 +451,31 @@
     <string name="ChangeSenderNameApply">Aplicar</string>
     <string name="DirectForwardNotAllowed">No se permite el reenvío directo.</string>
     <string name="ForceForwardStatusMediaCopy">Reenviando copia de archivos multimedia</string>
+
+    <!-- New Settings and Features -->
+    <string name="usePollinationsAi">Usar Pollinations.ai</string>
+    <string name="usePollinationsAiAbout">Use Pollinations.ai para respuestas de IA, resúmenes y asistencia de IA gratuitos. No se requiere clave de API.</string>
+    <string name="AiAssistanceSettings">Ajustes de asistencia de IA</string>
+    <string name="aiModelUrl">URL del modelo de IA 1</string>
+    <string name="aiApiKey">Clave de API de IA 1</string>
+    <string name="TestAiApi">Probar conexión de API 1</string>
+    <string name="aiModelUrl2">URL del modelo de IA 2 (Respaldo)</string>
+    <string name="aiApiKey2">Clave de API de IA 2 (Respaldo)</string>
+    <string name="TestAiApi2">Probar conexión de API 2</string>
+    <string name="DefaultScheduleDelay">Retraso predeterminado</string>
+    <string name="CustomReplyWord">Palabra de resposta personalizada</string>
+    <string name="Customization">Personalización</string>
+    <string name="SendLockedCustomEmojiAsSticker">Enviar emoji premium como sticker</string>
+    <string name="SendLockedCustomEmojiAsStickerInfo">Solo admite emojis personalizados WebP/WebM. Se excluyen los emojis solo TGS.</string>
+    <string name="LocalEditorPlus">Editor local+</string>
+    <string name="LocalEditorPlusAbout">Edite el texto y la fecha del mensaje, o elimine mensajes localmente solo en este dispositivo sin enviar solicitudes al servidor.</string>
+    <string name="LocalEditorMenuOption">Más</string>
+    <string name="LocalEditorEditOption">Editar localmente</string>
+    <string name="LocalEditorDeleteOption">Eliminar localmente</string>
+    <string name="LocalEditorRestore">Restaurar</string>
+    <string name="ShowAdminTagInVoiceChat">Mostrar etiqueta de admin en chat de voz</string>
+    <string name="ShowAdminTagInVoiceChatDesc">Muestra insignias de administrador o propietario junto a los nombres de usuario en chats de voz/video.</string>
+    <string name="Ayugram">Ayugram</string>
+    <string name="ProfilePrivacyManager">Gestor de privacidad de perfil</string>
+    <string name="ProfilePrivacyManagerAbout">Permite gestionar los ajustes de privacidad de usuarios individuales directamente desde su menú de perfil.</string>
 </resources>

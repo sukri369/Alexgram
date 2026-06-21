@@ -179,11 +179,18 @@ public class NekoConfig {
     public static ConfigItem forceMusicSpeedControl = addConfig("forceMusicSpeedControl", configTypeBool, false);
     public static ConfigItem enableEditFileName = addConfig("enableEditFileName", configTypeBool, false);
     public static ConfigItem enableChangeNameInGroups = addConfig("enableChangeNameInGroups", configTypeBool, false);
+    public static ConfigItem enableLocalEditorPlus = addConfig("enableLocalEditorPlus", configTypeBool, false);
     // [Alexgram: Quick Edit Icon] - Start
     public static ConfigItem showQuickEditIconInChatList = addConfig("showQuickEditIconInChatList", configTypeBool, false);
     public static ConfigItem quickEditIconOnlyForOwnMessages = addConfig("quickEditIconOnlyForOwnMessages", configTypeBool, true);
     // [Alexgram: Quick Edit Icon] - End
+    // [Alexgram: Admin Tag in Voice Chat] - Start
+    public static ConfigItem showAdminTagInVoiceChat = addConfig("showAdminTagInVoiceChat", configTypeBool, true);
+    // [Alexgram: Admin Tag in Voice Chat] - End
+    public static ConfigItem enableCustomPrivacy = addConfig("enableCustomPrivacy", configTypeBool, true);
+    public static ConfigItem enableSelectRangeInSharedMedia = addConfig("enableSelectRangeInSharedMedia", configTypeBool, true);
     // [Alexgram: Native Features] - End
+
 
     public static ConfigItem usePersianCalendar = addConfig("UsePersianCalendar", configTypeBool, false);
     public static ConfigItem displayPersianCalendarByLatin = addConfig("DisplayPersianCalendarByLatin", configTypeBool, false);
@@ -216,7 +223,7 @@ public class NekoConfig {
 
     public static void init() {
         loadConfig(false);
-        if ("Nagram".equals(customSavePath.String())) {
+        if ("Nagram".equals(customSavePath.String()) || "NagramX".equals(customSavePath.String())) {
             customSavePath.setConfigString("Alexgram");
         }
     }

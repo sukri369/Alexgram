@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.BotWebViewVibrationEffect;
 import org.telegram.messenger.LocaleController;
+import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.tgnet.TLRPC;
@@ -137,7 +138,14 @@ public class ArchiveSettingsActivity extends BaseFragment implements Notificatio
         items.add(new ItemInner(VIEW_TYPE_CHECK, 1, LocaleController.getString("ArchiveSettingUnmutedFoldersCheck")));
         items.add(new ItemInner(VIEW_TYPE_SHADOW, 2, LocaleController.getString("ArchiveSettingUnmutedFoldersInfo")));
 
-        final boolean hasFolders = getMessagesController().getDialogFilters().size() > 1;
+        int realFilterCount = 0;
+        ArrayList<MessagesController.DialogFilter> dialogFilters = getMessagesController().getDialogFilters();
+        for (int i = 0; i < dialogFilters.size(); i++) {
+            if (!tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(dialogFilters.get(i))) {
+                realFilterCount++;
+            }
+        }
+        final boolean hasFolders = realFilterCount > 1;
         if (hasFolders) {
             items.add(new ItemInner(VIEW_TYPE_HEADER, 3, LocaleController.getString("ArchiveSettingUnmutedChats")));
             items.add(new ItemInner(VIEW_TYPE_CHECK, 4, LocaleController.getString("ArchiveSettingUnmutedChatsCheck")));

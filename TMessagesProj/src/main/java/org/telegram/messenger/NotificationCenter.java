@@ -149,6 +149,9 @@ public class NotificationCenter {
     public static final int businessMessagesUpdated = totalEvents++;
     public static final int quickRepliesUpdated = totalEvents++;
     public static final int quickRepliesDeleted = totalEvents++;
+    // [Alexgram: Templates Notifications] - Start
+    public static final int templatesSettingsUpdated = totalEvents++;
+    // [Alexgram: Templates Notifications] - End
     public static final int bookmarkAdded = totalEvents++;
     public static final int starReactionAnonymousUpdate = totalEvents++;
     public static final int businessLinksUpdated = totalEvents++;
@@ -256,7 +259,6 @@ public class NotificationCenter {
     public static final int botStarsUpdated = totalEvents++;
     public static final int botStarsTransactionsLoaded = totalEvents++;
     public static final int channelStarsUpdated = totalEvents++;
-    public static final int webViewResolved = totalEvents++;
     public static final int updateAllMessages = totalEvents++;
     public static final int starGiftsLoaded = totalEvents++;
     public static final int starUserGiftsLoaded = totalEvents++;
@@ -279,8 +281,10 @@ public class NotificationCenter {
     public static final int updatedChatRanks = totalEvents++;
     public static final int joinedGroup = totalEvents++;
     public static final int loadedAiComposeTones = totalEvents++;
+    public static final int updatedChatbot = totalEvents++;
 
     //global
+    public static final int activeAccountChanged = totalEvents++;
     public static final int pushMessagesUpdated = totalEvents++;
     public static final int wallpapersDidLoad = totalEvents++;
     public static final int wallpapersNeedReload = totalEvents++;
@@ -306,6 +310,7 @@ public class NotificationCenter {
     public static final int didSetNewWallpapper = totalEvents++;
     public static final int proxySettingsChanged = totalEvents++;
     public static final int proxyCheckDone = totalEvents++;
+    public static final int proxyPingUpdated = totalEvents++;
     public static final int proxyChangedByRotation = totalEvents++;
     public static final int liveLocationsChanged = totalEvents++;
     public static final int newLocationAvailable = totalEvents++;
@@ -373,6 +378,10 @@ public class NotificationCenter {
     public static final int callTabsVisibleToggled = totalEvents++;
     public static final int setTabsVisible = totalEvents++;
     public static final int contactsPermissionBadgeCheck = totalEvents++;
+    public static final int pillStackSettingsChanged = totalEvents++;
+    public static final int pillStackLayoutChanged = totalEvents++;
+    public static final int guardBotDecisionResult = totalEvents++;
+    public static final int webBrowserSettingsUpdate = totalEvents++;
 
     public static boolean alreadyLogged;
 

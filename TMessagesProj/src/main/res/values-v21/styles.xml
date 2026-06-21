@@ -15,12 +15,12 @@
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:actionBarStyle">@style/ActionBar.Transparent.TMessages.Start</item>
-        <item name="android:colorBackground">@android:color/white</item>
-        <item name="android:windowBackground">@android:color/white</item>
+        <item name="android:colorBackground">#061B3D</item>
+        <item name="android:windowBackground">@drawable/splash_background</item>
         <item name="android:windowContentOverlay">@null</item>
-        <item name="android:colorPrimaryDark">#426482</item>
-        <item name="android:colorPrimary">#527da3</item>
-        <item name="android:navigationBarColor">#000000</item>
+        <item name="android:colorPrimaryDark">#041430</item>
+        <item name="android:colorPrimary">#061B3D</item>
+        <item name="android:navigationBarColor">#041430</item>
         <item name="android:textViewStyle">@style/MyTextViewStyle</item>
         <item name="android:forceDarkAllowed">false</item>
     </style>

@@ -92,6 +92,7 @@ public class SettingsSearchManager {
 
         // --- AUTOMATIC INDEXING (NAGRAM SETTINGS) ---
         registerActivity(nextIndex, NekoGeneralSettingsActivity.class, "General", R.drawable.msg_edit);
+        registerActivity(nextIndex, NekoCustomizationSettingsActivity.class, "Customization", R.drawable.msg_theme);
         registerActivity(nextIndex, NekoChatSettingsActivity.class, "Chats", R.drawable.msg_discussion_solar);
         registerActivity(nextIndex, NekoTranslatorSettingsActivity.class, "Translator", R.drawable.ic_translate);
         registerActivity(nextIndex, NekoExperimentalSettingsActivity.class, "Experimental", R.drawable.msg_fave);

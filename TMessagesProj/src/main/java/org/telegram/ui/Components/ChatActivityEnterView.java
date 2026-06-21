@@ -166,6 +166,7 @@ import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.tgnet.tl.TL_account;
 import org.telegram.tgnet.tl.TL_bots;
+import org.telegram.tgnet.tl.TL_iv;
 import org.telegram.tgnet.tl.TL_stories;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.ActionBarMenuSubItem;
@@ -207,6 +208,9 @@ import org.telegram.ui.StickersActivity;
 import org.telegram.ui.Stories.HighlightMessageSheet;
 import org.telegram.ui.Stories.recorder.CaptionContainerView;
 import org.telegram.ui.Stories.recorder.HintView2;
+// [Alexgram: Templates Oval Input] - Start
+import org.telegram.ui.Templates.TemplatesManager;
+// [Alexgram: Templates Oval Input] - End
 import org.telegram.ui.bots.BotCommandsMenuContainer;
 import org.telegram.ui.bots.BotCommandsMenuView;
 import org.telegram.ui.bots.BotKeyboardView;
@@ -332,6 +336,10 @@ public class ChatActivityEnterView extends FrameLayout implements
         void onMessageEditEnd(boolean loading);
 
         void didPressAttachButton();
+
+        // [Alexgram: Templates Oval Input] - Start
+        default void didPressTemplatesButton() {}
+        // [Alexgram: Templates Oval Input] - End
 
         default void didPressSuggestionButton() {}
 
@@ -567,8 +575,8 @@ public class ChatActivityEnterView extends FrameLayout implements
             if (isPremiumMode) {
                 canvas.save();
                 int heightRect = dp(26);
-                canvas.translate(0, ((getMeasuredHeight() - heightRect) / 2f) - dp(1));
-                bgRect.set(0, 0f, (float) getMeasuredWidth() - getPaddingEnd(), (float) heightRect);
+                canvas.translate(dp(5), ((getMeasuredHeight() - heightRect) / 2f));
+                bgRect.set(-dp(5), 0f, (float) getMeasuredWidth() - getPaddingEnd(), (float) heightRect);
                 canvas.drawRoundRect(bgRect, heightRect / 2f, heightRect / 2f, gradientPaint);
                 canvas.translate(getMeasuredWidth() - getPaddingEnd() - dp(6) - closeDrawable.getIntrinsicWidth(), dp(5));
                 closeDrawable.draw(canvas);
@@ -582,7 +590,7 @@ public class ChatActivityEnterView extends FrameLayout implements
                 SimpleTextView simpleTextView = (SimpleTextView) child;
                 canvas.save();
                 canvas.scale(0.8f, 0.8f);
-                canvas.translate(-dp(16), dp(5));
+                canvas.translate(-dp(12), dp(6));
                 int oldColor = simpleTextView.getTextPaint().getColor();
                 simpleTextView.getTextPaint().setColor(Color.WHITE);
                 boolean result = super.drawChild(canvas, child, drawingTime);
@@ -623,6 +631,9 @@ public class ChatActivityEnterView extends FrameLayout implements
     private ActionBarPopupWindow cameraSelectionPopup; // nax
     private ImageView cancelBotButton;
     private ChatActivityEnterViewAnimatedIconView emojiButton;
+    // [Alexgram: Templates Oval Input] - Start
+    private TemplateOvalButton templatesOvalButton;
+    // [Alexgram: Templates Oval Input] - End
     @Nullable
     private ImageView expandStickersButton;
     private boolean emojiViewFrozen;
@@ -705,6 +716,24 @@ public class ChatActivityEnterView extends FrameLayout implements
     private BusinessLinkPresetMessage lastSavedBusinessLinkMessage;
 
     private TLRPC.ChatFull info;
+
+    private static class PendingCustomEmojiStickerSend {
+        final TLRPC.Document document;
+        final String emoticon;
+        final boolean notify;
+        final int scheduleDate;
+        final int scheduleRepeatPeriod;
+
+        private PendingCustomEmojiStickerSend(TLRPC.Document document, String emoticon, boolean notify, int scheduleDate, int scheduleRepeatPeriod) {
+            this.document = document;
+            this.emoticon = emoticon;
+            this.notify = notify;
+            this.scheduleDate = scheduleDate;
+            this.scheduleRepeatPeriod = scheduleRepeatPeriod;
+        }
+    }
+
+    private final HashMap<String, ArrayList<PendingCustomEmojiStickerSend>> pendingCustomEmojiStickerSends = new HashMap<>();
 
     private boolean hasRecordVideo;
 
@@ -2649,6 +2678,11 @@ public class ChatActivityEnterView extends FrameLayout implements
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.audioRecordTooShort);
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.updateBotMenuButton);
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.didUpdatePremiumGiftFieldIcon);
+        NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.fileLoaded);
+        NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.fileLoadFailed);
+        // [Alexgram: Templates Oval Input] - Start
+        NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.templatesSettingsUpdated);
+        // [Alexgram: Templates Oval Input] - End
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.emojiLoaded);
 
         parentActivity = context;
@@ -2779,6 +2813,23 @@ public class ChatActivityEnterView extends FrameLayout implements
         });
         messageEditTextContainer.addView(emojiButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.LEFT, 2, 0, 0, 0));
         setEmojiButtonImage(false, false);
+
+        // [Alexgram: Templates Oval Input] - Start
+        templatesOvalButton = new TemplateOvalButton(context, resourcesProvider);
+        templatesOvalButton.setContentDescription(getString(R.string.chat_templates));
+        templatesOvalButton.setVisibility(GONE);
+        ScaleStateListAnimator.apply(templatesOvalButton);
+        templatesOvalButton.setOnClickListener(v -> {
+            if (adjustPanLayoutHelper != null && adjustPanLayoutHelper.animationInProgress()) {
+                return;
+            }
+            if (delegate != null) {
+                delegate.didPressTemplatesButton();
+            }
+        });
+        messageEditTextContainer.addView(templatesOvalButton, LayoutHelper.createFrame(TemplateOvalButton.WIDTH_DP, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.LEFT, 4, 0, 0, 0));
+        updateTemplatesOvalButton(false);
+        // [Alexgram: Templates Oval Input] - End
 
         if (isChat) {
             attachLayout = new LinearLayout(context) {
@@ -3537,13 +3588,13 @@ public class ChatActivityEnterView extends FrameLayout implements
         sendButtonContainer.addView(sendButtonBlockedByTypingView, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.RIGHT | Gravity.BOTTOM));
 
         slowModeButton = new SlowModeBtn(context);
-        slowModeButton.setTextSize(18);
+        slowModeButton.setTextSize(16);
         slowModeButton.setVisibility(INVISIBLE);
         slowModeButton.setSoundEffectsEnabled(false);
         slowModeButton.setScaleX(0.1f);
         slowModeButton.setScaleY(0.1f);
         slowModeButton.setAlpha(0.0f);
-        slowModeButton.setPadding(0, 0, dp(10), 0);
+        slowModeButton.setPadding(dp(14), 0, dp(14), 0);
         slowModeButton.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
         slowModeButton.setTextColor(getThemedColor(Theme.key_glass_defaultIcon));
         sendButtonContainer.addView(slowModeButton, LayoutHelper.createFrame(74, DEFAULT_HEIGHT, Gravity.RIGHT | Gravity.BOTTOM));
@@ -4474,7 +4525,7 @@ public class ChatActivityEnterView extends FrameLayout implements
             }
         });
         senderSelectView.setVisibility(GONE);
-        messageEditTextContainer.addView(senderSelectView, LayoutHelper.createFrame(32, 32, Gravity.BOTTOM | Gravity.LEFT, 8, 6, 8, 6));
+        messageEditTextContainer.addView(senderSelectView, LayoutHelper.createFrame(36, 36, Gravity.BOTTOM | Gravity.LEFT, 4.66f, 4, 4.66f, 4));
     }
 
     private void createBotCommandsMenuButton() {
@@ -5339,10 +5390,20 @@ public class ChatActivityEnterView extends FrameLayout implements
             message.out = true;
             message.peer_id = MessagesController.getInstance(currentAccount).getPeer(dialog_id);
             message.from_id = MessagesController.getInstance(currentAccount).getPeer(UserConfig.getInstance(currentAccount).getClientUserId());
+
             CharSequence[] text = new CharSequence[]{ new SpannableStringBuilder(messageEditText == null ? "" : messageEditText.getTextToUse()) };
-            MessageObject.addLinks(true, text[0]);
-            message.entities.addAll(MediaDataController.getInstance(currentAccount).getEntities(text, true));
-            message.message = text[0].toString();
+            final ArrayList<TL_iv.PageBlock> blocks = new ArrayList<>();
+            MarkdownParser.parse(text[0].toString(), blocks);
+            if (BuildVars.DEBUG_PRIVATE_VERSION && MarkdownParser.isMarkdown(blocks)) {
+                message.flags2 |= TLObject.FLAG_13;
+                message.rich_message = new TL_iv.RichMessage();
+                message.rich_message.blocks = blocks;
+            } else {
+                MessageObject.addLinks(true, text[0]);
+                message.entities.addAll(MediaDataController.getInstance(currentAccount).getEntities(text, true));
+                message.message = text[0].toString();
+            }
+
             if (replyingMessageObject != null && !replyingMessageObject.isTopicMainMessage) {
                 TLRPC.TL_messageReplyHeader reply_to = new TLRPC.TL_messageReplyHeader();
                 if (replyingTopMessage != null) {
@@ -5702,7 +5763,7 @@ public class ChatActivityEnterView extends FrameLayout implements
             }
         });
         botCommandsMenuContainer.setClipToPadding(false);
-        sizeNotifierLayout.addView(botCommandsMenuContainer, 14, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.BOTTOM));
+        sizeNotifierLayout.addView(botCommandsMenuContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.BOTTOM));
         botCommandsMenuContainer.setVisibility(View.GONE);
 
         if (lastBotInfo != null) {
@@ -6402,6 +6463,7 @@ public class ChatActivityEnterView extends FrameLayout implements
                     }
                 }
                 updateSendButtonPaid();
+                updateTemplatesOvalButton(true);
             }
 
             @Override
@@ -7114,6 +7176,12 @@ public class ChatActivityEnterView extends FrameLayout implements
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.audioRecordTooShort);
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.updateBotMenuButton);
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.didUpdatePremiumGiftFieldIcon);
+        NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.fileLoaded);
+        NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.fileLoadFailed);
+        // [Alexgram: Templates Oval Input] - Start
+        NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.templatesSettingsUpdated);
+        // [Alexgram: Templates Oval Input] - End
+        pendingCustomEmojiStickerSends.clear();
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.emojiLoaded);
         if (emojiView != null) {
             emojiView.onDestroy();
@@ -7149,6 +7217,170 @@ public class ChatActivityEnterView extends FrameLayout implements
             return;
         }
         updateRecordButton(parentFragment.getCurrentChat(), parentFragment.getCurrentUserInfo());
+    }
+
+    private boolean isGroupEmojiDocument(TLRPC.Document document) {
+        if (document == null || info == null || info.emojiset == null) {
+            return false;
+        }
+        TLRPC.InputStickerSet inputStickerSet = MessageObject.getInputStickerSet(document);
+        return inputStickerSet instanceof TLRPC.TL_inputStickerSetID && ((TLRPC.TL_inputStickerSetID) inputStickerSet).id == info.emojiset.id;
+    }
+
+    private boolean isCustomEmojiStickerMime(TLRPC.Document document) {
+        if (document == null) {
+            return false;
+        }
+        String mimeType = document.mime_type != null ? document.mime_type : "";
+        return "image/webp".equals(mimeType) || "video/webm".equals(mimeType);
+    }
+
+    private boolean sendCustomEmojiAsUploadedSticker(TLRPC.Document customEmojiDocument, String emoticon, boolean notify, int scheduleDate, int scheduleRepeatPeriod) {
+        if (isLiveComment) {
+            return false;
+        }
+        if (replyingQuote != null && parentFragment != null && replyingQuote.outdated) {
+            parentFragment.showQuoteMessageUpdate();
+            return false;
+        }
+        if (customEmojiDocument == null) {
+            return false;
+        }
+
+        final String sourceMime = customEmojiDocument.mime_type != null ? customEmojiDocument.mime_type : "";
+        if (!isCustomEmojiStickerMime(customEmojiDocument)) {
+            return false;
+        }
+
+        if (isInScheduleMode() && scheduleDate == 0) {
+            AlertsCreator.createScheduleDatePickerDialog(parentActivity, parentFragment.getDialogId(), (n, s, r) -> sendCustomEmojiAsUploadedSticker(customEmojiDocument, emoticon, n, s, r), resourcesProvider);
+            return true;
+        }
+        if (slowModeTimer > 0 && !isInScheduleMode()) {
+            if (delegate != null) {
+                delegate.onUpdateSlowModeButton(slowModeButton, true, slowModeButton.getText());
+            }
+            return true;
+        }
+
+        File file = FileLoader.getInstance(currentAccount).getPathToAttach(customEmojiDocument);
+        if (file == null || !file.exists()) {
+            File cacheFile = FileLoader.getInstance(currentAccount).getPathToAttach(customEmojiDocument, true);
+            if (cacheFile != null && cacheFile.exists()) {
+                file = cacheFile;
+            }
+        }
+        if (file == null || !file.exists()) {
+            String fileName = FileLoader.getAttachFileName(customEmojiDocument);
+            if (TextUtils.isEmpty(fileName)) {
+                return false;
+            }
+            ArrayList<PendingCustomEmojiStickerSend> pendingSends = pendingCustomEmojiStickerSends.get(fileName);
+            boolean shouldLoadFile = pendingSends == null;
+            if (pendingSends == null) {
+                pendingSends = new ArrayList<>();
+                pendingCustomEmojiStickerSends.put(fileName, pendingSends);
+            }
+            pendingSends.add(new PendingCustomEmojiStickerSend(customEmojiDocument, emoticon, notify, scheduleDate, scheduleRepeatPeriod));
+            if (shouldLoadFile) {
+                FileLoader.getInstance(currentAccount).loadFile(customEmojiDocument, null, FileLoader.PRIORITY_NORMAL, 1);
+            }
+            return true;
+        }
+
+        final File fileFinal = file;
+        final String uploadMimeFinal = sourceMime;
+        AlertsCreator.ensurePaidMessageConfirmation(currentAccount, dialog_id, 1, stars -> {
+            Runnable runnable = () -> {
+                if (delegate != null) {
+                    delegate.beforeMessageSend(null, notify, scheduleDate, stars);
+                }
+                if (searchingType != 0) {
+                    setSearchingTypeInternal(0, true);
+                    emojiView.closeSearch(true);
+                    emojiView.hideSearchKeyboard();
+                }
+                setStickersExpanded(false, true, false);
+                final TL_stories.StoryItem storyItem = delegate != null ? delegate.getReplyToStory() : null;
+
+                TLRPC.TL_document uploadDocument = new TLRPC.TL_document();
+                uploadDocument.id = 0;
+                uploadDocument.date = accountInstance.getConnectionsManager().getCurrentTime();
+                uploadDocument.file_reference = new byte[0];
+                uploadDocument.size = fileFinal.length();
+                uploadDocument.dc_id = 0;
+                uploadDocument.mime_type = uploadMimeFinal;
+
+                TLRPC.TL_documentAttributeFilename fileName = new TLRPC.TL_documentAttributeFilename();
+                fileName.file_name = "video/webm".equals(uploadDocument.mime_type) ? "sticker.webm" : "sticker.webp";
+                uploadDocument.attributes.add(fileName);
+
+                boolean hasStickerAttribute = false;
+                boolean hasAnimatedAttribute = false;
+                boolean hasVideoAttribute = false;
+                int videoW = 512;
+                int videoH = 512;
+                for (int i = 0; i < customEmojiDocument.attributes.size(); i++) {
+                    TLRPC.DocumentAttribute attribute = customEmojiDocument.attributes.get(i);
+                    if (attribute instanceof TLRPC.TL_documentAttributeCustomEmoji || attribute instanceof TLRPC.TL_documentAttributeSticker) {
+                        TLRPC.TL_documentAttributeSticker stickerAttribute = new TLRPC.TL_documentAttributeSticker();
+                        stickerAttribute.alt = !TextUtils.isEmpty(emoticon) ? emoticon : attribute.alt;
+                        stickerAttribute.stickerset = new TLRPC.TL_inputStickerSetEmpty();
+                        uploadDocument.attributes.add(stickerAttribute);
+                        hasStickerAttribute = true;
+                    } else {
+                        if (attribute instanceof TLRPC.TL_documentAttributeFilename) {
+                            continue;
+                        }
+                        if (attribute instanceof TLRPC.TL_documentAttributeAnimated) {
+                            hasAnimatedAttribute = true;
+                        } else if (attribute instanceof TLRPC.TL_documentAttributeVideo) {
+                            hasVideoAttribute = true;
+                            videoW = Math.max(1, attribute.w);
+                            videoH = Math.max(1, attribute.h);
+                        }
+                        uploadDocument.attributes.add(attribute);
+                    }
+                }
+                if (!hasStickerAttribute) {
+                    TLRPC.TL_documentAttributeSticker stickerAttribute = new TLRPC.TL_documentAttributeSticker();
+                    stickerAttribute.alt = emoticon != null ? emoticon : "";
+                    stickerAttribute.stickerset = new TLRPC.TL_inputStickerSetEmpty();
+                    uploadDocument.attributes.add(stickerAttribute);
+                }
+
+                if ("video/webm".equals(uploadDocument.mime_type)) {
+                    if (!hasVideoAttribute) {
+                        TLRPC.TL_documentAttributeVideo videoAttribute = new TLRPC.TL_documentAttributeVideo();
+                        videoAttribute.w = videoW;
+                        videoAttribute.h = videoH;
+                        videoAttribute.duration = 0;
+                        uploadDocument.attributes.add(videoAttribute);
+                    }
+                    if (!hasAnimatedAttribute) {
+                        uploadDocument.attributes.add(new TLRPC.TL_documentAttributeAnimated());
+                    }
+                }
+
+                SendMessagesHelper.SendMessageParams sendMessageParams = SendMessagesHelper.SendMessageParams.of(uploadDocument, null, fileFinal.getAbsolutePath(), dialog_id, replyingMessageObject, getThreadMessage(), null, null, null, null, notify, scheduleDate, scheduleRepeatPeriod, 0, null, null, false);
+                sendMessageParams.replyToStoryItem = storyItem;
+                sendMessageParams.replyQuote = replyingQuote;
+                sendMessageParams.quick_reply_shortcut = parentFragment != null ? parentFragment.quickReplyShortcut : null;
+                sendMessageParams.quick_reply_shortcut_id = parentFragment != null ? parentFragment.getQuickReplyId() : 0;
+                sendMessageParams.payStars = stars;
+                sendMessageParams.monoForumPeer = getSendMonoForumPeerId();
+                sendMessageParams.suggestionParams = getSendMessageSuggestionParams();
+                SendMessagesHelper.getInstance(currentAccount).sendMessage(sendMessageParams);
+
+                if (delegate != null) {
+                    delegate.onMessageSend(null, notify, scheduleDate, scheduleRepeatPeriod, stars);
+                }
+            };
+            if (!showConfirmAlert(runnable)) {
+                runnable.run();
+            }
+        });
+        return true;
     }
 
     public void updateRecordButton(TLRPC.Chat chat, TLRPC.UserFull userFull) {
@@ -7194,6 +7426,9 @@ public class ChatActivityEnterView extends FrameLayout implements
             }
         }
         setRecordVideoButtonVisible(currentModeVideo, false);
+        // [Alexgram: Templates Oval Input] - Start
+        updateTemplatesOvalButton(false);
+        // [Alexgram: Templates Oval Input] - End
     }
 
     public void onBeginHide() {
@@ -7264,6 +7499,7 @@ public class ChatActivityEnterView extends FrameLayout implements
             AndroidUtilities.showKeyboard(messageEditText);
             if (!AndroidUtilities.usingHardwareInput && !keyboardVisible && !AndroidUtilities.isInMultiwindow) {
                 waitingForKeyboardOpen = true;
+                updateTemplatesOvalButton(true);
                 AndroidUtilities.cancelRunOnUIThread(openKeyboardRunnable);
                 AndroidUtilities.runOnUIThread(openKeyboardRunnable, 100);
             }
@@ -7297,6 +7533,12 @@ public class ChatActivityEnterView extends FrameLayout implements
             NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.featuredStickersDidLoad);
             NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.messageReceivedByServer2);
             NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.sendingMessagesChanged);
+            NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.fileLoaded);
+            NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.fileLoadFailed);
+            // [Alexgram: Templates Oval Input] - Start
+            NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.templatesSettingsUpdated);
+            // [Alexgram: Templates Oval Input] - End
+            pendingCustomEmojiStickerSends.clear();
             currentAccount = account;
             accountInstance = AccountInstance.getInstance(currentAccount);
             NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.recordStarted);
@@ -7313,6 +7555,11 @@ public class ChatActivityEnterView extends FrameLayout implements
             NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.featuredStickersDidLoad);
             NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.messageReceivedByServer2);
             NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.sendingMessagesChanged);
+            NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.fileLoaded);
+            NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.fileLoadFailed);
+            // [Alexgram: Templates Oval Input] - Start
+            NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.templatesSettingsUpdated);
+            // [Alexgram: Templates Oval Input] - End
         }
 
         sendPlainEnabled = true;
@@ -7326,6 +7573,9 @@ public class ChatActivityEnterView extends FrameLayout implements
         checkRoundVideo();
         checkChannelRights();
         updateFieldHint(false);
+        // [Alexgram: Templates Oval Input] - Start
+        updateTemplatesOvalButton(false);
+        // [Alexgram: Templates Oval Input] - End
         if (messageEditText != null) {
             updateSendAsButton(parentFragment != null && parentFragment.getFragmentBeginToShow());
         }
@@ -9609,7 +9859,7 @@ public class ChatActivityEnterView extends FrameLayout implements
         slowModeButton.setVisibility(visible ? VISIBLE : GONE);
         int padding = visible ? dp(slowModeButton.isPremiumMode ? 26 : 16) : 0;
         if (messageEditText != null && messageEditText.getPaddingRight() != padding) {
-            messageEditText.setPadding(0, dp(11), padding, dp(12));
+            messageEditText.setPadding(0, dp(9), padding, dp(10));
         }
     }
 
@@ -11218,8 +11468,11 @@ public class ChatActivityEnterView extends FrameLayout implements
     }
 
     public void setBlockedByStreaming(boolean blocked, boolean animated) {
+        final boolean changed = animatorIsBlockedByStreaming.getValue() != blocked;
         animatorIsBlockedByStreaming.setValue(blocked, animated);
-        checkSendButton(animated);
+        if (changed) {
+            checkSendButton(animated);
+        }
     }
 
     public ValueAnimator animateSendButton(boolean show) {
@@ -11761,103 +12014,105 @@ public class ChatActivityEnterView extends FrameLayout implements
             startX = endX = 0;
         }
 
-        if (wasVisible != isVisible) {
-            ValueAnimator animator = senderSelectView == null ? null : (ValueAnimator) senderSelectView.getTag();
-            if (animator != null) {
-                animator.cancel();
-                senderSelectView.setTag(null);
-            }
+        if (wasVisible == isVisible) {
+            return;
+        }
 
-            if ((isLiveComment || parentFragment != null && parentFragment.getOtherSameChatsDiff() == 0 && parentFragment.fragmentOpened) && animated) {
-                ValueAnimator anim = ValueAnimator.ofFloat(0, 1).setDuration(150);
+        ValueAnimator animator = senderSelectView == null ? null : (ValueAnimator) senderSelectView.getTag();
+        if (animator != null) {
+            animator.cancel();
+            senderSelectView.setTag(null);
+        }
+
+        if ((isLiveComment || parentFragment != null && parentFragment.getOtherSameChatsDiff() == 0 && parentFragment.fragmentOpened) && animated) {
+            ValueAnimator anim = ValueAnimator.ofFloat(0, 1).setDuration(150);
+            if (senderSelectView != null) {
+                senderSelectView.setTranslationX(startX);
+            }
+            messageTextTranslationX = startX;
+            updateMessageTextParams();
+            anim.addUpdateListener(animation -> {
+                final float val = (float) animation.getAnimatedValue();
+                final float tx = startX + (endX - startX) * val;
                 if (senderSelectView != null) {
-                    senderSelectView.setTranslationX(startX);
+                    senderSelectView.setAlpha(startAlpha + (endAlpha - startAlpha) * val);
+                    senderSelectView.setTranslationX(tx);
                 }
-                messageTextTranslationX = startX;
+                emojiButton.setTranslationX(tx);
+                messageTextTranslationX = tx;
                 updateMessageTextParams();
-                anim.addUpdateListener(animation -> {
-                    final float val = (float) animation.getAnimatedValue();
-                    final float tx = startX + (endX - startX) * val;
+            });
+            anim.addListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationStart(Animator animation) {
+                    if (isVisible) {
+                        createSenderSelectView();
+                        senderSelectView.setVisibility(VISIBLE);
+                    }
+                    float tx = 0;
                     if (senderSelectView != null) {
-                        senderSelectView.setAlpha(startAlpha + (endAlpha - startAlpha) * val);
-                        senderSelectView.setTranslationX(tx);
+                        senderSelectView.setAlpha(startAlpha);
+                        senderSelectView.setTranslationX(startX);
+                        tx = senderSelectView.getTranslationX();
                     }
                     emojiButton.setTranslationX(tx);
                     messageTextTranslationX = tx;
                     updateMessageTextParams();
-                });
-                anim.addListener(new AnimatorListenerAdapter() {
-                    @Override
-                    public void onAnimationStart(Animator animation) {
-                        if (isVisible) {
-                            createSenderSelectView();
-                            senderSelectView.setVisibility(VISIBLE);
-                        }
-                        float tx = 0;
+
+                    if (botCommandsMenuButton != null && botCommandsMenuButton.getTag() == null) {
+                        animationParamsX.clear();
+                    }
+                }
+
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    if (!isVisible) {
                         if (senderSelectView != null) {
-                            senderSelectView.setAlpha(startAlpha);
-                            senderSelectView.setTranslationX(startX);
-                            tx = senderSelectView.getTranslationX();
+                            senderSelectView.setVisibility(GONE);
                         }
-                        emojiButton.setTranslationX(tx);
-                        messageTextTranslationX = tx;
+                        emojiButton.setTranslationX(0);
+                        messageTextTranslationX = 0;
                         updateMessageTextParams();
-
-                        if (botCommandsMenuButton != null && botCommandsMenuButton.getTag() == null) {
-                            animationParamsX.clear();
-                        }
                     }
+                }
 
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        if (!isVisible) {
-                            if (senderSelectView != null) {
-                                senderSelectView.setVisibility(GONE);
-                            }
-                            emojiButton.setTranslationX(0);
-                            messageTextTranslationX = 0;
-                            updateMessageTextParams();
-                        }
+                @Override
+                public void onAnimationCancel(Animator animation) {
+                    float tx = 0;
+                    if (isVisible) {
+                        createSenderSelectView();
                     }
-
-                    @Override
-                    public void onAnimationCancel(Animator animation) {
-                        float tx = 0;
-                        if (isVisible) {
-                            createSenderSelectView();
-                        }
-                        if (senderSelectView != null) {
-                            senderSelectView.setVisibility(isVisible ? VISIBLE : GONE);
-                            senderSelectView.setAlpha(endAlpha);
-                            senderSelectView.setTranslationX(endX);
-                            tx = senderSelectView.getTranslationX();
-                        }
-                        emojiButton.setTranslationX(tx);
-                        messageTextTranslationX = tx;
-                        updateMessageTextParams();
-                        requestLayout();
+                    if (senderSelectView != null) {
+                        senderSelectView.setVisibility(isVisible ? VISIBLE : GONE);
+                        senderSelectView.setAlpha(endAlpha);
+                        senderSelectView.setTranslationX(endX);
+                        tx = senderSelectView.getTranslationX();
                     }
-                });
-                anim.start();
-                if (senderSelectView != null) {
-                    senderSelectView.setTag(anim);
+                    emojiButton.setTranslationX(tx);
+                    messageTextTranslationX = tx;
+                    updateMessageTextParams();
+                    requestLayout();
                 }
-            } else {
-                if (isVisible) {
-                    createSenderSelectView();
-                }
-                if (senderSelectView != null) {
-                    senderSelectView.setVisibility(isVisible ? VISIBLE : GONE);
-                    senderSelectView.setTranslationX(endX);
-                }
-                float translationX = isVisible ? endX : 0;
-                emojiButton.setTranslationX(translationX);
-                messageTextTranslationX = translationX;
-                updateMessageTextParams();
-                if (senderSelectView != null) {
-                    senderSelectView.setAlpha(endAlpha);
-                    senderSelectView.setTag(null);
-                }
+            });
+            anim.start();
+            if (senderSelectView != null) {
+                senderSelectView.setTag(anim);
+            }
+        } else {
+            if (isVisible) {
+                createSenderSelectView();
+            }
+            if (senderSelectView != null) {
+                senderSelectView.setVisibility(isVisible ? VISIBLE : GONE);
+                senderSelectView.setTranslationX(endX);
+            }
+            float translationX = isVisible ? endX : 0;
+            emojiButton.setTranslationX(translationX);
+            messageTextTranslationX = translationX;
+            updateMessageTextParams();
+            if (senderSelectView != null) {
+                senderSelectView.setAlpha(endAlpha);
+                senderSelectView.setTag(null);
             }
         }
     }
@@ -11870,6 +12125,54 @@ public class ChatActivityEnterView extends FrameLayout implements
     public boolean hasBotWebView() {
         return botMenuButtonType == BotMenuButtonType.WEB_VIEW;
     }
+
+    // [Alexgram: Templates Oval Input] - Start
+    private boolean shouldShowTemplatesOvalButton() {
+        return isChat
+                && !isStories
+                && !isSpecialForward()
+                && sendPlainEnabled
+                && !keyboardVisible
+                && !waitingForKeyboardOpen
+                && parentFragment != null
+                && parentFragment.getChatMode() == ChatActivity.MODE_DEFAULT
+                && botMenuButtonType == BotMenuButtonType.NO_BUTTON
+                && TemplatesManager.getInstance(currentAccount).getPanelType() == TemplatesManager.PanelType.OVAL
+                && !hasText();
+    }
+
+    private boolean isTemplatesOvalButtonVisible() {
+        return templatesOvalButton != null && templatesOvalButton.getTag() != null;
+    }
+
+    private boolean isSenderSelectViewVisible() {
+        return senderSelectView != null && senderSelectView.getVisibility() == View.VISIBLE;
+    }
+
+    private int getSenderSelectOccupiedWidth() {
+        if (!isSenderSelectViewVisible()) {
+            return 0;
+        }
+        MarginLayoutParams params = (MarginLayoutParams) senderSelectView.getLayoutParams();
+        return params.leftMargin + senderSelectView.getLayoutParams().width + dp(4);
+    }
+
+    private void updateTemplatesOvalButton(boolean animated) {
+        if (templatesOvalButton == null) {
+            return;
+        }
+        boolean show = shouldShowTemplatesOvalButton();
+        boolean wasVisible = isTemplatesOvalButtonVisible();
+        if (show == wasVisible) {
+            return;
+        }
+        if (animated) {
+            beginDelayedTransition();
+        }
+        AndroidUtilities.updateViewVisibilityAnimated(templatesOvalButton, show, 0.5f, animated);
+        requestLayout();
+    }
+    // [Alexgram: Templates Oval Input] - End
 
     private void updateBotButton(boolean animated) {
         if (!isChat) {
@@ -12497,6 +12800,36 @@ public class ChatActivityEnterView extends FrameLayout implements
                 }
             }
 
+            @Override
+            public boolean allowNonPremiumCustomEmoji() {
+                TLRPC.User currentUser = UserConfig.getInstance(currentAccount).getCurrentUser();
+                boolean isOfficialPremium = currentUser != null && currentUser.premium;
+                return !isOfficialPremium
+                    && NaConfig.INSTANCE.getSendLockedCustomEmojiAsSticker().Bool()
+                    && dialog_id != UserConfig.getInstance(currentAccount).getClientUserId();
+            }
+
+            @Override
+            public boolean canShowNonPremiumCustomEmoji(TLRPC.Document document) {
+                return allowNonPremiumCustomEmoji()
+                    && document != null
+                    && !ChatActivityEnterView.this.isGroupEmojiDocument(document)
+                    && ChatActivityEnterView.this.isCustomEmojiStickerMime(document);
+            }
+
+            @Override
+            public boolean onNonPremiumCustomEmojiSelected(long documentId, TLRPC.Document document, String emoticon, boolean isRecent) {
+                if (!canShowNonPremiumCustomEmoji(document)) {
+                    return false;
+                }
+                if (!stickersEnabled) {
+                    ChatActivityEnterView.this.showRestrictedHint();
+                    return true;
+                }
+                return ChatActivityEnterView.this.sendCustomEmojiAsUploadedSticker(document, emoticon, true, 0, 0);
+            }
+
+            @Override
             public void onCustomEmojiSelected(long documentId, TLRPC.Document document, String emoticon, boolean isRecent) {
                 final EditTextBoldCursor messageEditText = mOverrideEditTextView != null ?
                     mOverrideEditTextView : ChatActivityEnterView.this.messageEditText;
@@ -13121,7 +13454,7 @@ public class ChatActivityEnterView extends FrameLayout implements
                 stickersExpandedHeight = sizeNotifierLayout.getHeight()
                     - AndroidUtilities.statusBarHeight
                     - AndroidUtilities.navigationBarHeight
-                    - dp(11)
+                    - dp(6)
                     - ActionBar.getCurrentActionBarHeight()
                     - getHeight();
                 if (searchingType == 2) {
@@ -13707,6 +14040,7 @@ public class ChatActivityEnterView extends FrameLayout implements
             showKeyboardOnResume = true;
         } else if (!AndroidUtilities.usingHardwareInput && !keyboardVisible && !AndroidUtilities.isInMultiwindow && (parentFragment == null || !parentFragment.isInBubbleMode())) {
             waitingForKeyboardOpen = true;
+            updateTemplatesOvalButton(true);
             if (emojiView != null) {
                 emojiView.onTouchEvent(MotionEvent.obtain(SystemClock.uptimeMillis(), SystemClock.uptimeMillis(), MotionEvent.ACTION_CANCEL, 0, 0, 0));
             }
@@ -13745,6 +14079,10 @@ public class ChatActivityEnterView extends FrameLayout implements
     }
 
     public void closeKeyboard() {
+        if (waitingForKeyboardOpen) {
+            waitingForKeyboardOpen = false;
+            updateTemplatesOvalButton(true);
+        }
         AndroidUtilities.hideKeyboard(messageEditText);
     }
 
@@ -13793,8 +14131,12 @@ public class ChatActivityEnterView extends FrameLayout implements
         if (searchingType != 0) {
             lastSizeChangeValue1 = height;
             lastSizeChangeValue2 = isWidthGreater;
+            boolean oldValue = keyboardVisible;
             keyboardVisible = height > 0;
             checkBotMenu();
+            if (oldValue != keyboardVisible) {
+                updateTemplatesOvalButton(true);
+            }
             return;
         }
         if (height > dp(50) && keyboardVisible && !AndroidUtilities.isInMultiwindow) {
@@ -13896,6 +14238,9 @@ public class ChatActivityEnterView extends FrameLayout implements
         boolean oldValue = keyboardVisible;
         keyboardVisible = height > 0;
         checkBotMenu();
+        if (oldValue != keyboardVisible) {
+            updateTemplatesOvalButton(true);
+        }
         if (keyboardVisible && isPopupShowing() && stickersExpansionAnim == null) {
             showPopup(0, currentPopupContentType);
         } else if (!keyboardVisible && !isPopupShowing() && botButtonsMessageObject != null && replyingMessageObject != botButtonsMessageObject && (!hasBotWebView() && !botCommandsMenuIsShowing() && !BaseFragment.hasSheets(parentFragment)) && (messageEditText == null || TextUtils.isEmpty(messageEditText.getText())) && botReplyMarkup != null && !botReplyMarkup.rows.isEmpty()) {
@@ -13945,6 +14290,16 @@ public class ChatActivityEnterView extends FrameLayout implements
     @SuppressWarnings("unchecked")
     @Override
     public void didReceivedNotification(int id, int account, Object... args) {
+        if (id == NotificationCenter.fileLoaded || id == NotificationCenter.fileLoadFailed) {
+            ArrayList<PendingCustomEmojiStickerSend> pendingSends = args[0] instanceof String ? pendingCustomEmojiStickerSends.remove(args[0]) : null;
+            if (pendingSends != null && id == NotificationCenter.fileLoaded) {
+                for (int i = 0; i < pendingSends.size(); i++) {
+                    PendingCustomEmojiStickerSend pendingSend = pendingSends.get(i);
+                    sendCustomEmojiAsUploadedSticker(pendingSend.document, pendingSend.emoticon, pendingSend.notify, pendingSend.scheduleDate, pendingSend.scheduleRepeatPeriod);
+                }
+            }
+            return;
+        }
         if (id == NotificationCenter.emojiLoaded) {
             if (emojiView != null) {
                 emojiView.invalidateViews();
@@ -14204,9 +14559,16 @@ public class ChatActivityEnterView extends FrameLayout implements
                 }
 
                 updateBotButton(false);
+                // [Alexgram: Templates Oval Input] - Start
+                updateTemplatesOvalButton(false);
+                // [Alexgram: Templates Oval Input] - End
             }
         } else if (id == NotificationCenter.didUpdatePremiumGiftFieldIcon) {
             updateGiftButton(true);
+        // [Alexgram: Templates Oval Input] - Start
+        } else if (id == NotificationCenter.templatesSettingsUpdated) {
+            updateTemplatesOvalButton(true);
+        // [Alexgram: Templates Oval Input] - End
         }
     }
 
@@ -14230,7 +14592,7 @@ public class ChatActivityEnterView extends FrameLayout implements
         int newHeight = originalViewHeight
             - AndroidUtilities.statusBarHeight
             - AndroidUtilities.navigationBarHeight
-            - dp(11)
+            - dp(6)
             - ActionBar.getCurrentActionBarHeight()
             - getHeight();
         if (searchingType == 2) {
@@ -14356,7 +14718,7 @@ public class ChatActivityEnterView extends FrameLayout implements
             stickersExpandedHeight = originalViewHeight
                 - AndroidUtilities.statusBarHeight
                 - AndroidUtilities.navigationBarHeight
-                - dp(11)
+                - dp(6)
                 - ActionBar.getCurrentActionBarHeight()
                 - getHeight();
             if (searchingType == 2) {
@@ -15100,7 +15462,19 @@ public class ChatActivityEnterView extends FrameLayout implements
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         int wasHeight = textFieldContainer.getMeasuredHeight();
-        if (botCommandsMenuButton != null && botCommandsMenuButton.getTag() != null) {
+        // [Alexgram: Templates Oval Input] - Start
+        if (isTemplatesOvalButtonVisible()) {
+            int width = templatesOvalButton.getLayoutParams().width;
+            int height = templatesOvalButton.getLayoutParams().height;
+            int leftOffset = getSenderSelectOccupiedWidth();
+            ((MarginLayoutParams) templatesOvalButton.getLayoutParams()).leftMargin = dp(4) + leftOffset;
+            templatesOvalButton.measure(MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY));
+            ((MarginLayoutParams) emojiButton.getLayoutParams()).leftMargin = dp(8) + width + leftOffset;
+            if (messageEditText != null) {
+                ((MarginLayoutParams) messageEditText.getLayoutParams()).leftMargin = dp(55) + width + leftOffset;
+            }
+        // [Alexgram: Templates Oval Input] - End
+        } else if (botCommandsMenuButton != null && botCommandsMenuButton.getTag() != null) {
             botCommandsMenuButton.measure(widthMeasureSpec, heightMeasureSpec);
             ((MarginLayoutParams) emojiButton.getLayoutParams()).leftMargin = dp(10) + (botCommandsMenuButton == null ? 0 : botCommandsMenuButton.getMeasuredWidth());
             if (messageEditText != null) {
@@ -15109,9 +15483,9 @@ public class ChatActivityEnterView extends FrameLayout implements
         } else if (senderSelectView != null && senderSelectView.getVisibility() == View.VISIBLE) {
             int width = senderSelectView.getLayoutParams().width, height = senderSelectView.getLayoutParams().height;
             senderSelectView.measure(MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY));
-            ((MarginLayoutParams) emojiButton.getLayoutParams()).leftMargin = dp(16) + width;
+            ((MarginLayoutParams) emojiButton.getLayoutParams()).leftMargin = dp(7) + width;
             if (messageEditText != null) {
-                ((MarginLayoutParams) messageEditText.getLayoutParams()).leftMargin = dp(63) + width;
+                ((MarginLayoutParams) messageEditText.getLayoutParams()).leftMargin = dp(54) + width;
             }
         } else {
             ((MarginLayoutParams) emojiButton.getLayoutParams()).leftMargin = dp(3);
@@ -15204,6 +15578,9 @@ public class ChatActivityEnterView extends FrameLayout implements
         }
 
         updateBotButton(animate);
+        // [Alexgram: Templates Oval Input] - Start
+        updateTemplatesOvalButton(animate);
+        // [Alexgram: Templates Oval Input] - End
     }
 
     public boolean botCommandsMenuIsShowing() {
@@ -15428,6 +15805,46 @@ public class ChatActivityEnterView extends FrameLayout implements
             recordCircle.setSendButtonInvisible();
         }
     }
+
+    // [Alexgram: Templates Oval Input] - Start
+    @SuppressLint("ViewConstructor")
+    private static class TemplateOvalButton extends View {
+        private static final int WIDTH_DP = 64;
+
+        private final Theme.ResourcesProvider resourcesProvider;
+        private final Paint backgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final RectF rect = new RectF();
+        private final Drawable icon;
+
+        TemplateOvalButton(Context context, Theme.ResourcesProvider resourcesProvider) {
+            super(context);
+            this.resourcesProvider = resourcesProvider;
+            icon = ContextCompat.getDrawable(context, R.drawable.fork_templates);
+            setWillNotDraw(false);
+            setFocusable(true);
+        }
+
+        @Override
+        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+            setMeasuredDimension(dp(WIDTH_DP), dp(DEFAULT_HEIGHT));
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            super.onDraw(canvas);
+            backgroundPaint.setColor(Theme.getColor(Theme.key_chat_messagePanelSend, resourcesProvider));
+            rect.set(dp(4), dp(3), getWidth() - dp(4), getHeight() - dp(3));
+            canvas.drawRoundRect(rect, dp(21), dp(21), backgroundPaint);
+            if (icon != null) {
+                int size = dp(34);
+                int left = (getWidth() - size) / 2;
+                int top = (getHeight() - size) / 2;
+                icon.setBounds(left, top, left + size, top + size);
+                icon.draw(canvas);
+            }
+        }
+    }
+    // [Alexgram: Templates Oval Input] - End
 
     public enum BotMenuButtonType {
         NO_BUTTON,

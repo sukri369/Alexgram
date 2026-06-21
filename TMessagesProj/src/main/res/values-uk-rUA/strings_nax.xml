@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="XChannel">Канал Nagram X</string>
+    <string name="XChannel">Канал Alexgram</string>
     <string name="EnableSaveDeletedMessages">Зберігати видаленні повідомлення</string>
     <string name="DeletedMessage">видалено</string>
     <string name="EnableSaveEditsHistory">Зберегти історію змін</string>
@@ -305,8 +305,8 @@
     <string name="BackAnimationSpring">Пружна</string>
     <string name="BackAnimationPredictive">Прогнозована</string>
     <string name="AddToFilter">Додати до фільтра</string>
-    <string name="UnifiedPushNeverReceivedNotifications">З моменту запуску Nagram X сповіщень через UnifiedPush не надходило.</string>
-    <string name="UnifiedPushLastReceivedNotification">Останнє сповіщення через UnifiedPush надійшло %1$d сек. тому.\n\nВи отримали %2$d сповіщень з моменту запуску Nagram X.</string>
+    <string name="UnifiedPushNeverReceivedNotifications">З моменту запуску Alexgram сповіщень через UnifiedPush не надходило.</string>
+    <string name="UnifiedPushLastReceivedNotification">Останнє сповіщення через UnifiedPush надійшло %1$d сек. тому.\n\nВи отримали %2$d сповіщень з моменту запуску Alexgram.</string>
     <string name="UnifiedPushCurrentEndpoint">Поточна кінцева точка UnifiedPush: %1$s</string>
     <string name="PlayOnce">Відтворити один раз</string>
     <string name="StorageSettings">Сховище</string>
@@ -356,6 +356,8 @@
     <string name="TabsByTypeDeleted">Видалені акаунти</string>
     <string name="TabsByTypeSecret">Секретні чати</string>
     <string name="TabsByTypeAlbums">Альбоми</string>
+    <string name="HideFolders">Приховати папки</string>
+    <string name="HideFoldersInfo">Приховати сервери папок Telegram і показувати лише вкладки за типами.</string>
     <string name="ShowQuickEditIcon">Кнопка швидкого редагування поруч із повідомленнями</string>
     <string name="ShowQuickEditIconDesc">Показувати значок олівця поруч із повідомленнями для швидкого доступу до редагування</string>
     <string name="QuickEditIconOnlyOwn">Тільки для повідомлень, які можна редагувати</string>
@@ -414,4 +416,31 @@
     <string name="ChangeSenderNameApply">Застосувати</string>
     <string name="DirectForwardNotAllowed">Пряме пересилання заборонено.</string>
     <string name="ForceForwardStatusMediaCopy">Копіювання медіафайлу</string>
+
+    <!-- New Settings and Features -->
+    <string name="usePollinationsAi">Використовувати Pollinations.ai</string>
+    <string name="usePollinationsAiAbout">Використовуйте Pollinations.ai для безкоштовних ШІ-відповідей, резюмування та ШІ-допомоги. Ключ API не потрібен.</string>
+    <string name="AiAssistanceSettings">Налаштування ШІ-помічника</string>
+    <string name="aiModelUrl">URL-адреса моделі ШІ 1</string>
+    <string name="aiApiKey">Ключ API ШІ 1</string>
+    <string name="TestAiApi">Перевірити з\'єднання з API 1</string>
+    <string name="aiModelUrl2">URL-адреса моделі ШІ 2 (резервна)</string>
+    <string name="aiApiKey2">Ключ API ШІ 2 (резервний)</string>
+    <string name="TestAiApi2">Перевірити з\'єднання з API 2</string>
+    <string name="DefaultScheduleDelay">Затримка за замовчуванням</string>
+    <string name="CustomReplyWord">Власне слово відповіді</string>
+    <string name="Customization">Персоналізація</string>
+    <string name="SendLockedCustomEmojiAsSticker">Надсилати преміум-емодзі як стікер</string>
+    <string name="SendLockedCustomEmojiAsStickerInfo">Підтримуються лише користувацькі емодзі WebP/WebM. Емодзі лише TGS виключені.</string>
+    <string name="LocalEditorPlus">Локальний редактор+</string>
+    <string name="LocalEditorPlusAbout">Редагуйте текст та дату повідомлень або видаляйте повідомлення локально лише на цьому пристрої без надсилання запитів на сервер.</string>
+    <string name="LocalEditorMenuOption">Більше</string>
+    <string name="LocalEditorEditOption">Редагувати локально</string>
+    <string name="LocalEditorDeleteOption">Видати локально</string>
+    <string name="LocalEditorRestore">Відновити</string>
+    <string name="ShowAdminTagInVoiceChat">Показувати тег адміна у голосовому чаті</string>
+    <string name="ShowAdminTagInVoiceChatDesc">Відображати значки адміністратора або власника поруч із іменами користувачів у голосових/відеочатах.</string>
+    <string name="Ayugram">Ayugram</string>
+    <string name="ProfilePrivacyManager">Керування приватністю профілю</string>
+    <string name="ProfilePrivacyManagerAbout">Дозволяє керувати налаштуваннями приватності окремих користувачів безпосередньо з меню їхнього профілю.</string>
 </resources>

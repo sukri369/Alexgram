@@ -43,6 +43,7 @@ import org.telegram.messenger.Utilities;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.AlertDialog;
+import org.telegram.ui.ActionBar.BackDrawable;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.INavigationLayout;
 import org.telegram.ui.ActionBar.SimpleTextView;
@@ -548,12 +549,14 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
 
     @Keep
     private int showTagsRow;
+    private int hideFoldersRow;
     private int filtersStartPosition;
     private int filtersSectionStart = -1, filtersSectionEnd = -1;
     private int folderTagsPosition;
 
     private void updateRows(boolean animated) {
         showTagsRow = -1;
+        hideFoldersRow = -1;
 
         if (listView != null) {
             if (listView.forcedSections == null) {
@@ -570,7 +573,14 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
         ArrayList<TLRPC.TL_dialogFilterSuggested> suggestedFilters = getMessagesController().suggestedFilters;
         ArrayList<MessagesController.DialogFilter> dialogFilters = getMessagesController().getDialogFilters();
         items.add(ItemInner.asHint());
-        if (!suggestedFilters.isEmpty() && dialogFilters.size() < 10) {
+        // [Alexgram: Tabs by Type] - only count real (non-virtual) filters for display and limit
+        int realFilterCount = 0;
+        for (int i = 0; i < dialogFilters.size(); ++i) {
+            if (!tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(dialogFilters.get(i))) {
+                realFilterCount++;
+            }
+        }
+        if (!suggestedFilters.isEmpty() && realFilterCount < 10) {
             int start = items.size();
             items.add(ItemInner.asHeader(LocaleController.getString(R.string.FilterRecommended)));
             for (int i = 0; i < suggestedFilters.size(); ++i) {
@@ -578,13 +588,6 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
             }
             if (listView != null) listView.forcedSections.add(AndroidUtilities.pack(start, items.size() - 1));
             items.add(ItemInner.asShadow(null));
-        }
-        // [Alexgram: Tabs by Type] - only count real (non-virtual) filters for display and limit
-        int realFilterCount = 0;
-        for (int i = 0; i < dialogFilters.size(); ++i) {
-            if (!tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(dialogFilters.get(i))) {
-                realFilterCount++;
-            }
         }
         if (realFilterCount > 0) {
             filtersSectionStart = items.size();
@@ -620,6 +623,10 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
         items.add(ItemInner.asShadow(!getUserConfig().isPremiumOrLocal() ? AndroidUtilities.replaceSingleTag(LocaleController.getString(R.string.FolderShowTagsInfoPremium), Theme.key_windowBackgroundWhiteBlueHeader, AndroidUtilities.REPLACING_TAG_TYPE_LINKBOLD, () -> {
             presentFragment(new PremiumPreviewFragment("settings"));
         }) : LocaleController.getString(R.string.FolderShowTagsInfo)));
+
+        hideFoldersRow = items.size();
+        items.add(ItemInner.asHideFolders(LocaleController.getString(R.string.HideFolders)));
+        items.add(ItemInner.asShadow(LocaleController.getString(R.string.HideFoldersInfo)));
 
         if (adapter != null) {
             if (animated) {
@@ -667,6 +674,9 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
                 }
             }
         });
+        if (parentLayout != null && parentLayout.isRightLayout()) {
+            actionBar.setBackButtonImage(R.drawable.ic_ab_close);
+        }
 
         fragmentView = new FrameLayout(context);
         FrameLayout frameLayout = (FrameLayout) fragmentView;
@@ -739,6 +749,11 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
             } else if (item.viewType == VIEW_TYPE_TABS_BY_TYPE) {
                 presentFragment(new tw.nekomimi.nekogram.tabs.TabsByTypeActivity());
             // [Alexgram: Tabs by Type] - End
+            } else if (item.viewType == VIEW_TYPE_HIDE_FOLDERS) {
+                boolean hide = !tw.nekomimi.nekogram.tabs.TabsByTypeSettings.getInstance().isHideFolders();
+                tw.nekomimi.nekogram.tabs.TabsByTypeSettings.getInstance().setHideFolders(hide);
+                ((TextCheckCell) view).setChecked(hide);
+                tw.nekomimi.nekogram.tabs.TabsByTypeManager.getInstance(currentAccount).applyAndNotify();
             }
         });
 
@@ -755,10 +770,16 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
     }
 
     public void createFolder(INavigationLayout navigationLayout) {
-        final int count = getMessagesController().getDialogFilters().size();
+        int realFilterCount = 0;
+        ArrayList<MessagesController.DialogFilter> dialogFilters = getMessagesController().getDialogFilters();
+        for (int i = 0; i < dialogFilters.size(); i++) {
+            if (!tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(dialogFilters.get(i))) {
+                realFilterCount++;
+            }
+        }
         if (
-            count - 1 >= getMessagesController().dialogFiltersLimitDefault && !getUserConfig().isPremium() ||
-            count >= getMessagesController().dialogFiltersLimitPremium
+            realFilterCount - 1 >= getMessagesController().dialogFiltersLimitDefault && !getUserConfig().isPremium() ||
+            realFilterCount >= getMessagesController().dialogFiltersLimitPremium
         ) {
             showDialog(new LimitReachedBottomSheet(this, getContext(), LimitReachedBottomSheet.TYPE_FOLDERS, currentAccount, null));
         } else if (navigationLayout != null) {
@@ -810,6 +831,7 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
     // [Alexgram: Tabs by Type] - Start
     private static final int VIEW_TYPE_TABS_BY_TYPE = 7;
     // [Alexgram: Tabs by Type] - End
+    private static final int VIEW_TYPE_HIDE_FOLDERS = 8;
 
     private int shiftDp = -4;
 
@@ -862,6 +884,11 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
             return new ItemInner(VIEW_TYPE_TABS_BY_TYPE);
         }
         // [Alexgram: Tabs by Type] - End
+        public static ItemInner asHideFolders(CharSequence text) {
+            ItemInner i = new ItemInner(VIEW_TYPE_HIDE_FOLDERS);
+            i.text = text;
+            return i;
+        }
 
         @Override
         public boolean equals(Object obj) {
@@ -875,7 +902,7 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
             if (other.viewType != viewType) {
                 return false;
             }
-            if (viewType == VIEW_TYPE_HEADER || viewType == VIEW_TYPE_BUTTON || viewType == VIEW_TYPE_SHADOW || viewType == VIEW_TYPE_CHECK) {
+            if (viewType == VIEW_TYPE_HEADER || viewType == VIEW_TYPE_BUTTON || viewType == VIEW_TYPE_SHADOW || viewType == VIEW_TYPE_CHECK || viewType == VIEW_TYPE_HIDE_FOLDERS) {
                 if (!TextUtils.equals(text, other.text)) {
                     return false;
                 }
@@ -1043,6 +1070,9 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
                     view = createTabsByTypeView(mContext);
                     break;
                 // [Alexgram: Tabs by Type] - End
+                case VIEW_TYPE_HIDE_FOLDERS:
+                    view = new TextCheckCell(mContext);
+                    break;
                 case VIEW_TYPE_FILTER_SUGGESTION:
                 default:
                     SuggestedFilterCell suggestedFilterCell = new SuggestedFilterCell(mContext);
@@ -1156,6 +1186,12 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
                     TextCheckCell cell = (TextCheckCell) holder.itemView;
                     cell.setTextAndCheck(item.text, getMessagesController().folderTags, divider);
                     cell.setCheckBoxIcon(!getUserConfig().isPremiumOrLocal() ? R.drawable.permission_locked : 0);
+                    break;
+                }
+                case VIEW_TYPE_HIDE_FOLDERS: {
+                    TextCheckCell cell = (TextCheckCell) holder.itemView;
+                    cell.setTextAndCheck(item.text, tw.nekomimi.nekogram.tabs.TabsByTypeSettings.getInstance().isHideFolders(), divider);
+                    cell.setCheckBoxIcon(0);
                     break;
                 }
                 case VIEW_TYPE_FILTER_SUGGESTION: {

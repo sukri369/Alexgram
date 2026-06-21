@@ -40,7 +40,7 @@ public class SelectPeerView extends FrameLayout {
 
         avatarDrawable = new AvatarDrawable();
         imageView = new BackupImageView(context);
-        imageView.setRoundRadius(dp(15));
+        imageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(30.0f));
         addView(imageView, LayoutHelper.createFrame(30, 30, Gravity.CENTER_VERTICAL | Gravity.LEFT, 14, 0, 0, 0));
 
         titleView = new TextView(context);
@@ -69,12 +69,14 @@ public class SelectPeerView extends FrameLayout {
         if (did >= 0) {
             final TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(did);
             avatarDrawable.setInfo(user);
+            imageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(30.0f));
             imageView.setForUserOrChat(user, avatarDrawable);
 
             titleView.setText(UserObject.getUserName(user));
         } else {
             final TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-did);
             avatarDrawable.setInfo(chat);
+            imageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(30.0f, chat != null && (org.telegram.messenger.ChatObject.isForum(chat) || org.telegram.messenger.ChatObject.isMonoForum(chat))));
             imageView.setForUserOrChat(chat, avatarDrawable);
 
             titleView.setText(chat == null ? "" : chat.title);

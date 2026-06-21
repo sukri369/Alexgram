@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="XChannel">Nagram X チャンネル</string>
+    <string name="XChannel">Alexgram チャンネル</string>
     <string name="EnableSaveDeletedMessages">削除済みメッセージを保存</string>
     <string name="DeletedMessage">削除済み</string>
     <string name="EnableSaveEditsHistory">編集履歴を保存</string>
@@ -306,8 +306,8 @@
     <string name="BackAnimationSpring">Spring</string>
     <string name="BackAnimationPredictive">予測型</string>
     <string name="AddToFilter">フィルターに追加</string>
-    <string name="UnifiedPushNeverReceivedNotifications">Nagram X の起動以降、UnifiedPush 経由で通知を受信したことはありません。</string>
-    <string name="UnifiedPushLastReceivedNotification">UnifiedPush で最後に受信した通知は %1$d 秒前です。\n\nNagram X の起動以降、 %2$d 件の通知を受信しました。</string>
+    <string name="UnifiedPushNeverReceivedNotifications">Alexgram の起動以降、UnifiedPush 経由で通知を受信したことはありません。</string>
+    <string name="UnifiedPushLastReceivedNotification">UnifiedPush で最後に受信した通知は %1$d 秒前です。\n\nAlexgram の起動以降、 %2$d 件の通知を受信しました。</string>
     <string name="UnifiedPushCurrentEndpoint">現在の UnifiedPush エンドポイントは：%1$s</string>
     <string name="PlayOnce">ワンショット</string>
     <string name="StorageSettings">ストレージ</string>
@@ -423,5 +423,32 @@
     <string name="ExperimentalMusicSpeedControlAbout">再生時間に関係なく、すべての音楽ファイルで再生速度制御を有効にします。</string>
     <string name="ExperimentalEditFileName">ファイル名を編集</string>
     <string name="ExperimentalEditFileNameAbout">送信するドキュメントまたはオーディオファイルを選択するときに、「ファイル名を編集」オプションを追加します。</string>
+
+    <!-- New Settings and Features -->
+    <string name="usePollinationsAi">Pollinations.aiを使用</string>
+    <string name="usePollinationsAiAbout">無料のAI返信、要約、およびAIアシスタントにPollinations.aiを使用します。APIキーは不要です。</string>
+    <string name="AiAssistanceSettings">AIアシスタント設定</string>
+    <string name="aiModelUrl">AIモデルのURL 1</string>
+    <string name="aiApiKey">AI APIキー 1</string>
+    <string name="TestAiApi">API接続テスト 1</string>
+    <string name="aiModelUrl2">AIモデルのURL 2（フェイルオーバー）</string>
+    <string name="aiApiKey2">AI APIキー 2（フェイルオーバー）</string>
+    <string name="TestAiApi2">API接続テスト 2</string>
+    <string name="DefaultScheduleDelay">デフォルトの遅延時間</string>
+    <string name="CustomReplyWord">カスタム返信ワード</string>
+    <string name="Customization">カスタマイズ</string>
+    <string name="SendLockedCustomEmojiAsSticker">プレミアム絵文字をステッカーとして送信</string>
+    <string name="SendLockedCustomEmojiAsStickerInfo">WebP/WebMカスタム絵文字のみをサポートします。TGSのみの絵文字は除外されます。</string>
+    <string name="LocalEditorPlus">ローカルエディター+</string>
+    <string name="LocalEditorPlusAbout">サーバーにリクエストを送信せずに、このデバイス上でのみローカルにメッセージのテキストと日付を編集、またはメッセージを削除します。</string>
+    <string name="LocalEditorMenuOption">詳細</string>
+    <string name="LocalEditorEditOption">ローカルで編集</string>
+    <string name="LocalEditorDeleteOption">ローカルで削除</string>
+    <string name="LocalEditorRestore">復元</string>
+    <string name="ShowAdminTagInVoiceChat">ボイスチャットで管理者タグを表示</string>
+    <string name="ShowAdminTagInVoiceChatDesc">ボイス/ビデオチャットでユーザー名の横に管理者または所有者バッジを表示します。</string>
+    <string name="Ayugram">Ayugram</string>
+    <string name="ProfilePrivacyManager">プロファイルプライバシーマネージャー</string>
+    <string name="ProfilePrivacyManagerAbout">プロファイルメニューから直接、個々のユーザーのプライバシー設定を管理できます。</string>
 </resources>
 

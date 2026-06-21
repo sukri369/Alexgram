@@ -84,6 +84,7 @@ import java.util.Objects;
 
 import tw.nekomimi.nekogram.helpers.HiddenChatsController;
 import tw.nekomimi.nekogram.ui.HiddenChatsActivity;
+import org.telegram.ui.Templates.TemplatesManager;
 
 public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements DialogCell.DialogCellDelegate {
     public final static int VIEW_TYPE_DIALOG = 0,
@@ -1496,7 +1497,21 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
 
         if (array == null) {
             array = new ArrayList<>();
-        } else if (dialogsType == 0) {
+        } else {
+            long templatesChannelId = TemplatesManager.getInstance(currentAccount).getTemplatesChannelId();
+            if (templatesChannelId != 0) {
+                ArrayList<TLRPC.Dialog> filtered = new ArrayList<>();
+                for (TLRPC.Dialog dialog : array) {
+                    if (dialog.id == templatesChannelId) {
+                        continue;
+                    }
+                    filtered.add(dialog);
+                }
+                array = filtered;
+            }
+        }
+
+        if (dialogsType == 0) {
             boolean isHiddenScreen = parentFragment instanceof HiddenChatsActivity; 
             ArrayList<TLRPC.Dialog> filtered = new ArrayList<>();
             for (TLRPC.Dialog dialog : array) {

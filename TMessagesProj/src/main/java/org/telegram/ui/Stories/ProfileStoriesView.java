@@ -107,7 +107,7 @@ public class ProfileStoriesView extends View implements NotificationCenter.Notif
     private class StoryCircle {
         public StoryCircle(TL_stories.StoryItem storyItem) {
             this.storyId = storyItem.id;
-            this.imageReceiver.setRoundRadius(dp(200));
+            this.imageReceiver.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(50.0f));
             this.imageReceiver.setParentView(ProfileStoriesView.this);
             this.live = storyItem.media instanceof TLRPC.TL_messageMediaVideoStream;
             if (attached) {
@@ -797,6 +797,7 @@ public class ProfileStoriesView extends View implements NotificationCenter.Notif
                 final StoryCircle nextCircle = nearest(i - 1 >= 0 ? circles.get(i - 1) : null, i - 2 >= 0 ? circles.get(i - 2) : null, circle);
                 clipCircle(canvas, circle, nextCircle);
                 circle.imageReceiver.setImageCoords(circle.cachedRect);
+                circle.imageReceiver.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadiusPx(circle.cachedRect.width()));
                 circle.imageReceiver.draw(canvas);
                 canvas.restoreToCount(r);
             }
@@ -902,10 +903,19 @@ public class ProfileStoriesView extends View implements NotificationCenter.Notif
     private final PathMeasure forumRoundRectPathMeasure = new PathMeasure();
     private final Path forumSegmentPath = new Path();
 
+    private float getAvatarStoryRoundRadius(RectF rect, boolean isForum) {
+        return org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadiusPx(Math.min(rect.width(), rect.height()), isForum);
+    }
+
+    private boolean shouldUseAvatarStoryRoundRect(RectF rect, boolean isForum) {
+        float size = Math.min(rect.width(), rect.height());
+        return size > 0 && (isForum || getAvatarStoryRoundRadius(rect, false) < size / 2f - 0.5f);
+    }
+
     private void drawArc(Canvas canvas, RectF oval, float startAngle, float sweepAngle, boolean useCenter, Paint paint) {
         boolean isForum = ChatObject.isForum(UserConfig.selectedAccount, dialogId);
-        if (isForum) {
-            float r = oval.height() * 0.32f;
+        if (shouldUseAvatarStoryRoundRect(oval, isForum)) {
+            float r = getAvatarStoryRoundRadius(oval, isForum);
             if (Math.abs(sweepAngle) == 360) {
                 canvas.drawRoundRect(oval, r, r, paint);
                 return;

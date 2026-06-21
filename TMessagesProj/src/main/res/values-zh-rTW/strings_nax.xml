@@ -307,8 +307,8 @@
     <string name="BackAnimationSpring">Spring</string>
     <string name="BackAnimationPredictive">預測</string>
     <string name="AddToFilter">新增過濾器</string>
-    <string name="UnifiedPushNeverReceivedNotifications">自 Nagram X 啟動後，您從未收到 UnifiedPush 的通知。</string>
-    <string name="UnifiedPushLastReceivedNotification">最後一次透過 UnifiedPush 接收到的通知是 %1$d 秒前。\n\n自 Nagram X 啟動以來，您已收到 %2$d 條通知。</string>
+    <string name="UnifiedPushNeverReceivedNotifications">自 Alexgram 啟動後，您從未收到 UnifiedPush 的通知。</string>
+    <string name="UnifiedPushLastReceivedNotification">最後一次透過 UnifiedPush 接收到的通知是 %1$d 秒前。\n\n自 Alexgram 啟動以來，您已收到 %2$d 條通知。</string>
     <string name="UnifiedPushCurrentEndpoint">目前的 UnifiedPush 端點是：%1$s</string>
     <string name="PlayOnce">播放一次</string>
     <string name="StorageSettings">儲存</string>
@@ -380,6 +380,8 @@
     <string name="TabsByTypeDeleted">已註銷帳戶</string>
     <string name="TabsByTypeSecret">加密私聊</string>
     <string name="TabsByTypeAlbums">相簿</string>
+    <string name="HideFolders">隱藏資料夾</string>
+    <string name="HideFoldersInfo">隱藏 Telegram 伺服器資料夾，只顯示按類型分組的標籤頁。</string>
     <string name="ShowQuickEditIcon">訊息旁邊的快速編輯按鈕</string>
     <string name="ShowQuickEditIconDesc">在訊息旁邊顯示鉛筆圖示以快速編輯訊息</string>
     <string name="QuickEditIconOnlyOwn">僅限可編輯的訊息</string>
@@ -425,4 +427,34 @@
     <string name="ExperimentalMusicSpeedControlAbout">無論播放時長如何，對所有音乐文件啟用播放速度控制。</string>
     <string name="ExperimentalEditFileName">編輯檔案名稱</string>
     <string name="ExperimentalEditFileNameAbout">選擇要發送的文檔或音頻文件時，添加“編輯檔案名稱”選項。</string>
+    <string name="SendLockedCustomEmojiAsSticker">將進階表情符號作為貼圖傳送</string>
+    <string name="SendLockedCustomEmojiAsStickerInfo">僅支援 WebP/WebM 自訂表情符號，排除僅支援 TGS 的表情符號。</string>
+    <string name="LocalEditorPlus">本機編輯器+</string>
+    <string name="LocalEditorPlusAbout">在本機上編輯訊息內容與日期，或僅在該裝置上刪除訊息，不傳送伺服器請求。</string>
+    <string name="LocalEditorMenuOption">更多</string>
+
+    <string name="LocalEditorEditOption">本機編輯</string>
+    <string name="LocalEditorDeleteOption">本機刪除</string>
+    <string name="LocalEditorRestore">還原</string>
+
+    <!-- New Settings and Features -->
+    <string name="usePollinationsAi">使用 Pollinations.ai</string>
+    <string name="usePollinationsAiAbout">使用 Pollinations.ai 獲取免費的 AI 回覆、總結和 AI 助手。無需 API 金鑰。</string>
+    <string name="AiAssistanceSettings">AI 助手設定</string>
+    <string name="aiModelUrl">AI 模型 URL 1</string>
+    <string name="aiApiKey">AI API 金鑰 1</string>
+    <string name="TestAiApi">測試 API 連線 1</string>
+    <string name="aiModelUrl2">AI 模型 URL 2（備用）</string>
+    <string name="aiApiKey2">AI API 金鑰 2（備用）</string>
+    <string name="TestAiApi2">測試 API 連線 2</string>
+    <string name="DefaultScheduleDelay">預設延遲</string>
+    <string name="CustomReplyWord">自訂回覆詞</string>
+    <string name="Customization">個性化</string>
+    <string name="ShowAdminTagInVoiceChat">在語音聊天中顯示管理員標籤</string>
+    <string name="ShowAdminTagInVoiceChatDesc">在語音/視訊聊天中在用戶名旁顯示管理員或所有者徽章。</string>
+    <string name="Ayugram">Ayugram</string>
+    <string name="ProfilePrivacyManager">個人檔案隱私管理器</string>
+    <string name="ProfilePrivacyManagerAbout">允許直接從用戶的個人檔案功能表管理單個用戶的隱私設定。</string>
 </resources>
+
+

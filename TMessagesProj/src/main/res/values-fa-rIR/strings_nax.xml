@@ -365,4 +365,31 @@
     <string name="ChangeSenderNameApply">اعمال</string>
     <string name="DirectForwardNotAllowed">هدایت مستقیم مجاز نیست.</string>
     <string name="ForceForwardStatusMediaCopy">ارسال کپی رسانه</string>
+
+    <!-- New Settings and Features -->
+    <string name="usePollinationsAi">استفاده از Pollinations.ai</string>
+    <string name="usePollinationsAiAbout">از Pollinations.ai برای پاسخ هوش مصنوعی، خلاصه‌سازی و کمک هوش مصنوعی رایگان استفاده کنید. نیازی به کلید API نیست.</string>
+    <string name="AiAssistanceSettings">تنظیمات دستیار هوش مصنوعی</string>
+    <string name="aiModelUrl">آدرس مدل هوش مصنوعی 1</string>
+    <string name="aiApiKey">کلید API هوش مصنوعی 1</string>
+    <string name="TestAiApi">تست اتصال API 1</string>
+    <string name="aiModelUrl2">آدرس مدل هوش مصنوعی 2 (پشتیبان)</string>
+    <string name="aiApiKey2">کلید API هوش مصنوعی 2 (پشتیبان)</string>
+    <string name="TestAiApi2">تست اتصال API 2</string>
+    <string name="DefaultScheduleDelay">تاخیر پیش‌فرض</string>
+    <string name="CustomReplyWord">کلمه پاسخ سفارشی</string>
+    <string name="Customization">سفارشی‌سازی</string>
+    <string name="SendLockedCustomEmojiAsSticker">ارسال شکلک‌های پرمیوم به عنوان استیکر</string>
+    <string name="SendLockedCustomEmojiAsStickerInfo">فقط از شکلک‌های سفارشی WebP/WebM پشتیبانی می‌کند. شکلک‌های فقط TGS مستثنی هستند.</string>
+    <string name="LocalEditorPlus">ویرایشگر محلی+</string>
+    <string name="LocalEditorPlusAbout">متن و تاریخ پیام را ویرایش کنید، یا پیام‌ها را به صورت محلی فقط در این دستگاه بدون ارسال درخواست به سرور حذف کنید.</string>
+    <string name="LocalEditorMenuOption">بیشتر</string>
+    <string name="LocalEditorEditOption">ویرایش محلی</string>
+    <string name="LocalEditorDeleteOption">حذف محلی</string>
+    <string name="LocalEditorRestore">بازیابی</string>
+    <string name="ShowAdminTagInVoiceChat">نمایش تگ مدیر در چت صوتی</string>
+    <string name="ShowAdminTagInVoiceChatDesc">نشان‌های مدیر یا مالک را در کنار نام کاربران در چت‌های صوتی/ویدیو نمایش دهید.</string>
+    <string name="Ayugram">Ayugram</string>
+    <string name="ProfilePrivacyManager">مدیریت حریم خصوصی پروفایل</string>
+    <string name="ProfilePrivacyManagerAbout">امکان مدیریت تنظیمات حریم خصوصی کاربران به صورت فردی را مستقیم از منوی پروفایل آن‌ها فراهم می‌کند.</string>
 </resources>

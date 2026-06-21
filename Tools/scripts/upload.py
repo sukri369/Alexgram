@@ -132,7 +132,7 @@ def get_documents() -> list[dict[str, str | Path]]:
 
 
 def encode_multipart(fields: dict[str, str], files: dict[str, tuple[str, bytes, str]]) -> tuple[bytes, str]:
-    boundary = "----NagramXUpload" + uuid.uuid4().hex
+    boundary = "----AlexgramUpload" + uuid.uuid4().hex
     body = bytearray()
 
     for name, value in fields.items():

@@ -274,13 +274,44 @@ public class ItemOptions {
     }
 
     public ItemOptions makeSwipeback() {
+        return makeSwipeback(false);
+    }
+
+    public ItemOptions makeSwipeback(boolean scrollable) {
         ItemOptions options = new ItemOptions(lastLayout, resourcesProvider);
-        options.foregroundIndex = lastLayout.addViewToSwipeBack(options.linearLayout);
+        if (scrollable) {
+            ScrollView scrollView = new ScrollView(lastLayout.getContext()) {
+                @Override
+                protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+                    super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(
+                            Math.min(AndroidUtilities.dp(380), MeasureSpec.getSize(heightMeasureSpec)),
+                            MeasureSpec.getMode(heightMeasureSpec)));
+                }
+            };
+            scrollView.setVerticalScrollBarEnabled(false);
+            scrollView.addView(options.linearLayout, LayoutHelper.createScroll(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP));
+            options.foregroundIndex = lastLayout.addViewToSwipeBack(scrollView);
+        } else {
+            options.foregroundIndex = lastLayout.addViewToSwipeBack(options.linearLayout);
+        }
+        if (lastLayout.getSwipeBack() != null) {
+            lastLayout.getSwipeBack().addOnSwipeBackProgressListener((layout, toProgress, progress) -> {
+                if ((toProgress == 0.0f && progress == 0.0f) || (toProgress == 1.0f && progress == 1.0f)) {
+                    dontDismiss = false;
+                }
+            });
+        }
         return options;
     }
 
     public LinearLayout getLinearLayout() {
-        return linearLayout;
+        if (linearLayout != null) {
+            return linearLayout;
+        }
+        if (lastLayout != null) {
+            return lastLayout.getLinearLayout();
+        }
+        return null;
     }
 
     public void openSwipeback(ItemOptions options) {
@@ -1812,7 +1843,7 @@ public class ItemOptions {
             if (blur) {
                 blurPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
                 scrimView.setAlpha(0.0f);
-                ScrimOptions.makeGlobalBlurBitmaps((bitmapBg, bitmapOptions) -> {
+                ScrimOptions.makeGlobalBlurBitmaps(pointContainer, (bitmapBg, bitmapOptions) -> {
                     scrimView.setAlpha(1.0f);
                     blurBitmap = bitmapBg;
                     if (scrimBlur3SourceBitmap != null) {

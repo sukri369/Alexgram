@@ -516,6 +516,18 @@ object NaConfig {
             ConfigItem.configTypeBool,
             false
         )
+    val avatarCorners =
+        addConfig(
+            "avatarCorners",
+            ConfigItem.configTypeFloat,
+            28.0f
+        )
+    val singleCornerRadius =
+        addConfig(
+            "singleCornerRadius",
+            ConfigItem.configTypeBool,
+            false
+        )
     val searchHashtagDefaultPageChannel =
         addConfig(
             "SearchHashtagDefaultPageChannel",
@@ -645,6 +657,12 @@ object NaConfig {
             "ShowVoiceChangerInChatMenu",
             ConfigItem.configTypeBool,
             true
+        )
+    val sendLockedCustomEmojiAsSticker =
+        addConfig(
+            "SendLockedCustomEmojiAsSticker",
+            ConfigItem.configTypeBool,
+            false
         )
 
     @JvmStatic
@@ -1821,10 +1839,10 @@ object NaConfig {
         if (normalizedLlmApiUrl != currentLlmApiUrl) {
             llmApiUrl.setConfigString(normalizedLlmApiUrl)
         }
-        if (customTitle.String() == "Nagram") {
+        if (customTitle.String() == "Nagram" || customTitle.String() == "NagramX") {
             customTitle.setConfigString("Alexgram")
         }
-        if (NekoConfig.customSavePath.String() == "Nagram") {
+        if (NekoConfig.customSavePath.String() == "Nagram" || NekoConfig.customSavePath.String() == "NagramX") {
             NekoConfig.customSavePath.setConfigString("Alexgram")
         }
     }

@@ -1786,7 +1786,14 @@ public class LimitReachedBottomSheet extends BottomSheetWithRecyclerListView imp
             float percent = .5f, position = .5f;
 
             if (type == TYPE_FOLDERS) {
-                currentValue = MessagesController.getInstance(currentAccount).dialogFilters.size() - 1;
+                int realFilterCount = 0;
+                ArrayList<MessagesController.DialogFilter> dialogFilters = MessagesController.getInstance(currentAccount).dialogFilters;
+                for (int i = 0; i < dialogFilters.size(); i++) {
+                    if (!tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(dialogFilters.get(i))) {
+                        realFilterCount++;
+                    }
+                }
+                currentValue = realFilterCount - 1;
             } else if (type == TYPE_ACCOUNTS) {
                 currentValue = UserConfig.getActivatedAccountsCount();
             } else if (type == TYPE_PIN_DIALOGS) {

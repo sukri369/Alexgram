@@ -203,6 +203,7 @@ public class StoriesUtilities {
         params.showProgress = showProgress;
         if (NaConfig.INSTANCE.getDisableStories().Bool() || params.currentState == STATE_EMPTY && params.progressToSate == 1f) {
             avatarImage.setImageCoords(params.originalAvatarRect);
+            avatarImage.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadiusPx(params.originalAvatarRect.width(), isForum, isForum && hasStories));
             avatarImage.draw(canvas);
             return;
         }
@@ -226,10 +227,12 @@ public class StoriesUtilities {
         );
         if (insetTo == 0) {
             avatarImage.setImageCoords(params.originalAvatarRect);
+            avatarImage.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadiusPx(params.originalAvatarRect.width(), isForum, isForum && hasStories));
         } else {
             rectTmp.set(params.originalAvatarRect);
             rectTmp.inset(insetTo, insetTo);
             avatarImage.setImageCoords(rectTmp);
+            avatarImage.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadiusPx(rectTmp.width(), isForum, isForum && hasStories));
         }
         if (drawLive > 0) {
             canvas.saveLayerAlpha(
@@ -382,7 +385,7 @@ public class StoriesUtilities {
                         paint = unreadPaint;
                     }
                 }
-                drawProgress(canvas, params, avatarImage.getParentView(), paint);
+                drawProgress(canvas, params, avatarImage.getParentView(), paint, isForum);
             }
         }
 
@@ -600,22 +603,22 @@ public class StoriesUtilities {
         }
     }
 
-    private static void drawProgress(Canvas canvas, AvatarStoryParams params, View view, Paint paint) {
+    private static void drawProgress(Canvas canvas, AvatarStoryParams params, View view, Paint paint, boolean isForum) {
         float len = 360 / (float) ANIMATION_SEGMENT_COUNT;
         params.updateProgressParams();
         view.invalidate();
 
         if (params.inc) {
-            canvas.drawArc(rectTmp, params.globalAngle, 360 * params.sweepAngle, false, paint);
+            drawAvatarStoryArc(canvas, rectTmp, paint, params.globalAngle, 360 * params.sweepAngle, isForum);
         } else {
-            canvas.drawArc(rectTmp, params.globalAngle + 360, -360 * (params.sweepAngle), false, paint);
+            drawAvatarStoryArc(canvas, rectTmp, paint, params.globalAngle + 360, -360 * params.sweepAngle, isForum);
         }
 
         for (int i = 0; i < ANIMATION_SEGMENT_COUNT; i++) {
             float startAngle = i * len + 10;
             float endAngle = startAngle + len - 10;
             float segmentLen = endAngle - startAngle;
-            canvas.drawArc(rectTmp, params.globalAngle + startAngle, segmentLen, false, paint);
+            drawAvatarStoryArc(canvas, rectTmp, paint, params.globalAngle + startAngle, segmentLen, isForum);
         }
     }
 
@@ -671,10 +674,15 @@ public class StoriesUtilities {
     private static final RectF forumRect = new RectF();
 
     private static void drawCircleInternal(Canvas canvas, View view, AvatarStoryParams params, Paint paint, boolean isForum) {
-        if (isForum) {
+        if (shouldUseAvatarStoryRoundRect(rectTmp, isForum)) {
             forumRect.set(rectTmp);
             forumRect.inset(dp(0.5f), dp(0.5f));
-            canvas.drawRoundRect(forumRect, dp(18), dp(18), paint);
+            float radius = getAvatarStoryRoundRadius(forumRect, isForum);
+            if (params.progressToArc == 0) {
+                canvas.drawRoundRect(forumRect, radius, radius, paint);
+            } else {
+                drawAvatarStoryRoundRectSegment(canvas, forumRect, paint, 360 + params.progressToArc / 2f, 720 - params.progressToArc / 2f, radius);
+            }
             return;
         }
         if (params.progressToArc == 0) {
@@ -689,27 +697,66 @@ public class StoriesUtilities {
     private static final PathMeasure forumRoundRectPathMeasure = new PathMeasure();
     private static final Path forumSegmentPath = new Path();
 
+    private static float getAvatarStoryRoundRadius(RectF rect, boolean isForum) {
+        return org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadiusPx(Math.min(rect.width(), rect.height()), isForum);
+    }
+
+    private static boolean shouldUseAvatarStoryRoundRect(RectF rect, boolean isForum) {
+        float size = Math.min(rect.width(), rect.height());
+        return size > 0 && (isForum || getAvatarStoryRoundRadius(rect, false) < size / 2f - 0.5f);
+    }
+
+    private static void drawAvatarStoryArc(Canvas canvas, RectF rect, Paint paint, float startAngle, float sweepAngle, boolean isForum) {
+        if (shouldUseAvatarStoryRoundRect(rect, isForum)) {
+            float radius = getAvatarStoryRoundRadius(rect, isForum);
+            drawAvatarStoryRoundRectSegment(canvas, rect, paint, startAngle, startAngle + sweepAngle, radius);
+        } else {
+            canvas.drawArc(rect, startAngle, sweepAngle, false, paint);
+        }
+    }
+
+    private static void drawAvatarStoryRoundRectSegment(Canvas canvas, RectF rect, Paint paint, float startAngle, float endAngle, float radius) {
+        float sweep = endAngle - startAngle;
+        if (Math.abs(sweep) >= 359.9f) {
+            canvas.drawRoundRect(rect, radius, radius, paint);
+            return;
+        }
+        if (endAngle < startAngle) {
+            float t = startAngle;
+            startAngle = endAngle;
+            endAngle = t;
+        }
+        while (startAngle >= 360.0f) {
+            startAngle -= 360.0f;
+            endAngle -= 360.0f;
+        }
+        while (startAngle < -360.0f) {
+            startAngle += 360.0f;
+            endAngle += 360.0f;
+        }
+        float rotateAngle = (((int) startAngle) / 90) * 90 + 90;
+        float pathAngleStart = -199 + rotateAngle;
+        float percentFrom = (startAngle - pathAngleStart) / 360;
+        float percentTo = (endAngle - pathAngleStart) / 360;
+        forumRoundRectPath.rewind();
+        forumRoundRectPath.addRoundRect(rect, radius, radius, Path.Direction.CW);
+
+        forumRoundRectMatrix.reset();
+        forumRoundRectMatrix.postRotate(rotateAngle, rect.centerX(), rect.centerY());
+        forumRoundRectPath.transform(forumRoundRectMatrix);
+
+        forumRoundRectPathMeasure.setPath(forumRoundRectPath, false);
+        float length = forumRoundRectPathMeasure.getLength();
+
+        forumSegmentPath.reset();
+        forumRoundRectPathMeasure.getSegment(length * percentFrom, length * percentTo, forumSegmentPath, true);
+        forumSegmentPath.rLineTo(0, 0);
+        canvas.drawPath(forumSegmentPath, paint);
+    }
+
     private static void drawSegment(Canvas canvas, RectF rectTmp, Paint paint, float startAngle, float endAngle, AvatarStoryParams params, boolean isForum) {
-        if (isForum) {
-            float r = rectTmp.height() * 0.32f;
-            float rotateAngle = (((int)(startAngle)) / 90) * 90 + 90;
-            float pathAngleStart = -199 + rotateAngle;
-            float percentFrom = (startAngle - pathAngleStart) / 360;
-            float percentTo = (endAngle - pathAngleStart) / 360;
-            forumRoundRectPath.rewind();
-            forumRoundRectPath.addRoundRect(rectTmp, r, r, Path.Direction.CW);
-
-            forumRoundRectMatrix.reset();
-            forumRoundRectMatrix.postRotate(rotateAngle, rectTmp.centerX(), rectTmp.centerY());
-            forumRoundRectPath.transform(forumRoundRectMatrix);
-
-            forumRoundRectPathMeasure.setPath(forumRoundRectPath, false);
-            float length = forumRoundRectPathMeasure.getLength();
-
-            forumSegmentPath.reset();
-            forumRoundRectPathMeasure.getSegment(length * percentFrom, length * percentTo, forumSegmentPath, true);
-            forumSegmentPath.rLineTo(0, 0);
-            canvas.drawPath(forumSegmentPath, paint);
+        if (shouldUseAvatarStoryRoundRect(rectTmp, isForum)) {
+            drawAvatarStoryRoundRectSegment(canvas, rectTmp, paint, startAngle, endAngle, getAvatarStoryRoundRadius(rectTmp, isForum));
             return;
         }
         if (params.useArcProgress) {

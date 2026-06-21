@@ -1,9 +1,5 @@
 package org.telegram.ui.Components;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.animation.AnimatorSet;
-import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.PorterDuff;
@@ -14,11 +10,11 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import org.telegram.messenger.HashtagSearchController;
 import org.telegram.messenger.LocaleController;
+import org.telegram.messenger.Utilities;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.messenger.R;
@@ -27,34 +23,32 @@ import java.util.ArrayList;
 
 @SuppressLint("ViewConstructor")
 public class HashtagHistoryView extends FrameLayout {
-    private int currentAccount;
-    private Theme.ResourcesProvider resourcesProvider;
-    private AnimatorSet animation;
+    private final int currentAccount;
+    private final Theme.ResourcesProvider resourcesProvider;
     private ArrayList<String> history;
 
-    public FrameLayout emptyView;
-    private ImageView emptyImage;
-    private TextView emptyText;
+    public final FrameLayout emptyView;
+    private final ImageView emptyImage;
+    private final TextView emptyText;
 
-    private UniversalRecyclerView recyclerView;
-    private UniversalAdapter adapter;
+    private final UniversalRecyclerView recyclerView;
+    private final UniversalAdapter adapter;
 
     public HashtagHistoryView(Context context, Theme.ResourcesProvider resourcesProvider, int currentAccount) {
         super(context);
         this.currentAccount = currentAccount;
         this.resourcesProvider = resourcesProvider;
 
-        setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite, resourcesProvider));
-
         recyclerView = new UniversalRecyclerView(context, currentAccount, 0, this::fillItems, this::onClick, this::onLongClick, resourcesProvider);
-        recyclerView.setOnScrollListener(new RecyclerView.OnScrollListener() {
+        recyclerView.setClipToPadding(false);
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
-            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 HashtagHistoryView.this.onScrolled(recyclerView, dx, dy);
             }
         });
         adapter = (UniversalAdapter) recyclerView.getAdapter();
+        adapter.setApplyBackground(false);
         addView(recyclerView, LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT);
 
         emptyView = new FrameLayout(context);
@@ -75,54 +69,34 @@ public class HashtagHistoryView extends FrameLayout {
         recyclerView.setEmptyView(emptyView);
     }
 
-    protected void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
-
-    }
-
-    public void show(boolean show) {
-        if (show == isShowing()) {
-            return;
-        }
-
-        if (animation != null) {
-            animation.cancel();
-            animation = null;
-        }
-        if (show) {
-            setVisibility(View.VISIBLE);
-        }
-        setTag(show ? 1 : null);
-        animation = new AnimatorSet();
-        animation.playTogether(ObjectAnimator.ofFloat(this, View.ALPHA, show ? 1.0f : 0.0f));
-        animation.setInterpolator(CubicBezierInterpolator.EASE_IN);
-        animation.setDuration(180);
-        animation.addListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                if (animation.equals(HashtagHistoryView.this.animation)) {
-                    HashtagHistoryView.this.animation = null;
-                    if (!show) {
-                        setVisibility(View.GONE);
-                    }
-                }
-            }
-
-            @Override
-            public void onAnimationCancel(Animator animation) {
-                if (animation.equals(HashtagHistoryView.this.animation)) {
-                    HashtagHistoryView.this.animation = null;
-                }
-            }
-        });
-        animation.start();
-    }
-
-    public boolean isShowing() {
-        return getTag() != null;
+    public void setTopBottomPadding(int top, int bottom) {
+        recyclerView.setPadding(0, top, 0, bottom);
+        emptyView.setTranslationY((top - bottom) / 2f);
     }
 
     public void update() {
         adapter.update(true);
+    }
+
+    public boolean isShowing() {
+        return getVisibility() == View.VISIBLE;
+    }
+
+    public void show(boolean show) {
+        setVisibility(show ? View.VISIBLE : View.GONE);
+        setAlpha(show ? 1f : 0f);
+        if (show) {
+            update();
+        }
+    }
+
+    protected void onClick(String hashtag) {
+        if (onClickListener != null) {
+            onClickListener.run(hashtag);
+        }
+    }
+
+    protected void onScrolled(RecyclerView recyclerView, int dx, int dy) {
     }
 
     private void fillItems(ArrayList<UItem> items, UniversalAdapter adapter) {
@@ -152,6 +126,16 @@ public class HashtagHistoryView extends FrameLayout {
         }
     }
 
+    private Utilities.Callback<String> onClickListener;
+
+    public void setOnHashtagClickListener(Utilities.Callback<String> onClickListener) {
+        this.onClickListener = onClickListener;
+    }
+
+    public void setOnScrollListener(RecyclerView.OnScrollListener onScrollListener) {
+        recyclerView.addOnScrollListener(onScrollListener);
+    }
+
     private boolean onLongClick(UItem item, View view, int position, float x, float y) {
         if (item.id != 0) {
             String hashtag = history.get(item.id - 1);
@@ -168,8 +152,5 @@ public class HashtagHistoryView extends FrameLayout {
             return true;
         }
         return false;
-    }
-
-    protected void onClick(String hashtag) {
     }
 }

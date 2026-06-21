@@ -460,5 +460,25 @@
     <!-- [Alexgram: Native Features] - End -->
     <string name="DirectForwardNotAllowed">Direct forwarding is not allowed.</string>
     <string name="ForceForwardStatusMediaCopy">Forwarding media copy</string>
+    <string name="Customization">Customization</string>
+    <string name="SendLockedCustomEmojiAsSticker">Send Premium Emoji as Sticker</string>
+    <string name="SendLockedCustomEmojiAsStickerInfo">Only supports WebP/WebM custom emoji. TGS-only emoji are excluded.</string>
+    <string name="LocalEditorPlus">Local Editor+</string>
+    <string name="LocalEditorPlusAbout">Edit message text and date, or delete messages locally on this device only without sending server requests.</string>
+    <string name="LocalEditorMenuOption">More</string>
+
+    <string name="LocalEditorEditOption">Edit locally</string>
+    <string name="LocalEditorDeleteOption">Delete locally</string>
+    <string name="LocalEditorRestore">Restore</string>
+
+    <!-- [Alexgram: Admin Tag in Voice Chat] - Start -->
+    <string name="ShowAdminTagInVoiceChat">Show Admin Tag in Voice Chat</string>
+    <string name="ShowAdminTagInVoiceChatDesc">Display admin or owner badges next to user names in voice/video chats.</string>
+    <!-- [Alexgram: Admin Tag in Voice Chat] - End -->
+    <string name="Ayugram">Ayugram</string>
+    <string name="ProfilePrivacyManager">Profile Privacy Manager</string>
+    <string name="ProfilePrivacyManagerAbout">Allows managing individual user privacy settings directly from their profile menu.</string>
 </resources>
+
+
 

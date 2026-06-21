@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="XChannel">Канал Nagram X</string>
+    <string name="XChannel">Канал Alexgram</string>
     <string name="EnableSaveDeletedMessages">Сохранять удалённые сообщения</string>
     <string name="DeletedMessage">удалено</string>
     <string name="EnableSaveEditsHistory">Сохранять историю изменений</string>
@@ -307,8 +307,8 @@
     <string name="BackAnimationSpring">Spring</string>
     <string name="BackAnimationPredictive">Предиктивная</string>
     <string name="AddToFilter">Добавить в фильтр</string>
-    <string name="UnifiedPushNeverReceivedNotifications">С момента запуска Nagram X вы не получали уведомлений с помощью UnifiedPush.</string>
-    <string name="UnifiedPushLastReceivedNotification">Последнее уведомление, полученное с помощью UnifiedPush, было %1$d секунд назад.\n\nС момента запуска Nagram X вы получили %2$d уведомлений.</string>
+    <string name="UnifiedPushNeverReceivedNotifications">С момента запуска Alexgram вы не получали уведомлений с помощью UnifiedPush.</string>
+    <string name="UnifiedPushLastReceivedNotification">Последнее уведомление, полученное с помощью UnifiedPush, было %1$d секунд назад.\n\nС момента запуска Alexgram вы получили %2$d уведомлений.</string>
     <string name="UnifiedPushCurrentEndpoint">Текущая конечная точка UnifiedPush: %1$s</string>
     <string name="PlayOnce">Играть один раз</string>
     <string name="StorageSettings">Хранилище</string>
@@ -458,5 +458,32 @@
     <string name="ChangeSenderNameOptionAll">Применить ко всем их сообщениям в этой группе</string>
     <string name="ChangeSenderNameOptionRestore">Восстановить исходное имя</string>
     <string name="ChangeSenderNameApply">Применить</string>
+
+    <!-- New Settings and Features -->
+    <string name="usePollinationsAi">Использовать Pollinations.ai</string>
+    <string name="usePollinationsAiAbout">Использовать Pollinations.ai для бесплатного ИИ-ответа, саммари и ИИ-помощника. API-ключ не требуется.</string>
+    <string name="AiAssistanceSettings">Настройки ИИ-помощника</string>
+    <string name="aiModelUrl">URL-адрес модели ИИ 1</string>
+    <string name="aiApiKey">API-ключ ИИ 1</string>
+    <string name="TestAiApi">Проверить подключение к API 1</string>
+    <string name="aiModelUrl2">URL-адрес модели ИИ 2 (резервный)</string>
+    <string name="aiApiKey2">API-ключ ИИ 2 (резервный)</string>
+    <string name="TestAiApi2">Проверить подключение к API 2</string>
+    <string name="DefaultScheduleDelay">Задержка по умолчанию</string>
+    <string name="CustomReplyWord">Пользовательское слово для ответа</string>
+    <string name="Customization">Персонализация</string>
+    <string name="SendLockedCustomEmojiAsSticker">Отправлять премиум-эмодзи как стикер</string>
+    <string name="SendLockedCustomEmojiAsStickerInfo">Поддерживаются только пользовательские эмодзи WebP/WebM. Исключаются эмодзи только TGS.</string>
+    <string name="LocalEditorPlus">Локальный редактор+</string>
+    <string name="LocalEditorPlusAbout">Редактируйте текст и дату сообщений или удаляйте сообщения локально только на этом устройстве без отправки запросов на сервер.</string>
+    <string name="LocalEditorMenuOption">Еще</string>
+    <string name="LocalEditorEditOption">Редактировать локально</string>
+    <string name="LocalEditorDeleteOption">Удалить локально</string>
+    <string name="LocalEditorRestore">Восстановить</string>
+    <string name="ShowAdminTagInVoiceChat">Показывать тег админа в голосовом чате</string>
+    <string name="ShowAdminTagInVoiceChatDesc">Показывать значки админа или владельца рядом с именами пользователей в голосовых/видеочатах.</string>
+    <string name="Ayugram">Ayugram</string>
+    <string name="ProfilePrivacyManager">Управление конфиденциальностью профиля</string>
+    <string name="ProfilePrivacyManagerAbout">Позволяет управлять настройками конфиденциальности отдельных пользователей прямо из меню их профиля.</string>
 </resources>
 

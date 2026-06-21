@@ -122,7 +122,7 @@ public class ShareDialogCell extends FrameLayout implements NotificationCenter.N
         currentType = type;
 
         imageView = new BackupImageView(context);
-        imageView.setRoundRadius(dp(28));
+        imageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(type == TYPE_CREATE ? 48.0f : 56.0f));
         if (type == TYPE_CREATE) {
             addView(imageView, LayoutHelper.createFrame(48, 48, Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, 7, 0, 0));
         } else {
@@ -205,12 +205,26 @@ public class ShareDialogCell extends FrameLayout implements NotificationCenter.N
 
     public void setDialog(long uid, boolean checked, CharSequence name) {
         avatarDrawable.setScaleSize(1f);
+        avatarDrawable.setCustomIcon(null);
         if (uid == Long.MAX_VALUE) {
             nameTextView.setText(repostToCustomName());
             if (repostStoryDrawable == null) {
                 repostStoryDrawable = new RepostStoryDrawable(getContext(), imageView, true, resourcesProvider);
             }
             imageView.setImage(null, null, repostStoryDrawable, null);
+        } else if (uid == Long.MAX_VALUE - 1) {
+            nameTextView.setText("Alexgram Templates");
+            avatarDrawable.setAvatarType(AvatarDrawable.AVATAR_TYPE_NORMAL);
+            avatarDrawable.setColor(0xFF2b2b2b);
+            try {
+                Drawable templatesIcon = getContext().getResources().getDrawable(R.drawable.fork_templates).mutate();
+                templatesIcon.setColorFilter(new android.graphics.PorterDuffColorFilter(Color.WHITE, android.graphics.PorterDuff.Mode.SRC_IN));
+                avatarDrawable.setCustomIcon(templatesIcon);
+            } catch (Throwable e) {
+                org.telegram.messenger.FileLog.e(e);
+            }
+            imageView.setImage(null, null, avatarDrawable, null);
+            imageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(56.0f));
         } else if (DialogObject.isUserDialog(uid)) {
             user = MessagesController.getInstance(currentAccount).getUser(uid);
             final TL_account.RequirementToContact r = MessagesController.getInstance(currentAccount).isUserContactBlocked(uid);
@@ -239,7 +253,7 @@ public class ShareDialogCell extends FrameLayout implements NotificationCenter.N
                 }
                 imageView.setForUserOrChat(user, avatarDrawable);
             }
-            imageView.setRoundRadius(dp(28));
+            imageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(56.0f));
         } else {
             user = null;
             premiumBlocked = false;
@@ -264,7 +278,7 @@ public class ShareDialogCell extends FrameLayout implements NotificationCenter.N
                 avatarDrawable.setInfo(currentAccount, chat);
                 imageView.setForUserOrChat(chat, avatarDrawable);
             }
-            imageView.setRoundRadius(chat != null && (chat.forum || chat.monoforum)? dp(16) : dp(28));
+            imageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(56.0f, chat != null && (chat.forum || chat.monoforum)));
         }
         currentDialog = uid;
         checkBox.setChecked(checked, false);

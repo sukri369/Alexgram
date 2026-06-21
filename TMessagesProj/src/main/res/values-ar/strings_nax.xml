@@ -140,4 +140,31 @@
     <string name="DirectForwardNotAllowed">التوجيه المباشر غير مسموح به.</string>
     <string name="ForceForwardStatusMediaCopy">نسخ الوسائط الجاري توجيهها</string>
     <string name="AppIconTelegramOriginal">الأصلي</string>
+
+    <!-- New Settings and Features -->
+    <string name="usePollinationsAi">استخدام Pollinations.ai</string>
+    <string name="usePollinationsAiAbout">استخدم Pollinations.ai للحصول على رد ذكاء اصطناعي وتلخيص ومساعدة ذكاء اصطناعي مجانية. لا يلزم مفتاح API.</string>
+    <string name="AiAssistanceSettings">إعدادات مساعدة الذكاء الاصطناعي</string>
+    <string name="aiModelUrl">رابط نموذج الذكاء الاصطناعي 1</string>
+    <string name="aiApiKey">مفتاح API للذكاء الاصطناعي 1</string>
+    <string name="TestAiApi">اختبار اتصال API 1</string>
+    <string name="aiModelUrl2">رابط نموذج الذكاء الاصطناعي 2 (الاحتياطي)</string>
+    <string name="aiApiKey2">مفتاح API للذكاء الاصطناعي 2 (الاحتياطي)</string>
+    <string name="TestAiApi2">اختبار اتصال API 2</string>
+    <string name="DefaultScheduleDelay">التأخير الافتراضي</string>
+    <string name="CustomReplyWord">كلمة رد مخصصة</string>
+    <string name="Customization">التخصيص</string>
+    <string name="SendLockedCustomEmojiAsSticker">إرسال الرموز التعبيرية المميزة كملصق</string>
+    <string name="SendLockedCustomEmojiAsStickerInfo">يدعم فقط الرموز التعبيرية المخصصة من نوع WebP/WebM. يتم استبعاد الرموز التعبيرية من نوع TGS فقط.</string>
+    <string name="LocalEditorPlus">المحرر المحلي+</string>
+    <string name="LocalEditorPlusAbout">قم بتحرير نص الرسالة وتاريخها، أو حذف الرسائل محليًا على هذا الجهاز فقط دون إرسال طلبات إلى الخادم.</string>
+    <string name="LocalEditorMenuOption">المزيد</string>
+    <string name="LocalEditorEditOption">تعديل محليًا</string>
+    <string name="LocalEditorDeleteOption">حذف محليًا</string>
+    <string name="LocalEditorRestore">استعادة</string>
+    <string name="ShowAdminTagInVoiceChat">إظهار علامة المشرف في المحادثة الصوتية</string>
+    <string name="ShowAdminTagInVoiceChatDesc">عرض شارات المشرف أو المالك بجانب أسماء المستخدمين في المحادثات الصوتية/المرئية.</string>
+    <string name="Ayugram">Ayugram</string>
+    <string name="ProfilePrivacyManager">مدير خصوصية الملف الشخصي</string>
+    <string name="ProfilePrivacyManagerAbout">يتيح إدارة إعدادات خصوصية المستخدمين الفردية مباشرة من قائمة ملفهم الشخصي.</string>
 </resources>

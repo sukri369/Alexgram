@@ -3313,7 +3313,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             @Override
             public void closeSearchField(boolean closeKeyboard) {
                 fragmentSearchField.editText.getText().clear();
-                if (closeKeyboard) {
+                if (closeKeyboard && fragmentSearchField.editText.isFocused()) {
                     AndroidUtilities.hideKeyboard(fragmentSearchField.editText);
                 }
                 fragmentSearchField.editText.clearFocus();
@@ -3467,6 +3467,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 return super.dispatchTouchEvent(ev);
             }
         };
+        fragmentSearchField.setShowPillStack(initialDialogsType == DIALOGS_TYPE_DEFAULT && folderId == 0);
         fragmentSearchField.setPadding(dp(4), dp(4), dp(4), dp(4));
         fragmentSearchField.setPivotX(0);
         fragmentSearchField.setPivotY(0);
@@ -4114,7 +4115,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             avatarDrawable.setTextSize(dp(12));
 
             BackupImageView imageView = new BackupImageView(context);
-            imageView.setRoundRadius(dp(18));
+            imageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(36.0f));
             switchItem.addView(imageView, LayoutHelper.createFrame(36, 36, Gravity.CENTER));
             switchItem.setOnClickListener(this::openAccountSelector);
             switchItem.setOnLongClickListener(this::openAccountSelector);
@@ -11948,6 +11949,18 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             }
 
             @Override
+            public boolean canSetTimer() {
+                if (selectedDialogs.isEmpty()) return false;
+                final MessagesController mc = getMessagesController();
+                for (long did : selectedDialogs) {
+                    if (!DialogObject.isUserDialog(did)) return false;
+                    final TLRPC.User u = mc.getUser(did);
+                    if (u == null || u.bot || UserObject.isUserSelf(u)) return false;
+                }
+                return true;
+            }
+
+            @Override
             public CharSequence getTitleFor(int index) {
                 if (sharedMediaEntries == null || sharedMediaEntries.isEmpty()) return null;
                 final int total = sharedMediaEntries.size();
@@ -12095,9 +12108,13 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             if (defaultFilter != null) {
                 activeFilters.add(defaultFilter);
             }
+            boolean hideFolders = tw.nekomimi.nekogram.tabs.TabsByTypeSettings.getInstance().isHideFolders();
             for (int a = 0; a < allFilters.size(); a++) {
                 MessagesController.DialogFilter filter = allFilters.get(a);
                 if (filter.isDefault()) {
+                    continue;
+                }
+                if (hideFolders && !tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(filter)) {
                     continue;
                 }
                 if (!tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(filter) || 
@@ -12120,7 +12137,14 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 }
             }
         } else {
-            activeFilters.addAll(allFilters);
+            boolean hideFolders = tw.nekomimi.nekogram.tabs.TabsByTypeSettings.getInstance().isHideFolders();
+            for (int a = 0; a < allFilters.size(); a++) {
+                MessagesController.DialogFilter filter = allFilters.get(a);
+                if (hideFolders && !filter.isDefault() && !tw.nekomimi.nekogram.tabs.TabsByTypeManager.isVirtualFilter(filter)) {
+                    continue;
+                }
+                activeFilters.add(filter);
+            }
         }
         return activeFilters;
     }

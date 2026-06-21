@@ -1947,6 +1947,22 @@ public class ShareAlert extends BottomSheet implements NotificationCenter.Notifi
             onShareStory(cell);
             return;
         }
+        if (dialog instanceof ShareDialogsAdapter.TemplatesDialog) {
+            if (selectedDialogs.indexOfKey(dialog.id) >= 0) {
+                selectedDialogs.remove(dialog.id);
+                if (cell instanceof ShareDialogCell) {
+                    ((ShareDialogCell) cell).setChecked(false, true);
+                }
+                updateSelectedCount(1);
+            } else {
+                selectedDialogs.put(dialog.id, dialog);
+                if (cell instanceof ShareDialogCell) {
+                    ((ShareDialogCell) cell).setChecked(true, true);
+                }
+                updateSelectedCount(1);
+            }
+            return;
+        }
         if (dialog != null && (cell instanceof ShareDialogCell && ((ShareDialogCell) cell).isBlocked() || cell instanceof ProfileSearchCell && ((ProfileSearchCell) cell).isBlocked())) {
             showPremiumBlockedToast(cell, dialog.id);
             return;
@@ -2407,6 +2423,38 @@ public class ShareAlert extends BottomSheet implements NotificationCenter.Notifi
     }
 
     protected void sendInternal(boolean withSound) {
+        if (selectedDialogs.indexOfKey(Long.MAX_VALUE - 1) >= 0) {
+            long channelId = org.telegram.ui.Templates.TemplatesManager.getInstance(currentAccount).getTemplatesChannelId();
+            if (channelId == 0) {
+                org.telegram.ui.Templates.TemplatesManager.getInstance(currentAccount).getOrCreateTemplatesChannel(newChannelId -> {
+                    if (newChannelId != 0) {
+                        TLRPC.Dialog oldDialog = selectedDialogs.get(Long.MAX_VALUE - 1);
+                        if (oldDialog != null) {
+                            selectedDialogs.remove(Long.MAX_VALUE - 1);
+                            TLRPC.Dialog newDialog = MessagesController.getInstance(currentAccount).dialogs_dict.get(newChannelId);
+                            if (newDialog == null) {
+                                newDialog = new TLRPC.TL_dialog();
+                                newDialog.id = newChannelId;
+                            }
+                            selectedDialogs.put(newChannelId, newDialog);
+                        }
+                        sendInternal(withSound);
+                    }
+                });
+                return;
+            } else {
+                TLRPC.Dialog oldDialog = selectedDialogs.get(Long.MAX_VALUE - 1);
+                if (oldDialog != null) {
+                    selectedDialogs.remove(Long.MAX_VALUE - 1);
+                    TLRPC.Dialog newDialog = MessagesController.getInstance(currentAccount).dialogs_dict.get(channelId);
+                    if (newDialog == null) {
+                        newDialog = new TLRPC.TL_dialog();
+                        newDialog.id = channelId;
+                    }
+                    selectedDialogs.put(channelId, newDialog);
+                }
+            }
+        }
         for (int a = 0; a < selectedDialogs.size(); a++) {
             long key = selectedDialogs.keyAt(a);
             if (AlertsCreator.checkSlowMode(getContext(), currentAccount, key, frameLayout2.getTag() != null && commentTextView.length() > 0)) {
@@ -2892,6 +2940,9 @@ public class ShareAlert extends BottomSheet implements NotificationCenter.Notifi
             long price = 0;
             for (int i = 0; i < selectedDialogs.size(); ++i) {
                 final long did = selectedDialogs.valueAt(i).id;
+                if (did == Long.MAX_VALUE - 1) {
+                    continue;
+                }
                 long thisPrice = MessagesController.getInstance(currentAccount).getSendPaidMessagesStars(did);
                 if (thisPrice <= 0) {
                     thisPrice = DialogObject.getMessagesStarsPrice(MessagesController.getInstance(currentAccount).isUserContactBlocked(did));
@@ -2922,6 +2973,10 @@ public class ShareAlert extends BottomSheet implements NotificationCenter.Notifi
             { id = Long.MAX_VALUE; }
         }
 
+        private class TemplatesDialog extends TLRPC.Dialog {
+            { id = Long.MAX_VALUE - 1; }
+        }
+
         private Context context;
         private int currentCount;
         private ArrayList<TLRPC.Dialog> dialogs = new ArrayList<>();
@@ -2946,6 +3001,9 @@ public class ShareAlert extends BottomSheet implements NotificationCenter.Notifi
                 dialogs.add(dialog);
                 dialogsMap.put(dialog.id, dialog);
             }
+            TemplatesDialog templatesDialog = new TemplatesDialog();
+            dialogs.add(templatesDialog);
+            dialogsMap.put(templatesDialog.id, templatesDialog);
             ArrayList<TLRPC.Dialog> archivedDialogs = new ArrayList<>();
             ArrayList<TLRPC.Dialog> allDialogs = MessagesController.getInstance(currentAccount).getAllDialogs();
             for (int a = 0; a < allDialogs.size(); a++) {
@@ -2966,6 +3024,9 @@ public class ShareAlert extends BottomSheet implements NotificationCenter.Notifi
                         dialogsMap.put(dialog.id, dialog);
                     } else {
                         TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-dialog.id);
+                        if (chat != null && -chat.id == org.telegram.ui.Templates.TemplatesManager.getInstance(currentAccount).getTemplatesChannelId()) {
+                            continue;
+                        }
                         if (!(chat == null || ChatObject.isNotInChat(chat) || chat.gigagroup && !ChatObject.hasAdminRights(chat) || ChatObject.isChannel(chat) && !chat.creator && (chat.admin_rights == null || !chat.admin_rights.post_messages) && !chat.megagroup)) {
                             if (dialog.folder_id == 1) {
                                 archivedDialogs.add(dialog);
@@ -3179,7 +3240,15 @@ public class ShareAlert extends BottomSheet implements NotificationCenter.Notifi
             searchAdapterHelper = new SearchAdapterHelper(false) {
                 @Override
                 protected boolean filter(TLObject obj) {
-                    return !(obj instanceof TLRPC.Chat) || ChatObject.canWriteToChat((TLRPC.Chat) obj);
+                    if (obj instanceof TLRPC.Chat) {
+                        TLRPC.Chat chat = (TLRPC.Chat) obj;
+                        long templatesChannelId = org.telegram.ui.Templates.TemplatesManager.getInstance(currentAccount).getTemplatesChannelId();
+                        if (templatesChannelId != 0 && chat.id == -templatesChannelId) {
+                            return false;
+                        }
+                        return ChatObject.canWriteToChat(chat);
+                    }
+                    return true;
                 }
             };
             searchAdapterHelper.setDelegate(new SearchAdapterHelper.SearchAdapterHelperDelegate() {
@@ -3311,6 +3380,10 @@ public class ShareAlert extends BottomSheet implements NotificationCenter.Notifi
                                         TLRPC.Chat chat = TLRPC.Chat.TLdeserialize(data, data.readInt32(false), false);
                                         data.reuse();
                                         if (!(chat == null || ChatObject.isNotInChat(chat) || ChatObject.isChannel(chat) && !chat.creator && (chat.admin_rights == null || !chat.admin_rights.post_messages) && !chat.megagroup)) {
+                                            long templatesChannelId = org.telegram.ui.Templates.TemplatesManager.getInstance(currentAccount).getTemplatesChannelId();
+                                            if (templatesChannelId != 0 && chat.id == -templatesChannelId) {
+                                                continue;
+                                            }
                                             DialogSearchResult dialogSearchResult = dialogsResult.get(-chat.id);
                                             dialogSearchResult.name = AndroidUtilities.generateSearchName(chat.title, null, q);
                                             dialogSearchResult.object = chat;

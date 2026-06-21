@@ -49,6 +49,14 @@ import java.util.ArrayList;
 
 public class SpecialForwardActivity extends ChatActivity {
 
+    public static class CategoryTab {
+        public int id;
+        public String title;
+        public int iconRes;
+        public String emoticon;
+        public org.telegram.messenger.MessagesController.DialogFilter filter;
+    }
+
     private final SparseArray<MessageObject> originalMessagesMap = new SparseArray<>();
     private MessageObject selectedMessage = null;
     private int nextUniqueId = -100000;
@@ -1785,7 +1793,7 @@ public class SpecialForwardActivity extends ChatActivity {
         finishFragment();
     }
 
-    public static class SpecialForwardShareAlert extends BottomSheet {
+    public static class SpecialForwardShareAlert extends BottomSheet implements org.telegram.messenger.NotificationCenter.NotificationCenterDelegate {
         private final int currentAccount;
         private final ArrayList<MessageObject> messages;
         private boolean forwardAsFile;
@@ -1795,7 +1803,8 @@ public class SpecialForwardActivity extends ChatActivity {
         private final ArrayList<TLRPC.Dialog> filteredDialogs = new ArrayList<>();
         private final LongSparseArray<TLRPC.Dialog> selectedDialogs = new LongSparseArray<>();
         
-        private int activeCategory = 0; 
+        private final ArrayList<CategoryTab> tabs = new ArrayList<>();
+        private int activeCategoryIndex = 0;
         private String searchQuery = "";
         
         private boolean showQuote = false;
@@ -1823,6 +1832,79 @@ public class SpecialForwardActivity extends ChatActivity {
             this.messages = messages;
             this.forwardAsFile = asFile;
             this.callback = callback;
+
+            org.telegram.ui.DialogsActivity.loadDialogs(org.telegram.messenger.AccountInstance.getInstance(currentAccount));
+            org.telegram.messenger.MessagesController.getInstance(currentAccount).loadDialogs(0, 0, 200, true);
+            org.telegram.messenger.MessagesController.getInstance(currentAccount).loadDialogs(1, 0, 200, true);
+            org.telegram.messenger.NotificationCenter.getInstance(currentAccount).addObserver(this, org.telegram.messenger.NotificationCenter.dialogsNeedReload);
+
+            // Initialize standard tabs
+            CategoryTab tabAll = new CategoryTab();
+            tabAll.id = 0;
+            tabAll.title = LocaleController.getString("FilterAllChatsShort", R.string.FilterAllChatsShort);
+            if (TextUtils.isEmpty(tabAll.title)) tabAll.title = "All";
+            tabAll.iconRes = R.drawable.filter_all_solar;
+            tabs.add(tabAll);
+
+            CategoryTab tabFav = new CategoryTab();
+            tabFav.id = -1;
+            tabFav.title = LocaleController.getString("ArchiveHintHeader3", R.string.ArchiveHintHeader3);
+            if (TextUtils.isEmpty(tabFav.title)) tabFav.title = "Pinned";
+            tabFav.iconRes = R.drawable.filter_favorite_solar;
+            tabs.add(tabFav);
+
+            CategoryTab tabPm = new CategoryTab();
+            tabPm.id = -2;
+            tabPm.title = LocaleController.getString("TabsByTypePersonal", R.string.TabsByTypePersonal);
+            if (TextUtils.isEmpty(tabPm.title)) tabPm.title = "Personal";
+            tabPm.iconRes = R.drawable.filter_private_solar;
+            tabs.add(tabPm);
+
+            CategoryTab tabContacts = new CategoryTab();
+            tabContacts.id = -3;
+            tabContacts.title = LocaleController.getString("FilterContacts", R.string.FilterContacts);
+            if (TextUtils.isEmpty(tabContacts.title)) tabContacts.title = "Contacts";
+            tabContacts.iconRes = R.drawable.msg_contacts_solar;
+            tabs.add(tabContacts);
+
+            CategoryTab tabGroup = new CategoryTab();
+            tabGroup.id = -4;
+            tabGroup.title = LocaleController.getString("FilterGroups", R.string.FilterGroups);
+            if (TextUtils.isEmpty(tabGroup.title)) tabGroup.title = "Groups";
+            tabGroup.iconRes = R.drawable.filter_groups_solar;
+            tabs.add(tabGroup);
+
+            CategoryTab tabChannel = new CategoryTab();
+            tabChannel.id = -5;
+            tabChannel.title = LocaleController.getString("FilterChannels", R.string.FilterChannels);
+            if (TextUtils.isEmpty(tabChannel.title)) tabChannel.title = "Channels";
+            tabChannel.iconRes = R.drawable.filter_channel_solar;
+            tabs.add(tabChannel);
+
+            CategoryTab tabBot = new CategoryTab();
+            tabBot.id = -6;
+            tabBot.title = LocaleController.getString("FilterBots", R.string.FilterBots);
+            if (TextUtils.isEmpty(tabBot.title)) tabBot.title = "Bots";
+            tabBot.iconRes = R.drawable.filter_bots_solar;
+            tabs.add(tabBot);
+
+            // Add custom folders
+            ArrayList<org.telegram.messenger.MessagesController.DialogFilter> dialogFilters = org.telegram.messenger.MessagesController.getInstance(currentAccount).getDialogFilters();
+            if (dialogFilters != null) {
+                for (int i = 0; i < dialogFilters.size(); i++) {
+                    org.telegram.messenger.MessagesController.DialogFilter filter = dialogFilters.get(i);
+                    if (filter == null || filter.id == 0 || filter.isDefault()) {
+                        continue;
+                    }
+                    CategoryTab tabFilter = new CategoryTab();
+                    tabFilter.id = filter.id;
+                    tabFilter.title = filter.name;
+                    tabFilter.emoticon = filter.emoticon;
+                    tabFilter.filter = filter;
+                    tabFilter.iconRes = R.drawable.msg_folders;
+                    tabs.add(tabFilter);
+                }
+            }
             
             allDialogs = new ArrayList<>(org.telegram.messenger.MessagesController.getInstance(currentAccount).getAllDialogs());
             filterDialogs();
@@ -1934,52 +2016,73 @@ public class SpecialForwardActivity extends ChatActivity {
             categoriesRow.setOrientation(LinearLayout.HORIZONTAL);
             categoriesRow.setGravity(Gravity.CENTER_VERTICAL);
             
-            int[] icons = new int[]{
-                R.drawable.filter_all_solar,        
-                R.drawable.filter_private_solar,   
-                R.drawable.filter_groups_solar,        
-                R.drawable.filter_favorite_solar,          
-                R.drawable.msg_contacts_solar,       
-                R.drawable.msg_groups_solar,       
-                R.drawable.filter_channel_solar,            
-                R.drawable.filter_bots_solar            
-            };
-            
             int selectedColor = Theme.getColor(Theme.key_dialogTextBlue);
             int unselectedColor = Theme.getColor(Theme.key_dialogIcon);
             int selectedBgColor = (selectedColor & 0x00ffffff) | 0x1a000000;
             
-            final View[] categoryTabs = new View[icons.length];
-            for (int i = 0; i < icons.length; i++) {
+            final View[] categoryTabs = new View[tabs.size()];
+            for (int i = 0; i < tabs.size(); i++) {
                 final int idx = i;
-                ImageView tabIcon = new ImageView(context);
-                tabIcon.setImageResource(icons[i]);
-                tabIcon.setColorFilter(new android.graphics.PorterDuffColorFilter(i == activeCategory ? selectedColor : unselectedColor, android.graphics.PorterDuff.Mode.SRC_IN));
-                tabIcon.setPadding(AndroidUtilities.dp(10), AndroidUtilities.dp(10), AndroidUtilities.dp(10), AndroidUtilities.dp(10));
+                final CategoryTab tab = tabs.get(idx);
+                
+                LinearLayout pillLayout = new LinearLayout(context);
+                pillLayout.setOrientation(LinearLayout.HORIZONTAL);
+                pillLayout.setGravity(Gravity.CENTER_VERTICAL);
+                pillLayout.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(6), AndroidUtilities.dp(12), AndroidUtilities.dp(6));
+                
+                // Emoticon or Icon
+                if (!TextUtils.isEmpty(tab.emoticon)) {
+                    TextView emojiView = new TextView(context);
+                    emojiView.setText(tab.emoticon);
+                    emojiView.setTextSize(14);
+                    pillLayout.addView(emojiView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_VERTICAL, 0, 0, 6, 0));
+                } else if (tab.iconRes != 0) {
+                    ImageView tabIcon = new ImageView(context);
+                    tabIcon.setImageResource(tab.iconRes);
+                    tabIcon.setColorFilter(new android.graphics.PorterDuffColorFilter(idx == activeCategoryIndex ? selectedColor : unselectedColor, android.graphics.PorterDuff.Mode.SRC_IN));
+                    pillLayout.addView(tabIcon, LayoutHelper.createLinear(16, 16, Gravity.CENTER_VERTICAL, 0, 0, 6, 0));
+                }
+                
+                TextView titleView = new TextView(context);
+                titleView.setText(tab.title);
+                titleView.setTextSize(13);
+                titleView.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+                titleView.setTextColor(idx == activeCategoryIndex ? selectedColor : unselectedColor);
+                pillLayout.addView(titleView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_VERTICAL));
                 
                 android.graphics.drawable.GradientDrawable tabBg = new android.graphics.drawable.GradientDrawable();
-                tabBg.setShape(android.graphics.drawable.GradientDrawable.OVAL);
-                tabBg.setColor(i == activeCategory ? selectedBgColor : Color.TRANSPARENT);
-                tabIcon.setBackground(tabBg);
+                tabBg.setCornerRadius(AndroidUtilities.dp(16));
+                tabBg.setColor(idx == activeCategoryIndex ? selectedBgColor : Color.TRANSPARENT);
+                pillLayout.setBackground(tabBg);
                 
-                tabIcon.setOnClickListener(v -> {
-                    activeCategory = idx;
+                pillLayout.setOnClickListener(v -> {
+                    activeCategoryIndex = idx;
                     for (int j = 0; j < categoryTabs.length; j++) {
+                        LinearLayout sibling = (LinearLayout) categoryTabs[j];
                         android.graphics.drawable.GradientDrawable bg = new android.graphics.drawable.GradientDrawable();
-                        bg.setShape(android.graphics.drawable.GradientDrawable.OVAL);
-                        bg.setColor(j == activeCategory ? selectedBgColor : Color.TRANSPARENT);
-                        categoryTabs[j].setBackground(bg);
-                        if (j == activeCategory) {
-                            ((ImageView) categoryTabs[j]).setColorFilter(new android.graphics.PorterDuffColorFilter(selectedColor, android.graphics.PorterDuff.Mode.SRC_IN));
-                        } else {
-                            ((ImageView) categoryTabs[j]).setColorFilter(new android.graphics.PorterDuffColorFilter(unselectedColor, android.graphics.PorterDuff.Mode.SRC_IN));
+                        bg.setCornerRadius(AndroidUtilities.dp(16));
+                        bg.setColor(j == activeCategoryIndex ? selectedBgColor : Color.TRANSPARENT);
+                        sibling.setBackground(bg);
+                        
+                        int siblingColor = (j == activeCategoryIndex ? selectedColor : unselectedColor);
+                        for (int k = 0; k < sibling.getChildCount(); k++) {
+                            View child = sibling.getChildAt(k);
+                            if (child instanceof ImageView) {
+                                ((ImageView) child).setColorFilter(new android.graphics.PorterDuffColorFilter(siblingColor, android.graphics.PorterDuff.Mode.SRC_IN));
+                            } else if (child instanceof TextView) {
+                                TextView tv = (TextView) child;
+                                if (tv.getText().toString().equals(tabs.get(j).emoticon)) {
+                                    continue;
+                                }
+                                tv.setTextColor(siblingColor);
+                            }
                         }
                     }
                     filterDialogs();
                 });
                 
-                categoryTabs[i] = tabIcon;
-                categoriesRow.addView(tabIcon, LayoutHelper.createLinear(40, 40, 0, 4, 0, 4, 0));
+                categoryTabs[i] = pillLayout;
+                categoriesRow.addView(pillLayout, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, 32, 0, 4, 0, 4, 0));
             }
             scrollCategories.addView(categoriesRow);
             rootLayout.addView(scrollCategories, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 8));
@@ -2077,17 +2180,37 @@ public class SpecialForwardActivity extends ChatActivity {
                 .show();
         }
 
+        private long getDialogDate(TLRPC.Dialog dialog) {
+            if (dialog == null) return 0;
+            TLRPC.DraftMessage draftMessage = MediaDataController.getInstance(currentAccount).getDraft(dialog.id, 0);
+            return DialogObject.getLastMessageOrDraftDate(dialog, draftMessage);
+        }
+
         private void filterDialogs() {
             filteredDialogs.clear();
+            if (tabs.isEmpty()) {
+                if (adapter != null) {
+                    adapter.notifyDataSetChanged();
+                }
+                return;
+            }
+            CategoryTab activeTab = tabs.get(activeCategoryIndex);
             
             // If Contacts category is active and search query is empty, show all contacts
-            if (activeCategory == 4 && TextUtils.isEmpty(searchQuery)) {
+            if (activeTab.id == -3 && TextUtils.isEmpty(searchQuery)) {
                 ArrayList<TLRPC.TL_contact> contactsList = org.telegram.messenger.ContactsController.getInstance(currentAccount).contacts;
                 for (TLRPC.TL_contact contact : contactsList) {
                     TLRPC.Dialog fakeDialog = new TLRPC.TL_dialog();
                     fakeDialog.id = contact.user_id;
                     filteredDialogs.add(fakeDialog);
                 }
+                java.util.Collections.sort(filteredDialogs, (dialog1, dialog2) -> {
+                    TLRPC.User u1 = org.telegram.messenger.MessagesController.getInstance(currentAccount).getUser(dialog1.id);
+                    TLRPC.User u2 = org.telegram.messenger.MessagesController.getInstance(currentAccount).getUser(dialog2.id);
+                    String name1 = u1 != null ? org.telegram.messenger.ContactsController.formatName(u1.first_name, u1.last_name) : "";
+                    String name2 = u2 != null ? org.telegram.messenger.ContactsController.formatName(u2.first_name, u2.last_name) : "";
+                    return name1.compareToIgnoreCase(name2);
+                });
                 if (adapter != null) {
                     adapter.notifyDataSetChanged();
                 }
@@ -2115,31 +2238,29 @@ public class SpecialForwardActivity extends ChatActivity {
                     }
                 }
                 
-                if (activeCategory == 1) { // PMs
+                if (activeTab.id == -1) { // Pinned
+                    if (!dialog.pinned) continue;
+                } else if (activeTab.id == -2) { // Personal (PMs)
                     if (!DialogObject.isUserDialog(dialogId)) continue;
                     TLRPC.User user = org.telegram.messenger.MessagesController.getInstance(currentAccount).getUser(dialogId);
                     if (user == null || user.bot) continue;
-                } else if (activeCategory == 2) { // Groups
-                    if (!DialogObject.isChatDialog(dialogId)) continue;
-                    TLRPC.Chat chat = org.telegram.messenger.MessagesController.getInstance(currentAccount).getChat(-dialogId);
-                    if (chat == null || ChatObject.isChannel(chat)) continue;
-                } else if (activeCategory == 3) { // Favorites (Pinned)
-                    if (!dialog.pinned) continue;
-                } else if (activeCategory == 4) { // Contacts
+                } else if (activeTab.id == -3) { // Contacts (with search query)
                     if (!DialogObject.isUserDialog(dialogId)) continue;
                     if (!org.telegram.messenger.ContactsController.getInstance(currentAccount).isContact(dialogId)) continue;
-                } else if (activeCategory == 5) { // Supergroups
+                } else if (activeTab.id == -4) { // Groups (combined: chat & megagroup)
                     if (!DialogObject.isChatDialog(dialogId)) continue;
                     TLRPC.Chat chat = org.telegram.messenger.MessagesController.getInstance(currentAccount).getChat(-dialogId);
-                    if (chat == null || !ChatObject.isChannel(chat) || !chat.megagroup) continue;
-                } else if (activeCategory == 6) { // Channels
+                    if (chat == null || (ChatObject.isChannel(chat) && !chat.megagroup)) continue;
+                } else if (activeTab.id == -5) { // Channels
                     if (!DialogObject.isChatDialog(dialogId)) continue;
                     TLRPC.Chat chat = org.telegram.messenger.MessagesController.getInstance(currentAccount).getChat(-dialogId);
                     if (chat == null || !ChatObject.isChannel(chat) || chat.megagroup) continue;
-                } else if (activeCategory == 7) { // Bots
+                } else if (activeTab.id == -6) { // Bots
                     if (!DialogObject.isUserDialog(dialogId)) continue;
                     TLRPC.User user = org.telegram.messenger.MessagesController.getInstance(currentAccount).getUser(dialogId);
                     if (user == null || !user.bot) continue;
+                } else if (activeTab.id > 0 && activeTab.filter != null) { // Custom folder
+                    if (!activeTab.filter.includesDialog(org.telegram.messenger.AccountInstance.getInstance(currentAccount), dialogId, dialog)) continue;
                 }
                 
                 filteredDialogs.add(dialog);
@@ -2169,6 +2290,34 @@ public class SpecialForwardActivity extends ChatActivity {
                         }
                     }
                 }
+            }
+
+            // Auto sort dialogs: pinned first, then by last message/draft date descending
+            if (activeTab.id != -3) { // skip sorting contacts which are already sorted alphabetically
+                java.util.Collections.sort(filteredDialogs, (dialog1, dialog2) -> {
+                    boolean pinned1 = dialog1.pinned;
+                    boolean pinned2 = dialog2.pinned;
+                    
+                    if (activeTab.filter != null) {
+                        pinned1 = activeTab.filter.pinnedDialogs.indexOfKey(dialog1.id) >= 0;
+                        pinned2 = activeTab.filter.pinnedDialogs.indexOfKey(dialog2.id) >= 0;
+                    }
+                    
+                    if (pinned1 != pinned2) {
+                        return pinned1 ? -1 : 1;
+                    } else if (pinned1) {
+                        if (activeTab.filter != null) {
+                            int index1 = activeTab.filter.pinnedDialogs.get(dialog1.id);
+                            int index2 = activeTab.filter.pinnedDialogs.get(dialog2.id);
+                            return Integer.compare(index1, index2);
+                        }
+                        return Integer.compare(dialog2.pinnedNum, dialog1.pinnedNum);
+                    }
+                    
+                    long date1 = getDialogDate(dialog1);
+                    long date2 = getDialogDate(dialog2);
+                    return Long.compare(date2, date1);
+                });
             }
             
             if (adapter != null) {
@@ -2239,6 +2388,20 @@ public class SpecialForwardActivity extends ChatActivity {
             public Holder(View itemView) {
                 super(itemView);
             }
+        }
+
+        @Override
+        public void didReceivedNotification(int id, int account, Object... args) {
+            if (id == org.telegram.messenger.NotificationCenter.dialogsNeedReload) {
+                allDialogs = new ArrayList<>(org.telegram.messenger.MessagesController.getInstance(currentAccount).getAllDialogs());
+                filterDialogs();
+            }
+        }
+
+        @Override
+        public void dismiss() {
+            super.dismiss();
+            org.telegram.messenger.NotificationCenter.getInstance(currentAccount).removeObserver(this, org.telegram.messenger.NotificationCenter.dialogsNeedReload);
         }
     }
 }

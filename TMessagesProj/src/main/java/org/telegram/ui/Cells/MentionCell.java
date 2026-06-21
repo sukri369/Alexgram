@@ -51,7 +51,7 @@ public class MentionCell extends LinearLayout {
         avatarDrawable.setTextSize(AndroidUtilities.dp(18));
 
         imageView = new BackupImageView(context);
-        imageView.setRoundRadius(AndroidUtilities.dp(14));
+        imageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(28.0f));
         addView(imageView, LayoutHelper.createLinear(28, 28, 12, 4, 0, 0));
 
         nameTextView = new TextView(context) {
@@ -96,6 +96,7 @@ public class MentionCell extends LinearLayout {
             return;
         }
         avatarDrawable.setInfo(user);
+        imageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(28.0f));
         if (user.photo != null && user.photo.photo_small != null) {
             imageView.setForUserOrChat(user, avatarDrawable);
         } else {
@@ -137,6 +138,7 @@ public class MentionCell extends LinearLayout {
             return;
         }
         avatarDrawable.setInfo(chat);
+        imageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(28.0f, ChatObject.isForum(chat) || ChatObject.isMonoForum(chat)));
         if (chat.photo != null && chat.photo.photo_small != null) {
             imageView.setForUserOrChat(chat, avatarDrawable);
         } else {
@@ -231,6 +233,7 @@ public class MentionCell extends LinearLayout {
         if (user != null) {
             imageView.setVisibility(VISIBLE);
             avatarDrawable.setInfo(user);
+            imageView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(28.0f));
             if (user.photo != null && user.photo.photo_small != null) {
                 imageView.setForUserOrChat(user, avatarDrawable);
             } else {

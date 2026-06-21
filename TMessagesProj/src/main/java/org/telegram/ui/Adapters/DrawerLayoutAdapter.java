@@ -131,6 +131,40 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter imple
     }
 
     @Override
+    public int getSelectionLeftPadding(View view, int position) {
+        if (view instanceof DrawerUserCell || view instanceof DrawerAddCell) {
+            return AndroidUtilities.dp(20);
+        }
+        return 0;
+    }
+
+    @Override
+    public int getSelectionRightPadding(View view, int position) {
+        if (view instanceof DrawerUserCell || view instanceof DrawerAddCell) {
+            return AndroidUtilities.dp(20);
+        }
+        return 0;
+    }
+
+    @Override
+    public float[] getSelectionRadii(View view, int position) {
+        if (view instanceof DrawerUserCell || view instanceof DrawerAddCell) {
+            int first = getFirstAccountPosition();
+            int last = getLastAccountPosition() + 1;
+            if (first != RecyclerView.NO_POSITION && last != RecyclerView.NO_POSITION) {
+                if (position == first && position == last) {
+                    return new float[]{20, 20, 20, 20};
+                } else if (position == first) {
+                    return new float[]{20, 20, 0, 0};
+                } else if (position == last) {
+                    return new float[]{0, 0, 20, 20};
+                }
+            }
+        }
+        return null;
+    }
+
+    @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view;
         switch (viewType) {

@@ -3,16 +3,31 @@
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
+    <!-- Left leg (less flared, aligned slope, rounded caps) -->
     <path
-        android:pathData="M 5.5,19.5 L 12,4.5 L 18.5,19.5"
+        android:pathData="M 7.13,16.5 L 5.0,21.5"
         android:strokeColor="#ffffff"
-        android:strokeWidth="2.3"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"/>
+        android:strokeWidth="2.2"
+        android:strokeLineCap="round"/>
+    <!-- Right leg (less flared, aligned slope, rounded caps) -->
     <path
-        android:pathData="M 8.2,14 L 15.8,14"
+        android:pathData="M 16.87,16.5 L 19.0,21.5"
         android:strokeColor="#ffffff"
-        android:strokeWidth="2.3"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"/>
+        android:strokeWidth="2.2"
+        android:strokeLineCap="round"/>
+    <!-- Paper Plane (soaring upwards, forming the apex of A) -->
+    <!-- Left Wing (solid white) -->
+    <path
+        android:pathData="M 12,5.0 L 5.5,15.0 L 12,12.0 Z"
+        android:fillColor="#ffffff"/>
+    <!-- Right Wing (white with 65% opacity for depth) -->
+    <path
+        android:pathData="M 12,5.0 L 12,12.0 L 18.5,15.0 Z"
+        android:fillColor="#ffffff"
+        android:fillAlpha="0.65"/>
+    <!-- Center fold tail flap (white with 35% opacity) -->
+    <path
+        android:pathData="M 12,12.0 L 9.5,13.5 L 12,13.0 Z"
+        android:fillColor="#ffffff"
+        android:fillAlpha="0.35"/>
 </vector>

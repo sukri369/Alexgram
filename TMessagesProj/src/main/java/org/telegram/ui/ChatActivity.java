@@ -19,6 +19,7 @@ import android.Manifest;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
+import android.animation.LayoutTransition;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
@@ -214,6 +215,7 @@ import org.telegram.messenger.VideoEditedInfo;
 import org.telegram.messenger.browser.Browser;
 import org.telegram.messenger.camera.CameraView;
 import org.telegram.messenger.support.LongSparseIntArray;
+import org.telegram.messenger.utils.FBool;
 import org.telegram.messenger.utils.OnPostDrawView;
 import org.telegram.messenger.utils.PhotoUtilities;
 import org.telegram.messenger.utils.RectFMergeBounding;
@@ -226,6 +228,7 @@ import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.tgnet.tl.TL_account;
 import org.telegram.tgnet.tl.TL_bots;
+import org.telegram.tgnet.tl.TL_iv;
 import org.telegram.tgnet.tl.TL_phone;
 import org.telegram.tgnet.tl.TL_stats;
 import org.telegram.tgnet.tl.TL_stories;
@@ -266,6 +269,7 @@ import org.telegram.ui.Cells.ChatUnreadCell;
 import org.telegram.ui.Cells.CheckBoxCell;
 import org.telegram.ui.Cells.ContextLinkCell;
 import org.telegram.ui.Cells.DialogCell;
+import org.telegram.ui.Cells.IMessageCell;
 import org.telegram.ui.Cells.MentionCell;
 import org.telegram.ui.Cells.ProfileChannelCell;
 import org.telegram.ui.Cells.ShareDialogCell;
@@ -300,6 +304,7 @@ import org.telegram.ui.Components.blur3.utils.Blur3Utils;
 import org.telegram.ui.Components.chat.ChatActivityBottomViewsVisibilityController;
 import org.telegram.ui.Components.chat.ChatActivityDraftMessageMeasureController;
 import org.telegram.ui.Components.chat.ChatActivityMessageMetricsView;
+import org.telegram.ui.Components.chat.ChatActivitySearchContainer;
 import org.telegram.ui.Components.chat.ChatActivityTopFadeView;
 import org.telegram.ui.Components.chat.layouts.ChatActivityActionsButtonsLayout;
 import org.telegram.ui.Components.chat.layouts.ChatActivityChannelButtonsLayout;
@@ -318,6 +323,10 @@ import org.telegram.ui.Components.poll.PollSendParams;
 import org.telegram.ui.Components.poll.PollUtils;
 import org.telegram.ui.Components.poll.sheets.PollStatisticsBottomSheet;
 import org.telegram.ui.Components.quickforward.QuickShareSelectorOverlayLayout;
+// [Alexgram: Templates Message Share Import] - Start
+import org.telegram.ui.Templates.TemplateSettings;
+import org.telegram.ui.Templates.TemplatesManager;
+// [Alexgram: Templates Message Share Import] - End
 import org.telegram.ui.Components.spoilers.SpoilerEffect;
 import org.telegram.ui.Components.voip.CellFlickerDrawable;
 import org.telegram.ui.Components.voip.VoIPHelper;
@@ -461,6 +470,9 @@ public class ChatActivity extends BaseFragment implements
 	private final static int nkbtn_special_forward = 2060;
 	// [Alexgram: Special Forward] - End
 	private final static int nkbtn_sharemessage = 2030;
+	// [Alexgram: Templates Message Share Action] - Start
+	private final static int nkbtn_save_to_templates = 2130;
+	// [Alexgram: Templates Message Share Action] - End
 
 	// chat click menu buttons
 	private final static int nkbtn_detail = 2012;
@@ -1347,6 +1359,8 @@ public class ChatActivity extends BaseFragment implements
 	private final static int OPTION_COPY_PHOTO_AS_STICKER = 151;
 	private final static int OPTION_COPY_FRAME = 152;
 	public final static int OPTION_CHANGE_SENDER_NAME = 160;
+	public final static int OPTION_LOCAL_EDITOR_PLUS = 170;
+
 
 	private final static int[] allowedNotificationsDuringChatListAnimations = new int[]{
 			AyuConstants.MESSAGES_DELETED_NOTIFICATION,
@@ -2614,6 +2628,16 @@ public class ChatActivity extends BaseFragment implements
 			}
 			openAttachMenu();
 		}
+
+		// [Alexgram: Templates Oval Input] - Start
+		@Override
+		public void didPressTemplatesButton() {
+			if (chatAttachAlert != null) {
+				chatAttachAlert.setEditingMessageObject(0, null);
+			}
+			openTemplatesMenu();
+		}
+		// [Alexgram: Templates Oval Input] - End
 
 		@Override
 		public void didPressSuggestionButton() {
@@ -4563,6 +4587,9 @@ public class ChatActivity extends BaseFragment implements
 
 			@Override
 			protected boolean onAvatarClick() {
+				if (dialog_id == TemplatesManager.getInstance(currentAccount).getTemplatesChannelId()) {
+					return true;
+				}
 				if (isTitleCentered()) {
 					if (editTextItem != null && editTextItem.getView() != null && editTextItem.getView().getVisibility() == VISIBLE) {
 						editTextItem.getView().performClick();
@@ -10918,7 +10945,7 @@ public class ChatActivity extends BaseFragment implements
 		actionModeViews.add(actionMode.addItemWithWidth(star, R.drawable.msg_fave, AndroidUtilities.dp(54), LocaleController.getString(R.string.AddToFavorites)));
 		actionModeViews.add(actionMode.addItemWithWidth(copy, R.drawable.msg_copy, AndroidUtilities.dp(54), LocaleController.getString(R.string.Copy)));
 		if (currentEncryptedChat == null && getDialogId() != UserObject.VERIFY && NaConfig.INSTANCE.getActionBarButtonForward().Bool()) {
-			actionModeViews.add(actionMode.addItemWithWidth(forward, R.drawable.msg_forward_noquote, AndroidUtilities.dp(54), LocaleController.getString(R.string.Forward)));
+			actionModeViews.add(actionMode.addItemWithWidth(forward, R.drawable.msg_forward, AndroidUtilities.dp(54), LocaleController.getString(R.string.Forward)));
 		}
 		// [Alexgram: Special Forward] - Start
 		if (currentEncryptedChat == null && NaConfig.INSTANCE.getSpecialForward().Bool()) {
@@ -14440,6 +14467,18 @@ public class ChatActivity extends BaseFragment implements
 		showDialog(chatAttachAlert);
 	}
 
+	// [Alexgram: Templates Oval Input] - Start
+	private void openTemplatesMenu() {
+		if (getParentActivity() == null || chatActivityEnterView != null && !TextUtils.isEmpty(chatActivityEnterView.getSlowModeTimer())) {
+			return;
+		}
+		openAttachMenu();
+		if (chatAttachAlert != null) {
+			chatAttachAlert.openTemplatesLayout();
+		}
+	}
+	// [Alexgram: Templates Oval Input] - End
+
 	public void openAttachMenuForCreatingSticker() {
 		ContentPreviewViewer.getInstance().setStickerSetForCustomSticker(null);
 		if (getParentActivity() == null) {
@@ -17681,6 +17720,7 @@ public class ChatActivity extends BaseFragment implements
 	public static final int PROGRESS_GIFT = 4;
 	public static final int PROGRESS_PAID_MEDIA = 5;
 	public static final int PROGRESS_FORWARD = 6;
+	public static final int PROGRESS_FULL_ARTICLE = 7;
 
 	private int progressDialogAtMessageId;
 	private int progressDialogAtMessageType;
@@ -20429,6 +20469,7 @@ public class ChatActivity extends BaseFragment implements
 				if (actionModeOtherItem != null) {
 					actionModeOtherItem.setSubItemVisibility(nkbtn_sharemessage, selectedMessagesCanCopyIds[0].size() + selectedMessagesCanCopyIds[1].size() > 0);
 				}
+
 
 				boolean allowPin = false;
 				if (currentChat != null) {
@@ -31944,6 +31985,195 @@ public class ChatActivity extends BaseFragment implements
 		return caption;
 	}
 
+	// [Alexgram: Templates Message Share Helpers] - Start
+	private boolean hasSelectedMessagesWithTemplateText() {
+		for (int a = 1; a >= 0; a--) {
+			for (int b = 0; b < selectedMessagesIds[a].size(); b++) {
+				if (canSaveToTemplates(selectedMessagesIds[a].valueAt(b), null)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	private boolean canSaveToTemplates(MessageObject messageObject, MessageObject.GroupedMessages group) {
+		return hasTemplateContent(getTemplateSourceMessages(messageObject, group));
+	}
+
+	private ArrayList<MessageObject> getTemplateSourceMessages(MessageObject messageObject, MessageObject.GroupedMessages group) {
+		ArrayList<MessageObject> result = new ArrayList<>();
+		if (group != null && group.messages != null && !group.messages.isEmpty()) {
+			result.addAll(group.messages);
+		 } else if (messageObject != null) {
+			result.add(messageObject);
+		}
+		return result;
+	}
+
+	private ArrayList<MessageObject> getQuickShareSourceMessages(MessageObject messageObject) {
+		ArrayList<MessageObject> result = new ArrayList<>();
+		if (messageObject != null && messageObject.getGroupId() != 0) {
+			MessageObject.GroupedMessages group = groupedMessagesMap.get(messageObject.getGroupId());
+			if (group != null && group.messages != null && !group.messages.isEmpty()) {
+				result.addAll(group.messages);
+			}
+		}
+		if (result.isEmpty() && messageObject != null) {
+			result.add(messageObject);
+		}
+		return result;
+	}
+
+	private String getTemplateTextFromMessage(MessageObject messageObject) {
+		if (messageObject == null) {
+			return "";
+		}
+		CharSequence text = messageObject.caption;
+		if (TextUtils.isEmpty(text) && messageObject.messageOwner != null && !TextUtils.isEmpty(messageObject.messageOwner.message)) {
+			text = messageObject.messageOwner.message;
+		}
+		if (TextUtils.isEmpty(text) && messageObject.type == MessageObject.TYPE_TEXT) {
+			text = messageObject.messageText;
+		}
+		return text == null ? "" : text.toString().trim();
+	}
+
+	private String buildTemplateText(ArrayList<MessageObject> messages) {
+		StringBuilder builder = new StringBuilder();
+		if (messages == null) {
+			return "";
+		}
+		for (int i = 0; i < messages.size(); i++) {
+			String text = getTemplateTextFromMessage(messages.get(i));
+			if (TextUtils.isEmpty(text)) {
+				continue;
+			}
+			if (builder.length() > 0) {
+				builder.append("\n\n");
+			}
+			builder.append(text);
+		}
+		return builder.toString();
+	}
+
+	private boolean canSerializeTemplateMessage(MessageObject messageObject) {
+		return messageObject != null && messageObject.contentType == 0 && messageObject.messageOwner != null && !(messageObject.messageOwner instanceof TLRPC.TL_messageService);
+	}
+
+	private boolean hasTemplateContent(ArrayList<MessageObject> messages) {
+		if (!TextUtils.isEmpty(buildTemplateText(messages))) {
+			return true;
+		}
+		if (messages == null) {
+			return false;
+		}
+		for (int i = 0; i < messages.size(); i++) {
+			if (canSerializeTemplateMessage(messages.get(i))) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private ArrayList<String> buildTemplateMessagePayloads(ArrayList<MessageObject> messages) {
+		ArrayList<String> result = new ArrayList<>();
+		if (messages == null) {
+			return result;
+		}
+		for (int i = 0; i < messages.size(); i++) {
+			MessageObject messageObject = messages.get(i);
+			if (!canSerializeTemplateMessage(messageObject)) {
+				continue;
+			}
+			String payload = TemplateSettings.serializeMessage(messageObject);
+			if (!TextUtils.isEmpty(payload)) {
+				result.add(payload);
+			}
+		}
+		return result;
+	}
+
+	private String makeTemplateName(String text) {
+		String name = text == null ? "" : text.replace('\n', ' ').trim().replaceAll("\\s+", " ");
+		if (name.length() > 40) {
+			name = name.substring(0, 40).trim();
+		}
+		return TextUtils.isEmpty(name) ? LocaleController.getString(R.string.chat_template) : name;
+	}
+
+	private boolean saveMessagesToTemplates(ArrayList<MessageObject> messages, String name) {
+		String text = buildTemplateText(messages);
+		ArrayList<String> messagePayloads = buildTemplateMessagePayloads(messages);
+		if (TextUtils.isEmpty(text) && messagePayloads.isEmpty()) {
+			return false;
+		}
+		TemplatesManager.getInstance(currentAccount).addTemplate(TextUtils.isEmpty(name) ? makeTemplateName(text) : name, text, messagePayloads);
+		return true;
+	}
+
+	private void showSaveToTemplatesDialog(ArrayList<MessageObject> messages) {
+		if (getParentActivity() == null) {
+			return;
+		}
+		String text = buildTemplateText(messages);
+		if (!hasTemplateContent(messages)) {
+			showTemplateNoTextBulletin();
+			return;
+		}
+		EditText editText = new EditText(getParentActivity());
+		editText.setBackground(null);
+		editText.setSingleLine(true);
+		editText.setText(makeTemplateName(text));
+		editText.setSelectAllOnFocus(true);
+		editText.setTextColor(getThemedColor(Theme.key_dialogTextBlack));
+		editText.setHintTextColor(getThemedColor(Theme.key_dialogTextHint));
+		editText.setHint(LocaleController.getString(R.string.chat_template_name_hint));
+		editText.setPadding(0, 0, 0, 0);
+
+		FrameLayout container = new FrameLayout(getParentActivity());
+		container.addView(editText, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 24, 4, 24, 0));
+
+		AlertDialog dialog = new AlertDialog.Builder(getParentActivity(), themeDelegate)
+				.setTitle(LocaleController.getString(R.string.chat_templates))
+				.setMessage(LocaleController.getString(R.string.chat_template_name_info))
+				.setView(container)
+				.setPositiveButton(LocaleController.getString(R.string.Save), (dialogInterface, which) -> {
+					if (saveMessagesToTemplates(messages, editText.getText().toString())) {
+						showTemplateSavedBulletin();
+					} else {
+						showTemplateNoTextBulletin();
+					}
+				})
+				.setNegativeButton(LocaleController.getString(R.string.Cancel), null)
+				.create();
+		showDialog(dialog);
+		editText.requestFocus();
+		AndroidUtilities.showKeyboard(editText);
+	}
+
+	private Bulletin createTemplateSavedBulletin() {
+		Drawable drawable = ContextCompat.getDrawable(getParentActivity() != null ? getParentActivity() : ApplicationLoader.applicationContext, R.drawable.fork_templates);
+		if (drawable != null) {
+			drawable = drawable.mutate();
+			drawable.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_undo_infoColor), PorterDuff.Mode.SRC_IN));
+		}
+		return BulletinFactory.of(this).createSimpleBulletin(drawable, LocaleController.getString(R.string.chat_templates_added));
+	}
+
+	private void showTemplateSavedBulletin() {
+		createTemplateSavedBulletin().show();
+	}
+
+	private Bulletin createTemplateNoTextBulletin() {
+		return BulletinFactory.of(this).createErrorBulletin(LocaleController.getString(R.string.chat_templates_no_text), themeDelegate);
+	}
+
+	private void showTemplateNoTextBulletin() {
+		createTemplateNoTextBulletin().show();
+	}
+	// [Alexgram: Templates Message Share Helpers] - End
+
 	private boolean createMenu(View v, boolean single, boolean listView, float x, float y, boolean searchGroup, boolean longpress) {
 		return createMenu(v, single, listView, x, y, searchGroup, longpress, false, false);
 	}
@@ -32371,7 +32601,7 @@ public class ChatActivity extends BaseFragment implements
 			final boolean isReactionsAvailableFinal = !suggestEdit && isReactionsAvailable;
 
 			int flags = 0;
-			if (isReactionsViewAvailable || showMessageSeen || showSponsorInfo || options.contains(OPTION_REPLY) || options.contains(OPTION_COPY) || options.contains(OPTION_COPY_PHOTO) || options.contains(OPTION_FORWARD) || options.contains(nkbtn_translate)) {
+			if (isReactionsViewAvailable || showMessageSeen || showSponsorInfo || options.contains(OPTION_REPLY) || options.contains(OPTION_COPY) || options.contains(OPTION_COPY_PHOTO) || options.contains(OPTION_FORWARD) || options.contains(nkbtn_translate) || options.contains(OPTION_LOCAL_EDITOR_PLUS)) {
 				flags |= ActionBarPopupWindow.ActionBarPopupWindowLayout.FLAG_USE_SWIPEBACK;
 			}
 
@@ -33240,7 +33470,7 @@ public class ChatActivity extends BaseFragment implements
 						coreItems.add("Edit");
 					} else if (this.lastMessageMenuStatus.allowForward) {
 						coreOptions.add(OPTION_FORWARD);
-						coreIcons.add(R.drawable.msg_forward_noquote);
+						coreIcons.add(R.drawable.msg_forward);
 						coreItems.add("Forward");
 					}
 
@@ -33287,12 +33517,85 @@ public class ChatActivity extends BaseFragment implements
 					}
 					popupLayout.addView(cell);
 					final int i = a;
-					cell.setOnClickListener(v1 -> {
-						if (selectedObject == null || i >= options.size()) {
-							return;
+					if (option == OPTION_LOCAL_EDITOR_PLUS) {
+						cell.setRightIcon(R.drawable.msg_arrowright);
+						final boolean subShowChangeName = tw.nekomimi.nekogram.NekoConfig.enableChangeNameInGroups.Bool()
+								&& tw.nekomimi.nekogram.helpers.MessageNameOverrideHelper.isGroupChat(currentAccount, getDialogId())
+								&& message != null
+								&& !message.isOutOwner()
+								&& message.getFromChatId() != 0
+								&& !isAyuDeleted
+								&& message.getId() > 0;
+						final boolean subShowLocalEditor = tw.nekomimi.nekogram.NekoConfig.enableLocalEditorPlus.Bool()
+								&& message != null
+								&& !isAyuDeleted
+								&& message.getId() > 0;
+
+						android.widget.LinearLayout subLayout = new android.widget.LinearLayout(getParentActivity());
+						subLayout.setOrientation(android.widget.LinearLayout.VERTICAL);
+						subLayout.setBackgroundColor(getThemedColor(Theme.key_actionBarDefaultSubmenuBackground));
+
+						ActionBarMenuSubItem backCell = new ActionBarMenuSubItem(getParentActivity(), true, false, themeDelegate);
+						backCell.setItemHeight(44);
+						backCell.setTextAndIcon(LocaleController.getString(R.string.Back), R.drawable.msg_arrow_back);
+						backCell.setOnClickListener(v2 -> {
+							if (popupLayout.getSwipeBack() != null) {
+								popupLayout.getSwipeBack().closeForeground();
+							}
+						});
+						subLayout.addView(backCell, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+
+						if (subShowChangeName) {
+							ActionBarMenuSubItem changeNameCell = new ActionBarMenuSubItem(getParentActivity(), false, !subShowLocalEditor, themeDelegate);
+							changeNameCell.setItemHeight(44);
+							changeNameCell.setTextAndIcon(LocaleController.getString("ChangeSenderNameMenu", R.string.ChangeSenderNameMenu), R.drawable.msg_change_name_nax);
+							changeNameCell.setOnClickListener(v2 -> {
+								closeMenu();
+								processSelectedOption(OPTION_CHANGE_SENDER_NAME);
+							});
+							subLayout.addView(changeNameCell, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 						}
-						processSelectedOption(options.get(i));
-					});
+
+						if (subShowLocalEditor) {
+							ActionBarMenuSubItem editCell = new ActionBarMenuSubItem(getParentActivity(), false, false, themeDelegate);
+							editCell.setItemHeight(44);
+							editCell.setTextAndIcon(LocaleController.getString("LocalEditorEditOption", R.string.LocalEditorEditOption), R.drawable.msg_edit);
+							editCell.setOnClickListener(v2 -> {
+								closeMenu();
+								showLocalEditMessageDialog(selectedObject);
+							});
+							subLayout.addView(editCell, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+
+							ActionBarMenuSubItem deleteCell = new ActionBarMenuSubItem(getParentActivity(), false, true, themeDelegate);
+							deleteCell.setItemHeight(44);
+							deleteCell.setTextAndIcon(LocaleController.getString("LocalEditorDeleteOption", R.string.LocalEditorDeleteOption), R.drawable.msg_delete);
+							deleteCell.setOnClickListener(v2 -> {
+								closeMenu();
+								com.radolyn.ayugram.utils.AyuState.permitDeleteMessage(selectedObject.getDialogId(), selectedObject.getId());
+								ArrayList<Integer> ids = new ArrayList<>();
+								ids.add(selectedObject.getId());
+								MessagesController.getInstance(currentAccount).deleteMessages(ids, null, null, selectedObject.getDialogId(), (int) getTopicId(), false, chatMode, true);
+								updateVisibleRows();
+							});
+							subLayout.addView(deleteCell, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+						}
+
+						final int subMenuIndex = popupLayout.addViewToSwipeBack(subLayout);
+						cell.setOnClickListener(v1 -> {
+							if (popupLayout.getSwipeBack() != null) {
+								popupLayout.getSwipeBack().openForeground(subMenuIndex);
+							}
+						});
+					} else {
+
+						cell.setOnClickListener(v1 -> {
+							if (selectedObject == null || i >= options.size()) {
+								return;
+							}
+							processSelectedOption(options.get(i));
+						});
+					}
+
 					/*if (option == OPTION_TRANSLATE) {
 						final boolean translateEnabled = getMessagesController().getTranslateController().isContextTranslateEnabled();
 						String toLangDefault = LocaleController.getInstance().getCurrentLocale().getLanguage();
@@ -33920,7 +34223,12 @@ public class ChatActivity extends BaseFragment implements
 			}
 			int popupY;
 			int minY = (int) (chatListView.getY() + dp(24));
-			int maxY = totalHeight - height - dp(8);
+			// Subtract navigationBarHeight from maxY: contentView.getHeight() doesn't include the
+			// navigation bar, but showAtLocation() places popups in the full window coordinate system.
+			// Without this, the popup's maxHeight is too small on devices with navigation bars,
+			// causing the menu to be cut off at the bottom on those devices.
+			int navBarHeight = keyboardHeight > AndroidUtilities.dp(20) ? 0 : AndroidUtilities.navigationBarHeight;
+			int maxY = totalHeight - height - dp(8) - navBarHeight;
 			if (height < totalHeight) {
 				popupY = (int) (chatListView.getY() + v.getTop() + y);
 				if (isInsideContainer) {
@@ -34851,6 +35159,12 @@ public class ChatActivity extends BaseFragment implements
 		}
 		boolean preserveDim = false;
 		switch (option) {
+			case OPTION_LOCAL_EDITOR_PLUS: {
+				final MessageObject msgObj = selectedObject;
+				showLocalEditorDialog(msgObj);
+				break;
+			}
+
 			case AyuConstants.OPTION_HISTORY:
 				presentFragment(new AyuMessageHistory(selectedObject));
 				break;
@@ -41060,21 +41374,18 @@ public class ChatActivity extends BaseFragment implements
 				return null;
 			}
 
+			ArrayList<MessageObject> arrayList = getQuickShareSourceMessages(messageObject);
+			// [Alexgram: Templates Quick Share Save] - Start
+			if (QuickShareSelectorOverlayLayout.isTemplatesDialogId(did)) {
+				if (saveMessagesToTemplates(arrayList, null)) {
+					return createTemplateSavedBulletin().allowBlur().show(false);
+				}
+				return createTemplateNoTextBulletin().allowBlur().show(false);
+			}
+			// [Alexgram: Templates Quick Share Save] - End
+
 			if (AlertsCreator.checkSlowMode(getContext(), currentAccount, did, false)) {
 				return null;
-			}
-
-
-			ArrayList<MessageObject> arrayList = null;
-			if (messageObject.getGroupId() != 0) {
-				MessageObject.GroupedMessages groupedMessages = groupedMessagesMap.get(messageObject.getGroupId());
-				if (groupedMessages != null) {
-					arrayList = groupedMessages.messages;
-				}
-			}
-			if (arrayList == null) {
-				arrayList = new ArrayList<>();
-				arrayList.add(messageObject);
 			}
 
 			final boolean isSavedMessages = did == UserConfig.getInstance(UserConfig.selectedAccount).clientUserId;
@@ -46441,6 +46752,12 @@ public class ChatActivity extends BaseFragment implements
 			} catch (Exception e) {
 				AlertUtil.showToast(e);
 			}
+		// [Alexgram: Templates Action Mode Save] - Start
+		} else if (id == nkbtn_save_to_templates) {
+			ArrayList<MessageObject> messages = getSelectedMessages1();
+			showSaveToTemplatesDialog(messages);
+			clearSelectionMode();
+		// [Alexgram: Templates Action Mode Save] - End
 		} else if (id == shortcuts_administrators || id == shortcuts_permissions || id == shortcuts_members) {
 			Bundle args = new Bundle();
 			args.putLong("chat_id", currentChat.id);
@@ -46506,6 +46823,10 @@ public class ChatActivity extends BaseFragment implements
 				return "TranslateMessageLLM";
 			case nkbtn_sharemessage:
 				return "showShareMessages";
+			// [Alexgram: Templates Message Share Action] - Start
+			case nkbtn_save_to_templates:
+				return "showSaveToTemplates";
+			// [Alexgram: Templates Message Share Action] - End
 			case nkbtn_hide:
 				return "showMessageHide";
 			case nkbtn_report:
@@ -46673,6 +46994,12 @@ public class ChatActivity extends BaseFragment implements
 				}
 				break;
 			}
+			// [Alexgram: Templates Message Menu Save] - Start
+			case nkbtn_save_to_templates: {
+				showSaveToTemplatesDialog(getTemplateSourceMessages(selectedObject, selectedObjectGroup));
+				break;
+			}
+			// [Alexgram: Templates Message Menu Save] - End
 			case nkbtn_stickerdl: {
 				if ((Build.VERSION.SDK_INT <= 28 || BuildVars.NO_SCOPED_STORAGE) && getParentActivity().checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
 					getParentActivity().requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 4);
@@ -47123,7 +47450,7 @@ public class ChatActivity extends BaseFragment implements
 		options.setOnDismiss(dialog::dismissFast);
 
 		final boolean allowCustomTabs = !str.startsWith("video?") && !Browser.isInternalUri(Uri.parse(str), null);
-		final boolean customTabs = SharedConfig.inappBrowser && allowCustomTabs;
+		final boolean customTabs = allowCustomTabs && MessagesController.getInstance(currentAccount).isWebBrowserOpenInApp(str);
 		final boolean isHashtag = str.startsWith("#") || str.startsWith("$");
 		final boolean isMail = str.startsWith("mailto:");
 
@@ -47144,7 +47471,7 @@ public class ChatActivity extends BaseFragment implements
 			options.add(R.drawable.msg_language, getString(R.string.OpenInSystemBrowser), () -> {
 				Browser.openInExternalBrowser(getParentActivity(), str, false);
 			});
-		} else if (!isMail && !isHashtag && !customTabs && allowCustomTabs && !SharedConfig.inappBrowser) {
+		} else if (!isMail && !isHashtag && !customTabs && allowCustomTabs && !MessagesController.getInstance(currentAccount).isWebBrowserOpenInApp(str)) {
 			options.add(R.drawable.msg_language, getString(R.string.OpenInTelegramBrowser), () -> {
 				Browser.openInTelegramBrowser(getParentActivity(), str, null);
 			});
@@ -48930,7 +49257,7 @@ public class ChatActivity extends BaseFragment implements
 					if (!GroupedIconsView.useGroupedIcons() || allowEdit) {
 						items.add(LocaleController.getString(R.string.Forward));
 						options.add(OPTION_FORWARD);
-						icons.add(NaConfig.INSTANCE.getShowNoQuoteForward().Bool() ? R.drawable.msg_forward : R.drawable.msg_forward_noquote);
+						icons.add(R.drawable.msg_forward);
 					}
 				}
 				// --- NagramX Start ---
@@ -49304,18 +49631,26 @@ public class ChatActivity extends BaseFragment implements
 			}
 		}
 		// [Alexgram: Customizable Message Menu] - End
-		if (tw.nekomimi.nekogram.NekoConfig.enableChangeNameInGroups.Bool()
+		boolean showChangeName = tw.nekomimi.nekogram.NekoConfig.enableChangeNameInGroups.Bool()
 				&& tw.nekomimi.nekogram.helpers.MessageNameOverrideHelper.isGroupChat(currentAccount, getDialogId())
 				&& message != null
 				&& !message.isOutOwner()
 				&& message.getFromChatId() != 0
 				&& !isAyuDeleted
-				&& message.getId() > 0) {
-			items.add(LocaleController.getString("ChangeSenderNameMenu", R.string.ChangeSenderNameMenu));
-			options.add(OPTION_CHANGE_SENDER_NAME);
-			icons.add(R.drawable.msg_change_name_nax);
+				&& message.getId() > 0;
+		boolean showLocalEditor = tw.nekomimi.nekogram.NekoConfig.enableLocalEditorPlus.Bool()
+				&& message != null
+				&& !isAyuDeleted
+				&& message.getId() > 0;
+
+		if (showChangeName || showLocalEditor) {
+			items.add(LocaleController.getString("LocalEditorMenuOption", R.string.LocalEditorMenuOption));
+			options.add(OPTION_LOCAL_EDITOR_PLUS);
+			icons.add(R.drawable.ic_local_editor);
 		}
+
 		if (NekoConfig.showMessageDetails.Bool()) {
+
 			items.add(LocaleController.getString(R.string.MessageDetails));
 			options.add(nkbtn_detail);
 			icons.add(R.drawable.msg_info);
@@ -51003,6 +51338,135 @@ public class ChatActivity extends BaseFragment implements
 	protected void multiChatOnFragmentDestroy() {}
 	protected boolean multiChatOnMenuItemClicked(int itemId) { return false; }
 	protected void multiChatOnMessageSend(CharSequence charSequence, boolean notify, int scheduleDate, int scheduleRepeatPeriod, long topicId) {}
+
+	private void showLocalEditorDialog(final MessageObject messageObject) {
+		if (messageObject == null || getParentActivity() == null) {
+			return;
+		}
+		AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity(), themeDelegate);
+		builder.setTitle(LocaleController.getString("LocalEditorMenuOption", R.string.LocalEditorMenuOption));
+		builder.setItems(new CharSequence[]{
+			LocaleController.getString("LocalEditorEditOption", R.string.LocalEditorEditOption),
+			LocaleController.getString("LocalEditorDeleteOption", R.string.LocalEditorDeleteOption)
+		}, (dialog, which) -> {
+			if (which == 0) {
+				showLocalEditMessageDialog(messageObject);
+			} else if (which == 1) {
+				com.radolyn.ayugram.utils.AyuState.permitDeleteMessage(messageObject.getDialogId(), messageObject.getId());
+				ArrayList<Integer> ids = new ArrayList<>();
+				ids.add(messageObject.getId());
+				MessagesController.getInstance(currentAccount).deleteMessages(ids, null, null, messageObject.getDialogId(), (int) getTopicId(), false, chatMode, true);
+				updateVisibleRows();
+			}
+		});
+		showDialog(builder.create());
+	}
+
+	private void showLocalEditMessageDialog(final MessageObject messageObject) {
+		if (messageObject == null || getParentActivity() == null) {
+			return;
+		}
+		Context context = getParentActivity();
+		android.widget.LinearLayout layout = new android.widget.LinearLayout(context);
+		layout.setOrientation(android.widget.LinearLayout.VERTICAL);
+		int padding = AndroidUtilities.dp(20);
+		layout.setPadding(padding, AndroidUtilities.dp(10), padding, AndroidUtilities.dp(10));
+
+		final android.widget.EditText textEdit = new android.widget.EditText(context);
+		String currentText = (messageObject.caption != null) ? messageObject.caption.toString() : (messageObject.messageOwner.message != null ? messageObject.messageOwner.message : "");
+		textEdit.setText(currentText);
+		textEdit.setHint(messageObject.caption != null ? "Caption" : "Text");
+		textEdit.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
+		textEdit.setHintTextColor(Theme.getColor(Theme.key_dialogTextHint));
+		layout.addView(textEdit);
+
+		final android.widget.EditText timeEdit = new android.widget.EditText(context);
+		long currentTimestamp = messageObject.messageOwner.date;
+		java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.US);
+		timeEdit.setText(sdf.format(new java.util.Date(currentTimestamp * 1000)));
+		timeEdit.setHint("Time (HH:MM:SS)");
+		timeEdit.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
+		timeEdit.setHintTextColor(Theme.getColor(Theme.key_dialogTextHint));
+		
+		android.widget.LinearLayout.LayoutParams lp = new android.widget.LinearLayout.LayoutParams(
+				android.widget.LinearLayout.LayoutParams.MATCH_PARENT, 
+				android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+		);
+		lp.topMargin = AndroidUtilities.dp(10);
+		layout.addView(timeEdit, lp);
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(context, themeDelegate);
+		builder.setTitle(LocaleController.getString("LocalEditorMenuOption", R.string.LocalEditorMenuOption));
+		builder.setView(layout);
+		builder.setPositiveButton(LocaleController.getString(R.string.Save), (dialog, which) -> {
+			String newText = textEdit.getText().toString();
+			String newTimeStr = timeEdit.getText().toString();
+			try {
+				java.util.Date parsedTime = sdf.parse(newTimeStr);
+				java.util.Calendar originalCal = java.util.Calendar.getInstance();
+				originalCal.setTimeInMillis(currentTimestamp * 1000);
+				
+				java.util.Calendar parsedCal = java.util.Calendar.getInstance();
+				parsedCal.setTime(parsedTime);
+				
+				originalCal.set(java.util.Calendar.HOUR_OF_DAY, parsedCal.get(java.util.Calendar.HOUR_OF_DAY));
+				originalCal.set(java.util.Calendar.MINUTE, parsedCal.get(java.util.Calendar.MINUTE));
+				originalCal.set(java.util.Calendar.SECOND, parsedCal.get(java.util.Calendar.SECOND));
+				
+				int newTimestampSec = (int) (originalCal.getTimeInMillis() / 1000);
+				
+				String origText = messageObject.messageOwner.message != null ? messageObject.messageOwner.message : "";
+				int origDate = messageObject.messageOwner.date;
+				if (tw.nekomimi.nekogram.helpers.LocalEditorHelper.hasEdit(messageObject.getDialogId(), messageObject.getId())) {
+					String storedOrigText = tw.nekomimi.nekogram.helpers.LocalEditorHelper.getOriginalText(messageObject.getDialogId(), messageObject.getId());
+					int storedOrigDate = tw.nekomimi.nekogram.helpers.LocalEditorHelper.getOriginalDate(messageObject.getDialogId(), messageObject.getId());
+					if (storedOrigText != null && storedOrigDate != 0) {
+						origText = storedOrigText;
+						origDate = storedOrigDate;
+					}
+				}
+
+				// Save to local editor helper
+				tw.nekomimi.nekogram.helpers.LocalEditorHelper.saveEdit(messageObject.getDialogId(), messageObject.getId(), newText, newTimestampSec, origText, origDate);
+				
+				// Apply layout changes in-memory only (no server call)
+				messageObject.applyLocalEdit(newText, newTimestampSec);
+				
+				// Force immediate re-bind of this cell after dialog dismisses
+				AndroidUtilities.runOnUIThread(() -> {
+					int msgIndex = messages.indexOf(messageObject);
+					if (chatAdapter != null && msgIndex >= 0) {
+						chatAdapter.notifyItemChanged(chatAdapter.messagesStartRow + msgIndex);
+					}
+					updateVisibleRows();
+				});
+			} catch (Exception e) {
+				org.telegram.ui.Components.BulletinFactory.of(ChatActivity.this).createErrorBulletin("Wrong timestamp format!", themeDelegate).show();
+			}
+		});
+		builder.setNegativeButton(LocaleController.getString(R.string.Cancel), (dialog, which) -> dialog.dismiss());
+		if (tw.nekomimi.nekogram.helpers.LocalEditorHelper.hasEdit(messageObject.getDialogId(), messageObject.getId())) {
+			builder.setNeutralButton(LocaleController.getString("LocalEditorRestore", R.string.LocalEditorRestore), (dialog, which) -> {
+				String origText = tw.nekomimi.nekogram.helpers.LocalEditorHelper.getOriginalText(messageObject.getDialogId(), messageObject.getId());
+				int origDate = tw.nekomimi.nekogram.helpers.LocalEditorHelper.getOriginalDate(messageObject.getDialogId(), messageObject.getId());
+				if (origText != null && origDate != 0) {
+					messageObject.applyLocalEdit(origText, origDate);
+				}
+				tw.nekomimi.nekogram.helpers.LocalEditorHelper.removeEdit(messageObject.getDialogId(), messageObject.getId());
+				// Force immediate re-bind of this cell after dialog dismisses
+				AndroidUtilities.runOnUIThread(() -> {
+					int msgIndex = messages.indexOf(messageObject);
+					if (chatAdapter != null && msgIndex >= 0) {
+						chatAdapter.notifyItemChanged(chatAdapter.messagesStartRow + msgIndex);
+					}
+					updateVisibleRows();
+				});
+			});
+		}
+		showDialog(builder.create());
+	}
+
+
 	protected void multiChatOnPause() {}
 	protected void multiChatOnResume() {}
 	protected void multiChatOnTextChanged(CharSequence charSequence, boolean isSpecial, boolean force) {}

@@ -62,6 +62,8 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.common.collect.Lists;
+
 import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
@@ -82,6 +84,7 @@ import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
+import org.telegram.messenger.SharedPrefsHelper;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.browser.Browser;
@@ -92,6 +95,7 @@ import org.telegram.ui.ActionBar.ActionBarMenu;
 import org.telegram.ui.ActionBar.ActionBarMenuItem;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
+import org.telegram.ui.ActionBar.INavigationLayout;
 import org.telegram.ui.ActionBar.SimpleTextView;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Cells.SettingsSearchCell;
@@ -141,7 +145,9 @@ import org.telegram.ui.bots.SetupEmojiStatusSheet;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
@@ -331,7 +337,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                 if (id == -1) {
                     finishFragment();
                 } else if (id == 2) {
-                    presentFragment(new LogoutActivity());
+                    presentSettingFragment(new LogoutActivity());
                 }
             }
         });
@@ -444,7 +450,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
 
         avatarDrawable = new AvatarDrawable();
         avatarView = new BackupImageView(context);
-        avatarView.setRoundRadius(dp(90));
+        avatarView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(90.0f));
         avatarContainer.addView(avatarView, LayoutHelper.createFrame(90, 90, Gravity.CENTER_HORIZONTAL | Gravity.TOP, 0, 15, 0, 0));
 
         avatarProgressView = new RadialProgressView(context) {
@@ -744,8 +750,18 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             try {
                 accountsReorderId = adapter.reorderSectionStart();
                 items.add(AccountHeaderCell.Factory.of(1000, getString(R.string.SettingsAccounts)));
-                for (int i = 0; i < accountNumbers.size(); ++i) {
-                    items.add(AccountCell.Factory.of(i + 2000, accountNumbers.get(i)));
+                boolean settingsAccountsShown = MessagesController.getGlobalMainSettings().getBoolean("settingsAccountsShown", true);
+                if (settingsAccountsShown || accountNumbers.size() <= 1) {
+                    for (int i = 0; i < accountNumbers.size(); ++i) {
+                        items.add(AccountCell.Factory.of(i + 2000, accountNumbers.get(i)));
+                    }
+                } else {
+                    int activeAccount = UserConfig.selectedAccount;
+                    if (accountNumbers.contains(activeAccount)) {
+                        items.add(AccountCell.Factory.of(accountNumbers.indexOf(activeAccount) + 2000, activeAccount));
+                    } else {
+                        items.add(AccountCell.Factory.of(2000, accountNumbers.get(0)));
+                    }
                 }
                 adapter.reorderSectionEnd();
                 items.add(UItem.asShadow(null));
@@ -839,6 +855,22 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         items.add(UItem.asCustomShadow(versionView));
     }
 
+    private void presentSettingFragment(BaseFragment fragment) {
+        if (AndroidUtilities.isTablet() && LaunchActivity.instance != null && LaunchActivity.instance.getRightActionBarLayout() != null) {
+            final INavigationLayout layout = LaunchActivity.instance.getRightActionBarLayout();
+            if (!layout.getFragmentStack().isEmpty()) {
+                for (int a = 0; a < layout.getFragmentStack().size() - 1; a++) {
+                    layout.removeFragmentFromStack(layout.getFragmentStack().get(0));
+                    a--;
+                }
+                layout.closeLastFragment(false);
+            }
+            layout.presentFragment(new INavigationLayout.NavigationParams(fragment).setNoAnimation(true).forceRightLayout());
+        } else {
+            presentFragment(fragment);
+        }
+    }
+
     private void onClick(UItem item, View view, int position, float x, float y) {
         if (item.object instanceof TLRPC.TL_attachMenuBot) {
             TLRPC.TL_attachMenuBot attachMenuBot = (TLRPC.TL_attachMenuBot) item.object;
@@ -880,44 +912,44 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         }
         switch (item.id) {
             case 1:
-                presentFragment(new UserInfoActivity());
+                presentSettingFragment(new UserInfoActivity());
                 break;
             case 2:
-                presentFragment(new ThemeActivity(ThemeActivity.THEME_TYPE_BASIC));
+                presentSettingFragment(new ThemeActivity(ThemeActivity.THEME_TYPE_BASIC));
                 break;
             case 3:
-                presentFragment(new PrivacySettingsActivity());
+                presentSettingFragment(new PrivacySettingsActivity());
                 break;
             case 5:
-                presentFragment(new NotificationsSettingsActivity());
+                presentSettingFragment(new NotificationsSettingsActivity());
                 break;
             case 6:
-                presentFragment(new DataSettingsActivity());
+                presentSettingFragment(new DataSettingsActivity());
                 break;
             case 7:
-                presentFragment(new FiltersSetupActivity());
+                presentSettingFragment(new FiltersSetupActivity());
                 break;
             case 8:
-                presentFragment(new SessionsActivity(0));
+                presentSettingFragment(new SessionsActivity(0));
                 break;
             case 9:
-                presentFragment(new LiteModeSettingsActivity());
+                presentSettingFragment(new LiteModeSettingsActivity());
                 break;
             case 10:
-                presentFragment(new LanguageSelectActivity());
+                presentSettingFragment(new LanguageSelectActivity());
                 break;
 
             case 11:
-                presentFragment(new PremiumPreviewFragment("settings"));
+                presentSettingFragment(new PremiumPreviewFragment("settings"));
                 break;
             case 12:
-                presentFragment(new StarsIntroActivity());
+                presentSettingFragment(new StarsIntroActivity());
                 break;
             case 13:
-                presentFragment(new TONIntroActivity());
+                presentSettingFragment(new TONIntroActivity());
                 break;
             case 15:
-                presentFragment(new PremiumPreviewFragment(PremiumPreviewFragment.FEATURES_BUSINESS, "settings"));
+                presentSettingFragment(new PremiumPreviewFragment(PremiumPreviewFragment.FEATURES_BUSINESS, "settings"));
                 break;
             case 16:
                 UserSelectorBottomSheet.open(0, BirthdayController.getInstance(UserConfig.selectedAccount).getState());
@@ -1045,6 +1077,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         private final Theme.ResourcesProvider resourcesProvider;
         private final SimpleTextView titleView;
         private final ImageView pinView;
+        private final ImageView arrowView;
 
         public AccountHeaderCell(Context context, Theme.ResourcesProvider resourcesProvider) {
             super(context);
@@ -1055,7 +1088,10 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             titleView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlueHeader, resourcesProvider));
             titleView.setGravity(Gravity.CENTER_VERTICAL | (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT));
             titleView.setTypeface(AndroidUtilities.bold());
-            addView(titleView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.FILL, 22, 0, 52, 0));
+            
+            int titleLeftMargin = LocaleController.isRTL ? 92 : 22;
+            int titleRightMargin = LocaleController.isRTL ? 22 : 92;
+            addView(titleView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.FILL, titleLeftMargin, 0, titleRightMargin, 0));
 
             pinView = new ImageView(context);
             pinView.setScaleType(ImageView.ScaleType.CENTER);
@@ -1068,13 +1104,38 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                     ((UniversalAdapter) v.getTag()).update(true);
                 }
             });
-            addView(pinView, LayoutHelper.createFrame(40, 40, (LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT) | Gravity.CENTER_VERTICAL, 8, 0, 8, 0));
+            int pinMargin = 8;
+            addView(pinView, LayoutHelper.createFrame(40, 40, (LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT) | Gravity.CENTER_VERTICAL, LocaleController.isRTL ? pinMargin : 0, 0, LocaleController.isRTL ? 0 : pinMargin, 0));
+
+            arrowView = new ImageView(context);
+            arrowView.setScaleType(ImageView.ScaleType.CENTER);
+            arrowView.setImageResource(R.drawable.msg_expand);
+            boolean expanded = org.telegram.messenger.MessagesController.getGlobalMainSettings().getBoolean("settingsAccountsShown", true);
+            arrowView.setRotation(expanded ? 180.0f : 0.0f);
+            arrowView.setOnClickListener(v -> {
+                boolean exp = !org.telegram.messenger.MessagesController.getGlobalMainSettings().getBoolean("settingsAccountsShown", true);
+                org.telegram.messenger.MessagesController.getGlobalMainSettings().edit().putBoolean("settingsAccountsShown", exp).apply();
+                updateArrow(exp, true);
+                org.telegram.messenger.BotWebViewVibrationEffect.APP_ERROR.vibrate();
+                if (v.getTag() instanceof UniversalAdapter) {
+                    ((UniversalAdapter) v.getTag()).update(true);
+                }
+            });
+            int arrowMargin = 48;
+            addView(arrowView, LayoutHelper.createFrame(40, 40, (LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT) | Gravity.CENTER_VERTICAL, LocaleController.isRTL ? arrowMargin : 0, 0, LocaleController.isRTL ? 0 : arrowMargin, 0));
         }
 
         public void set(CharSequence title, boolean pin, UniversalAdapter adapter) {
+            set(title, pin, org.telegram.messenger.MessagesController.getGlobalMainSettings().getBoolean("settingsAccountsShown", true), 0, adapter);
+        }
+
+        public void set(CharSequence title, boolean pin, boolean expanded, int accountsCount, UniversalAdapter adapter) {
             titleView.setText(title);
             updatePin(pin);
+            updateArrow(expanded, false);
+            arrowView.setVisibility(accountsCount > 1 ? View.VISIBLE : View.GONE);
             pinView.setTag(adapter);
+            arrowView.setTag(adapter);
         }
 
         private void updatePin(boolean pin) {
@@ -1082,9 +1143,24 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             pinView.setContentDescription(pin ? "Unpin" : "Pin");
         }
 
+        private void updateArrow(boolean expanded, boolean animated) {
+            float rotation = expanded ? 180.0f : 0.0f;
+            if (animated) {
+                arrowView.animate().cancel();
+                arrowView.animate().rotation(rotation).setDuration(220).setInterpolator(org.telegram.ui.Components.CubicBezierInterpolator.EASE_OUT).start();
+            } else {
+                arrowView.animate().cancel();
+                arrowView.setRotation(rotation);
+            }
+            arrowView.setContentDescription(expanded ? "Collapse Accounts" : "Expand Accounts");
+        }
+
         @Override
         public void updateColors() {
-            titleView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlueHeader, resourcesProvider));
+            int color = Theme.getColor(Theme.key_windowBackgroundWhiteBlueHeader, resourcesProvider);
+            titleView.setTextColor(color);
+            arrowView.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN));
+            pinView.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN));
         }
 
         @Override
@@ -1105,7 +1181,18 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
 
             @Override
             public void bindView(View view, UItem item, boolean divider, UniversalAdapter adapter, UniversalRecyclerView listView) {
-                ((AccountHeaderCell) view).set(item.text, NaConfig.INSTANCE.getPinAccountOrder().Bool(), adapter);
+                boolean pin = NaConfig.INSTANCE.getPinAccountOrder().Bool();
+                boolean expanded = org.telegram.messenger.MessagesController.getGlobalMainSettings().getBoolean("settingsAccountsShown", true);
+                
+                int accountsCount = 0;
+                for (int a = 0; a < org.telegram.messenger.UserConfig.MAX_ACCOUNT_COUNT; a++) {
+                    if (tw.nekomimi.nekogram.helpers.PasscodeHelper.isAccountHidden(a)) continue;
+                    if (org.telegram.messenger.UserConfig.getInstance(a).isClientActivated()) {
+                        accountsCount++;
+                    }
+                }
+                
+                ((AccountHeaderCell) view).set(item.text, pin, expanded, accountsCount, adapter);
             }
 
             public static UItem of(int id, CharSequence title) {
@@ -1139,7 +1226,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
 
             avatarDrawable = new AvatarDrawable();
             avatarView = new BackupImageView(context);
-            avatarView.setRoundRadius(dp(14));
+            avatarView.setRoundRadius(org.telegram.messenger.AvatarCornerHelper.getAvatarRoundRadius(28.0f));
 
             textView = new SimpleTextView(context);
             textView.setTextSize(15);
@@ -1752,6 +1839,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                 SharedPreferences.Editor editor = MessagesController.getGlobalMainSettings().edit();
                 editor.remove("archivehint").remove("proximityhint").remove("archivehint_l").remove("searchpostsnew").remove("speedhint").remove("gifhint").remove("reminderhint").remove("soundHint").remove("themehint").remove("bganimationhint").remove("filterhint").remove("n_0").remove("storyprvhint").remove("storyhint").remove("storyhint2").remove("storydualhint").remove("storysvddualhint").remove("stories_camera").remove("dualcam").remove("dualmatrix").remove("dual_available").remove("archivehint").remove("askNotificationsAfter").remove("askNotificationsDuration").remove("viewoncehint").remove("voicepausehint").remove("taptostorysoundhint").remove("nothanos").remove("voiceoncehint").remove("savedhint").remove("savedsearchhint").remove("savedsearchtaghint").remove("newppsms").remove("monetizationadshint").remove("seekSpeedHintShowed").remove("unsupport_video/av01").remove("statusgiftpage").remove("multistorieshint").remove("trimvoicehint").remove("taptostoryhighlighthint").remove("proxycheckstatusip").remove("callmiconstart").remove("showchattagsinfo").remove("language_showed3").remove("aihintshown").remove("savedmsgschatshint").apply();
                 HintsController.resetAll();
+                SharedPrefsHelper.cleanupAccount(currentAccount);
                 MessagesController.getEmojiSettings(currentAccount).edit().remove("featured_hidden").remove("emoji_featured_hidden").commit();
                 MessagesController.getGlobalNotificationsSettings().edit().remove("disable_sharing_learn").remove("askedAboutFSILockscreen").apply();
                 SharedConfig.textSelectionHintShows = 0;

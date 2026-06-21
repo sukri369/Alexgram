@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="XChannel">Canale Nagram X</string>
+    <string name="XChannel">Canale Alexgram</string>
     <string name="EnableSaveDeletedMessages">Salva i messaggi eliminati</string>
     <string name="DeletedMessage">eliminato</string>
     <string name="EnableSaveEditsHistory">Salva cronologia modifiche</string>
@@ -310,8 +310,8 @@ Non possiamo aiutarti in questo caso; se hai problemi di accesso, contatta il Su
     <string name="BackAnimationSpring">Rimbalzo</string>
     <string name="BackAnimationPredictive">Predittiva</string>
     <string name="AddToFilter">Aggiungi al filtro</string>
-    <string name="UnifiedPushNeverReceivedNotifications">Non hai mai ricevuto notifiche con UnifiedPush da quando è stato avviato Nagram X.</string>
-    <string name="UnifiedPushLastReceivedNotification">L\'ultima notifica ricevuta con UnifiedPush è stata %1$d secondi fa.\n\nHai ricevuto %2$d notifiche da quando è stato avviato Nagram X.</string>
+    <string name="UnifiedPushNeverReceivedNotifications">Non hai mai ricevuto notifiche con UnifiedPush da quando è stato avviato Alexgram.</string>
+    <string name="UnifiedPushLastReceivedNotification">L\'ultima notifica ricevuta con UnifiedPush è stata %1$d secondi fa.\n\nHai ricevuto %2$d notifiche da quando è stato avviato Alexgram.</string>
     <string name="UnifiedPushCurrentEndpoint">L\'endpoint UnifiedPush corrente è: %1$s</string>
     <string name="PlayOnce">Esegui una volta</string>
     <string name="StorageSettings">Archiviazione</string>
@@ -457,4 +457,31 @@ Non possiamo aiutarti in questo caso; se hai problemi di accesso, contatta il Su
     <string name="ChangeSenderNameOptionRestore">Ripristina nome originale</string>
     <string name="ChangeSenderNameApply">Applica</string>
     <string name="ForceForwardStatusMediaCopy">Inoltro copia del file multimediale</string>
+
+    <!-- New Settings and Features -->
+    <string name="usePollinationsAi">Usa Pollinations.ai</string>
+    <string name="usePollinationsAiAbout">Usa Pollinations.ai per risposte AI, riassunti e assistenza AI gratuiti. Nessuna chiave API richiesta.</string>
+    <string name="AiAssistanceSettings">Impostazioni Assistenza AI</string>
+    <string name="aiModelUrl">URL Modello AI 1</string>
+    <string name="aiApiKey">Chiave API AI 1</string>
+    <string name="TestAiApi">Testa Connessione API 1</string>
+    <string name="aiModelUrl2">URL Modello AI 2 (Failover)</string>
+    <string name="aiApiKey2">Chiave API AI 2 (Failover)</string>
+    <string name="TestAiApi2">Testa Connessione API 2</string>
+    <string name="DefaultScheduleDelay">Ritardo predefinito</string>
+    <string name="CustomReplyWord">Parola di risposta personalizzata</string>
+    <string name="Customization">Personalizzazione</string>
+    <string name="SendLockedCustomEmojiAsSticker">Invia emoji premium come sticker</string>
+    <string name="SendLockedCustomEmojiAsStickerInfo">Supporta solo emoji personalizzate WebP/WebM. Le emoji solo TGS sono escluse.</string>
+    <string name="LocalEditorPlus">Editor locale+</string>
+    <string name="LocalEditorPlusAbout">Modifica il testo e la data del messaggio, o elimina i messaggi localmente solo su questo dispositivo senza inviare richieste al server.</string>
+    <string name="LocalEditorMenuOption">Altro</string>
+    <string name="LocalEditorEditOption">Modifica localmente</string>
+    <string name="LocalEditorDeleteOption">Elimina localmente</string>
+    <string name="LocalEditorRestore">Ripristina</string>
+    <string name="ShowAdminTagInVoiceChat">Mostra tag admin nella chat vocale</string>
+    <string name="ShowAdminTagInVoiceChatDesc">Visualizza badge di amministratore o proprietario accanto ai nomi utente nelle chat vocali/video.</string>
+    <string name="Ayugram">Ayugram</string>
+    <string name="ProfilePrivacyManager">Gestore della privacy del profilo</string>
+    <string name="ProfilePrivacyManagerAbout">Consente di gestire le impostazioni di privacy dei singoli utenti direttamente dal menu del loro profilo.</string>
 </resources>
