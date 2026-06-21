@@ -465,10 +465,10 @@
     <string name="usePollinationsAi">Pollinations.ai Kullan</string>
     <string name="usePollinationsAiAbout">Ücretsiz yapay zeka yanıtları, özetleme ve yapay zeka yardımı için Pollinations.ai kullanın. API anahtarı gerekmez.</string>
     <string name="AiAssistanceSettings">Yapay Zeka Yardımı Ayarları</string>
-    <string name="aiModelUrl">Yapay Zeka Model URL'si 1</string>
+    <string name="aiModelUrl">Yapay Zeka Model URL\'si 1</string>
     <string name="aiApiKey">Yapay Zeka API Anahtarı 1</string>
     <string name="TestAiApi">API Bağlantısını Test Et 1</string>
-    <string name="aiModelUrl2">Yapay Zeka Model URL'si 2 (Yedek)</string>
+    <string name="aiModelUrl2">Yapay Zeka Model URL\'si 2 (Yedek)</string>
     <string name="aiApiKey2">Yapay Zeka API Anahtarı 2 (Yedek)</string>
     <string name="TestAiApi2">API Bağlantısını Test Et 2</string>
     <string name="DefaultScheduleDelay">Varsayılan gecikme</string>

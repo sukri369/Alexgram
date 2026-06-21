@@ -423,10 +423,10 @@
     <string name="AiAssistanceSettings">Налаштування ШІ-помічника</string>
     <string name="aiModelUrl">URL-адреса моделі ШІ 1</string>
     <string name="aiApiKey">Ключ API ШІ 1</string>
-    <string name="TestAiApi">Перевірити з'єднання з API 1</string>
+    <string name="TestAiApi">Перевірити з\'єднання з API 1</string>
     <string name="aiModelUrl2">URL-адреса моделі ШІ 2 (резервна)</string>
     <string name="aiApiKey2">Ключ API ШІ 2 (резервний)</string>
-    <string name="TestAiApi2">Перевірити з'єднання з API 2</string>
+    <string name="TestAiApi2">Перевірити з\'єднання з API 2</string>
     <string name="DefaultScheduleDelay">Затримка за замовчуванням</string>
     <string name="CustomReplyWord">Власне слово відповіді</string>
     <string name="Customization">Персоналізація</string>
