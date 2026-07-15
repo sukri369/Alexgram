@@ -1659,6 +1659,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
     private LinkPath translationLoadingPath;
     private LoadingDrawable translationLoadingDrawable;
     private ArrayList<MessageObject.TextLayoutBlock> translationLoadingDrawableText;
+    private ArrayList<TextSelectionHelper.TextLayoutBlock> richTranslationLoadingDrawableText;
     private StaticLayout translationLoadingDrawableLayout;
 
 
@@ -9378,6 +9379,13 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 drawForwardedName = (messageObject.messageOwner.fwd_from != null && !(messageObject.isAnyKindOfSticker() && messageObject.isDice())) || messageObject.type == MessageObject.TYPE_STORY;
                 if (!messageObject.isAnyKindOfSticker() && messageObject.type != MessageObject.TYPE_ROUND_VIDEO) {
                     drawName = (isSavedChat && !messageObject.isOutOwner() && (messageObject.getSavedDialogId() < 0 || messageObject.getSavedDialogId() == UserObject.ANONYMOUS) || messageObject.isFromGroup() && messageObject.isSupergroup() || messageObject.isRepostPreview || messageObject.isImportedForward() && messageObject.messageOwner.fwd_from.from_id == null || isSideMenuEnabled && !messageObject.isOutOwner() && (isMonoForum && isAllChats || isForum)) && (currentPosition == null || (currentPosition.flags & MessageObject.POSITION_FLAG_TOP) != 0);
+                    // [Alexgram: Sender Name on GIFs] - Force show sender name on GIFs when enabled
+                    if (!drawName && messageObject.type == MessageObject.TYPE_GIF && tw.nekomimi.nekogram.NekoConfig.showSenderNameOnGif.Bool()) {
+                        drawName = true;
+                    }
+                    if (!drawName && (messageObject.isPhoto() || messageObject.isVideo()) && tw.nekomimi.nekogram.NekoConfig.showSenderNameOnMedia.Bool()) {
+                        drawName = true;
+                    }
                 }
                 mediaBackground = isMedia = messageObject.type != MessageObject.TYPE_FILE;
                 drawImageButton = true;
@@ -9717,6 +9725,9 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                     }
                     additionHeight -= dp(17);
                 } else if (messageObject.isAnyKindOfSticker()) {
+                    if (tw.nekomimi.nekogram.NekoConfig.showSenderNameOnSticker.Bool() && (messageObject.isSticker() || messageObject.isAnimatedSticker())) {
+                        drawName = true;
+                    }
 
                     drawBackground = false;
                     boolean isWebpSticker = messageObject.type == MessageObject.TYPE_STICKER;
@@ -11358,6 +11369,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 translationLoadingDrawable.reset();
                 translationLoadingDrawable = null;
             }
+            richTranslationLoadingDrawableText = null;
             if (timerParticlesAlpha != null) {
                 timerParticlesAlpha.set(currentMessageObject != null && currentMessageObject.needDrawBluredPreview() && currentMessageObject.messageOwner != null && currentMessageObject.messageOwner.destroyTime != 0 && MediaController.getInstance().isPlayingMessage(currentMessageObject), true);
             }
@@ -14505,6 +14517,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                     delegate.getTextSelectionHelper().drawRich(currentMessageObject, layout, canvas);
                 }
                 layout.draw(canvas, padLeft, padRight, transitionParams);
+                drawRichMessageTranslationLoading(canvas, layout, alpha);
                 canvas.restore();
 
                 if (botDraftTypingAnimator != null && botDraftTypingAnimator.isRunning()) {
@@ -16924,6 +16937,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
 
                 if (translationLoadingDrawableText != textLayoutBlocks) {
                     translationLoadingDrawableText = textLayoutBlocks;
+                    richTranslationLoadingDrawableText = null;
                     translationLoadingPath.reset();
                     for (int i = 0; i < textLayoutBlocks.size(); ++i) {
                         MessageObject.TextLayoutBlock block = textLayoutBlocks.get(i);
@@ -19155,7 +19169,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 nameLayout = new StaticLayout(nameStringFinal, Theme.chat_namePaint, Math.max(dp(1), nameWidthForLayout + additionalWidth + dp(2)), Layout.Alignment.ALIGN_NORMAL, 1.0f, 0.0f, false);
                 if (nameLayout.getLineCount() > 0) {
                     nameWidth = nameLayoutWidth = (int) Math.ceil(nameLayout.getLineWidth(0));
-                    if (!messageObject.isAnyKindOfSticker()) {
+                    if (!messageObject.isAnyKindOfSticker() || (tw.nekomimi.nekogram.NekoConfig.showSenderNameOnSticker.Bool() && drawNameLayout)) {
                         namesOffset += getNameHeight();
                     }
                     nameOffsetX = nameLayout.getLineLeft(0);
@@ -19352,7 +19366,10 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                     }
                     forwardNameOffsetX[0] = forwardedNameLayout[0].getLineLeft(0);
                     forwardNameOffsetX[1] = forwardedNameLayout[1].getLineLeft(0);
-                    if (isSideMenued && !drawBackground || messageObject.type != MessageObject.TYPE_ROUND_VIDEO && !messageObject.isAnyKindOfSticker() || messageObject.type == MessageObject.TYPE_EMOJIS) {
+                    // [Alexgram: Sender Name on Stickers/GIFs] - Also add forwarded offset for stickers/GIFs when sender name is enabled
+                    final boolean isStickerFwdWithSenderName = (messageObject.isSticker() || messageObject.isAnimatedSticker()) && tw.nekomimi.nekogram.NekoConfig.showSenderNameOnSticker.Bool();
+                    final boolean isGifFwdWithSenderName = messageObject.type == MessageObject.TYPE_GIF && tw.nekomimi.nekogram.NekoConfig.showSenderNameOnGif.Bool();
+                    if (isSideMenued && !drawBackground || (messageObject.type != MessageObject.TYPE_ROUND_VIDEO && (!messageObject.isAnyKindOfSticker() || isStickerFwdWithSenderName || isGifFwdWithSenderName)) || messageObject.type == MessageObject.TYPE_EMOJIS) {
                         namesOffset += dp(8) + Theme.chat_forwardNamePaint.getTextSize() * 2;
                         if (messageObject.type == MessageObject.TYPE_EMOJIS) {
                             namesOffset += dp(8);
@@ -19366,7 +19383,10 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
 
         if ((!messageObject.isGiveawayResults() && (!isThreadChat || messageObject.isQuickReply() || isSavedChat || messageObject.getReplyTopMsgId(isForum) != 0 || isForumGeneral || isMonoForum) && messageObject.hasValidReplyMessageObject() || messageObject.messageOwner.fwd_from != null && messageObject.isDice() || (messageObject.messageOwner.reply_to != null && (messageObject.messageOwner.reply_to.story_id != 0 || !TextUtils.isEmpty(messageObject.messageOwner.reply_to.quote_text) || messageObject.messageOwner.reply_to.reply_from != null))) && !messageObject.isRepostPreview) {
             if (currentPosition == null || currentPosition.minY == 0) {
-                if (isSideMenued && !drawBackground || !messageObject.isAnyKindOfSticker() && messageObject.type != MessageObject.TYPE_ROUND_VIDEO || messageObject.type == MessageObject.TYPE_EMOJIS) {
+                // [Alexgram: Sender Name on Stickers/GIFs] - Also add reply offset for stickers/GIFs when sender name is enabled
+                final boolean isStickerWithSenderName = (messageObject.isSticker() || messageObject.isAnimatedSticker()) && tw.nekomimi.nekogram.NekoConfig.showSenderNameOnSticker.Bool();
+                final boolean isGifWithSenderName = messageObject.type == MessageObject.TYPE_GIF && tw.nekomimi.nekogram.NekoConfig.showSenderNameOnGif.Bool();
+                if (isSideMenued && !drawBackground || (!messageObject.isAnyKindOfSticker() || isStickerWithSenderName || isGifWithSenderName) && messageObject.type != MessageObject.TYPE_ROUND_VIDEO || messageObject.type == MessageObject.TYPE_EMOJIS) {
                     namesOffset += dp(20) + (Theme.chat_replyTextPaint.getTextSize() + Theme.chat_replyNamePaint.getTextSize());
                     if (messageObject.type == MessageObject.TYPE_EMOJIS && !drawForwardedName) {
                         namesOffset += dp(12);
@@ -21312,7 +21332,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         if ((currentNameStatusDrawable != null || currentNameEmojiStatusDrawable != null || topicButton != null && (drawTopic || transitionParams.animateDrawTopic)) && drawNameLayout && nameLayout != null && (currentPosition == null || currentPosition.minX == 0 && currentPosition.minY == 0) && !(currentMessageObject.deleted && !drawingToBitmap && currentMessagesGroup != null && currentMessagesGroup.messages.size() >= 1)) {
             int color;
             float nameX, nameY;
-            if (currentMessageObject.shouldDrawWithoutBackground()) {
+            if (currentMessageObject.shouldDrawWithoutBackground() && !cachedIsBookmarked && !(tw.nekomimi.nekogram.NekoConfig.showSenderNameOnSticker.Bool() && (currentMessageObject.isSticker() || currentMessageObject.isAnimatedSticker()))) {
                 color = getThemedColor(Theme.key_chat_stickerNameText);
                 if (currentMessageObject.isOutOwner()) {
                     nameX = dp(28);
@@ -21371,7 +21391,14 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 } else {
                     color = getThemedColor(Theme.key_chat_inForwardedNameText);
                 }
-                nameY = dp(drawPinnedTop ? 9 : 10);
+                if (currentMessageObject.shouldDrawWithoutBackground() && tw.nekomimi.nekogram.NekoConfig.showSenderNameOnSticker.Bool() && (currentMessageObject.isSticker() || currentMessageObject.isAnimatedSticker())) {
+                    nameY = namesOffset - getNameHeight() + dp(5);
+                    if (nameY < dp(drawPinnedTop ? 9 : 10)) {
+                        nameY = dp(drawPinnedTop ? 9 : 10);
+                    }
+                } else {
+                    nameY = dp(drawPinnedTop ? 9 : 10);
+                }
             }
             if (currentMessagesGroup != null && currentMessagesGroup.transitionParams.backgroundChangeBounds) {
                 nameX += currentMessagesGroup.transitionParams.offsetLeft;
@@ -22269,7 +22296,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
 
             int oldAlpha;
 
-            if (currentMessageObject.shouldDrawWithoutBackground() && !isBookmarked) {
+            if (currentMessageObject.shouldDrawWithoutBackground() && !isBookmarked && !(tw.nekomimi.nekogram.NekoConfig.showSenderNameOnSticker.Bool() && (currentMessageObject.isSticker() || currentMessageObject.isAnimatedSticker()))) {
                 Theme.chat_namePaint.setColor(getThemedColor(Theme.key_chat_stickerNameText));
                 if (currentMessageObject.isOutOwner()) {
                     nameX = dp(28);
@@ -22350,7 +22377,14 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 } else {
                     Theme.chat_namePaint.setColor(getThemedColor(Theme.key_chat_inForwardedNameText));
                 }
-                nameY = dp(drawPinnedTop ? 9 : 10);
+                if (currentMessageObject.shouldDrawWithoutBackground() && tw.nekomimi.nekogram.NekoConfig.showSenderNameOnSticker.Bool() && (currentMessageObject.isSticker() || currentMessageObject.isAnimatedSticker())) {
+                    nameY = namesOffset - getNameHeight() + dp(5);
+                    if (nameY < dp(drawPinnedTop ? 9 : 10)) {
+                        nameY = dp(drawPinnedTop ? 9 : 10);
+                    }
+                } else {
+                    nameY = dp(drawPinnedTop ? 9 : 10);
+                }
                 if (viaSpan1 != null || viaSpan2 != null) {
                     int color = getThemedColor(currentMessageObject.isOutOwner() ? Theme.key_chat_outViaBotNameText : Theme.key_chat_inViaBotNameText);
                     if (viaSpan1 != null) {
@@ -29886,4 +29920,63 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         canvas.restore();
     }
 
+    private void drawRichMessageTranslationLoading(Canvas canvas, RichMessageLayout layout, float alpha) {
+        if (layout == null || layout.textBlocks.isEmpty() || alpha == 0 || currentMessageObject == null) {
+            return;
+        }
+        final TranslateController translateController = MessagesController.getInstance(currentAccount).getTranslateController();
+        final boolean translating = translateController.isTranslating(currentMessageObject);
+        if (translationLoadingFloat == null) {
+            translationLoadingFloat = new AnimatedFloat(this, 350, CubicBezierInterpolator.EASE_OUT_QUINT);
+        }
+        float translationLoading = translationLoadingFloat.set(translating ? 1 : 0);
+        if (translationLoading <= 0) {
+            return;
+        }
+        if (translationLoadingDrawable == null) {
+            translationLoadingDrawable = new LoadingDrawable();
+            translationLoadingDrawable.setAppearByGradient(true);
+            if (translationLoadingPath == null) {
+                translationLoadingPath = new LinkPath(true);
+                translationLoadingPath.setUseCornerPathImplementation(true);
+            }
+            translationLoadingDrawable.usePath(translationLoadingPath);
+            translationLoadingDrawable.setRadiiDp(5);
+            translationLoadingDrawable.reset();
+        }
+        if (richTranslationLoadingDrawableText != layout.textBlocks) {
+            richTranslationLoadingDrawableText = layout.textBlocks;
+            translationLoadingDrawableText = null;
+            translationLoadingPath.reset();
+            for (int i = 0; i < layout.textBlocks.size(); ++i) {
+                TextSelectionHelper.TextLayoutBlock block = layout.textBlocks.get(i);
+                Layout textLayout = block != null ? block.getLayout() : null;
+                if (textLayout != null) {
+                    translationLoadingPath.setCurrentLayout(textLayout, 0, block.getX(), block.getY());
+                    translationLoadingPath.setAllowReset(false);
+                    textLayout.getSelectionPath(0, textLayout.getText().length(), translationLoadingPath);
+                    translationLoadingPath.setAllowReset(true);
+                }
+            }
+            translationLoadingPath.closeRects();
+            translationLoadingDrawable.updateBounds();
+        }
+
+        if (translating && (translationLoadingDrawable.isDisappearing() || translationLoadingDrawable.isDisappeared())) {
+            translationLoadingDrawable.reset();
+            translationLoadingDrawable.resetDisappear();
+        } else if (!translating && !translationLoadingDrawable.isDisappearing() && !translationLoadingDrawable.isDisappeared()) {
+            translationLoadingDrawable.disappear();
+        }
+        int color = getThemedColor(currentMessageObject.isOutOwner() ? Theme.key_chat_messageLinkOut : Theme.key_chat_messageLinkIn);
+        translationLoadingDrawable.setColors(
+                Theme.multAlpha(color, .05f),
+                Theme.multAlpha(color, .15f),
+                Theme.multAlpha(color, .1f),
+                Theme.multAlpha(color, .3f)
+        );
+        translationLoadingDrawable.setAlpha((int) (0xFF * alpha * translationLoading));
+        translationLoadingDrawable.draw(canvas);
+        invalidate();
+    }
 }

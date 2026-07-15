@@ -335,6 +335,16 @@ public class AndroidUtilities {
 
     public static Typeface bold() {
         if (mediumTypeface == null) {
+            // [Alexgram: Fonts] - Start: apply selected app font
+            String fontKey = NekoConfig.appFontKey.String();
+            if (fontKey != null && !fontKey.isEmpty()) {
+                org.telegram.ui.Components.Paint.PaintTypeface pf = org.telegram.ui.Components.Paint.PaintTypeface.find(fontKey);
+                if (pf != null && pf.getTypeface() != null) {
+                    mediumTypeface = pf.getTypeface();
+                    return mediumTypeface;
+                }
+            }
+            // [Alexgram: Fonts] - End
             if (NekoConfig.typeface.Bool() && SharedConfig.useSystemBoldFont && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 mediumTypeface = Typeface.create(null, 500, false);
             } else {
@@ -4497,6 +4507,13 @@ public class AndroidUtilities {
 
     public static boolean openForView(File f, String fileName, String mimeType, final Activity activity, Theme.ResourcesProvider resourcesProvider, boolean restrict) {
         if (f != null && f.exists()) {
+            // ZaStoGram: a .plugin opened in-app (e.g. tapped in a chat) -> review-and-install dialog,
+            // not an external viewer/browser.
+            if (fileName != null && fileName.length() >= 7
+                    && fileName.regionMatches(true, fileName.length() - 7, ".plugin", 0, 7)
+                    && org.telegram.ui.Plugins.PluginsActivity.offerInstall(activity, f)) {
+                return true;
+            }
             String realMimeType = null;
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);

@@ -470,14 +470,84 @@
     <string name="LocalEditorEditOption">Edit locally</string>
     <string name="LocalEditorDeleteOption">Delete locally</string>
     <string name="LocalEditorRestore">Restore</string>
+    <string name="LocalEditorEmptyTextError">Message text cannot be empty</string>
 
     <!-- [Alexgram: Admin Tag in Voice Chat] - Start -->
     <string name="ShowAdminTagInVoiceChat">Show Admin Tag in Voice Chat</string>
     <string name="ShowAdminTagInVoiceChatDesc">Display admin or owner badges next to user names in voice/video chats.</string>
     <!-- [Alexgram: Admin Tag in Voice Chat] - End -->
+    <!-- [Alexgram: Sender Name on Stickers] - Start -->
+    <string name="ShowSenderNameOnSticker">Show sender name on stickers</string>
+    <string name="ShowSenderNameOnStickerDesc">Display the sender\'s name directly on sticker messages in group chats.</string>
+    <string name="ShowSenderNameOnGif">Show sender name on GIFs</string>
+    <string name="ShowSenderNameOnGifDesc">Display the sender\'s name on GIF messages (works when sender name on stickers is enabled).</string>
+    <!-- [Alexgram: Sender Name on Stickers] - End -->
+    <!-- [Alexgram: Sender Name on Media] - Start -->
+    <string name="ShowSenderNameOnMedia">Show sender name on media like Telegram Desktop</string>
+    <string name="ShowSenderNameOnMediaDesc">Display the sender\'s name overlaying photos and videos instead of above them, similar to Telegram Desktop.</string>
+    <!-- [Alexgram: Sender Name on Media] - End -->
     <string name="Ayugram">Ayugram</string>
     <string name="ProfilePrivacyManager">Profile Privacy Manager</string>
     <string name="ProfilePrivacyManagerAbout">Allows managing individual user privacy settings directly from their profile menu.</string>
+    <!-- [Alexgram: Fonts] - Start -->
+    <string name="Fonts">Fonts</string>
+    <string name="AppFont">App font</string>
+    <string name="AppFontDefault">Default</string>
+    <string name="AppFontDesc">The font used across the app interface.</string>
+    <string name="AppFontResetDesc">Reset to the default app font?</string>
+    <string name="AvailableFonts">Available fonts</string>
+    <string name="IncludeSystemFonts">Include system fonts</string>
+    <string name="IncludeSystemFontsDesc">Show fonts provided by the system in the list below</string>
+    <!-- [Alexgram: Fonts] - End -->
+    <!-- [Alexgram: Copy File Reference] - Start -->
+    <string name="CopyFileRef">Copy file ref</string>
+    <string name="CopyFileRefAbout">Enable copying file references from message menus and pasting them to the input menu.</string>
+    <string name="CopyFileRefFailed">Failed to copy file reference</string>
+    <string name="CopyFileRefDone">Copied %1$d file(s)</string>
+    <string name="PasteFileRef">Send files by ref</string>
+    <string name="PasteFileRefConfirm">Do you want to send the %1$d copied file(s) to this chat?</string>
+    <string name="PasteFileRefPasteText">Paste text instead</string>
+    <!-- [Alexgram: Copy File Reference] - End -->
+    <!-- [Alexgram: Force Select Voice Chat Profile] - Start -->
+    <string name="AlwaysAskHowToJoinVoiceChat">Always ask how to join voice chats</string>
+    <string name="AlwaysAskHowToJoinVoiceChatDesc">Prompt to choose whether to join as your personal account or a channel every time you join a voice/video chat.</string>
+    <!-- [Alexgram: Force Select Voice Chat Profile] - End -->
+    <!-- [Alexgram: Chat-Specific Auto-Download] - Start -->
+    <string name="ChatAutoDownloadTitle">Auto Download Settings</string>
+    <string name="ChatAutoDownloadEnable">Override Global Auto Download</string>
+    <string name="ChatAutoDownloadPhotos">Photos</string>
+    <string name="ChatAutoDownloadVideos">Videos</string>
+    <string name="ChatAutoDownloadFiles">Files &amp; Documents</string>
+    <string name="ChatAutoDownloadVoice">Voice &amp; Video Notes</string>
+    <string name="ChatAutoDownloadAudio">Music &amp; Audio</string>
+    <!-- [Alexgram: Chat-Specific Auto-Download] - End -->
+    <!-- [Alexgram: Plugins] - Start -->
+    <string name="Plugins">Plugins</string>
+    <string name="ChoosePluginFile">Choose .plugin file</string>
+    <string name="CouldNotOpenFileSelector">Could not open file selector</string>
+    <string name="NotValidPluginFile">This does not appear to be a valid .plugin file</string>
+    <string name="PluginInstalled">Plugin «%s» installed</string>
+    <string name="UpdatePlugin">Update plugin?</string>
+    <string name="InstallPlugin">Install plugin?</string>
+    <string name="AlreadyInstalledVersion">Already installed: v%1$s  →  v%2$s</string>
+    <string name="RequiresVersion">Requires version %s+</string>
+    <string name="Install">Install</string>
+    <string name="FailedToInstallPlugin">Failed to install plugin</string>
+    <string name="InstalledPlugins">Installed Plugins</string>
+    <string name="NoPluginsHint">No plugins yet. Tap + and choose a .plugin file (Python, exteraGram-compatible).</string>
+    <string name="PluginTapHint">Tap on a plugin to enable/disable it, open settings, or delete it.</string>
+    <string name="Error">error</string>
+    <string name="Disabled">off</string>
+    <string name="Enabled">on</string>
+    <string name="Plugin">Plugin</string>
+    <string name="EnabledToggle">Enabled</string>
+    <string name="DeletePlugin">Delete plugin</string>
+    <string name="DeletePluginInfo">Deleting removes the plugin and erases its saved settings.</string>
+    <string name="DeletePluginTitle">Delete plugin?</string>
+    <string name="DeletePluginAlert">«%s» and its settings will be deleted.</string>
+    <string name="Author">Author: %s</string>
+    <string name="Version">Version: %s</string>
+    <!-- [Alexgram: Plugins] - End -->
 </resources>
 
 

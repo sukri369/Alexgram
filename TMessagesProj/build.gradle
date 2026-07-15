@@ -8,6 +8,7 @@ plugins {
     id 'com.google.dagger.hilt.android'
     id 'com.google.devtools.ksp'
     id 'org.jetbrains.kotlin.plugin.compose'
+    id 'com.chaquo.python'
 }
 
 def buildTimestamp = System.getenv('BUILD_TIMESTAMP') ?: '0'
@@ -78,11 +79,13 @@ android {
 
     splits {
         abi {
-            enable = true
+            enable = false
             reset()
             universalApk = false
             if (!nativeTarget.isBlank()) {
-                include nativeTarget
+                nativeTarget.split(',').collect { it.trim() }.each { abi ->
+                    include abi
+                }
             } else {
                 include 'arm64-v8a', 'x86_64'
             }
@@ -90,6 +93,13 @@ android {
     }
 
     defaultConfig {
+        ndk {
+            if (!nativeTarget.isBlank()) {
+                abiFilters.addAll(nativeTarget.split(',').collect { it.trim() })
+            } else {
+                abiFilters "arm64-v8a", "x86_64"
+            }
+        }
         versionName verName
         versionCode verCode
 
@@ -192,7 +202,11 @@ androidComponents {
     onVariants(selector().all()) { variant ->
         variant.outputs.forEach { output ->
             String gramName = 'Alexgram'
-            String first = String.format('%s-v%s(%s)', gramName, verName, verCode)
+            String suffix = ""
+            if (!nativeTarget.isBlank()) {
+                suffix = "-${nativeTarget.replace(',', '-')}"
+            }
+            String first = String.format('%s-v%s(%s)%s', gramName, verName, verCode, suffix)
             output.outputFileName.set(
                 output.outputFileName.get()
                     .replace('TMessagesProj', first)
@@ -305,4 +319,37 @@ dependencies {
     implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
 
     compileOnly fileTree('libs')
+
+    // ZaStoGram plugin engine: Pine — dynamic ART method hooking (Xposed-compatible API).
+    implementation 'top.canyie.pine:core:0.3.0'
+    implementation 'top.canyie.pine:xposed:0.2.0'
+}
+
+def getPythonPath() {
+    def envPath = System.getenv("PYTHON_PATH")
+    if (envPath != null && !envPath.isEmpty()) {
+        return envPath
+    }
+    def localWinPath = "${System.getProperty('user.home')}/AppData/Local/Programs/Python/Python313/python.exe"
+    if (new File(localWinPath).exists()) {
+        return localWinPath
+    }
+    return System.getProperty("os.name").toLowerCase().contains("win") ? "python" : "python3"
+}
+
+chaquopy {
+    defaultConfig {
+        if (nativeTarget.contains("armeabi-v7a") && !nativeTarget.contains("arm64-v8a")) {
+            version "3.11"
+        } else {
+            version "3.13"
+        }
+        buildPython getPythonPath()
+        pyc {
+            src false
+        }
+        pip {
+            install "requests"
+        }
+    }
 }

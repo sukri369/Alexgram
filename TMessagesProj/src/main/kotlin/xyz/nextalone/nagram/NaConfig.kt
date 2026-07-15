@@ -408,6 +408,12 @@ object NaConfig {
             ConfigItem.configTypeBool,
             false
         )
+    val hideHomeSearchField =
+        addConfig(
+            "HideHomeSearchField",
+            ConfigItem.configTypeBool,
+            false
+        )
     val showQuickReplyInBotCommands =
         addConfig(
             "ShowQuickReplyInBotCommands",
@@ -644,14 +650,26 @@ object NaConfig {
             ConfigItem.configTypeInt,
             0
         )
-    // [Alexgram: Max Active Accounts] - Start
+    // [Alexgram: Accounts Settings] - Start
+    val maxAccountCount =
+        addConfig(
+            "MaxAccountCount",
+            ConfigItem.configTypeInt,
+            100
+        )
     val maxActiveAccounts =
         addConfig(
             "MaxActiveAccounts",
             ConfigItem.configTypeInt,
             10
         )
-    // [Alexgram: Max Active Accounts] - End
+    val startupActiveAccounts =
+        addConfig(
+            "StartupActiveAccounts",
+            ConfigItem.configTypeInt,
+            3
+        )
+    // [Alexgram: Accounts Settings] - End
     val showVoiceChangerInChatMenu =
         addConfig(
             "ShowVoiceChangerInChatMenu",
@@ -1561,6 +1579,12 @@ object NaConfig {
     val mainTabsHideTitles =
         addConfig(
             "MainTabsHideTitles",
+            ConfigItem.configTypeBool,
+            false
+        )
+    val mainTabsShowSearchButton =
+        addConfig(
+            "MainTabsShowSearchButton",
             ConfigItem.configTypeBool,
             false
         )

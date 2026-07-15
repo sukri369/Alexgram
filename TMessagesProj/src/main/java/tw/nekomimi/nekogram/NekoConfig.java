@@ -87,6 +87,10 @@ public class NekoConfig {
     public static ConfigItem tabletMode = addConfig("TabletMode", configTypeInt, 0);
 
     public static ConfigItem typeface = addConfig("TypefaceUseDefault", configTypeBool, false);
+    // [Alexgram: Fonts] - Start
+    public static ConfigItem appFontKey = addConfig("AppFontKey", configTypeString, "");
+    public static ConfigItem appFontIncludeSystem = addConfig("AppFontIncludeSystem", configTypeBool, false);
+    // [Alexgram: Fonts] - End
     public static ConfigItem nameOrder = addConfig("NameOrder", configTypeInt, 1);
     public static ConfigItem mapPreviewProvider = addConfig("MapPreviewProvider", configTypeInt, 0);
     public static ConfigItem forceBlurInChat = addConfig("forceBlurInChat", configTypeBool, false);
@@ -174,12 +178,14 @@ public class NekoConfig {
     public static ConfigItem mapDriftingFixForGoogleMaps = addConfig("mapDriftingFixForGoogleMaps", configTypeBool, true);
 
     public static ConfigItem localPremium = addConfig("localPremium", configTypeBool, false);
+    public static ConfigItem hidePremiumIcon = addConfig("hidePremiumIcon", configTypeBool, false);
 
     // [Alexgram: Native Features] - Start
     public static ConfigItem forceMusicSpeedControl = addConfig("forceMusicSpeedControl", configTypeBool, false);
     public static ConfigItem enableEditFileName = addConfig("enableEditFileName", configTypeBool, false);
     public static ConfigItem enableChangeNameInGroups = addConfig("enableChangeNameInGroups", configTypeBool, false);
     public static ConfigItem enableLocalEditorPlus = addConfig("enableLocalEditorPlus", configTypeBool, false);
+    public static ConfigItem showCopyFileRef = addConfig("showCopyFileRef", configTypeBool, false);
     // [Alexgram: Quick Edit Icon] - Start
     public static ConfigItem showQuickEditIconInChatList = addConfig("showQuickEditIconInChatList", configTypeBool, false);
     public static ConfigItem quickEditIconOnlyForOwnMessages = addConfig("quickEditIconOnlyForOwnMessages", configTypeBool, true);
@@ -187,8 +193,19 @@ public class NekoConfig {
     // [Alexgram: Admin Tag in Voice Chat] - Start
     public static ConfigItem showAdminTagInVoiceChat = addConfig("showAdminTagInVoiceChat", configTypeBool, true);
     // [Alexgram: Admin Tag in Voice Chat] - End
+    // [Alexgram: Always Ask How to Join Voice Chats] - Start
+    public static ConfigItem forceSelectVoiceChatProfile = addConfig("forceSelectVoiceChatProfile", configTypeBool, false);
+    // [Alexgram: Always Ask How to Join Voice Chats] - End
+    // [Alexgram: Sender Name on Stickers] - Start
+    public static ConfigItem showSenderNameOnSticker = addConfig("showSenderNameOnSticker", configTypeBool, false);
+    public static ConfigItem showSenderNameOnGif = addConfig("showSenderNameOnGif", configTypeBool, false);
+    public static ConfigItem showSenderNameOnMedia = addConfig("showSenderNameOnMedia", configTypeBool, false);
+    // [Alexgram: Sender Name on Stickers] - End
     public static ConfigItem enableCustomPrivacy = addConfig("enableCustomPrivacy", configTypeBool, true);
     public static ConfigItem enableSelectRangeInSharedMedia = addConfig("enableSelectRangeInSharedMedia", configTypeBool, true);
+    // [Alexgram: Hide Birthdays] - Start
+    public static ConfigItem hideBirthdayBanners = addConfig("hideBirthdayBanners", configTypeBool, false);
+    // [Alexgram: Hide Birthdays] - End
     // [Alexgram: Native Features] - End
 
 

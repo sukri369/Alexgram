@@ -406,6 +406,7 @@ import tw.nekomimi.nekogram.menu.translate.TranslatePopupWrapper;
 import tw.nekomimi.nekogram.parts.DialogTransKt;
 import tw.nekomimi.nekogram.parts.MessageTransKt;
 import tw.nekomimi.nekogram.parts.PollTransUpdatesKt;
+import tw.nekomimi.nekogram.parts.RichMessageTransHelper;
 import tw.nekomimi.nekogram.helpers.SettingsBackupHelper;
 import tw.nekomimi.nekogram.translate.Translator;
 import tw.nekomimi.nekogram.translate.TranslatorKt;
@@ -485,6 +486,7 @@ public class ChatActivity extends BaseFragment implements
 	private final static int nkbtn_editAdmin = 2019;
 	private final static int nkbtn_editPermission = 2020;
 	private final static int nkbtn_copy_link_in_pm = 2025;
+	private final static int nkbtn_copy_fref = 2032;
 	private final static int nkbtn_repeatascopy = 2028;
 	private final static int nkbtn_setReminder = 2029;
 	private final static int nkbtn_reply_private = 2033;
@@ -1128,6 +1130,23 @@ public class ChatActivity extends BaseFragment implements
 	public ProfileChannelCell.ChannelMessageFetcher profileChannelMessageFetcher;
 	public ProfileBirthdayEffect.BirthdayEffectFetcher birthdayAssetsFetcher;
 
+	public static class FileRefClipboardItem {
+		public final TLRPC.TL_document document;
+		public final TLRPC.TL_photo photo;
+
+		public FileRefClipboardItem(TLRPC.TL_document document) {
+			this.document = document;
+			this.photo = null;
+		}
+
+		public FileRefClipboardItem(TLRPC.TL_photo photo) {
+			this.document = null;
+			this.photo = photo;
+		}
+	}
+
+	public static ArrayList<FileRefClipboardItem> fileRefClipboard = new ArrayList<>();
+
 	private LongSparseArray<TL_bots.BotInfo> botInfo = new LongSparseArray<>();
 	private String botUser;
 	private long inlineReturn;
@@ -1310,6 +1329,7 @@ public class ChatActivity extends BaseFragment implements
 	public final static int OPTION_APPLY_LOCALIZATION_OR_THEME = 5;
 	public final static int OPTION_SHARE = 6;
 	public final static int OPTION_SAVE_TO_GALLERY2 = 7;
+	public final static int OPTION_COPY_REF = 69696;
 	public final static int OPTION_REPLY = 8;
 	public final static int OPTION_ADD_TO_STICKERS_OR_MASKS = 9;
 	public final static int OPTION_SAVE_TO_DOWNLOADS_OR_MUSIC = 10;
@@ -1800,6 +1820,7 @@ public class ChatActivity extends BaseFragment implements
 	private final static int nkbtn_voice_changer = 2104;
 	private final static int nkbtn_change_font = 2107;
 	private final static int nkbtn_split_chat = 2108;
+	private final static int nkbtn_auto_download = 2109;
 	private final static int export_chat = 136;
 	private final static int import_chat = 137;
 	// [Alexgram: Advanced Tools] - End
@@ -4376,6 +4397,8 @@ public class ChatActivity extends BaseFragment implements
 				// [Alexgram: Advanced Tools] - Start
 				} else if (id == nkbtn_voice_changer) {
 					showDialog(new VoiceChangerSelectAlert(getParentActivity()));
+				} else if (id == nkbtn_auto_download) {
+					showDialog(new xyz.nextalone.nagram.ui.ChatAutoDownloadSettingsAlert(getParentActivity(), dialog_id));
 				} else if (id == nkbtn_change_font) {
 					chatActivityEnterView.getEditField().makeSelectedChangeFont();
 				} else if (id == nkbtn_split_chat) {
@@ -4872,6 +4895,11 @@ public class ChatActivity extends BaseFragment implements
 			splitChatItem.setOnClickListener(v -> {
 				headerItem.closeSubMenu();
 				actionBar.actionBarMenuOnItemClick.onItemClick(nkbtn_split_chat);
+			});
+			ActionBarMenuSubItem autoDownloadItem = ActionBarMenuItem.addItem(advancedToolsLayout, R.drawable.msg2_data, LocaleController.getString("ChatAutoDownloadTitle", R.string.ChatAutoDownloadTitle), false, getResourceProvider());
+			autoDownloadItem.setOnClickListener(v -> {
+				headerItem.closeSubMenu();
+				actionBar.actionBarMenuOnItemClick.onItemClick(nkbtn_auto_download);
 			});
 			headerItem.lazilyAddSwipeBackItem(R.drawable.ic_advanced_tool_na, null, "Advanced Tool", advancedToolsLayout);
 			headerItem.lazilyAddColoredGap();
@@ -10984,6 +11012,9 @@ public class ChatActivity extends BaseFragment implements
 		}
 		if (canSendMessages) {
 			actionModeOtherItem.addSubItem(nkbtn_repeatascopy, R.drawable.msg_repeat, LocaleController.getString(R.string.RepeatAsCopy));
+		}
+		if (NekoConfig.showCopyFileRef.Bool()) {
+			actionModeOtherItem.addSubItem(nkbtn_copy_fref, R.drawable.msg_copy, LocaleController.getString("CopyFileRef", R.string.CopyFileRef));
 		}
 		actionModeOtherItem.addSubItem(nkbtn_hide, R.drawable.msg_disable, LocaleController.getString(R.string.Hide));
 		actionModeOtherItem.addSubItem(nkbtn_report, R.drawable.msg_report, LocaleController.getString(R.string.ReportChat));
@@ -33782,7 +33813,8 @@ public class ChatActivity extends BaseFragment implements
 					}
 					if (option == nkbtn_translate && !NaConfig.INSTANCE.getShowTranslateMessageLLM().Bool()) {
 						MessageObject msg = getMessageForTranslate();
-						if (msg != null && !msg.isTranslated()) {
+						boolean isRichMessage = msg != null && msg.isRich();
+						if (msg != null && !isRichMessage && !msg.isTranslated()) {
 							var translatePopupWrapper = new TranslatePopupWrapper(this, popupLayout.getSwipeBack(), this::processSelectedOption, getResourceProvider());
 							int swipeBackIndex = popupLayout.addViewToSwipeBack(translatePopupWrapper.windowLayout);
 							cell.setRightIcon(R.drawable.msg_arrowright, v12 -> popupLayout.getSwipeBack().openForeground(swipeBackIndex));
@@ -35360,6 +35392,10 @@ public class ChatActivity extends BaseFragment implements
 			}
 			case OPTION_CHANGE_SENDER_NAME: {
 				tw.nekomimi.nekogram.helpers.MessageNameOverrideHelper.showChangeNameDialog(this, selectedObject);
+				break;
+			}
+			case OPTION_COPY_REF: {
+				copyFileReferences();
 				break;
 			}
 			case OPTION_COPY: {
@@ -38887,6 +38923,43 @@ public class ChatActivity extends BaseFragment implements
 		req.random_id = object.sponsoredId;
 		getConnectionsManager().sendRequest(req, null);
 		getMessagesController().markSponsoredAsRead(dialog_id, object);
+	}
+
+	private void copyFileReferences() {
+		ArrayList<MessageObject> msgs = getSelectedMessages1();
+		if (msgs.isEmpty()) {
+			if (selectedObject == null) return;
+			msgs = new ArrayList<>();
+			msgs.add(selectedObject);
+		}
+		fileRefClipboard.clear();
+		for (int i = 0; i < msgs.size(); ++i) {
+			MessageObject msg = msgs.get(i);
+			TLRPC.Document doc = msg.getDocument();
+			if (doc instanceof TLRPC.TL_document) {
+				fileRefClipboard.add(new FileRefClipboardItem((TLRPC.TL_document) doc));
+				continue;
+			}
+			if (msg.messageOwner != null && msg.messageOwner.media != null && msg.messageOwner.media.photo instanceof TLRPC.TL_photo) {
+				fileRefClipboard.add(new FileRefClipboardItem((TLRPC.TL_photo) msg.messageOwner.media.photo));
+				continue;
+			}
+		}
+		if (fileRefClipboard.isEmpty()) {
+			BulletinFactory.of(this).createErrorBulletin(getString(R.string.CopyFileRefFailed)).show();
+		} else {
+			BulletinFactory.of(this).createSimpleBulletin(R.raw.info, LocaleController.formatString("CopyFileRefDone", R.string.CopyFileRefDone, fileRefClipboard.size())).show();
+			if (actionBar.isActionModeShowed()) {
+				getSelectedMessages();
+			}
+		}
+	}
+
+	private boolean canCopyFileRef(MessageObject msg) {
+		if (msg == null) return false;
+		if (msg.getDocument() instanceof TLRPC.TL_document) return true;
+		if (msg.messageOwner != null && msg.messageOwner.media != null && msg.messageOwner.media.photo instanceof TLRPC.TL_photo) return true;
+		return false;
 	}
 
 	@Override
@@ -46720,6 +46793,8 @@ public class ChatActivity extends BaseFragment implements
 		} else if (id == nkbtn_repeatascopy) {
 			repeatMessage(false, true);
 			clearSelectionMode();
+		} else if (id == nkbtn_copy_fref) {
+			copyFileReferences();
 		} else if (id == nkheaderbtn_hide_title) {
 			if (avatarContainer != null) {
 				avatarContainer.setTitle("");
@@ -48909,6 +48984,11 @@ public class ChatActivity extends BaseFragment implements
 						icons.add(R.drawable.msg_copy);
 					}
 				}
+				if (NekoConfig.showCopyFileRef.Bool() && canCopyFileRef(selectedObject)) {
+					items.add(LocaleController.getString("CopyFileRef", R.string.CopyFileRef));
+					options.add(OPTION_COPY_REF);
+					icons.add(R.drawable.msg_copy);
+				}
 				if (!isThreadChat() && chatMode != MODE_SCHEDULED && currentChat != null && primaryMessage != null && (currentChat.has_link || primaryMessage.hasReplies()) && currentChat.megagroup && primaryMessage.canViewThread()) {
 					if (primaryMessage.hasReplies()) {
 						items.add(LocaleController.formatPluralString("ViewReplies", primaryMessage.getRepliesCount()));
@@ -49329,6 +49409,11 @@ public class ChatActivity extends BaseFragment implements
 					boolean showTranslateLLM = NaConfig.INSTANCE.getShowTranslateMessageLLM().Bool() && LlmConfig.isLLMTranslatorAvailable() && !LlmConfig.llmIsDefaultProvider();
 					boolean isTranslatableMessage = msg != null && !msg.isAnimatedEmoji() && !msg.isDice();
 					if ((showTranslate || showTranslateLLM) && isTranslatableMessage) {
+						boolean isRichMessage = msg != null && msg.isRich();
+						if (isRichMessage) {
+							showTranslate = true;
+							showTranslateLLM = false;
+						}
 						String fromLang = msg.messageOwner.originalLanguage;
 						// check if language is restricted but don't detect language here to avoid extra delay
 						if (fromLang != null && RestrictedLanguagesSelectActivity.getRestrictedLanguages().contains(fromLang)) {
@@ -49344,7 +49429,7 @@ public class ChatActivity extends BaseFragment implements
 						if (showTranslate && (isOutgoingOrNotTranslatingDialog || isLLMDefault)) {
 							items.add(canUndoTranslate ? getString(R.string.UndoTranslate) : getString(R.string.Translate));
 							options.add(nkbtn_translate);
-							icons.add(isLLMDefault ? R.drawable.magic_stick_solar : R.drawable.msg_translate);
+							icons.add(isLLMDefault && !isRichMessage ? R.drawable.magic_stick_solar : R.drawable.msg_translate);
 						}
 						boolean shouldShowLLM = !showTranslate || !isTranslated || !isOutgoingOrNotTranslatingDialog;
 						if (showTranslateLLM && shouldShowLLM) {
@@ -49462,6 +49547,11 @@ public class ChatActivity extends BaseFragment implements
 						icons.add(R.drawable.msg_copy);
 					}
 				}
+				if (NekoConfig.showCopyFileRef.Bool() && canCopyFileRef(selectedObject)) {
+					items.add(LocaleController.getString("CopyFileRef", R.string.CopyFileRef));
+					options.add(OPTION_COPY_REF);
+					icons.add(R.drawable.msg_copy);
+				}
 				if (!isThreadChat() && chatMode != MODE_SCHEDULED && currentChat != null && primaryMessage != null && (currentChat.has_link || primaryMessage.hasReplies()) && currentChat.megagroup && primaryMessage.canViewThread()) {
 					if (primaryMessage.hasReplies()) {
 						items.add(LocaleController.formatPluralString("ViewReplies", primaryMessage.getRepliesCount()));
@@ -49561,6 +49651,11 @@ public class ChatActivity extends BaseFragment implements
 				boolean showTranslateLLM = NaConfig.INSTANCE.getShowTranslateMessageLLM().Bool() && LlmConfig.isLLMTranslatorAvailable() && !LlmConfig.llmIsDefaultProvider();
 				boolean isTranslatableMessage = msg != null && !msg.isAnimatedEmoji() && !msg.isDice();
 				if ((showTranslate || showTranslateLLM) && isTranslatableMessage) {
+					boolean isRichMessage = msg != null && msg.isRich();
+					if (isRichMessage) {
+						showTranslate = true;
+						showTranslateLLM = false;
+					}
 					String fromLang = msg.messageOwner.originalLanguage;
 					if (fromLang != null && RestrictedLanguagesSelectActivity.getRestrictedLanguages().contains(fromLang)) {
 						showTranslate = false;
@@ -49573,7 +49668,7 @@ public class ChatActivity extends BaseFragment implements
 					if (showTranslate && (isOutgoingOrNotTranslatingDialog || isLLMDefault)) {
 						items.add(canUndoTranslate ? getString(R.string.UndoTranslate) : getString(R.string.Translate));
 						options.add(nkbtn_translate);
-						icons.add(isLLMDefault ? R.drawable.magic_stick_solar : R.drawable.msg_translate);
+						icons.add(isLLMDefault && !isRichMessage ? R.drawable.magic_stick_solar : R.drawable.msg_translate);
 					}
 					boolean shouldShowLLM = !showTranslate || !isTranslated || !isOutgoingOrNotTranslatingDialog;
 					if (showTranslateLLM && shouldShowLLM) {
@@ -49683,7 +49778,7 @@ public class ChatActivity extends BaseFragment implements
 		boolean isDocuments = selectedObjectGroup != null && selectedObjectGroup.isDocuments;
 		if (selectedObjectGroup != null && !isDocuments) {
 			for (MessageObject object : selectedObjectGroup.messages) {
-				if (!TextUtils.isEmpty(object.messageOwner.message)) {
+				if (canTranslateSelectedMessage(object)) {
 					if (messageObject != null) {
 						messageObject = null;
 						break;
@@ -49692,17 +49787,27 @@ public class ChatActivity extends BaseFragment implements
 					}
 				}
 			}
-		} else if (selectedObject != null && (!TextUtils.isEmpty(selectedObject.messageOwner.message) || selectedObject.isPoll())) {
+		} else if (canTranslateSelectedMessage(selectedObject)) {
 			messageObject = selectedObject;
 		}
 		if (messageObject == null && isDocuments) {
 			for (MessageObject obj : selectedObjectGroup.messages) {
-				if (!TextUtils.isEmpty(obj.messageOwner.message)) {
+				if (canTranslateSelectedMessage(obj)) {
 					messageObject = obj;
 				}
 			}
 		}
 		return messageObject;
+	}
+
+	private boolean canTranslateSelectedMessage(MessageObject messageObject) {
+		if (messageObject == null || messageObject.messageOwner == null) {
+			return false;
+		}
+		if (!TextUtils.isEmpty(messageObject.messageOwner.message) || messageObject.isPoll()) {
+			return true;
+		}
+		return messageObject.isRich() && !RichMessageTransHelper.collectPlainTexts(messageObject.messageOwner.rich_message).isEmpty();
 	}
 
 	private boolean handleTranslateDuringAutoTrans(String toLang) {
@@ -51400,6 +51505,10 @@ public class ChatActivity extends BaseFragment implements
 		builder.setView(layout);
 		builder.setPositiveButton(LocaleController.getString(R.string.Save), (dialog, which) -> {
 			String newText = textEdit.getText().toString();
+			if (messageObject.isMediaEmpty() && android.text.TextUtils.isEmpty(newText.trim())) {
+				org.telegram.ui.Components.BulletinFactory.of(ChatActivity.this).createErrorBulletin(LocaleController.getString("LocalEditorEmptyTextError", R.string.LocalEditorEmptyTextError), themeDelegate).show();
+				return;
+			}
 			String newTimeStr = timeEdit.getText().toString();
 			try {
 				java.util.Date parsedTime = sdf.parse(newTimeStr);

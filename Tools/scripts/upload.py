@@ -118,9 +118,12 @@ def get_large_file_notice(file_path: Path) -> str:
 
 def get_documents() -> list[dict[str, str | Path]]:
     documents: list[dict[str, str | Path]] = []
-    for abi in ["arm64-v8a"]:
+    for abi in ["armeabi-v7a", "arm64-v8a"]:
         apk = find_apk(abi)
         if apk is not None:
+            documents.append({"path": apk, "caption": ""})
+    if not documents:
+        for apk in artifacts_path.rglob("*.apk"):
             documents.append({"path": apk, "caption": ""})
     if not documents:
         documents.append({

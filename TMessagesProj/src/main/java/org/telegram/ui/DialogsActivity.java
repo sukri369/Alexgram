@@ -12,6 +12,7 @@ package org.telegram.ui;
 import tw.nekomimi.nekogram.helpers.HiddenChatsController;
 import tw.nekomimi.nekogram.ui.HiddenChatsPasscodeActivity;
 import tw.nekomimi.nekogram.settings.HiddenChatsSettingsActivity;
+import tw.nekomimi.nekogram.NekoConfig;
 // [Alexgram: Hidden Chats] - End
 
 import static org.telegram.messenger.AndroidUtilities.dp;
@@ -3056,6 +3057,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 .add(NotificationCenter.messageReceivedByServer)
                 .add(NotificationCenter.messageSendError)
                 .add(NotificationCenter.needReloadRecentDialogsSearch)
+                .add(NotificationCenter.updateSearchSettings)
+                .add(NotificationCenter.mainTabsLayoutChanged)
                 .add(NotificationCenter.replyMessagesDidLoad)
                 .add(NotificationCenter.topicsDidLoaded)
                 .add(NotificationCenter.reloadHints)
@@ -3202,7 +3205,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 showSelectStatusDialog();
             });
             SelectAnimatedEmojiDialog.preload(currentAccount);
-        } else if (user != null && MessagesController.getInstance(currentAccount).isPremiumUser(user)) {
+        } else if (user != null && MessagesController.getInstance(currentAccount).isPremiumUser(user) && !NekoConfig.hidePremiumIcon.Bool()) {
             if (premiumStar == null) {
                 premiumStar = getContext().getResources().getDrawable(R.drawable.msg_premium_liststar).mutate();
                 premiumStar = new AnimatedEmojiDrawable.WrapSizeDrawable(premiumStar, dp(18), dp(18)) {
@@ -6416,7 +6419,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 MessagesController.getInstance(currentAccount).removeSuggestion(0, "STARS_SUBSCRIPTION_LOW_BALANCE");
                 updateDialogsHint();
             });
-        } else if (folderId == 0 && !getMessagesController().premiumPurchaseBlocked() && BirthdayController.getInstance(currentAccount).contains() && !getMessagesController().dismissedSuggestions.contains("BIRTHDAY_CONTACTS_TODAY")) {
+        } else if (folderId == 0 && !tw.nekomimi.nekogram.NekoConfig.hideBirthdayBanners.Bool() && !getMessagesController().premiumPurchaseBlocked() && BirthdayController.getInstance(currentAccount).contains() && !getMessagesController().dismissedSuggestions.contains("BIRTHDAY_CONTACTS_TODAY")) {
             BirthdayController.BirthdayState state = BirthdayController.getInstance(currentAccount).getState();
             ArrayList<TLRPC.User> users = state.today;
             dialogsHintCellVisible = true;
@@ -11085,6 +11088,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             if (searchViewPager != null && searchViewPager.dialogsSearchAdapter != null) {
                 searchViewPager.dialogsSearchAdapter.loadRecentSearch();
             }
+        } else if (id == NotificationCenter.updateSearchSettings) {
+            refreshSearchSettingsUi();
+        } else if (id == NotificationCenter.mainTabsLayoutChanged) {
+            checkUi_itemSearchVisibility();
         } else if (id == NotificationCenter.replyMessagesDidLoad) {
             updateVisibleRows(MessagesController.UPDATE_MASK_MESSAGE_TEXT);
         } else if (id == NotificationCenter.reloadHints) {
@@ -14151,6 +14158,25 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         }
     }
 
+    @Override
+    public boolean hasSearch() {
+        return isSupportSearch();
+    }
+
+    @Override
+    public void onSearchButtonClicked() {
+        showSearch(true, false, true);
+        if (fragmentSearchFieldWatcher != null) {
+            fragmentSearchFieldWatcher.toggleSearch(true);
+        }
+        AndroidUtilities.runOnUIThread(() -> {
+            if (fragmentSearchField != null && fragmentSearchField.editText != null) {
+                fragmentSearchField.editText.requestFocus();
+                AndroidUtilities.showKeyboard(fragmentSearchField.editText);
+            }
+        }, 100);
+    }
+
     private void showItemOptions() {
         ItemOptions io = ItemOptions.makeOptions(this, optionsItem);
         io.setColors(getThemedColor(Theme.key_actionBarDefaultTitle), getThemedColor(Theme.key_actionBarDefaultTitle));
@@ -14742,7 +14768,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         final float factor1 = animatorSearchButtonVisible.getFloatValue();
         final float factor2 = 1f - getRightSlidingProgress();
         final float factor3 = 1f - animatorDoneButtonVisible.getFloatValue();
-        final float factor = factor0 * factor1 * factor2 * factor3;
+        final float factor = shouldReplaceHomeSearchFieldWithMainTabsButton()
+                ? 0
+                : factor0 * factor1 * factor2 * factor3;
         FragmentFloatingButton.setAnimatedVisibility(searchItem, factor);
         if (dialogStoriesCell != null) {
             dialogStoriesCell.invalidate();
@@ -15132,7 +15160,31 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     }
 
     private boolean shouldShowIdleSearchField() {
-        return true;
+        return !(NaConfig.INSTANCE.getHideHomeSearchField().Bool()
+                && initialDialogsType == DIALOGS_TYPE_DEFAULT
+                && !onlySelect
+                && folderId == 0
+                && searchString == null);
+    }
+
+    private boolean shouldReplaceHomeSearchFieldWithMainTabsButton() {
+        return hasMainTabs
+                && NaConfig.INSTANCE.getMainTabsShowSearchButton().Bool()
+                && !NaConfig.INSTANCE.getHideBottomNavigationBar().Bool();
+    }
+
+    private void refreshSearchSettingsUi() {
+        additionNavigationBarHeight = hasMainTabs && !NaConfig.INSTANCE.getHideBottomNavigationBar().Bool() ? dp(MainTabsHelper.getMainTabsHeightWithMargins()) : 0;
+        additionFloatingButtonOffset = hasMainTabs && !NaConfig.INSTANCE.getHideBottomNavigationBar().Bool() ? dp(MainTabsHelper.getMainTabsHeight() + MainTabsHelper.getMainTabsMargin()) : 0;
+        invalidateScrollY = true;
+        checkUi_searchFieldVisibility();
+        if (viewPages != null) {
+            for (ViewPage page : viewPages) {
+                if (page != null && page.listView != null) {
+                    page.listView.requestLayout();
+                }
+            }
+        }
     }
 
     private int getIdleSearchFieldHeight() {
