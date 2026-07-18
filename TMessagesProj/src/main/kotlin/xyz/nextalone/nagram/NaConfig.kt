@@ -534,6 +534,12 @@ object NaConfig {
             ConfigItem.configTypeBool,
             false
         )
+    val launchAnimationStyle =
+        addConfig(
+            "LaunchAnimationStyle",
+            ConfigItem.configTypeInt,
+            0
+        )
     val searchHashtagDefaultPageChannel =
         addConfig(
             "SearchHashtagDefaultPageChannel",
@@ -1594,6 +1600,14 @@ object NaConfig {
             ConfigItem.configTypeBool,
             false
         )
+    // [Alexgram: Friends Activities] - Start
+    val friendsActivities =
+        addConfig(
+            "FriendsActivities",
+            ConfigItem.configTypeBool,
+            false
+        )
+    // [Alexgram: Friends Activities] - End
     val showNotificationPreviewWhenLocked =
         addConfig(
             "ShowNotificationPreviewWhenLocked",
